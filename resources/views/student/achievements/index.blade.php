@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'إنجازاتي')
-@section('header', 'إنجازاتي')
+@section('title', __('student.achievements_title'))
+@section('header', __('student.achievements_title'))
 
 @section('content')
 <div class="space-y-6">
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-        <h1 class="text-2xl font-bold text-gray-900">إنجازاتي</h1>
+        <h1 class="text-2xl font-bold text-gray-900">{{ __('student.achievements_title') }}</h1>
         @if(isset($stats))
         <div class="mt-4">
-            <div class="text-sm text-gray-600">إجمالي النقاط</div>
+            <div class="text-sm text-gray-600">{{ __('student.total_points') }}</div>
             <div class="text-3xl font-bold text-sky-600 mt-2">{{ $stats['total_points'] ?? 0 }}</div>
         </div>
         @endif
@@ -25,10 +25,10 @@
                 @else
                 <i class="fas fa-trophy text-6xl text-yellow-600 mb-4"></i>
                 @endif
-                <h3 class="text-lg font-bold text-gray-900">{{ $achievement->achievement->name ?? 'إنجاز' }}</h3>
+                <h3 class="text-lg font-bold text-gray-900">{{ $achievement->achievement->name ?? __('student.achievement_default') }}</h3>
                 <p class="text-sm text-gray-600 mt-2">{{ $achievement->achievement->description ?? '' }}</p>
                 @if($achievement->points_earned)
-                <div class="mt-4 text-sky-600 font-bold">+{{ $achievement->points_earned }} نقاط</div>
+                <div class="mt-4 text-sky-600 font-bold">+{{ $achievement->points_earned }} {{ __('student.points_earned') }}</div>
                 @endif
             </div>
         </div>
@@ -38,7 +38,7 @@
     @else
     <div class="bg-white rounded-xl shadow-lg p-12 text-center">
         <i class="fas fa-trophy text-gray-400 text-6xl mb-4"></i>
-        <p class="text-gray-600">لا توجد إنجازات</p>
+        <p class="text-gray-600">{{ __('student.no_achievements') }}</p>
     </div>
     @endif
 </div>

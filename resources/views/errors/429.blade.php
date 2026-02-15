@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>429 - طلبات كثيرة جداً | Mindlytics</title>
+    <title>429 - {{ __('errors.429_title') }} | Mindlytics</title>
     
     <!-- خط عربي أصيل -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -167,14 +167,12 @@
                 
                 <!-- العنوان -->
                 <h2 class="text-3xl md:text-4xl lg:text-5xl font-black mb-4 text-gray-900 fade-in-up" style="animation-delay: 0.2s;">
-                    طلبات كثيرة جداً
+                    {{ __('errors.429_title') }}
                 </h2>
                 
                 <!-- الرسالة -->
                 <p class="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed fade-in-up max-w-2xl mx-auto" style="animation-delay: 0.3s;">
-                    عذراً، لقد قمت بإرسال عدد كبير جداً من الطلبات في وقت قصير.
-                    <br class="hidden md:block">
-                    يرجى الانتظار قليلاً ثم المحاولة مرة أخرى.
+                    {{ __('errors.429_message') }}
                 </p>
 
                 <!-- معلومات إضافية -->
@@ -205,7 +203,7 @@
                     </button>
                     <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center justify-center gap-2 bg-white text-purple-600 px-8 py-4 rounded-full font-bold text-base border-2 border-purple-600 hover:bg-purple-50 transition-all duration-300">
                         <i class="fas fa-home"></i>
-                        <span>العودة للوحة التحكم</span>
+                        <span>{{ __('errors.back_dashboard') }}</span>
                     </a>
                 </div>
 

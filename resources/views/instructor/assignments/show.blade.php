@@ -7,7 +7,7 @@
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 sm:p-6 mb-6">
         <nav class="text-sm text-slate-500 mb-2">
-            <a href="{{ route('instructor.assignments.index') }}" class="hover:text-sky-600">الواجبات</a>
+            <a href="{{ route('instructor.assignments.index') }}" class="hover:text-sky-600">{{ __('instructor.assignments') }}</a>
             <span class="mx-2">/</span>
             <span class="text-slate-700 font-semibold">{{ $assignment->title }}</span>
         </nav>
@@ -17,16 +17,16 @@
                 <p class="text-sm text-slate-600 mt-0.5">{{ $assignment->course->title ?? '—' }}</p>
                 @if($assignment->group)
                     <span class="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-100 text-sky-700">
-                        <i class="fas fa-users"></i> واجب جماعي: {{ $assignment->group->name }}
+                        <i class="fas fa-users"></i> {{ __('instructor.collective_assignment') }}: {{ $assignment->group->name }}
                     </span>
                 @endif
             </div>
             <div class="flex items-center gap-2">
                 <a href="{{ route('instructor.assignments.edit', $assignment) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold">
-                    <i class="fas fa-edit"></i> تعديل
+                    <i class="fas fa-edit"></i> {{ __('common.edit') }}
                 </a>
                 <a href="{{ route('instructor.assignments.submissions', $assignment) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold">
-                    <i class="fas fa-inbox"></i> التسليمات ({{ $submissionStats['total'] ?? 0 }})
+                    <i class="fas fa-inbox"></i> {{ __('instructor.submissions_title') }} ({{ $submissionStats['total'] ?? 0 }})
                 </a>
             </div>
         </div>
@@ -34,21 +34,21 @@
 
     @if($assignment->description)
         <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 mb-6">
-            <h3 class="font-bold text-slate-800 mb-2">الوصف</h3>
+            <h3 class="font-bold text-slate-800 mb-2">{{ __('instructor.description') }}</h3>
             <p class="text-slate-600">{{ $assignment->description }}</p>
         </div>
     @endif
 
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-4 py-3 border-b border-slate-200 bg-slate-50 font-bold text-slate-800">آخر التسليمات</div>
+        <div class="px-4 py-3 border-b border-slate-200 bg-slate-50 font-bold text-slate-800">{{ __('instructor.last_submissions') }}</div>
         <div class="overflow-x-auto">
             @if($submissions->count() > 0)
                 <table class="min-w-full divide-y divide-slate-200">
                     <thead class="bg-slate-50">
                         <tr>
-                            <th class="px-4 py-3 text-right text-xs font-bold text-slate-700">الطالب / المجموعة</th>
-                            <th class="px-4 py-3 text-right text-xs font-bold text-slate-700">تاريخ التسليم</th>
-                            <th class="px-4 py-3 text-right text-xs font-bold text-slate-700">الحالة</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-slate-700">{{ __('instructor.student_or_group') }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-slate-700">{{ __('instructor.submission_date') }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-slate-700">{{ __('common.status') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
@@ -56,7 +56,7 @@
                             <tr>
                                 <td class="px-4 py-3 text-sm text-slate-800">
                                     @if($sub->group_id)
-                                        <span class="text-sky-600">{{ $sub->group->name ?? 'مجموعة' }}</span>
+                                        <span class="text-sky-600">{{ $sub->group->name ?? __('instructor.group_fallback') }}</span>
                                         <span class="text-slate-500">({{ $sub->student->name ?? '—' }})</span>
                                     @else
                                         {{ $sub->student->name ?? '—' }}
@@ -72,7 +72,7 @@
                 </table>
                 <div class="p-3 border-t border-slate-200">{{ $submissions->links() }}</div>
             @else
-                <p class="p-6 text-center text-slate-500">لا توجد تسليمات بعد</p>
+                <p class="p-6 text-center text-slate-500">{{ __('instructor.no_submissions') }}</p>
             @endif
         </div>
     </div>

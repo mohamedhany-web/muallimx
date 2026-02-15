@@ -1,5 +1,9 @@
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+@endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" itemscope itemtype="https://schema.org/EducationalOrganization">
+<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}" itemscope itemtype="https://schema.org/EducationalOrganization">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
@@ -7,9 +11,9 @@
         <meta name="apple-mobile-web-app-capable" content="yes">
         
         <!-- Primary Meta Tags -->
-        <title>Mindlytics - أكاديمية البرمجة والذكاء الاصطناعي | تعلم البرمجة من الصفر</title>
-        <meta name="title" content="Mindlytics - أكاديمية البرمجة والذكاء الاصطناعي | تعلم البرمجة من الصفر">
-        <meta name="description" content="تعلم البرمجة والذكاء الاصطناعي من الصفر إلى الاحتراف مع Mindlytics. كورسات برمجة عربية شاملة، دروس تفاعلية، مشاريع عملية، وشهادات معتمدة. انضم إلى آلاف الطلاب الناجحين.">
+        <title>{{ __('landing.meta.title') }}</title>
+        <meta name="title" content="{{ __('landing.meta.title') }}">
+        <meta name="description" content="{{ __('landing.meta.description') }}">
         <meta name="keywords" content="برمجة, ذكاء اصطناعي, تعلم البرمجة, كورسات برمجة, دورات برمجة, برمجة عربية, Python, JavaScript, Laravel, React, تعلم البرمجة من الصفر, أكاديمية برمجة, منصة تعليمية">
         <meta name="author" content="Mindlytics">
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
@@ -24,26 +28,27 @@
         <link rel="canonical" href="{{ url('/') }}">
         
         <!-- Language and Region -->
-        <link rel="alternate" hreflang="ar" href="{{ url('/') }}">
-        <link rel="alternate" hreflang="x-default" href="{{ url('/') }}">
+        <link rel="alternate" hreflang="ar" href="{{ url('/') }}?lang=ar">
+        <link rel="alternate" hreflang="en" href="{{ url('/') }}?lang=en">
+        <link rel="alternate" hreflang="x-default" href="{{ url('/') }}?lang=ar">
         
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ url('/') }}">
-        <meta property="og:title" content="Mindlytics - أكاديمية البرمجة والذكاء الاصطناعي">
-        <meta property="og:description" content="تعلم البرمجة والذكاء الاصطناعي من الصفر إلى الاحتراف مع Mindlytics. كورسات برمجة عربية شاملة، دروس تفاعلية، مشاريع عملية، وشهادات معتمدة.">
+        <meta property="og:title" content="{{ __('landing.meta.og_title') }}">
+        <meta property="og:description" content="{{ __('landing.meta.og_description') }}">
         <meta property="og:image" content="{{ asset('images/og-image.jpg') }}">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
-        <meta property="og:image:alt" content="Mindlytics - أكاديمية البرمجة والذكاء الاصطناعي">
-        <meta property="og:locale" content="ar_AR">
+        <meta property="og:image:alt" content="{{ __('landing.meta.og_title') }}">
+        <meta property="og:locale" content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
         <meta property="og:site_name" content="Mindlytics">
         
         <!-- Twitter Card -->
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:url" content="{{ url('/') }}">
-        <meta name="twitter:title" content="Mindlytics - أكاديمية البرمجة والذكاء الاصطناعي">
-        <meta name="twitter:description" content="تعلم البرمجة والذكاء الاصطناعي من الصفر إلى الاحتراف مع Mindlytics. كورسات برمجة عربية شاملة.">
+        <meta name="twitter:title" content="{{ __('landing.meta.og_title') }}">
+        <meta name="twitter:description" content="{{ __('landing.meta.og_description') }}">
         <meta name="twitter:image" content="{{ asset('images/og-image.jpg') }}">
         <meta name="twitter:image:alt" content="Mindlytics - أكاديمية البرمجة والذكاء الاصطناعي">
         
@@ -2328,25 +2333,25 @@
         <div class="max-w-7xl mx-auto text-center relative z-10">
             <!-- Main Headline -->
             <h1 class="hero-headline text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-extrabold text-blue-900 mb-6 sm:mb-8 md:mb-10 leading-tight fade-in-up" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
-                استعد لمستقبل البرمجة والذكاء الاصطناعي
+                {{ __('landing.hero.headline') }}
             </h1>
             <!-- Sub-headline -->
             <p class="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-blue-700/95 mb-8 sm:mb-10 md:mb-14 font-bold fade-in-up max-w-4xl mx-auto leading-relaxed" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
-                تعلم التقنيات الأحدث في البرمجة والذكاء الاصطناعي وكن جزءاً من الثورة التقنية
+                {{ __('landing.hero.subheadline') }}
             </p>
 
             <!-- CTA Buttons -->
             <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-10 sm:mb-12 md:mb-16 fade-in-up">
                 <a href="{{ route('public.courses') }}" class="btn-primary text-white w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg shadow-lg relative overflow-hidden">
                     <span class="relative z-10">
-                        <i class="fas fa-book ml-2"></i>
-                        تصفح الكورسات
+                        <i class="fas fa-book {{ $isRtl ? 'ml-2' : 'mr-2' }}"></i>
+                        {{ __('landing.hero.browse_courses') }}
                     </span>
                 </a>
                 <a href="{{ route('register') }}" class="btn-secondary text-white w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg shadow-lg relative overflow-hidden">
                     <span class="relative z-10">
-                        <i class="fas fa-user-plus ml-2"></i>
-                        اشترك الآن
+                        <i class="fas fa-user-plus {{ $isRtl ? 'ml-2' : 'mr-2' }}"></i>
+                        {{ __('landing.hero.signup_now') }}
                     </span>
                 </a>
                 </div>
@@ -2358,7 +2363,7 @@
                     <div class="counter-wrapper">
                         <div class="text-3xl md:text-4xl font-black text-blue-600 mb-2 counter" data-target="35200">35,200</div>
                             </div>
-                    <div class="text-gray-600 font-medium">دقيقة مشاهدة</div>
+                    <div class="text-gray-600 font-medium">{{ __('landing.stats.minutes_watched') }}</div>
                         </div>
 
                 <!-- Stat 2 -->
@@ -2366,7 +2371,7 @@
                     <div class="counter-wrapper">
                         <div class="text-3xl md:text-4xl font-black text-blue-600 mb-2 counter" data-target="1250">1,250+</div>
                                 </div>
-                    <div class="text-gray-600 font-medium">شهادة</div>
+                    <div class="text-gray-600 font-medium">{{ __('landing.stats.certificates') }}</div>
                             </div>
 
                 <!-- Stat 3 -->
@@ -2374,7 +2379,7 @@
                     <div class="counter-wrapper">
                         <div class="text-3xl md:text-4xl font-black text-blue-600 mb-2 counter" data-target="85">85+</div>
                                 </div>
-                    <div class="text-gray-600 font-medium">دورة تدريبية</div>
+                    <div class="text-gray-600 font-medium">{{ __('landing.stats.courses') }}</div>
                             </div>
 
                 <!-- Stat 4 -->
@@ -2382,7 +2387,7 @@
                     <div class="counter-wrapper">
                         <div class="text-3xl md:text-4xl font-black text-blue-600 mb-2 counter" data-target="3250">3,250+</div>
                                 </div>
-                    <div class="text-gray-600 font-medium">متعلم عربي</div>
+                    <div class="text-gray-600 font-medium">{{ __('landing.stats.learners') }}</div>
                 </div>
             </div>
         </div>
@@ -2395,17 +2400,17 @@
                 <div class="inline-block mb-4">
                     <span class="featured-courses-badge bg-gradient-to-r from-blue-50 via-green-50/80 to-blue-50 text-blue-800 px-4 py-2 rounded-full text-sm font-bold inline-flex items-center gap-2 shadow-sm border border-blue-200/60">
                         <i class="fas fa-star text-blue-600"></i>
-                        <span>أفضل الدورات التدريبية</span>
+                        <span>{{ __('landing.featured.badge') }}</span>
                     </span>
                 </div>
                 <h2 class="featured-courses-title text-4xl md:text-5xl lg:text-6xl font-black mb-5 inline-block">
                     <span class="featured-courses-title-draw">
-                        <span class="featured-courses-title-main">الكورسات</span><span class="featured-courses-title-highlight"> المميزة</span>
+                        <span class="featured-courses-title-main">{{ __('landing.featured.title') }}</span><span class="featured-courses-title-highlight">{{ __('landing.featured.title_highlight') }}</span>
                     </span>
                     <span class="featured-courses-title-line" aria-hidden="true"></span>
                 </h2>
                 <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                    اكتشف أفضل الكورسات البرمجية المصممة خصيصاً لمساعدتك على النجاح وتحقيق أهدافك
+                    {{ __('landing.featured_subtitle') }}
                 </p>
             </div>
         </div>
@@ -2456,7 +2461,7 @@
                                     <div class="absolute top-2 left-2 z-20">
                                         <span class="bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 text-yellow-900 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1 border border-yellow-300/50 backdrop-blur-sm">
                                             <i class="fas fa-star text-[8px]"></i>
-                                            <span>مميز</span>
+                                            <span>{{ __('landing.featured_badge') }}</span>
                                         </span>
                                     </div>
                                 @endif
@@ -2466,7 +2471,7 @@
                                     <div class="bg-white/95 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-xl border border-white/50 group-hover:scale-110 transition-transform duration-300">
                                         <span class="text-xs font-bold text-gray-800 flex items-center gap-1.5">
                                             <i class="fas fa-play-circle text-blue-600 text-[11px] group-hover:text-green-600 transition-colors duration-300"></i>
-                                            <span>{{ $course->lessons_count ?? 0 }} درس</span>
+                                            <span>{{ $course->lessons_count ?? 0 }} {{ __('landing.lesson_single') }}</span>
                                         </span>
                                     </div>
                                 </div>
@@ -2483,7 +2488,7 @@
                                         <div class="w-4 h-4 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center">
                                             <i class="fas fa-user text-white text-[8px]"></i>
                                         </div>
-                                        <span class="text-xs font-semibold text-blue-700 group-hover:text-blue-800 transition-colors duration-300">{{ Str::limit($course->instructor->name ?? 'مدرب', 18) }}</span>
+                                        <span class="text-xs font-semibold text-blue-700 group-hover:text-blue-800 transition-colors duration-300">{{ Str::limit($course->instructor->name ?? __('public.instructor_fallback'), 18) }}</span>
                                     </div>
                                 </div>
 
@@ -2494,7 +2499,7 @@
                                 
                                 <!-- Description with Enhanced Design -->
                                 <p class="text-gray-600 text-xs mb-3 line-clamp-2 leading-relaxed group-hover:text-gray-700 transition-colors duration-300 relative z-10">
-                                    {{ Str::limit($course->description ?? 'دورة برمجية متكاملة', 70) }}
+                                    {{ Str::limit($course->description ?? __('landing.course_description_fallback'), 70) }}
                                 </p>
                                 
                                 <!-- Footer with Enhanced Design -->
@@ -2506,12 +2511,12 @@
                                                 <div class="w-5 h-5 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-md">
                                                     <i class="fas fa-gift text-white text-[8px]"></i>
                                                 </div>
-                                                <span>مجاني</span>
+                                                <span>{{ __('landing.free') }}</span>
                                             </span>
                                         @else
                                             <span class="text-lg font-black text-blue-600 flex items-center gap-1 group-hover:scale-110 transition-transform duration-300">
                                                 <span>{{ number_format($course->price ?? 0) }}</span>
-                                                <span class="text-[10px] text-gray-500 font-normal">ج.م</span>
+                                                <span class="text-[10px] text-gray-500 font-normal">{{ __('landing.currency') }}</span>
                                             </span>
                                         @endif
                                     </div>
@@ -2522,7 +2527,7 @@
                                         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover/btn:opacity-100 group-hover/btn:animate-shimmer transition-opacity duration-300"></div>
                                         <!-- Glow Effect -->
                                         <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-green-400 rounded-lg blur opacity-0 group-hover/btn:opacity-50 transition-opacity duration-300"></div>
-                                        <span class="relative z-10">عرض</span>
+                                        <span class="relative z-10">{{ __('landing.view_btn') }}</span>
                                         <i class="fas fa-arrow-left text-[10px] relative z-10 group-hover/btn:translate-x-1 transition-transform duration-300"></i>
                                     </a>
                                 </div>
@@ -2536,7 +2541,7 @@
                     <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-green-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 relative overflow-hidden group">
                         <span class="relative z-10 flex items-center gap-2">
                             <i class="fas fa-book-open"></i>
-                            <span>عرض جميع الكورسات</span>
+                            <span>{{ __('landing.view_all_courses') }}</span>
                             <i class="fas fa-arrow-left transition-transform duration-300 group-hover:-translate-x-1"></i>
                         </span>
                         <span class="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
@@ -2549,10 +2554,10 @@
                     <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-book text-gray-400 text-4xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">قريباً...</h3>
-                    <p class="text-gray-600 mb-6">نعمل على إضافة المزيد من الكورسات المميزة</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ __('landing.coming_soon') }}</h3>
+                    <p class="text-gray-600 mb-6">{{ __('landing.coming_soon_desc') }}</p>
                     <a href="{{ route('register') }}" class="btn-primary text-white px-6 py-3 rounded-full relative overflow-hidden">
-                        <span class="relative z-10">اشترك للحصول على التحديثات</span>
+                        <span class="relative z-10">{{ __('landing.subscribe_updates') }}</span>
                     </a>
                 </div>
             </div>
@@ -2602,10 +2607,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="text-center mb-12 fade-in-up">
                 <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-4 section-title" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
-                    لماذا <span class="gradient-text">Mindlytics</span>؟
+                    {{ __('landing.why_mindlytics') }} <span class="gradient-text">Mindlytics</span>{{ __('landing.why_mindlytics_suffix') }}
                 </h2>
                 <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-                    منصة تعليمية متكاملة تجمع بين أفضل المحتوى التعليمي والتقنيات الحديثة
+                    {{ __('landing.why_subtitle') }}
                 </p>
                         </div>
                         
@@ -2615,8 +2620,8 @@
                     <div class="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl group-hover:scale-110 transition-transform duration-300">
                         <i class="fas fa-graduation-cap text-white text-3xl"></i>
                                 </div>
-                    <h3 class="text-xl md:text-2xl font-black text-gray-900 mb-3">تعليم احترافي</h3>
-                    <p class="text-gray-600 text-base leading-relaxed">محاضرات عالية الجودة من خبراء في المجال</p>
+                    <h3 class="text-xl md:text-2xl font-black text-gray-900 mb-3">{{ __('landing.feature1_title') }}</h3>
+                    <p class="text-gray-600 text-base leading-relaxed">{{ __('landing.feature1_desc') }}</p>
                             </div>
                             
                 <!-- Feature 2 -->
@@ -2624,8 +2629,8 @@
                     <div class="w-20 h-20 bg-gradient-to-br from-green-600 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl group-hover:scale-110 transition-transform duration-300">
                         <i class="fas fa-certificate text-white text-3xl"></i>
                                 </div>
-                    <h3 class="text-xl md:text-2xl font-black text-gray-900 mb-3">شهادات معتمدة</h3>
-                    <p class="text-gray-600 text-base leading-relaxed">احصل على شهادات معتمدة بعد إتمام كل دورة</p>
+                    <h3 class="text-xl md:text-2xl font-black text-gray-900 mb-3">{{ __('landing.feature2_title') }}</h3>
+                    <p class="text-gray-600 text-base leading-relaxed">{{ __('landing.feature2_desc') }}</p>
                             </div>
                             
                 <!-- Feature 3 -->
@@ -2633,8 +2638,8 @@
                     <div class="w-20 h-20 bg-gradient-to-br from-purple-600 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl group-hover:scale-110 transition-transform duration-300">
                         <i class="fas fa-users text-white text-3xl"></i>
                                 </div>
-                    <h3 class="text-xl md:text-2xl font-black text-gray-900 mb-3">مجتمع نشط</h3>
-                    <p class="text-gray-600 text-base leading-relaxed">انضم لمجتمع من المتعلمين والمبدعين</p>
+                    <h3 class="text-xl md:text-2xl font-black text-gray-900 mb-3">{{ __('landing.feature3_title') }}</h3>
+                    <p class="text-gray-600 text-base leading-relaxed">{{ __('landing.feature3_desc') }}</p>
                             </div>
                             
                 <!-- Feature 4 -->
@@ -2642,8 +2647,8 @@
                     <div class="w-20 h-20 bg-gradient-to-br from-orange-600 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl group-hover:scale-110 transition-transform duration-300">
                         <i class="fas fa-headset text-white text-3xl"></i>
                             </div>
-                    <h3 class="text-xl md:text-2xl font-black text-gray-900 mb-3">دعم فني مستمر</h3>
-                    <p class="text-gray-600 text-base leading-relaxed">فريق دعم متاح لمساعدتك في أي وقت</p>
+                    <h3 class="text-xl md:text-2xl font-black text-gray-900 mb-3">{{ __('landing.feature4_title') }}</h3>
+                    <p class="text-gray-600 text-base leading-relaxed">{{ __('landing.feature4_desc') }}</p>
                 </div>
             </div>
         </div>
@@ -2653,8 +2658,8 @@
     @php
         $portfolioCards = [
             [
-                'name' => 'رفع المشاريع',
-                'subtitle' => 'بعد إتمام الكورسات',
+                'name' => __('landing.portfolio_card1_name'),
+                'subtitle' => __('landing.portfolio_card1_subtitle'),
                 'icon' => 'folder-open',
                 'icon_color' => 'blue',
                 'border_color' => 'blue-200',
@@ -2664,17 +2669,17 @@
                 'icon_text' => 'blue-600',
                 'button_class' => 'btn-primary',
                 'features' => [
-                    'ارفع مشاريعك الحقيقية بعد كل كورس',
-                    'اعرض أعمالك البرمجية في معرض واحد',
-                    'وثّق تقدمك وبناء البورتفوليو',
-                    'شارك روابط مشاريعك بسهولة'
+                    __('landing.portfolio_card1_feature1'),
+                    __('landing.portfolio_card1_feature2'),
+                    __('landing.portfolio_card1_feature3'),
+                    __('landing.portfolio_card1_feature4'),
                 ],
-                'cta_text' => 'ابدأ التعلم الآن',
+                'cta_text' => __('landing.portfolio_card1_cta'),
                 'cta_route' => 'public.courses'
             ],
             [
-                'name' => 'معرض أعمال الطلاب',
-                'subtitle' => 'حيث ترى الشركات الموهبة',
+                'name' => __('landing.portfolio_card2_name'),
+                'subtitle' => __('landing.portfolio_card2_subtitle'),
                 'icon' => 'briefcase',
                 'icon_color' => 'green',
                 'border_color' => 'green-200',
@@ -2685,19 +2690,19 @@
                 'button_class' => 'btn-secondary',
                 'is_popular' => true,
                 'features' => [
-                    'الشركات تشاهد أعمال طلابنا مباشرة',
-                    'تصفّح مشاريع حقيقية حسب التخصص',
-                    'اكتشف مواهب جاهزة للتوظيف',
-                    'تواصل مع المطورين عبر المنصة',
-                    'معرض واحد يربط التعليم بسوق العمل',
-                    'شهادات وإنجازات موثّقة لكل طالب'
+                    __('landing.portfolio_card2_feature1'),
+                    __('landing.portfolio_card2_feature2'),
+                    __('landing.portfolio_card2_feature3'),
+                    __('landing.portfolio_card2_feature4'),
+                    __('landing.portfolio_card2_feature5'),
+                    __('landing.portfolio_card2_feature6'),
                 ],
-                'cta_text' => 'استعرض المعرض',
+                'cta_text' => __('landing.portfolio_card2_cta'),
                 'cta_route' => 'public.courses'
             ],
             [
-                'name' => 'فرص عمل حقيقية',
-                'subtitle' => 'من التعلم إلى الوظيفة',
+                'name' => __('landing.portfolio_card3_name'),
+                'subtitle' => __('landing.portfolio_card3_subtitle'),
                 'icon' => 'handshake',
                 'icon_color' => 'purple',
                 'border_color' => 'purple-200',
@@ -2707,14 +2712,14 @@
                 'icon_text' => 'purple-600',
                 'button_class' => 'bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800',
                 'features' => [
-                    'شركات تبحث عن مواهب خريجي Mindlytics',
-                    'طلابنا يحصلون على فرص من معرض الأعمال',
-                    'ربط مباشر بين الموهبة واحتياجات السوق',
-                    'من مشروع تخرّج إلى أول عقد عمل',
-                    'شبكة تواصل بين الطالب والشركة',
-                    'مسار واضح من الكورس إلى الوظيفة'
+                    __('landing.portfolio_card3_feature1'),
+                    __('landing.portfolio_card3_feature2'),
+                    __('landing.portfolio_card3_feature3'),
+                    __('landing.portfolio_card3_feature4'),
+                    __('landing.portfolio_card3_feature5'),
+                    __('landing.portfolio_card3_feature6'),
                 ],
-                'cta_text' => 'انضم كطالب أو شركة',
+                'cta_text' => __('landing.portfolio_card3_cta'),
                 'cta_route' => 'register'
             ]
         ];
@@ -2731,7 +2736,7 @@
                     <span class="gradient-text">Mindlytics</span> Portfolio
                 </h2>
                 <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                    من الكورس إلى المشروع ثم الوظيفة — معرض أعمال يربط طلابنا بالشركات ويفتح أبواب الفرص
+                    {{ __('landing.portfolio_section_subtitle') }}
                 </p>
             </div>
 
@@ -2771,7 +2776,7 @@
                             <div class="absolute top-2 left-1/2 transform -translate-x-1/2 z-30">
                                 <span class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1 whitespace-nowrap">
                                     <i class="fas fa-star text-[10px]"></i>
-                                    الأكثر تفاعلاً
+                                    {{ __('landing.most_popular_badge') }}
                                 </span>
                             </div>
                         @endif
@@ -2821,22 +2826,22 @@
         
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center fade-in-up relative z-10">
             <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-6 leading-tight">
-                جاهز لبدء رحلتك البرمجية؟
+                {{ __('landing.cta_ready_title') }}
             </h2>
             <p class="text-lg md:text-xl text-gray-600 mb-10 font-medium">
-                انضم إلى آلاف الطلاب الذين حققوا التميز في البرمجة مع Mindlytics
+                {{ __('landing.cta_ready_desc') }}
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden group">
                     <span class="relative z-10 flex items-center gap-2">
                     <i class="fas fa-user-plus"></i>
-                        <span>سجل مجاناً الآن</span>
+                        <span>{{ __('landing.cta_register_free') }}</span>
                     </span>
                     <span class="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                 </a>
                 <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-full font-bold text-lg border-2 border-blue-600 hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl relative">
                     <span class="flex items-center gap-2">
-                        <span>استعرض جميع الكورسات</span>
+                        <span>{{ __('landing.cta_browse_all') }}</span>
                         <i class="fas fa-arrow-left"></i>
                     </span>
                 </a>

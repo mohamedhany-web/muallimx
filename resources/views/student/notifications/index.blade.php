@@ -1,22 +1,22 @@
 @extends('layouts.app')
 
-@section('title', 'الإشعارات')
-@section('header', 'الإشعارات')
+@section('title', __('student.notifications_title'))
+@section('header', __('student.notifications_title'))
 
 @section('content')
 <div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
     <!-- الهيدر والإحصائيات -->
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="px-4 sm:px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">الإشعارات</h1>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">{{ __('student.notifications_title') }}</h1>
             <div class="flex items-center gap-2">
                 @if($stats['unread'] > 0)
                 <button onclick="markAllAsRead()" class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-                    <i class="fas fa-check ml-2"></i> تحديد الكل كمقروء
+                    <i class="fas fa-check ml-2"></i> {{ __('student.mark_all_read') }}
                 </button>
                 @endif
                 <button onclick="cleanup()" class="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-                    <i class="fas fa-broom ml-2"></i> تنظيف
+                    <i class="fas fa-broom ml-2"></i> {{ __('student.cleanup_btn') }}
                 </button>
             </div>
         </div>
@@ -24,19 +24,19 @@
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div class="py-3 px-4 bg-gray-50 rounded-xl border border-gray-100 text-center">
                     <p class="text-xl sm:text-2xl font-bold text-gray-900">{{ $stats['total'] }}</p>
-                    <p class="text-xs font-medium text-gray-500">إجمالي الإشعارات</p>
+                    <p class="text-xs font-medium text-gray-500">{{ __('student.total_notifications') }}</p>
                 </div>
                 <div class="py-3 px-4 bg-sky-50 rounded-xl border border-sky-100 text-center">
                     <p class="text-xl sm:text-2xl font-bold text-sky-600">{{ $stats['unread'] }}</p>
-                    <p class="text-xs font-medium text-gray-500">غير مقروءة</p>
+                    <p class="text-xs font-medium text-gray-500">{{ __('student.unread_label') }}</p>
                 </div>
                 <div class="py-3 px-4 bg-amber-50 rounded-xl border border-amber-100 text-center">
                     <p class="text-xl sm:text-2xl font-bold text-amber-600">{{ $stats['today'] }}</p>
-                    <p class="text-xs font-medium text-gray-500">اليوم</p>
+                    <p class="text-xs font-medium text-gray-500">{{ __('student.today_label') }}</p>
                 </div>
                 <div class="py-3 px-4 bg-red-50 rounded-xl border border-red-100 text-center">
                     <p class="text-xl sm:text-2xl font-bold text-red-600">{{ $stats['urgent'] }}</p>
-                    <p class="text-xs font-medium text-gray-500">عاجلة</p>
+                    <p class="text-xs font-medium text-gray-500">{{ __('student.urgent_label') }}</p>
                 </div>
             </div>
         </div>
@@ -46,9 +46,9 @@
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5">
         <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-                <label for="type" class="block text-sm font-medium text-gray-700 mb-1">نوع الإشعار</label>
+                <label for="type" class="block text-sm font-medium text-gray-700 mb-1">{{ __('student.notification_type_label') }}</label>
                 <select name="type" id="type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
-                    <option value="">جميع الأنواع</option>
+                    <option value="">{{ __('student.all_types') }}</option>
                     @foreach($notificationTypes as $key => $type)
                         <option value="{{ $key }}" {{ request('type') == $key ? 'selected' : '' }}>{{ $type }}</option>
                     @endforeach
@@ -56,18 +56,18 @@
             </div>
 
             <div>
-                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">{{ __('common.status') }}</label>
                 <select name="status" id="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
-                    <option value="">جميع الحالات</option>
-                    <option value="unread" {{ request('status') == 'unread' ? 'selected' : '' }}>غير مقروءة</option>
-                    <option value="read" {{ request('status') == 'read' ? 'selected' : '' }}>مقروءة</option>
+                    <option value="">{{ __('student.all_statuses') }}</option>
+                    <option value="unread" {{ request('status') == 'unread' ? 'selected' : '' }}>{{ __('student.unread_label') }}</option>
+                    <option value="read" {{ request('status') == 'read' ? 'selected' : '' }}>{{ __('student.read_filter') }}</option>
                 </select>
             </div>
 
             <div>
-                <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">الأولوية</label>
+                <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">{{ __('student.priority_label') }}</label>
                 <select name="priority" id="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm">
-                    <option value="">جميع الأولويات</option>
+                    <option value="">{{ __('student.all_priorities') }}</option>
                     @foreach($priorities as $key => $priority)
                         <option value="{{ $key }}" {{ request('priority') == $key ? 'selected' : '' }}>{{ $priority }}</option>
                     @endforeach
@@ -77,7 +77,7 @@
             <div class="flex items-end">
                 <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors">
                     <i class="fas fa-filter ml-2"></i>
-                    فلترة
+                    {{ __('student.filter_btn') }}
                 </button>
             </div>
         </form>

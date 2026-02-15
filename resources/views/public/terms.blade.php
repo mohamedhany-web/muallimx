@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'الشروط والأحكام - Mindlytics')
+@section('title', __('public.terms_page_title') . ' - ' . __('public.site_suffix'))
 
 @push('styles')
 <style>

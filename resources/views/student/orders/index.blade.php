@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'طلباتي')
-@section('header', 'طلباتي')
+@section('title', __('student.orders_page_title'))
+@section('header', __('student.orders_page_title'))
 
 @section('content')
 <div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -9,12 +9,12 @@
     <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">طلباتي</h1>
-                <p class="text-sm text-gray-500">تتبع حالة طلباتك وعمليات الشراء</p>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ __('student.orders_page_title') }}</h1>
+                <p class="text-sm text-gray-500">{{ __('student.orders_subtitle') }}</p>
             </div>
             <a href="{{ route('academic-years') }}" class="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors">
                 <i class="fas fa-search"></i>
-                تصفح الكورسات
+                {{ __('student.browse_courses_btn') }}
             </a>
         </div>
     </div>
@@ -29,9 +29,9 @@
                             <div class="flex flex-wrap items-center gap-2 mb-3">
                                 <h3 class="text-base sm:text-lg font-bold text-gray-900">
                                     @if($order->academic_year_id && $order->learningPath)
-                                        {{ $order->learningPath->name ?? 'مسار تعليمي' }}
+                                        {{ $order->learningPath->name ?? __('student.learning_path_label') }}
                                     @else
-                                        {{ $order->course->title ?? 'كورس غير محدد' }}
+                                        {{ $order->course->title ?? __('student.course_undefined') }}
                                     @endif
                                 </h3>
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold {{ $order->status == 'pending' ? 'bg-amber-100 text-amber-800' : ($order->status == 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800') }}">
@@ -45,9 +45,9 @@
 
                             <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-3">
                                 @if($order->academic_year_id && $order->learningPath)
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-xs font-medium">مسار تعليمي</span>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-xs font-medium">{{ __('student.learning_path_label') }}</span>
                                     @if($order->learningPath->price)
-                                        <span>{{ number_format($order->learningPath->price, 2) }} ج.م</span>
+                                        <span>{{ number_format($order->learningPath->price, 2) }} {{ __('public.currency_egp') }}</span>
                                     @endif
                                 @elseif($order->course && ($order->course->academicYear || $order->course->academicSubject))
                                     @if($order->course->academicYear)
@@ -62,25 +62,25 @@
 
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3">
                                 <div class="py-2 px-3 bg-gray-50 rounded-lg border border-gray-100">
-                                    <p class="text-xs font-medium text-gray-500">المبلغ</p>
-                                    <p class="text-sm font-bold text-gray-900">{{ number_format($order->amount, 2) }} ج.م</p>
+                                    <p class="text-xs font-medium text-gray-500">{{ __('student.amount_label') }}</p>
+                                    <p class="text-sm font-bold text-gray-900">{{ number_format($order->amount, 2) }} {{ __('public.currency_egp') }}</p>
                                 </div>
                                 <div class="py-2 px-3 bg-gray-50 rounded-lg border border-gray-100">
-                                    <p class="text-xs font-medium text-gray-500">طريقة الدفع</p>
+                                    <p class="text-xs font-medium text-gray-500">{{ __('student.payment_method_label') }}</p>
                                     <p class="text-xs font-semibold text-gray-900">
-                                        @if($order->payment_method == 'bank_transfer') تحويل بنكي
-                                        @elseif($order->payment_method == 'cash') نقدي
-                                        @else أخرى
+                                        @if($order->payment_method == 'bank_transfer') {{ __('student.bank_transfer') }}
+                                        @elseif($order->payment_method == 'cash') {{ __('student.cash_label') }}
+                                        @else {{ __('student.other_label') }}
                                         @endif
                                     </p>
                                 </div>
                                 <div class="py-2 px-3 bg-gray-50 rounded-lg border border-gray-100">
-                                    <p class="text-xs font-medium text-gray-500">تاريخ الطلب</p>
+                                    <p class="text-xs font-medium text-gray-500">{{ __('student.order_date_label') }}</p>
                                     <p class="text-sm font-semibold text-gray-900">{{ $order->created_at->format('d/m/Y') }}</p>
                                 </div>
                                 @if($order->approved_at)
                                 <div class="py-2 px-3 bg-emerald-50 rounded-lg border border-emerald-100">
-                                    <p class="text-xs font-medium text-gray-500">تاريخ الموافقة</p>
+                                    <p class="text-xs font-medium text-gray-500">{{ __('student.approved_date_label') }}</p>
                                     <p class="text-sm font-semibold text-gray-900">{{ $order->approved_at->format('d/m/Y') }}</p>
                                 </div>
                                 @endif
@@ -88,7 +88,7 @@
 
                             @if($order->notes)
                                 <div class="p-3 bg-sky-50 rounded-lg border border-sky-100 mb-3">
-                                    <p class="text-xs font-medium text-gray-500 mb-1">ملاحظاتك</p>
+                                    <p class="text-xs font-medium text-gray-500 mb-1">{{ __('student.your_notes') }}</p>
                                     <p class="text-sm text-gray-700">{{ $order->notes }}</p>
                                 </div>
                             @endif
@@ -97,12 +97,12 @@
                         <div class="flex flex-row sm:flex-col gap-2 flex-shrink-0 w-full sm:w-auto">
                             <a href="{{ route('orders.show', $order) }}" class="inline-flex items-center justify-center gap-2 flex-1 sm:flex-none bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors">
                                 <i class="fas fa-eye"></i>
-                                عرض التفاصيل
+                                {{ __('student.view_details') }}
                             </a>
                             @if($order->status == 'approved' && $order->course)
                                 <a href="{{ route('courses.show', $order->course) }}" class="inline-flex items-center justify-center gap-2 flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors">
                                     <i class="fas fa-play"></i>
-                                    ادخل للكورس
+                                    {{ __('student.enter_course') }}
                                 </a>
                             @endif
                         </div>
@@ -122,11 +122,11 @@
             <div class="w-16 h-16 bg-sky-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-sky-600">
                 <i class="fas fa-shopping-cart text-2xl"></i>
             </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">لا توجد طلبات</h3>
-            <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">لم تقم بتقديم أي طلبات بعد. يمكنك تصفح الكورسات المتاحة وطلب تفعيلها.</p>
+            <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('student.no_orders') }}</h3>
+            <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">{{ __('student.no_orders_desc') }}</p>
             <a href="{{ route('academic-years') }}" class="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors">
                 <i class="fas fa-plus"></i>
-                تصفح الكورسات
+                {{ __('student.browse_courses_btn') }}
             </a>
         </div>
     @endif

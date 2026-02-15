@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', ($profile->user->name ?? 'مدرب') . ' - Mindlytics')
+@section('title', ($profile->user->name ?? __('public.instructor_fallback')) . ' - Mindlytics')
 @section('content')
 <div class="max-w-4xl mx-auto px-4 sm:px-6 py-12">
     <div class="rounded-3xl bg-white border border-slate-200 shadow-lg overflow-hidden">
@@ -17,7 +17,7 @@
             </div>
             <div class="flex-1">
                 <h1 class="text-2xl font-bold text-slate-900">{{ $profile->user->name }}</h1>
-                <p class="text-sky-600 font-medium mt-1">{{ $profile->headline ?? 'مدرب' }}</p>
+                <p class="text-sky-600 font-medium mt-1">{{ $profile->headline ?? __('public.instructor_fallback') }}</p>
                 @if($profile->bio)
                     <div class="mt-4 text-slate-700 whitespace-pre-line">{{ $profile->bio }}</div>
                 @endif
@@ -31,7 +31,7 @@
         </div>
         @if($profile->experience)
         <div class="px-6 sm:px-8 pb-6">
-            <h2 class="text-lg font-bold text-slate-900 mb-3">الخبرات</h2>
+            <h2 class="text-lg font-bold text-slate-900 mb-3">{{ __('public.experience') }}</h2>
             @if(count($profile->experience_list) > 0)
             <ul class="space-y-3 ps-4 pe-4 max-w-full">
                 @foreach($profile->experience_list as $item)
@@ -48,7 +48,7 @@
         @endif
         @if($profile->skills_list)
         <div class="px-6 sm:px-8 pb-6">
-            <h2 class="text-lg font-bold text-slate-900 mb-3">المهارات</h2>
+            <h2 class="text-lg font-bold text-slate-900 mb-3">{{ __('public.skills') }}</h2>
             <div class="flex flex-wrap gap-2">
                 @foreach($profile->skills_list as $skill)
                 <span class="inline-flex items-center rounded-xl bg-slate-100 text-slate-700 px-3 py-1.5 text-sm font-medium border border-slate-200">{{ $skill }}</span>
@@ -58,7 +58,7 @@
         @endif
         @if($courses->count() > 0)
         <div class="px-6 sm:px-8 pb-8 border-t border-slate-100 pt-6">
-            <h2 class="text-lg font-bold text-slate-900 mb-4">كورسات المدرب</h2>
+            <h2 class="text-lg font-bold text-slate-900 mb-4">{{ __('public.instructor_courses') }}</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 @foreach($courses as $c)
                 <a href="{{ route('public.course.show', $c->id) }}" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 transition-colors">
@@ -69,7 +69,7 @@
                     @endif
                     <div class="flex-1 min-w-0">
                         <p class="font-semibold text-slate-900 truncate">{{ $c->title }}</p>
-                        <p class="text-xs text-slate-500">{{ $c->price > 0 ? number_format($c->price) . ' ج.م' : 'مجاني' }}</p>
+                        <p class="text-xs text-slate-500">{{ $c->price > 0 ? number_format($c->price) . ' ج.م' : __('public.free_price') }}</p>
                     </div>
                 </a>
                 @endforeach

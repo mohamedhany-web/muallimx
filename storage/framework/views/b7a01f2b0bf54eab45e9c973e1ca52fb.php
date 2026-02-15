@@ -2,6 +2,7 @@
 <nav id="navbar" 
      x-data="{ 
          mobileMenu: false,
+         langDropdown: false,
          toggleMenu() {
              this.mobileMenu = !this.mobileMenu;
              if (this.mobileMenu && window.innerWidth < 1024) {
@@ -22,7 +23,8 @@
              document.body.classList.remove('overflow-hidden');
          }
      }"
-     class="navbar-gradient text-white relative overflow-hidden nav-modern"
+     @click.outside="langDropdown = false"
+     class="navbar-gradient text-white relative overflow-visible nav-modern"
      style="margin: 0; padding: 0; top: 0;">
     <!-- خلفية زخرفية خفيفة بألوان الأكاديمية -->
     <div class="absolute inset-0 opacity-[0.05] pointer-events-none" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(255,255,255,0.08) 12px, rgba(255,255,255,0.08) 24px);"></div>
@@ -32,8 +34,8 @@
     </div>
     <div class="absolute inset-0 opacity-80 pointer-events-none" style="background: linear-gradient(135deg, rgba(30, 64, 175, 0.95) 0%, rgba(30, 58, 138, 0.98) 50%, rgba(5, 150, 105, 0.08) 100%);"></div>
     
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="flex justify-between items-center h-16 lg:h-20 gap-4 lg:gap-6">
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 overflow-visible">
+        <div class="flex justify-between items-center h-16 lg:h-20 gap-4 lg:gap-6 overflow-visible min-w-0">
             <!-- الشعار والعلامة -->
             <div class="flex items-center gap-3 gap-reverse flex-shrink-0">
                 <a href="<?php echo e(route('home')); ?>" class="flex items-center gap-3 gap-reverse group nav-brand">
@@ -44,50 +46,77 @@
                     </div>
                     <div class="flex flex-col">
                         <span class="text-base lg:text-lg font-extrabold text-white group-hover:text-white/95 transition-colors leading-tight" style="font-family: 'Tajawal', 'Cairo', sans-serif;">Mindlytics</span>
-                        <span class="text-[11px] lg:text-xs text-white/80 font-medium leading-tight" style="font-family: 'Tajawal', 'Cairo', sans-serif;">أكاديمية البرمجة</span>
+                        <span class="text-[11px] lg:text-xs text-white/80 font-medium leading-tight" style="font-family: 'Tajawal', 'Cairo', sans-serif;"><?php echo e(__('landing.nav.brand')); ?></span>
                     </div>
                 </a>
             </div>
 
             <!-- روابط سطح المكتب -->
-            <div class="hidden lg:flex items-center gap-1 flex-1 justify-center max-w-3xl mx-auto" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
-                <a href="<?php echo e(route('public.learning-paths.index')); ?>" class="nav-link-modern px-4 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10">
-                    <i class="fas fa-route text-sm ml-2 opacity-90"></i>
-                    المسارات التعليمية
+            <div class="hidden lg:flex items-center gap-2 flex-1 justify-center max-w-5xl mx-auto min-w-0 shrink" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
+                <a href="<?php echo e(route('public.learning-paths.index')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-3 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
+                    <i class="fas fa-route text-sm <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?> opacity-90 flex-shrink-0"></i>
+                    <span><?php echo e(__('landing.nav.learning_paths')); ?></span>
                 </a>
-                <a href="<?php echo e(route('public.courses')); ?>" class="nav-link-modern px-4 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10">
-                    <i class="fas fa-book text-sm ml-2 opacity-90"></i>
-                    الكورسات
+                <a href="<?php echo e(route('public.courses')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-3 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
+                    <i class="fas fa-book text-sm <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?> opacity-90 flex-shrink-0"></i>
+                    <span><?php echo e(__('landing.nav.courses')); ?></span>
                 </a>
-                <a href="<?php echo e(route('public.about')); ?>" class="nav-link-modern px-4 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10">
-                    <i class="fas fa-info-circle text-sm ml-2 opacity-90"></i>
-                    من نحن
+                <a href="<?php echo e(route('public.about')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-3 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
+                    <i class="fas fa-info-circle text-sm <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?> opacity-90 flex-shrink-0"></i>
+                    <span><?php echo e(__('landing.nav.about')); ?></span>
                 </a>
-                <a href="<?php echo e(route('public.portfolio.index')); ?>" class="nav-link-modern px-4 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10">
-                    <i class="fas fa-briefcase text-sm ml-2 opacity-90"></i>
-                    البورتفوليو
+                <a href="<?php echo e(route('public.portfolio.index')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-3 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
+                    <i class="fas fa-briefcase text-sm <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?> opacity-90 flex-shrink-0"></i>
+                    <span><?php echo e(__('landing.nav.portfolio')); ?></span>
                 </a>
-                <a href="<?php echo e(route('public.instructors.index')); ?>" class="nav-link-modern px-4 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10">
-                    <i class="fas fa-user-tie text-sm ml-2 opacity-90"></i>
-                    المدربون
+                <a href="<?php echo e(route('public.instructors.index')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-3 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
+                    <i class="fas fa-user-tie text-sm <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?> opacity-90 flex-shrink-0"></i>
+                    <span><?php echo e(__('landing.nav.instructors')); ?></span>
                 </a>
             </div>
 
-            <!-- أزرار الدخول والتسجيل -->
-            <div class="hidden lg:flex items-center gap-2 flex-shrink-0" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
+            <!-- مبدّل اللغة (دروب داون - ديسكتوب فقط) + أزرار الدخول والتسجيل -->
+            <div class="hidden lg:flex items-center gap-3 flex-shrink-0" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
+                <div class="relative">
+                    <button type="button"
+                            @click="langDropdown = !langDropdown"
+                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-white/95 hover:text-white hover:bg-white/10 text-sm font-medium transition-all duration-200 border border-white/20 min-w-[4.5rem] justify-center"
+                            :class="{ 'bg-white/15': langDropdown }"
+                            aria-haspopup="true"
+                            :aria-expanded="langDropdown">
+                        <i class="fas fa-globe text-white/90"></i>
+                        <span><?php echo e(app()->getLocale() === 'ar' ? __('landing.language_switcher.ar') : __('landing.language_switcher.en')); ?></span>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200" :class="{ 'rotate-180': langDropdown }"></i>
+                    </button>
+                    <div x-show="langDropdown"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute top-full mt-1 <?php echo e(app()->getLocale() === 'ar' ? 'right-0' : 'left-0'); ?> z-[100] min-w-[7rem] py-1 rounded-xl bg-white/95 backdrop-blur-md border border-white/30 shadow-xl"
+                         style="display: none;">
+                        <a href="<?php echo e(request()->fullUrlWithQuery(['lang' => 'ar'])); ?>" class="block px-4 py-2.5 text-sm font-medium <?php echo e(app()->getLocale() === 'ar' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100'); ?> rounded-lg mx-1"><?php echo e(__('landing.language_switcher.ar')); ?></a>
+                        <a href="<?php echo e(request()->fullUrlWithQuery(['lang' => 'en'])); ?>" class="block px-4 py-2.5 text-sm font-medium <?php echo e(app()->getLocale() === 'en' ? 'bg-blue-600 text-white' : 'text-slate-700 hover:bg-slate-100'); ?> rounded-lg mx-1"><?php echo e(__('landing.language_switcher.en')); ?></a>
+                    </div>
+                </div>
                 <?php if(auth()->guard()->check()): ?>
                     <a href="<?php echo e(url('/dashboard')); ?>" class="nav-cta-btn bg-white text-blue-800 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-50 hover:shadow-lg transition-all duration-200 shadow-md border border-white/30">
-                        <i class="fas fa-tachometer-alt text-xs ml-2"></i>
-                        لوحة التحكم
+                        <i class="fas fa-tachometer-alt text-xs <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?>"></i>
+                        <?php echo e(__('landing.nav.dashboard')); ?>
+
                     </a>
                 <?php endif; ?>
                 <?php if(auth()->guard()->guest()): ?>
                     <a href="<?php echo e(route('login')); ?>" class="px-4 py-2.5 rounded-xl text-white/95 hover:text-white font-bold text-sm border border-white/30 hover:bg-white/10 transition-all duration-200">
-                        تسجيل دخول
+                        <?php echo e(__('landing.nav.login')); ?>
+
                     </a>
                     <a href="<?php echo e(route('register')); ?>" class="nav-cta-btn bg-white text-blue-800 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-50 hover:shadow-lg transition-all duration-200 shadow-md border border-white/30">
-                        <i class="fas fa-user-plus text-xs ml-2"></i>
-                        انشاء حساب
+                        <i class="fas fa-user-plus text-xs <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?>"></i>
+                        <?php echo e(__('landing.nav.register')); ?>
+
                     </a>
                 <?php endif; ?>
             </div>
@@ -96,7 +125,7 @@
             <button type="button"
                     id="mobile-menu-toggle"
                     class="lg:hidden text-white p-3 rounded-xl flex-shrink-0 z-50 border border-white/25 hover:bg-white/10 transition-all duration-200"
-                    aria-label="قائمة الهاتف"
+                    aria-label="<?php echo e(__('landing.nav.mobile_menu')); ?>"
                     aria-expanded="false">
                 <span id="menu-bars-icon" class="relative z-10"><i class="fas fa-bars text-lg"></i></span>
                 <span id="menu-times-icon" style="display: none;" class="relative z-10"><i class="fas fa-times text-lg"></i></span>
@@ -128,10 +157,10 @@
                 </div>
                 <div class="min-w-0">
                     <h2 class="text-lg font-extrabold text-white truncate">Mindlytics</h2>
-                    <p class="text-sm text-white/80 font-medium truncate">أكاديمية البرمجة</p>
+                    <p class="text-sm text-white/80 font-medium truncate"><?php echo e(__('landing.nav.brand')); ?></p>
                 </div>
             </div>
-            <button type="button" id="mobile-menu-close" class="mobile-sidebar-close flex-shrink-0 w-12 h-12 min-h-[48px] min-w-[48px] flex items-center justify-center text-white/90 hover:text-white hover:bg-white/15 active:bg-white/20 rounded-xl transition-colors touch-manipulation" aria-label="إغلاق القائمة">
+            <button type="button" id="mobile-menu-close" class="mobile-sidebar-close flex-shrink-0 w-12 h-12 min-h-[48px] min-w-[48px] flex items-center justify-center text-white/90 hover:text-white hover:bg-white/15 active:bg-white/20 rounded-xl transition-colors touch-manipulation" aria-label="<?php echo e(__('landing.nav.close_menu')); ?>">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
@@ -141,29 +170,35 @@
             <div class="space-y-2">
                 <a href="<?php echo e(route('public.learning-paths.index')); ?>" class="mobile-sidebar-link flex items-center gap-4 text-white hover:bg-white/12 active:bg-white/18 rounded-2xl px-4 min-h-[52px] touch-manipulation transition-colors">
                     <span class="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0"><i class="fas fa-route text-white text-lg"></i></span>
-                    <span class="flex-1 font-bold text-[17px]">المسارات التعليمية</span>
-                    <i class="fas fa-chevron-left text-white/40 text-sm flex-shrink-0"></i>
+                    <span class="flex-1 font-bold text-[17px]"><?php echo e(__('landing.nav.learning_paths')); ?></span>
+                    <i class="fas fa-chevron-<?php echo e(app()->getLocale() === 'ar' ? 'left' : 'right'); ?> text-white/40 text-sm flex-shrink-0"></i>
                 </a>
                 <a href="<?php echo e(route('public.courses')); ?>" class="mobile-sidebar-link flex items-center gap-4 text-white hover:bg-white/12 active:bg-white/18 rounded-2xl px-4 min-h-[52px] touch-manipulation transition-colors">
                     <span class="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0"><i class="fas fa-book text-white text-lg"></i></span>
-                    <span class="flex-1 font-bold text-[17px]">الكورسات</span>
-                    <i class="fas fa-chevron-left text-white/40 text-sm flex-shrink-0"></i>
+                    <span class="flex-1 font-bold text-[17px]"><?php echo e(__('landing.nav.courses')); ?></span>
+                    <i class="fas fa-chevron-<?php echo e(app()->getLocale() === 'ar' ? 'left' : 'right'); ?> text-white/40 text-sm flex-shrink-0"></i>
                 </a>
                 <a href="<?php echo e(route('public.about')); ?>" class="mobile-sidebar-link flex items-center gap-4 text-white hover:bg-white/12 active:bg-white/18 rounded-2xl px-4 min-h-[52px] touch-manipulation transition-colors">
                     <span class="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0"><i class="fas fa-info-circle text-white text-lg"></i></span>
-                    <span class="flex-1 font-bold text-[17px]">من نحن</span>
-                    <i class="fas fa-chevron-left text-white/40 text-sm flex-shrink-0"></i>
+                    <span class="flex-1 font-bold text-[17px]"><?php echo e(__('landing.nav.about')); ?></span>
+                    <i class="fas fa-chevron-<?php echo e(app()->getLocale() === 'ar' ? 'left' : 'right'); ?> text-white/40 text-sm flex-shrink-0"></i>
                 </a>
                 <a href="<?php echo e(route('public.portfolio.index')); ?>" class="mobile-sidebar-link flex items-center gap-4 text-white hover:bg-white/12 active:bg-white/18 rounded-2xl px-4 min-h-[52px] touch-manipulation transition-colors">
                     <span class="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0"><i class="fas fa-briefcase text-white text-lg"></i></span>
-                    <span class="flex-1 font-bold text-[17px]">البورتفوليو</span>
-                    <i class="fas fa-chevron-left text-white/40 text-sm flex-shrink-0"></i>
+                    <span class="flex-1 font-bold text-[17px]"><?php echo e(__('landing.nav.portfolio')); ?></span>
+                    <i class="fas fa-chevron-<?php echo e(app()->getLocale() === 'ar' ? 'left' : 'right'); ?> text-white/40 text-sm flex-shrink-0"></i>
                 </a>
                 <a href="<?php echo e(route('public.instructors.index')); ?>" class="mobile-sidebar-link flex items-center gap-4 text-white hover:bg-white/12 active:bg-white/18 rounded-2xl px-4 min-h-[52px] touch-manipulation transition-colors">
                     <span class="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0"><i class="fas fa-user-tie text-white text-lg"></i></span>
-                    <span class="flex-1 font-bold text-[17px]">المدربون</span>
-                    <i class="fas fa-chevron-left text-white/40 text-sm flex-shrink-0"></i>
+                    <span class="flex-1 font-bold text-[17px]"><?php echo e(__('landing.nav.instructors')); ?></span>
+                    <i class="fas fa-chevron-<?php echo e(app()->getLocale() === 'ar' ? 'left' : 'right'); ?> text-white/40 text-sm flex-shrink-0"></i>
                 </a>
+            </div>
+            
+            <!-- مبدّل اللغة (موبايل) -->
+            <div class="flex items-center gap-2 py-3 px-4 lg:hidden">
+                <a href="<?php echo e(request()->fullUrlWithQuery(['lang' => 'ar'])); ?>" class="px-3 py-2 rounded-xl text-sm font-bold <?php echo e(app()->getLocale() === 'ar' ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10'); ?>"><?php echo e(__('landing.language_switcher.ar')); ?></a>
+                <a href="<?php echo e(request()->fullUrlWithQuery(['lang' => 'en'])); ?>" class="px-3 py-2 rounded-xl text-sm font-bold <?php echo e(app()->getLocale() === 'en' ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10'); ?>"><?php echo e(__('landing.language_switcher.en')); ?></a>
             </div>
             
             <div class="my-4 h-px bg-white/15"></div>
@@ -173,18 +208,18 @@
                 <?php if(auth()->guard()->check()): ?>
                     <a href="<?php echo e(url('/dashboard')); ?>" class="flex items-center justify-center gap-2 bg-white text-blue-900 px-5 py-4 rounded-2xl font-bold text-[17px] shadow-lg hover:bg-blue-50 active:bg-blue-100 min-h-[52px] touch-manipulation transition-colors">
                         <i class="fas fa-tachometer-alt"></i>
-                        <span>لوحة التحكم</span>
+                        <span><?php echo e(__('landing.nav.dashboard')); ?></span>
                     </a>
                 <?php endif; ?>
                 <?php if(auth()->guard()->guest()): ?>
                     <a href="<?php echo e(route('login')); ?>" class="mobile-sidebar-link flex items-center gap-4 text-white hover:bg-white/12 active:bg-white/18 rounded-2xl px-4 min-h-[52px] touch-manipulation transition-colors">
                         <span class="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0"><i class="fas fa-sign-in-alt text-white text-lg"></i></span>
-                        <span class="flex-1 font-bold text-[17px]">تسجيل دخول</span>
-                        <i class="fas fa-chevron-left text-white/40 text-sm flex-shrink-0"></i>
+                        <span class="flex-1 font-bold text-[17px]"><?php echo e(__('landing.nav.login')); ?></span>
+                        <i class="fas fa-chevron-<?php echo e(app()->getLocale() === 'ar' ? 'left' : 'right'); ?> text-white/40 text-sm flex-shrink-0"></i>
                     </a>
                     <a href="<?php echo e(route('register')); ?>" class="flex items-center justify-center gap-2 bg-white text-blue-900 px-5 py-4 rounded-2xl font-bold text-[17px] shadow-lg hover:bg-blue-50 active:bg-blue-100 min-h-[52px] touch-manipulation transition-colors">
                         <i class="fas fa-user-plus"></i>
-                        <span>انشاء حساب</span>
+                        <span><?php echo e(__('landing.nav.register')); ?></span>
                     </a>
                 <?php endif; ?>
             </div>

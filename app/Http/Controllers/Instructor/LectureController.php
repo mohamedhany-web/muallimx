@@ -103,7 +103,7 @@ class LectureController extends Controller
             'teams_registration_link' => 'nullable|url',
             'teams_meeting_link' => 'nullable|url',
             'recording_url' => 'nullable|url',
-            'video_platform' => 'nullable|in:youtube,vimeo,google_drive,direct',
+            'video_platform' => 'nullable|in:youtube,vimeo,google_drive,direct,bunny',
             'notes' => 'nullable|string',
             'has_attendance_tracking' => 'boolean',
             'has_assignment' => 'boolean',
@@ -146,6 +146,8 @@ class LectureController extends Controller
                 $validated['video_platform'] = 'vimeo';
             } elseif (strpos($recordingUrl, 'drive.google.com') !== false) {
                 $validated['video_platform'] = 'google_drive';
+            } elseif (strpos($recordingUrl, 'mediadelivery.net') !== false) {
+                $validated['video_platform'] = 'bunny';
             } elseif (preg_match('/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i', $recordingUrl)) {
                 $validated['video_platform'] = 'direct';
             }
@@ -294,7 +296,7 @@ class LectureController extends Controller
             'teams_registration_link' => 'nullable|url',
             'teams_meeting_link' => 'nullable|url',
             'recording_url' => 'nullable|url',
-            'video_platform' => 'nullable|in:youtube,vimeo,google_drive,direct',
+            'video_platform' => 'nullable|in:youtube,vimeo,google_drive,direct,bunny',
             'notes' => 'nullable|string',
             'status' => 'required|in:scheduled,in_progress,completed,cancelled',
             'has_attendance_tracking' => 'boolean',
@@ -310,6 +312,22 @@ class LectureController extends Controller
         $validated['has_attendance_tracking'] = $request->has('has_attendance_tracking');
         $validated['has_assignment'] = $request->has('has_assignment');
         $validated['has_evaluation'] = $request->has('has_evaluation');
+        
+        // إذا تم تغيير recording_url دون video_platform، اكتشاف المنصة تلقائياً
+        if (!empty($validated['recording_url']) && empty($validated['video_platform'])) {
+            $recordingUrl = $validated['recording_url'];
+            if (strpos($recordingUrl, 'youtube.com') !== false || strpos($recordingUrl, 'youtu.be') !== false) {
+                $validated['video_platform'] = 'youtube';
+            } elseif (strpos($recordingUrl, 'vimeo.com') !== false) {
+                $validated['video_platform'] = 'vimeo';
+            } elseif (strpos($recordingUrl, 'drive.google.com') !== false) {
+                $validated['video_platform'] = 'google_drive';
+            } elseif (strpos($recordingUrl, 'mediadelivery.net') !== false) {
+                $validated['video_platform'] = 'bunny';
+            } elseif (preg_match('/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i', $recordingUrl)) {
+                $validated['video_platform'] = 'direct';
+            }
+        }
         
         $lecture->update($validated);
         

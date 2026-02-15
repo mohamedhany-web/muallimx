@@ -1,21 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'كورساتي الأوفلاين - Mindlytics')
-@section('header', 'كورساتي الأوفلاين')
+@section('title', __('instructor.my_offline_courses') . ' - Mindlytics')
+@section('header', __('instructor.my_offline_courses'))
 
 @section('content')
 <div class="space-y-6">
-    <!-- الهيدر -->
     <div class="rounded-2xl p-5 sm:p-6 bg-white border border-slate-200 shadow-sm">
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-1">كورساتي الأوفلاين</h1>
-        <p class="text-sm text-slate-500">الكورسات الحضورية المعينة لك</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-1">{{ __('instructor.my_offline_courses') }}</h1>
+        <p class="text-sm text-slate-500">{{ __('instructor.offline_courses_subtitle') }}</p>
     </div>
 
-    <!-- الإحصائيات -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div class="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">إجمالي الكورسات</p>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{{ __('instructor.total_courses') }}</p>
                 <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ $stats['total'] ?? 0 }}</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
@@ -24,7 +22,7 @@
         </div>
         <div class="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">نشطة</p>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{{ __('instructor.active') }}</p>
                 <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ $stats['active'] ?? 0 }}</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -33,7 +31,7 @@
         </div>
         <div class="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">مسودة</p>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{{ __('instructor.draft') }}</p>
                 <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ $stats['draft'] ?? 0 }}</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center">
@@ -42,7 +40,7 @@
         </div>
         <div class="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">منتهية</p>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{{ __('instructor.completed_filter') }}</p>
                 <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ $stats['completed'] ?? 0 }}</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center">
@@ -51,7 +49,7 @@
         </div>
         <div class="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">إجمالي الطلاب</p>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{{ __('instructor.total_students') }}</p>
                 <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ $stats['total_students'] ?? 0 }}</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center">
@@ -64,24 +62,24 @@
     <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm">
         <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-                <label for="search" class="block text-sm font-semibold text-slate-700 mb-2">البحث</label>
+                <label for="search" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('common.search') }}</label>
                 <input type="text" name="search" id="search" value="{{ request('search') }}"
-                       placeholder="البحث في عناوين الكورسات..."
+                       placeholder="{{ __('instructor.search_in_course_titles') }}"
                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-colors">
             </div>
             <div>
-                <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">الحالة</label>
+                <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('instructor.status_label') }}</label>
                 <select name="status" id="status" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition-colors">
-                    <option value="">جميع الحالات</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                    <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>مسودة</option>
-                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>منتهي</option>
+                    <option value="">{{ __('instructor.all_statuses') }}</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>{{ __('instructor.active') }}</option>
+                    <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>{{ __('instructor.draft') }}</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>{{ __('instructor.completed_filter') }}</option>
                 </select>
             </div>
             <div class="flex items-end gap-2">
                 <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors">
                     <i class="fas fa-search"></i>
-                    <span>بحث</span>
+                    <span>{{ __('common.search') }}</span>
                 </button>
                 @if(request()->anyFilled(['search', 'status']))
                     <a href="{{ route('instructor.offline-courses.index') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors inline-flex items-center justify-center">
@@ -107,9 +105,9 @@
                                 default => 'bg-slate-100 text-slate-700',
                             };
                             $statusLabel = match($course->status ?? '') {
-                                'active' => 'نشط',
-                                'completed' => 'منتهي',
-                                default => 'مسودة',
+                                'active' => __('instructor.active'),
+                                'completed' => __('instructor.completed_filter'),
+                                default => __('instructor.draft'),
                             };
                         @endphp
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold shrink-0 {{ $statusClass }}">
@@ -130,7 +128,7 @@
                                 <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
                                     <i class="fas fa-map-marker-alt text-amber-600 text-xs"></i>
                                 </div>
-                                <span class="text-slate-500">المكان:</span>
+                                <span class="text-slate-500">{{ __('instructor.location') }}:</span>
                                 <span class="text-slate-800 font-medium">{{ $course->locationModel->name ?? $course->location }}</span>
                             </div>
                         @elseif($course->location)
@@ -146,10 +144,10 @@
                                 <div class="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center flex-shrink-0">
                                     <i class="fas fa-calendar-alt text-sky-600 text-xs"></i>
                                 </div>
-                                <span class="text-slate-500">من</span>
+                                <span class="text-slate-500">{{ __('instructor.from_date') }}</span>
                                 <span class="text-slate-800 font-medium">{{ $course->start_date->format('Y-m-d') }}</span>
                                 @if($course->end_date)
-                                    <span class="text-slate-500">إلى</span>
+                                    <span class="text-slate-500">{{ __('instructor.to_date') }}</span>
                                     <span class="text-slate-800 font-medium">{{ $course->end_date->format('Y-m-d') }}</span>
                                 @endif
                             </div>
@@ -169,11 +167,11 @@
                     <div class="grid grid-cols-2 gap-4 text-center">
                         <div>
                             <div class="text-lg font-bold text-slate-800">{{ $course->groups_count ?? 0 }}</div>
-                            <div class="text-xs text-slate-500 font-medium">مجموعة</div>
+                            <div class="text-xs text-slate-500 font-medium">{{ __('instructor.group_single') }}</div>
                         </div>
                         <div>
                             <div class="text-lg font-bold text-slate-800">{{ $course->enrollments_count ?? 0 }}</div>
-                            <div class="text-xs text-slate-500 font-medium">طالب</div>
+                            <div class="text-xs text-slate-500 font-medium">{{ __('instructor.student_single') }}</div>
                         </div>
                     </div>
                 </div>
@@ -182,7 +180,7 @@
                     <a href="{{ route('instructor.offline-courses.show', $course) }}"
                        class="w-full inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors">
                         <i class="fas fa-eye"></i>
-                        <span>عرض التفاصيل</span>
+                        <span>{{ __('instructor.view_details') }}</span>
                     </a>
                 </div>
             </div>
@@ -199,8 +197,8 @@
             <div class="w-24 h-24 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-map-marker-alt text-4xl text-amber-500"></i>
             </div>
-            <h3 class="text-xl sm:text-2xl font-bold text-slate-800 mb-2">لا توجد كورسات أوفلاين</h3>
-            <p class="text-slate-500 max-w-md mx-auto">لم يتم تعيين أي كورس حضوري لك بعد</p>
+            <h3 class="text-xl sm:text-2xl font-bold text-slate-800 mb-2">{{ __('instructor.no_offline_courses') }}</h3>
+            <p class="text-slate-500 max-w-md mx-auto">{{ __('instructor.no_offline_courses_desc') }}</p>
         </div>
     @endif
 </div>

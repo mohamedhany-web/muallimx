@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
-@section('title', 'المجموعات')
-@section('header', 'المجموعات')
+@section('title', __('instructor.groups'))
+@section('header', __('instructor.groups'))
 
 @section('content')
 <div class="space-y-6">
     <div class="rounded-2xl p-5 sm:p-6 bg-white border border-slate-200 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">المجموعات</h1>
-                <p class="text-sm text-slate-500 mt-0.5">إدارة مجموعات الطلاب في الكورسات</p>
+                <h1 class="text-2xl font-bold text-slate-800">{{ __('instructor.groups') }}</h1>
+                <p class="text-sm text-slate-500 mt-0.5">{{ __('instructor.manage_student_groups') }}</p>
             </div>
             <a href="{{ route('instructor.groups.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
                 <i class="fas fa-plus"></i>
-                <span>إنشاء مجموعة جديدة</span>
+                <span>{{ __('instructor.create_new_group') }}</span>
             </a>
         </div>
     </div>
@@ -22,7 +22,7 @@
         <div class="rounded-xl p-4 bg-white border border-slate-200 shadow-sm">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase">الإجمالي</p>
+                    <p class="text-xs font-semibold text-slate-500 uppercase">{{ __('instructor.total') }}</p>
                     <p class="text-2xl font-bold text-slate-800">{{ $stats['total'] ?? 0 }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600"><i class="fas fa-users"></i></div>
@@ -31,7 +31,7 @@
         <div class="rounded-xl p-4 bg-white border border-slate-200 shadow-sm">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase">نشطة</p>
+                    <p class="text-xs font-semibold text-slate-500 uppercase">{{ __('instructor.active') }}</p>
                     <p class="text-2xl font-bold text-slate-800">{{ $stats['active'] ?? 0 }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600"><i class="fas fa-check-circle"></i></div>
@@ -40,7 +40,7 @@
         <div class="rounded-xl p-4 bg-white border border-slate-200 shadow-sm">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase">معطلة</p>
+                    <p class="text-xs font-semibold text-slate-500 uppercase">{{ __('instructor.inactive') }}</p>
                     <p class="text-2xl font-bold text-slate-800">{{ $stats['inactive'] ?? 0 }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600"><i class="fas fa-ban"></i></div>
@@ -49,7 +49,7 @@
         <div class="rounded-xl p-4 bg-white border border-slate-200 shadow-sm">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase">إجمالي الأعضاء</p>
+                    <p class="text-xs font-semibold text-slate-500 uppercase">{{ __('instructor.total_members') }}</p>
                     <p class="text-2xl font-bold text-slate-800">{{ $stats['total_members'] ?? 0 }}</p>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center text-violet-600"><i class="fas fa-user-friends"></i></div>
@@ -60,30 +60,30 @@
     <div class="rounded-xl bg-white border border-slate-200 shadow-sm p-5">
         <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-                <label for="course_id" class="block text-sm font-semibold text-slate-700 mb-1">الكورس</label>
+                <label for="course_id" class="block text-sm font-semibold text-slate-700 mb-1">{{ __('instructor.courses') }}</label>
                 <select name="course_id" id="course_id" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800">
-                    <option value="">جميع الكورسات</option>
+                    <option value="">{{ __('instructor.all_courses') }}</option>
                     @foreach($courses as $course)
                         <option value="{{ $course->id }}" {{ request('course_id') == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
                     @endforeach
                 </select>
             </div>
             <div>
-                <label for="status" class="block text-sm font-semibold text-slate-700 mb-1">الحالة</label>
+                <label for="status" class="block text-sm font-semibold text-slate-700 mb-1">{{ __('common.status') }}</label>
                 <select name="status" id="status" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800">
-                    <option value="">الكل</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشطة</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>معطلة</option>
-                    <option value="archived" {{ request('status') == 'archived' ? 'selected' : '' }}>مؤرشفة</option>
+                    <option value="">{{ __('instructor.all') }}</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>{{ __('instructor.active') }}</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>{{ __('instructor.inactive') }}</option>
+                    <option value="archived" {{ request('status') == 'archived' ? 'selected' : '' }}>{{ __('instructor.archived') }}</option>
                 </select>
             </div>
             <div>
-                <label for="search" class="block text-sm font-semibold text-slate-700 mb-1">البحث</label>
-                <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="بحث..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800">
+                <label for="search" class="block text-sm font-semibold text-slate-700 mb-1">{{ __('common.search') }}</label>
+                <input type="text" name="search" id="search" value="{{ request('search') }}" placeholder="{{ __('instructor.search_placeholder') }}" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800">
             </div>
             <div class="flex items-end gap-2">
                 <button type="submit" class="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-search ml-1"></i> بحث
+                    <i class="fas fa-search ml-1"></i> {{ __('common.search') }}
                 </button>
                 @if(request()->anyFilled(['course_id', 'status', 'search']))
                     <a href="{{ route('instructor.groups.index') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors">
@@ -106,9 +106,9 @@
                                 @elseif($group->status == 'inactive') bg-amber-100 text-amber-700
                                 @else bg-slate-100 text-slate-600
                                 @endif">
-                                @if($group->status == 'active') نشطة
-                                @elseif($group->status == 'inactive') معطلة
-                                @else مؤرشفة
+                                @if($group->status == 'active') {{ __('instructor.active') }}
+                                @elseif($group->status == 'inactive') {{ __('instructor.inactive') }}
+                                @else {{ __('instructor.archived') }}
                                 @endif
                             </span>
                         </div>
@@ -122,7 +122,7 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-users text-violet-500 w-4"></i>
-                                <span>{{ $group->members_count ?? 0 }} / {{ $group->max_members ?? '—' }} أعضاء</span>
+                                <span>{{ $group->members_count ?? 0 }} / {{ $group->max_members ?? '—' }} {{ __('instructor.members') }}</span>
                             </div>
                             @if($group->leader)
                                 <div class="flex items-center gap-2">
@@ -134,7 +134,7 @@
                     </div>
                     <div class="border-t border-slate-200 p-4 bg-slate-50/50">
                         <a href="{{ route('instructor.groups.show', $group) }}" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold text-sm transition-colors">
-                            <i class="fas fa-eye"></i> عرض التفاصيل
+                            <i class="fas fa-eye"></i> {{ __('instructor.view_details') }}
                         </a>
                     </div>
                 </div>
@@ -148,10 +148,10 @@
             <div class="w-16 h-16 rounded-2xl bg-sky-100 flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-users text-2xl text-sky-500"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-2">لا توجد مجموعات</h3>
-            <p class="text-sm text-slate-500 mb-4">لم يتم إنشاء أي مجموعات بعد</p>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">{{ __('instructor.no_groups') }}</h3>
+            <p class="text-sm text-slate-500 mb-4">{{ __('instructor.no_groups_description') }}</p>
             <a href="{{ route('instructor.groups.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                <i class="fas fa-plus"></i> إنشاء مجموعة جديدة
+                <i class="fas fa-plus"></i> {{ __('instructor.create_new_group') }}
             </a>
         </div>
     @endif

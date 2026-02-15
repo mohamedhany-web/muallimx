@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'برنامج الإحالات - Mindlytics')
-@section('header', 'برنامج الإحالات')
+@section('title', __('student.referrals_title') . ' - Mindlytics')
+@section('header', __('student.referrals_title'))
 
 @section('content')
 <div class="p-6 bg-gray-50 min-h-screen">
@@ -11,9 +11,9 @@
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
                     <i class="fas fa-users text-sky-600 ml-3"></i>
-                    برنامج الإحالات
+                    {{ __('student.referrals_title') }}
                 </h1>
-                <p class="text-gray-600">أحِل أصدقائك واحصل على مكافآت</p>
+                <p class="text-gray-600">{{ __('student.referrals_subtitle') }}</p>
             </div>
         </div>
     </div>
@@ -26,7 +26,7 @@
             <div class="relative z-10">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-600 mb-1">إجمالي الإحالات</p>
+                        <p class="text-sm font-semibold text-gray-600 mb-1">{{ __('student.total_referrals') }}</p>
                         <p class="text-4xl font-black bg-gradient-to-r from-sky-600 via-sky-700 to-slate-600 bg-clip-text text-transparent">{{ number_format($stats['total_referrals']) }}</p>
                     </div>
                     <div class="w-14 h-14 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -35,7 +35,7 @@
                 </div>
                 <div class="mt-4 flex items-center text-sm">
                     <i class="fas fa-users text-sky-500 ml-2"></i>
-                    <span class="text-gray-600 font-medium">جميع الإحالات المسجلة</span>
+                    <span class="text-gray-600 font-medium">{{ __('student.all_referrals_registered') }}</span>
                 </div>
             </div>
         </div>
@@ -46,7 +46,7 @@
             <div class="relative z-10">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-600 mb-1">إحالات مكتملة</p>
+                        <p class="text-sm font-semibold text-gray-600 mb-1">{{ __('student.completed_referrals') }}</p>
                         <p class="text-4xl font-black text-emerald-600">{{ number_format($stats['completed_referrals']) }}</p>
                     </div>
                     <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -55,7 +55,7 @@
                 </div>
                 <div class="mt-4 flex items-center text-sm">
                     <i class="fas fa-gift text-emerald-500 ml-2"></i>
-                    <span class="text-gray-600 font-medium">تم الحصول على المكافأة</span>
+                    <span class="text-gray-600 font-medium">{{ __('student.reward_earned') }}</span>
                 </div>
             </div>
         </div>
@@ -66,7 +66,7 @@
             <div class="relative z-10">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-600 mb-1">قيد الانتظار</p>
+                        <p class="text-sm font-semibold text-gray-600 mb-1">{{ __('student.pending_referrals') }}</p>
                         <p class="text-4xl font-black text-amber-600">{{ number_format($stats['pending_referrals']) }}</p>
                     </div>
                     <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -75,7 +75,7 @@
                 </div>
                 <div class="mt-4 flex items-center text-sm">
                     <i class="fas fa-clock text-amber-500 ml-2"></i>
-                    <span class="text-gray-600 font-medium">في انتظار الشراء</span>
+                    <span class="text-gray-600 font-medium">{{ __('student.waiting_purchase') }}</span>
                 </div>
             </div>
         </div>

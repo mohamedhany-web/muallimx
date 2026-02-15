@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'إنشاء مجموعة جديدة - Mindlytics')
-@section('header', 'إنشاء مجموعة جديدة')
+@section('title', __('instructor.create_group_new') . ' - Mindlytics')
+@section('header', __('instructor.create_group_new'))
 
 @push('styles')
 <style>
@@ -27,17 +27,17 @@
         <!-- الهيدر -->
         <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 sm:p-6 mb-6">
             <nav class="text-sm text-slate-500 mb-2">
-                <a href="{{ route('instructor.groups.index') }}" class="hover:text-sky-600 transition-colors">المجموعات</a>
+                <a href="{{ route('instructor.groups.index') }}" class="hover:text-sky-600 transition-colors">{{ __('instructor.groups') }}</a>
                 <span class="mx-2">/</span>
-                <span class="text-slate-700 font-semibold">إنشاء مجموعة جديدة</span>
+                <span class="text-slate-700 font-semibold">{{ __('instructor.create_group_new') }}</span>
             </nav>
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center">
                     <i class="fas fa-users text-lg"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800">إنشاء مجموعة جديدة</h1>
-                    <p class="text-sm text-slate-600 mt-0.5">أضف مجموعة جديدة للطلاب في الكورس</p>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ __('instructor.create_group_new') }}</h1>
+                    <p class="text-sm text-slate-600 mt-0.5">{{ __('instructor.add_new_group_desc') }}</p>
                 </div>
             </div>
         </div>
@@ -51,13 +51,13 @@
                     <!-- الكورس -->
                     <div class="md:col-span-2">
                         <label for="course_id" class="block text-sm font-semibold text-slate-700 mb-2">
-                            الكورس <span class="text-red-500">*</span>
+                            {{ __('instructor.course_label') }} <span class="text-red-500">*</span>
                         </label>
                         <div class="input-wrapper">
                             <i class="fas fa-book-open"></i>
                             <select name="course_id" id="course_id" required
                                     class="form-select w-full px-4 py-3 rounded-xl bg-white text-slate-800">
-                                <option value="">اختر الكورس</option>
+                                <option value="">{{ __('instructor.choose_course_option') }}</option>
                                 @foreach($courses as $course)
                                     <option value="{{ $course->id }}" {{ old('course_id', request('course_id')) == $course->id ? 'selected' : '' }}>
                                         {{ $course->title }}
@@ -75,13 +75,13 @@
                     <!-- اسم المجموعة -->
                     <div class="md:col-span-2">
                         <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">
-                            اسم المجموعة <span class="text-red-500">*</span>
+                            {{ __('instructor.group_name_required') }} <span class="text-red-500">*</span>
                         </label>
                         <div class="input-wrapper">
                             <i class="fas fa-tag"></i>
                             <input type="text" name="name" id="name" value="{{ old('name') }}" required
                                    class="form-input w-full px-4 py-3 rounded-xl bg-white text-slate-800"
-                                   placeholder="مثال: مجموعة المشروع النهائي">
+                                   placeholder="{{ __('instructor.group_name_required') }}">
                         </div>
                         @error('name')
                             <p class="mt-2 text-sm text-red-500 flex items-center gap-2">
@@ -92,12 +92,12 @@
 
                     <!-- الوصف -->
                     <div class="md:col-span-2">
-                        <label for="description" class="block text-sm font-semibold text-slate-700 mb-2">الوصف</label>
+                        <label for="description" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('instructor.description') }}</label>
                         <div class="input-wrapper">
                             <i class="fas fa-align-right textarea-icon" style="top: 1.25rem; transform: none;"></i>
                             <textarea name="description" id="description" rows="4"
                                       class="form-textarea w-full px-4 py-3 rounded-xl bg-white text-slate-800 resize-none"
-                                      placeholder="وصف مختصر عن المجموعة وأهدافها...">{{ old('description') }}</textarea>
+                                      placeholder="{{ __('instructor.group_description_placeholder') }}">{{ old('description') }}</textarea>
                         </div>
                         @error('description')
                             <p class="mt-2 text-sm text-red-500 flex items-center gap-2">
@@ -108,17 +108,17 @@
 
                     <!-- قائد المجموعة -->
                     <div>
-                        <label for="leader_id" class="block text-sm font-semibold text-slate-700 mb-2">قائد المجموعة</label>
+                        <label for="leader_id" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('instructor.group_leader_label') }}</label>
                         <div class="input-wrapper">
                             <i class="fas fa-user-tie"></i>
                             <select name="leader_id" id="leader_id"
                                     class="form-select w-full px-4 py-3 rounded-xl bg-white text-slate-800">
-                                <option value="">بدون قائد (سيتم تعيينه لاحقاً)</option>
+                                <option value="">{{ __('instructor.no_leader_option') }}</option>
                             </select>
                         </div>
                         <p class="mt-2 text-xs text-slate-500 flex items-center gap-1">
                             <i class="fas fa-info-circle"></i>
-                            اختر الكورس أولاً لتحميل قائمة الطلاب
+                            {{ __('instructor.choose_course_first') }}
                         </p>
                         @error('leader_id')
                             <p class="mt-2 text-sm text-red-500 flex items-center gap-2">
@@ -130,7 +130,7 @@
                     <!-- الحد الأقصى للأعضاء -->
                     <div>
                         <label for="max_members" class="block text-sm font-semibold text-slate-700 mb-2">
-                            الحد الأقصى للأعضاء <span class="text-red-500">*</span>
+                            {{ __('instructor.max_members_required') }} <span class="text-red-500">*</span>
                         </label>
                         <div class="input-wrapper">
                             <i class="fas fa-hashtag"></i>
@@ -148,15 +148,15 @@
                     <!-- الحالة -->
                     <div class="md:col-span-2">
                         <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">
-                            الحالة <span class="text-red-500">*</span>
+                            {{ __('common.status') }} <span class="text-red-500">*</span>
                         </label>
                         <div class="input-wrapper">
                             <i class="fas fa-circle"></i>
                             <select name="status" id="status" required
                                     class="form-select w-full px-4 py-3 rounded-xl bg-white text-slate-800">
-                                <option value="active" {{ old('status', 'active') == 'active' ? 'selected' : '' }}>نشطة</option>
-                                <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>معطلة</option>
-                                <option value="archived" {{ old('status') == 'archived' ? 'selected' : '' }}>مؤرشفة</option>
+                                <option value="active" {{ old('status', 'active') == 'active' ? 'selected' : '' }}>{{ __('instructor.active') }}</option>
+                                <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>{{ __('instructor.inactive') }}</option>
+                                <option value="archived" {{ old('status') == 'archived' ? 'selected' : '' }}>{{ __('instructor.archived') }}</option>
                             </select>
                         </div>
                         @error('status')
@@ -171,11 +171,11 @@
                 <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-6 mt-8 border-t border-slate-200">
                     <a href="{{ route('instructor.groups.index') }}"
                        class="inline-flex items-center justify-center gap-2 px-6 py-3 border border-slate-300 rounded-xl text-slate-700 hover:bg-slate-50 font-semibold transition-colors">
-                        <i class="fas fa-times"></i> إلغاء
+                        <i class="fas fa-times"></i> {{ __('common.cancel') }}
                     </a>
                     <button type="submit"
                             class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold shadow-sm hover:shadow transition-colors">
-                        <i class="fas fa-save"></i> إنشاء المجموعة
+                        <i class="fas fa-save"></i> {{ __('instructor.create_group_btn') }}
                     </button>
                 </div>
             </form>
@@ -183,17 +183,25 @@
     </div>
 </div>
 
+@php
+    $groupCreateI18n = [
+        'loading' => __('instructor.loading_text'),
+        'no_students' => __('instructor.no_students_in_course_msg'),
+        'error' => __('instructor.error_fetching_data'),
+    ];
+@endphp
 <script>
 (function() {
     const courseSelect = document.getElementById('course_id');
     const leaderSelect = document.getElementById('leader_id');
+    const i18n = @json($groupCreateI18n);
 
     function loadStudents(courseId) {
         while (leaderSelect.children.length > 1) leaderSelect.removeChild(leaderSelect.lastChild);
         if (!courseId) return;
 
         const loadingOpt = document.createElement('option');
-        loadingOpt.value = ''; loadingOpt.textContent = 'جاري التحميل...'; loadingOpt.disabled = true;
+        loadingOpt.value = ''; loadingOpt.textContent = i18n.loading; loadingOpt.disabled = true;
         leaderSelect.appendChild(loadingOpt);
         leaderSelect.disabled = true;
 
@@ -212,7 +220,7 @@
                     });
                 } else {
                     const noOpt = document.createElement('option');
-                    noOpt.value = ''; noOpt.textContent = 'لا يوجد طلاب مسجلين في هذا الكورس'; noOpt.disabled = true;
+                    noOpt.value = ''; noOpt.textContent = i18n.no_students; noOpt.disabled = true;
                     leaderSelect.appendChild(noOpt);
                 }
                 leaderSelect.disabled = false;
@@ -221,7 +229,7 @@
                 console.error(err);
                 loadingOpt.remove();
                 const errOpt = document.createElement('option');
-                errOpt.value = ''; errOpt.textContent = 'حدث خطأ أثناء جلب البيانات'; errOpt.disabled = true;
+                errOpt.value = ''; errOpt.textContent = i18n.error; errOpt.disabled = true;
                 leaderSelect.appendChild(errOpt);
                 leaderSelect.disabled = false;
             });
@@ -229,7 +237,6 @@
 
     courseSelect.addEventListener('change', function() { loadStudents(this.value); });
 
-    // إذا كان الكورس محدداً من الرابط، تحميل الطلاب فوراً
     if (courseSelect.value) loadStudents(courseSelect.value);
 })();
 </script>

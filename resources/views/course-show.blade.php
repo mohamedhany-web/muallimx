@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>{{ $course->title ?? 'تفاصيل الكورس' }} - Mindlytics - أكاديمية البرمجة</title>
+    <title>{{ $course->title ?? __('public.course_detail_title') }} - {{ __('public.site_suffix') }}</title>
 
     <!-- خط عربي أصيل -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -993,7 +993,7 @@
                 <i class="fas fa-check-circle text-green-600 text-2xl flex-shrink-0 mt-0.5"></i>
                 <div class="flex-1">
                     <p class="text-green-800 font-bold">{{ session('success') }}</p>
-                    <p class="text-green-700 text-sm mt-1">يمكنك متابعة حالة الطلب من صفحة طلباتي في لوحة التحكم.</p>
+                    <p class="text-green-700 text-sm mt-1">{{ __('public.order_success_hint') }}</p>
                 </div>
                 <button type="button" @click="show = false" class="text-green-600 hover:text-green-800 p-1"><i class="fas fa-times"></i></button>
             </div>
@@ -1075,11 +1075,11 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full py-8 lg:py-10">
             <!-- Breadcrumb -->
             <nav class="mb-4 text-gray-600 text-sm flex items-center fade-in-up">
-                <a href="{{ url('/') }}" class="hover:text-blue-600 transition-colors">الرئيسية</a>
+                <a href="{{ url('/') }}" class="hover:text-blue-600 transition-colors">{{ __('public.home') }}</a>
                 <span class="mx-2 text-gray-400">/</span>
-                <a href="{{ route('public.courses') }}" class="hover:text-blue-600 transition-colors">الكورسات</a>
+                <a href="{{ route('public.courses') }}" class="hover:text-blue-600 transition-colors">{{ __('public.courses') }}</a>
                 <span class="mx-2 text-gray-400">/</span>
-                <span class="text-gray-900 font-medium">{{ Str::limit($course->title ?? 'الكورس', 30) }}</span>
+                <span class="text-gray-900 font-medium">{{ Str::limit($course->title ?? __('public.course_fallback'), 30) }}</span>
             </nav>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
@@ -1088,47 +1088,47 @@
                     @if($course->is_featured ?? false)
                         <div class="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full shadow-md mb-4 fade-in-up">
                             <i class="fas fa-star text-yellow-900 text-[8px]"></i>
-                            <span class="text-yellow-900 font-bold text-[9px]">كورس مميز</span>
+                            <span class="text-yellow-900 font-bold text-[9px]">{{ __('public.featured_course_badge') }}</span>
                         </div>
                     @endif
                     
                     <h1 class="text-3xl md:text-4xl lg:text-5xl font-black mb-3 leading-tight text-gray-900 fade-in-up" style="animation-delay: 0.1s;">
-                        {{ $course->title ?? 'اسم الكورس' }}
+                        {{ $course->title ?? __('public.course_title_fallback') }}
                     </h1>
                     
                     <p class="text-base md:text-lg text-gray-600 mb-5 leading-relaxed fade-in-up" style="animation-delay: 0.2s;">
-                        {{ $course->description ?? 'كورس برمجي شامل ومتخصص' }}
+                        {{ $course->description ?? __('public.course_desc_fallback') }}
                     </p>
 
                     <!-- Course Stats -->
                     <div class="grid grid-cols-3 gap-4 mb-6 fade-in-up" style="animation-delay: 0.1s;">
                         <div class="bg-white rounded-2xl p-4 text-center border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
                             <div class="text-3xl font-black text-blue-600 mb-2">{{ $course->lessons_count ?? 0 }}</div>
-                            <div class="text-sm text-gray-600 font-medium">درس</div>
+                            <div class="text-sm text-gray-600 font-medium">{{ __('public.lesson_single') }}</div>
                         </div>
                         <div class="bg-white rounded-2xl p-4 text-center border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
                             <div class="text-3xl font-black text-green-600 mb-2">{{ $course->duration_hours ?? 0 }}</div>
-                            <div class="text-sm text-gray-600 font-medium">ساعة</div>
+                            <div class="text-sm text-gray-600 font-medium">{{ __('public.hours') }}</div>
                         </div>
                         <div class="bg-white rounded-2xl p-4 text-center border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
                             <div class="text-xl font-black text-gray-700 mb-2">
-                                @if($course->level == 'beginner') مبتدئ
-                                @elseif($course->level == 'intermediate') متوسط
-                                @else متقدم
+                                @if($course->level == 'beginner') {{ __('public.level_beginner') }}
+                                @elseif($course->level == 'intermediate') {{ __('public.level_intermediate') }}
+                                @else {{ __('public.level_advanced') }}
                                 @endif
                             </div>
-                            <div class="text-sm text-gray-600 font-medium">المستوى</div>
+                            <div class="text-sm text-gray-600 font-medium">{{ __('public.level_label') }}</div>
                         </div>
                     </div>
 
                     @if($course->instructor && \App\Models\InstructorProfile::where('user_id', $course->instructor->id)->where('status', 'approved')->exists())
                     <div class="mb-6 fade-in-up" style="animation-delay: 0.15s;">
-                        <span class="text-sm text-gray-600 font-medium">المدرب: </span>
+                        <span class="text-sm text-gray-600 font-medium">{{ __('public.instructor_label') }}</span>
                         <a href="{{ route('public.instructors.show', $course->instructor) }}" class="text-blue-600 hover:text-blue-700 font-bold hover:underline">{{ $course->instructor->name }}</a>
                     </div>
                     @elseif($course->instructor)
                     <div class="mb-6 fade-in-up" style="animation-delay: 0.15s;">
-                        <span class="text-sm text-gray-600 font-medium">المدرب: </span>
+                        <span class="text-sm text-gray-600 font-medium">{{ __('public.instructor_label') }}</span>
                         <span class="font-semibold text-gray-800">{{ $course->instructor->name }}</span>
                     </div>
                     @endif
@@ -1139,18 +1139,18 @@
                             @if($isEnrolled ?? false)
                                 <a href="{{ route('courses.show', $course->id) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                                     <i class="fas fa-play-circle"></i>
-                                    ابدأ التعلم الآن
+                                    {{ __('public.start_learning_now') }}
                                 </a>
                             @else
                                 @if(($course->price ?? 0) > 0 && !($course->is_free ?? false))
                                     <a href="{{ route('public.course.checkout', $course->id) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                                         <i class="fas fa-shopping-cart"></i>
-                                        شراء الآن
+                                        {{ __('public.buy_now') }}
                                     </a>
                                 @else
                                     <a href="{{ route('public.course.enroll.free', $course->id) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                                         <i class="fas fa-gift"></i>
-                                        سجل مجاناً
+                                        {{ __('public.register_free') }}
                                     </a>
                                 @endif
                             @endif
@@ -1159,18 +1159,18 @@
                             @if(($course->price ?? 0) > 0 && !($course->is_free ?? false))
                                 <a href="{{ route('register', ['redirect' => route('public.course.checkout', $course->id)]) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                                     <i class="fas fa-shopping-cart"></i>
-                                    شراء الآن
+                                    {{ __('public.buy_now') }}
                                 </a>
                             @else
                                 <a href="{{ route('register', ['redirect' => route('public.course.enroll.free', $course->id)]) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                                     <i class="fas fa-gift"></i>
-                                    سجل مجاناً
+                                    {{ __('public.register_free') }}
                                 </a>
                             @endif
                         @endguest
                         <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-full font-bold text-base border-2 border-blue-600 hover:bg-blue-50 transition-all duration-300">
                             <i class="fas fa-arrow-right"></i>
-                            جميع الكورسات
+                            {{ __('public.all_courses') }}
                         </a>
                     </div>
                 </div>
@@ -1188,7 +1188,7 @@
                                 @if(($course->price ?? 0) > 0)
                                     <div class="text-4xl font-black text-blue-600 mb-2">{{ number_format($course->price, 2) }} <span class="text-xl text-gray-600">ج.م</span></div>
                                 @else
-                                    <div class="text-4xl font-black text-green-600 mb-2">مجاني</div>
+                                    <div class="text-4xl font-black text-green-600 mb-2">{{ __('public.free_price') }}</div>
                                 @endif
                             </div>
 
@@ -1222,12 +1222,12 @@
                                     @if(($course->price ?? 0) > 0 && !($course->is_free ?? false))
                                         <a href="{{ route('public.course.checkout', $course->id) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
                                             <i class="fas fa-shopping-cart"></i>
-                                            شراء الآن
+                                            {{ __('public.buy_now') }}
                                         </a>
                                     @else
                                         <a href="{{ route('public.course.enroll.free', $course->id) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
                                             <i class="fas fa-gift"></i>
-                                            سجل مجاناً
+                                            {{ __('public.register_free') }}
                                         </a>
                                     @endif
                                 @endif
@@ -1236,12 +1236,12 @@
                                 @if(($course->price ?? 0) > 0 && !($course->is_free ?? false))
                                     <a href="{{ route('register', ['redirect' => route('public.course.checkout', $course->id)]) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
                                         <i class="fas fa-shopping-cart"></i>
-                                        شراء الآن
+                                        {{ __('public.buy_now') }}
                                     </a>
                                 @else
                                     <a href="{{ route('register', ['redirect' => route('public.course.enroll.free', $course->id)]) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
                                         <i class="fas fa-gift"></i>
-                                        سجل مجاناً
+                                        {{ __('public.register_free') }}
                                     </a>
                                 @endif
                             @endguest
@@ -1256,9 +1256,9 @@
                         <div class="text-center mb-6">
                             <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-2">
                                 <i class="fas fa-video text-blue-600 ml-2"></i>
-                                فيديو مقدمة الكورس
+                                {{ __('public.intro_video_title') }}
                             </h2>
-                            <p class="text-gray-600 text-sm">شاهد هذا الفيديو للتعرف على محتوى الكورس</p>
+                            <p class="text-gray-600 text-sm">{{ __('public.intro_video_desc') }}</p>
                         </div>
                         
                         <div class="custom-video-player-wrapper">
@@ -1301,7 +1301,7 @@
                             @else
                                 <div class="bg-gray-100 rounded-lg p-8 text-center">
                                     <i class="fas fa-exclamation-triangle text-yellow-500 text-3xl mb-3"></i>
-                                    <p class="text-gray-600">رابط الفيديو غير مدعوم</p>
+                                    <p class="text-gray-600">{{ __('public.video_unsupported') }}</p>
                                 </div>
                             @endif
                         </div>
@@ -1322,13 +1322,13 @@
                     <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 lg:p-8 border border-gray-200 fade-in-up">
                         <h2 class="text-2xl lg:text-3xl font-black text-gray-900 mb-6 flex items-center gap-3">
                             <i class="fas fa-info-circle text-blue-600"></i>
-                            عن الكورس
+                            {{ __('public.about_course') }}
                         </h2>
                         <div class="prose max-w-none text-gray-700 leading-relaxed">
-                            <p class="text-lg mb-4">{{ $course->description ?? 'كورس برمجي شامل ومتخصص' }}</p>
+                            <p class="text-lg mb-4">{{ $course->description ?? __('public.course_desc_fallback') }}</p>
                             @if($course->objectives)
                                 <div class="mt-6">
-                                    <h3 class="text-xl font-bold text-gray-900 mb-4">أهداف الكورس:</h3>
+                                    <h3 class="text-xl font-bold text-gray-900 mb-4">{{ __('public.course_objectives') }}</h3>
                                     <div class="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-6 border border-blue-100">
                                         <p class="text-gray-700 whitespace-pre-line leading-relaxed">{{ $course->objectives }}</p>
                                     </div>
@@ -1342,7 +1342,7 @@
                     <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 lg:p-8 border border-gray-200 fade-in-up" style="animation-delay: 0.1s;">
                         <h2 class="text-2xl lg:text-3xl font-black text-gray-900 mb-6 flex items-center gap-3">
                             <i class="fas fa-graduation-cap text-blue-600"></i>
-                            ما ستعلمه
+                            {{ __('public.what_you_learn') }}
                         </h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             @php
@@ -1365,7 +1365,7 @@
                     <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 lg:p-8 border border-gray-200 fade-in-up" style="animation-delay: 0.2s;">
                         <h2 class="text-2xl lg:text-3xl font-black text-gray-900 mb-6 flex items-center gap-3">
                             <i class="fas fa-list-check text-blue-600"></i>
-                            المتطلبات
+                            {{ __('public.requirements') }}
                         </h2>
                         <div class="bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200">
                             <p class="text-gray-700 whitespace-pre-line leading-relaxed">{{ $course->requirements }}</p>
@@ -1387,7 +1387,7 @@
                                     <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
                                         <i class="fas fa-info-circle text-white text-lg"></i>
                                     </div>
-                                    <span>معلومات الكورس</span>
+                                    <span>{{ __('public.course_info') }}</span>
                                 </h3>
                             
                             <div class="space-y-3">
@@ -1396,7 +1396,7 @@
                                             <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform duration-300">
                                                 <i class="fas fa-clock text-white text-sm"></i>
                                             </div>
-                                            <span>المدة</span>
+                                            <span>{{ __('public.duration') }}</span>
                                     </span>
                                         <span class="font-black text-gray-900 text-lg">{{ $course->duration_hours ?? 0 }} ساعة</span>
                                 </div>
@@ -1406,7 +1406,7 @@
                                             <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-md group-hover/item:scale-110 transition-transform duration-300">
                                                 <i class="fas fa-layer-group text-white text-sm"></i>
                                             </div>
-                                            <span>عدد الدروس</span>
+                                            <span>{{ __('public.lessons_count_label') }}</span>
                                     </span>
                                         <span class="font-black text-gray-900 text-lg">{{ $course->lessons_count ?? 0 }} درس</span>
                                 </div>
@@ -1466,13 +1466,13 @@
                                             <a href="{{ route('register', ['redirect' => route('public.course.checkout', $course->id)]) }}" class="group/btn relative inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-6 py-4 rounded-xl font-bold text-base shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 w-full overflow-hidden">
                                                 <div class="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
                                                 <i class="fas fa-shopping-cart relative z-10"></i>
-                                                <span class="relative z-10">شراء الآن</span>
+                                                <span class="relative z-10">{{ __('public.buy_now') }}</span>
                                             </a>
                                         @else
                                             <a href="{{ route('register', ['redirect' => route('public.course.enroll.free', $course->id)]) }}" class="group/btn relative inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 via-green-500 to-emerald-500 text-white px-6 py-4 rounded-xl font-bold text-base shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 w-full overflow-hidden">
                                                 <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-green-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
                                                 <i class="fas fa-gift relative z-10"></i>
-                                                <span class="relative z-10">سجل مجاناً</span>
+                                                <span class="relative z-10">{{ __('public.register_free') }}</span>
                                     </a>
                                         @endif
                                 @endguest
@@ -1534,7 +1534,7 @@
                     <a href="{{ route('courses.show', $course->id) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden group">
                         <span class="relative z-10 flex items-center gap-2">
                             <i class="fas fa-play"></i>
-                            <span>ابدأ التعلم الآن</span>
+                            <span>{{ __('public.start_learning_now') }}</span>
                         </span>
                         <span class="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                     </a>
@@ -1543,14 +1543,14 @@
                     <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden group">
                         <span class="relative z-10 flex items-center gap-2">
                             <i class="fas fa-user-plus"></i>
-                            <span>سجل مجاناً الآن</span>
+                            <span>{{ __('public.register_free') }} الآن</span>
                         </span>
                         <span class="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                     </a>
                 @endguest
                 <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-full font-bold text-lg border-2 border-blue-600 hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl relative">
                     <span class="flex items-center gap-2">
-                        <span>استعرض جميع الكورسات</span>
+                        <span>استعرض {{ __('public.all_courses') }}</span>
                         <i class="fas fa-arrow-left"></i>
                     </span>
                 </a>

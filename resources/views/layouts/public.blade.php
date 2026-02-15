@@ -1,9 +1,13 @@
+@php
+    $publicLocale = app()->getLocale();
+    $publicRtl = $publicLocale === 'ar';
+@endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ $publicLocale }}" dir="{{ $publicRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Mindlytics - أكاديمية البرمجة')</title>
+    <title>@yield('title', config('app.name') . ' - ' . __('landing.nav.brand'))</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">

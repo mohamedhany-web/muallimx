@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <title>{{ $learningPath->name ?? 'تفاصيل المسار التعليمي' }} - Mindlytics - أكاديمية البرمجة</title>
+        <title>{{ $learningPath->name ?? __('public.learning_path_detail_title') }} - {{ __('public.site_suffix') }}</title>
 
         <!-- خط عربي أصيل -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -472,7 +472,7 @@
                             @else
                                 <div class="bg-gray-100 rounded-lg p-8 text-center">
                                     <i class="fas fa-exclamation-triangle text-yellow-500 text-3xl mb-3"></i>
-                                    <p class="text-gray-600">رابط الفيديو غير مدعوم</p>
+                                    <p class="text-gray-600">{{ __('public.video_unsupported') }}</p>
                                 </div>
                             @endif
                         </div>
@@ -481,7 +481,7 @@
                     <div class="bg-white rounded-3xl p-6 lg:p-8 shadow-xl border border-gray-200">
                         <div class="text-center text-gray-500 py-12">
                             <i class="fas fa-video text-4xl mb-4 text-gray-300"></i>
-                            <p class="text-lg">لا يوجد فيديو مقدمة متاح</p>
+                            <p class="text-lg">{{ __('public.no_intro_video') }}</p>
                         </div>
                     </div>
                     @endif
@@ -500,31 +500,31 @@
                     <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 lg:p-8 border border-gray-200 fade-in-up">
                         <h2 class="text-2xl lg:text-3xl font-black text-gray-900 mb-6 flex items-center gap-3">
                             <i class="fas fa-info-circle text-blue-600"></i>
-                            عن المسار التعليمي
+                            {{ __('public.about_path') }}
                         </h2>
                         <div class="prose max-w-none text-gray-700 leading-relaxed">
                             @if($learningPath->description && trim($learningPath->description) !== '')
                                 <p class="text-lg mb-4">{{ $learningPath->description }}</p>
                             @else
-                                <p class="text-lg mb-4">مسار تعليمي شامل ومتخصص يضم مجموعة من الكورسات المتنوعة التي تغطي جميع جوانب هذا المجال. تم تصميم هذا المسار بعناية ليوفر لك تجربة تعليمية متكاملة من البداية حتى الاحتراف.</p>
+                                <p class="text-lg mb-4">{{ __('public.path_description_fallback_long') }}</p>
                                 <div class="bg-gradient-to-br from-blue-50 to-green-50 rounded-xl p-6 border border-blue-100 mt-6">
-                                    <h3 class="text-xl font-bold text-gray-900 mb-4">ما يميز هذا المسار:</h3>
+                                    <h3 class="text-xl font-bold text-gray-900 mb-4">{{ __('public.path_highlights_title') }}</h3>
                                     <ul class="space-y-3 text-gray-700">
                                         <li class="flex items-start gap-3">
                                             <i class="fas fa-check-circle text-green-600 mt-1"></i>
-                                            <span>محتوى شامل ومنظم يغطي جميع الأساسيات والمفاهيم المتقدمة</span>
+                                            <span>{{ __('public.path_highlight_1') }}</span>
                                         </li>
                                         <li class="flex items-start gap-3">
                                             <i class="fas fa-check-circle text-green-600 mt-1"></i>
-                                            <span>مشاريع عملية تطبيقية لتعزيز التعلم</span>
+                                            <span>{{ __('public.path_highlight_2') }}</span>
                                         </li>
                                         <li class="flex items-start gap-3">
                                             <i class="fas fa-check-circle text-green-600 mt-1"></i>
-                                            <span>دعم مستمر من المدربين والزملاء</span>
+                                            <span>{{ __('public.path_highlight_3') }}</span>
                                         </li>
                                         <li class="flex items-start gap-3">
                                             <i class="fas fa-check-circle text-green-600 mt-1"></i>
-                                            <span>شهادة إتمام معتمدة في نهاية المسار</span>
+                                            <span>{{ __('public.path_highlight_4') }}</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -537,7 +537,7 @@
                     <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 lg:p-8 border border-gray-200 fade-in-up" style="animation-delay: 0.1s;">
                         <h2 class="text-2xl lg:text-3xl font-black text-gray-900 mb-6 flex items-center gap-3">
                             <i class="fas fa-graduation-cap text-blue-600"></i>
-                            الكورسات في هذا المسار
+                            {{ __('public.courses_in_path') }}
                         </h2>
                         <div class="space-y-4">
                             @foreach($learningPath->courses as $index => $course)
@@ -550,13 +550,13 @@
                                         {{ $course->title }}
                                     </h3>
                                     <p class="text-gray-600 text-sm mb-3 line-clamp-2">
-                                        {{ Str::limit($course->description ?? 'كورس برمجي شامل', 100) }}
+                                        {{ Str::limit($course->description ?? __('public.course_fallback_short'), 100) }}
                                     </p>
                                     <div class="flex items-center gap-4 flex-wrap">
                                         @if($course->lessons_count > 0)
                                         <div class="flex items-center gap-2 text-sm text-gray-600">
                                             <i class="fas fa-play-circle text-blue-600"></i>
-                                            <span>{{ $course->lessons_count }} درس</span>
+                                            <span>{{ $course->lessons_count }} {{ __('public.lesson_single') }}</span>
                                         </div>
                                         @endif
                                         @if($course->academicSubject)
@@ -568,19 +568,19 @@
                                         @if(($course->price ?? 0) > 0)
                                         <div class="flex items-center gap-2 text-sm font-bold text-blue-600">
                                             <i class="fas fa-tag"></i>
-                                            <span>{{ number_format($course->price, 0) }} ج.م</span>
+                                            <span>{{ number_format($course->price, 0) }} {{ __('public.currency_egp') }}</span>
                                         </div>
                                         @else
                                         <div class="flex items-center gap-2 text-sm font-bold text-green-600">
                                             <i class="fas fa-gift"></i>
-                                            <span>مجاني</span>
+                                            <span>{{ __('public.free_price') }}</span>
                                         </div>
                                         @endif
                                     </div>
                                 </div>
                                 <div class="flex-shrink-0">
                                     <a href="{{ route('public.course.show', $course->id) }}" class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-                                        <span>عرض</span>
+                                        <span>{{ __('public.view_btn') }}</span>
                                         <i class="fas fa-arrow-left text-xs"></i>
                                     </a>
                                 </div>
@@ -599,16 +599,16 @@
                             <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100/50 to-green-100/50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             
                             <div class="relative z-10">
-                                <h3 class="text-2xl font-black text-gray-900 mb-6 text-center">معلومات المسار</h3>
+                                <h3 class="text-2xl font-black text-gray-900 mb-6 text-center">{{ __('public.path_info_title') }}</h3>
                             
                                 <div class="space-y-3">
                                     <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-xl border-2 border-blue-100">
-                                        <span class="text-gray-700 font-semibold">عدد الكورسات</span>
+                                        <span class="text-gray-700 font-semibold">{{ __('public.path_courses_count_label') }}</span>
                                         <span class="font-black text-gray-900 text-lg">{{ $learningPath->courses_count ?? 0 }}</span>
                                     </div>
                                     
                                     <div class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border-2 border-green-100">
-                                        <span class="text-gray-700 font-semibold">إجمالي الدروس</span>
+                                        <span class="text-gray-700 font-semibold">{{ __('public.path_total_lessons') }}</span>
                                         <span class="font-black text-gray-900 text-lg">{{ $totalLessons }}</span>
                                     </div>
                                     
@@ -622,12 +622,12 @@
                                     @endphp
                                     
                                     <div class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border-2 border-purple-100">
-                                        <span class="text-gray-700 font-semibold">كورسات مجانية</span>
+                                        <span class="text-gray-700 font-semibold">{{ __('public.path_free_courses') }}</span>
                                         <span class="font-black text-gray-900 text-lg">{{ $freeCourses }}</span>
                                     </div>
                                     
                                     <div class="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-blue-50 rounded-xl border-2 border-orange-100">
-                                        <span class="text-gray-700 font-semibold">كورسات مدفوعة</span>
+                                        <span class="text-gray-700 font-semibold">{{ __('public.path_paid_courses') }}</span>
                                         <span class="font-black text-gray-900 text-lg">{{ $paidCourses }}</span>
                                     </div>
                                 </div>
@@ -643,15 +643,15 @@
                                     <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                                         <i class="fas fa-user-plus text-white text-2xl"></i>
                                     </div>
-                                    <h3 class="text-xl font-black text-gray-900 mb-2">اشترك في المسار</h3>
+                                    <h3 class="text-xl font-black text-gray-900 mb-2">{{ __('public.subscribe_path') }}</h3>
                                 </div>
                                 
                                 <!-- Price -->
                                 <div class="text-center mb-6">
                                     @if(($learningPath->price ?? 0) > 0)
-                                        <div class="text-3xl font-black text-blue-600 mb-1">{{ number_format($learningPath->price, 0) }} <span class="text-lg text-gray-600">ج.م</span></div>
+                                        <div class="text-3xl font-black text-blue-600 mb-1">{{ number_format($learningPath->price, 0) }} <span class="text-lg text-gray-600">{{ __('public.currency_egp') }}</span></div>
                                     @else
-                                        <div class="text-3xl font-black text-green-600 mb-1">مجاني</div>
+                                        <div class="text-3xl font-black text-green-600 mb-1">{{ __('public.free_price') }}</div>
                                     @endif
                                 </div>
 
@@ -659,19 +659,19 @@
                                 <div class="space-y-2 mb-6">
                                     <div class="flex items-center gap-2 text-sm text-gray-700">
                                         <i class="fas fa-check-circle text-green-500"></i>
-                                        <span>وصول مدى الحياة</span>
+                                        <span>{{ __('public.lifetime_access') }}</span>
                                     </div>
                                     <div class="flex items-center gap-2 text-sm text-gray-700">
                                         <i class="fas fa-check-circle text-green-500"></i>
-                                        <span>شهادة إتمام معتمدة</span>
+                                        <span>{{ __('public.certificate_on_completion') }}</span>
                                     </div>
                                     <div class="flex items-center gap-2 text-sm text-gray-700">
                                         <i class="fas fa-check-circle text-green-500"></i>
-                                        <span>مشاريع عملية</span>
+                                        <span>{{ __('public.practical_projects') }}</span>
                                     </div>
                                     <div class="flex items-center gap-2 text-sm text-gray-700">
                                         <i class="fas fa-check-circle text-green-500"></i>
-                                        <span>دعم مباشر</span>
+                                        <span>{{ __('public.direct_support') }}</span>
                                     </div>
                                 </div>
 
@@ -681,25 +681,25 @@
                                         @if($isEnrolled ?? false)
                                             <a href="{{ route('student.learning-path.show', $learningPath->slug) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
                                                 <i class="fas fa-play"></i>
-                                                ابدأ الآن
+                                                {{ __('public.start_now') }}
                                             </a>
                                         @elseif(isset($enrollment) && $enrollment->status === 'pending')
                                             <div class="inline-flex items-center justify-center gap-2 bg-yellow-100 text-yellow-800 px-6 py-3 rounded-xl font-bold text-sm border-2 border-yellow-300 w-full">
                                                 <i class="fas fa-clock"></i>
-                                                طلبك قيد المراجعة
+                                                {{ __('public.enrollment_pending') }}
                                             </div>
                                         @else
                                             @if(($learningPath->price ?? 0) > 0)
                                                 <a href="{{ route('public.learning-path.checkout', Str::slug($learningPath->name)) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
                                                     <i class="fas fa-shopping-cart"></i>
-                                                    اشترك في المسار
+                                                    {{ __('public.subscribe_path_btn') }}
                                                 </a>
                                             @else
                                                 <form action="{{ route('public.learning-path.enroll.free', Str::slug($learningPath->name)) }}" method="POST" class="mb-3">
                                                     @csrf
                                                     <button type="submit" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
                                                         <i class="fas fa-user-plus"></i>
-                                                        اشترك مجاناً
+                                                        {{ __('public.enroll_free') }}
                                                     </button>
                                                 </form>
                                             @endif
@@ -708,7 +708,7 @@
                                     @guest
                                         <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
                                             <i class="fas fa-user-plus"></i>
-                                            سجل للاشتراك
+                                            {{ __('public.register_to_enroll') }}
                                         </a>
                                     @endguest
                                 </div>
@@ -726,9 +726,9 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12 fade-in-up">
                 <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-4">
-                    مسارات <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500">ذات صلة</span>
+                    {{ __('public.related_paths_title') }} <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-green-500">{{ __('public.related_paths_highlight') }}</span>
                 </h2>
-                <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">استكشف المزيد من المسارات التعليمية</p>
+                <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">{{ __('public.explore_more_paths') }}</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -748,17 +748,17 @@
                             {{ $path->name }}
                         </h3>
                         <p class="text-gray-600 mb-4 text-sm leading-relaxed line-clamp-2">
-                            {{ Str::limit($path->description ?? 'مسار تعليمي شامل', 80) }}
+                            {{ Str::limit($path->description ?? __('public.path_description_fallback'), 80) }}
                         </p>
                         
                         <div class="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                             <div>
                                 <span class="text-2xl font-black text-sky-600">{{ number_format($path->price ?? 0, 0) }}</span>
-                                <span class="text-sm text-gray-500">ج.م</span>
+                                <span class="text-sm text-gray-500">{{ __('public.currency_egp') }}</span>
                             </div>
                             <a href="{{ route('public.learning-path.show', $path->slug) }}" class="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1">
                                 <i class="fas fa-eye ml-2"></i>
-                                عرض
+                                {{ __('public.view_btn') }}
                             </a>
                         </div>
                     </div>

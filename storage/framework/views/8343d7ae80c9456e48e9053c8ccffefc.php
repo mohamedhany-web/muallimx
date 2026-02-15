@@ -1,10 +1,11 @@
+<?php $adminLocale = app()->getLocale(); $adminRtl = $adminLocale === 'ar'; ?>
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="<?php echo e($adminLocale); ?>" dir="<?php echo e($adminRtl ? 'rtl' : 'ltr'); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
-    <title><?php echo $__env->yieldContent('title', 'لوحة الإدارة - Mindlytics'); ?></title>
+    <title><?php echo $__env->yieldContent('title', __('auth.dashboard')); ?> - <?php echo e(config('app.name')); ?></title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
@@ -524,6 +525,26 @@
                     </div>
                     
                     <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+                        <?php if (isset($component)) { $__componentOriginal8d3bff7d7383a45350f7495fc470d934 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal8d3bff7d7383a45350f7495fc470d934 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.language-switcher','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('language-switcher'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal8d3bff7d7383a45350f7495fc470d934)): ?>
+<?php $attributes = $__attributesOriginal8d3bff7d7383a45350f7495fc470d934; ?>
+<?php unset($__attributesOriginal8d3bff7d7383a45350f7495fc470d934); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal8d3bff7d7383a45350f7495fc470d934)): ?>
+<?php $component = $__componentOriginal8d3bff7d7383a45350f7495fc470d934; ?>
+<?php unset($__componentOriginal8d3bff7d7383a45350f7495fc470d934); ?>
+<?php endif; ?>
                         <!-- User dropdown -->
                         <div class="relative z-40" x-data="{ open: false }" @click.outside="open = false">
                             <div>

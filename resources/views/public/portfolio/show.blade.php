@@ -7,7 +7,7 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <a href="{{ route('public.portfolio.index') }}" class="inline-flex items-center gap-2 text-blue-600 hover:text-gray-900 font-medium mb-8 transition-colors">
             <i class="fas fa-arrow-right"></i>
-            العودة للمعرض
+            {{ __('public.back_to_gallery') }}
         </a>
 
         <article class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
@@ -44,7 +44,7 @@
                 @if($project->project_url)
                     <a href="{{ $project->project_url }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all">
                         <i class="fas fa-external-link-alt"></i>
-                        عرض المشروع
+                        {{ __('public.view_project') }}
                     </a>
                 @endif
 
@@ -56,8 +56,8 @@
                         <span class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-green-500 text-white flex items-center justify-center text-xl font-black">{{ mb_substr($project->user->name ?? 'ط', 0, 1) }}</span>
                     @endif
                     <div>
-                        <p class="font-bold text-gray-900">{{ $project->user->name ?? 'طالب' }}</p>
-                        <p class="text-sm text-gray-500">مشروع من معرض Mindlytics Portfolio</p>
+                        <p class="font-bold text-gray-900">{{ $project->user->name ?? __('public.student_fallback') }}</p>
+                        <p class="text-sm text-gray-500">{{ __('public.project_from_portfolio') }}</p>
                     </div>
                 </div>
             </div>
@@ -65,7 +65,7 @@
 
         @if($related->count() > 0)
             <div class="mt-12">
-                <h2 class="text-xl font-bold text-gray-900 mb-6">مشاريع أخرى من نفس المسار</h2>
+                <h2 class="text-xl font-bold text-gray-900 mb-6">{{ __('public.other_projects_same_path') }}</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     @foreach($related as $r)
                         <a href="{{ route('public.portfolio.show', $r->id) }}" class="flex gap-4 bg-white rounded-xl shadow border border-gray-200 p-4 hover:shadow-lg hover:border-blue-500/30 transition-all">
@@ -78,7 +78,7 @@
                             @endif
                             <div class="min-w-0 flex-1">
                                 <h3 class="font-bold text-gray-900 truncate">{{ $r->title }}</h3>
-                                <p class="text-sm text-gray-500">{{ $r->user->name ?? 'طالب' }}</p>
+                                <p class="text-sm text-gray-500">{{ $r->user->name ?? __('public.student_fallback') }}</p>
                             </div>
                         </a>
                     @endforeach

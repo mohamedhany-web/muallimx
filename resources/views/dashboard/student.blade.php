@@ -1,6 +1,6 @@
 @extends('layouts.student-dashboard')
 
-@section('title', 'لوحة تحكم الطالب')
+@section('title', __('student.dashboard_title'))
 
 @push('styles')
 <style>
@@ -296,12 +296,12 @@
         <div class="welcome-accent" aria-hidden="true"></div>
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <div class="flex-1 min-w-0">
-                <p class="text-xs font-semibold text-sky-600 uppercase tracking-wider mb-2">لوحة تحكمك</p>
+                <p class="text-xs font-semibold text-sky-600 uppercase tracking-wider mb-2">{{ __('student.your_dashboard') }}</p>
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 leading-tight">
-                    مرحباً، {{ auth()->user()->name }}
+                    {{ __('student.welcome_name', ['name' => auth()->user()->name]) }}
                 </h1>
                 <p class="text-gray-600 text-sm sm:text-base max-w-xl leading-relaxed">
-                    استمر في رحلتك التعليمية واجعل كل يوم خطوة نحو تحقيق أهدافك
+                    {{ __('student.dashboard_subtitle') }}
                 </p>
             </div>
             <div class="flex items-center gap-5 flex-shrink-0">
@@ -321,8 +321,8 @@
                     <span class="absolute inset-0 flex items-center justify-center text-lg font-bold text-sky-700">{{ $stats['total_progress'] }}%</span>
                 </div>
                 <div class="text-right">
-                    <p class="text-sm font-semibold text-gray-700">التقدم الكلي</p>
-                    <p class="text-xs text-gray-500 mt-0.5">من إكمال الكورسات</p>
+<p class="text-sm font-semibold text-gray-700">{{ __('student.total_progress') }}</p>
+                <p class="text-xs text-gray-500 mt-0.5">{{ __('student.from_course_completion') }}</p>
                 </div>
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-100 to-sky-50 flex items-center justify-center text-sky-600 border border-sky-100 shadow-sm hidden sm:flex">
                     <i class="fas fa-graduation-cap text-xl"></i>
@@ -338,14 +338,14 @@
             <div class="relative z-10">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold text-sky-700 mb-2">كورساتي النشطة</p>
+                        <p class="text-sm font-bold text-sky-700 mb-2">{{ __('student.my_active_courses') }}</p>
                         <p class="text-4xl font-black text-sky-600">{{ $stats['active_courses'] }}</p>
                     </div>
                     <div class="card-icon flex-shrink-0">
                         <i class="fas fa-book-open"></i>
                     </div>
                 </div>
-                <p class="text-xs font-medium text-gray-600">كورسات نشطة حالياً</p>
+                <p class="text-xs font-medium text-gray-600">{{ __('student.active_courses_now') }}</p>
             </div>
         </a>
 
@@ -354,14 +354,14 @@
             <div class="relative z-10">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold text-emerald-700 mb-2">مكتملة</p>
+                        <p class="text-sm font-bold text-emerald-700 mb-2">{{ __('student.completed') }}</p>
                         <p class="text-4xl font-black text-emerald-600">{{ $stats['completed_courses'] }}</p>
                     </div>
                     <div class="card-icon flex-shrink-0">
                         <i class="fas fa-check-circle"></i>
                     </div>
                 </div>
-                <p class="text-xs font-medium text-gray-600">كورسات مكتملة</p>
+                <p class="text-xs font-medium text-gray-600">{{ __('student.completed_courses') }}</p>
             </div>
         </a>
 
@@ -370,7 +370,7 @@
             <div class="relative z-10">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold text-sky-700 mb-2">التقدم الكلي</p>
+                        <p class="text-sm font-bold text-sky-700 mb-2">{{ __('student.total_progress') }}</p>
                         <p class="text-4xl font-black text-sky-600">{{ $stats['total_progress'] }}%</p>
                     </div>
                     <div class="card-icon flex-shrink-0">
@@ -388,14 +388,14 @@
             <div class="relative z-10">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold text-amber-700 mb-2">طلبات معلقة</p>
+                        <p class="text-sm font-bold text-amber-700 mb-2">{{ __('student.pending_orders') }}</p>
                         <p class="text-4xl font-black text-amber-600">{{ $stats['pending_orders'] }}</p>
                     </div>
                     <div class="card-icon flex-shrink-0">
                         <i class="fas fa-clock"></i>
                     </div>
                 </div>
-                <p class="text-xs font-medium text-gray-600">طلبات قيد المعالجة</p>
+                <p class="text-xs font-medium text-gray-600">{{ __('student.orders_in_processing') }}</p>
             </div>
         </a>
     </div>
@@ -410,10 +410,10 @@
                         <div class="section-icon bg-sky-100 text-sky-600 border-2 border-sky-200">
                             <i class="fas fa-book-open"></i>
                         </div>
-                        <span>كورساتي النشطة</span>
+                        <span>{{ __('student.my_active_courses') }}</span>
                     </div>
                     <a href="{{ route('my-courses.index') }}" class="text-sm text-sky-600 hover:text-sky-700 font-semibold transition-colors flex items-center gap-1">
-                        عرض الكل <i class="fas fa-arrow-left text-xs"></i>
+                        {{ __('student.view_all') }} <i class="fas fa-arrow-left text-xs"></i>
                     </a>
                 </div>
                 <div class="space-y-4">
@@ -429,7 +429,7 @@
                                 <div class="flex-1 min-w-0">
                                     <h3 class="font-bold text-gray-900 mb-1.5 truncate text-base">{{ $course->title }}</h3>
                                     <p class="text-sm text-gray-600 mb-3 truncate">
-                                        {{ $course->academicSubject->name ?? 'غير محدد' }} - {{ $course->academicYear->name ?? 'غير محدد' }}
+                                        {{ $course->academicSubject->name ?? __('student.not_specified') }} - {{ $course->academicYear->name ?? __('student.not_specified') }}
                                     </p>
                                     <div class="flex items-center gap-3">
                                         <div class="flex-1 progress-container">
@@ -445,11 +445,11 @@
                             <div class="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                                 <i class="fas fa-book-open text-3xl text-gray-400"></i>
                             </div>
-                            <p class="text-base font-semibold mb-2 text-gray-700">لا توجد كورسات نشطة</p>
-                            <p class="text-sm text-gray-600 mb-6">ابدأ رحلتك التعليمية الآن</p>
+                            <p class="text-base font-semibold mb-2 text-gray-700">{{ __('student.no_active_courses') }}</p>
+                            <p class="text-sm text-gray-600 mb-6">{{ __('student.start_journey_now') }}</p>
                             <a href="{{ route('academic-years') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-sm font-semibold transition-all shadow-md hover:shadow-lg">
                                 <i class="fas fa-search"></i>
-                                <span>استكشف الكورسات</span>
+                                <span>{{ __('student.explore_courses') }}</span>
                             </a>
                         </div>
                     @endforelse
@@ -466,7 +466,7 @@
                         <div class="section-icon bg-amber-100 text-amber-600 border-2 border-amber-200">
                             <i class="fas fa-tasks"></i>
                         </div>
-                        <span>الواجبات</span>
+                        <span>{{ __('student.assignments') }}</span>
                         @if($upcomingAssignments->count() > 0)
                             <span class="bg-amber-100 text-amber-700 status-badge mr-auto">
                                 {{ $upcomingAssignments->count() }}
@@ -496,7 +496,7 @@
                     @empty
                         <div class="text-center py-8 text-gray-500">
                             <i class="fas fa-clipboard-check text-3xl mb-3 opacity-30"></i>
-                            <p class="text-sm font-medium">لا توجد واجبات</p>
+                            <p class="text-sm font-medium">{{ __('student.no_assignments') }}</p>
                         </div>
                     @endforelse
                 </div>
@@ -509,7 +509,7 @@
                         <div class="section-icon bg-sky-100 text-sky-600 border-2 border-sky-200">
                             <i class="fas fa-clipboard-check"></i>
                         </div>
-                        <span>الاختبارات</span>
+                        <span>{{ __('student.exams') }}</span>
                         @if($upcomingExams->count() > 0)
                             <span class="bg-sky-100 text-sky-700 status-badge mr-auto">
                                 {{ $upcomingExams->count() }}
@@ -530,13 +530,13 @@
                                 <div class="text-xs text-gray-600 mb-2.5 truncate">{{ $course->title }}</div>
                             @endif
                             <span class="status-badge {{ $isAvailableNow ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700' }}">
-                                {{ $isAvailableNow ? 'متاح' : 'قريباً' }}
+                                {{ $isAvailableNow ? __('student.available') : __('student.coming_soon') }}
                             </span>
                         </a>
                     @empty
                         <div class="text-center py-8 text-gray-500">
                             <i class="fas fa-file-alt text-3xl mb-3 opacity-30"></i>
-                            <p class="text-sm font-medium">لا توجد اختبارات</p>
+                            <p class="text-sm font-medium">{{ __('student.no_exams') }}</p>
                         </div>
                     @endforelse
                 </div>
@@ -553,7 +553,7 @@
                     <div class="section-icon bg-emerald-100 text-emerald-600 border-2 border-emerald-200">
                         <i class="fas fa-chart-pie"></i>
                     </div>
-                    <span>نتائج الامتحانات</span>
+                    <span>{{ __('student.exam_results') }}</span>
                 </div>
             </div>
             <div class="space-y-3">
@@ -567,7 +567,7 @@
                             <i class="fas fa-award text-emerald-600 text-lg"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="font-semibold text-gray-900 text-sm mb-1 truncate">{{ $exam->title ?? 'امتحان محذوف' }}</div>
+                            <div class="font-semibold text-gray-900 text-sm mb-1 truncate">{{ $exam->title ?? __('student.exam_deleted') }}</div>
                             @if($course)
                                 <div class="text-xs text-gray-600 mb-2 truncate">{{ $course->title }}</div>
                             @endif
@@ -582,14 +582,14 @@
                         </div>
                         @if($exam)
                             <a href="{{ route('student.exams.result', [$exam, $attempt]) }}" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700 transition-colors shadow-sm">
-                                عرض
+                                {{ __('common.view') }}
                             </a>
                         @endif
                     </div>
                 @empty
                     <div class="text-center py-10 text-gray-500">
                         <i class="fas fa-poll text-4xl mb-3 opacity-30"></i>
-                        <p class="text-sm font-medium">لم يتم تسجيل نتائج بعد</p>
+                        <p class="text-sm font-medium">{{ __('student.no_results_yet') }}</p>
                     </div>
                 @endforelse
             </div>
@@ -602,7 +602,7 @@
 <div class="section-icon bg-amber-100 text-amber-600 border-2 border-amber-200">
                             <i class="fas fa-certificate"></i>
                         </div>
-                        <span>الشهادات الصادرة</span>
+                        <span>{{ __('student.issued_certificates') }}</span>
                 </div>
             </div>
             <div class="space-y-3">
@@ -613,14 +613,14 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="font-semibold text-gray-900 text-sm mb-1 truncate">
-                                {{ $certificate->title ?? $certificate->course_name ?? 'شهادة بدون عنوان' }}
+                                {{ $certificate->title ?? $certificate->course_name ?? __('student.certificate_untitled') }}
                             </div>
                             @if($certificate->course)
                                 <div class="text-xs text-gray-600 mb-2 truncate">{{ $certificate->course->title }}</div>
                             @endif
                             @if($certificate->certificate_number)
                                 <span class="status-badge bg-sky-100 text-sky-700">
-                                    رقم: {{ $certificate->certificate_number }}
+                                    {{ __('student.certificate_number_label') }}: {{ $certificate->certificate_number }}
                                 </span>
                             @endif
                         </div>
@@ -628,7 +628,7 @@
                 @empty
                     <div class="text-center py-10 text-gray-500">
                         <i class="fas fa-certificate text-4xl mb-3 opacity-30"></i>
-                        <p class="text-sm font-medium">لم يتم إصدار شهادات حتى الآن</p>
+                        <p class="text-sm font-medium">{{ __('student.no_certificates_yet') }}</p>
                     </div>
                 @endforelse
             </div>

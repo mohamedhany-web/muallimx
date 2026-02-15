@@ -1,10 +1,11 @@
+@php $adminLocale = app()->getLocale(); $adminRtl = $adminLocale === 'ar'; @endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ $adminLocale }}" dir="{{ $adminRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'لوحة الإدارة - Mindlytics')</title>
+    <title>@yield('title', __('auth.dashboard')) - {{ config('app.name') }}</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -524,6 +525,7 @@
                     </div>
                     
                     <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+                        <x-language-switcher />
                         <!-- User dropdown -->
                         <div class="relative z-40" x-data="{ open: false }" @click.outside="open = false">
                             <div>

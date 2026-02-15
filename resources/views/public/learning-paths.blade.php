@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <title>المسارات التعليمية - Mindlytics - أكاديمية البرمجة</title>
+        <title>{{ __('public.learning_paths_page_title') }} - {{ __('public.site_suffix') }}</title>
 
         <!-- خط عربي موحّد مع الصفحة الرئيسية -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -757,10 +757,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full py-16">
             <div class="text-center fade-in-up">
                 <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight text-gray-900">
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-green-500 to-blue-600 animate-gradient-text">المسارات التعليمية</span>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-green-500 to-blue-600 animate-gradient-text">{{ __('public.learning_paths_hero') }}</span>
                 </h1>
                 <p class="text-lg md:text-xl lg:text-2xl text-gray-700 mb-10 leading-relaxed max-w-3xl mx-auto font-medium">
-                    اختر مسارك التعليمي المناسب واحصل على مجموعة متكاملة من المهارات والكورسات
+                    {{ __('public.learning_paths_subtitle') }}
                 </p>
                 
                 <!-- Enhanced Search and Filter -->
@@ -779,7 +779,7 @@
                             <!-- Search Input -->
                             <input type="text" 
                                    x-model="searchQuery"
-                                   placeholder="ابحث عن مسار تعليمي..." 
+                                   placeholder="{{ __('public.search_learning_path_placeholder') }}" 
                                    class="flex-1 bg-transparent border-0 outline-none text-gray-800 placeholder-gray-400 text-base lg:text-lg transition-all duration-300 focus:placeholder-gray-300 font-medium"
                             >
                             
@@ -787,7 +787,7 @@
                             <button class="bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-6 lg:px-8 py-3 rounded-full hover:from-blue-700 hover:via-blue-600 hover:to-green-600 transition-all duration-300 transform hover:scale-110 relative overflow-hidden group shadow-lg hover:shadow-xl flex-shrink-0">
                                 <span class="relative z-10 flex items-center gap-2">
                                     <i class="fas fa-search text-sm"></i>
-                                    <span class="font-bold text-sm lg:text-base">ابحث</span>
+                                    <span class="font-bold text-sm lg:text-base">{{ __('public.search_btn') }}</span>
                                 </span>
                                 <span class="absolute inset-0 bg-white/30 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
                             </button>
@@ -800,7 +800,7 @@
                                 <i class="fas fa-search text-blue-500 text-lg mr-3"></i>
                                 <input type="text" 
                                        x-model="searchQuery"
-                                       placeholder="ابحث عن مسار تعليمي..." 
+                                       placeholder="{{ __('public.search_learning_path_placeholder') }}" 
                                        class="flex-1 bg-transparent border-0 outline-none text-gray-800 placeholder-gray-400 text-base font-medium"
                                 >
                             </div>
@@ -808,7 +808,7 @@
                             <!-- Search Button -->
                             <button class="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-2xl font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300">
                                 <i class="fas fa-search ml-2"></i>
-                                <span>ابحث</span>
+                                <span>{{ __('public.search_btn') }}</span>
                             </button>
                         </div>
                         
@@ -822,7 +822,7 @@
                             <p class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-xs md:text-sm font-medium shadow-sm">
                                 <i class="fas fa-filter text-xs"></i>
                                 <span class="text-blue-600 font-bold" x-text="filteredPaths.length"></span> 
-                                <span> مسار متاح</span>
+                                <span> {{ __('public.paths_available') }}</span>
                             </p>
                         </div>
                     </div>
@@ -875,7 +875,7 @@
                         <div class="absolute bottom-3 right-3 bg-white/20 backdrop-blur-md rounded-full px-2 py-1 z-20">
                             <span class="text-white text-[10px] font-bold flex items-center gap-1">
                                 <i class="fas fa-graduation-cap text-[10px]"></i>
-                                <span>{{ $path->courses_count ?? 0 }} كورس</span>
+                                <span>{{ __('public.path_courses_count', ['count' => $path->courses_count ?? 0]) }}</span>
                             </span>
                         </div>
                     </div>
@@ -888,7 +888,7 @@
                             </h3>
                             
                             <p class="text-gray-600 text-xs lg:text-sm mb-3 line-clamp-2 leading-relaxed min-h-[3rem]">
-                                {{ Str::limit($path->description ?? 'مسار تعليمي شامل يضم مجموعة من الكورسات والمهارات', 80) }}
+                                {{ Str::limit($path->description ?? __('public.path_description_fallback'), 80) }}
                             </p>
                         </div>
                         
@@ -897,19 +897,19 @@
                                 @if(($path->price ?? 0) > 0)
                                     <span class="text-base lg:text-lg font-black text-blue-600 flex items-center gap-1">
                                         <span>{{ number_format($path->price, 0) }}</span>
-                                        <span class="text-[10px] text-gray-500 font-normal">ج.م</span>
+                                        <span class="text-[10px] text-gray-500 font-normal">{{ __('public.currency_egp') }}</span>
                                     </span>
                                 @else
                                     <span class="text-base lg:text-lg font-black text-green-600 flex items-center gap-1">
                                         <i class="fas fa-gift text-xs"></i>
-                                        <span>مجاني</span>
+                                        <span>{{ __('public.free_price') }}</span>
                                     </span>
                                 @endif
                             </div>
                             <a href="{{ route('public.learning-path.show', $path->slug) }}" class="bg-gradient-to-r from-blue-600 to-green-500 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-[10px] lg:text-xs font-bold shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-200 whitespace-nowrap relative z-50 pointer-events-auto">
                                 <span class="flex items-center gap-1">
-                                    <span class="hidden sm:inline">عرض التفاصيل</span>
-                                    <span class="sm:hidden">التفاصيل</span>
+                                    <span class="hidden sm:inline">{{ __('public.view_details') }}</span>
+                                    <span class="sm:hidden">{{ __('public.details_short') }}</span>
                                     <i class="fas fa-arrow-left text-[10px]"></i>
                                 </span>
                             </a>
@@ -925,11 +925,11 @@
                     <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-route text-gray-400 text-4xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">قريباً...</h3>
-                    <p class="text-gray-600 mb-6">نعمل على إضافة المزيد من المسارات التعليمية لخدمتكم بشكل أفضل</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ __('public.coming_soon') }}</h3>
+                    <p class="text-gray-600 mb-6">{{ __('public.coming_soon_paths') }}</p>
                     <a href="{{ route('register') }}" class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                         <i class="fas fa-bell"></i>
-                        <span>اشترك للحصول على التحديثات</span>
+                        <span>{{ __('public.subscribe_updates') }}</span>
                     </a>
                 </div>
             </div>
@@ -947,22 +947,22 @@
         
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center fade-in-up relative z-10">
             <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-6 leading-tight">
-                جاهز لبدء رحلتك التعليمية؟
+                {{ __('public.cta_ready_title') }}
             </h2>
             <p class="text-lg md:text-xl text-gray-600 mb-10 font-medium">
-                انضم إلى آلاف الطلاب الذين حققوا التميز في البرمجة مع Mindlytics
+                {{ __('public.cta_ready_desc') }}
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden group">
                     <span class="relative z-10 flex items-center gap-2">
                         <i class="fas fa-user-plus"></i>
-                        <span>سجل مجاناً الآن</span>
+                        <span>{{ __('public.register_free_now') }}</span>
                     </span>
                     <span class="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                 </a>
                 <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-full font-bold text-lg border-2 border-blue-600 hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl relative">
                     <span class="flex items-center gap-2">
-                        <span>استعرض الكورسات</span>
+                        <span>{{ __('public.browse_all_courses') }}</span>
                         <i class="fas fa-arrow-left"></i>
                     </span>
                 </a>

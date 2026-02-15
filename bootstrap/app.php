@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Security Headers - يجب أن يكون أول middleware
         $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
         
+        // تحديد لغة الموقع من ?lang= أو الجلسة (لجميع الصفحات)
+        $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);
+        
         // Input Sanitization - تنظيف المدخلات
         $middleware->appendToGroup('web', \App\Http\Middleware\InputSanitizationMiddleware::class);
         
@@ -36,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'ownership' => \App\Http\Middleware\EnsureOwnership::class,
             'guest-only' => \App\Http\Middleware\EnsureGuestOnly::class,
             'prevent-concurrent' => \App\Http\Middleware\PreventConcurrentSessions::class,
+            'landing.locale' => \App\Http\Middleware\SetLandingLocale::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

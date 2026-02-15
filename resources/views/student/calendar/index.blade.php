@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'التقويم الأكاديمي')
+@section('title', __('student.calendar_title'))
 
 @push('styles')
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css' rel='stylesheet' />
@@ -50,12 +50,12 @@
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 p-5 sm:p-6">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">التقويم الأكاديمي</h1>
-                    <p class="text-sm text-gray-500 mt-1">جميع الأحداث والمواعيد المهمة في مكان واحد</p>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">{{ __('student.calendar_title') }}</h1>
+                    <p class="text-sm text-gray-500 mt-1">{{ __('student.calendar_subtitle') }}</p>
                 </div>
                 <div class="text-sm text-gray-600 flex items-center gap-2">
                     <i class="fas fa-calendar-alt text-sky-500"></i>
-                    <span>إجمالي الأحداث: <strong>{{ $stats['total'] ?? 0 }}</strong></span>
+                    <span>{{ __('student.total_events') }}: <strong>{{ $stats['total'] ?? 0 }}</strong></span>
                 </div>
             </div>
         </div>
@@ -70,19 +70,19 @@
                     <div class="event-legend mt-4 pt-4 border-t border-gray-200">
                         <div class="legend-item">
                             <div class="legend-color bg-red-500"></div>
-                            <span>امتحانات</span>
+                            <span>{{ __('student.legend_exams') }}</span>
                         </div>
                         <div class="legend-item">
                             <div class="legend-color bg-sky-500"></div>
-                            <span>محاضرات</span>
+                            <span>{{ __('student.legend_lectures') }}</span>
                         </div>
                         <div class="legend-item">
                             <div class="legend-color bg-amber-500"></div>
-                            <span>واجبات</span>
+                            <span>{{ __('student.legend_assignments') }}</span>
                         </div>
                         <div class="legend-item">
                             <div class="legend-color bg-emerald-500"></div>
-                            <span>أحداث أخرى</span>
+                            <span>{{ __('student.other_events') }}</span>
                         </div>
                     </div>
                 </div>

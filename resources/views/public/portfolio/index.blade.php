@@ -1,32 +1,31 @@
 @extends('layouts.public')
 
-@section('title', 'Mindlytics Portfolio - معرض أعمال الطلاب')
+@section('title', __('public.portfolio_page_title'))
 
 @section('content')
 <section class="py-8 md:py-12 bg-gradient-to-b from-slate-50 to-white" style="padding-top: 6rem;">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="mb-8 text-center">
             <h1 class="text-3xl md:text-4xl font-black text-gray-900 mb-2" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
-                Mindlytics <span class="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">Portfolio</span>
+                Mindlytics <span class="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">{{ __('public.portfolio_heading') }}</span>
             </h1>
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                معرض أعمال طلابنا — مشاريع حقيقية بعد إتمام الكورسات، حيث ترى الشركات الموهبة
+                {{ __('public.portfolio_subtitle') }}
             </p>
         </div>
 
         <div class="flex flex-col lg:flex-row gap-8">
-            <!-- التصنيفات = المسارات التعليمية -->
             <aside class="lg:w-64 flex-shrink-0">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sticky top-24">
                     <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i class="fas fa-route text-blue-600"></i>
-                        المسارات التعليمية
+                        {{ __('public.learning_paths_sidebar') }}
                     </h2>
                     <ul class="space-y-1">
                         <li>
                             <a href="{{ route('public.portfolio.index') }}" class="block px-4 py-3 rounded-xl text-sm font-medium transition-all {{ !$categoryId ? 'bg-blue-600/10 text-blue-900 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-100' }}">
                                 <i class="fas fa-th-large ml-2 text-blue-600"></i>
-                                الكل
+                                {{ __('public.all') }}
                             </a>
                         </li>
                         @foreach($learningPaths as $path)
@@ -66,7 +65,7 @@
                                             @else
                                                 <span class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">{{ mb_substr($project->user->name ?? 'ط', 0, 1) }}</span>
                                             @endif
-                                            <span class="text-sm font-medium text-gray-700">{{ $project->user->name ?? 'طالب' }}</span>
+                                            <span class="text-sm font-medium text-gray-700">{{ $project->user->name ?? __('public.student_fallback') }}</span>
                                         </div>
                                         @if($project->academicYear)
                                             <span class="text-xs font-medium text-blue-600 bg-blue-600/10 px-2.5 py-1 rounded-lg">{{ $project->academicYear->name }}</span>
@@ -84,11 +83,11 @@
                         <div class="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                             <i class="fas fa-folder-open text-4xl text-blue-600"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">لا توجد مشاريع منشورة بعد</h3>
-                        <p class="text-gray-600 mb-6">ستظهر هنا مشاريع طلابنا بعد مراجعتها ونشرها من المدربين</p>
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">{{ __('public.no_projects_yet') }}</h3>
+                        <p class="text-gray-600 mb-6">{{ __('public.no_projects_desc') }}</p>
                         <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all">
                             <i class="fas fa-book"></i>
-                            استعرض الكورسات
+                            {{ __('public.browse_courses') }}
                         </a>
                     </div>
                 @endif

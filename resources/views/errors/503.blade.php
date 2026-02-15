@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>503 - الخدمة غير متاحة | Mindlytics</title>
+    <title>503 - {{ __('errors.503_title') }} | Mindlytics</title>
     
     <!-- خط عربي أصيل -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -155,13 +155,11 @@
                 </h1>
                 
                 <h2 class="text-3xl md:text-4xl lg:text-5xl font-black mb-4 text-gray-900 fade-in-up" style="animation-delay: 0.2s;">
-                    الخدمة غير متاحة مؤقتاً
+                    {{ __('errors.503_title') }}
                 </h2>
                 
                 <p class="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed fade-in-up max-w-2xl mx-auto" style="animation-delay: 0.3s;">
-                    عذراً، الخدمة غير متاحة حالياً بسبب أعمال الصيانة.
-                    <br class="hidden md:block">
-                    سنعود قريباً. شكراً لصبرك.
+                    {{ __('errors.503_message') }}
                 </p>
 
                 <div class="bg-white rounded-2xl p-6 md:p-8 mb-8 border border-gray-200 shadow-xl fade-in-up max-w-2xl mx-auto" style="animation-delay: 0.4s;">
@@ -190,7 +188,7 @@
                     </button>
                     <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center justify-center gap-2 bg-white text-teal-600 px-8 py-4 rounded-full font-bold text-base border-2 border-teal-600 hover:bg-teal-50 transition-all duration-300">
                         <i class="fas fa-home"></i>
-                        <span>العودة للوحة التحكم</span>
+                        <span>{{ __('errors.back_dashboard') }}</span>
                     </a>
                 </div>
             </div>

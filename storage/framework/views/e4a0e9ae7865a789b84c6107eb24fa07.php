@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>" dir="<?php echo e(app()->getLocale() === 'ar' ? 'rtl' : 'ltr'); ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>500 - خطأ في الخادم | Mindlytics</title>
+    <title>500 - <?php echo e(__('errors.500_title')); ?> | Mindlytics</title>
     
     <!-- خط عربي أصيل -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -147,7 +147,7 @@
             <div class="text-center">
                 <div class="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full shadow-lg mb-6 fade-in-up">
                     <i class="fas fa-exclamation-triangle text-white text-sm"></i>
-                    <span class="text-white font-bold text-sm">خطأ في الخادم</span>
+                    <span class="text-white font-bold text-sm"><?php echo e(__('errors.500_badge')); ?></span>
                 </div>
 
                 <h1 class="text-8xl md:text-9xl font-black mb-6 leading-tight text-gray-900 fade-in-up" style="animation-delay: 0.1s;">
@@ -155,13 +155,13 @@
                 </h1>
                 
                 <h2 class="text-3xl md:text-4xl lg:text-5xl font-black mb-4 text-gray-900 fade-in-up" style="animation-delay: 0.2s;">
-                    خطأ في الخادم
+                    <?php echo e(__('errors.500_title')); ?>
+
                 </h2>
                 
                 <p class="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed fade-in-up max-w-2xl mx-auto" style="animation-delay: 0.3s;">
-                    عذراً، حدث خطأ غير متوقع في الخادم.
-                    <br class="hidden md:block">
-                    تم إبلاغ الفريق التقني وسيتم حل المشكلة قريباً.
+                    <?php echo e(__('errors.500_message')); ?>
+
                 </p>
 
                 <div class="bg-white rounded-2xl p-6 md:p-8 mb-8 border border-gray-200 shadow-xl fade-in-up max-w-2xl mx-auto" style="animation-delay: 0.4s;">
@@ -190,7 +190,7 @@
                     </button>
                     <a href="<?php echo e(route('admin.dashboard')); ?>" class="inline-flex items-center justify-center gap-2 bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-base border-2 border-orange-600 hover:bg-orange-50 transition-all duration-300">
                         <i class="fas fa-home"></i>
-                        <span>العودة للوحة التحكم</span>
+                        <span><?php echo e(__('errors.back_dashboard')); ?></span>
                     </a>
                 </div>
             </div>

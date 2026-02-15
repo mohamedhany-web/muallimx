@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'إنشاء واجب جديد - Mindlytics')
-@section('header', 'إنشاء واجب جديد')
+@section('title', __('instructor.create_assignment') . ' - Mindlytics')
+@section('header', __('instructor.create_assignment'))
 
 @push('styles')
 <style>
@@ -15,24 +15,24 @@
     <!-- الهيدر -->
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 sm:p-6 mb-6">
         <nav class="text-sm text-slate-500 mb-2">
-            <a href="{{ route('instructor.assignments.index') }}" class="hover:text-sky-600 transition-colors">الواجبات</a>
+            <a href="{{ route('instructor.assignments.index') }}" class="hover:text-sky-600 transition-colors">{{ __('instructor.assignments') }}</a>
             <span class="mx-2">/</span>
-            <span class="text-slate-700 font-semibold">إنشاء واجب جديد</span>
+            <span class="text-slate-700 font-semibold">{{ __('instructor.create_assignment') }}</span>
         </nav>
         <div class="flex flex-wrap items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
                 <i class="fas fa-tasks text-lg"></i>
             </div>
             <div class="min-w-0 flex-1">
-                <h1 class="text-xl sm:text-2xl font-bold text-slate-800">إنشاء واجب جديد</h1>
-                <p class="text-sm text-slate-600 mt-0.5">أضف واجباً للكورس أو لمجموعة محددة</p>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ __('instructor.create_assignment') }}</h1>
+                <p class="text-sm text-slate-600 mt-0.5">{{ __('instructor.add_assignment_for_course') }}</p>
                 @if(request('group_id') && isset($courseGroups))
                     @php
                         $selectedGroup = collect($courseGroups)->flatten(1)->firstWhere('id', (int) request('group_id'));
                     @endphp
                     @if($selectedGroup)
                         <span class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-100 text-sky-700">
-                            <i class="fas fa-users"></i> واجب للمجموعة: {{ $selectedGroup->name }}
+                            <i class="fas fa-users"></i> {{ __('instructor.assignment_for_group') }}: {{ $selectedGroup->name }}
                         </span>
                     @endif
                 @endif
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const loadingOption = document.createElement('option');
         loadingOption.value = '';
-        loadingOption.textContent = 'جاري التحميل...';
+        loadingOption.textContent = @json(__('instructor.loading_text'));
         loadingOption.disabled = true;
         lessonSelect.appendChild(loadingOption);
         lessonSelect.disabled = true;
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     var noOpt = document.createElement('option');
                     noOpt.value = '';
-                    noOpt.textContent = 'لا يوجد دروس في هذا الكورس';
+                    noOpt.textContent = @json(__('instructor.no_lessons_in_course'));
                     noOpt.disabled = true;
                     lessonSelect.appendChild(noOpt);
                 }
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadingOption.remove();
                 var errOpt = document.createElement('option');
                 errOpt.value = '';
-                errOpt.textContent = 'حدث خطأ';
+                errOpt.textContent = @json(__('instructor.error_occurred'));
                 errOpt.disabled = true;
                 lessonSelect.appendChild(errOpt);
                 lessonSelect.disabled = false;

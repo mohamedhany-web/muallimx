@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'بناء المنهج - ' . $course->title)
-@section('header', 'بناء المنهج - ' . $course->title)
+@section('title', __('instructor.build_curriculum') . ' - ' . $course->title)
+@section('header', __('instructor.build_curriculum') . ' - ' . $course->title)
 
 @push('styles')
 <style>
@@ -18,19 +18,19 @@
     <div class="rounded-2xl p-5 sm:p-6 bg-white border border-slate-200 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-1">بناء المنهج الدراسي</h1>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-1">{{ __('instructor.build_curriculum') }}</h1>
                 <p class="text-sm text-slate-500">{{ $course->title }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <a href="{{ route('instructor.lectures.index') }}" 
                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
                     <i class="fas fa-chalkboard-teacher"></i>
-                    <span>المحاضرات</span>
+                    <span>{{ __('instructor.lectures') }}</span>
                 </a>
                 <a href="{{ route('instructor.courses.index') }}" 
                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors">
                     <i class="fas fa-arrow-right"></i>
-                    <span>العودة</span>
+                    <span>{{ __('instructor.back') }}</span>
                 </a>
             </div>
         </div>
@@ -337,7 +337,7 @@
                     <label class="block text-sm font-semibold text-slate-700 mb-2"><i class="fas fa-video text-sky-500 ml-1"></i> رابط تسجيل المحاضرة (اختياري)</label>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-2">اختر المشغل</label>
-                        <div class="grid grid-cols-4 gap-2 mb-3">
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
                             <button type="button" onclick="selectVideoPlatform('youtube', this)"
                                     class="platform-btn p-3 border-2 border-slate-200 rounded-lg text-center hover:border-sky-400 transition-colors" data-platform="youtube">
                                 <i class="fab fa-youtube text-red-600 text-xl mb-1 block"></i>
@@ -357,6 +357,11 @@
                                     class="platform-btn p-3 border-2 border-slate-200 rounded-lg text-center hover:border-sky-400 transition-colors" data-platform="direct">
                                 <i class="fas fa-file-video text-purple-600 text-xl mb-1 block"></i>
                                 <span class="text-xs font-semibold text-slate-700">مباشر</span>
+                            </button>
+                            <button type="button" onclick="selectVideoPlatform('bunny', this)"
+                                    class="platform-btn p-3 border-2 border-slate-200 rounded-lg text-center hover:border-sky-400 transition-colors" data-platform="bunny">
+                                <i class="fas fa-cloud text-orange-600 text-xl mb-1 block"></i>
+                                <span class="text-xs font-semibold text-slate-700">Bunny.net</span>
                             </button>
                         </div>
                         <input type="hidden" name="video_platform" id="lectureVideoPlatform" value="">
@@ -979,6 +984,9 @@ async function editLectureFromCurriculum(lectureId, sectionId) {
                 } else if (url.includes('drive.google.com')) {
                     detectedPlatform = 'google_drive';
                     platformBtn = document.querySelector('[data-platform="google_drive"]');
+                } else if (url.includes('mediadelivery.net')) {
+                    detectedPlatform = 'bunny';
+                    platformBtn = document.querySelector('[data-platform="bunny"]');
                 } else if (url.match(/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i)) {
                     detectedPlatform = 'direct';
                     platformBtn = document.querySelector('[data-platform="direct"]');
@@ -1137,6 +1145,8 @@ function saveLecture(e) {
             detectedPlatform = 'vimeo';
         } else if (recordingUrl.includes('drive.google.com')) {
             detectedPlatform = 'google_drive';
+        } else if (recordingUrl.includes('mediadelivery.net')) {
+            detectedPlatform = 'bunny';
         } else if (recordingUrl.match(/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i)) {
             detectedPlatform = 'direct';
         }
@@ -1319,6 +1329,10 @@ function selectVideoPlatform(platform, button) {
                 placeholder.textContent = 'مثال: https://example.com/video.mp4';
                 input.placeholder = 'الصق رابط الفيديو المباشر هنا...';
                 break;
+            case 'bunny':
+                placeholder.textContent = 'مثال: https://iframe.mediadelivery.net/embed/LIBRARY_ID/VIDEO_ID';
+                input.placeholder = 'الصق رابط Bunny.net (embed) هنا...';
+                break;
             default:
                 placeholder.textContent = '';
                 input.placeholder = 'ضع رابط الفيديو هنا...';
@@ -1366,6 +1380,14 @@ function previewLectureVideo() {
             const driveBtn = document.querySelector('[data-platform="google_drive"]');
             if (driveBtn) {
                 selectVideoPlatform('google_drive', driveBtn);
+            }
+        } else if (url.includes('mediadelivery.net')) {
+            platform = 'bunny';
+            selectedVideoPlatform = 'bunny';
+            document.getElementById('lectureVideoPlatform').value = 'bunny';
+            const bunnyBtn = document.querySelector('[data-platform="bunny"]');
+            if (bunnyBtn) {
+                selectVideoPlatform('bunny', bunnyBtn);
             }
         } else if (url.match(/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i)) {
             platform = 'direct';
@@ -1468,6 +1490,15 @@ function previewLectureVideo() {
                 isValid = true;
                 const escapedUrl = url.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
                 html = '<video controls width="100%" height="100%" style="max-height: 100%; border-radius: 0.75rem;" class="w-full h-full"><source src="' + escapedUrl + '" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>';
+            }
+        }
+        // Bunny.net (Bunny Stream)
+        else if (platform === 'bunny') {
+            const bunnyMatch = url.match(/iframe\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+            if (bunnyMatch && bunnyMatch[1] && bunnyMatch[2]) {
+                isValid = true;
+                const embedUrl = url.split('?')[0];
+                html = '<iframe src="' + embedUrl.replace(/"/g, '&quot;') + '" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
             }
         }
         

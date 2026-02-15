@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'سياسة الخصوصية - Mindlytics')
+@section('title', __('public.privacy_page_title') . ' - ' . __('public.site_suffix'))
 
 @push('styles')
 <style>

@@ -1,10 +1,11 @@
+@php $authLocale = app()->getLocale(); $authRtl = $authLocale === 'ar'; @endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ $authLocale }}" dir="{{ $authRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>إنشاء حساب - Mindlytics</title>
+    <title>{{ __('auth.register') }} - {{ config('app.name') }}</title>
 
     {{-- تحميل صورة الخلفية مبكراً لسرعة الظهور --}}
     <link rel="preload" href="{{ $authBackgroundUrl ?? asset('images/brainstorm-meeting.jpg') }}" as="image">
@@ -661,13 +662,13 @@
         <!-- تصميم الهاتف فقط -->
         <div class="register-mobile-wrap">
             <div class="register-mobile-welcome">
-                <h1 class="welcome-title">انضم إلينا</h1>
-                <p class="welcome-desc">أنشئ حسابك وابدأ رحلتك التعليمية مع Mindlytics</p>
+                <h1 class="welcome-title">{{ __('auth.join_us') }}</h1>
+                <p class="welcome-desc">{{ __('auth.create_account_desc') }}</p>
             </div>
 
             <div class="register-mobile-form-wrap">
-                <h2 class="section-title">إنشاء حساب</h2>
-                <p class="section-subtitle">أدخل بياناتك لإنشاء حسابك الجديد</p>
+                <h2 class="section-title">{{ __('auth.register') }}</h2>
+                <p class="section-subtitle">{{ __('auth.register_subtitle') }}</p>
 
                 <div class="register-mobile-form-card">
                     <form action="{{ route('register') }}" method="POST">
@@ -678,20 +679,20 @@
                         @endphp
 
                         <div class="bg-[var(--color-primary-light)] border border-[var(--input-border)] rounded-xl p-2.5 mb-3">
-                            <p class="text-xs font-bold text-[var(--text-dark)]">تسجيل الطلاب فقط</p>
+                            <p class="text-xs font-bold text-[var(--text-dark)]">{{ __('auth.students_only_note') }}</p>
                         </div>
 
                         <div class="input-wrap">
-                            <label for="name_m">الاسم الكامل</label>
+                            <label for="name_m">{{ __('auth.full_name') }}</label>
                             <div class="relative">
                                 <i class="input-icon fas fa-user"></i>
-                                <input type="text" name="name" id="name_m" value="{{ old('name') }}" required class="form-input w-full" placeholder="الاسم الكامل">
+                                <input type="text" name="name" id="name_m" value="{{ old('name') }}" required class="form-input w-full" placeholder="{{ __('auth.enter_full_name') }}">
                             </div>
                             @error('name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                         </div>
 
                         <div class="input-wrap">
-                            <label>رقم الهاتف</label>
+                            <label>{{ __('auth.phone_number') }}</label>
                             <div class="phone-country-row flex rounded-xl overflow-hidden border border-[var(--input-border)] bg-[var(--input-bg)] focus-within:border-[var(--color-primary)]">
                                 <select name="country_code" required class="form-input shrink-0 py-2.5 rounded-none border-0 border-l border-[var(--input-border)] text-sm min-w-[5rem]" dir="ltr">
                                     @foreach($phoneCountries ?? [] as $c)
@@ -704,7 +705,7 @@
                         </div>
 
                         <div class="input-wrap">
-                            <label for="email_m">البريد الإلكتروني (اختياري)</label>
+                            <label for="email_m">{{ __('auth.email_optional') }}</label>
                             <div class="relative">
                                 <i class="input-icon fas fa-envelope"></i>
                                 <input type="email" name="email" id="email_m" value="{{ old('email') }}" class="form-input w-full" placeholder="example@email.com" dir="ltr">
@@ -713,7 +714,7 @@
                         </div>
 
                         <div class="input-wrap">
-                            <label for="password_m">كلمة المرور</label>
+                            <label for="password_m">{{ __('auth.password') }}</label>
                             <div class="relative">
                                 <i class="input-icon fas fa-lock"></i>
                                 <input :type="showPassword ? 'text' : 'password'" name="password" id="password_m" required class="form-input w-full pl-12" placeholder=".........">
@@ -723,7 +724,7 @@
                         </div>
 
                         <div class="input-wrap">
-                            <label for="password_confirmation_m">تأكيد كلمة المرور</label>
+                            <label for="password_confirmation_m">{{ __('auth.password_confirmation') }}</label>
                             <div class="relative">
                                 <i class="input-icon fas fa-lock"></i>
                                 <input :type="showPasswordConfirm ? 'text' : 'password'" name="password_confirmation" id="password_confirmation_m" required class="form-input w-full pl-12" placeholder=".........">
@@ -733,19 +734,19 @@
 
                         <div class="flex items-start gap-2 mb-4">
                             <input type="checkbox" id="terms_m" required class="mt-0.5 h-4 w-4 rounded border-[var(--input-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]">
-                            <label for="terms_m" class="text-xs text-[var(--text-muted)]">أوافق على <a href="#" class="link-primary">شروط الاستخدام</a> و <a href="#" class="link-primary">سياسة الخصوصية</a></label>
+                            <label for="terms_m" class="text-xs text-[var(--text-muted)]">{{ __('auth.agree_terms') }} <a href="#" class="link-primary">{{ __('auth.terms_of_use') }}</a> {{ __('auth.and') }} <a href="#" class="link-primary">{{ __('auth.privacy_policy') }}</a></label>
                         </div>
 
                         <button type="submit" class="btn-register w-full py-3 rounded-xl text-white font-bold flex items-center justify-center gap-2">
                             <i class="fas fa-user-plus"></i>
-                            <span>إنشاء الحساب</span>
+                            <span>{{ __('auth.create_account_btn') }}</span>
                         </button>
 
                         <div class="text-center pt-4 mt-4 border-t border-[var(--input-border)]">
-                            <p class="text-sm text-[var(--text-muted)] mb-1">لديك حساب بالفعل؟</p>
+                            <p class="text-sm text-[var(--text-muted)] mb-1">{{ __('auth.already_have_account') }}</p>
                             <a href="{{ route('login') }}" class="link-primary text-sm inline-flex items-center gap-1">
                                 <i class="fas fa-sign-in-alt"></i>
-                                <span>سجّل الدخول</span>
+                                <span>{{ __('auth.go_to_login') }}</span>
                             </a>
                         </div>
                     </form>
@@ -763,23 +764,23 @@
                 </div>
                 <div class="visual-content">
                     <h1 class="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black mb-2 md:mb-6 leading-tight text-white drop-shadow-lg visual-title">
-                        معاً نُطوّر مهاراتنا
+                        {{ __('auth.visual_title') }}
                     </h1>
                     <p class="text-xs sm:text-sm md:text-lg lg:text-xl text-white/90 mb-3 md:mb-8 leading-relaxed font-bold px-1 md:px-2 drop-shadow-md visual-desc">
-                        تعلّم، تشارك، وتنمو في بيئة واحدة
+                        {{ __('auth.visual_desc') }}
                     </p>
                     <div class="flex flex-wrap justify-center gap-2 md:gap-4 px-1 md:px-2 visual-badges">
                         <div class="flex items-center gap-1.5 md:gap-2 bg-white/10 backdrop-blur-md px-2 py-1.5 md:px-5 md:py-3 rounded-lg md:rounded-xl border-2 border-white/30 shadow-xl hover:bg-white/20 transition-all">
                             <i class="fas fa-check-circle text-white/90 text-xs md:text-base"></i>
-                            <span class="font-bold text-[10px] md:text-sm text-white">تعلم فعّال</span>
+                            <span class="font-bold text-[10px] md:text-sm text-white">{{ __('auth.effective_learning') }}</span>
                         </div>
                         <div class="flex items-center gap-1.5 md:gap-2 bg-white/10 backdrop-blur-md px-2 py-1.5 md:px-5 md:py-3 rounded-lg md:rounded-xl border-2 border-white/30 shadow-xl hover:bg-white/20 transition-all">
                             <i class="fas fa-users text-white/90 text-xs md:text-base"></i>
-                            <span class="font-bold text-[10px] md:text-sm text-white">تعاون ومشاركة</span>
+                            <span class="font-bold text-[10px] md:text-sm text-white">{{ __('auth.collaboration') }}</span>
                         </div>
                         <div class="flex items-center gap-1.5 md:gap-2 bg-white/10 backdrop-blur-md px-2 py-1.5 md:px-5 md:py-3 rounded-lg md:rounded-xl border-2 border-white/30 shadow-xl hover:bg-white/20 transition-all">
                             <i class="fas fa-chart-line text-white/90 text-xs md:text-base"></i>
-                            <span class="font-bold text-[10px] md:text-sm text-white">نمو مستمر</span>
+                            <span class="font-bold text-[10px] md:text-sm text-white">{{ __('auth.continuous_growth') }}</span>
                         </div>
                     </div>
                 </div>
@@ -789,7 +790,7 @@
             <div class="register-form-section">
                 <div class="register-form-wrapper">
                     <h2 class="register-page-title text-2xl md:text-3xl font-black text-[var(--text-dark)] text-center mb-6">
-                        إنشاء حساب في <span class="text-[var(--color-primary)]">Mindlytics</span>
+                        {{ __('auth.register') }} <span class="text-[var(--color-primary)]">{{ config('app.name') }}</span>
                     </h2>
 
                     <!-- Register Form -->
@@ -798,7 +799,7 @@
                         
                         <!-- Student Notice -->
                         <div class="bg-[var(--color-primary-light)] border border-[var(--input-border)] rounded-xl p-3 mb-4">
-                            <p class="text-sm font-bold text-[var(--text-dark)]">تسجيل الطلاب فقط — أدخل بياناتك لإنشاء حسابك</p>
+                            <p class="text-sm font-bold text-[var(--text-dark)]">{{ __('auth.students_only_note') }} — {{ __('auth.register_subtitle') }}</p>
                         </div>
 
                         <!-- Form Grid -->
@@ -810,7 +811,7 @@
                             <!-- الاسم الكامل -->
                             <div>
                                 <label for="name" class="block text-sm font-bold text-[var(--text-dark)] mb-1.5">
-                                    الاسم الكامل
+                                    {{ __('auth.full_name') }}
                                 </label>
                                 <input type="text" 
                                        name="name" 
@@ -818,7 +819,7 @@
                                        value="{{ old('name') }}"
                                        required 
                                        class="form-input w-full px-4 py-3 rounded-xl text-[var(--text-dark)] font-medium @error('name') border-red-500 @enderror" 
-                                       placeholder="أدخل اسمك الكامل">
+                                       placeholder="{{ __('auth.enter_full_name') }}">
                                 @error('name')
                                     <p class="mt-1 text-xs text-red-600 font-medium">{{ $message }}</p>
                                 @enderror
@@ -827,7 +828,7 @@
                             <!-- رقم الهاتف مع كود الدولة -->
                             <div>
                                 <label for="phone" class="block text-sm font-bold text-[var(--text-dark)] mb-1.5">
-                                    رقم الهاتف
+                                    {{ __('auth.phone_number') }}
                                 </label>
                                 <div class="phone-country-row flex rounded-xl overflow-hidden border border-[var(--input-border)] bg-[var(--input-bg)] transition-all focus-within:border-[var(--color-primary)] focus-within:ring-2 focus-within:ring-[var(--color-primary-light)] @error('phone') border-red-500 @enderror">
                                     <select name="country_code" 
@@ -835,7 +836,7 @@
                                             required
                                             class="form-input shrink-0 py-2.5 rounded-l-xl rounded-r-none border-0 border-l border-[var(--input-border)] text-[var(--text-dark)] font-medium text-sm bg-transparent focus:ring-0"
                                             dir="ltr"
-                                            aria-label="كود الدولة">
+                                            aria-label="{{ __('auth.country_code_aria') }}">
                                         @foreach($phoneCountries ?? [] as $c)
                                             <option value="{{ $c['dial_code'] }}" {{ old('country_code', $defaultCountry['dial_code'] ?? '+966') === $c['dial_code'] ? 'selected' : '' }}>
                                                 {{ $c['dial_code'] }} {{ $c['name_ar'] }}
@@ -850,7 +851,7 @@
                                            class="form-input flex-1 min-w-0 px-3 py-2.5 rounded-r-xl rounded-l-none border-0 text-[var(--text-dark)] font-medium text-sm bg-transparent focus:ring-0 @error('phone') border-red-500 @enderror" 
                                            placeholder="xxxxxxxx" 
                                            dir="ltr"
-                                           aria-label="رقم الهاتف">
+                                           aria-label="{{ __('auth.phone_aria') }}">
                                 </div>
                                 @error('phone')
                                     <p class="mt-1 text-xs text-red-600 font-medium">{{ $message }}</p>
@@ -860,7 +861,7 @@
                             <!-- البريد الإلكتروني -->
                             <div>
                                 <label for="email" class="block text-sm font-bold text-[var(--text-dark)] mb-1.5">
-                                    البريد الإلكتروني (اختياري)
+                                    {{ __('auth.email_optional') }}
                                 </label>
                                 <input type="email" 
                                        name="email" 
@@ -877,7 +878,7 @@
                             <!-- كلمة المرور -->
                             <div>
                                 <label for="password" class="block text-sm font-bold text-[var(--text-dark)] mb-1.5">
-                                    كلمة المرور
+                                    {{ __('auth.password') }}
                                 </label>
                                 <div class="relative">
                                     <input :type="showPassword ? 'text' : 'password'" 
@@ -885,7 +886,7 @@
                                            id="password" 
                                            required 
                                            class="form-input w-full px-4 py-3 pr-10 pl-11 rounded-xl text-[var(--text-dark)] font-medium @error('password') border-red-500 @enderror" 
-                                           placeholder="أدخل كلمة مرور قوية">
+                                           placeholder="{{ __('auth.enter_strong_password') }}">
                                     <button type="button" 
                                             @click="showPassword = !showPassword" 
                                             class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--color-primary)] transition-colors focus:outline-none">
@@ -901,7 +902,7 @@
                             <!-- تأكيد كلمة المرور -->
                             <div>
                                 <label for="password_confirmation" class="block text-sm font-bold text-[var(--text-dark)] mb-1.5">
-                                    تأكيد كلمة المرور
+                                    {{ __('auth.password_confirmation') }}
                                 </label>
                                 <div class="relative">
                                     <input :type="showPasswordConfirm ? 'text' : 'password'" 
@@ -909,7 +910,7 @@
                                            id="password_confirmation" 
                                            required 
                                            class="form-input w-full px-4 py-3 pr-10 pl-11 rounded-xl text-[var(--text-dark)] font-medium" 
-                                           placeholder="أعد إدخال كلمة المرور">
+                                           placeholder="{{ __('auth.reenter_password') }}">
                                     <button type="button" 
                                             @click="showPasswordConfirm = !showPasswordConfirm" 
                                             class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--color-primary)] transition-colors focus:outline-none">
@@ -927,10 +928,10 @@
                                    required
 class="mt-0.5 h-4 w-4 rounded border-[var(--input-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)]">
                             <label for="terms" class="mr-2 text-sm text-[var(--text-dark)] font-medium leading-tight">
-                                أوافق على
-                                <a href="#" class="link-primary underline">شروط الاستخدام</a>
-                                و
-                                <a href="#" class="link-primary underline">سياسة الخصوصية</a>
+                                {{ __('auth.agree_terms') }}
+                                <a href="#" class="link-primary underline">{{ __('auth.terms_of_use') }}</a>
+                                {{ __('auth.and') }}
+                                <a href="#" class="link-primary underline">{{ __('auth.privacy_policy') }}</a>
                             </label>
                         </div>
 
@@ -938,15 +939,15 @@ class="mt-0.5 h-4 w-4 rounded border-[var(--input-border)] text-[var(--color-pri
                         <button type="submit" 
                                 class="btn-register w-full py-3 rounded-xl text-white font-black text-base shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 mt-4">
                             <i class="fas fa-user-plus text-lg"></i>
-                            <span>إنشاء الحساب</span>
+                            <span>{{ __('auth.create_account_btn') }}</span>
                         </button>
 
                         <!-- Login Link -->
                         <div class="text-center pt-6 mt-6 border-t border-[var(--input-border)]">
-                            <p class="text-sm text-[var(--text-muted)] mb-2">لديك حساب بالفعل؟</p>
+                            <p class="text-sm text-[var(--text-muted)] mb-2">{{ __('auth.already_have_account') }}</p>
                             <a href="{{ route('login') }}" class="link-primary inline-flex items-center gap-2 text-sm">
                                 <i class="fas fa-sign-in-alt"></i>
-                                <span>سجّل الدخول</span>
+                                <span>{{ __('auth.go_to_login') }}</span>
                             </a>
                         </div>
                     </form>

@@ -10,7 +10,7 @@
             </div>
             <div>
                 <h2 class="text-xl font-black bg-gradient-to-r from-blue-300 via-blue-200 to-blue-100 bg-clip-text text-transparent tracking-tight">Mindlytics</h2>
-                <p class="text-xs text-slate-300/80 font-bold">لوحة الإدارة</p>
+                <p class="text-xs text-slate-300/80 font-bold"><?php echo e(__('admin.admin_panel')); ?></p>
             </div>
         </div>
     </div>
@@ -44,7 +44,7 @@
                           <?php echo e($dashboardActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-xl shadow-blue-600/40' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'); ?>">
                     <div class="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     <i class="fas fa-chart-line w-5 relative z-10 <?php echo e($dashboardActive ? 'text-white' : 'text-slate-400 group-hover:text-white'); ?>"></i>
-                    <span class="relative z-10 font-semibold">لوحة التحكم</span>
+                    <span class="relative z-10 font-semibold"><?php echo e(__('admin.dashboard')); ?></span>
                     <?php if($dashboardActive): ?>
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-400 to-blue-500 rounded-r shadow-lg"></div>
                     <?php endif; ?>
@@ -62,7 +62,7 @@
                           <?php echo e($profileActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-xl shadow-blue-600/40' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'); ?>">
                     <div class="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     <i class="fas fa-user w-5 relative z-10 <?php echo e($profileActive ? 'text-white' : 'text-slate-400 group-hover:text-white'); ?>"></i>
-                    <span class="relative z-10 font-semibold">الملف الشخصي</span>
+                    <span class="relative z-10 font-semibold"><?php echo e(__('admin.profile')); ?></span>
                     <?php if($profileActive): ?>
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-400 to-blue-500 rounded-r shadow-lg"></div>
                     <?php endif; ?>
@@ -78,7 +78,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-cogs w-5 text-slate-400 group-hover:text-white"></i>
-                        <span class="font-medium">إدارة النظام</span>
+                        <span class="font-medium"><?php echo e(__('admin.system_management')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -88,7 +88,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.users*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-users w-4"></i>
-                            <span>المستخدمين</span>
+                            <span><?php echo e(__('admin.users')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -96,7 +96,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.orders.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-shopping-cart w-4"></i>
-                            <span>الطلبات</span>
+                            <span><?php echo e(__('admin.orders')); ?></span>
                             <?php
                                 $pendingOrders = \App\Models\Order::where('status', 'pending')->count();
                             ?>
@@ -110,7 +110,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.notifications.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-bell w-4"></i>
-                            <span>الإشعارات</span>
+                            <span><?php echo e(__('admin.notifications')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -118,7 +118,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.employee-notifications.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-user-tie w-4"></i>
-                            <span>إشعارات الموظفين</span>
+                            <span><?php echo e(__('admin.employee_notifications')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -126,7 +126,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.activity-log*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-history w-4"></i>
-                            <span>سجل النشاطات</span>
+                            <span><?php echo e(__('admin.activity_log')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -134,7 +134,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.statistics*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-chart-bar w-4"></i>
-                            <span>الإحصائيات</span>
+                            <span><?php echo e(__('admin.statistics')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -142,7 +142,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.performance.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-tachometer-alt w-4"></i>
-                            <span>أداء الموقع</span>
+                            <span><?php echo e(__('admin.performance')); ?></span>
                         </a>
                     </li>
                 </ul>
@@ -157,7 +157,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-handshake w-5 text-blue-400 group-hover:text-white"></i>
-                        <span class="font-medium">نظام الاتفاقيات</span>
+                        <span class="font-medium"><?php echo e(__('admin.agreements_system')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -168,7 +168,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.agreements.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-file-contract w-4"></i>
-                            <span>اتفاقيات المدربين</span>
+                            <span><?php echo e(__('admin.instructor_agreements')); ?></span>
                         </a>
                     </li>
                     <?php endif; ?>
@@ -178,7 +178,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.employee-agreements.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-user-tie w-4"></i>
-                            <span>اتفاقيات الموظفين</span>
+                            <span><?php echo e(__('admin.employee_agreements')); ?></span>
                         </a>
                     </li>
                     <?php endif; ?>
@@ -188,7 +188,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.withdrawals.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-money-bill-wave w-4"></i>
-                            <span>طلبات السحب</span>
+                            <span><?php echo e(__('admin.withdrawal_requests')); ?></span>
                             <?php
                                 try {
                                     $pendingWithdrawals = \App\Models\WithdrawalRequest::where('status', 'pending')->count();
@@ -214,7 +214,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-money-bill-wave w-5 text-slate-400 group-hover:text-white"></i>
-                        <span class="font-medium">إدارة المحاسبة</span>
+                        <span class="font-medium"><?php echo e(__('admin.accounting')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -224,7 +224,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.invoices.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-file-invoice w-4"></i>
-                            <span>الفواتير</span>
+                            <span><?php echo e(__('admin.invoices')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -232,7 +232,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.payments.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-credit-card w-4"></i>
-                            <span>المدفوعات</span>
+                            <span><?php echo e(__('admin.payments')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -240,7 +240,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.transactions.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-exchange-alt w-4"></i>
-                            <span>المعاملات المالية</span>
+                            <span><?php echo e(__('admin.transactions')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -248,7 +248,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.wallets.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-wallet w-4"></i>
-                            <span>المحافظ</span>
+                            <span><?php echo e(__('admin.wallets')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -256,7 +256,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.salaries.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-money-check-alt w-4"></i>
-                            <span>الماليات الخاصة بالمدربين</span>
+                            <span><?php echo e(__('admin.instructor_finances')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -264,7 +264,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.expenses.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-receipt w-4"></i>
-                            <span>المصروفات</span>
+                            <span><?php echo e(__('admin.expenses')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -272,7 +272,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.subscriptions.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-calendar-check w-4"></i>
-                            <span>الاشتراكات</span>
+                            <span><?php echo e(__('admin.subscriptions')); ?></span>
                         </a>
                     </li>
                     <?php
@@ -283,7 +283,7 @@
                                 class="flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all duration-300 text-slate-400 hover:bg-slate-700/50 hover:text-white">
                             <span class="flex items-center gap-2">
                                 <i class="fas fa-calendar-check w-4 text-slate-400"></i>
-                                <span class="font-medium text-sm">إدارة التقسيط</span>
+                                <span class="font-medium text-sm"><?php echo e(__('admin.installment_management')); ?></span>
                             </span>
                             <i class="fas fa-chevron-down text-xs transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                         </button>
@@ -293,7 +293,7 @@
                                    @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                                    class="flex items-center gap-2 px-4 py-2 text-xs rounded-lg transition-all duration-300 <?php echo e(request()->routeIs('admin.installments.plans.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'); ?>">
                                     <i class="fas fa-layer-group w-3.5"></i>
-                                    <span>خطط التقسيط</span>
+                                    <span><?php echo e(__('admin.installment_plans')); ?></span>
                                 </a>
                             </li>
                             <li>
@@ -301,7 +301,7 @@
                                    @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                                    class="flex items-center gap-2 px-4 py-2 text-xs rounded-lg transition-all duration-300 <?php echo e(request()->routeIs('admin.installments.agreements.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'); ?>">
                                     <i class="fas fa-handshake w-3.5"></i>
-                                    <span>اتفاقيات السداد</span>
+                                    <span><?php echo e(__('admin.payment_agreements')); ?></span>
                                 </a>
                             </li>
                         </ul>
@@ -311,7 +311,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.accounting.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-chart-pie w-4"></i>
-                            <span>التقارير المحاسبية</span>
+                            <span><?php echo e(__('admin.accounting_reports')); ?></span>
                         </a>
                     </li>
                 </ul>
@@ -326,7 +326,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-tags w-5 text-slate-400 group-hover:text-white"></i>
-                        <span class="font-medium">إدارة التسويق</span>
+                        <span class="font-medium"><?php echo e(__('admin.marketing')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -336,7 +336,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.personal-branding.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-user-tie w-4"></i>
-                            <span>التسويق الشخصي (المدربين)</span>
+                            <span><?php echo e(__('admin.personal_branding')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -344,7 +344,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.coupons.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-ticket-alt w-4"></i>
-                            <span>الكوبونات والخصومات</span>
+                            <span><?php echo e(__('admin.coupons_discounts')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -352,7 +352,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.referral-programs.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-gift w-4"></i>
-                            <span>برامج الإحالات</span>
+                            <span><?php echo e(__('admin.referral_programs')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -360,7 +360,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.referrals.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-user-friends w-4"></i>
-                            <span>الإحالات</span>
+                            <span><?php echo e(__('admin.referrals')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -368,7 +368,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.loyalty.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-star w-4"></i>
-                            <span>برامج الولاء</span>
+                            <span><?php echo e(__('admin.loyalty_programs')); ?></span>
                         </a>
                     </li>
                 </ul>
@@ -383,7 +383,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-user-graduate w-5 text-emerald-400 group-hover:text-white"></i>
-                        <span class="font-medium">إدارة التسجيلات</span>
+                        <span class="font-medium"><?php echo e(__('admin.enrollments')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -393,7 +393,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.online-enrollments.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-laptop w-4"></i>
-                            <span>التسجيلات الأونلاين</span>
+                            <span><?php echo e(__('admin.online_enrollments')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -401,7 +401,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.offline-enrollments.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-chalkboard-teacher w-4"></i>
-                            <span>التسجيلات الأوفلاين</span>
+                            <span><?php echo e(__('admin.offline_enrollments')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -409,7 +409,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.learning-path-enrollments.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-route w-4"></i>
-                            <span>تسجيلات المسارات التعليمية</span>
+                            <span><?php echo e(__('admin.learning_path_enrollments')); ?></span>
                             <?php
                                 try {
                                     $pendingEnrollments = \App\Models\LearningPathEnrollment::where('status', 'pending')->count();
@@ -434,7 +434,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-folder w-5 text-slate-400 group-hover:text-white"></i>
-                        <span class="font-medium">إدارة المحتوى</span>
+                        <span class="font-medium"><?php echo e(__('admin.content_management')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -442,7 +442,8 @@
                     <li class="pt-2 pb-1">
                         <div class="flex items-center gap-2 text-xs font-bold text-slate-400 px-4 py-1 uppercase tracking-wider">
                             <i class="fas fa-route"></i>
-                            كتالوج التعلم
+                            <?php echo e(__('admin.learning_catalog')); ?>
+
                         </div>
                     </li>
                     <li>
@@ -450,7 +451,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.academic-years.*') && !request()->routeIs('admin.learning-paths.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-compass w-4"></i>
-                            <span>مسارات التعلم</span>
+                            <span><?php echo e(__('admin.learning_paths')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -458,7 +459,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.learning-paths.courses.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-graduation-cap w-4"></i>
-                            <span>تسجيل الكورسات للمسارات</span>
+                            <span><?php echo e(__('admin.register_courses_paths')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -466,7 +467,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.learning-paths.instructors.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-user-tie w-4"></i>
-                            <span>توصيف المدربين للمسارات</span>
+                            <span><?php echo e(__('admin.assign_instructors_paths')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -474,7 +475,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.academic-subjects.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-layer-group w-4"></i>
-                            <span>مجموعات المهارات</span>
+                            <span><?php echo e(__('admin.skill_groups')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -485,7 +486,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e($advancedCoursesActive ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-graduation-cap w-4"></i>
-                            <span>إدارة الكورسات</span>
+                            <span><?php echo e(__('admin.courses_management')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -493,7 +494,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.lectures.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-video w-4"></i>
-                            <span>المحاضرات</span>
+                            <span><?php echo e(__('admin.lectures')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -501,7 +502,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.groups.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-users-cog w-4"></i>
-                            <span>المجموعات</span>
+                            <span><?php echo e(__('admin.groups')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -509,7 +510,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.assignments.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-tasks w-4"></i>
-                            <span>الواجبات والمشاريع</span>
+                            <span><?php echo e(__('admin.assignments_projects')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -517,7 +518,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.exams.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-clipboard-check w-4"></i>
-                            <span>الامتحانات</span>
+                            <span><?php echo e(__('admin.exams')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -528,7 +529,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e($questionBankActive ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-database w-4"></i>
-                            <span>بنك الأسئلة</span>
+                            <span><?php echo e(__('admin.question_bank')); ?></span>
                         </a>
                     </li>
                 </ul>
@@ -543,7 +544,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-chalkboard-teacher w-5 text-purple-400 group-hover:text-white"></i>
-                        <span class="font-medium">الكورسات الأوفلاين</span>
+                        <span class="font-medium"><?php echo e(__('admin.offline_courses')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -553,7 +554,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.offline-locations.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-map-marker-alt w-4"></i>
-                            <span>إدارة الأماكن</span>
+                            <span><?php echo e(__('admin.manage_locations')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -561,7 +562,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.offline-courses.index') || request()->routeIs('admin.offline-courses.show') || request()->routeIs('admin.offline-courses.create') || request()->routeIs('admin.offline-courses.edit') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-book-reader w-4"></i>
-                            <span>الكورسات الأوفلاين</span>
+                            <span><?php echo e(__('admin.offline_courses_list')); ?></span>
                             <?php
                                 try {
                                     $activeOfflineCourses = \App\Models\OfflineCourse::where('status', 'active')->count();
@@ -579,7 +580,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.offline-agreements.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-file-contract w-4"></i>
-                            <span>اتفاقيات المدربين</span>
+                            <span><?php echo e(__('admin.instructor_agreements')); ?></span>
                         </a>
                     </li>
                 </ul>
@@ -594,7 +595,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-users-cog w-5 text-emerald-400 group-hover:text-white"></i>
-                        <span class="font-medium">الإدارة</span>
+                        <span class="font-medium"><?php echo e(__('admin.management')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -604,7 +605,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.employees.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-user-tie w-4"></i>
-                            <span>الموظفين</span>
+                            <span><?php echo e(__('admin.employees')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -612,7 +613,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.employee-jobs.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-briefcase w-4"></i>
-                            <span>الوظائف</span>
+                            <span><?php echo e(__('admin.jobs')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -620,7 +621,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.employee-tasks.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-tasks w-4"></i>
-                            <span>مهام الموظفين</span>
+                            <span><?php echo e(__('admin.employee_tasks')); ?></span>
                             <?php
                                 try {
                                     $pendingTasks = \App\Models\EmployeeTask::where('status', 'pending')->count();
@@ -638,7 +639,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.tasks.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-chalkboard-teacher w-4"></i>
-                            <span>مهام المدربين</span>
+                            <span><?php echo e(__('admin.instructor_tasks')); ?></span>
                             <?php
                                 try {
                                     $pendingInstructorTasks = \App\Models\Task::whereIn('user_id', \App\Models\User::whereIn('role', ['instructor', 'teacher'])->pluck('id'))->where('status', 'pending')->count();
@@ -656,7 +657,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.instructor-requests.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-inbox w-4"></i>
-                            <span>طلبات المدربين</span>
+                            <span><?php echo e(__('admin.instructor_requests_join')); ?></span>
                             <?php
                                 try {
                                     $pendingInstructorRequests = \App\Models\InstructorRequest::where('status', 'pending')->count();
@@ -674,7 +675,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.leaves.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-calendar-alt w-4"></i>
-                            <span>الإجازات</span>
+                            <span><?php echo e(__('admin.leaves')); ?></span>
                             <?php
                                 try {
                                     $pendingLeaves = \App\Models\LeaveRequest::where('status', 'pending')->count();
@@ -699,7 +700,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-shield-alt w-5 text-red-400 group-hover:text-white"></i>
-                        <span class="font-medium">الرقابة والجودة</span>
+                        <span class="font-medium"><?php echo e(__('admin.quality_supervision')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -709,7 +710,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.quality-control.index') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-tachometer-alt w-4"></i>
-                            <span>لوحة الرقابة</span>
+                            <span><?php echo e(__('admin.control_panel')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -717,7 +718,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.quality-control.students') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-user-graduate w-4"></i>
-                            <span>رقابة الطلاب</span>
+                            <span><?php echo e(__('admin.student_control')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -725,7 +726,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.quality-control.instructors') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-chalkboard-teacher w-4"></i>
-                            <span>رقابة المدربين</span>
+                            <span><?php echo e(__('admin.instructor_control')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -733,7 +734,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.quality-control.employees') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-user-tie w-4"></i>
-                            <span>رقابة الموظفين</span>
+                            <span><?php echo e(__('admin.employee_control')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -741,7 +742,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.quality-control.operations') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-cogs w-4"></i>
-                            <span>متابعة العمليات</span>
+                            <span><?php echo e(__('admin.operations_followup')); ?></span>
                         </a>
                     </li>
                 </ul>
@@ -756,7 +757,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-certificate w-5 text-slate-400 group-hover:text-white"></i>
-                        <span class="font-medium">التحكم في الشهادات</span>
+                        <span class="font-medium"><?php echo e(__('admin.certificates_control')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -766,7 +767,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.certificates.index') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-list w-4"></i>
-                            <span>قائمة الشهادات</span>
+                            <span><?php echo e(__('admin.certificates_list')); ?></span>
                             <?php
                                 $totalCertificates = \App\Models\Certificate::count();
                             ?>
@@ -780,7 +781,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.certificates.create') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-plus-circle w-4"></i>
-                            <span>إصدار شهادة جديدة</span>
+                            <span><?php echo e(__('admin.issue_certificate')); ?></span>
                         </a>
                     </li>
                     <?php
@@ -794,7 +795,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->get('status') == 'pending' ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-clock w-4"></i>
-                            <span>الشهادات المعلقة</span>
+                            <span><?php echo e(__('admin.pending_certificates')); ?></span>
                             <span class="mr-auto bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full px-2 py-0.5 shadow-lg"><?php echo e($pendingCertificates); ?></span>
                         </a>
                     </li>
@@ -811,7 +812,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-trophy w-5 text-slate-400 group-hover:text-white"></i>
-                        <span class="font-medium">الإنجازات والشارات</span>
+                        <span class="font-medium"><?php echo e(__('admin.achievements_badges')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -821,7 +822,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.achievements.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-medal w-4"></i>
-                            <span>الإنجازات</span>
+                            <span><?php echo e(__('admin.achievements')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -829,7 +830,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.badges.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-award w-4"></i>
-                            <span>الشارات</span>
+                            <span><?php echo e(__('admin.badges')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -837,7 +838,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.reviews.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-star-half-alt w-4"></i>
-                            <span>التقييمات والمراجعات</span>
+                            <span><?php echo e(__('admin.reviews_ratings')); ?></span>
                         </a>
                     </li>
                 </ul>
@@ -852,7 +853,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-shield-alt w-5 text-slate-400 group-hover:text-white"></i>
-                        <span class="font-medium">الصلاحيات والأدوار</span>
+                        <span class="font-medium"><?php echo e(__('admin.permissions_roles')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -862,7 +863,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.roles.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-user-tag w-4"></i>
-                            <span>الأدوار</span>
+                            <span><?php echo e(__('admin.roles')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -870,7 +871,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.permissions.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-key w-4"></i>
-                            <span>الصلاحيات</span>
+                            <span><?php echo e(__('admin.permissions')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -878,7 +879,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.user-permissions.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-user-shield w-4"></i>
-                            <span>صلاحيات المستخدمين</span>
+                            <span><?php echo e(__('admin.user_permissions')); ?></span>
                         </a>
                     </li>
                 </ul>
@@ -893,7 +894,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-globe w-5 text-slate-400 group-hover:text-white"></i>
-                        <span class="font-medium">الصفحات الخارجية</span>
+                        <span class="font-medium"><?php echo e(__('admin.external_pages')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -903,7 +904,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.blog.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-newspaper w-4"></i>
-                            <span>المدونة</span>
+                            <span><?php echo e(__('admin.blog')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -911,7 +912,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.portfolio.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-briefcase w-4"></i>
-                            <span>البورتفوليو</span>
+                            <span><?php echo e(__('admin.portfolio')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -919,7 +920,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.contact-messages.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-envelope w-4"></i>
-                            <span>رسائل التواصل</span>
+                            <span><?php echo e(__('admin.contact_messages')); ?></span>
                             <?php
                                 $unreadCount = \App\Models\ContactMessage::whereNull('read_at')->count();
                             ?>
@@ -933,7 +934,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.packages.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-tags w-4"></i>
-                            <span>الأسعار والباقات</span>
+                            <span><?php echo e(__('admin.pricing_packages')); ?></span>
                         </a>
                     </li>
                 </ul>
@@ -949,7 +950,7 @@
                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative overflow-hidden group <?php echo e($tasksActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-xl shadow-blue-600/40' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'); ?>">
                     <div class="absolute inset-0 bg-gradient-to-r from-blue-200/40 to-blue-100/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     <i class="fas fa-list-check w-5 relative z-10 <?php echo e($tasksActive ? 'text-white' : 'text-slate-400 group-hover:text-white'); ?>"></i>
-                    <span class="relative z-10 font-semibold">المهام</span>
+                    <span class="relative z-10 font-semibold"><?php echo e(__('admin.tasks')); ?></span>
                     <?php if($tasksActive): ?>
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-400 to-blue-500 rounded-r shadow-lg"></div>
                     <?php endif; ?>
@@ -966,7 +967,7 @@
                    class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative overflow-hidden group <?php echo e($messagesActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-xl shadow-blue-600/40' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'); ?>">
                     <div class="absolute inset-0 bg-gradient-to-r from-blue-200/40 to-blue-100/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     <i class="fas fa-envelope w-5 relative z-10 <?php echo e($messagesActive ? 'text-white' : 'text-slate-400 group-hover:text-white'); ?>"></i>
-                    <span class="relative z-10 font-semibold">الرسائل</span>
+                    <span class="relative z-10 font-semibold"><?php echo e(__('admin.messages')); ?></span>
                     <?php if($messagesActive): ?>
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-400 to-blue-500 rounded-r shadow-lg"></div>
                     <?php endif; ?>
@@ -982,7 +983,7 @@
                         class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
                     <div class="flex items-center gap-3">
                         <i class="fas fa-file-excel w-5 text-emerald-400 group-hover:text-white"></i>
-                        <span class="font-medium">التقارير الشاملة</span>
+                        <span class="font-medium"><?php echo e(__('admin.comprehensive_reports')); ?></span>
                     </div>
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -992,7 +993,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.reports.index') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-chart-pie w-4"></i>
-                            <span>لوحة التقارير</span>
+                            <span><?php echo e(__('admin.reports_dashboard')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -1000,7 +1001,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.reports.users') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-users w-4"></i>
-                            <span>تقارير المستخدمين</span>
+                            <span><?php echo e(__('admin.user_reports')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -1008,7 +1009,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.reports.courses') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-graduation-cap w-4"></i>
-                            <span>تقارير الكورسات</span>
+                            <span><?php echo e(__('admin.course_reports')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -1016,7 +1017,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.reports.financial') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-money-bill-wave w-4"></i>
-                            <span>التقارير المالية</span>
+                            <span><?php echo e(__('admin.financial_reports')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -1024,7 +1025,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.reports.academic') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-book w-4"></i>
-                            <span>التقارير الأكاديمية</span>
+                            <span><?php echo e(__('admin.academic_reports')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -1032,7 +1033,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.reports.activities') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-history w-4"></i>
-                            <span>تقارير النشاطات</span>
+                            <span><?php echo e(__('admin.activity_reports')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -1040,7 +1041,7 @@
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.reports.comprehensive') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-file-alt w-4"></i>
-                            <span>التقرير الشامل</span>
+                            <span><?php echo e(__('admin.comprehensive_report')); ?></span>
                         </a>
                     </li>
                 </ul>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'الإعدادات')
-@section('header', 'الإعدادات')
+@section('title', __('student.settings_title'))
+@section('header', __('student.settings_title'))
 
 @push('styles')
 <style>
@@ -71,8 +71,8 @@
 <div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
     <!-- الهيدر -->
     <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">الإعدادات</h1>
-        <p class="text-sm text-gray-500">إدارة إعدادات الحساب والتفضيلات</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ __('student.settings_title') }}</h1>
+        <p class="text-sm text-gray-500">{{ __('student.settings_subtitle') }}</p>
     </div>
 
     <div class="space-y-6">
@@ -82,13 +82,13 @@
                 <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-600 border border-sky-200 flex items-center justify-center">
                     <i class="fas fa-bell"></i>
                 </div>
-                <h2 class="text-lg font-bold text-gray-900">إعدادات الإشعارات</h2>
+                <h2 class="text-lg font-bold text-gray-900">{{ __('student.notification_settings') }}</h2>
             </div>
             <div class="space-y-4">
                 <div class="flex items-center justify-between p-4 bg-sky-50/50 rounded-xl border border-sky-100">
                     <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-bold text-gray-900 mb-0.5">إشعارات الكورسات الجديدة</h3>
-                        <p class="text-xs text-gray-600">تلقي إشعار عند إضافة كورسات جديدة</p>
+                        <h3 class="text-sm font-bold text-gray-900 mb-0.5">{{ __('student.new_courses_notif') }}</h3>
+                        <p class="text-xs text-gray-600">{{ __('student.new_courses_notif_desc') }}</p>
                     </div>
                     <label class="toggle-switch flex-shrink-0 mr-2">
                         <input type="checkbox" checked>
@@ -97,8 +97,8 @@
                 </div>
                 <div class="flex items-center justify-between p-4 bg-sky-50/50 rounded-xl border border-sky-100">
                     <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-bold text-gray-900 mb-0.5">إشعارات الطلبات</h3>
-                        <p class="text-xs text-gray-600">تلقي إشعار عند تحديث حالة طلباتك</p>
+                        <h3 class="text-sm font-bold text-gray-900 mb-0.5">{{ __('student.orders_notif') }}</h3>
+                        <p class="text-xs text-gray-600">{{ __('student.orders_notif_desc') }}</p>
                     </div>
                     <label class="toggle-switch flex-shrink-0 mr-2">
                         <input type="checkbox" checked>
@@ -107,8 +107,8 @@
                 </div>
                 <div class="flex items-center justify-between p-4 bg-sky-50/50 rounded-xl border border-sky-100">
                     <div class="flex-1 min-w-0">
-                        <h3 class="text-sm font-bold text-gray-900 mb-0.5">إشعارات الامتحانات</h3>
-                        <p class="text-xs text-gray-600">تلقي تذكير قبل مواعيد الامتحانات</p>
+                        <h3 class="text-sm font-bold text-gray-900 mb-0.5">{{ __('student.exams_notif') }}</h3>
+                        <p class="text-xs text-gray-600">{{ __('student.exams_notif_desc') }}</p>
                     </div>
                     <label class="toggle-switch flex-shrink-0 mr-2">
                         <input type="checkbox" checked>

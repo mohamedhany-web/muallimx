@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'الملف الشخصي')
-@section('header', 'الملف الشخصي')
+@section('title', __('student.profile_title'))
+@section('header', __('student.profile_title'))
 
 @push('styles')
 <style>
@@ -18,13 +18,13 @@
 @php
     use Illuminate\Support\Str;
     $roleLabels = [
-        'student' => ['label' => 'طالب', 'color' => 'from-sky-500 to-sky-400', 'chip' => 'bg-gradient-to-r from-sky-500/15 to-sky-400/15 text-sky-500 border-2 border-sky-500/30'],
-        'teacher' => ['label' => 'معلم', 'color' => 'from-emerald-500 to-green-600', 'chip' => 'bg-gradient-to-r from-emerald-500/15 to-green-600/15 text-emerald-600 border-2 border-emerald-500/30'],
-        'admin' => ['label' => 'إداري', 'color' => 'from-indigo-500 to-violet-600', 'chip' => 'bg-gradient-to-r from-indigo-500/15 to-violet-600/15 text-indigo-600 border-2 border-indigo-500/30'],
-        'super_admin' => ['label' => 'مدير عام', 'color' => 'from-blue-600 to-indigo-700', 'chip' => 'bg-gradient-to-r from-blue-600/15 to-indigo-700/15 text-blue-600 border-2 border-blue-600/30'],
+        'student' => ['label' => __('student.student_role'), 'color' => 'from-sky-500 to-sky-400', 'chip' => 'bg-gradient-to-r from-sky-500/15 to-sky-400/15 text-sky-500 border-2 border-sky-500/30'],
+        'teacher' => ['label' => __('student.teacher_role'), 'color' => 'from-emerald-500 to-green-600', 'chip' => 'bg-gradient-to-r from-emerald-500/15 to-green-600/15 text-emerald-600 border-2 border-emerald-500/30'],
+        'admin' => ['label' => __('student.admin_role_label'), 'color' => 'from-indigo-500 to-violet-600', 'chip' => 'bg-gradient-to-r from-indigo-500/15 to-violet-600/15 text-indigo-600 border-2 border-indigo-500/30'],
+        'super_admin' => ['label' => __('student.super_admin_role'), 'color' => 'from-blue-600 to-indigo-700', 'chip' => 'bg-gradient-to-r from-blue-600/15 to-indigo-700/15 text-blue-600 border-2 border-blue-600/30'],
     ];
 
-    $roleMeta = $roleLabels[$user->role] ?? ['label' => 'مستخدم', 'color' => 'from-slate-500 to-slate-600', 'chip' => 'bg-slate-500/15 text-gray-200 border border-slate-500/40'];
+    $roleMeta = $roleLabels[$user->role] ?? ['label' => __('student.user_role'), 'color' => 'from-slate-500 to-slate-600', 'chip' => 'bg-slate-500/15 text-gray-200 border border-slate-500/40'];
 
     $memberSince = null;
     if ($user && $user->created_at instanceof \Carbon\CarbonInterface) {
@@ -40,10 +40,10 @@
     }
 
     $stats = [
-        ['icon' => 'fa-calendar-week', 'label' => 'تاريخ الانضمام', 'value' => $memberSince ?: '—', 'color' => 'from-sky-500 to-sky-400'],
-        ['icon' => 'fa-layer-group', 'label' => 'الكورسات النشطة', 'value' => $coursesCount, 'color' => 'from-purple-500 to-indigo-600'],
-        ['icon' => 'fa-bell', 'label' => 'الإشعارات', 'value' => $notificationsCount, 'color' => 'from-emerald-500 to-emerald-600'],
-        ['icon' => 'fa-clock-rotate-left', 'label' => 'آخر تسجيل دخول', 'value' => $lastLogin ?: '—', 'color' => 'from-amber-400 to-amber-500'],
+        ['icon' => 'fa-calendar-week', 'label' => __('student.join_date_label'), 'value' => $memberSince ?: '—', 'color' => 'from-sky-500 to-sky-400'],
+        ['icon' => 'fa-layer-group', 'label' => __('student.active_courses_count'), 'value' => $coursesCount, 'color' => 'from-purple-500 to-indigo-600'],
+        ['icon' => 'fa-bell', 'label' => __('student.notifications'), 'value' => $notificationsCount, 'color' => 'from-emerald-500 to-emerald-600'],
+        ['icon' => 'fa-clock-rotate-left', 'label' => __('student.last_login_label'), 'value' => $lastLogin ?: '—', 'color' => 'from-amber-400 to-amber-500'],
     ];
 @endphp
 
@@ -54,7 +54,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center gap-5 w-full lg:w-auto">
                 <div class="profile-avatar flex items-center justify-center h-24 w-24 sm:h-28 sm:w-28 rounded-2xl bg-gradient-to-br {{ $roleMeta['color'] }} text-white overflow-hidden mx-auto sm:mx-0">
                     @if($user->profile_image)
-                        <img src="{{ $user->profile_image_url }}" alt="صورة الملف الشخصي" class="w-full h-full object-cover">
+                        <img src="{{ $user->profile_image_url }}" alt="{{ __('student.profile_image_alt') }}" class="w-full h-full object-cover">
                     @else
                         <span class="text-4xl sm:text-5xl font-black leading-none">{{ mb_substr($user->name, 0, 1) }}</span>
                     @endif
@@ -66,7 +66,7 @@
                             {{ $roleMeta['label'] }}
                         </span>
                         <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 mb-2">{{ $user->name }}</h1>
-                        <p class="text-sm sm:text-base text-gray-600 font-medium">إدارة بياناتك وإعدادات حسابك الشخصي</p>
+                        <p class="text-sm sm:text-base text-gray-600 font-medium">{{ __('student.profile_subtitle') }}</p>
                     </div>
 
                     <div class="flex flex-col sm:flex-row sm:justify-end gap-3 text-sm">

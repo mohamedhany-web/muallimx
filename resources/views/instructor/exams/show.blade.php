@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'تفاصيل الاختبار')
-@section('header', 'تفاصيل الاختبار: ' . $exam->title)
+@section('title', __('instructor.exam_details'))
+@section('header', __('instructor.exam_details') . ': ' . $exam->title)
 
 @section('content')
 <div class="space-y-6">
@@ -9,17 +9,17 @@
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-800">{{ $exam->title }}</h1>
-                <p class="text-sm text-slate-500 mt-0.5">عرض تفاصيل الاختبار والمحاولات</p>
+                <p class="text-sm text-slate-500 mt-0.5">{{ __('instructor.exam_details_subtitle') }}</p>
             </div>
             <div class="flex items-center gap-2">
                 <a href="{{ route('instructor.exams.questions.manage', $exam) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-500 hover:bg-violet-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-cogs"></i> إدارة الأسئلة
+                    <i class="fas fa-cogs"></i> {{ __('instructor.manage_questions') }}
                 </a>
                 <a href="{{ route('instructor.exams.edit', $exam) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-edit"></i> تعديل
+                    <i class="fas fa-edit"></i> {{ __('common.edit') }}
                 </a>
                 <a href="{{ route('instructor.exams.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors">
-                    <i class="fas fa-arrow-right"></i> العودة
+                    <i class="fas fa-arrow-right"></i> {{ __('instructor.back') }}
                 </a>
             </div>
         </div>
@@ -29,61 +29,61 @@
         <div class="xl:col-span-3">
             <div class="rounded-xl bg-white border border-slate-200 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-slate-800">معلومات الاختبار</h3>
+                    <h3 class="text-lg font-bold text-slate-800">{{ __('instructor.exam_info') }}</h3>
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold {{ $exam->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }}">
                         <i class="fas {{ $exam->is_active ? 'fa-check-circle' : 'fa-ban' }} ml-1"></i>
-                        {{ $exam->is_active ? 'نشط' : 'معطل' }}
+                        {{ $exam->is_active ? __('instructor.active') : __('instructor.inactive') }}
                     </span>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-500 mb-1">العنوان</label>
+                                <label class="block text-sm font-semibold text-slate-500 mb-1">{{ __('instructor.title') }}</label>
                                 <div class="font-bold text-slate-800 text-lg">{{ $exam->title }}</div>
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-slate-500 mb-1">الكورس</label>
-                                <div class="text-slate-800 font-semibold">{{ $exam->offlineCourse->title ?? $exam->advancedCourse->title ?? '—' }} @if($exam->offline_course_id)<span class="text-amber-600">(أوفلاين)</span>@endif</div>
+                                <label class="block text-sm font-semibold text-slate-500 mb-1">{{ __('instructor.course_label') }}</label>
+                                <div class="text-slate-800 font-semibold">{{ $exam->offlineCourse->title ?? $exam->advancedCourse->title ?? '—' }} @if($exam->offline_course_id)<span class="text-amber-600">({{ __('instructor.offline_badge') }})</span>@endif</div>
                                 @if($exam->advancedCourse && $exam->advancedCourse->academicSubject)
                                     <div class="text-sm text-slate-500">{{ $exam->advancedCourse->academicSubject->name }}</div>
                                 @endif
                             </div>
                             @if($exam->lesson && !$exam->offline_course_id)
                                 <div>
-                                    <label class="block text-sm font-semibold text-slate-500 mb-1">الدرس</label>
+                                    <label class="block text-sm font-semibold text-slate-500 mb-1">{{ __('instructor.lesson_label') }}</label>
                                     <div class="text-slate-800 font-semibold">{{ $exam->lesson->title }}</div>
                                 </div>
                             @endif
                         </div>
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-500 mb-1">مدة الاختبار</label>
-                                <div class="text-slate-800 font-bold text-lg">{{ $exam->duration_minutes }} دقيقة</div>
+                                <label class="block text-sm font-semibold text-slate-500 mb-1">{{ __('instructor.duration_minutes') }}</label>
+                                <div class="text-slate-800 font-bold text-lg">{{ $exam->duration_minutes }} {{ __('instructor.minute_unit') }}</div>
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-slate-500 mb-1">الدرجة الكلية</label>
-                                <div class="text-slate-800 font-bold text-lg">{{ $exam->total_marks }} نقطة</div>
+                                <label class="block text-sm font-semibold text-slate-500 mb-1">{{ __('instructor.total_score_label') }}</label>
+                                <div class="text-slate-800 font-bold text-lg">{{ $exam->total_marks }} {{ __('instructor.point_unit') }}</div>
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-slate-500 mb-1">درجة النجاح</label>
-                                <div class="text-slate-800 font-bold text-lg">{{ $exam->passing_marks }} نقطة</div>
+                                <label class="block text-sm font-semibold text-slate-500 mb-1">{{ __('instructor.passing_marks_label') }}</label>
+                                <div class="text-slate-800 font-bold text-lg">{{ $exam->passing_marks }} {{ __('instructor.point_unit') }}</div>
                             </div>
                             <div>
-                                <label class="block text-sm font-semibold text-slate-500 mb-1">المحاولات المسموحة</label>
-                                <div class="text-slate-800 font-bold text-lg">{{ $exam->attempts_allowed == 0 ? 'غير محدود' : $exam->attempts_allowed }}</div>
+                                <label class="block text-sm font-semibold text-slate-500 mb-1">{{ __('instructor.attempts_allowed_label') }}</label>
+                                <div class="text-slate-800 font-bold text-lg">{{ $exam->attempts_allowed == 0 ? __('instructor.unlimited') : $exam->attempts_allowed }}</div>
                             </div>
                         </div>
                     </div>
                     @if($exam->description)
                         <div class="mt-6">
-                            <label class="block text-sm font-semibold text-slate-500 mb-2">الوصف</label>
+                            <label class="block text-sm font-semibold text-slate-500 mb-2">{{ __('instructor.description') }}</label>
                             <div class="text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200">{{ $exam->description }}</div>
                         </div>
                     @endif
                     @if($exam->instructions)
                         <div class="mt-6">
-                            <label class="block text-sm font-semibold text-slate-500 mb-2">التعليمات</label>
+                            <label class="block text-sm font-semibold text-slate-500 mb-2">{{ __('instructor.instructions_label') }}</label>
                             <div class="text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 whitespace-pre-wrap">{{ $exam->instructions }}</div>
                         </div>
                     @endif
@@ -97,7 +97,7 @@
                     <div class="w-12 h-12 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600"><i class="fas fa-question-circle"></i></div>
                     <div>
                         <p class="text-2xl font-bold text-slate-800">{{ $exam->questions->count() }}</p>
-                        <p class="text-xs font-semibold text-slate-500">أسئلة</p>
+                        <p class="text-xs font-semibold text-slate-500">{{ __('instructor.questions_count') }}</p>
                     </div>
                 </div>
             </div>
@@ -106,7 +106,7 @@
                     <div class="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center text-violet-600"><i class="fas fa-users"></i></div>
                     <div>
                         <p class="text-2xl font-bold text-slate-800">{{ $attemptStats['total'] }}</p>
-                        <p class="text-xs font-semibold text-slate-500">محاولات</p>
+                        <p class="text-xs font-semibold text-slate-500">{{ __('instructor.attempts_count') }}</p>
                     </div>
                 </div>
             </div>
@@ -115,7 +115,7 @@
                     <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600"><i class="fas fa-check-double"></i></div>
                     <div>
                         <p class="text-2xl font-bold text-slate-800">{{ $attemptStats['completed'] }}</p>
-                        <p class="text-xs font-semibold text-slate-500">مكتملة</p>
+                        <p class="text-xs font-semibold text-slate-500">{{ __('instructor.completed_count') }}</p>
                     </div>
                 </div>
             </div>
@@ -124,7 +124,7 @@
                     <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600"><i class="fas fa-star"></i></div>
                     <div>
                         <p class="text-2xl font-bold text-slate-800">{{ number_format($attemptStats['average_score'], 1) }}</p>
-                        <p class="text-xs font-semibold text-slate-500">متوسط الدرجات</p>
+                        <p class="text-xs font-semibold text-slate-500">{{ __('instructor.average_score_label') }}</p>
                     </div>
                 </div>
             </div>
@@ -137,26 +137,26 @@
                 <button type="button" @click="activeTab = 'questions'"
                         :class="activeTab === 'questions' ? 'border-sky-500 text-sky-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'"
                         class="py-4 px-1 border-b-2 text-sm transition-colors">
-                    <i class="fas fa-question-circle ml-2"></i> الأسئلة ({{ $exam->questions->count() }})
+                    <i class="fas fa-question-circle ml-2"></i> {{ __('instructor.questions_tab') }} ({{ $exam->questions->count() }})
                 </button>
                 <button type="button" @click="activeTab = 'attempts'"
                         :class="activeTab === 'attempts' ? 'border-sky-500 text-sky-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'"
                         class="py-4 px-1 border-b-2 text-sm transition-colors">
-                    <i class="fas fa-users ml-2"></i> المحاولات ({{ $attempts->total() }})
+                    <i class="fas fa-users ml-2"></i> {{ __('instructor.attempts_tab') }} ({{ $attempts->total() }})
                 </button>
                 <button type="button" @click="activeTab = 'settings'"
                         :class="activeTab === 'settings' ? 'border-sky-500 text-sky-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-700'"
                         class="py-4 px-1 border-b-2 text-sm transition-colors">
-                    <i class="fas fa-cogs ml-2"></i> الإعدادات
+                    <i class="fas fa-cogs ml-2"></i> {{ __('instructor.settings_tab') }}
                 </button>
             </nav>
         </div>
         <div class="p-6">
             <div x-show="activeTab === 'questions'">
                 <div class="flex items-center justify-between mb-4">
-                    <h4 class="text-lg font-bold text-slate-800">أسئلة الاختبار</h4>
+                    <h4 class="text-lg font-bold text-slate-800">{{ __('instructor.exam_questions_title') }}</h4>
                     <a href="{{ route('instructor.exams.questions.manage', $exam) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-xl font-semibold text-sm transition-colors">
-                        <i class="fas fa-cogs"></i> إدارة الأسئلة
+                        <i class="fas fa-cogs"></i> {{ __('instructor.manage_questions') }}
                     </a>
                 </div>
                 @if($exam->questions->count() > 0)
@@ -168,7 +168,7 @@
                                     <div>
                                         <p class="text-sm font-semibold text-slate-800">{{ Str::limit($question->question, 80) }}</p>
                                         <div class="flex items-center gap-4 text-xs text-slate-500 mt-1">
-                                            <span>{{ $question->pivot->marks ?? 1 }} نقطة</span>
+                                            <span>{{ $question->pivot->marks ?? 1 }} {{ __('instructor.point_unit') }}</span>
                                             @if($question->type)<span>{{ $question->type }}</span>@endif
                                         </div>
                                     </div>
@@ -179,26 +179,26 @@
                 @else
                     <div class="text-center py-12">
                         <div class="w-16 h-16 rounded-2xl bg-sky-100 flex items-center justify-center mx-auto mb-4"><i class="fas fa-question-circle text-2xl text-sky-500"></i></div>
-                        <h3 class="text-lg font-bold text-slate-800 mb-2">لا توجد أسئلة</h3>
-                        <p class="text-sm text-slate-500 mb-4">ابدأ بإضافة الأسئلة من صفحة إدارة الأسئلة</p>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">{{ __('instructor.no_questions') }}</h3>
+                        <p class="text-sm text-slate-500 mb-4">{{ __('instructor.add_questions_hint') }}</p>
                         <a href="{{ route('instructor.exams.questions.manage', $exam) }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
-                            <i class="fas fa-cogs"></i> إدارة الأسئلة
+                            <i class="fas fa-cogs"></i> {{ __('instructor.manage_questions') }}
                         </a>
                     </div>
                 @endif
             </div>
 
             <div x-show="activeTab === 'attempts'">
-                <h4 class="text-lg font-bold text-slate-800 mb-4">محاولات الطلاب</h4>
+                <h4 class="text-lg font-bold text-slate-800 mb-4">{{ __('instructor.student_attempts_title') }}</h4>
                 @if($attempts->count() > 0)
                     <div class="overflow-x-auto rounded-xl border border-slate-200">
                         <table class="min-w-full divide-y divide-slate-200">
                             <thead class="bg-slate-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">الطالب</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">النتيجة</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">الحالة</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">التاريخ</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">{{ __('instructor.students') }}</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">{{ __('instructor.result_label') }}</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">{{ __('common.status') }}</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">{{ __('common.date') }}</th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-slate-200">
@@ -218,7 +218,7 @@
                                                 <div class="text-sm font-semibold text-slate-800">{{ number_format($attempt->score, 1) }} / {{ $exam->total_marks }}</div>
                                                 <div class="text-xs text-slate-500">{{ number_format(($attempt->score / $exam->total_marks) * 100, 1) }}%</div>
                                             @else
-                                                <span class="text-sm text-slate-500">لم يكتمل</span>
+                                                <span class="text-sm text-slate-500">{{ __('instructor.not_completed') }}</span>
                                             @endif
                                         </td>
                                         <td class="px-6 py-4">
@@ -227,7 +227,7 @@
                                                 @elseif($attempt->status === 'in_progress') bg-amber-100 text-amber-700
                                                 @else bg-slate-100 text-slate-600
                                                 @endif">
-                                                {{ $attempt->status === 'completed' ? 'مكتمل' : ($attempt->status === 'in_progress' ? 'قيد التنفيذ' : 'غير مكتمل') }}
+                                                {{ $attempt->status === 'completed' ? __('instructor.completed_status') : ($attempt->status === 'in_progress' ? __('instructor.in_progress_status') : __('instructor.not_completed')) }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 text-sm text-slate-600">{{ $attempt->submitted_at ? $attempt->submitted_at->format('Y-m-d H:i') : $attempt->created_at->format('Y-m-d H:i') }}</td>
@@ -240,28 +240,28 @@
                 @else
                     <div class="text-center py-12">
                         <div class="w-16 h-16 rounded-2xl bg-sky-100 flex items-center justify-center mx-auto mb-4"><i class="fas fa-users text-2xl text-sky-500"></i></div>
-                        <h3 class="text-lg font-bold text-slate-800 mb-2">لا توجد محاولات</h3>
-                        <p class="text-sm text-slate-500">لم يقم أي طالب بأداء هذا الاختبار بعد</p>
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">{{ __('instructor.no_attempts') }}</h3>
+                        <p class="text-sm text-slate-500">{{ __('instructor.no_attempts_desc') }}</p>
                     </div>
                 @endif
             </div>
 
             <div x-show="activeTab === 'settings'">
-                <h4 class="text-lg font-bold text-slate-800 mb-4">إعدادات الاختبار</h4>
+                <h4 class="text-lg font-bold text-slate-800 mb-4">{{ __('instructor.exam_settings_title') }}</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="space-y-3">
                         @foreach([
-                            ['randomize_questions', 'خلط الأسئلة'],
-                            ['randomize_options', 'خلط الخيارات'],
-                            ['show_results_immediately', 'عرض النتائج فوراً'],
-                            ['show_correct_answers', 'عرض الإجابات الصحيحة'],
-                            ['show_explanations', 'عرض شرح الإجابات'],
-                            ['allow_review', 'السماح بمراجعة الإجابات'],
+                            ['randomize_questions', __('instructor.randomize_questions')],
+                            ['randomize_options', __('instructor.randomize_options')],
+                            ['show_results_immediately', __('instructor.show_results_immediately')],
+                            ['show_correct_answers', __('instructor.show_correct_answers')],
+                            ['show_explanations', __('instructor.show_explanations')],
+                            ['allow_review', __('instructor.allow_review')],
                         ] as $item)
                             @php $attr = $item[0]; $name = $item[1]; @endphp
                             <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
                                 <span class="text-sm font-medium text-slate-700">{{ $name }}</span>
-                                <span class="text-sm font-semibold {{ $exam->$attr ? 'text-emerald-600' : 'text-slate-500' }}">{{ $exam->$attr ? 'مفعل' : 'معطل' }}</span>
+                                <span class="text-sm font-semibold {{ $exam->$attr ? 'text-emerald-600' : 'text-slate-500' }}">{{ $exam->$attr ? __('instructor.enabled') : __('instructor.inactive') }}</span>
                             </div>
                         @endforeach
                     </div>

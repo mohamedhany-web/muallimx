@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'شهاداتي')
-@section('header', 'شهاداتي')
+@section('title', __('student.my_certificates_title'))
+@section('header', __('student.my_certificates_title'))
 
 @section('content')
 <div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
     <!-- الهيدر -->
     <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">شهاداتي</h1>
-        <p class="text-sm text-gray-500">الشهادات التي حصلت عليها من إتمام الكورسات</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ __('student.my_certificates_title') }}</h1>
+        <p class="text-sm text-gray-500">{{ __('student.certificates_subtitle') }}</p>
     </div>
 
     @if(isset($stats))
@@ -16,7 +16,7 @@
         <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
             <div class="flex items-center justify-between gap-3">
                 <div class="min-w-0">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">إجمالي الشهادات</p>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ __('student.total_certificates') }}</p>
                     <p class="text-2xl font-bold text-sky-600 leading-none">{{ $stats['total'] ?? 0 }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 flex-shrink-0">
@@ -27,7 +27,7 @@
         <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
             <div class="flex items-center justify-between gap-3">
                 <div class="min-w-0">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">المُصدرة</p>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ __('student.issued_label') }}</p>
                     <p class="text-2xl font-bold text-emerald-600 leading-none">{{ $stats['issued'] ?? 0 }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 flex-shrink-0">
@@ -47,7 +47,7 @@
                     <i class="fas fa-certificate text-xl"></i>
                 </div>
                 <h3 class="text-base font-bold text-gray-900 mb-2 line-clamp-2 leading-snug">
-                    {{ $certificate->title ?? $certificate->course_name ?? 'شهادة الإتمام' }}
+                    {{ $certificate->title ?? $certificate->course_name ?? __('student.completion_certificate') }}
                 </h3>
                 @if($certificate->course)
                 <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ $certificate->course->title }}</p>
@@ -59,7 +59,7 @@
                     @endif
                 </div>
                 <span class="inline-flex items-center gap-2 text-sky-600 font-semibold text-sm">
-                    عرض الشهادة <i class="fas fa-arrow-left"></i>
+                    {{ __('student.view_certificate') }} <i class="fas fa-arrow-left"></i>
                 </span>
             </div>
         </a>
@@ -73,10 +73,10 @@
         <div class="w-16 h-16 bg-sky-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-sky-600">
             <i class="fas fa-certificate text-2xl"></i>
         </div>
-        <h3 class="text-lg font-bold text-gray-900 mb-2">لا توجد شهادات</h3>
-        <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">لم يتم إصدار أي شهادات لك حتى الآن. أكمل الكورسات للحصول على شهادات الإتمام.</p>
+        <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('student.no_certificates') }}</h3>
+        <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">{{ __('student.no_certificates_desc') }}</p>
         <a href="{{ route('my-courses.index') }}" class="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors">
-            <i class="fas fa-book-open"></i> عرض كورساتي
+            <i class="fas fa-book-open"></i> {{ __('student.view_my_courses') }}
         </a>
     </div>
     @endif

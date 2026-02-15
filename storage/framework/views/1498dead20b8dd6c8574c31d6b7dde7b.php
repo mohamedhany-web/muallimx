@@ -1,10 +1,11 @@
+<?php $authLocale = app()->getLocale(); $authRtl = $authLocale === 'ar'; ?>
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="<?php echo e($authLocale); ?>" dir="<?php echo e($authRtl ? 'rtl' : 'ltr'); ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
-    <title>تسجيل الدخول - Mindlytics</title>
+    <title><?php echo e(__('auth.login')); ?> - <?php echo e(config('app.name')); ?></title>
 
     
     <link rel="preload" href="<?php echo e($authBackgroundUrl ?? asset('images/brainstorm-meeting.jpg')); ?>" as="image">
@@ -686,20 +687,20 @@
         <div class="login-mobile-wrap">
             <!-- بطاقة الترحيب -->
             <div class="login-mobile-welcome">
-                <h1 class="welcome-title">مرحباً بعودتك</h1>
-                <p class="welcome-desc">سجّل دخولك لمتابعة دوراتك وإنجازاتك</p>
+                <h1 class="welcome-title"><?php echo e(__('auth.welcome_back')); ?></h1>
+                <p class="welcome-desc"><?php echo e(__('auth.enter_credentials')); ?></p>
             </div>
 
             <!-- تسجيل الدخول: عنوان + بطاقة بيضاء -->
             <div class="login-mobile-form-wrap">
-                <h2 class="section-title">تسجيل الدخول</h2>
-                <p class="section-subtitle">أدخل بياناتك للوصول إلى حسابك</p>
+                <h2 class="section-title"><?php echo e(__('auth.login')); ?></h2>
+                <p class="section-subtitle"><?php echo e(__('auth.enter_credentials')); ?></p>
 
                 <div class="login-mobile-form-card">
                     <form action="<?php echo e(route('login')); ?>" method="POST">
                         <?php echo csrf_field(); ?>
                         <div class="input-wrap">
-                            <label for="email_mobile">البريد الإلكتروني</label>
+                            <label for="email_mobile"><?php echo e(__('auth.email')); ?></label>
                             <div class="relative">
                                 <i class="input-icon fas fa-envelope"></i>
                                 <input type="email" name="email" id="email_mobile" value="<?php echo e(old('email')); ?>" required autocomplete="email"
@@ -720,7 +721,7 @@ unset($__errorArgs, $__bag); ?>
                             <input type="text" name="website" tabindex="-1" autocomplete="off">
                         </div>
                         <div class="input-wrap">
-                            <label for="password_mobile">كلمة المرور</label>
+                            <label for="password_mobile"><?php echo e(__('auth.password')); ?></label>
                             <div class="relative">
                                 <i class="input-icon fas fa-lock"></i>
                                 <input :type="showPassword ? 'text' : 'password'" name="password" id="password_mobile" required
@@ -744,23 +745,23 @@ unset($__errorArgs, $__bag); ?>
                         <div class="flex items-center justify-between text-sm mt-3 mb-4">
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" name="remember" class="w-4 h-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]">
-                                <span class="text-[var(--text-muted)]">تذكرني</span>
+                                <span class="text-[var(--text-muted)]"><?php echo e(__('auth.remember')); ?></span>
                             </label>
-                            <a href="#" class="link-primary text-sm">نسيت كلمة المرور؟</a>
+                            <a href="#" class="link-primary text-sm"><?php echo e(__('auth.forgot_password')); ?></a>
                         </div>
                         <button type="submit" class="btn-login w-full py-3 rounded-xl text-white font-bold text-base flex items-center justify-center gap-2">
-                            <span>تسجيل الدخول</span>
+                            <span><?php echo e(__('auth.login')); ?></span>
                         </button>
                         <div class="relative my-4">
                             <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-[var(--input-border)]"></div></div>
-                            <div class="relative flex justify-center text-sm"><span class="bg-white px-3 text-[var(--text-muted)]">أو</span></div>
+                            <div class="relative flex justify-center text-sm"><span class="bg-white px-3 text-[var(--text-muted)]"><?php echo e(__('auth.or')); ?></span></div>
                         </div>
-                        <a href="<?php echo e(route('auth.google.redirect')); ?>" class="btn-social btn-google w-full flex items-center justify-center gap-3 py-3 rounded-xl" aria-label="تسجيل الدخول أو إنشاء حساب بـ Google">
+                        <a href="<?php echo e(route('auth.google.redirect')); ?>" class="btn-social btn-google w-full flex items-center justify-center gap-3 py-3 rounded-xl" aria-label="<?php echo e(__('auth.login_google_aria')); ?>">
                             <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                            <span>متابعة بـ Google</span>
+                            <span><?php echo e(__('auth.continue_with_google')); ?></span>
                         </a>
                         <div class="text-center pt-4 mt-4 border-t border-[var(--input-border)]">
-                            <p class="text-sm text-[var(--text-muted)]">ليس لديك حساب؟ <a href="<?php echo e(route('register')); ?>" class="link-primary font-bold">سجّل الآن</a></p>
+                            <p class="text-sm text-[var(--text-muted)]"><?php echo e(__('auth.no_account_question')); ?> <a href="<?php echo e(route('register')); ?>" class="link-primary font-bold"><?php echo e(__('auth.no_account_register_now')); ?></a></p>
                         </div>
                     </form>
                 </div>
@@ -778,23 +779,25 @@ unset($__errorArgs, $__bag); ?>
                 </div>
                 <div class="visual-content">
                     <h1 class="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-black mb-2 md:mb-6 leading-tight text-white drop-shadow-lg visual-title">
-                        معاً نُطوّر مهاراتنا
+                        <?php echo e(__('auth.visual_title')); ?>
+
                     </h1>
                     <p class="text-xs sm:text-sm md:text-lg lg:text-xl text-white/90 mb-3 md:mb-8 leading-relaxed font-bold px-1 md:px-2 drop-shadow-md visual-desc">
-                        تعلّم، تشارك، وتنمو في بيئة واحدة
+                        <?php echo e(__('auth.visual_desc')); ?>
+
                     </p>
                     <div class="flex flex-wrap justify-center gap-2 md:gap-4 px-1 md:px-2 visual-badges">
                         <div class="flex items-center gap-1.5 md:gap-2 bg-white/10 backdrop-blur-md px-2 py-1.5 md:px-5 md:py-3 rounded-lg md:rounded-xl border-2 border-white/30 shadow-xl hover:bg-white/20 transition-all">
                             <i class="fas fa-check-circle text-white/90 text-xs md:text-base"></i>
-                            <span class="font-bold text-[10px] md:text-sm text-white">تعلم فعّال</span>
+                            <span class="font-bold text-[10px] md:text-sm text-white"><?php echo e(__('auth.effective_learning')); ?></span>
                         </div>
                         <div class="flex items-center gap-1.5 md:gap-2 bg-white/10 backdrop-blur-md px-2 py-1.5 md:px-5 md:py-3 rounded-lg md:rounded-xl border-2 border-white/30 shadow-xl hover:bg-white/20 transition-all">
                             <i class="fas fa-users text-white/90 text-xs md:text-base"></i>
-                            <span class="font-bold text-[10px] md:text-sm text-white">تعاون ومشاركة</span>
+                            <span class="font-bold text-[10px] md:text-sm text-white"><?php echo e(__('auth.collaboration')); ?></span>
                         </div>
                         <div class="flex items-center gap-1.5 md:gap-2 bg-white/10 backdrop-blur-md px-2 py-1.5 md:px-5 md:py-3 rounded-lg md:rounded-xl border-2 border-white/30 shadow-xl hover:bg-white/20 transition-all">
                             <i class="fas fa-chart-line text-white/90 text-xs md:text-base"></i>
-                            <span class="font-bold text-[10px] md:text-sm text-white">نمو مستمر</span>
+                            <span class="font-bold text-[10px] md:text-sm text-white"><?php echo e(__('auth.continuous_growth')); ?></span>
                         </div>
                     </div>
                 </div>
@@ -802,9 +805,31 @@ unset($__errorArgs, $__bag); ?>
 
             <!-- القسم الأيمن في RTL: لوحة النموذج البيضاء -->
             <div class="login-form-section">
+                <div class="absolute top-4 <?php echo e($authRtl ? 'left' : 'right'); ?>-4 z-10">
+                    <?php if (isset($component)) { $__componentOriginal8d3bff7d7383a45350f7495fc470d934 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal8d3bff7d7383a45350f7495fc470d934 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.language-switcher','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('language-switcher'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal8d3bff7d7383a45350f7495fc470d934)): ?>
+<?php $attributes = $__attributesOriginal8d3bff7d7383a45350f7495fc470d934; ?>
+<?php unset($__attributesOriginal8d3bff7d7383a45350f7495fc470d934); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal8d3bff7d7383a45350f7495fc470d934)): ?>
+<?php $component = $__componentOriginal8d3bff7d7383a45350f7495fc470d934; ?>
+<?php unset($__componentOriginal8d3bff7d7383a45350f7495fc470d934); ?>
+<?php endif; ?>
+                </div>
                 <div class="login-form-wrapper">
                     <h2 class="login-page-title text-2xl md:text-3xl font-black text-[var(--text-dark)] text-center mb-8">
-                        تسجيل الدخول إلى <span class="text-[var(--color-primary)]">Mindlytics</span>
+                        <?php echo e(__('auth.login')); ?> <span class="text-[var(--color-primary)]"><?php echo e(config('app.name')); ?></span>
                     </h2>
 
                     <form action="<?php echo e(route('login')); ?>" method="POST" class="space-y-5">
@@ -825,7 +850,7 @@ $message = $__bag->first($__errorArgs[0]); ?> border-red-500 <?php unset($messag
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" 
-                                   placeholder="البريد الإلكتروني" 
+                                   placeholder="<?php echo e(__('auth.email')); ?>" 
                                    dir="ltr"
                                    autofocus>
                             <?php $__errorArgs = ['email'];
@@ -857,7 +882,7 @@ $message = $__bag->first($__errorArgs[0]); ?> border-red-500 <?php unset($messag
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>" 
-                                   placeholder="كلمة المرور">
+                                   placeholder="<?php echo e(__('auth.password')); ?>">
                             <button type="button" 
                                     @click="showPassword = !showPassword" 
                                     class="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--color-primary)] transition-colors focus:outline-none">
@@ -880,15 +905,16 @@ unset($__errorArgs, $__bag); ?>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="checkbox" name="remember" id="remember" 
                                        class="w-4 h-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]">
-                                <span class="text-[var(--text-muted)] font-medium">تذكرني</span>
+                                <span class="text-[var(--text-muted)] font-medium"><?php echo e(__('auth.remember')); ?></span>
                             </label>
-                            <a href="#" class="link-primary text-sm">نسيت كلمة المرور؟</a>
+                            <a href="#" class="link-primary text-sm"><?php echo e(__('auth.forgot_password')); ?></a>
                         </div>
 
                         <button type="submit" 
                                 class="btn-login w-full py-3.5 rounded-xl text-white font-bold text-base flex items-center justify-center gap-2">
-                            تسجيل الدخول
-                        </button>
+<?php echo e(__('auth.login')); ?>
+
+</button>
                     </form>
 
                     <div class="relative my-6">
@@ -896,19 +922,19 @@ unset($__errorArgs, $__bag); ?>
                             <div class="w-full border-t border-[var(--input-border)]"></div>
                         </div>
                         <div class="relative flex justify-center text-sm">
-                            <span class="bg-white px-3 text-[var(--text-muted)]">أو سجّل الدخول باستخدام</span>
+                            <span class="bg-white px-3 text-[var(--text-muted)]"><?php echo e(__('auth.or_login_with')); ?></span>
                         </div>
                     </div>
 
                     <div class="space-y-3">
-                        <a href="<?php echo e(route('auth.google.redirect')); ?>" class="btn-social btn-google w-full flex items-center justify-center gap-3" aria-label="تسجيل الدخول أو إنشاء حساب طالب بـ Google">
+                        <a href="<?php echo e(route('auth.google.redirect')); ?>" class="btn-social btn-google w-full flex items-center justify-center gap-3" aria-label="<?php echo e(__('auth.login_google_aria')); ?>">
                             <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                            <span>متابعة بـ Google</span>
+                            <span><?php echo e(__('auth.continue_with_google')); ?></span>
                         </a>
                     </div>
 
                     <p class="text-center text-sm text-[var(--text-muted)] mt-8">
-                        ليس لديك حساب؟ <a href="<?php echo e(route('register')); ?>" class="link-primary font-bold">سجّل الآن</a>
+                        <?php echo e(__('auth.no_account_question')); ?> <a href="<?php echo e(route('register')); ?>" class="link-primary font-bold"><?php echo e(__('auth.no_account_register_now')); ?></a>
                     </p>
                 </div>
             </div>

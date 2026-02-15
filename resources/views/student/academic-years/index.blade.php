@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'مسارات التعلم')
-@section('header', 'مسارات التعلم')
+@section('title', __('student.academic_paths_title'))
+@section('header', __('student.academic_paths_title'))
 
 @section('content')
 <div class="space-y-8">
@@ -15,10 +15,10 @@
                 <div class="space-y-4 max-w-3xl">
                     <span class="inline-flex items-center gap-2 bg-white/15 text-white px-4 py-2 rounded-full text-sm font-medium backdrop-blur-md">
                         <i class="fas fa-route"></i>
-                        اكتشف مسارات Mindlytics التعليمية
+                        {{ __('student.discover_paths') }}
                     </span>
                     <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight">
-                        اختر مسار التعلم الأنسب لك واستعد لبناء مشروعك التقني القادم
+                        {{ __('student.choose_path_subtitle') }}
                     </h1>
                     <p class="text-white/80 text-lg sm:text-xl max-w-2xl">
                         قمنا بتحويل التقسيمات التقليدية إلى مسارات احترافية تجمع المهارات والأدوات المطلوبة في سوق العمل البرمجي. كل مسار يحتوي على مجموعات مهارية متكاملة تساعدك على الانتقال من مستوى المبتدئ إلى المحترف.
@@ -27,15 +27,15 @@
                 <div class="bg-white/10 rounded-2xl backdrop-blur-md p-6 border border-white/20 shadow-lg w-full max-w-xs">
                     <div class="space-y-4">
                         <div>
-                            <p class="text-sm text-white/70">إجمالي المسارات</p>
+                            <p class="text-sm text-white/70">{{ __('student.total_paths') }}</p>
                             <p class="text-3xl font-bold">{{ $tracks->count() }}</p>
                         </div>
                         <div class="border-t border-white/10 pt-4">
-                            <p class="text-sm text-white/70">مجموعات المهارات</p>
+                            <p class="text-sm text-white/70">{{ __('student.skill_groups') }}</p>
                             <p class="text-xl font-semibold">{{ $tracks->sum('academic_subjects_count') }}</p>
                         </div>
                         <div class="border-t border-white/10 pt-4">
-                            <p class="text-sm text-white/70">أحدث الكورسات</p>
+                            <p class="text-sm text-white/70">{{ __('student.latest_courses') }}</p>
                             <p class="text-xl font-semibold">
                                 {{ $tracks->sum(fn($track) => optional($track->track_metrics)['courses_count'] ?? 0) }}
                             </p>

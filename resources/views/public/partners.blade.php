@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'الشركاء - Mindlytics')
+@section('title', __('public.partners_page_title') . ' - ' . __('public.site_suffix'))
 
 @section('content')
 <!-- Hero Section -->

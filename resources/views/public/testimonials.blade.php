@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'آراء العملاء - Mindlytics')
+@section('title', __('public.testimonials_page_title') . ' - ' . __('public.site_suffix'))
 
 @section('content')
 <!-- Hero Section -->

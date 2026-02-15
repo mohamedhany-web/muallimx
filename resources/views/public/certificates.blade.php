@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'الشهادات - Mindlytics')
+@section('title', __('public.certificates_page_title') . ' - ' . __('public.site_suffix'))
 
 @section('content')
 <!-- Hero Section -->

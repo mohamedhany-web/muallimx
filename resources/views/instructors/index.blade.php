@@ -1,10 +1,10 @@
 @extends('layouts.public')
-@section('title', 'المدربون - Mindlytics')
+@section('title', __('public.instructors_page_title'))
 @section('content')
 <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12">
     <div class="text-center mb-12">
-        <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">مدربونا</h1>
-        <p class="text-slate-600">تعرف على فريق المدربين والخبراء.</p>
+        <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">{{ __('public.instructors_heading') }}</h1>
+        <p class="text-slate-600">{{ __('public.instructors_subtitle') }}</p>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($profiles as $p)
@@ -22,11 +22,11 @@
             </div>
             <div class="p-5">
                 <h2 class="text-lg font-bold text-slate-900">{{ $p->user->name }}</h2>
-                <p class="text-sm text-slate-600 mt-1">{{ $p->headline ?? 'مدرب' }}</p>
+                <p class="text-sm text-slate-600 mt-1">{{ $p->headline ?? __('public.instructor_fallback') }}</p>
             </div>
         </a>
         @empty
-        <div class="col-span-full text-center py-12 text-slate-500">لا يوجد مدربون معروضون حالياً.</div>
+        <div class="col-span-full text-center py-12 text-slate-500">{{ __('public.no_instructors') }}</div>
         @endforelse
     </div>
 </div>

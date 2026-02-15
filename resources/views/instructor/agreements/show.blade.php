@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'تفاصيل الاتفاقية - Mindlytics')
-@section('header', 'تفاصيل الاتفاقية')
+@section('title', __('instructor.agreement_details_title') . ' - Mindlytics')
+@section('header', __('instructor.agreement_details_title'))
 
 @section('content')
 <div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" style="background: #f8fafc; min-height: 100vh;">
@@ -14,31 +14,31 @@
                 </div>
                 <div>
                     <h2 class="text-2xl sm:text-3xl font-black text-slate-900">{{ $agreement->title }}</h2>
-                    <p class="text-sm text-slate-600 mt-1">رقم الاتفاقية: <span class="font-semibold">{{ $agreement->agreement_number ?? 'N/A' }}</span></p>
+                    <p class="text-sm text-slate-600 mt-1">{{ __('instructor.agreement_number') }}: <span class="font-semibold">{{ $agreement->agreement_number ?? 'N/A' }}</span></p>
                 </div>
             </div>
             <a href="{{ route('instructor.agreements.index') }}" class="inline-flex items-center gap-2 rounded-xl border-2 border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
                 <i class="fas fa-arrow-right"></i>
-                رجوع
+                {{ __('instructor.back') }}
             </a>
         </div>
 
         <!-- Stats -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-5 sm:p-8">
             <div class="dashboard-card rounded-xl border-2 border-emerald-200/50 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-lg">
-                <p class="text-xs font-semibold text-emerald-700 mb-2">إجمالي المدفوعات</p>
-                <p class="text-2xl font-black text-emerald-700">{{ number_format($stats['total_earned'], 2) }} ج.م</p>
+                <p class="text-xs font-semibold text-emerald-700 mb-2">{{ __('instructor.total_payments') }}</p>
+                <p class="text-2xl font-black text-emerald-700">{{ number_format($stats['total_earned'], 2) }} {{ __('public.currency_egp') }}</p>
             </div>
             <div class="dashboard-card rounded-xl border-2 border-amber-200/50 bg-gradient-to-br from-amber-50 to-white p-5 shadow-lg">
-                <p class="text-xs font-semibold text-amber-700 mb-2">معلق</p>
-                <p class="text-2xl font-black text-amber-700">{{ number_format($stats['pending_amount'], 2) }} ج.م</p>
+                <p class="text-xs font-semibold text-amber-700 mb-2">{{ __('instructor.pending') }}</p>
+                <p class="text-2xl font-black text-amber-700">{{ number_format($stats['pending_amount'], 2) }} {{ __('public.currency_egp') }}</p>
             </div>
             <div class="dashboard-card rounded-xl border-2 border-blue-200/50 bg-gradient-to-br from-blue-50 to-white p-5 shadow-lg">
-                <p class="text-xs font-semibold text-blue-700 mb-2">إجمالي المدفوعات</p>
+                <p class="text-xs font-semibold text-blue-700 mb-2">{{ __('instructor.total_payments') }}</p>
                 <p class="text-2xl font-black text-blue-700">{{ $stats['total_payments'] }}</p>
             </div>
             <div class="dashboard-card rounded-xl border-2 border-green-200/50 bg-gradient-to-br from-green-50 to-white p-5 shadow-lg">
-                <p class="text-xs font-semibold text-green-700 mb-2">مدفوع</p>
+                <p class="text-xs font-semibold text-green-700 mb-2">{{ __('instructor.paid') }}</p>
                 <p class="text-2xl font-black text-green-700">{{ $stats['paid_payments'] }}</p>
             </div>
         </div>
@@ -52,29 +52,29 @@
                 <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
                     <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
                         <i class="fas fa-info-circle text-[#2CA9BD]"></i>
-                        معلومات الاتفاقية
+                        {{ __('instructor.agreement_info') }}
                     </h3>
                 </div>
                 <div class="px-5 py-6 sm:px-8 lg:px-12 space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-gradient-to-br from-blue-50 to-white p-4 rounded-xl border-2 border-blue-100">
-                            <p class="text-xs font-semibold text-blue-700 mb-1">نوع الاتفاقية</p>
+                            <p class="text-xs font-semibold text-blue-700 mb-1">{{ __('instructor.agreement_type_label') }}</p>
                             <p class="text-sm font-black text-slate-900">
                                 @if($agreement->type == 'course_price')
-                                    سعر للكورس كاملاً
+                                    {{ __('instructor.course_price_full') }}
                                 @elseif($agreement->type == 'hourly_rate')
-                                    سعر للساعة المسجلة
+                                    {{ __('instructor.hourly_rate_recorded') }}
                                 @else
-                                    راتب شهري
+                                    {{ __('instructor.monthly_salary') }}
                                 @endif
                             </p>
                         </div>
                         <div class="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border-2 border-purple-100">
-                            <p class="text-xs font-semibold text-purple-700 mb-1">السعر/المعدل</p>
-                            <p class="text-sm font-black text-slate-900">{{ number_format($agreement->rate, 2) }} ج.م</p>
+                            <p class="text-xs font-semibold text-purple-700 mb-1">{{ __('instructor.rate') }}</p>
+                            <p class="text-sm font-black text-slate-900">{{ number_format($agreement->rate, 2) }} {{ __('public.currency_egp') }}</p>
                         </div>
                         <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-xl border-2 border-emerald-100">
-                            <p class="text-xs font-semibold text-emerald-700 mb-1">الحالة</p>
+                            <p class="text-xs font-semibold text-emerald-700 mb-1">{{ __('common.status') }}</p>
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold 
                                 @if($agreement->status == 'active') bg-emerald-100 text-emerald-700 border-2 border-emerald-200
                                 @elseif($agreement->status == 'draft') bg-gray-100 text-gray-700 border-2 border-gray-200
@@ -82,40 +82,40 @@
                                 @elseif($agreement->status == 'terminated') bg-rose-100 text-rose-700 border-2 border-rose-200
                                 @else bg-blue-100 text-blue-700 border-2 border-blue-200
                                 @endif">
-                                @if($agreement->status == 'active') نشط
-                                @elseif($agreement->status == 'draft') مسودة
-                                @elseif($agreement->status == 'suspended') معلق
-                                @elseif($agreement->status == 'terminated') منتهي
-                                @else مكتمل
+                                @if($agreement->status == 'active') {{ __('instructor.active_status') }}
+                                @elseif($agreement->status == 'draft') {{ __('instructor.draft') }}
+                                @elseif($agreement->status == 'suspended') {{ __('instructor.suspended') }}
+                                @elseif($agreement->status == 'terminated') {{ __('instructor.terminated') }}
+                                @else {{ __('instructor.agreement_completed') }}
                                 @endif
                             </span>
                         </div>
                         <div class="bg-gradient-to-br from-indigo-50 to-white p-4 rounded-xl border-2 border-indigo-100">
-                            <p class="text-xs font-semibold text-indigo-700 mb-1">تاريخ البدء</p>
+                            <p class="text-xs font-semibold text-indigo-700 mb-1">{{ __('instructor.start_date') }}</p>
                             <p class="text-sm font-black text-slate-900">{{ $agreement->start_date ? $agreement->start_date->format('Y-m-d') : '-' }}</p>
                         </div>
                         @if($agreement->end_date)
                         <div class="bg-gradient-to-br from-orange-50 to-white p-4 rounded-xl border-2 border-orange-100">
-                            <p class="text-xs font-semibold text-orange-700 mb-1">تاريخ الانتهاء</p>
+                            <p class="text-xs font-semibold text-orange-700 mb-1">{{ __('instructor.end_date') }}</p>
                             <p class="text-sm font-black text-slate-900">{{ $agreement->end_date->format('Y-m-d') }}</p>
                         </div>
                         @endif
                     </div>
                     @if($agreement->description)
                     <div class="bg-gradient-to-br from-slate-50 to-white p-4 rounded-xl border-2 border-slate-100">
-                        <p class="text-xs font-semibold text-slate-700 mb-2">الوصف</p>
+                        <p class="text-xs font-semibold text-slate-700 mb-2">{{ __('instructor.description') }}</p>
                         <p class="text-sm text-slate-700 leading-relaxed">{{ $agreement->description }}</p>
                     </div>
                     @endif
                     @if($agreement->terms)
                     <div class="bg-gradient-to-br from-slate-50 to-white p-4 rounded-xl border-2 border-slate-100">
-                        <p class="text-xs font-semibold text-slate-700 mb-2">شروط العقد</p>
+                        <p class="text-xs font-semibold text-slate-700 mb-2">{{ __('instructor.contract_terms') }}</p>
                         <div class="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{{ $agreement->terms }}</div>
                     </div>
                     @endif
                     @if($agreement->notes)
                     <div class="bg-gradient-to-br from-amber-50 to-white p-4 rounded-xl border-2 border-amber-100">
-                        <p class="text-xs font-semibold text-amber-700 mb-2">ملاحظات</p>
+                        <p class="text-xs font-semibold text-amber-700 mb-2">{{ __('instructor.notes') }}</p>
                         <div class="text-sm text-amber-800 whitespace-pre-line leading-relaxed">{{ $agreement->notes }}</div>
                     </div>
                     @endif
@@ -127,19 +127,19 @@
                 <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
                     <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
                         <i class="fas fa-receipt text-[#2CA9BD]"></i>
-                        سجل المدفوعات
+                        {{ __('instructor.payments_log') }}
                     </h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
                             <tr class="text-xs font-bold uppercase tracking-widest text-slate-700">
-                                <th class="px-6 py-4 text-right">رقم الدفعة</th>
-                                <th class="px-6 py-4 text-right">النوع</th>
-                                <th class="px-6 py-4 text-right">المبلغ</th>
-                                <th class="px-6 py-4 text-right">الحالة</th>
-                                <th class="px-6 py-4 text-right">التاريخ</th>
-                                <th class="px-6 py-4 text-right">إيصال التحويل</th>
+                                <th class="px-6 py-4 text-right">{{ __('instructor.payment_number') }}</th>
+                                <th class="px-6 py-4 text-right">{{ __('instructor.type') }}</th>
+                                <th class="px-6 py-4 text-right">{{ __('instructor.amount') }}</th>
+                                <th class="px-6 py-4 text-right">{{ __('common.status') }}</th>
+                                <th class="px-6 py-4 text-right">{{ __('common.date') }}</th>
+                                <th class="px-6 py-4 text-right">{{ __('instructor.transfer_receipt') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 bg-white text-sm">
@@ -149,17 +149,17 @@
                                     <td class="px-6 py-4">
                                         @php
                                             $typeLabels = [
-                                                'course_completion' => 'إكمال كورس',
-                                                'course_sale' => 'بيع كورس',
-                                                'course_price' => 'سعر كورس',
-                                                'hourly_teaching' => 'ساعة تدريس',
-                                                'lecture_hour' => 'ساعة تدريس',
-                                                'hourly_rate' => 'سعر ساعة',
-                                                'monthly_salary' => 'راتب شهري',
-                                                'bonus' => 'مكافأة',
-                                                'other' => 'أخرى',
+                                                'course_completion' => __('instructor.course_price_full'),
+                                                'course_sale' => __('instructor.course_price'),
+                                                'course_price' => __('instructor.course_price'),
+                                                'hourly_teaching' => __('instructor.hourly_rate_recorded'),
+                                                'lecture_hour' => __('instructor.hourly_rate_recorded'),
+                                                'hourly_rate' => __('instructor.hourly_rate'),
+                                                'monthly_salary' => __('instructor.monthly_salary'),
+                                                'bonus' => __('instructor.bonus'),
+                                                'other' => __('instructor.other'),
                                             ];
-                                            $typeLabel = $typeLabels[$payment->type] ?? ($payment->type ?? 'غير محدد');
+                                            $typeLabel = $typeLabels[$payment->type] ?? ($payment->type ?? __('instructor.not_specified'));
                                         @endphp
                                         <div>
                                             <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
@@ -172,24 +172,24 @@
                                                 <p class="text-xs text-slate-500 mt-1">{{ $payment->lecture->title ?? '' }}</p>
                                             @endif
                                             @if($payment->hours_count)
-                                                <p class="text-xs text-slate-500 mt-1">{{ $payment->hours_count }} ساعة</p>
+                                                <p class="text-xs text-slate-500 mt-1">{{ $payment->hours_count }} {{ __('instructor.hour') }}</p>
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 font-black text-slate-900">{{ number_format($payment->amount, 2) }} ج.م</td>
+                                    <td class="px-6 py-4 font-black text-slate-900">{{ number_format($payment->amount, 2) }} {{ __('public.currency_egp') }}</td>
                                     <td class="px-6 py-4">
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold 
                                             @if($payment->status == 'paid') bg-emerald-100 text-emerald-700 border-2 border-emerald-200
                                             @elseif($payment->status == 'approved') bg-amber-100 text-amber-700 border-2 border-amber-200
                                             @else bg-gray-100 text-gray-700 border-2 border-gray-200
                                             @endif">
-                                            @if($payment->status == 'paid') تم الاستلام
-                                            @elseif($payment->status == 'approved') معتمد
-                                            @else قيد المراجعة
+                                            @if($payment->status == 'paid') {{ __('instructor.received') }}
+                                            @elseif($payment->status == 'approved') {{ __('instructor.approved') }}
+                                            @else {{ __('instructor.pending_review') }}
                                             @endif
                                         </span>
                                         @if($payment->status == 'paid')
-                                            <p class="text-xs text-emerald-600 mt-1">تم تحويل المبلغ حسب الاتفاقية</p>
+                                            <p class="text-xs text-emerald-600 mt-1">{{ __('instructor.amount_transferred_info') }}</p>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 text-xs text-slate-600">{{ $payment->created_at->format('Y-m-d') }}</td>
@@ -197,7 +197,7 @@
                                         @if($payment->status == 'paid' && $payment->transfer_receipt_path)
                                             <a href="{{ asset('storage/' . $payment->transfer_receipt_path) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">
                                                 <i class="fas fa-receipt"></i>
-                                                تحميل الإيصال
+                                                {{ __('instructor.download_receipt') }}
                                             </a>
                                         @else
                                             —
@@ -212,8 +212,8 @@
                                                 <i class="fas fa-receipt text-slate-400 text-2xl"></i>
                                             </div>
                                             <div>
-                                                <p class="font-bold text-slate-900">لا توجد مدفوعات</p>
-                                                <p class="text-sm text-slate-600 mt-1">لم يتم تسجيل أي مدفوعات بعد</p>
+                                                <p class="font-bold text-slate-900">{{ __('instructor.no_payments') }}</p>
+                                                <p class="text-sm text-slate-600 mt-1">{{ __('instructor.no_payments_yet') }}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -231,19 +231,19 @@
                 <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
                     <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
                         <i class="fas fa-info-circle text-[#2CA9BD]"></i>
-                        معلومات سريعة
+                        {{ __('instructor.quick_tips') }}
                     </h3>
                 </div>
                 <div class="px-5 py-6 sm:px-8 lg:px-12 space-y-4">
                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-blue-200">
                         <div class="flex items-center gap-2 mb-2">
                             <i class="fas fa-info-circle text-blue-600"></i>
-                            <span class="text-sm font-bold text-blue-800">نصائح</span>
+                            <span class="text-sm font-bold text-blue-800">{{ __('instructor.tips') }}</span>
                         </div>
                         <ul class="mt-2 text-sm text-blue-700 space-y-1.5 font-medium">
-                            <li>• يمكنك متابعة جميع المدفوعات هنا</li>
-                            <li>• المدفوعات المعتمدة تظهر في "معلق"</li>
-                            <li>• المدفوعات المكتملة تظهر في "إجمالي المدفوعات"</li>
+                            <li>• {{ __('instructor.tips_follow_payments') }}</li>
+                            <li>• {{ __('instructor.tips_pending') }}</li>
+                            <li>• {{ __('instructor.tips_completed') }}</li>
                         </ul>
                     </div>
                 </div>

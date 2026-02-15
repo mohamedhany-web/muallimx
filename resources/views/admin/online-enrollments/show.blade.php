@@ -16,7 +16,7 @@
                 <span>تفاصيل التسجيل</span>
             </nav>
         </div>
-        <a href="{{ route('admin.enrollments.index') }}" 
+        <a href="{{ route('admin.online-enrollments.index') }}" 
            class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
             <i class="fas fa-arrow-right ml-2"></i>
             العودة

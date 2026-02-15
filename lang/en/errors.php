@@ -1,0 +1,28 @@
+<?php
+
+return [
+    '404_title' => 'Page Not Found',
+    '404_message' => 'Sorry, the page you are looking for could not be found.',
+    '403_title' => 'Forbidden',
+    '403_message' => 'You do not have permission to access this page.',
+    '500_title' => 'Server Error',
+    '500_message' => 'Something went wrong. Please try again later.',
+    '429_title' => 'Too Many Requests',
+    '429_message' => 'Too many attempts. Please try again later.',
+    '503_title' => 'Service Unavailable',
+    '503_message' => 'The site is under maintenance. We will be back soon.',
+    'page_not_found_badge' => 'Page not found',
+    '404_message_full' => 'Sorry, the page you are looking for could not be found or has been moved. Please check the URL and try again.',
+    'suggestions' => 'Suggestions',
+    'suggestion_check_url' => 'Check that the URL you entered is correct',
+    'suggestion_use_menus' => 'Use the menus to navigate',
+    'back_dashboard' => 'Back to Dashboard',
+    'back_previous' => 'Back to previous page',
+    '403_message_full' => 'Sorry, you do not have the required permissions to access this page. Please contact the administrator if you believe this is an error.',
+    '403_extra_info' => 'Additional information',
+    '403_protected' => 'This page is protected and requires special permissions',
+    '403_check_login' => 'Make sure you are logged in with an account that has the required permissions',
+    '500_badge' => 'Server Error',
+    '429_badge' => 'Too Many Requests',
+    '503_badge' => 'Service Unavailable',
+];

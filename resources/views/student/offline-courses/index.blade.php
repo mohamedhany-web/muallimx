@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'كورساتي الأوفلاين')
-@section('header', 'كورساتي الأوفلاين')
+@section('title', __('student.offline_courses_title'))
+@section('header', __('student.offline_courses_title'))
 
 @push('styles')
 <style>
@@ -33,8 +33,8 @@
 <div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
     <!-- الهيدر -->
     <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">كورساتي الأوفلاين</h1>
-        <p class="text-sm text-gray-500">الكورسات الحضورية المسجلة فيها</p>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ __('student.offline_courses_title') }}</h1>
+        <p class="text-sm text-gray-500">{{ __('student.offline_courses_subtitle') }}</p>
     </div>
 
     <!-- الإحصائيات -->
@@ -42,7 +42,7 @@
         <div class="stats-card-offline p-4">
             <div class="flex items-center justify-between gap-3">
                 <div class="min-w-0">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">الكورسات</p>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ __('student.courses_count_label') }}</p>
                     <p class="text-2xl font-bold text-sky-600 leading-none">{{ $stats['total_offline'] }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 flex-shrink-0">
@@ -53,7 +53,7 @@
         <div class="stats-card-offline p-4">
             <div class="flex items-center justify-between gap-3">
                 <div class="min-w-0">
-                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">الأنشطة</p>
+                    <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ __('student.activities_label') }}</p>
                     <p class="text-2xl font-bold text-amber-600 leading-none">{{ $stats['total_activities'] }}</p>
                 </div>
                 <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0">
@@ -76,7 +76,7 @@
                 <div class="p-4">
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <h3 class="text-base font-bold text-gray-900 line-clamp-2 leading-snug flex-1 min-w-0">{{ $course->title }}</h3>
-                        <span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-sky-100 text-sky-700 flex-shrink-0">أوفلاين</span>
+                        <span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-sky-100 text-sky-700 flex-shrink-0">{{ __('student.offline_badge') }}</span>
                     </div>
                     <p class="text-xs text-gray-500 mb-2">
                         {{ $course->instructor->name ?? '—' }}
@@ -111,8 +111,8 @@
                 <div class="w-16 h-16 bg-sky-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-sky-600">
                     <i class="fas fa-chalkboard-teacher text-2xl"></i>
                 </div>
-                <h3 class="text-lg font-bold text-gray-900 mb-2">لا توجد كورسات أوفلاين</h3>
-                <p class="text-sm text-gray-500">لم يتم تسجيلك في أي كورس أوفلاين بعد</p>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('student.no_offline_courses') }}</h3>
+                <p class="text-sm text-gray-500">{{ __('student.no_offline_courses_desc') }}</p>
             </div>
         @endforelse
     </div>

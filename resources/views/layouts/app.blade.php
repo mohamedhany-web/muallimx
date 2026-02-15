@@ -1,11 +1,15 @@
+@php
+    $appLocale = app()->getLocale();
+    $appRtl = $appLocale === 'ar';
+@endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="light">
+<html lang="{{ $appLocale }}" dir="{{ $appRtl ? 'rtl' : 'ltr' }}" class="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Mindlytics') }} - @yield('title', 'لوحة التحكم')</title>
+    <title>{{ config('app.name', 'Mindlytics') }} - @yield('title', __('auth.dashboard'))</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -370,7 +374,7 @@ x-init="
                         <div class="flex md:hidden items-center flex-1 min-w-0 ml-2">
                             <div class="search-command flex items-center gap-2 w-full">
                                 <i class="fas fa-search text-sky-500 text-xs sm:text-sm flex-shrink-0"></i>
-                                <input type="text" placeholder="بحث..." class="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-700 placeholder-slate-400 font-medium min-w-0">
+                                <input type="text" placeholder="{{ __('common.nav_search_placeholder') }}" class="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-700 placeholder-slate-400 font-medium min-w-0">
                             </div>
                         </div>
 
@@ -378,19 +382,21 @@ x-init="
                         <div class="hidden md:flex items-center flex-1 max-w-xl min-w-0">
                             <div class="search-command flex items-center gap-3 w-full">
                                 <i class="fas fa-search text-sky-500 text-sm flex-shrink-0"></i>
-                                <input type="text" placeholder="ابحث عن كورسات، دروس، امتحانات..." class="flex-1 bg-transparent border-none outline-none text-sm text-slate-700 placeholder-slate-400 font-medium min-w-0">
+                                <input type="text" placeholder="{{ __('common.nav_search_placeholder_long') }}" class="flex-1 bg-transparent border-none outline-none text-sm text-slate-700 placeholder-slate-400 font-medium min-w-0">
                                 <kbd class="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600">Ctrl K</kbd>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+                        <!-- Language Switcher -->
+                        <x-language-switcher class="hidden sm:inline-flex" />
                         <!-- Quick Actions - Desktop Only -->
                         <div class="hidden lg:flex items-center gap-2">
-                            <a href="{{ route('academic-years') }}" class="quick-action-btn" title="تصفح الكورسات">
+                            <a href="{{ route('academic-years') }}" class="quick-action-btn" title="{{ __('common.browse_courses') }}">
                                 <i class="fas fa-search text-sm"></i>
                             </a>
-                            <a href="{{ route('my-courses.index') }}" class="quick-action-btn" title="كورساتي">
+                            <a href="{{ route('my-courses.index') }}" class="quick-action-btn" title="{{ __('common.my_courses_title') }}">
                                 <i class="fas fa-book-open text-sm"></i>
                             </a>
                         </div>

@@ -147,10 +147,8 @@ Route::get('/sitemap.xml', function() {
         ->header('Content-Type', 'application/xml');
 })->name('sitemap');
 
-// الصفحة الرئيسية (Home) - welcome.blade.php
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+// الصفحة الرئيسية (Home) - الترجمة عبر SetLocale في مجموعة web
+Route::get('/', [\App\Http\Controllers\Public\LandingController::class, 'index'])->name('home');
 
 // الصفحات العامة
 Route::get('/about', [\App\Http\Controllers\Public\PageController::class, 'about'])->name('public.about');

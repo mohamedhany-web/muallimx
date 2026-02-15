@@ -11,7 +11,7 @@
             </div>
             <div class="flex-1 min-w-0">
                 <h2 class="text-sm md:text-base font-bold text-gray-900 tracking-tight leading-tight">Mindlytics</h2>
-                <p class="text-xs text-gray-500 font-medium mt-0.5">مركز التعلم</p>
+                <p class="text-xs text-gray-500 font-medium mt-0.5">{{ __('student.learning_center') }}</p>
             </div>
         </div>
     </div>
@@ -22,14 +22,14 @@
             <div class="stats-card bg-sky-50 rounded-lg p-2 md:p-2.5 border border-sky-100 cursor-pointer transition-all duration-200">
                 <div class="flex items-center gap-1 mb-0.5">
                     <i class="fas fa-book text-sky-500 text-xs"></i>
-                    <span class="text-xs text-gray-600 font-medium">الكورسات</span>
+                    <span class="text-xs text-gray-600 font-medium">{{ __('student.courses') }}</span>
                 </div>
                 <div class="text-base md:text-lg font-bold text-sky-600 leading-none">{{ auth()->user()->activeCourses()->count() }}</div>
             </div>
             <div class="stats-card bg-amber-50 rounded-lg p-2 md:p-2.5 border border-amber-100 cursor-pointer transition-all duration-200">
                 <div class="flex items-center gap-1 mb-0.5">
                     <i class="fas fa-chart-line text-amber-500 text-xs"></i>
-                    <span class="text-xs text-gray-600 font-medium">التقدم</span>
+                    <span class="text-xs text-gray-600 font-medium">{{ __('student.progress') }}</span>
                 </div>
                 <div class="text-base md:text-lg font-bold text-amber-600 leading-none">
                     @php
@@ -58,8 +58,8 @@
                         <i class="fas fa-chart-line text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">لوحة التحكم</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">نظرة عامة</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.dashboard') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ __('student.overview') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -78,8 +78,8 @@
                         <i class="fas fa-search text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">تصفح الكورسات</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">اكتشف جديد</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.browse_courses') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ __('student.discover_new') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -96,8 +96,8 @@
                         <i class="fas fa-book-open text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">كورساتي</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ auth()->user()->activeCourses()->count() }} كورس نشط</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.my_courses') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ auth()->user()->activeCourses()->count() }} {{ __('student.active_course') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -117,8 +117,8 @@
                         <i class="fas fa-users text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">مجموعاتي</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ $myGroupsCount }} مجموعة</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.my_groups') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ $myGroupsCount }} {{ __('student.group_count') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -138,7 +138,7 @@
                         <i class="fas fa-route text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">المسار التعليمي</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.learning_path') }}</div>
                         <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ \Illuminate\Support\Str::limit($activeEnrollment->learningPath->name, 20) }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
@@ -156,7 +156,7 @@
                         <i class="fas fa-chalkboard-teacher text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">كورساتي الأوفلاين</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.my_offline_courses') }}</div>
                         @php
                             try {
                                 $offlineCount = auth()->user()->offlineEnrollments()->where('status', 'active')->count();
@@ -164,7 +164,7 @@
                                 $offlineCount = 0;
                             }
                         @endphp
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ $offlineCount }} كورس أوفلاين</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ $offlineCount }} {{ __('student.offline_course') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -181,8 +181,8 @@
                         <i class="fas fa-shopping-cart text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">طلباتي</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">متابعة الطلبات</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.orders') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ __('student.orders_tracking') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -199,8 +199,8 @@
                         <i class="fas fa-clipboard-check text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">الامتحانات</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">اختباراتي</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.exams') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ __('student.my_exams') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -217,8 +217,8 @@
                         <i class="fas fa-certificate text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">شهاداتي</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">إنجازاتي</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.certificates') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ __('student.my_achievements') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -235,8 +235,8 @@
                         <i class="fas fa-wallet text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">محفظتي</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">المالية</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.wallet') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ __('student.wallet_financial') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -296,12 +296,12 @@
                         @endif
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">التقويم</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.calendar') }}</div>
                         <div class="text-xs text-gray-500 mt-0.5 leading-tight">
                             @if($upcomingEventsCount > 0)
-                                {{ $upcomingEventsCount }} حدث قادم
+                                {{ $upcomingEventsCount }} {{ __('student.upcoming_event') }}
                             @else
-                                الأحداث والمواعيد
+                                {{ __('student.events_dates') }}
                             @endif
                         </div>
                     </div>
@@ -321,8 +321,8 @@
                         <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-white"></span>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">الإشعارات</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">3 جديد</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.notifications') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">3 {{ __('student.new_notifications') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -339,8 +339,8 @@
                         <i class="fas fa-briefcase text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">مشاريعي</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">البورتفوليو</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.my_projects') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ __('student.portfolio') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -357,8 +357,8 @@
                         <i class="fas fa-user text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">الملف الشخصي</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">معلوماتي</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.profile') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ __('student.my_info') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -375,8 +375,8 @@
                         <i class="fas fa-cog text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-black text-gray-900 text-sm leading-tight">الإعدادات</div>
-                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">الخيارات</div>
+                        <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.settings') }}</div>
+                        <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ __('student.options') }}</div>
                     </div>
                     <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                 </div>
@@ -396,8 +396,8 @@
                             <i class="fas fa-shield-alt text-sm"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="font-black text-gray-900 text-sm leading-tight">لوحة الإدارة</div>
-                            <div class="text-xs text-gray-500 mt-0.5 leading-tight">مدير</div>
+                            <div class="font-black text-gray-900 text-sm leading-tight">{{ __('student.admin_panel') }}</div>
+                            <div class="text-xs text-gray-500 mt-0.5 leading-tight">{{ __('student.admin_role') }}</div>
                         </div>
                         <i class="fas fa-chevron-left text-gray-400 text-xs flex-shrink-0"></i>
                     </div>
@@ -421,11 +421,11 @@
                     <p class="text-xs font-bold text-gray-900 truncate leading-tight">{{ auth()->user()->name }}</p>
                     <p class="text-[10px] text-gray-500 truncate leading-tight mt-0.5 flex items-center gap-1">
                         @if(auth()->user()->isAdmin())
-                            <i class="fas fa-shield-alt text-sky-500 text-[10px]"></i> مدير
+                            <i class="fas fa-shield-alt text-sky-500 text-[10px]"></i> {{ __('student.admin_role') }}
                         @elseif(auth()->user()->isInstructor())
-                            <i class="fas fa-chalkboard-teacher text-sky-500 text-[10px]"></i> مدرب
+                            <i class="fas fa-chalkboard-teacher text-sky-500 text-[10px]"></i> {{ __('student.instructor_role') }}
                         @else
-                            <i class="fas fa-user-graduate text-sky-500 text-[10px]"></i> طالب
+                            <i class="fas fa-user-graduate text-sky-500 text-[10px]"></i> {{ __('student.student_role') }}
                         @endif
                     </p>
                 </div>

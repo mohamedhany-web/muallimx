@@ -1,11 +1,12 @@
+@php $studentLocale = app()->getLocale(); $studentRtl = $studentLocale === 'ar'; @endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="light">
+<html lang="{{ $studentLocale }}" dir="{{ $studentRtl ? 'rtl' : 'ltr' }}" class="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Mindlytics') }} - @yield('title', 'لوحة التحكم')</title>
+    <title>{{ config('app.name', 'Mindlytics') }} - @yield('title', __('auth.dashboard'))</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -531,7 +532,7 @@ x-init="
                             <div class="search-command flex items-center gap-2 w-full">
                                 <i class="fas fa-search text-sky-500 text-xs sm:text-sm flex-shrink-0"></i>
                                 <input type="text" 
-                                       placeholder="بحث..." 
+                                       placeholder="{{ __('common.nav_search_placeholder') }}" 
                                        class="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-gray-700 placeholder-gray-400 font-medium min-w-0">
                             </div>
                         </div>
@@ -541,7 +542,7 @@ x-init="
                             <div class="search-command flex items-center gap-3 w-full">
                                 <i class="fas fa-search text-sky-500 text-sm flex-shrink-0"></i>
                                 <input type="text" 
-                                       placeholder="ابحث عن كورسات، دروس، امتحانات..." 
+                                       placeholder="{{ __('common.nav_search_placeholder_long') }}" 
                                        class="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 font-medium min-w-0">
                                 <kbd class="hidden lg:flex items-center gap-1 px-2.5 py-1 bg-gradient-to-br from-sky-500/10 to-sky-400/10 rounded text-xs font-bold text-sky-500 border border-sky-500/20 flex-shrink-0">
                                     <span>Ctrl</span>
@@ -552,12 +553,13 @@ x-init="
                     </div>
 
                     <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+                        <x-language-switcher class="hidden sm:inline-flex" />
                         <!-- Quick Actions - Desktop Only -->
                         <div class="hidden lg:flex items-center gap-2">
-                            <a href="{{ route('academic-years') }}" class="quick-action-btn" title="تصفح الكورسات">
+                            <a href="{{ route('academic-years') }}" class="quick-action-btn" title="{{ __('landing.nav.courses') }}">
                                 <i class="fas fa-search text-sm"></i>
                             </a>
-                            <a href="{{ route('my-courses.index') }}" class="quick-action-btn" title="كورساتي">
+                            <a href="{{ route('my-courses.index') }}" class="quick-action-btn" title="{{ __('common.my_courses_title') }}">
                                 <i class="fas fa-book-open text-sm"></i>
                             </a>
                         </div>

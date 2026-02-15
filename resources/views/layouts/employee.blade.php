@@ -1,9 +1,10 @@
+@php $empLocale = app()->getLocale(); $empRtl = $empLocale === 'ar'; @endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ $empLocale }}" dir="{{ $empRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'لوحة الموظف - Mindlytics')</title>
+    <title>@yield('title', __('auth.dashboard')) - {{ config('app.name') }}</title>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">

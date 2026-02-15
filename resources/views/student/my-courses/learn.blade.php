@@ -1,6 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.student-dashboard')
 
-@section('title', $course->title . ' - ابدأ التعلم')
+@section('title', $course->title . ' - ' . __('student.learn'))
 @section('header', '')
 
 @push('meta')
@@ -46,188 +46,11 @@
         }
     }
     
-    /* Focus Mode - وضع التركيز المتقدم (ثيم داكن كما في التصميم) */
-    .focus-mode {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: #0f172a;
-        z-index: 99999;
-        overflow: hidden;
-        padding: 0;
-        animation: focusFadeIn 0.3s ease-in-out;
-        display: flex;
-        flex-direction: column;
-        width: 100vw;
-        height: 100vh;
-        box-sizing: border-box;
-    }
-    
-    /* إخفاء السايدبار الرئيسي في وضع التركيز */
-    body:has(.focus-mode) .student-sidebar,
-    body:has(.focus-mode) aside {
-        display: none !important;
-    }
-    
-    body:has(.focus-mode) .flex.h-screen {
-        padding: 0 !important;
-    }
-    
-    body:has(.focus-mode) .flex.flex-col.flex-1 {
-        width: 100vw !important;
-        max-width: 100vw !important;
-    }
-    
-    /* سايدبار المنهج */
-    .focus-sidebar {
-        width: 340px;
-        min-width: 340px;
-        max-width: 340px;
-        background: linear-gradient(180deg, #0f172a 0%, #0c1222 50%, #020617 100%);
-        border-right: 1px solid rgba(14, 165, 233, 0.2);
-        overflow-y: auto;
-        overflow-x: hidden;
-        position: relative;
-        transition: transform 0.25s ease, width 0.25s ease, opacity 0.25s ease;
-        order: 1;
-        flex-shrink: 0;
-        height: 100%;
-        box-shadow: 8px 0 32px rgba(0,0,0,0.3);
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
-    }
-    
-    /* السايدبار مغلق */
-    .focus-sidebar.closed {
-        width: 0 !important;
-        min-width: 0 !important;
-        max-width: 0 !important;
-        padding: 0;
-        border: none;
-        overflow: hidden;
-        opacity: 0;
-        pointer-events: none;
-        margin: 0;
-    }
-    
-    @media (max-width: 1024px) {
-        .focus-sidebar.closed {
-            width: 0 !important;
-            transform: translateX(-100%);
-        }
-    }
-    
-    .focus-sidebar::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .focus-sidebar::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.5);
-    }
-    
-    .focus-sidebar::-webkit-scrollbar-thumb {
-        background: rgba(14, 165, 233, 0.4);
-        border-radius: 3px;
-    }
-    .focus-sidebar::-webkit-scrollbar-thumb:hover {
-        background: rgba(14, 165, 233, 0.6);
-    }
-    .focus-sidebar-header {
-        padding: 1.125rem 1.25rem;
-        background: rgba(15, 23, 42, 0.98);
-        border-bottom: 1px solid rgba(14, 165, 233, 0.15);
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        backdrop-filter: blur(12px);
-    }
-    
-    @media (max-width: 640px) {
-        .focus-sidebar-header {
-            padding: 0.875rem 1rem;
-        }
-    }
-    
-    .focus-sidebar-content {
-        padding: 0.65rem 0.85rem;
-    }
-    
-    @media (max-width: 640px) {
-        .focus-sidebar-content {
-            padding: 0.6rem 0.75rem;
-        }
-    }
-    
-    /* المحتوى الرئيسي - على اليسار (ثيم داكن) */
-    .focus-main-content {
-        flex: 1;
-        overflow: hidden;
-        background: #0f172a;
-        position: relative;
-        order: 1;
-        min-height: 0;
-        width: 100%;
-        height: 100%;
-        transition: width 0.3s ease, margin-left 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        box-sizing: border-box;
-    }
-    
-    @media (min-width: 1024px) {
-        .focus-sidebar:not(.closed) ~ .focus-main-content,
-        .focus-sidebar:not(.closed) + .focus-main-content {
-            width: calc(100% - 340px);
-        }
-    }
-    
-    /* عندما يكون السايدبار مغلق، المحتوى يملأ الصفحة */
-    .curriculum-wrapper {
-        width: 100%;
-        display: flex;
-        height: 100%;
-        overflow: hidden;
-    }
-    
-    .curriculum-wrapper .focus-main-content {
-        flex: 1;
-        min-width: 0;
-        transition: width 0.3s ease, margin-left 0.3s ease;
-    }
-    
-    @media (min-width: 1024px) {
-        .focus-sidebar.closed ~ .focus-main-content,
-        .focus-sidebar.closed + .focus-main-content {
-            width: 100% !important;
-            margin-left: 0 !important;
-            flex: 1 !important;
-        }
-    }
-    
-    .focus-main-content::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-    .focus-main-content::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.6);
-    }
-    
-    .focus-main-content::-webkit-scrollbar-thumb {
-        background: rgba(71, 85, 105, 0.8);
-        border-radius: 4px;
-    }
-    
-    .focus-main-content::-webkit-scrollbar-thumb:hover {
-        background: rgba(100, 116, 139, 0.9);
-    }
-    
-    /* عناصر المنهج في السايدبار */
+    /* عناصر المنهج - بطاقات مثل لوحة التحكم */
     .curriculum-item {
-        background: rgba(30, 41, 59, 0.5);
-        border: 1px solid rgba(51, 65, 85, 0.45);
-        border-radius: 8px;
+        background: #ffffff;
+        border: 1px solid rgb(226 232 240);
+        border-radius: 12px;
         padding: 0.6rem 0.75rem;
         margin-bottom: 0.4rem;
         transition: all 0.2s ease;
@@ -236,372 +59,35 @@
         touch-action: manipulation;
     }
     @media (max-width: 640px) {
-        .curriculum-item { padding: 0.55rem 0.7rem; margin-bottom: 0.35rem; border-radius: 6px; }
+        .curriculum-item { padding: 0.55rem 0.7rem; margin-bottom: 0.35rem; border-radius: 10px; }
     }
     .curriculum-item:hover {
-        background: rgba(30, 41, 59, 0.9);
-        border-color: rgba(14, 165, 233, 0.35);
+        background: rgb(248 250 252);
+        border-color: rgb(186 230 253);
         transform: translateX(-2px);
     }
     .curriculum-item.active {
-        background: linear-gradient(135deg, rgba(14, 165, 233, 0.2) 0%, rgba(6, 182, 212, 0.1) 100%);
-        border-color: rgba(14, 165, 233, 0.6);
+        background: rgb(224 242 254);
+        border-color: rgb(14 165 233);
         box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
     }
     .curriculum-item.completed {
-        border-color: rgba(16, 185, 129, 0.4);
-        background: rgba(16, 185, 129, 0.1);
+        border-color: rgb(167 243 208);
+        background: rgb(236 253 245);
     }
     .curriculum-item.locked {
-        opacity: 0.55;
+        opacity: 0.6;
         cursor: not-allowed;
+        background: rgb(248 250 252);
     }
     .curriculum-item.locked:hover {
         transform: none;
     }
     
-    /* زر التبديل - مدمج مع السايدبار (على الحافة اليمنى للسايدبار عندما يكون على اليسار) */
-    .focus-sidebar .sidebar-toggle-btn {
-        position: absolute;
-        top: 50%;
-        right: -20px;
-        transform: translateY(-50%);
-        z-index: 1000;
-        background: #0f172a;
-        border: 1px solid rgba(14, 165, 233, 0.35);
-        border-left: none;
-        color: rgb(148 163 184);
-        width: 36px;
-        height: 56px;
-        border-radius: 0 8px 8px 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 2px 0 8px rgba(0,0,0,0.2);
-        touch-action: manipulation;
-    }
-    .focus-sidebar .sidebar-toggle-btn:hover {
-        background: #1e293b;
-        border-color: rgb(14 165 233);
-        color: rgb(56 189 248);
-    }
-    
-    @media (max-width: 1024px) {
-        .focus-sidebar .sidebar-toggle-btn {
-            display: none;
-        }
-    }
-    
-    /* عندما يكون السايدبار مغلق، الزر يظهر على اليسار من المحتوى (لفتح السايدبار) */
-    .focus-main-content .sidebar-toggle-btn {
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        border-radius: 0 8px 8px 0;
-        border-left: 1px solid rgba(14, 165, 233, 0.35);
-        border-right: none;
-    }
-    
-    .focus-main-content .sidebar-toggle-btn:hover {
-        left: -5px;
-    }
-    
-    /* زر في السايدبار لإغلاقه */
-    .sidebar-close-btn {
-        position: absolute;
-        top: 1rem;
-        left: 1rem;
-        background: rgba(239, 68, 68, 0.2);
-        border: 1px solid rgba(239, 68, 68, 0.5);
-        color: white;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        z-index: 20;
-    }
-    
-    .sidebar-close-btn:hover {
-        background: rgba(239, 68, 68, 0.4);
-        border-color: #ef4444;
-        transform: scale(1.1);
-    }
-    
-    .focus-sidebar.closed .sidebar-close-btn {
-        display: none;
-    }
-    
-    /* ——— الجوال: سايدبار ملء الشاشة مع انتقالات سلسة ——— */
-    @media (max-width: 1024px) {
-        .focus-sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            z-index: 100001;
-            transform: translateX(-100%);
-            width: min(100vw, 360px) !important;
-            max-width: none;
-            min-width: 0;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
-            will-change: transform;
-            box-shadow: none;
-            border-radius: 0;
-            /* دعم الشقوق والأجهزة ذات الحواف */
-            padding-left: env(safe-area-inset-left, 0);
-        }
-        .focus-sidebar.open {
-            transform: translateX(0);
-            box-shadow: 8px 0 32px rgba(0, 0, 0, 0.4);
-        }
-        
-        .focus-main-content {
-            width: 100% !important;
-            margin-left: 0 !important;
-        }
-        
-        .sidebar-toggle-btn {
-            display: block;
-        }
-        
-        .focus-control-bar {
-            padding: 0.75rem 1rem !important;
-            padding-left: max(1rem, env(safe-area-inset-left));
-            padding-right: max(1rem, env(safe-area-inset-right));
-        }
-        
-        .focus-control-bar .controls {
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-        
-        .focus-control-bar h1 {
-            font-size: 1rem !important;
-        }
-        
-        .focus-control-bar .action-buttons {
-            flex-wrap: wrap;
-        }
-        
-        .focus-control-bar .btn-control span {
-            display: none;
-        }
-        
-        .focus-main-content-wrapper {
-            padding: 1rem !important;
-        }
-        
-        .lesson-content-viewer,
-        .lecture-viewer {
-            padding: 1rem !important;
-        }
-        
-        /* منع تمرير الخلفية عند فتح السايدبار على الجوال */
-        body.sidebar-mobile-open {
-            overflow: hidden !important;
-            position: fixed !important;
-            width: 100% !important;
-        }
-    }
-    
-    @media (max-width: 640px) {
-        .focus-sidebar {
-            width: 100vw !important;
-            max-width: 100vw !important;
-        }
-        
-        .focus-sidebar-header {
-            padding-top: max(0.875rem, env(safe-area-inset-top));
-        }
-        
-        .sidebar-close-btn {
-            top: max(1rem, env(safe-area-inset-top));
-            width: 44px;
-            height: 44px;
-            min-width: 44px;
-            min-height: 44px;
-        }
-        
-        .focus-control-bar {
-            padding: 0.625rem 0.75rem !important;
-            min-height: 52px;
-        }
-        
-        .focus-control-bar h1 {
-            font-size: 0.875rem !important;
-        }
-        
-        .curriculum-item {
-            padding: 0.875rem 1rem !important;
-            min-height: 48px;
-        }
-        
-        .curriculum-item-title {
-            font-size: 0.8125rem !important;
-        }
-        
-        .curriculum-item-meta {
-            font-size: 0.625rem !important;
-        }
-    }
-    
-    @keyframes focusFadeIn {
-        from {
-            opacity: 0;
-            backdrop-filter: blur(0px);
-        }
-        to {
-            opacity: 1;
-            backdrop-filter: blur(10px);
-        }
-    }
-    
-    .focus-mode .curriculum-wrapper {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        overflow: hidden;
-        width: 100vw;
-    }
-    
-    .focus-mode .curriculum-wrapper > .flex {
-        flex: 1;
-        min-height: 0;
-        overflow: hidden;
-        width: 100%;
-    }
-    
-    /* منع التمرير الأفقي */
-    html:has(.focus-mode),
-    body:has(.focus-mode) {
-        overflow: hidden !important;
-        width: 100vw !important;
-        max-width: 100vw !important;
-    }
-    
-    .focus-mode .focus-control-bar {
-        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-        border-bottom: 1px solid rgba(14, 165, 233, 0.15);
-        padding: 0.875rem 1.25rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-        position: relative;
-        flex-shrink: 0;
-        z-index: 100;
-        width: 100%;
-        box-sizing: border-box;
-        height: auto;
-        min-height: 64px;
-    }
-    
-    @media (max-width: 640px) {
-        .focus-mode .focus-control-bar {
-            padding: 0.75rem 1rem;
-            min-height: 58px;
-        }
-    }
-    
-    .focus-mode .focus-control-bar .controls {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.75rem;
-        width: 100%;
-        flex-wrap: wrap;
-    }
-    
-    @media (max-width: 640px) {
-        .focus-mode .focus-control-bar .controls {
-            gap: 0.5rem;
-        }
-    }
-    
-    .focus-mode .focus-control-bar .search-box {
-        position: relative;
-        max-width: 300px;
-        flex: 1;
-        min-width: 200px;
-    }
-    
-    @media (max-width: 768px) {
-        .focus-mode .focus-control-bar .search-box {
-            display: none;
-        }
-    }
-    
-    .focus-mode .focus-control-bar .search-box input {
-        width: 100%;
-        padding: 0.5rem 1rem 0.5rem 2.5rem;
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        border-radius: 0.5rem;
-        background: white;
-        font-size: 0.875rem;
-    }
-    
-    .focus-mode .focus-control-bar .search-box input:focus {
-        outline: none;
-        border-color: rgb(14 165 233);
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
-    }
-    .focus-mode .focus-control-bar .action-buttons {
-        display: flex;
-        gap: 0.5rem;
-        flex-shrink: 0;
-    }
-    
-    .focus-mode .focus-control-bar .btn-control {
-        padding: 0.5rem 0.875rem;
-        background: rgba(51, 65, 85, 0.5);
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        border-radius: 10px;
-        color: rgb(226 232 240);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        white-space: nowrap;
-    }
-    @media (max-width: 640px) {
-        .focus-mode .focus-control-bar .btn-control {
-            padding: 0.5rem 0.65rem;
-            min-width: 42px;
-            justify-content: center;
-            border-radius: 8px;
-        }
-    }
-    .focus-mode .focus-control-bar .btn-close {
-        background: rgba(239, 68, 68, 0.15);
-        border-color: rgba(239, 68, 68, 0.3);
-        color: #f87171;
-    }
-    
-    .focus-mode .focus-control-bar .btn-close:hover {
-        background: rgba(239, 68, 68, 0.25);
-        border-color: #ef4444;
-    }
-    .focus-mode .focus-control-bar .btn-control:hover {
-        background: rgba(14, 165, 233, 0.15);
-        border-color: rgba(14, 165, 233, 0.4);
-        color: rgb(186 230 253);
-    }
-    .focus-mode .focus-control-bar .btn-control.active {
-        background: rgba(14, 165, 233, 0.2);
-        border-color: rgba(14, 165, 233, 0.5);
-        color: rgb(125 211 252);
-    }
     /* شريط تفاصيل الدرس */
     .lesson-details-bar {
-        background: linear-gradient(180deg, #1e293b 0%, #172033 100%);
-        border-bottom: 1px solid rgba(14, 165, 233, 0.2);
+        background: #ffffff;
+        border-bottom: 1px solid rgb(226 232 240);
         padding: 0.875rem 1.25rem;
         display: flex;
         align-items: center;
@@ -618,9 +104,9 @@
     .lesson-details-bar .lesson-thumb {
         width: 56px;
         height: 32px;
-        border-radius: 6px;
+        border-radius: 8px;
         object-fit: cover;
-        background: #0f172a;
+        background: rgb(241 245 249);
         flex-shrink: 0;
     }
     @media (max-width: 640px) {
@@ -630,7 +116,7 @@
         }
     }
     .lesson-details-bar .lesson-title-text {
-        color: rgb(241 245 249);
+        color: rgb(17 24 39);
         font-weight: 600;
         font-size: 0.875rem;
         flex: 1;
@@ -644,7 +130,7 @@
         }
     }
     .lesson-details-bar .lesson-meta {
-        color: rgba(148, 163, 184, 0.95);
+        color: rgb(100 116 139);
         font-size: 0.75rem;
     }
     @media (max-width: 640px) {
@@ -657,12 +143,12 @@
         align-items: center;
         gap: 0.5rem;
         padding: 0.5rem 1rem;
-        background: #10b981;
+        background: rgb(14 165 233);
         color: white;
         font-weight: 600;
         font-size: 0.875rem;
         border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         cursor: pointer;
         transition: background 0.2s;
         touch-action: manipulation;
@@ -675,15 +161,15 @@
         }
     }
     .btn-lesson-complete:hover {
-        background: #059669;
+        background: rgb(2 132 199);
     }
     .btn-lesson-complete:disabled,
     .btn-lesson-complete.completed {
-        background: #059669;
+        background: rgb(16 185 129);
         cursor: default;
     }
     .lesson-details-bar .btn-share {
-        color: rgba(148, 163, 184, 0.9);
+        color: rgb(100 116 139);
         font-size: 0.8125rem;
         display: inline-flex;
         align-items: center;
@@ -693,53 +179,36 @@
         cursor: pointer;
     }
     .lesson-details-bar .btn-share:hover {
-        color: rgb(226 232 240);
-    }
-    
-    /* شريط تقدم الطالب */
-    .focus-progress-bar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: rgba(15, 23, 42, 0.9);
-        z-index: 100000;
-    }
-    .focus-progress-bar .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, rgb(14 165 233), rgb(16 185 129));
-        transition: width 0.5s ease;
-        border-radius: 0 2px 2px 0;
+        color: rgb(14 165 233);
     }
     
     .curriculum-section-header {
-        color: rgb(226 232 240);
+        color: rgb(71 85 105);
         font-weight: 600;
         font-size: 0.65rem;
         text-transform: uppercase;
         letter-spacing: 0.06em;
         padding: 0.5rem 0.75rem;
-        background: rgba(30, 41, 59, 0.6);
-        border-radius: 8px;
+        background: rgb(248 250 252);
+        border-radius: 10px;
         margin-bottom: 0.5rem;
         margin-top: 0.9rem;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        border: 1px solid rgba(71, 85, 105, 0.5);
+        border: 1px solid rgb(226 232 240);
         cursor: pointer;
         user-select: none;
         transition: background 0.2s, border-color 0.2s;
     }
     .curriculum-section-header:hover {
-        background: rgba(51, 65, 85, 0.6);
-        border-color: rgba(14, 165, 233, 0.3);
+        background: rgb(241 245 249);
+        border-color: rgb(186 230 253);
     }
     .curriculum-section-header:first-of-type { margin-top: 0; }
     .curriculum-section-chevron {
         transition: transform 0.2s ease;
-        color: rgba(148, 163, 184, 0.9);
+        color: rgb(100 116 139);
         font-size: 0.6rem;
     }
     .curriculum-section-header.collapsed .curriculum-section-chevron {
@@ -749,12 +218,12 @@
         .curriculum-section-header {
             font-size: 0.6rem;
             padding: 0.45rem 0.65rem;
-            border-radius: 6px;
+            border-radius: 8px;
         }
     }
     
     .curriculum-item-title {
-        color: rgb(241 245 249);
+        color: rgb(17 24 39);
         font-weight: 600;
         font-size: 0.8rem;
         margin-bottom: 0.15rem;
@@ -765,7 +234,7 @@
         .curriculum-item-title { font-size: 0.75rem; }
     }
     .curriculum-item-meta {
-        color: rgba(148, 163, 184, 0.85);
+        color: rgb(100 116 139);
         font-size: 0.65rem;
         display: flex;
         gap: 0.4rem;
@@ -823,11 +292,11 @@
     }
     .lesson-content-viewer::-webkit-scrollbar-track,
     .lecture-viewer::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.5);
+        background: rgb(241 245 249);
     }
     .lesson-content-viewer::-webkit-scrollbar-thumb,
     .lecture-viewer::-webkit-scrollbar-thumb {
-        background: rgba(71, 85, 105, 0.7);
+        background: rgb(203 213 225);
         border-radius: 3px;
     }
     
@@ -877,7 +346,7 @@
         text-align: center;
         padding: 2.5rem 1.5rem;
         min-height: 400px;
-        color: rgb(226 232 240);
+        color: rgb(71 85 105);
         box-sizing: border-box;
     }
     
@@ -902,12 +371,13 @@
         bottom: 0;
         width: 400px;
         max-width: 90vw;
-        background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
-        border-left: 1px solid rgba(14, 165, 233, 0.3);
+        background: #ffffff;
+        border-left: 1px solid rgb(226 232 240);
         padding: 1.5rem;
         overflow-y: auto;
         transition: right 0.3s ease;
         z-index: 100002;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.06);
         -webkit-overflow-scrolling: touch;
     }
     
@@ -927,55 +397,48 @@
     }
     
     .focus-settings-panel::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.5);
+        background: rgb(248 250 252);
     }
     
     .focus-settings-panel::-webkit-scrollbar-thumb {
-        background: rgba(59, 130, 246, 0.5);
+        background: rgb(203 213 225);
         border-radius: 3px;
     }
     
-    .focus-mode[data-font-size='small'] .curriculum-content {
+    .learn-page[data-font-size='small'] .curriculum-content {
         font-size: 0.875rem;
     }
     
-    .focus-mode[data-font-size='medium'] .curriculum-content {
+    .learn-page[data-font-size='medium'] .curriculum-content {
         font-size: 1rem;
     }
     
-    .focus-mode[data-font-size='large'] .curriculum-content {
+    .learn-page[data-font-size='large'] .curriculum-content {
         font-size: 1.125rem;
     }
     
     @media print {
-        .focus-mode .focus-control-bar,
-        .focus-mode .focus-stats,
-        .focus-mode .btn-control {
+        .learn-page .btn-control,
+        .learn-page [class*="learn-progress"] {
             display: none;
         }
-        
-        .focus-mode {
-            position: static;
-        }
+        .learn-page { position: static; }
     }
     
-    /* أنماط مشغل الفيديو - المشغل الخاص بنا يتحكم والفيديو يملأ المساحة */
+    /* مشغل الفيديو داخل حاوية 16:9 */
     .lesson-video-viewer {
         position: relative;
         width: 100%;
-        height: 100%;
-        min-height: calc(100vh - 70px);
         background: #000;
         display: flex;
         flex-direction: column;
     }
     
     #video-container {
-        position: relative;
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
-        min-height: 0;
-        flex: 1;
         display: flex;
         flex-direction: column;
         background: #000;
@@ -1183,7 +646,7 @@
 @endphp
 
 @section('content')
-<div class="focus-mode" 
+<div class="learn-page bg-slate-50/80 min-h-screen pb-8"
      data-lectures='{!! $lecturesDataJson !!}'
      data-course-progress="{{ min(100, (float)($progress ?? 0)) }}"
      :data-font-size="fontSize"
@@ -1193,261 +656,80 @@
      @keydown.ctrl.p.window.prevent="printCurriculum()"
      @keydown.ctrl.comma.window.prevent="showSettings = !showSettings"
      x-init="
-         console.log('Focus mode initialized');
          $watch('searchQuery', () => filterItems());
          updateProgressBar();
          setInterval(() => updateProgressBar(), 100);
-         document.body.style.overflow = 'hidden';
-         
-         // إخفاء السايدبار الرئيسي
-         const mainSidebar = document.querySelector('.student-sidebar');
-         if (mainSidebar) {
-             mainSidebar.style.display = 'none';
-         }
-         
-         // إخفاء النافبار الرئيسي
-         const mainHeader = document.querySelector('header');
-         if (mainHeader) {
-             mainHeader.style.display = 'none';
-         }
-         
-         // إخفاء الـ overlay للجوال
-         const mobileOverlay = document.querySelector('.fixed.inset-0.bg-black\\/50');
-         if (mobileOverlay) {
-             mobileOverlay.style.display = 'none';
-         }
-         
-         // إدارة fullscreen state
-         document.addEventListener('fullscreenchange', () => {
-             isFullscreen = !!document.fullscreenElement;
-         });
-         
-         // إغلاق السايدبار على الجوال عند النقر خارجها
-         if (window.innerWidth < 1024) {
-             document.addEventListener('click', (e) => {
-                 if (sidebarOpen && !e.target.closest('.focus-sidebar') && !e.target.closest('.sidebar-toggle')) {
-                     sidebarOpen = false;
-                 }
-             });
-         }
+         document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; });
      ">
-    <!-- شريط تقدم الطالب -->
-    <div class="focus-progress-bar" title="تقدمك: {{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}">
-        <div class="progress-fill" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
-    </div>
-    
-    <div class="curriculum-wrapper">
-        <!-- شريط التحكم العلوي - تصميم محدث -->
-        <div class="focus-control-bar">
-            <div class="controls">
-                <div class="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+    {{-- Breadcrumb --}}
+    <nav class="bg-white border-b border-slate-200 px-4 py-2 lg:px-6" aria-label="Breadcrumb">
+        <ol class="w-full flex flex-wrap items-center gap-2 text-sm text-slate-600">
+            <li><a href="{{ route('dashboard') }}" class="hover:text-sky-600 transition-colors">{{ __('auth.dashboard') }}</a></li>
+            <li class="flex items-center gap-2"><i class="fas fa-chevron-left text-slate-400 text-xs"></i></li>
+            <li><a href="{{ route('my-courses.index') }}" class="hover:text-sky-600 transition-colors">{{ __('student.my_courses') }}</a></li>
+            <li class="flex items-center gap-2"><i class="fas fa-chevron-left text-slate-400 text-xs"></i></li>
+            <li><a href="{{ route('my-courses.show', $course) }}" class="hover:text-sky-600 transition-colors truncate max-w-[180px]">{{ $course->title }}</a></li>
+            <li class="flex items-center gap-2"><i class="fas fa-chevron-left text-slate-400 text-xs"></i></li>
+            <li class="text-sky-600 font-medium">{{ __('student.learn') }}</li>
+        </ol>
+    </nav>
+
+    {{-- بطاقة الرأس: عنوان الكورس، تقدم، إحصائيات، أزرار --}}
+    <div class="w-full px-4 py-4 lg:px-6">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-4 lg:p-5 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
                     <a href="{{ route('my-courses.show', $course) }}" 
-                       class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-700/60 hover:bg-sky-500/20 text-slate-200 hover:text-sky-300 border border-slate-600/50 hover:border-sky-500/30 transition-all"
-                       title="العودة للكورس">
+                       class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-600 hover:text-sky-600 border border-slate-200 hover:border-sky-300 transition-all"
+                       title="{{ __('common.back') }}">
                         <i class="fas fa-arrow-right"></i>
                     </a>
-                    <button @click="sidebarOpen = !sidebarOpen" 
-                            class="sidebar-toggle btn-control flex-shrink-0 lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation rounded-xl"
-                            title="القائمة" aria-label="فتح قائمة المنهج">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <button @click="sidebarClosed = !sidebarClosed" 
-                            class="sidebar-toggle btn-control flex-shrink-0 hidden lg:flex rounded-xl"
-                            title="إظهار/إخفاء المنهج">
-                        <i class="fas" :class="sidebarClosed ? 'fa-chevron-left' : 'fa-chevron-right'"></i>
-                    </button>
-                    <div class="flex-1 min-w-0 overflow-hidden flex items-center gap-3">
-                        <div class="min-w-0 flex-1 text-left">
-                            <h1 class="text-base md:text-lg font-bold text-white truncate">{{ $course->title }}</h1>
-                            <div class="flex items-center gap-2 mt-1">
-                                <div class="h-1.5 flex-1 max-w-[120px] bg-slate-600 rounded-full overflow-hidden">
-                                    <div class="h-full bg-gradient-to-l from-sky-400 to-emerald-400 rounded-full transition-all duration-500" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
-                                </div>
-                                <span class="text-xs font-semibold text-slate-300 whitespace-nowrap">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
-                                <span class="text-xs text-slate-400">·</span>
-                                <span class="text-xs font-bold text-sky-300">{{ number_format((float)($progress ?? 0), 0) }}%</span>
+                    <div class="min-w-0 flex-1">
+                        <h1 class="text-lg lg:text-xl font-bold text-gray-900 truncate">{{ $course->title }}</h1>
+                        <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <div class="h-2 flex-1 max-w-[140px] bg-slate-200 rounded-full overflow-hidden">
+                                <div class="learn-progress-fill h-full bg-gradient-to-l from-sky-400 to-sky-500 rounded-full transition-all duration-500" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
                             </div>
+                            <span class="text-xs font-semibold text-slate-600 whitespace-nowrap">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
+                            <span class="text-xs font-bold text-sky-600">{{ number_format((float)($progress ?? 0), 0) }}%</span>
                         </div>
                     </div>
                 </div>
-                <div class="action-buttons flex items-center gap-2 flex-shrink-0">
-                    <a href="{{ route('my-courses.show', $course) }}" class="btn-control hidden sm:inline-flex" title="العودة"><i class="fas fa-arrow-right ml-1"></i><span class="hidden lg:inline">العودة</span></a>
-                    <button @click="showSettings = !showSettings" :class="showSettings ? 'active' : ''" class="btn-control" title="إعدادات"><i class="fas fa-cog ml-1"></i><span class="hidden lg:inline">إعدادات</span></button>
-                    <button @click="toggleFullscreen()" class="btn-control" title="ملء الشاشة"><i class="fas ml-1" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i><span class="hidden lg:inline">ملء الشاشة</span></button>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <button @click="showSettings = !showSettings" :class="showSettings ? 'bg-sky-100 border-sky-300 text-sky-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-sky-300'" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all" title="إعدادات"><i class="fas fa-cog"></i><span class="hidden sm:inline">إعدادات</span></button>
+                    <button @click="toggleFullscreen()" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-sky-50 hover:border-sky-300 text-slate-600 hover:text-sky-600 text-sm font-medium transition-all" title="ملء الشاشة"><i class="fas" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i><span class="hidden sm:inline">ملء الشاشة</span></button>
                 </div>
             </div>
         </div>
-        
-        <!-- Overlay للجوال عند فتح السايدبار: إغلاق بالنقر + منع التمرير -->
-        <div x-show="sidebarOpen && window.innerWidth < 1024"
-             x-effect="document.body.classList.toggle('sidebar-mobile-open', sidebarOpen)"
-             @click="sidebarOpen = false"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-[100000] lg:hidden cursor-pointer"
-             style="z-index: 100000; background: rgba(0,0,0,0.55); backdrop-filter: blur(4px); -webkit-tap-highlight-color: transparent;"
-             aria-label="إغلاق القائمة"></div>
-        
-        <!-- المحتوى الرئيسي + السايدبار (السايدبار على اليسار) -->
-        <div class="flex flex-1 overflow-hidden relative" style="width: 100%; height: calc(100vh - 70px);">
-            <!-- المحتوى الرئيسي - منطقة التعلم -->
-            <div class="focus-main-content" style="width: 100%; flex: 1; height: 100%; position: relative; order: 2;">
-                <!-- زر إغلاق/فتح السايدبار - يظهر عندما يكون السايدبار مغلق (للكمبيوتر فقط) -->
-                <button x-show="sidebarClosed && window.innerWidth >= 1024" 
-                        @click="sidebarClosed = false" 
-                        class="sidebar-toggle-btn hidden lg:flex"
-                        title="فتح السايدبار">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-                <div class="focus-main-content-wrapper">
-                    <!-- حالة ترحيب - اختر عنصراً لبدء التعلم -->
-                    <div x-show="!selectedLesson && !selectedLecture && !selectedPattern" 
-                         x-transition
-                         class="empty-content-state">
-                        <div class="relative mb-8">
-                            <div class="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-gradient-to-br from-sky-500/20 to-emerald-500/20 border border-sky-500/30 flex items-center justify-center mx-auto shadow-xl shadow-sky-500/10">
-                                <i class="fas fa-book-open text-sky-400 text-5xl md:text-6xl"></i>
-                            </div>
-                            <div class="absolute -bottom-1 -right-2 w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center">
-                                <i class="fas fa-play text-emerald-400 text-lg"></i>
-                            </div>
+    </div>
+
+    {{-- شبكة عمودين: منهج (يسار) + محتوى (يمين) --}}
+    <div class="w-full px-4 lg:px-6 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+        {{-- بطاقة المنهج --}}
+        <div class="lg:col-span-4 xl:col-span-3">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-4">
+                <div class="p-4 border-b border-slate-200">
+                    <h3 class="text-gray-900 font-bold text-sm flex items-center gap-2 mb-3">
+                        <span class="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center"><i class="fas fa-list text-sky-500 text-xs"></i></span>
+                        المنهج
+                    </h3>
+                    <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 mb-3">
+                        <div class="h-1.5 flex-1 rounded-full bg-slate-200 overflow-hidden">
+                            <div class="h-full bg-gradient-to-l from-sky-400 to-sky-500 rounded-full" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
                         </div>
-                        <h3 class="text-2xl md:text-3xl font-bold text-white mb-2">مرحباً في {{ $course->title }}</h3>
-                        <p class="text-slate-400 text-base md:text-lg mb-2 max-w-md mx-auto">اختر محاضرة أو واجباً أو امتحاناً من القائمة لبدء التعلم</p>
-                        <p class="text-slate-500 text-sm mb-8">التقدم: {{ $completedLessons ?? 0 }} من {{ $totalLessons ?? 0 }} — {{ number_format((float)($progress ?? 0), 0) }}%</p>
-                        <button @click="sidebarOpen = true; sidebarClosed = false" 
-                                class="lg:hidden inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-white px-6 py-3.5 rounded-xl font-semibold transition-all shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30">
-                            <i class="fas fa-list"></i>
-                            <span>فتح المنهج</span>
-                        </button>
-                    </div>
-                    
-                    <!-- محتوى الدرس المحدد -->
-                    <div x-show="selectedLesson && !selectedLecture && !showVideoPlayer" x-transition class="lesson-content-viewer">
-                        <div x-html="lessonContent"></div>
-                    </div>
-                    
-                    <!-- مشغل الفيديو الموحد (للدروس والمحاضرات) - عنصر واحد فقط لضمان تحديث الرابط المعروض -->
-                    <div x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)" 
-                         x-transition
-                         class="lesson-video-viewer w-full h-full bg-black flex flex-col"
-                         style="position: relative; min-height: calc(100vh - 70px);">
-                        <!-- شريط تفاصيل الدرس (يظهر للدروس فقط) -->
-                        <div x-show="selectedLesson && !selectedLecture" class="lesson-details-bar">
-                            <span class="lesson-meta">التقدم: <span x-text="videoProgressPercent || 0">0</span>%</span>
-                            <span class="lesson-meta">الوقت: <span x-text="videoTimeCurrent || '0:00'">0:00</span> / <span x-text="currentLessonDuration ? (currentLessonDuration + ' د') : (videoTimeTotal || '0:00')">0:00</span></span>
-                            <img x-show="currentLessonThumbnail" :src="currentLessonThumbnail" alt="" class="lesson-thumb" />
-                            <span class="lesson-title-text truncate" x-text="currentLessonTitle || 'الدرس'">الدرس</span>
-                            <button type="button"
-                                    @click="markLessonComplete()"
-                                    :disabled="currentLessonCompleted"
-                                    :class="currentLessonCompleted ? 'btn-lesson-complete completed' : 'btn-lesson-complete'">
-                                <i class="fas fa-check text-white"></i>
-                                <span x-text="currentLessonCompleted ? 'تم إكمال الدرس بنجاح!' : 'تم إكمال الدرس بنجاح!'">تم إكمال الدرس بنجاح!</span>
-                            </button>
-                            <button type="button" class="btn-share" title="مشاركة"><i class="fas fa-share-alt"></i> مشاركة</button>
-                        </div>
-                        <div class="flex-1 min-h-0 relative" x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)">
-                            @include('student.my-courses.partials.video-player')
-                        </div>
-                    </div>
-                    
-                    <!-- محتوى المحاضرة المحددة (بدون فيديو) -->
-                    <div x-show="selectedLecture && !showVideoPlayer" x-transition class="lesson-content-viewer">
-                        <div x-html="lectureContent"></div>
-                    </div>
-                    
-                    <!-- النمط التعليمي / التحدي البرمجي (داخل منطقة التعلم) - بحجم قريب من مشغل الفيديو -->
-                    <div x-show="selectedPattern" x-transition class="pattern-embed-outer flex flex-1 min-h-0 min-w-0 w-full items-center justify-center overflow-auto p-2 sm:p-3" style="min-height: calc(100vh - 70px);">
-                        <div class="pattern-embed-wrapper flex flex-col w-full max-w-7xl min-h-0 rounded-xl overflow-hidden border border-slate-200 shadow-xl bg-white flex-shrink-0" style="min-height: calc(100vh - 120px);">
-                            <div class="flex items-center justify-between gap-3 px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-800/80 border-b border-slate-600/50 rounded-t-xl shrink-0">
-                                <span class="text-slate-200 font-semibold text-sm flex items-center gap-2">
-                                    <i class="fas fa-puzzle-piece text-sky-400"></i>
-                                    النمط التعليمي
-                                </span>
-                                <button type="button" @click="selectedPattern = null"
-                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-600/80 hover:bg-slate-500/80 text-slate-200 text-sm font-medium transition-colors">
-                                    <i class="fas fa-arrow-right ml-1"></i>
-                                    إغلاق والعودة
-                                </button>
-                            </div>
-                            <div class="pattern-embed-iframe-container flex-1 min-h-0 min-w-0 bg-white rounded-b-xl overflow-hidden border-t-0 border-slate-200" style="min-height: calc(100vh - 180px);">
-                                <iframe :src="selectedPattern ? '{{ route('my-courses.learning-patterns.show', [$course, '_PID_']) }}'.replace('_PID_', selectedPattern) + '?embed=1' : ''"
-                                        class="pattern-embed-iframe w-full h-full min-h-[70vh] border-0"
-                                        style="min-height: calc(100vh - 180px);"
-                                        title="النمط التعليمي"></iframe>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- السايدبار - المنهج (أقسام المدرب + محاضرات/دروس) على اليسار -->
-            <div class="focus-sidebar" 
-                 :class="{ 
-                     'closed': sidebarClosed && window.innerWidth >= 1024, 
-                     'open': sidebarOpen || (window.innerWidth >= 1024 && !sidebarClosed) 
-                 }"
-                 x-show="sidebarOpen || window.innerWidth >= 1024"
-                 x-cloak
-                 style="z-index: 100001; order: 1;"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 -translate-x-full"
-                 x-transition:enter-end="opacity-100 translate-x-0"
-                 x-transition:leave="transition ease-in duration-250"
-                 x-transition:leave-start="opacity-100 translate-x-0"
-                 x-transition:leave-end="opacity-0 -translate-x-full">
-                <!-- زر إغلاق/فتح السايدبار - مدمج مع السايدبار (للكمبيوتر فقط) -->
-                <button @click="sidebarClosed = !sidebarClosed" 
-                        class="sidebar-toggle-btn hidden lg:flex"
-                        title="إغلاق/فتح السايدبار"
-                        x-show="!sidebarClosed || window.innerWidth >= 1024">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <!-- زر إغلاق السايدبار (للجوال) -->
-                <button @click="sidebarOpen = false" 
-                        class="sidebar-close-btn lg:hidden touch-manipulation" 
-                        title="إغلاق القائمة"
-                        aria-label="إغلاق القائمة">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div class="focus-sidebar-header">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="text-white font-bold text-sm flex items-center gap-2">
-                            <span class="w-7 h-7 rounded-lg bg-sky-500/20 flex items-center justify-center">
-                                <i class="fas fa-list text-sky-400 text-xs"></i>
-                            </span>
-                            المنهج
-                        </h3>
-                        <button @click="sidebarOpen = false" 
-                                class="lg:hidden text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-white/10">
-                            <i class="fas fa-times text-sm"></i>
-                        </button>
-                    </div>
-                    <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-800/60 border border-slate-600/40 mb-3">
-                        <div class="h-1.5 flex-1 rounded-full bg-slate-700 overflow-hidden">
-                            <div class="h-full bg-gradient-to-l from-sky-400 to-emerald-400 rounded-full" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
-                        </div>
-                        <span class="text-[10px] font-bold text-slate-300 whitespace-nowrap">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
-                        <span class="text-[10px] font-bold text-sky-300">{{ number_format((float)($progress ?? 0), 0) }}%</span>
+                        <span class="text-[10px] font-bold text-gray-600 whitespace-nowrap">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
+                        <span class="text-[10px] font-bold text-sky-600">{{ number_format((float)($progress ?? 0), 0) }}%</span>
                     </div>
                     <div class="search-box relative">
                         <input type="text" 
                                x-model="searchQuery"
                                placeholder="ابحث..."
-                               class="w-full bg-slate-800/80 border border-slate-600/60 text-slate-100 placeholder-slate-500 px-3 py-2 pr-9 rounded-lg text-xs focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/20 transition-all"
+                               class="w-full bg-slate-50 border border-slate-200 text-gray-900 placeholder-gray-400 px-3 py-2 pr-9 rounded-xl text-xs focus:outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-all"
                                @keydown.escape="searchQuery = ''">
-                        <div class="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-slate-500 pointer-events-none">
-                            <i class="fas fa-search text-xs"></i>
-                        </div>
+                        <div class="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"><i class="fas fa-search text-xs"></i></div>
                     </div>
                 </div>
-                
-                <div class="focus-sidebar-content">
+                <div class="focus-sidebar-content max-h-[60vh] overflow-y-auto p-3">
                     <!-- الاختبارات في السايدبار -->
                     @if(isset($sidebarExams) && $sidebarExams->count() > 0)
                         <div class="mb-4">
@@ -1461,7 +743,7 @@
                                 <span class="flex items-center gap-1.5">
                                     <i class="fas fa-clipboard-check text-sky-400/90 text-[10px]"></i>
                                     <span>الاختبارات</span>
-                                    <span class="text-slate-500 text-[10px]">({{ $sidebarExams->count() }})</span>
+                                    <span class="text-gray-500 text-[10px]">({{ $sidebarExams->count() }})</span>
                                 </span>
                                 <i class="fas fa-chevron-down curriculum-section-chevron"></i>
                             </div>
@@ -1508,14 +790,14 @@
                                         <i class="fas fa-folder text-sky-400/90 text-[10px]"></i>
                                         <span>{{ $section->title }}</span>
                                         @if($sectionItemCount > 0)
-                                            <span class="text-slate-500 text-[10px]">({{ $sectionItemCount }})</span>
+                                            <span class="text-gray-500 text-[10px]">({{ $sectionItemCount }})</span>
                                         @endif
                                     </span>
                                     <i class="fas fa-chevron-down curriculum-section-chevron"></i>
                                 </div>
                                 <div x-show="!isSectionCollapsed({{ $section->id }})" x-transition>
                                 @if($section->description)
-                                    <p class="text-[10px] text-slate-500 mb-2 px-2">{{ $section->description }}</p>
+                                    <p class="text-[10px] text-gray-500 mb-2 px-2">{{ $section->description }}</p>
                                 @endif
                                 
                                 @foreach($section->activeItems as $curriculumItem)
@@ -1672,74 +954,153 @@
                     @else
                         <!-- لا يوجد منهج (تم إلغاء عرض الدروس) -->
                         <div class="py-6 px-4 text-center">
-                            <p class="text-slate-400 text-sm">لا توجد عناصر في المنهج بعد.</p>
-                            <p class="text-slate-500 text-xs mt-1">المحاضرات والواجبات والامتحانات تظهر هنا عند إضافتها من المدرب.</p>
+                            <p class="text-gray-600 text-sm">لا توجد عناصر في المنهج بعد.</p>
+                            <p class="text-gray-500 text-xs mt-1">المحاضرات والواجبات والامتحانات تظهر هنا عند إضافتها من المدرب.</p>
                         </div>
                     @endif
                 </div>
             </div>
-            
         </div>
-    
-    <!-- لوحة الإعدادات -->
+
+        {{-- بطاقة المحتوى --}}
+        <div class="lg:col-span-8 xl:col-span-9">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
+                <div class="focus-main-content-wrapper p-4 lg:p-6">
+                    <!-- حالة ترحيب -->
+                    <div x-show="!selectedLesson && !selectedLecture && !selectedPattern" 
+                         x-transition
+                         class="empty-content-state">
+                        <div class="relative mb-8">
+                            <div class="w-28 h-28 md:w-36 md:h-36 rounded-3xl bg-gradient-to-br from-sky-500/20 to-emerald-500/20 border border-sky-500/30 flex items-center justify-center mx-auto shadow-xl shadow-sky-500/10">
+                                <i class="fas fa-book-open text-sky-400 text-5xl md:text-6xl"></i>
+                            </div>
+                            <div class="absolute -bottom-1 -right-2 w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center">
+                                <i class="fas fa-play text-emerald-400 text-lg"></i>
+                            </div>
+                        </div>
+                        <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">مرحباً في {{ $course->title }}</h3>
+                        <p class="text-gray-600 text-base md:text-lg mb-2 max-w-md mx-auto">اختر محاضرة أو واجباً أو امتحاناً من القائمة لبدء التعلم</p>
+                        <p class="text-gray-500 text-sm mb-8">التقدم: {{ $completedLessons ?? 0 }} من {{ $totalLessons ?? 0 }} — {{ number_format((float)($progress ?? 0), 0) }}%</p>
+                    </div>
+                    
+                    <!-- محتوى الدرس المحدد -->
+                    <div x-show="selectedLesson && !selectedLecture && !showVideoPlayer" x-transition class="lesson-content-viewer">
+                        <div x-html="lessonContent"></div>
+                    </div>
+                    
+                    <!-- مشغل الفيديو داخل حاوية 16:9 -->
+                    <div x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)" 
+                         x-transition
+                         class="lesson-video-viewer w-full flex flex-col rounded-xl overflow-hidden border border-slate-200 bg-black">
+                        <div x-show="selectedLesson && !selectedLecture" class="lesson-details-bar">
+                            <span class="lesson-meta">التقدم: <span x-text="videoProgressPercent || 0">0</span>%</span>
+                            <span class="lesson-meta">الوقت: <span x-text="videoTimeCurrent || '0:00'">0:00</span> / <span x-text="currentLessonDuration ? (currentLessonDuration + ' د') : (videoTimeTotal || '0:00')">0:00</span></span>
+                            <img x-show="currentLessonThumbnail" :src="currentLessonThumbnail" alt="" class="lesson-thumb" />
+                            <span class="lesson-title-text truncate" x-text="currentLessonTitle || 'الدرس'">الدرس</span>
+                            <button type="button"
+                                    @click="markLessonComplete()"
+                                    :disabled="currentLessonCompleted"
+                                    :class="currentLessonCompleted ? 'btn-lesson-complete completed' : 'btn-lesson-complete'">
+                                <i class="fas fa-check text-white"></i>
+                                <span x-text="currentLessonCompleted ? 'تم إكمال الدرس بنجاح!' : 'تم إكمال الدرس بنجاح!'">تم إكمال الدرس بنجاح!</span>
+                            </button>
+                            <button type="button" class="btn-share" title="مشاركة"><i class="fas fa-share-alt"></i> مشاركة</button>
+                        </div>
+                        <div class="aspect-video w-full relative bg-black" x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)">
+                            @include('student.my-courses.partials.video-player')
+                        </div>
+                    </div>
+                    
+                    <!-- محتوى المحاضرة (بدون فيديو) -->
+                    <div x-show="selectedLecture && !showVideoPlayer" x-transition class="lesson-content-viewer">
+                        <div x-html="lectureContent"></div>
+                    </div>
+                    
+                    <!-- النمط التعليمي -->
+                    <div x-show="selectedPattern" x-transition class="pattern-embed-outer flex w-full items-center justify-center overflow-auto p-2 sm:p-3 min-h-[400px]">
+                        <div class="pattern-embed-wrapper flex flex-col w-full max-w-4xl min-h-[360px] rounded-xl overflow-hidden border border-slate-200 shadow-lg bg-white">
+                            <div class="flex items-center justify-between gap-3 px-3 py-2.5 sm:px-4 sm:py-3 bg-white border-b border-slate-200 rounded-t-xl shrink-0">
+                                <span class="text-gray-900 font-semibold text-sm flex items-center gap-2">
+                                    <i class="fas fa-puzzle-piece text-sky-500"></i>
+                                    النمط التعليمي
+                                </span>
+                                <button type="button" @click="selectedPattern = null"
+                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-gray-700 text-sm font-medium transition-colors border border-slate-200">
+                                    <i class="fas fa-arrow-right ml-1"></i>
+                                    إغلاق والعودة
+                                </button>
+                            </div>
+                            <div class="pattern-embed-iframe-container flex-1 min-h-[300px] bg-white rounded-b-xl overflow-hidden border-t-0 border-slate-200">
+                                <iframe :src="selectedPattern ? '{{ route('my-courses.learning-patterns.show', [$course, '_PID_']) }}'.replace('_PID_', selectedPattern) + '?embed=1' : ''"
+                                        class="pattern-embed-iframe w-full h-full min-h-[300px] border-0"
+                                        title="النمط التعليمي"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- لوحة الإعدادات - متناسقة مع لوحة التحكم -->
     <div class="focus-settings-panel" :class="{ 'active': showSettings }">
-        <div class="mb-5 pb-4 border-b border-slate-600/50">
-            <h3 class="text-white font-bold text-lg flex items-center gap-2">
-                <span class="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center"><i class="fas fa-cog text-sky-400"></i></span>
+        <div class="mb-5 pb-4 border-b border-slate-200">
+            <h3 class="text-gray-900 font-bold text-lg flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-sky-100 flex items-center justify-center"><i class="fas fa-cog text-sky-500"></i></span>
                 إعدادات العرض
             </h3>
         </div>
         <div class="space-y-5">
             <div>
-                <label class="text-slate-300 text-sm font-medium mb-2 block flex items-center gap-2">
-                    <i class="fas fa-font text-slate-400"></i>
+                <label class="text-gray-700 text-sm font-medium mb-2 block flex items-center gap-2">
+                    <i class="fas fa-font text-sky-500"></i>
                     حجم الخط
                 </label>
                 <div class="flex gap-2">
                     <button @click="fontSize = 'small'" 
-                            :class="fontSize === 'small' ? 'bg-sky-500/30 border-sky-400/50 text-sky-200' : 'bg-slate-700/60 border-slate-600 text-slate-300 hover:border-slate-500'"
+                            :class="fontSize === 'small' ? 'bg-sky-100 border-sky-400 text-sky-700' : 'bg-slate-50 border-slate-200 text-gray-600 hover:border-slate-300'"
                             class="px-3 py-2 rounded-xl text-sm font-medium border transition-all">صغير</button>
                     <button @click="fontSize = 'medium'" 
-                            :class="fontSize === 'medium' ? 'bg-sky-500/30 border-sky-400/50 text-sky-200' : 'bg-slate-700/60 border-slate-600 text-slate-300 hover:border-slate-500'"
+                            :class="fontSize === 'medium' ? 'bg-sky-100 border-sky-400 text-sky-700' : 'bg-slate-50 border-slate-200 text-gray-600 hover:border-slate-300'"
                             class="px-3 py-2 rounded-xl text-sm font-medium border transition-all">متوسط</button>
                     <button @click="fontSize = 'large'" 
-                            :class="fontSize === 'large' ? 'bg-sky-500/30 border-sky-400/50 text-sky-200' : 'bg-slate-700/60 border-slate-600 text-slate-300 hover:border-slate-500'"
+                            :class="fontSize === 'large' ? 'bg-sky-100 border-sky-400 text-sky-700' : 'bg-slate-50 border-slate-200 text-gray-600 hover:border-slate-300'"
                             class="px-3 py-2 rounded-xl text-sm font-medium border transition-all">كبير</button>
                 </div>
             </div>
-            <div class="pt-4 border-t border-slate-600/50">
-                <p class="text-slate-400 text-xs font-medium mb-3">اختصارات لوحة المفاتيح</p>
+            <div class="pt-4 border-t border-slate-200">
+                <p class="text-gray-600 text-xs font-medium mb-3">اختصارات لوحة المفاتيح</p>
                 <div class="space-y-2 text-xs">
-                    <div class="flex justify-between items-center text-slate-400">
+                    <div class="flex justify-between items-center text-gray-600">
                         <span>البحث</span>
-                        <kbd class="px-2 py-1 bg-slate-700/80 rounded-lg text-slate-300 font-mono">Ctrl+F</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-gray-700 font-mono">Ctrl+F</kbd>
                     </div>
-                    <div class="flex justify-between items-center text-slate-400">
+                    <div class="flex justify-between items-center text-gray-600">
                         <span>الطباعة</span>
-                        <kbd class="px-2 py-1 bg-slate-700/80 rounded-lg text-slate-300 font-mono">Ctrl+P</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-gray-700 font-mono">Ctrl+P</kbd>
                     </div>
-                    <div class="flex justify-between items-center text-slate-400">
+                    <div class="flex justify-between items-center text-gray-600">
                         <span>الإعدادات</span>
-                        <kbd class="px-2 py-1 bg-slate-700/80 rounded-lg text-slate-300 font-mono">Ctrl+,</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-gray-700 font-mono">Ctrl+,</kbd>
                     </div>
-                    <div class="flex justify-between items-center text-slate-400">
+                    <div class="flex justify-between items-center text-gray-600">
                         <span>إغلاق</span>
-                        <kbd class="px-2 py-1 bg-slate-700/80 rounded-lg text-slate-300 font-mono">ESC</kbd>
+                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-gray-700 font-mono">ESC</kbd>
                     </div>
                 </div>
             </div>
             <div>
-                <label class="text-slate-300 text-sm font-medium mb-2 block">عرض العناصر</label>
+                <label class="text-gray-700 text-sm font-medium mb-2 block">عرض العناصر</label>
                 <div class="space-y-2">
-                    <label class="flex items-center gap-2 text-slate-300 text-sm cursor-pointer">
-                        <input type="checkbox" x-model="showLectures" class="rounded border-slate-500 text-sky-500 focus:ring-sky-500/30">
+                    <label class="flex items-center gap-2 text-gray-600 text-sm cursor-pointer">
+                        <input type="checkbox" x-model="showLectures" class="rounded border-slate-300 text-sky-500 focus:ring-sky-500/30">
                         <span>إظهار المحاضرات</span>
                     </label>
                 </div>
             </div>
         </div>
-        <div class="mt-6 pt-4 border-t border-gray-700">
-            <button @click="showSettings = false" class="w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+        <div class="mt-6 pt-4 border-t border-slate-200">
+            <button @click="showSettings = false" class="w-full bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-xl font-medium transition-colors">
                 <i class="fas fa-times ml-2"></i>
                 إغلاق
             </button>
@@ -2011,6 +1372,8 @@ function courseFocusMode() {
                         platform = 'vimeo';
                     } else if (lecture.recording_url.includes('drive.google.com')) {
                         platform = 'google_drive';
+                    } else if (lecture.recording_url.includes('mediadelivery.net')) {
+                        platform = 'bunny';
                     } else if (lecture.recording_url.match(/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i)) {
                         platform = 'direct';
                     }
@@ -2242,6 +1605,15 @@ function courseFocusMode() {
                 return '<video width="100%" height="100%" controls style="border-radius: 0.75rem;"><source src="' + this.escapeHtml(url) + '" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>';
             }
             
+            // Bunny.net (Bunny Stream)
+            if (url.includes('mediadelivery.net')) {
+                const bunnyMatch = url.match(/iframe\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+                if (bunnyMatch && bunnyMatch[1] && bunnyMatch[2]) {
+                    const embedUrl = url.split('?')[0];
+                    return '<iframe src="' + this.escapeHtml(embedUrl) + '" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
+                }
+            }
+            
             return null;
         },
         toggleSection(section) {
@@ -2286,9 +1658,8 @@ function courseFocusMode() {
             }
         },
         updateProgressBar() {
-            // شريط التقدم يعرض تقدم الطالب في الكورس (من الخادم)
-            const wrapper = document.querySelector('.focus-mode');
-            const progressBar = document.querySelector('.focus-progress-bar .progress-fill');
+            const wrapper = document.querySelector('.learn-page');
+            const progressBar = document.querySelector('.learn-progress-fill');
             if (progressBar && wrapper && wrapper.dataset.courseProgress !== undefined) {
                 const pct = Math.min(100, parseFloat(wrapper.dataset.courseProgress) || 0);
                 progressBar.style.width = pct + '%';
@@ -2299,7 +1670,8 @@ function courseFocusMode() {
             return url.includes('youtube.com') || 
                    url.includes('youtu.be') || 
                    url.includes('vimeo.com') ||
-                   url.includes('drive.google.com');
+                   url.includes('drive.google.com') ||
+                   url.includes('mediadelivery.net');
         },
         async loadProtectedVideo(lessonId, videoUrl) {
             try {
@@ -2328,66 +1700,22 @@ function courseFocusMode() {
     };
 }
 
-// دالة مشغل الفيديو - يتحكم في كل المصادر: يوتيوب، فيمييو، مباشر، درايف
+// مشغل الفيديو - عرض رابط الفيديو فقط (iframe / video بالتحكم الأصلي للمنصة)
 function videoPlayer() {
     return {
-        isPlaying: false,
-        isMuted: false,
-        isFullscreen: false,
-        progressPercent: 0,
         currentLessonVideoUrl: null,
-        /** نوع المصدر الحالي: 'youtube' | 'vimeo' | 'direct' | 'generic' */
-        currentSourceType: null,
-        youtubePlayer: null,
+        watchersSetup: false,
         get currentVideoUrl() {
             return this.currentLessonVideoUrl;
         },
         set currentVideoUrl(value) {
             this.currentLessonVideoUrl = value;
-            if (value) {
-                this.loadVideo(value);
-            }
+            if (value) this.loadVideo(value);
         },
-        vimeoPlayer: null,
-        videoElement: null,
-        watchStartTime: null,
-        totalWatchTime: 0,
-        lastProgressUpdate: 0,
-        isVideoReady: false,
-        progressInterval: null,
-        watchersSetup: false,
         init() {
-            // الحصول على البيانات من Alpine.js parent
             this.setupParentWatcher();
-            
-            // محاولة أخرى بعد تأخير قصير للتأكد من أن Alpine.js جاهز
-            setTimeout(() => {
-                this.setupParentWatcher();
-            }, 100);
-            
-            setTimeout(() => {
-                this.setupParentWatcher();
-            }, 300);
-            
-            setTimeout(() => {
-                this.setupParentWatcher();
-            }, 500);
-            
-            const checkInterval = setInterval(() => {
-                const parent = this.$el.closest('[x-data*="courseFocusMode"]');
-                if (parent && parent.__x) {
-                    const d = parent.__x.$data;
-                    if (d.showVideoPlayer && d.currentLessonVideoUrl && d.currentLessonVideoUrl !== this.currentLessonVideoUrl) {
-                        this.currentLessonVideoUrl = d.currentLessonVideoUrl;
-                        this.loadVideo(d.currentLessonVideoUrl, this.detectPlatform(d.currentLessonVideoUrl));
-                    }
-                }
-            }, 2000);
-            
-            // تنظيف interval عند إزالة العنصر
-            this.$el.addEventListener('alpine:destroy', () => {
-                clearInterval(checkInterval);
-            });
+            setTimeout(() => this.setupParentWatcher(), 150);
+            setTimeout(() => this.setupParentWatcher(), 400);
         },
         setupParentWatcher() {
             const parent = this.$el.closest('[x-data*="courseFocusMode"]');
@@ -2397,8 +1725,6 @@ function videoPlayer() {
                 this.currentLessonVideoUrl = parentData.currentLessonVideoUrl;
                 this.loadVideo(parentData.currentLessonVideoUrl, this.detectPlatform(parentData.currentLessonVideoUrl));
             }
-            
-            // مراقبة التغييرات من parent
             if (!this.watchersSetup) {
                 parent.__x.$watch('currentLessonVideoUrl', (value) => {
                     if (value && value !== this.currentLessonVideoUrl) {
@@ -2412,22 +1738,19 @@ function videoPlayer() {
                         this.loadVideo(parentData.currentLessonVideoUrl, this.detectPlatform(parentData.currentLessonVideoUrl));
                     }
                 });
-                
                 this.watchersSetup = true;
             }
         },
         getSurface() {
-            if (this.$el) {
-                const s = this.$el.querySelector('#video-surface');
-                if (s) return s;
-            }
-            return document.querySelector('#video-container #video-surface');
+            const s = this.$el && this.$el.querySelector('#video-surface');
+            return s || document.querySelector('#video-container #video-surface');
         },
         detectPlatform(url) {
             if (!url) return null;
             if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
             if (url.includes('vimeo.com')) return 'vimeo';
             if (url.includes('drive.google.com')) return 'google_drive';
+            if (url.includes('iframe.mediadelivery.net') || url.includes('mediadelivery.net')) return 'bunny';
             if (url.match(/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i) || url.includes('/api/video/stream/')) return 'direct';
             return null;
         },
@@ -2443,129 +1766,60 @@ function videoPlayer() {
             const m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
             return m ? m[1] : null;
         },
+        getBunnyEmbedUrl(url) {
+            const m = url.match(/iframe\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+            if (m && m[1] && m[2]) {
+                const base = 'https://iframe.mediadelivery.net/embed/' + m[1] + '/' + m[2];
+                try {
+                    const u = new URL(url);
+                    if (u.search) return base + u.search;
+                } catch (e) {}
+                return base;
+            }
+            if (url.includes('mediadelivery.net')) return url;
+            return null;
+        },
         loadVideo(videoUrl, platform = null) {
             if (!videoUrl) {
                 this.currentLessonVideoUrl = null;
                 return;
             }
-            // تحديث الرابط فوراً حتى تظهر منطقة الفيديو ولا تبقى رسالة "لا يوجد فيديو"
             this.currentLessonVideoUrl = videoUrl;
-            if (this._ytProgressInterval) { clearInterval(this._ytProgressInterval); this._ytProgressInterval = null; }
-            if (this._vimeoProgressInterval) { clearInterval(this._vimeoProgressInterval); this._vimeoProgressInterval = null; }
-            this.youtubePlayer = null;
-            this.vimeoPlayer = null;
-            this.videoElement = null;
-            this.currentSourceType = null;
-            this.isVideoReady = false;
-            this.progressPercent = 0;
-
             const surface = this.getSurface();
             if (!surface) {
-                this.$nextTick(() => {
-                    const s = this.getSurface();
-                    if (s) this.loadVideo(videoUrl, platform);
-                    else setTimeout(() => this.loadVideo(videoUrl, platform), 150);
-                });
+                this.$nextTick && this.$nextTick(() => this.loadVideo(videoUrl, platform));
+                setTimeout(() => this.loadVideo(videoUrl, platform), 200);
                 return;
             }
-            if (!platform) platform = this.detectPlatform(videoUrl);
+            platform = platform || this.detectPlatform(videoUrl);
             surface.innerHTML = '';
-            const self = this;
 
             if (platform === 'youtube') {
                 const vid = this.getYoutubeVideoId(videoUrl);
                 if (!vid) return;
-                const box = document.createElement('div');
-                box.id = 'yt-player-box';
-                box.className = 'absolute inset-0 w-full h-full';
-                surface.appendChild(box);
-                this.currentSourceType = 'youtube';
-                if (!window.YT) {
-                    const s = document.createElement('script');
-                    s.src = 'https://www.youtube.com/iframe_api';
-                    document.head.appendChild(s);
-                }
-                const onReady = () => {
-                    self.youtubePlayer = new YT.Player('yt-player-box', {
-                        height: '100%',
-                        width: '100%',
-                        videoId: vid,
-                        playerVars: { autoplay: 0, controls: 0, rel: 0, modestbranding: 1, playsinline: 1, origin: window.location.origin },
-                        events: {
-                            onReady() { self.isVideoReady = true; self.updateProgress(); },
-                            onStateChange(e) {
-                                if (e.data === YT.PlayerState.PLAYING) {
-                                    self.startWatchTimer(); self.isPlaying = true;
-                                    if (self._ytProgressInterval) clearInterval(self._ytProgressInterval);
-                                    self._ytProgressInterval = setInterval(() => self.updateProgress(), 400);
-                                } else if (e.data === YT.PlayerState.PAUSED) {
-                                    self.stopWatchTimer(); self.isPlaying = false;
-                                    if (self._ytProgressInterval) { clearInterval(self._ytProgressInterval); self._ytProgressInterval = null; }
-                                } else if (e.data === YT.PlayerState.ENDED) {
-                                    if (self._ytProgressInterval) { clearInterval(self._ytProgressInterval); self._ytProgressInterval = null; }
-                                    self.markLessonComplete();
-                                }
-                            }
-                        }
-                    });
-                };
-                if (window.YT && window.YT.Player) {
-                    onReady();
-                } else {
-                    window.onYouTubeIframeAPIReady = onReady;
-                }
+                const iframe = document.createElement('iframe');
+                iframe.src = 'https://www.youtube.com/embed/' + vid + '?rel=0&modestbranding=1';
+                iframe.className = 'absolute inset-0 w-full h-full border-0';
+                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                iframe.allowFullscreen = true;
+                surface.appendChild(iframe);
             } else if (platform === 'vimeo') {
                 const vid = this.getVimeoVideoId(videoUrl);
                 if (!vid) return;
                 const iframe = document.createElement('iframe');
-                iframe.src = 'https://player.vimeo.com/video/' + vid + '?title=0&byline=0&portrait=0&controls=0';
+                iframe.src = 'https://player.vimeo.com/video/' + vid + '?title=0&byline=0&portrait=0';
                 iframe.className = 'absolute inset-0 w-full h-full border-0';
+                iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+                iframe.allowFullscreen = true;
                 surface.appendChild(iframe);
-                this.currentSourceType = 'vimeo';
-                const initVimeo = () => {
-                    if (typeof window.Vimeo === 'undefined' || !window.Vimeo.Player) {
-                        setTimeout(initVimeo, 80);
-                        return;
-                    }
-                    try {
-                        self.vimeoPlayer = new Vimeo.Player(iframe);
-                        self.isVideoReady = true;
-                        self.vimeoPlayer.on('play', () => {
-                            self.startWatchTimer(); self.isPlaying = true;
-                            if (self._vimeoProgressInterval) clearInterval(self._vimeoProgressInterval);
-                            self._vimeoProgressInterval = setInterval(() => self.updateProgress(), 400);
-                        });
-                        self.vimeoPlayer.on('pause', () => {
-                            self.stopWatchTimer(); self.isPlaying = false;
-                            if (self._vimeoProgressInterval) { clearInterval(self._vimeoProgressInterval); self._vimeoProgressInterval = null; }
-                        });
-                        self.vimeoPlayer.on('ended', () => self.markLessonComplete());
-                        self.vimeoPlayer.getDuration().then(d => d > 0 && self.updateProgress()).catch(() => {});
-                    } catch (err) { self.isVideoReady = true; }
-                };
-                if (window.Vimeo && window.Vimeo.Player) initVimeo();
-                else {
-                    const s = document.createElement('script');
-                    s.src = 'https://player.vimeo.com/api/player.js';
-                    s.onload = initVimeo;
-                    document.head.appendChild(s);
-                }
             } else if (platform === 'direct') {
                 const video = document.createElement('video');
                 video.className = 'absolute inset-0 w-full h-full object-contain';
-                video.controls = false;
+                video.controls = true;
                 video.setAttribute('playsinline', '');
                 const src = this.escapeHtml(videoUrl);
                 video.innerHTML = '<source src="' + src + '" type="video/mp4">';
-                video.oncontextmenu = () => false;
                 surface.appendChild(video);
-                this.currentSourceType = 'direct';
-                this.videoElement = video;
-                video.addEventListener('loadeddata', () => { self.isVideoReady = true; });
-                video.addEventListener('play', () => { self.startWatchTimer(); self.isPlaying = true; });
-                video.addEventListener('pause', () => { self.stopWatchTimer(); self.isPlaying = false; });
-                video.addEventListener('timeupdate', () => self.updateProgress());
-                video.addEventListener('ended', () => self.markLessonComplete());
             } else if (platform === 'google_drive') {
                 const fileId = this.getDriveFileId(videoUrl);
                 if (!fileId) return;
@@ -2573,8 +1827,14 @@ function videoPlayer() {
                 iframe.src = 'https://drive.google.com/file/d/' + fileId + '/preview';
                 iframe.className = 'absolute inset-0 w-full h-full border-0';
                 surface.appendChild(iframe);
-                this.currentSourceType = 'generic';
-                this.isVideoReady = true;
+            } else if (platform === 'bunny') {
+                const embedUrl = this.getBunnyEmbedUrl(videoUrl);
+                if (!embedUrl) return;
+                const iframe = document.createElement('iframe');
+                iframe.src = embedUrl;
+                iframe.className = 'absolute inset-0 w-full h-full border-0';
+                iframe.allowFullscreen = true;
+                surface.appendChild(iframe);
             }
         },
         escapeHtml(text) {
@@ -2582,144 +1842,6 @@ function videoPlayer() {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
-        },
-        togglePlayPause() {
-            if (this.currentSourceType === 'youtube' && this.youtubePlayer && typeof this.youtubePlayer.getPlayerState === 'function') {
-                try {
-                    const state = this.youtubePlayer.getPlayerState();
-                    if (state === YT.PlayerState.PLAYING) {
-                        this.youtubePlayer.pauseVideo();
-                    } else {
-                        this.youtubePlayer.playVideo();
-                    }
-                } catch (e) { console.warn('YT play/pause:', e); }
-            } else if (this.currentSourceType === 'vimeo' && this.vimeoPlayer) {
-                this.vimeoPlayer.getPaused().then(paused => {
-                    if (paused) this.vimeoPlayer.play(); else this.vimeoPlayer.pause();
-                }).catch(() => {});
-            } else if (this.currentSourceType === 'direct' && this.videoElement) {
-                if (this.videoElement.paused) this.videoElement.play(); else this.videoElement.pause();
-            }
-        },
-        toggleMute() {
-            if (this.currentSourceType === 'youtube' && this.youtubePlayer && typeof this.youtubePlayer.isMuted === 'function') {
-                try {
-                    if (this.youtubePlayer.isMuted()) {
-                        this.youtubePlayer.unMute();
-                        this.isMuted = false;
-                    } else {
-                        this.youtubePlayer.mute();
-                        this.isMuted = true;
-                    }
-                } catch (e) { console.warn('YT mute:', e); }
-            } else if (this.currentSourceType === 'vimeo' && this.vimeoPlayer) {
-                this.vimeoPlayer.getVolume().then(vol => {
-                    const mute = vol > 0;
-                    return this.vimeoPlayer.setVolume(mute ? 0 : 1).then(() => {
-                        this.isMuted = mute;
-                    });
-                }).catch(() => {});
-            } else if (this.currentSourceType === 'direct' && this.videoElement) {
-                this.videoElement.muted = !this.videoElement.muted;
-                this.isMuted = this.videoElement.muted;
-            }
-        },
-        toggleFullscreen() {
-            const container = document.getElementById('video-container');
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-                this.isFullscreen = false;
-            } else {
-                container.requestFullscreen();
-                this.isFullscreen = true;
-            }
-        },
-        seekTo(event) {
-            const progressBar = event.currentTarget;
-            const rect = progressBar.getBoundingClientRect();
-            const pos = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
-            if (this.currentSourceType === 'youtube' && this.youtubePlayer && typeof this.youtubePlayer.seekTo === 'function') {
-                try {
-                    const duration = typeof this.youtubePlayer.getDuration === 'function' ? this.youtubePlayer.getDuration() : 0;
-                    if (duration > 0) this.youtubePlayer.seekTo(pos * duration, true);
-                } catch (e) { console.warn('YT seek:', e); }
-            } else if (this.currentSourceType === 'vimeo' && this.vimeoPlayer) {
-                this.vimeoPlayer.getDuration().then(duration => {
-                    if (duration > 0) return this.vimeoPlayer.setCurrentTime(pos * duration);
-                }).catch(() => {});
-            } else if (this.currentSourceType === 'direct' && this.videoElement) {
-                this.videoElement.currentTime = pos * this.videoElement.duration;
-            }
-        },
-        updateProgress() {
-            let currentTime = 0;
-            let duration = 0;
-            
-            if (this.currentSourceType === 'youtube' && this.youtubePlayer && typeof this.youtubePlayer.getCurrentTime === 'function') {
-                try {
-                    currentTime = this.youtubePlayer.getCurrentTime();
-                    duration = typeof this.youtubePlayer.getDuration === 'function' ? this.youtubePlayer.getDuration() : 0;
-                } catch (e) {}
-            } else if (this.currentSourceType === 'vimeo' && this.vimeoPlayer) {
-                Promise.all([this.vimeoPlayer.getCurrentTime(), this.vimeoPlayer.getDuration()]).then(([c, d]) => {
-                    if (d > 0) this.progressPercent = (c / d) * 100;
-                }).catch(() => {});
-                return;
-            } else if (this.currentSourceType === 'direct' && this.videoElement) {
-                currentTime = this.videoElement.currentTime;
-                duration = this.videoElement.duration;
-            }
-            
-            if (duration > 0) {
-                this.progressPercent = (currentTime / duration) * 100;
-            }
-        },
-        startWatchTimer() {
-            this.watchStartTime = Date.now();
-        },
-        stopWatchTimer() {
-            if (this.watchStartTime) {
-                this.totalWatchTime += Math.floor((Date.now() - this.watchStartTime) / 1000);
-                this.watchStartTime = null;
-            }
-        },
-        async markLessonComplete() {
-            const parent = this.$el.closest('[x-data*="courseFocusMode"]');
-            if (!parent || !parent.__x) return;
-            
-            const parentData = parent.__x.$data;
-            const lessonId = parentData.selectedLesson || parentData.currentLessonId;
-            if (!lessonId) return;
-            
-            const finalWatchTime = this.totalWatchTime + (this.watchStartTime ? Math.floor((Date.now() - this.watchStartTime) / 1000) : 0);
-            
-            try {
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
-                const response = await fetch(`/my-courses/{{ $course->id }}/lessons/${lessonId}/progress`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    body: JSON.stringify({
-                        completed: true,
-                        watch_time: finalWatchTime
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        this.showCompletionMessage();
-                    }
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        },
-        showCompletionMessage() {
-            // يمكن إضافة رسالة إكمال هنا
-            console.log('Lesson completed!');
         }
     };
 }

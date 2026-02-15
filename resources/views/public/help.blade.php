@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'مركز المساعدة - Mindlytics')
+@section('title', __('public.help_page_title') . ' - ' . __('public.site_suffix'))
 
 @push('styles')
 <style>

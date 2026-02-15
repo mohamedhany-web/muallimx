@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', $notification->title)
-@section('header', 'تفاصيل الإشعار')
+@section('header', __('student.notification_details'))
 
 @section('content')
 <div class="space-y-6">
@@ -9,9 +9,9 @@
     <div class="flex items-center justify-between">
         <div>
             <nav class="text-sm text-gray-500 mb-2">
-                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">لوحة التحكم</a>
+                <a href="{{ route('dashboard') }}" class="hover:text-primary-600">{{ __('student.dashboard') }}</a>
                 <span class="mx-2">/</span>
-                <a href="{{ route('notifications') }}" class="hover:text-primary-600">الإشعارات</a>
+                <a href="{{ route('notifications') }}" class="hover:text-primary-600">{{ __('student.notifications') }}</a>
                 <span class="mx-2">/</span>
                 <span>{{ $notification->title }}</span>
             </nav>
@@ -19,7 +19,7 @@
         <a href="{{ route('notifications') }}" 
            class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
             <i class="fas fa-arrow-right ml-2"></i>
-            العودة للإشعارات
+            {{ __('student.back_to_notifications') }}
         </a>
     </div>
 

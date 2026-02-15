@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>404 - الصفحة غير موجودة | Mindlytics</title>
+    <title>404 - {{ __('errors.404_title') }} | Mindlytics</title>
     
     <!-- خط عربي أصيل -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -147,7 +147,7 @@
             <div class="text-center">
                 <div class="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-green-500 rounded-full shadow-lg mb-6 fade-in-up">
                     <i class="fas fa-search text-white text-sm"></i>
-                    <span class="text-white font-bold text-sm">صفحة غير موجودة</span>
+                    <span class="text-white font-bold text-sm">{{ __('errors.page_not_found_badge') }}</span>
                 </div>
 
                 <h1 class="text-8xl md:text-9xl font-black mb-6 leading-tight text-gray-900 fade-in-up" style="animation-delay: 0.1s;">
@@ -155,13 +155,11 @@
                 </h1>
                 
                 <h2 class="text-3xl md:text-4xl lg:text-5xl font-black mb-4 text-gray-900 fade-in-up" style="animation-delay: 0.2s;">
-                    الصفحة غير موجودة
+                    {{ __('errors.404_title') }}
                 </h2>
                 
                 <p class="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed fade-in-up max-w-2xl mx-auto" style="animation-delay: 0.3s;">
-                    عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها.
-                    <br class="hidden md:block">
-                    يرجى التحقق من الرابط والمحاولة مرة أخرى.
+                    {{ __('errors.404_message_full') }}
                 </p>
 
                 <div class="bg-white rounded-2xl p-6 md:p-8 mb-8 border border-gray-200 shadow-xl fade-in-up max-w-2xl mx-auto" style="animation-delay: 0.4s;">
@@ -169,16 +167,16 @@
                         <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
                             <i class="fas fa-info-circle text-lg"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900">اقتراحات</h3>
+                        <h3 class="text-xl font-bold text-gray-900">{{ __('errors.suggestions') }}</h3>
                     </div>
                     <div class="text-gray-700 text-right space-y-3">
                         <div class="flex items-start justify-center gap-3 bg-blue-50 rounded-xl p-4">
                             <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
-                            <span class="text-sm">تحقق من صحة الرابط الذي أدخلته</span>
+                            <span class="text-sm">{{ __('errors.suggestion_check_url') }}</span>
                         </div>
                         <div class="flex items-start justify-center gap-3 bg-blue-50 rounded-xl p-4">
                             <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
-                            <span class="text-sm">استخدم القوائم للتنقل بين الصفحات</span>
+                            <span class="text-sm">{{ __('errors.suggestion_use_menus') }}</span>
                         </div>
                     </div>
                 </div>
@@ -186,11 +184,11 @@
                 <div class="flex flex-col sm:flex-row gap-4 justify-center fade-in-up" style="animation-delay: 0.5s;">
                     <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-8 py-4 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                         <i class="fas fa-home"></i>
-                        <span>العودة للوحة التحكم</span>
+                        <span>{{ __('errors.back_dashboard') }}</span>
                     </a>
                     <a href="javascript:history.back()" class="inline-flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-full font-bold text-base border-2 border-blue-600 hover:bg-blue-50 transition-all duration-300">
                         <i class="fas fa-arrow-right"></i>
-                        <span>العودة للصفحة السابقة</span>
+                        <span>{{ __('errors.back_previous') }}</span>
                     </a>
                 </div>
             </div>

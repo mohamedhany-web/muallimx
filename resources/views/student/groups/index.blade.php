@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'مجموعاتي - Mindlytics')
-@section('header', 'مجموعاتي')
+@section('title', __('student.my_groups_title') . ' - Mindlytics')
+@section('header', __('student.my_groups_title'))
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -11,8 +11,8 @@
                 <i class="fas fa-users text-lg"></i>
             </div>
             <div>
-                <h1 class="text-xl font-bold text-slate-800">مجموعاتي</h1>
-                <p class="text-sm text-slate-600 mt-0.5">المجموعات التي أنتمي إليها في الكورسات</p>
+                <h1 class="text-xl font-bold text-slate-800">{{ __('student.my_groups_title') }}</h1>
+                <p class="text-sm text-slate-600 mt-0.5">{{ __('student.my_groups_subtitle') }}</p>
             </div>
         </div>
     </div>
@@ -22,8 +22,8 @@
             <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-users text-2xl"></i>
             </div>
-            <p class="text-slate-600 font-medium">لا تنتمي لأي مجموعة حالياً</p>
-            <p class="text-sm text-slate-500 mt-1">سيتم إضافتك لمجموعة من قبل المدرب عند تفعيل المجموعات في الكورس</p>
+            <p class="text-slate-600 font-medium">{{ __('student.no_groups') }}</p>
+            <p class="text-sm text-slate-500 mt-1">{{ __('student.no_groups_desc') }}</p>
         </div>
     @else
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -39,10 +39,10 @@
                             <p class="text-sm text-slate-500 mt-0.5">{{ $group->course->title ?? '—' }}</p>
                             <div class="flex items-center gap-2 mt-2">
                                 <span class="text-xs text-slate-500">
-                                    {{ $group->members->count() }} / {{ $group->max_members }} عضو
+                                    {{ $group->members->count() }} / {{ $group->max_members }} {{ __('student.member_singular') }}
                                 </span>
                                 @if($group->leader)
-                                    <span class="text-xs text-amber-600">قائد: {{ $group->leader->name }}</span>
+                                    <span class="text-xs text-amber-600">{{ __('student.leader_label') }}: {{ $group->leader->name }}</span>
                                 @endif
                             </div>
                         </div>

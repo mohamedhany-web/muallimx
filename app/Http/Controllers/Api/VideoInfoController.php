@@ -16,7 +16,7 @@ class VideoInfoController extends Controller
     {
         $request->validate([
             'url' => 'required|url',
-            'platform' => 'required|in:youtube,vimeo,google_drive,direct'
+            'platform' => 'required|in:youtube,vimeo,google_drive,direct,bunny'
         ]);
 
         $url = $request->input('url');
@@ -42,6 +42,9 @@ class VideoInfoController extends Controller
                     break;
                 case 'direct':
                     $info = $this->getDirectVideoInfo($url);
+                    break;
+                case 'bunny':
+                    $info = $this->getBunnyInfo($url);
                     break;
             }
 
@@ -152,6 +155,19 @@ class VideoInfoController extends Controller
         }
 
         // Google Drive لا يوفر معلومات مباشرة بدون API
+        return [
+            'title' => null,
+            'duration' => null,
+            'thumbnail' => null,
+            'description' => null,
+        ];
+    }
+
+    /**
+     * الحصول على معلومات Bunny.net (Bunny Stream)
+     */
+    private function getBunnyInfo($url)
+    {
         return [
             'title' => null,
             'duration' => null,

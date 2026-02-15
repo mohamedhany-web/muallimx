@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'لوحة تحكم المدرب')
-@section('header', 'لوحة تحكم المدرب')
+@section('title', __('instructor.dashboard_title'))
+@section('header', __('instructor.dashboard_title'))
 
 @push('styles')
 <style>
@@ -20,9 +20,9 @@
                     <i class="fas fa-chalkboard-teacher text-sky-500 text-3xl sm:text-4xl"></i>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-xs font-semibold text-sky-600 uppercase tracking-widest mb-1.5">لوحة المدرب</p>
-                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-1 truncate">مرحباً، {{ auth()->user()->name }}</h2>
-                    <p class="text-slate-500 text-sm">نظرة عامة على نشاطك التعليمي اليوم</p>
+                    <p class="text-xs font-semibold text-sky-600 uppercase tracking-widest mb-1.5">{{ __('instructor.instructor_panel') }}</p>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-1 truncate">{{ __('instructor.welcome') }}، {{ auth()->user()->name }}</h2>
+                    <p class="text-slate-500 text-sm">{{ __('instructor.overview_activity_today') }}</p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-x-6 gap-y-3 lg:gap-8 lg:border-r lg:border-slate-200 lg:pr-8">
@@ -30,13 +30,13 @@
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-sky-50 text-sky-600">
                         <i class="fas fa-book text-sm"></i>
                     </span>
-                    <span class="text-slate-600"><span class="font-bold text-slate-800">{{ number_format($stats['my_courses']) }}</span> كورس</span>
+                    <span class="text-slate-600"><span class="font-bold text-slate-800">{{ number_format($stats['my_courses']) }}</span> {{ __('instructor.course') }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600">
                         <i class="fas fa-user-graduate text-sm"></i>
                     </span>
-                    <span class="text-slate-600"><span class="font-bold text-slate-800">{{ number_format($stats['total_students']) }}</span> طالب</span>
+                    <span class="text-slate-600"><span class="font-bold text-slate-800">{{ number_format($stats['total_students']) }}</span> {{ __('instructor.student_single') }}</span>
                 </div>
                 <div class="flex items-center gap-2 text-slate-400 text-sm">
                     <i class="fas fa-calendar-alt"></i>
@@ -52,7 +52,7 @@
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 transition-shadow hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">كورساتي</p>
+                    <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">{{ __('instructor.my_courses') }}</p>
                     <p class="text-3xl sm:text-4xl font-bold text-slate-800 leading-none">{{ number_format($stats['my_courses']) }}</p>
                 </div>
                 <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-sky-50 flex items-center justify-center flex-shrink-0 border border-slate-100">
@@ -61,7 +61,7 @@
             </div>
             <div class="mt-4">
                 <a href="{{ route('instructor.courses.index') }}" class="text-sm font-semibold text-sky-600 hover:text-sky-700 transition-colors inline-flex items-center gap-2">
-                    إدارة الكورسات
+                    {{ __('instructor.manage_courses') }}
                     <i class="fas fa-arrow-left text-xs"></i>
                 </a>
             </div>
@@ -71,7 +71,7 @@
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 transition-shadow hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">إجمالي الطلاب</p>
+                    <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">{{ __('instructor.total_students') }}</p>
                     <p class="text-3xl sm:text-4xl font-bold text-slate-800 leading-none">{{ number_format($stats['total_students']) }}</p>
                 </div>
                 <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-emerald-50 flex items-center justify-center flex-shrink-0 border border-slate-100">
@@ -80,7 +80,7 @@
             </div>
             <div class="mt-4">
                 <a href="{{ route('instructor.courses.index') }}" class="text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors inline-flex items-center gap-2">
-                    عرض الطلاب
+                    {{ __('instructor.view_students') }}
                     <i class="fas fa-arrow-left text-xs"></i>
                 </a>
             </div>
@@ -90,9 +90,9 @@
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 transition-shadow hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">المحاضرات</p>
+                    <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">{{ __('instructor.lectures') }}</p>
                     <p class="text-3xl sm:text-4xl font-bold text-slate-800 leading-none">{{ number_format($stats['total_lectures']) }}</p>
-                    <p class="text-xs text-slate-500 font-medium mt-1">{{ $stats['upcoming_lectures'] }} قادمة</p>
+                    <p class="text-xs text-slate-500 font-medium mt-1">{{ $stats['upcoming_lectures'] }} {{ __('instructor.upcoming') }}</p>
                 </div>
                 <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-violet-50 flex items-center justify-center flex-shrink-0 border border-slate-100">
                     <i class="fas fa-chalkboard-teacher text-violet-600 text-xl sm:text-2xl"></i>
@@ -100,7 +100,7 @@
             </div>
             <div class="mt-4">
                 <a href="{{ route('instructor.lectures.index') }}" class="text-sm font-semibold text-violet-600 hover:text-violet-700 transition-colors inline-flex items-center gap-2">
-                    إدارة المحاضرات
+                    {{ __('instructor.manage_lectures') }}
                     <i class="fas fa-arrow-left text-xs"></i>
                 </a>
             </div>
@@ -110,9 +110,9 @@
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 transition-shadow hover:shadow-md">
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
-                    <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">الواجبات</p>
+                    <p class="text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">{{ __('instructor.assignments') }}</p>
                     <p class="text-3xl sm:text-4xl font-bold text-slate-800 leading-none">{{ number_format($stats['total_assignments']) }}</p>
-                    <p class="text-xs text-slate-500 font-medium mt-1">{{ $stats['pending_submissions'] }} تحتاج تقييم</p>
+                    <p class="text-xs text-slate-500 font-medium mt-1">{{ $stats['pending_submissions'] }} {{ __('instructor.need_grading') }}</p>
                 </div>
                 <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-amber-50 flex items-center justify-center flex-shrink-0 border border-slate-100">
                     <i class="fas fa-tasks text-amber-600 text-xl sm:text-2xl"></i>
@@ -120,7 +120,7 @@
             </div>
             <div class="mt-4">
                 <a href="{{ route('instructor.assignments.index') }}" class="text-sm font-semibold text-amber-600 hover:text-amber-700 transition-colors inline-flex items-center gap-2">
-                    إدارة الواجبات
+                    {{ __('instructor.manage_assignments') }}
                     <i class="fas fa-arrow-left text-xs"></i>
                 </a>
             </div>
@@ -135,10 +135,10 @@
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <i class="fas fa-book text-sky-500"></i>
-                        كورساتي الحديثة
+                        {{ __('instructor.my_recent_courses') }}
                     </h3>
                     <a href="{{ route('instructor.courses.index') }}" class="text-sm font-semibold text-sky-600 hover:text-sky-700 transition-colors inline-flex items-center gap-2">
-                        عرض الكل
+                        {{ __('instructor.view_all') }}
                         <i class="fas fa-arrow-left text-xs"></i>
                     </a>
                 </div>
@@ -154,7 +154,7 @@
                             <h4 class="text-sm font-bold text-slate-800 truncate mb-1">{{ $course->title }}</h4>
                             <p class="text-xs text-slate-500 mb-2">
                                 <i class="fas fa-book text-sky-500 ml-1"></i>
-                                {{ $course->academicSubject->name ?? 'غير محدد' }}
+                                {{ $course->academicSubject->name ?? __('instructor.not_specified') }}
                                 @if($course->academicYear)
                                     - {{ $course->academicYear->name }}
                                 @endif
@@ -162,7 +162,7 @@
                             <div class="flex items-center gap-4 mt-2">
                                 <span class="text-xs text-slate-600 font-medium">
                                     <i class="fas fa-users text-sky-500 ml-1"></i>
-                                    {{ $course->active_students_count ?? 0 }} طالب
+                                    {{ $course->active_students_count ?? 0 }} {{ __('instructor.student_single') }}
                                 </span>
                                 <span class="text-xs text-slate-400">
                                     <i class="fas fa-calendar ml-1"></i>
@@ -170,14 +170,14 @@
                                 </span>
                             </div>
                         </div>
-                        <a href="{{ route('instructor.courses.show', $course) }}" class="p-2.5 rounded-xl bg-sky-100 text-sky-600 hover:bg-sky-200 transition-colors" title="عرض التفاصيل">
+                        <a href="{{ route('instructor.courses.show', $course) }}" class="p-2.5 rounded-xl bg-sky-100 text-sky-600 hover:bg-sky-200 transition-colors" title="{{ __('instructor.view_details') }}">
                             <i class="fas fa-eye text-xs"></i>
                         </a>
                     </div>
                     @empty
                     <div class="text-center py-8 text-slate-500">
                         <i class="fas fa-book text-4xl mb-3 text-slate-300"></i>
-                        <p class="font-medium">لم تُعيّن لك كورسات بعد</p>
+                        <p class="font-medium">{{ __('instructor.no_courses_assigned') }}</p>
                     </div>
                     @endforelse
                 </div>
@@ -190,10 +190,10 @@
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <i class="fas fa-calendar-alt text-violet-500"></i>
-                        المحاضرات القادمة
+                        {{ __('instructor.upcoming_lectures') }}
                     </h3>
                     <a href="{{ route('instructor.lectures.index') }}" class="text-sm font-semibold text-violet-600 hover:text-violet-700 transition-colors inline-flex items-center gap-2">
-                        عرض الكل
+                        {{ __('instructor.view_all') }}
                         <i class="fas fa-arrow-left text-xs"></i>
                     </a>
                 </div>
@@ -209,7 +209,7 @@
                             <h4 class="text-sm font-bold text-slate-800 truncate mb-1">{{ $lecture->title }}</h4>
                             <p class="text-xs text-slate-500 mb-2">
                                 <i class="fas fa-book text-violet-500 ml-1"></i>
-                                {{ $lecture->course->title ?? 'غير محدد' }}
+                                {{ $lecture->course->title ?? __('instructor.not_specified') }}
                                 @if($lecture->lesson)
                                     - {{ $lecture->lesson->title }}
                                 @endif
@@ -225,17 +225,17 @@
                                 </span>
                             </div>
                         </div>
-                        <a href="{{ route('instructor.lectures.show', $lecture) }}" class="p-2.5 rounded-xl bg-violet-100 text-violet-600 hover:bg-violet-200 transition-colors" title="عرض التفاصيل">
+                        <a href="{{ route('instructor.lectures.show', $lecture) }}" class="p-2.5 rounded-xl bg-violet-100 text-violet-600 hover:bg-violet-200 transition-colors" title="{{ __('instructor.view_details') }}">
                             <i class="fas fa-eye text-xs"></i>
                         </a>
                     </div>
                     @empty
                     <div class="text-center py-8 text-slate-500">
                         <i class="fas fa-calendar-alt text-4xl mb-3 text-slate-300"></i>
-                        <p class="font-medium mb-3">لا توجد محاضرات قادمة</p>
+                        <p class="font-medium mb-3">{{ __('instructor.no_lectures') }}</p>
                         <a href="{{ route('instructor.lectures.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-violet-100 text-violet-700 rounded-xl hover:bg-violet-200 font-semibold text-sm transition-colors">
                             <i class="fas fa-plus"></i>
-                            إضافة محاضرة
+                            {{ __('instructor.add_lecture') }}
                         </a>
                     </div>
                     @endforelse
@@ -252,10 +252,10 @@
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <i class="fas fa-tasks text-amber-500"></i>
-                        واجبات تحتاج تقييم ({{ $stats['pending_submissions'] }})
+                        {{ __('instructor.assignments_need_grading') }} ({{ $stats['pending_submissions'] }})
                     </h3>
                     <a href="{{ route('instructor.assignments.index') }}" class="text-sm font-semibold text-amber-600 hover:text-amber-700 transition-colors inline-flex items-center gap-2">
-                        عرض الكل
+                        {{ __('instructor.view_all') }}
                         <i class="fas fa-arrow-left text-xs"></i>
                     </a>
                 </div>
@@ -268,10 +268,10 @@
                             <i class="fas fa-file-alt text-amber-600 text-sm"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h4 class="text-sm font-bold text-slate-800 truncate mb-1">{{ $submission->assignment->title ?? 'واجب' }}</h4>
+                            <h4 class="text-sm font-bold text-slate-800 truncate mb-1">{{ $submission->assignment->title ?? __('instructor.assignment_default') }}</h4>
                             <p class="text-xs text-slate-500 mb-2">
                                 <i class="fas fa-user text-amber-500 ml-1"></i>
-                                {{ $submission->student->name ?? 'طالب' }}
+                                {{ $submission->student->name ?? __('instructor.student_single') }}
                             </p>
                             <div class="flex items-center gap-4 mt-2">
                                 <span class="text-xs text-slate-600 font-medium">
@@ -281,14 +281,14 @@
                                 <span class="text-xs text-slate-400">{{ $submission->created_at->diffForHumans() }}</span>
                             </div>
                         </div>
-                        <a href="{{ route('instructor.assignments.submissions', $submission->assignment) }}" class="p-2.5 rounded-xl bg-amber-100 text-amber-600 hover:bg-amber-200 transition-colors" title="تقييم الواجب">
+                        <a href="{{ route('instructor.assignments.submissions', $submission->assignment) }}" class="p-2.5 rounded-xl bg-amber-100 text-amber-600 hover:bg-amber-200 transition-colors" title="{{ __('instructor.grade_assignment') }}">
                             <i class="fas fa-check text-xs"></i>
                         </a>
                     </div>
                     @empty
                     <div class="text-center py-8 text-slate-500">
                         <i class="fas fa-check-circle text-4xl mb-2 text-slate-300"></i>
-                        <p class="font-medium">جميع الواجبات تم تقييمها</p>
+                        <p class="font-medium">{{ __('instructor.all_assignments_graded') }}</p>
                     </div>
                     @endforelse
                 </div>
@@ -301,10 +301,10 @@
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <i class="fas fa-users text-emerald-500"></i>
-                        مجموعاتي ({{ $stats['total_groups'] }})
+                        {{ __('instructor.my_groups_title') }} ({{ $stats['total_groups'] }})
                     </h3>
                     <a href="{{ route('instructor.groups.index') }}" class="text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors inline-flex items-center gap-2">
-                        عرض الكل
+                        {{ __('instructor.view_all') }}
                         <i class="fas fa-arrow-left text-xs"></i>
                     </a>
                 </div>
@@ -320,29 +320,29 @@
                             <h4 class="text-sm font-bold text-slate-800 truncate mb-1">{{ $group->name }}</h4>
                             <p class="text-xs text-slate-500 mb-2">
                                 <i class="fas fa-book text-emerald-500 ml-1"></i>
-                                {{ $group->course->title ?? 'غير محدد' }}
+                                {{ $group->course->title ?? __('instructor.not_specified') }}
                             </p>
                             <div class="flex items-center gap-4 mt-2">
                                 <span class="text-xs text-slate-600 font-medium">
                                     <i class="fas fa-users text-emerald-500 ml-1"></i>
-                                    {{ $group->members->count() ?? 0 }} عضو
+                                    {{ $group->members->count() ?? 0 }} {{ __('instructor.member_single') }}
                                 </span>
                                 @if($group->max_members)
-                                    <span class="text-xs text-slate-400">/ {{ $group->max_members }} حد أقصى</span>
+                                    <span class="text-xs text-slate-400">/ {{ $group->max_members }} {{ __('instructor.max_limit') }}</span>
                                 @endif
                             </div>
                         </div>
-                        <a href="{{ route('instructor.groups.show', $group) }}" class="p-2.5 rounded-xl bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors" title="عرض التفاصيل">
+                        <a href="{{ route('instructor.groups.show', $group) }}" class="p-2.5 rounded-xl bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition-colors" title="{{ __('instructor.view_details') }}">
                             <i class="fas fa-eye text-xs"></i>
                         </a>
                     </div>
                     @empty
                     <div class="text-center py-8 text-slate-500">
                         <i class="fas fa-users text-4xl mb-3 text-slate-300"></i>
-                        <p class="font-medium mb-3">لا توجد مجموعات</p>
+                        <p class="font-medium mb-3">{{ __('instructor.no_groups') }}</p>
                         <a href="{{ route('instructor.groups.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-100 text-emerald-700 rounded-xl hover:bg-emerald-200 font-semibold text-sm transition-colors">
                             <i class="fas fa-plus"></i>
-                            إنشاء مجموعة
+                            {{ __('instructor.create_new_group') }}
                         </a>
                     </div>
                     @endforelse
@@ -356,7 +356,7 @@
         <div class="px-5 sm:px-6 py-4 border-b border-slate-200 bg-slate-50">
             <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <i class="fas fa-bolt text-sky-500"></i>
-                إجراءات سريعة
+                {{ __('instructor.quick_actions') }}
             </h3>
         </div>
         <div class="p-5 sm:p-6 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
@@ -364,25 +364,25 @@
                 <div class="w-12 h-12 rounded-xl bg-sky-100 flex items-center justify-center mb-3 group-hover:bg-sky-200 transition-colors">
                     <i class="fas fa-video text-sky-600 text-xl"></i>
                 </div>
-                <span class="text-xs sm:text-sm font-semibold text-slate-700">إضافة محاضرة</span>
+                <span class="text-xs sm:text-sm font-semibold text-slate-700">{{ __('instructor.add_lecture') }}</span>
             </a>
             <a href="{{ route('instructor.assignments.create') }}" class="flex flex-col items-center p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-emerald-50 hover:border-emerald-200 transition-colors group">
                 <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mb-3 group-hover:bg-emerald-200 transition-colors">
                     <i class="fas fa-tasks text-emerald-600 text-xl"></i>
                 </div>
-                <span class="text-xs sm:text-sm font-semibold text-slate-700">إضافة واجب</span>
+                <span class="text-xs sm:text-sm font-semibold text-slate-700">{{ __('instructor.add_assignment') }}</span>
             </a>
             <a href="{{ route('instructor.exams.index') }}" class="flex flex-col items-center p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-violet-50 hover:border-violet-200 transition-colors group">
                 <div class="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center mb-3 group-hover:bg-violet-200 transition-colors">
                     <i class="fas fa-clipboard-check text-violet-600 text-xl"></i>
                 </div>
-                <span class="text-xs sm:text-sm font-semibold text-slate-700">إدارة الاختبارات</span>
+                <span class="text-xs sm:text-sm font-semibold text-slate-700">{{ __('instructor.manage_exams') }}</span>
             </a>
             <a href="{{ route('instructor.attendance.index') }}" class="flex flex-col items-center p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-amber-50 hover:border-amber-200 transition-colors group">
                 <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mb-3 group-hover:bg-amber-200 transition-colors">
                     <i class="fas fa-clipboard-list text-amber-600 text-xl"></i>
                 </div>
-                <span class="text-xs sm:text-sm font-semibold text-slate-700">الحضور والغياب</span>
+                <span class="text-xs sm:text-sm font-semibold text-slate-700">{{ __('instructor.attendance_absence') }}</span>
             </a>
         </div>
     </div>

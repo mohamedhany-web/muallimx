@@ -1,21 +1,21 @@
 @extends('layouts.app')
 
-@section('title', 'كورساتي - Mindlytics')
-@section('header', 'كورساتي')
+@section('title', __('instructor.my_courses') . ' - Mindlytics')
+@section('header', __('instructor.my_courses'))
 
 @section('content')
 <div class="space-y-6">
     <!-- الهيدر -->
     <div class="rounded-2xl p-5 sm:p-6 bg-white border border-slate-200 shadow-sm">
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-1">كورساتي</h1>
-        <p class="text-sm text-slate-500">الكورسات التي تم تعيينها لك</p>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-1">{{ __('instructor.my_courses') }}</h1>
+        <p class="text-sm text-slate-500">{{ __('instructor.courses_assigned_to_you') }}</p>
     </div>
 
     <!-- الإحصائيات -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">إجمالي الكورسات</p>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{{ __('instructor.total_courses') }}</p>
                 <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ $stats['total'] ?? 0 }}</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center">
@@ -24,7 +24,7 @@
         </div>
         <div class="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">نشطة</p>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{{ __('instructor.active') }}</p>
                 <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ $stats['active'] ?? 0 }}</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -33,7 +33,7 @@
         </div>
         <div class="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">معطلة</p>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{{ __('instructor.inactive') }}</p>
                 <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ $stats['inactive'] ?? 0 }}</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
@@ -42,7 +42,7 @@
         </div>
         <div class="rounded-2xl p-5 bg-white border border-slate-200 shadow-sm flex items-center justify-between">
             <div>
-                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">إجمالي الطلاب</p>
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{{ __('instructor.total_students') }}</p>
                 <p class="text-2xl sm:text-3xl font-bold text-slate-800">{{ $stats['total_students'] ?? 0 }}</p>
             </div>
             <div class="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center">
@@ -55,23 +55,23 @@
     <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm">
         <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-                <label for="search" class="block text-sm font-semibold text-slate-700 mb-2">البحث</label>
+                <label for="search" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('common.search') }}</label>
                 <input type="text" name="search" id="search" value="{{ request('search') }}" 
-                       placeholder="البحث في عناوين الكورسات..."
+                       placeholder="{{ __('instructor.search_in_course_titles') }}"
                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
             </div>
             <div>
-                <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">الحالة</label>
+                <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">{{ __('common.status') }}</label>
                 <select name="status" id="status" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-colors">
-                    <option value="">جميع الحالات</option>
-                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>نشط</option>
-                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>معطل</option>
+                    <option value="">{{ __('instructor.all_statuses') }}</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>{{ __('instructor.active_status') }}</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>{{ __('instructor.inactive_status') }}</option>
                 </select>
             </div>
             <div class="flex items-end gap-2">
                 <button type="submit" class="flex-1 inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors">
                     <i class="fas fa-search"></i>
-                    <span>بحث</span>
+                    <span>{{ __('common.search') }}</span>
                 </button>
                 @if(request()->anyFilled(['search', 'status']))
                     <a href="{{ route('instructor.courses.index') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors inline-flex items-center justify-center">
@@ -92,7 +92,7 @@
                         <h3 class="text-lg font-bold text-slate-800 truncate flex-1">{{ $course->title }}</h3>
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold shrink-0 {{ $course->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
                             <i class="fas {{ $course->is_active ? 'fa-check-circle' : 'fa-ban' }}"></i>
-                            {{ $course->is_active ? 'نشط' : 'معطل' }}
+                            {{ $course->is_active ? __('instructor.active_status') : __('instructor.inactive_status') }}
                         </span>
                     </div>
                 </div>
@@ -108,7 +108,7 @@
                             <div class="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-graduation-cap text-sky-600 text-xs"></i>
                             </div>
-                            <span class="text-slate-500">السنة:</span>
+                            <span class="text-slate-500">{{ __('instructor.year') }}:</span>
                             <span class="text-slate-800 font-medium">{{ $course->academicYear->name }}</span>
                         </div>
                         @endif
@@ -117,7 +117,7 @@
                             <div class="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-book text-violet-600 text-xs"></i>
                             </div>
-                            <span class="text-slate-500">المادة:</span>
+                            <span class="text-slate-500">{{ __('instructor.subject') }}:</span>
                             <span class="text-slate-800 font-medium">{{ $course->academicSubject->name }}</span>
                         </div>
                         @endif
@@ -126,7 +126,7 @@
                             <div class="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-code text-cyan-600 text-xs"></i>
                             </div>
-                            <span class="text-slate-500">اللغة:</span>
+                            <span class="text-slate-500">{{ __('instructor.language_label') }}:</span>
                             <span class="text-slate-800 font-medium">{{ $course->programming_language }}</span>
                         </div>
                         @endif
@@ -135,11 +135,11 @@
                             <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-signal text-emerald-600 text-xs"></i>
                             </div>
-                            <span class="text-slate-500">المستوى:</span>
+                            <span class="text-slate-500">{{ __('instructor.level_label') }}:</span>
                             <span class="text-slate-800 font-medium">
-                                @if($course->level == 'beginner') مبتدئ
-                                @elseif($course->level == 'intermediate') متوسط
-                                @else متقدم
+                                @if($course->level == 'beginner') {{ __('instructor.beginner') }}
+                                @elseif($course->level == 'intermediate') {{ __('instructor.intermediate') }}
+                                @else {{ __('instructor.advanced') }}
                                 @endif
                             </span>
                         </div>
@@ -149,7 +149,7 @@
                             <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-money-bill-wave text-amber-600 text-xs"></i>
                             </div>
-                            <span class="text-slate-500">السعر:</span>
+                            <span class="text-slate-500">{{ __('instructor.price') }}:</span>
                             <span class="text-slate-800 font-semibold">{{ number_format($course->price, 2) }} ج.م</span>
                         </div>
                         @else
@@ -157,7 +157,7 @@
                             <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-gift text-emerald-600 text-xs"></i>
                             </div>
-                            <span class="text-emerald-600 font-semibold">مجاني</span>
+                            <span class="text-emerald-600 font-semibold">{{ __('instructor.free') }}</span>
                         </div>
                         @endif
                     </div>
@@ -167,11 +167,11 @@
                     <div class="grid grid-cols-2 gap-4 text-center">
                         <div>
                             <div class="text-lg font-bold text-slate-800">{{ $course->lectures_count ?? 0 }}</div>
-                            <div class="text-xs text-slate-500 font-medium">محاضرة</div>
+                            <div class="text-xs text-slate-500 font-medium">{{ __('instructor.lecture_single') }}</div>
                         </div>
                         <div>
                             <div class="text-lg font-bold text-slate-800">{{ $course->enrollments_count ?? 0 }}</div>
-                            <div class="text-xs text-slate-500 font-medium">طالب</div>
+                            <div class="text-xs text-slate-500 font-medium">{{ __('instructor.student_single') }}</div>
                         </div>
                     </div>
                 </div>
@@ -180,7 +180,7 @@
                     <a href="{{ route('instructor.courses.show', $course) }}" 
                        class="w-full inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors">
                         <i class="fas fa-eye"></i>
-                        <span>عرض التفاصيل</span>
+                        <span>{{ __('instructor.view_details') }}</span>
                     </a>
                 </div>
             </div>
@@ -197,8 +197,8 @@
             <div class="w-24 h-24 rounded-2xl bg-sky-50 flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-book-open text-4xl text-sky-500"></i>
             </div>
-            <h3 class="text-xl sm:text-2xl font-bold text-slate-800 mb-2">لا توجد كورسات</h3>
-            <p class="text-slate-500 max-w-md mx-auto">لم يتم تعيين أي كورسات لك بعد</p>
+            <h3 class="text-xl sm:text-2xl font-bold text-slate-800 mb-2">{{ __('instructor.no_courses') }}</h3>
+            <p class="text-slate-500 max-w-md mx-auto">{{ __('instructor.courses_description_empty') }}</p>
         </div>
     @endif
 </div>

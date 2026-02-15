@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $course->title . ' - كورساتي')
+@section('title', $course->title . ' - ' . __('student.my_courses'))
 @section('header', $course->title)
 
 @push('styles')

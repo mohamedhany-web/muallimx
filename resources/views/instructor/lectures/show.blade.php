@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'تفاصيل المحاضرة - ' . $lecture->title)
-@section('header', 'تفاصيل المحاضرة')
+@section('title', __('instructor.lecture_details') . ' - ' . $lecture->title)
+@section('header', __('instructor.lecture_details'))
 
 @push('styles')
 <style>
@@ -73,12 +73,12 @@ function updateAttendance(studentId, status) {
         if (data.success) {
             location.reload();
         } else {
-            alert(data.message || 'حدث خطأ أثناء تحديث الحضور');
+            alert(data.message || @json(__('instructor.attendance_update_error')));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('حدث خطأ أثناء تحديث الحضور');
+        alert(@json(__('instructor.attendance_update_error')));
     });
 }
 
@@ -97,12 +97,12 @@ function updateStatus(status) {
         if (data.success) {
             location.reload();
         } else {
-            alert(data.message || 'حدث خطأ أثناء تحديث الحالة');
+            alert(data.message || @json(__('instructor.status_update_error')));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('حدث خطأ أثناء تحديث الحالة');
+        alert(@json(__('instructor.status_update_error')));
     });
 }
 </script>

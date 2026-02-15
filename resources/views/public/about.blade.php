@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <title>من نحن - Mindlytics - أكاديمية البرمجة</title>
+        <title>{{ __('public.about_page_title') }} - {{ __('public.site_suffix') }}</title>
 
         <!-- خط عربي موحّد مع الصفحة الرئيسية -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -758,10 +758,10 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full py-16">
             <div class="text-center fade-in-up">
                 <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight text-gray-900">
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-green-500 to-blue-600 animate-gradient-text">من نحن</span>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-green-500 to-blue-600 animate-gradient-text">{{ __('public.about_hero') }}</span>
                 </h1>
                 <p class="text-lg md:text-xl lg:text-2xl text-gray-700 mb-10 leading-relaxed max-w-3xl mx-auto font-medium">
-                    نؤمن بقوة التعليم في تحويل المستقبل
+                    {{ __('public.about_hero_sub') }}
                 </p>
             </div>
         </div>
@@ -774,21 +774,21 @@
             <blockquote class="reveal-quote relative pr-6 py-2 mb-16">
                 <span class="quote-line absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-blue-600 to-green-500 rounded-full"></span>
                 <p class="text-2xl md:text-3xl font-bold text-gray-800 leading-relaxed pr-4">
-                    نؤمن بأن البرمجة ليست مهنة فحسب، بل لغة المستقبل. نضع بين يديك مساراً واضحاً من الصفر حتى الاحتراف.
+                    {{ __('public.about_intro') }}
                 </p>
             </blockquote>
 
             <!-- من نحن - فقرات تظهر واحدة تلو الأخرى -->
             <div class="prose-about max-w-3xl reveal-stagger">
                 <h2 class="text-2xl font-black text-gray-900 mb-6 mt-12">
-                    من نحن
+                    {{ __('public.about_heading') }}
                     <span class="block h-1 w-24 mt-1 bg-gradient-to-l from-blue-600 to-green-500 rounded-full"></span>
                 </h2>
                 <p class="text-lg text-gray-700 leading-loose mb-6">
-                    <strong class="text-blue-700">Mindlytics</strong> منصة تعليمية عربية متخصصة في البرمجة وتطوير البرمجيات والذكاء الاصطناعي. نقدم محتوى تعليمياً منظماً من المبتدئ إلى المتقدم، مع التركيز على التطبيق العملي ومشاريع حقيقية حتى يتمكن خريجونا من المنافسة في سوق العمل المحلي والعالمي.
+                    {!! __('public.about_para1', ['brand' => '<strong class="text-blue-700">Mindlytics</strong>']) !!}
                 </p>
                 <p class="text-lg text-gray-700 leading-loose mb-6">
-                    انطلقت فكرتنا من حاجة السوق إلى مبرمجين مؤهلين وقلة المصادر العربية الموثوقة. لذلك صممنا مسارات تعليمية واضحة، كورسات محدثة، ومدربين من أصحاب الخبرة في المجال. نرافقك خطوة بخطوة حتى تحقق هدفك سواء كان تغيير مسارك المهني، تطوير مهاراتك، أو بناء مشروعك الخاص.
+                    {{ __('public.about_para2') }}
                 </p>
             </div>
 
@@ -797,21 +797,21 @@
                 <div class="flex gap-6 items-start reveal-from-right">
                     <span class="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center mt-1 shadow-lg shadow-blue-600/30"><i class="fas fa-eye text-lg"></i></span>
                     <div>
-                        <h3 class="text-xl font-black text-gray-900 mb-3">رؤيتنا</h3>
+                        <h3 class="text-xl font-black text-gray-900 mb-3">{{ __('public.our_vision') }}</h3>
                         <p class="text-gray-700 leading-relaxed">
-                            أن نكون المرجع الأول في التعليم البرمجي باللغة العربية في المنطقة، وأن يساهم خريجونا في بناء الاقتصاد الرقمي وتقليل الفجوة بين التعليم الأكاديمي ومتطلبات سوق العمل.
+                            {{ __('public.vision_text') }}
                         </p>
                     </div>
                 </div>
                 <div class="flex gap-6 items-start reveal-from-left">
                     <span class="flex-shrink-0 w-12 h-12 rounded-xl bg-green-600 text-white flex items-center justify-center mt-1 shadow-lg shadow-green-600/30"><i class="fas fa-bullseye text-lg"></i></span>
                     <div>
-                        <h3 class="text-xl font-black text-gray-900 mb-3">مهمتنا</h3>
-                        <p class="text-gray-700 leading-relaxed mb-4">تقديم تعليم برمجي عملي وعالي الجودة يركز على:</p>
+                        <h3 class="text-xl font-black text-gray-900 mb-3">{{ __('public.our_mission') }}</h3>
+                        <p class="text-gray-700 leading-relaxed mb-4">{{ __('public.mission_intro') }}</p>
                         <ul class="space-y-2 text-gray-700">
-                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> محتوى محدث يواكب أحدث التقنيات</li>
-                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> دعم ومتابعة خلال رحلة التعلم</li>
-                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> شهادات معتمدة عند إتمام المسارات</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> {{ __('public.mission_1') }}</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> {{ __('public.mission_2') }}</li>
+                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> {{ __('public.mission_3') }}</li>
                         </ul>
                     </div>
                 </div>
@@ -819,34 +819,34 @@
 
             <!-- لماذا نحن - قائمة بتأثير متتابع -->
             <div class="mt-20 pt-16 border-t border-gray-200">
-                <h2 class="text-2xl font-black text-gray-900 mb-8 reveal">لماذا Mindlytics؟</h2>
+                <h2 class="text-2xl font-black text-gray-900 mb-8 reveal">{{ __('public.why_mindlytics') }}</h2>
                 <ul class="space-y-6 reveal-stagger">
                     <li class="flex gap-4 items-start">
                         <i class="fas fa-code text-blue-600 text-lg mt-1 flex-shrink-0"></i>
                         <div>
-                            <span class="font-bold text-gray-900">محتوى حديث ومتطور</span>
-                            <p class="text-gray-600 text-sm mt-0.5">كورسات ومشاريع مبنية على أحدث التقنيات والمتطلبات في سوق العمل.</p>
+                            <span class="font-bold text-gray-900">{{ __('public.why_1_title') }}</span>
+                            <p class="text-gray-600 text-sm mt-0.5">{{ __('public.why_1_desc') }}</p>
                         </div>
                     </li>
                     <li class="flex gap-4 items-start">
                         <i class="fas fa-user-tie text-green-600 text-lg mt-1 flex-shrink-0"></i>
                         <div>
-                            <span class="font-bold text-gray-900">مدربون محترفون</span>
-                            <p class="text-gray-600 text-sm mt-0.5">فريق من المطورين والمدرّبين ذوي الخبرة الميدانية في البرمجة والتدريب.</p>
+                            <span class="font-bold text-gray-900">{{ __('public.why_2_title') }}</span>
+                            <p class="text-gray-600 text-sm mt-0.5">{{ __('public.why_2_desc') }}</p>
                         </div>
                     </li>
                     <li class="flex gap-4 items-start">
                         <i class="fas fa-headset text-blue-600 text-lg mt-1 flex-shrink-0"></i>
                         <div>
-                            <span class="font-bold text-gray-900">دعم مستمر</span>
-                            <p class="text-gray-600 text-sm mt-0.5">دعم فني وتعليمي لمساعدتك عند الحاجة خلال رحلتك.</p>
+                            <span class="font-bold text-gray-900">{{ __('public.why_3_title') }}</span>
+                            <p class="text-gray-600 text-sm mt-0.5">{{ __('public.why_3_desc') }}</p>
                         </div>
                     </li>
                     <li class="flex gap-4 items-start">
                         <i class="fas fa-certificate text-green-600 text-lg mt-1 flex-shrink-0"></i>
                         <div>
-                            <span class="font-bold text-gray-900">شهادات معتمدة</span>
-                            <p class="text-gray-600 text-sm mt-0.5">شهادات إتمام معترف بها عند إنجازك للمسارات والكورسات.</p>
+                            <span class="font-bold text-gray-900">{{ __('public.why_4_title') }}</span>
+                            <p class="text-gray-600 text-sm mt-0.5">{{ __('public.why_4_desc') }}</p>
                         </div>
                     </li>
                 </ul>
@@ -854,27 +854,27 @@
 
             <!-- القيم - ظهور بتأخير متتابع -->
             <div class="mt-20 pt-16 border-t border-gray-200">
-                <h2 class="text-2xl font-black text-gray-900 mb-8 reveal">قيمنا</h2>
+                <h2 class="text-2xl font-black text-gray-900 mb-8 reveal">{{ __('public.our_values') }}</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 reveal-stagger">
                     <div class="flex gap-4">
                         <span class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-black flex items-center justify-center">1</span>
                         <div>
-                            <h4 class="font-bold text-gray-900 mb-1">الابتكار</h4>
-                            <p class="text-gray-600 text-sm">مواكبة أحدث المناهج والتقنيات لتجربة تعليمية عصرية.</p>
+                            <h4 class="font-bold text-gray-900 mb-1">{{ __('public.value_1_title') }}</h4>
+                            <p class="text-gray-600 text-sm">{{ __('public.value_1_desc') }}</p>
                         </div>
                     </div>
                     <div class="flex gap-4">
                         <span class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 text-green-700 font-black flex items-center justify-center">2</span>
                         <div>
-                            <h4 class="font-bold text-gray-900 mb-1">الجودة</h4>
-                            <p class="text-gray-600 text-sm">التزامنا بأعلى معايير الجودة في المحتوى والتدريب.</p>
+                            <h4 class="font-bold text-gray-900 mb-1">{{ __('public.value_2_title') }}</h4>
+                            <p class="text-gray-600 text-sm">{{ __('public.value_2_desc') }}</p>
                         </div>
                     </div>
                     <div class="flex gap-4">
                         <span class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-black flex items-center justify-center">3</span>
                         <div>
-                            <h4 class="font-bold text-gray-900 mb-1">الشغف</h4>
-                            <p class="text-gray-600 text-sm">الإيمان بقوة التعليم في تغيير المسارات وتحقيق الأهداف.</p>
+                            <h4 class="font-bold text-gray-900 mb-1">{{ __('public.value_3_title') }}</h4>
+                            <p class="text-gray-600 text-sm">{{ __('public.value_3_desc') }}</p>
                         </div>
                     </div>
                 </div>
@@ -885,19 +885,19 @@
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center reveal-stagger">
                     <div>
                         <div class="text-3xl md:text-4xl font-black text-blue-600 counter" data-target="{{ $stats['courses'] ?? 50 }}">{{ $stats['courses'] ?? 50 }}+</div>
-                        <div class="text-gray-600 font-medium mt-1">كورس متاح</div>
+                        <div class="text-gray-600 font-medium mt-1">{{ __('public.stat_courses') }}</div>
                     </div>
                     <div>
                         <div class="text-3xl md:text-4xl font-black text-blue-600 counter" data-target="{{ $stats['students'] ?? 1000 }}">{{ $stats['students'] ?? 1000 }}+</div>
-                        <div class="text-gray-600 font-medium mt-1">طالب نشط</div>
+                        <div class="text-gray-600 font-medium mt-1">{{ __('public.stat_students') }}</div>
                     </div>
                     <div>
                         <div class="text-3xl md:text-4xl font-black text-green-600 counter" data-target="{{ $stats['instructors'] ?? 20 }}">{{ $stats['instructors'] ?? 20 }}+</div>
-                        <div class="text-gray-600 font-medium mt-1">مدرّس محترف</div>
+                        <div class="text-gray-600 font-medium mt-1">{{ __('public.stat_instructors') }}</div>
                     </div>
                     <div>
                         <div class="text-3xl md:text-4xl font-black text-green-600">100%</div>
-                        <div class="text-gray-600 font-medium mt-1">التزام بالجودة</div>
+                        <div class="text-gray-600 font-medium mt-1">{{ __('public.stat_quality') }}</div>
                     </div>
                 </div>
             </div>
@@ -915,22 +915,22 @@
         
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal-scale relative z-10">
             <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-6 leading-tight">
-                جاهز لبدء رحلتك البرمجية؟
+                {{ __('public.cta_programming_title') }}
             </h2>
             <p class="text-lg md:text-xl text-gray-600 mb-10 font-medium">
-                انضم إلى آلاف الطلاب الذين حققوا التميز في البرمجة مع Mindlytics
+                {{ __('public.cta_programming_desc') }}
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden group">
                     <span class="relative z-10 flex items-center gap-2">
                         <i class="fas fa-user-plus"></i>
-                        <span>سجل مجاناً الآن</span>
+                        <span>{{ __('public.register_free_now') }}</span>
                     </span>
                     <span class="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                 </a>
                 <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-full font-bold text-lg border-2 border-blue-600 hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl relative">
                     <span class="flex items-center gap-2">
-                        <span>استعرض جميع الكورسات</span>
+                        <span>{{ __('public.browse_all_courses_btn') }}</span>
                         <i class="fas fa-arrow-left"></i>
                     </span>
                 </a>

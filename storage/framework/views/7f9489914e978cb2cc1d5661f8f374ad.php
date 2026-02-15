@@ -1,11 +1,15 @@
+<?php
+    $appLocale = app()->getLocale();
+    $appRtl = $appLocale === 'ar';
+?>
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="light">
+<html lang="<?php echo e($appLocale); ?>" dir="<?php echo e($appRtl ? 'rtl' : 'ltr'); ?>" class="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
 
-    <title><?php echo e(config('app.name', 'Mindlytics')); ?> - <?php echo $__env->yieldContent('title', 'لوحة التحكم'); ?></title>
+    <title><?php echo e(config('app.name', 'Mindlytics')); ?> - <?php echo $__env->yieldContent('title', __('auth.dashboard')); ?></title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
@@ -370,7 +374,7 @@ x-init="
                         <div class="flex md:hidden items-center flex-1 min-w-0 ml-2">
                             <div class="search-command flex items-center gap-2 w-full">
                                 <i class="fas fa-search text-sky-500 text-xs sm:text-sm flex-shrink-0"></i>
-                                <input type="text" placeholder="بحث..." class="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-700 placeholder-slate-400 font-medium min-w-0">
+                                <input type="text" placeholder="<?php echo e(__('common.nav_search_placeholder')); ?>" class="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-slate-700 placeholder-slate-400 font-medium min-w-0">
                             </div>
                         </div>
 
@@ -378,19 +382,40 @@ x-init="
                         <div class="hidden md:flex items-center flex-1 max-w-xl min-w-0">
                             <div class="search-command flex items-center gap-3 w-full">
                                 <i class="fas fa-search text-sky-500 text-sm flex-shrink-0"></i>
-                                <input type="text" placeholder="ابحث عن كورسات، دروس، امتحانات..." class="flex-1 bg-transparent border-none outline-none text-sm text-slate-700 placeholder-slate-400 font-medium min-w-0">
+                                <input type="text" placeholder="<?php echo e(__('common.nav_search_placeholder_long')); ?>" class="flex-1 bg-transparent border-none outline-none text-sm text-slate-700 placeholder-slate-400 font-medium min-w-0">
                                 <kbd class="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600">Ctrl K</kbd>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+                        <!-- Language Switcher -->
+                        <?php if (isset($component)) { $__componentOriginal8d3bff7d7383a45350f7495fc470d934 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal8d3bff7d7383a45350f7495fc470d934 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.language-switcher','data' => ['class' => 'hidden sm:inline-flex']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('language-switcher'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'hidden sm:inline-flex']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal8d3bff7d7383a45350f7495fc470d934)): ?>
+<?php $attributes = $__attributesOriginal8d3bff7d7383a45350f7495fc470d934; ?>
+<?php unset($__attributesOriginal8d3bff7d7383a45350f7495fc470d934); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal8d3bff7d7383a45350f7495fc470d934)): ?>
+<?php $component = $__componentOriginal8d3bff7d7383a45350f7495fc470d934; ?>
+<?php unset($__componentOriginal8d3bff7d7383a45350f7495fc470d934); ?>
+<?php endif; ?>
                         <!-- Quick Actions - Desktop Only -->
                         <div class="hidden lg:flex items-center gap-2">
-                            <a href="<?php echo e(route('academic-years')); ?>" class="quick-action-btn" title="تصفح الكورسات">
+                            <a href="<?php echo e(route('academic-years')); ?>" class="quick-action-btn" title="<?php echo e(__('common.browse_courses')); ?>">
                                 <i class="fas fa-search text-sm"></i>
                             </a>
-                            <a href="<?php echo e(route('my-courses.index')); ?>" class="quick-action-btn" title="كورساتي">
+                            <a href="<?php echo e(route('my-courses.index')); ?>" class="quick-action-btn" title="<?php echo e(__('common.my_courses_title')); ?>">
                                 <i class="fas fa-book-open text-sm"></i>
                             </a>
                         </div>

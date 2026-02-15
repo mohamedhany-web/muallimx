@@ -20,11 +20,11 @@
                     </div>
                     <div>
                         <h3 class="font-black text-base md:text-lg lg:text-xl bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">Mindlytics</h3>
-                        <p class="text-gray-600 text-[10px] md:text-xs font-medium">أكاديمية البرمجة</p>
+                        <p class="text-gray-600 text-[10px] md:text-xs font-medium">{{ __('public.brand') }}</p>
                     </div>
                 </div>
                 <p class="text-gray-700 text-xs md:text-sm mb-4 md:mb-5 leading-relaxed hidden md:block">
-                    منصة تعليمية متخصصة في البرمجة تهدف إلى تبسيط مفاهيم البرمجة وجعلها أكثر متعة وفهماً للطلاب في جميع المستويات من المبتدئين إلى المحترفين.
+                    {{ __('public.footer_about') }}
                 </p>
                 
                 <!-- Social Media Icons - Enhanced -->
@@ -51,27 +51,27 @@
             <!-- Quick Links - Enhanced -->
             <div class="fade-in-up">
                 <h4 class="font-black text-sm md:text-base lg:text-lg mb-3 md:mb-4 text-gray-900 relative inline-block">
-                    روابط سريعة
+                    {{ __('public.quick_links') }}
                     <span class="absolute bottom-0 right-0 w-full h-0.5 bg-gradient-to-r from-blue-500 to-green-500"></span>
                 </h4>
                 <ul class="space-y-1.5 md:space-y-2">
                     <li>
                         <a href="{{ url('/') }}" class="footer-link group flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-all duration-300 text-xs md:text-sm py-1">
                             <i class="fas fa-home text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] md:text-xs w-4"></i>
-                            <span class="group-hover:translate-x-[-3px] transition-transform">الرئيسية</span>
+                            <span class="group-hover:translate-x-[-3px] transition-transform">{{ __('public.home') }}</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('public.courses') }}" class="footer-link group flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-all duration-300 text-xs md:text-sm py-1">
                             <i class="fas fa-graduation-cap text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] md:text-xs w-4"></i>
-                            <span class="group-hover:translate-x-[-3px] transition-transform">الكورسات</span>
+                            <span class="group-hover:translate-x-[-3px] transition-transform">{{ __('public.courses') }}</span>
                         </a>
                     </li>
                     @if(Route::has('public.about'))
                     <li class="hidden sm:block">
                         <a href="{{ route('public.about') }}" class="footer-link group flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-all duration-300 text-xs md:text-sm py-1">
                             <i class="fas fa-info-circle text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] md:text-xs w-4"></i>
-                            <span class="group-hover:translate-x-[-3px] transition-transform">من نحن</span>
+                            <span class="group-hover:translate-x-[-3px] transition-transform">{{ __('public.about') }}</span>
                         </a>
                     </li>
                     @endif
@@ -79,7 +79,7 @@
                     <li class="hidden sm:block">
                         <a href="{{ route('public.contact') }}" class="footer-link group flex items-center gap-2 text-gray-700 hover:text-blue-600 transition-all duration-300 text-xs md:text-sm py-1">
                             <i class="fas fa-envelope text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] md:text-xs w-4"></i>
-                            <span class="group-hover:translate-x-[-3px] transition-transform">تواصل معنا</span>
+                            <span class="group-hover:translate-x-[-3px] transition-transform">{{ __('public.contact_us') }}</span>
                         </a>
                     </li>
                     @endif
@@ -89,7 +89,7 @@
             <!-- Support - Enhanced -->
             <div class="fade-in-up">
                 <h4 class="font-black text-sm md:text-base lg:text-lg mb-3 md:mb-4 text-gray-900 relative inline-block">
-                    الدعم
+                    {{ __('public.support') }}
                     <span class="absolute bottom-0 right-0 w-full h-0.5 bg-gradient-to-r from-green-500 to-blue-500"></span>
                 </h4>
                 <ul class="space-y-1.5 md:space-y-2">
@@ -97,7 +97,7 @@
                     <li>
                         <a href="{{ route('public.faq') }}" class="footer-link group flex items-center gap-2 text-gray-700 hover:text-green-600 transition-all duration-300 text-xs md:text-sm py-1">
                             <i class="fas fa-question-circle text-green-600 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] md:text-xs w-4"></i>
-                            <span class="group-hover:translate-x-[-3px] transition-transform">الأسئلة الشائعة</span>
+                            <span class="group-hover:translate-x-[-3px] transition-transform">{{ __('public.faq') }}</span>
                         </a>
                     </li>
                     @endif
@@ -105,7 +105,7 @@
                     <li class="hidden sm:block">
                         <a href="{{ route('public.help') }}" class="footer-link group flex items-center gap-2 text-gray-700 hover:text-green-600 transition-all duration-300 text-xs md:text-sm py-1">
                             <i class="fas fa-life-ring text-green-600 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] md:text-xs w-4"></i>
-                            <span class="group-hover:translate-x-[-3px] transition-transform">مركز المساعدة</span>
+                            <span class="group-hover:translate-x-[-3px] transition-transform">{{ __('public.help_center') }}</span>
                         </a>
                     </li>
                     @endif
@@ -113,7 +113,7 @@
                     <li class="hidden sm:block">
                         <a href="{{ route('public.contact') }}" class="footer-link group flex items-center gap-2 text-gray-700 hover:text-green-600 transition-all duration-300 text-xs md:text-sm py-1">
                             <i class="fas fa-headset text-green-600 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] md:text-xs w-4"></i>
-                            <span class="group-hover:translate-x-[-3px] transition-transform">تواصل معنا</span>
+                            <span class="group-hover:translate-x-[-3px] transition-transform">{{ __('public.contact_us') }}</span>
                         </a>
                     </li>
                     @endif
@@ -123,7 +123,7 @@
             <!-- Legal & Contact - Enhanced -->
             <div class="fade-in-right col-span-2 md:col-span-1">
                 <h4 class="font-black text-sm md:text-base lg:text-lg mb-3 md:mb-4 text-gray-900 relative inline-block">
-                    قانوني
+                    {{ __('public.legal') }}
                     <span class="absolute bottom-0 right-0 w-full h-0.5 bg-gradient-to-r from-blue-500 to-green-500"></span>
                 </h4>
                 <ul class="space-y-1.5 md:space-y-2 mb-4 md:mb-6">
@@ -131,7 +131,7 @@
                     <li>
                         <a href="{{ route('public.terms') }}" class="footer-link group flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-all duration-300 text-xs md:text-sm py-1">
                             <i class="fas fa-file-contract text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] md:text-xs w-4"></i>
-                            <span class="group-hover:translate-x-[-3px] transition-transform">الشروط والأحكام</span>
+                            <span class="group-hover:translate-x-[-3px] transition-transform">{{ __('public.terms_conditions') }}</span>
                         </a>
                     </li>
                     @endif
@@ -139,7 +139,7 @@
                     <li>
                         <a href="{{ route('public.privacy') }}" class="footer-link group flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-all duration-300 text-xs md:text-sm py-1">
                             <i class="fas fa-shield-alt text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] md:text-xs w-4"></i>
-                            <span class="group-hover:translate-x-[-3px] transition-transform">سياسة الخصوصية</span>
+                            <span class="group-hover:translate-x-[-3px] transition-transform">{{ __('public.privacy_policy') }}</span>
                         </a>
                     </li>
                     @endif
@@ -147,7 +147,7 @@
                 
                 <!-- Contact Info - Hidden on mobile -->
                 <div class="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-300 hidden md:block">
-                    <h5 class="font-bold text-xs md:text-sm mb-2 md:mb-3 text-gray-900">تواصل معنا</h5>
+                    <h5 class="font-bold text-xs md:text-sm mb-2 md:mb-3 text-gray-900">{{ __('public.contact_us') }}</h5>
                     <div class="space-y-1.5 md:space-y-2 text-[10px] md:text-xs text-gray-600">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-envelope text-blue-600 text-xs"></i>
@@ -166,15 +166,15 @@
         <div class="border-t border-gray-300 pt-4 md:pt-6">
             <div class="flex flex-col gap-3 md:flex-row md:justify-between md:items-center">
                 <p class="text-gray-600 text-xs md:text-sm text-center">
-                    &copy; {{ date('Y') }} <span class="font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">Mindlytics</span> - أكاديمية البرمجة
+                    &copy; {{ date('Y') }} <span class="font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">Mindlytics</span> - {{ __('public.brand') }}
                 </p>
                 <div class="flex items-center justify-center gap-3 md:gap-4 text-xs">
                     @if(Route::has('public.privacy'))
-                        <a href="{{ route('public.privacy') }}" class="text-gray-600 hover:text-blue-600 transition-colors">الخصوصية</a>
+                        <a href="{{ route('public.privacy') }}" class="text-gray-600 hover:text-blue-600 transition-colors">{{ __('public.privacy_short') }}</a>
                         <span class="text-gray-400">•</span>
                     @endif
                     @if(Route::has('public.terms'))
-                        <a href="{{ route('public.terms') }}" class="text-gray-600 hover:text-blue-600 transition-colors">الشروط</a>
+                        <a href="{{ route('public.terms') }}" class="text-gray-600 hover:text-blue-600 transition-colors">{{ __('public.terms_short') }}</a>
                     @endif
                 </div>
             </div>

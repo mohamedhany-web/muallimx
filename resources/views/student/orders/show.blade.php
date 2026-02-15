@@ -6,7 +6,7 @@
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">تفاصيل الطلب #{{ $order->id }}</h1>
+                <h1 class="text-2xl font-bold text-gray-900">{{ __('student.order_details_title') }} #{{ $order->id }}</h1>
                 <p class="text-gray-600 mt-1 flex items-center gap-2">
                     <i class="fas fa-calendar-alt text-xs"></i>
                     {{ $order->created_at->format('d/m/Y - H:i') }}
@@ -15,7 +15,7 @@
             <a href="{{ route('orders.index') }}" 
                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                 <i class="fas fa-arrow-right mr-2"></i>
-                العودة للطلبات
+                {{ __('student.back_to_orders') }}
             </a>
         </div>
     </div>
@@ -28,7 +28,7 @@
                 <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50">
                     <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <i class="fas {{ $order->academic_year_id ? 'fa-route' : 'fa-book-open' }} text-sky-600"></i>
-                        {{ $order->academic_year_id ? 'معلومات المسار التعليمي' : 'معلومات الكورس' }}
+                        {{ $order->academic_year_id ? __('student.learning_path_info') : __('student.course_info') }}
                     </h2>
                 </div>
                 <div class="p-6">
