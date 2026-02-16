@@ -31,8 +31,8 @@ class VideoHelper
             return "https://drive.google.com/file/d/{$fileId}/preview";
         }
 
-        // Bunny.net (Bunny Stream) - إذا كان الرابط بصيغة embed نرجعه كما هو
-        if (preg_match('/iframe\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+        // Bunny.net (Bunny Stream) - iframe أو player.mediadelivery.net
+        if (preg_match('/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
             $libraryId = $matches[1];
             $videoId = $matches[2];
             $base = "https://iframe.mediadelivery.net/embed/{$libraryId}/{$videoId}";
@@ -120,7 +120,7 @@ class VideoHelper
             '/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', // YouTube
             '/vimeo\.com\/(\d+)/', // Vimeo
             '/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/', // Google Drive
-            '/iframe\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/', // Bunny.net (Bunny Stream)
+            '/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/', // Bunny.net (Bunny Stream)
             '/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i' // Direct video files
         ];
 

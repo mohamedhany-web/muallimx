@@ -1330,7 +1330,7 @@ function selectVideoPlatform(platform, button) {
                 input.placeholder = 'الصق رابط الفيديو المباشر هنا...';
                 break;
             case 'bunny':
-                placeholder.textContent = 'مثال: https://iframe.mediadelivery.net/embed/LIBRARY_ID/VIDEO_ID';
+                placeholder.textContent = 'مثال: https://iframe.mediadelivery.net/embed/LIBRARY_ID/VIDEO_ID أو player.mediadelivery.net/embed/...';
                 input.placeholder = 'الصق رابط Bunny.net (embed) هنا...';
                 break;
             default:
@@ -1494,7 +1494,7 @@ function previewLectureVideo() {
         }
         // Bunny.net (Bunny Stream)
         else if (platform === 'bunny') {
-            const bunnyMatch = url.match(/iframe\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+            const bunnyMatch = url.match(/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
             if (bunnyMatch && bunnyMatch[1] && bunnyMatch[2]) {
                 isValid = true;
                 const embedUrl = url.split('?')[0];

@@ -431,7 +431,7 @@ function videoPreviewData() {
                     }
                     if (!isValid) html = '<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"><i class="fas fa-exclamation-circle ml-1"></i> ' + directInvalid + '</div>';
                 } else if (this.selectedPlatform === 'bunny') {
-                    const bunnyMatch = url.match(/iframe\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+                    const bunnyMatch = url.match(/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
                     if (bunnyMatch && bunnyMatch[1] && bunnyMatch[2]) {
                         isValid = true;
                         const embedUrl = url.split('?')[0];

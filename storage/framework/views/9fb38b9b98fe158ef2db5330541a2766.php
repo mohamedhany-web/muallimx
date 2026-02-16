@@ -1605,7 +1605,7 @@ function courseFocusMode() {
             
             // Bunny.net (Bunny Stream)
             if (url.includes('mediadelivery.net')) {
-                const bunnyMatch = url.match(/iframe\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+                const bunnyMatch = url.match(/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
                 if (bunnyMatch && bunnyMatch[1] && bunnyMatch[2]) {
                     const embedUrl = url.split('?')[0];
                     return '<iframe src="' + this.escapeHtml(embedUrl) + '" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
@@ -1765,7 +1765,7 @@ function videoPlayer() {
             return m ? m[1] : null;
         },
         getBunnyEmbedUrl(url) {
-            const m = url.match(/iframe\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+            const m = url.match(/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
             if (m && m[1] && m[2]) {
                 const base = 'https://iframe.mediadelivery.net/embed/' + m[1] + '/' + m[2];
                 try {

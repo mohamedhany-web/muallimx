@@ -675,7 +675,7 @@ return [
     'vimeo_invalid' => 'Invalid Vimeo link',
     'drive_note' => 'Note: Google Drive preview may not work. Ensure the file is shared.',
     'direct_invalid' => 'Direct link must end with a video extension (.mp4, .webm, .ogg, .avi, .mov)',
-    'bunny_invalid' => 'Invalid Bunny.net link. Use the embed URL: https://iframe.mediadelivery.net/embed/libraryId/videoId',
+    'bunny_invalid' => 'Invalid Bunny.net link. Use the embed URL: https://iframe.mediadelivery.net/embed/libraryId/videoId or https://player.mediadelivery.net/embed/libraryId/videoId',
     'preview_error' => 'An error occurred while loading the preview',
     'paste_youtube' => 'Paste YouTube link here...',
     'paste_vimeo' => 'Paste Vimeo link here...',
