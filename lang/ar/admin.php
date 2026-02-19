@@ -99,4 +99,14 @@ return [
     'external_pages' => 'الصفحات الخارجية',
     'tasks' => 'المهام',
     'comprehensive_reports' => 'التقارير الشاملة',
+
+    'community_section' => 'مجتمع البيانات والذكاء الاصطناعي',
+    'community_dashboard' => 'لوحة المجتمع',
+    'community_competitions' => 'المسابقات',
+    'community_datasets' => 'مجموعات البيانات',
+    'community_submissions' => 'التقديمات',
+    'community_discussions' => 'المناقشات',
+    'community_settings' => 'إعدادات المجتمع',
+    'top_management' => 'الإدارة العليا',
+    'about_page' => 'صفحة من نحن',
 ];

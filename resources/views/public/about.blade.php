@@ -767,168 +767,183 @@
         </div>
     </section>
 
-    <!-- المحتوى التحريري - من نحن مع انيميشنات ظهور عند التمرير -->
-    <section class="py-16 md:py-24 bg-white overflow-hidden">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- جملة افتتاحية - ظهور مع خط جانبي يرسم -->
-            <blockquote class="reveal-quote relative pr-6 py-2 mb-16">
-                <span class="quote-line absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-blue-600 to-green-500 rounded-full"></span>
-                <p class="text-2xl md:text-3xl font-bold text-gray-800 leading-relaxed pr-4">
-                    {{ __('public.about_intro') }}
-                </p>
-            </blockquote>
-
-            <!-- من نحن - فقرات تظهر واحدة تلو الأخرى -->
-            <div class="prose-about max-w-3xl reveal-stagger">
-                <h2 class="text-2xl font-black text-gray-900 mb-6 mt-12">
-                    {{ __('public.about_heading') }}
-                    <span class="block h-1 w-24 mt-1 bg-gradient-to-l from-blue-600 to-green-500 rounded-full"></span>
-                </h2>
-                <p class="text-lg text-gray-700 leading-loose mb-6">
-                    {!! __('public.about_para1', ['brand' => '<strong class="text-blue-700">Mindlytics</strong>']) !!}
-                </p>
-                <p class="text-lg text-gray-700 leading-loose mb-6">
-                    {{ __('public.about_para2') }}
-                </p>
-            </div>
-
-            <!-- الرؤية والمهمة - من اليمين ثم من اليسار -->
-            <div class="mt-20 space-y-12">
-                <div class="flex gap-6 items-start reveal-from-right">
-                    <span class="flex-shrink-0 w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center mt-1 shadow-lg shadow-blue-600/30"><i class="fas fa-eye text-lg"></i></span>
-                    <div>
-                        <h3 class="text-xl font-black text-gray-900 mb-3">{{ __('public.our_vision') }}</h3>
-                        <p class="text-gray-700 leading-relaxed">
-                            {{ __('public.vision_text') }}
-                        </p>
-                    </div>
+    <!-- من نحن - نص بعرض كامل وتنسيق واضح -->
+    <section class="py-16 md:py-24 bg-white">
+        <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="reveal-heading text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-10 md:mb-14">
+                {{ __('public.about_heading') }}
+                <span class="heading-underline block h-1 w-28 mt-2 bg-gradient-to-l from-blue-600 to-green-500 rounded-full"></span>
+            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+                <div class="lg:col-span-7 reveal-from-right space-y-6">
+                    <p class="text-lg md:text-xl text-gray-700 leading-[1.85]">
+                        {!! __('public.about_para1', ['brand' => '<strong class="text-blue-600 font-black">Mindlytics</strong>']) !!}
+                    </p>
+                    <p class="text-lg md:text-xl text-gray-700 leading-[1.85]">
+                        {{ __('public.about_para2') }}
+                    </p>
                 </div>
-                <div class="flex gap-6 items-start reveal-from-left">
-                    <span class="flex-shrink-0 w-12 h-12 rounded-xl bg-green-600 text-white flex items-center justify-center mt-1 shadow-lg shadow-green-600/30"><i class="fas fa-bullseye text-lg"></i></span>
-                    <div>
-                        <h3 class="text-xl font-black text-gray-900 mb-3">{{ __('public.our_mission') }}</h3>
-                        <p class="text-gray-700 leading-relaxed mb-4">{{ __('public.mission_intro') }}</p>
-                        <ul class="space-y-2 text-gray-700">
-                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> {{ __('public.mission_1') }}</li>
-                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> {{ __('public.mission_2') }}</li>
-                            <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> {{ __('public.mission_3') }}</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- لماذا نحن - قائمة بتأثير متتابع -->
-            <div class="mt-20 pt-16 border-t border-gray-200">
-                <h2 class="text-2xl font-black text-gray-900 mb-8 reveal">{{ __('public.why_mindlytics') }}</h2>
-                <ul class="space-y-6 reveal-stagger">
-                    <li class="flex gap-4 items-start">
-                        <i class="fas fa-code text-blue-600 text-lg mt-1 flex-shrink-0"></i>
-                        <div>
-                            <span class="font-bold text-gray-900">{{ __('public.why_1_title') }}</span>
-                            <p class="text-gray-600 text-sm mt-0.5">{{ __('public.why_1_desc') }}</p>
-                        </div>
-                    </li>
-                    <li class="flex gap-4 items-start">
-                        <i class="fas fa-user-tie text-green-600 text-lg mt-1 flex-shrink-0"></i>
-                        <div>
-                            <span class="font-bold text-gray-900">{{ __('public.why_2_title') }}</span>
-                            <p class="text-gray-600 text-sm mt-0.5">{{ __('public.why_2_desc') }}</p>
-                        </div>
-                    </li>
-                    <li class="flex gap-4 items-start">
-                        <i class="fas fa-headset text-blue-600 text-lg mt-1 flex-shrink-0"></i>
-                        <div>
-                            <span class="font-bold text-gray-900">{{ __('public.why_3_title') }}</span>
-                            <p class="text-gray-600 text-sm mt-0.5">{{ __('public.why_3_desc') }}</p>
-                        </div>
-                    </li>
-                    <li class="flex gap-4 items-start">
-                        <i class="fas fa-certificate text-green-600 text-lg mt-1 flex-shrink-0"></i>
-                        <div>
-                            <span class="font-bold text-gray-900">{{ __('public.why_4_title') }}</span>
-                            <p class="text-gray-600 text-sm mt-0.5">{{ __('public.why_4_desc') }}</p>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
-            <!-- القيم - ظهور بتأخير متتابع -->
-            <div class="mt-20 pt-16 border-t border-gray-200">
-                <h2 class="text-2xl font-black text-gray-900 mb-8 reveal">{{ __('public.our_values') }}</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 reveal-stagger">
-                    <div class="flex gap-4">
-                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-black flex items-center justify-center">1</span>
-                        <div>
-                            <h4 class="font-bold text-gray-900 mb-1">{{ __('public.value_1_title') }}</h4>
-                            <p class="text-gray-600 text-sm">{{ __('public.value_1_desc') }}</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-4">
-                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 text-green-700 font-black flex items-center justify-center">2</span>
-                        <div>
-                            <h4 class="font-bold text-gray-900 mb-1">{{ __('public.value_2_title') }}</h4>
-                            <p class="text-gray-600 text-sm">{{ __('public.value_2_desc') }}</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-4">
-                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-black flex items-center justify-center">3</span>
-                        <div>
-                            <h4 class="font-bold text-gray-900 mb-1">{{ __('public.value_3_title') }}</h4>
-                            <p class="text-gray-600 text-sm">{{ __('public.value_3_desc') }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- أرقام - ظهور مع تأخير متتابع -->
-            <div class="mt-20 pt-16 border-t border-gray-200">
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center reveal-stagger">
-                    <div>
-                        <div class="text-3xl md:text-4xl font-black text-blue-600 counter" data-target="{{ $stats['courses'] ?? 50 }}">{{ $stats['courses'] ?? 50 }}+</div>
-                        <div class="text-gray-600 font-medium mt-1">{{ __('public.stat_courses') }}</div>
-                    </div>
-                    <div>
-                        <div class="text-3xl md:text-4xl font-black text-blue-600 counter" data-target="{{ $stats['students'] ?? 1000 }}">{{ $stats['students'] ?? 1000 }}+</div>
-                        <div class="text-gray-600 font-medium mt-1">{{ __('public.stat_students') }}</div>
-                    </div>
-                    <div>
-                        <div class="text-3xl md:text-4xl font-black text-green-600 counter" data-target="{{ $stats['instructors'] ?? 20 }}">{{ $stats['instructors'] ?? 20 }}+</div>
-                        <div class="text-gray-600 font-medium mt-1">{{ __('public.stat_instructors') }}</div>
-                    </div>
-                    <div>
-                        <div class="text-3xl md:text-4xl font-black text-green-600">100%</div>
-                        <div class="text-gray-600 font-medium mt-1">{{ __('public.stat_quality') }}</div>
+                <div class="lg:col-span-5 reveal-from-left flex justify-center lg:justify-start">
+                    <div class="w-full max-w-sm aspect-square rounded-3xl bg-gradient-to-br from-blue-100 via-green-50/80 to-blue-100 flex items-center justify-center shadow-2xl shadow-blue-200/30 border border-blue-100/50">
+                        <i class="fas fa-graduation-cap text-blue-400/60 text-7xl md:text-8xl"></i>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="py-16 md:py-20 lg:py-24 bg-gradient-to-br from-blue-50 via-white to-green-50 relative overflow-hidden">
-        <!-- Subtle animated background elements -->
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute top-10 left-10 w-96 h-96 bg-blue-400/5 rounded-full blur-3xl animate-pulse"></div>
-            <div class="absolute bottom-10 right-10 w-96 h-96 bg-green-400/5 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
-            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-300/3 rounded-full blur-3xl"></div>
+    <!-- الرؤية والمهمة - كروت بعرض الصفحة -->
+    <section class="py-16 md:py-24 bg-gradient-to-b from-slate-50 to-white">
+        <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
+                <div class="reveal-scale rounded-3xl bg-white p-8 md:p-10 shadow-xl shadow-blue-100/40 border border-blue-50 hover:shadow-2xl hover:shadow-blue-200/30 transition-all duration-500 overflow-hidden relative group">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-l from-blue-600 to-blue-400 opacity-90"></div>
+                    <div class="flex gap-6 items-start">
+                        <span class="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/40 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-eye text-2xl"></i>
+                        </span>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-2xl md:text-3xl font-black text-gray-900 mb-4">{{ __('public.our_vision') }}</h3>
+                            <p class="text-lg text-gray-700 leading-relaxed">
+                                {{ __('public.vision_text') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="reveal-scale rounded-3xl bg-white p-8 md:p-10 shadow-xl shadow-green-100/40 border border-green-50 hover:shadow-2xl hover:shadow-green-200/30 transition-all duration-500 overflow-hidden relative group">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-l from-green-600 to-green-400 opacity-90"></div>
+                    <div class="flex gap-6 items-start">
+                        <span class="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-green-600 to-green-500 text-white flex items-center justify-center shadow-lg shadow-green-500/40 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-bullseye text-2xl"></i>
+                        </span>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-2xl md:text-3xl font-black text-gray-900 mb-4">{{ __('public.our_mission') }}</h3>
+                            <p class="text-lg text-gray-700 leading-relaxed mb-5">{{ __('public.mission_intro') }}</p>
+                            <ul class="space-y-3 text-gray-700">
+                                <li class="flex items-center gap-3 text-base"><span class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></span> {{ __('public.mission_1') }}</li>
+                                <li class="flex items-center gap-3 text-base"><span class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></span> {{ __('public.mission_2') }}</li>
+                                <li class="flex items-center gap-3 text-base"><span class="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></span> {{ __('public.mission_3') }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal-scale relative z-10">
-            <h2 class="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-6 leading-tight">
+    </section>
+
+    <!-- لماذا نحن - شبكة 2x2 بعرض كامل -->
+    <section class="py-16 md:py-24 bg-white">
+        <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="reveal text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-12 md:mb-16 text-center">
+                {{ __('public.why_mindlytics') }}
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 reveal-stagger">
+                <div class="rounded-2xl bg-gradient-to-br from-blue-50 to-white p-6 md:p-8 border border-blue-100/80 hover:border-blue-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-5 shadow-lg shadow-blue-500/30">
+                        <i class="fas fa-code text-xl"></i>
+                    </div>
+                    <h4 class="text-xl font-black text-gray-900 mb-2">{{ __('public.why_1_title') }}</h4>
+                    <p class="text-gray-600 leading-relaxed flex-1">{{ __('public.why_1_desc') }}</p>
+                </div>
+                <div class="rounded-2xl bg-gradient-to-br from-green-50 to-white p-6 md:p-8 border border-green-100/80 hover:border-green-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-green-600 text-white flex items-center justify-center mb-5 shadow-lg shadow-green-500/30">
+                        <i class="fas fa-user-tie text-xl"></i>
+                    </div>
+                    <h4 class="text-xl font-black text-gray-900 mb-2">{{ __('public.why_2_title') }}</h4>
+                    <p class="text-gray-600 leading-relaxed flex-1">{{ __('public.why_2_desc') }}</p>
+                </div>
+                <div class="rounded-2xl bg-gradient-to-br from-blue-50 to-white p-6 md:p-8 border border-blue-100/80 hover:border-blue-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-5 shadow-lg shadow-blue-500/30">
+                        <i class="fas fa-headset text-xl"></i>
+                    </div>
+                    <h4 class="text-xl font-black text-gray-900 mb-2">{{ __('public.why_3_title') }}</h4>
+                    <p class="text-gray-600 leading-relaxed flex-1">{{ __('public.why_3_desc') }}</p>
+                </div>
+                <div class="rounded-2xl bg-gradient-to-br from-green-50 to-white p-6 md:p-8 border border-green-100/80 hover:border-green-200 hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                    <div class="w-14 h-14 rounded-xl bg-green-600 text-white flex items-center justify-center mb-5 shadow-lg shadow-green-500/30">
+                        <i class="fas fa-certificate text-xl"></i>
+                    </div>
+                    <h4 class="text-xl font-black text-gray-900 mb-2">{{ __('public.why_4_title') }}</h4>
+                    <p class="text-gray-600 leading-relaxed flex-1">{{ __('public.why_4_desc') }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- القيم - ثلاثة أعمدة بعرض كامل -->
+    <section class="py-16 md:py-24 bg-gradient-to-b from-slate-50 to-white">
+        <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="reveal text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-12 md:mb-16 text-center">
+                {{ __('public.our_values') }}
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10 reveal-stagger">
+                <div class="rounded-3xl bg-white p-8 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 text-center hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                    <span class="inline-flex w-16 h-16 rounded-2xl bg-blue-100 text-blue-700 font-black text-2xl items-center justify-center mb-6">1</span>
+                    <h4 class="text-xl md:text-2xl font-black text-gray-900 mb-3">{{ __('public.value_1_title') }}</h4>
+                    <p class="text-gray-600 leading-relaxed text-base md:text-lg">{{ __('public.value_1_desc') }}</p>
+                </div>
+                <div class="rounded-3xl bg-white p-8 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 text-center hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                    <span class="inline-flex w-16 h-16 rounded-2xl bg-green-100 text-green-700 font-black text-2xl items-center justify-center mb-6">2</span>
+                    <h4 class="text-xl md:text-2xl font-black text-gray-900 mb-3">{{ __('public.value_2_title') }}</h4>
+                    <p class="text-gray-600 leading-relaxed text-base md:text-lg">{{ __('public.value_2_desc') }}</p>
+                </div>
+                <div class="rounded-3xl bg-white p-8 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-100 text-center hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                    <span class="inline-flex w-16 h-16 rounded-2xl bg-blue-100 text-blue-700 font-black text-2xl items-center justify-center mb-6">3</span>
+                    <h4 class="text-xl md:text-2xl font-black text-gray-900 mb-3">{{ __('public.value_3_title') }}</h4>
+                    <p class="text-gray-600 leading-relaxed text-base md:text-lg">{{ __('public.value_3_desc') }}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- أرقام - شريط بعرض كامل -->
+    <section class="py-16 md:py-20 bg-gradient-to-r from-blue-600 via-blue-500 to-green-600 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+        <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 text-center reveal-stagger">
+                <div>
+                    <div class="text-4xl md:text-5xl lg:text-6xl font-black text-white counter drop-shadow-lg" data-target="{{ $stats['courses'] ?? 50 }}">{{ $stats['courses'] ?? 50 }}+</div>
+                    <div class="text-blue-100 font-semibold mt-2 text-lg">{{ __('public.stat_courses') }}</div>
+                </div>
+                <div>
+                    <div class="text-4xl md:text-5xl lg:text-6xl font-black text-white counter drop-shadow-lg" data-target="{{ $stats['students'] ?? 1000 }}">{{ $stats['students'] ?? 1000 }}+</div>
+                    <div class="text-blue-100 font-semibold mt-2 text-lg">{{ __('public.stat_students') }}</div>
+                </div>
+                <div>
+                    <div class="text-4xl md:text-5xl lg:text-6xl font-black text-white counter drop-shadow-lg" data-target="{{ $stats['instructors'] ?? 20 }}">{{ $stats['instructors'] ?? 20 }}+</div>
+                    <div class="text-blue-100 font-semibold mt-2 text-lg">{{ __('public.stat_instructors') }}</div>
+                </div>
+                <div>
+                    <div class="text-4xl md:text-5xl lg:text-6xl font-black text-white drop-shadow-lg">100%</div>
+                    <div class="text-blue-100 font-semibold mt-2 text-lg">{{ __('public.stat_quality') }}</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section - عرض كامل -->
+    <section class="py-20 md:py-28 lg:py-32 bg-gradient-to-br from-blue-50 via-white to-green-50 relative overflow-hidden">
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-10 left-10 w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-3xl animate-pulse"></div>
+            <div class="absolute bottom-10 right-10 w-[500px] h-[500px] bg-green-400/10 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-blue-200/5 to-green-200/5 rounded-full blur-3xl"></div>
+        </div>
+        <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal-scale">
+            <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-6 leading-tight max-w-4xl mx-auto">
                 {{ __('public.cta_programming_title') }}
             </h2>
-            <p class="text-lg md:text-xl text-gray-600 mb-10 font-medium">
+            <p class="text-lg md:text-xl lg:text-2xl text-gray-600 mb-12 font-medium max-w-2xl mx-auto">
                 {{ __('public.cta_programming_desc') }}
             </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden group">
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="{{ route('register') }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden group">
                     <span class="relative z-10 flex items-center gap-2">
                         <i class="fas fa-user-plus"></i>
                         <span>{{ __('public.register_free_now') }}</span>
                     </span>
                     <span class="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                 </a>
-                <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-full font-bold text-lg border-2 border-blue-600 hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl relative">
+                <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 bg-white text-blue-600 px-10 py-4 rounded-full font-bold text-lg border-2 border-blue-600 hover:bg-blue-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl relative">
                     <span class="flex items-center gap-2">
                         <span>{{ __('public.browse_all_courses_btn') }}</span>
                         <i class="fas fa-arrow-left"></i>

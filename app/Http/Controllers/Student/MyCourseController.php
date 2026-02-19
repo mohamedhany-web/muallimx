@@ -213,7 +213,7 @@ class MyCourseController extends Controller
             ->orderBy('order')
             ->get();
         
-        // تحميل تقدم الدروس والأنماط في العناصر
+        // تحميل تقدم الدروس والأنماط والامتحانات في العناصر
         foreach ($sections as $section) {
             foreach ($section->activeItems as $curriculumItem) {
                 if ($curriculumItem->item instanceof \App\Models\CourseLesson) {
@@ -224,26 +224,41 @@ class MyCourseController extends Controller
                     $curriculumItem->item->load(['attempts' => function($q) use ($user) {
                         $q->where('user_id', $user->id)->latest();
                     }]);
+                } elseif ($curriculumItem->item instanceof \App\Models\AdvancedExam) {
+                    $curriculumItem->item->load(['attempts' => function($q) use ($user) {
+                        $q->where('user_id', $user->id)->whereNotNull('submitted_at');
+                    }]);
                 }
             }
         }
 
-        // حساب التقدم من المنهج
+        // حساب التقدم من المنهج (جميع العناصر: دروس، محاضرات، واجبات، امتحانات، أنماط)
         $totalItems = 0;
         $completedItems = 0;
         
         foreach ($sections as $section) {
             foreach ($section->activeItems as $item) {
-                if ($item->item instanceof \App\Models\CourseLesson) {
-                    $totalItems++;
-                    $progress = $item->item->progress->first();
+                $entity = $item->item;
+                if (!$entity) {
+                    continue;
+                }
+                $totalItems++;
+                if ($entity instanceof \App\Models\CourseLesson) {
+                    $progress = $entity->progress->first();
                     if ($progress && $progress->is_completed) {
                         $completedItems++;
                     }
-                } elseif ($item->item instanceof \App\Models\LearningPattern) {
-                    $totalItems++;
-                    $bestAttempt = $item->item->getUserBestAttempt($user->id);
+                } elseif ($entity instanceof \App\Models\LearningPattern) {
+                    $bestAttempt = $entity->getUserBestAttempt($user->id);
                     if ($bestAttempt && $bestAttempt->status === 'completed') {
+                        $completedItems++;
+                    }
+                } elseif ($entity instanceof \App\Models\AdvancedExam) {
+                    $passingMarks = (float) ($entity->passing_marks ?? 0);
+                    $passed = $entity->attempts->contains(function ($attempt) use ($passingMarks) {
+                        return $attempt->score !== null && (float) $attempt->score >= $passingMarks;
+                    });
+                    if ($passed) {
                         $completedItems++;
                     }
                 }
@@ -287,6 +302,33 @@ class MyCourseController extends Controller
             'sidebarExams',
             'lesson'
         ));
+    }
+
+    /**
+     * إرجاع بيانات محاضرة واحدة كـ JSON (لصفحة التعلم - جلب الفيديو عند الحاجة)
+     */
+    public function getLectureData($courseId, $lectureId)
+    {
+        $user = Auth::user();
+        $course = $user->activeCourses()->findOrFail($courseId);
+        $lecture = $course->lectures()->findOrFail($lectureId);
+
+        $recordingUrl = $lecture->recording_url ? trim($lecture->recording_url) : null;
+        $videoPlatform = $lecture->video_platform ? trim(strtolower($lecture->video_platform)) : null;
+
+        return response()->json([
+            'id' => $lecture->id,
+            'title' => $lecture->title,
+            'description' => $lecture->description,
+            'scheduled_at' => $lecture->scheduled_at ? $lecture->scheduled_at->toIso8601String() : null,
+            'scheduled_at_formatted' => $lecture->scheduled_at ? $lecture->scheduled_at->format('Y/m/d H:i') : null,
+            'duration_minutes' => $lecture->duration_minutes ?? 60,
+            'recording_url' => $recordingUrl,
+            'video_platform' => $videoPlatform,
+            'teams_meeting_link' => $lecture->teams_meeting_link ?? null,
+            'teams_registration_link' => $lecture->teams_registration_link ?? null,
+            'notes' => $lecture->notes ?? null,
+        ]);
     }
 
     /**

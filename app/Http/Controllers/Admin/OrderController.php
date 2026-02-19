@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\Transaction;
 use App\Models\StudentCourseEnrollment;
 use App\Models\ActivityLog;
+use App\Services\InstructorCoursePercentageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -439,6 +440,13 @@ class OrderController extends Controller
                             'payment_method' => $paymentMethod,
                             'final_price' => $order->amount,
                         ]);
+                    }
+
+                    $enrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
+                        ->where('advanced_course_id', $order->advanced_course_id)
+                        ->first();
+                    if ($enrollment) {
+                        InstructorCoursePercentageService::processEnrollmentActivation($enrollment);
                     }
                 } catch (\Throwable $e) {
                     Log::warning('Course enrollment failed during order approval: ' . $e->getMessage(), [

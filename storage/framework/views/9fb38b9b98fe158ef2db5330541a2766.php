@@ -362,45 +362,24 @@
         }
     }
     
-    .focus-settings-panel {
-        position: fixed;
-        right: -400px;
-        top: 0;
-        bottom: 0;
-        width: 400px;
-        max-width: 90vw;
-        background: #ffffff;
-        border-left: 1px solid rgb(226 232 240);
-        padding: 1.5rem;
-        overflow-y: auto;
-        transition: right 0.3s ease;
-        z-index: 100002;
-        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.06);
-        -webkit-overflow-scrolling: touch;
+    /* وضع التركيز: إخفاء سايدبار ونافبار لوحة التحكم */
+    body.learn-focus-mode .student-sidebar,
+    body.learn-focus-mode .student-header { display: none !important; }
+    body.learn-focus-mode main .w-full.max-w-full { padding: 0 !important; }
+    body.learn-focus-mode main { height: 100vh; overflow: hidden; }
+    body.learn-focus-mode .learn-page { min-height: 100vh; height: 100%; display: flex; flex-direction: column; }
+    body.learn-focus-mode .learn-focus-wrapper { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    body.learn-focus-mode .learn-focus-wrapper .learn-focus-grid { flex: 1; min-height: 0; display: flex; flex-direction: row; gap: 0; }
+    body.learn-focus-mode .learn-focus-sidebar { flex-shrink: 0; width: 280px; min-width: 240px; max-height: 100%; overflow: hidden; display: flex; flex-direction: column; }
+    body.learn-focus-mode .learn-focus-sidebar .bg-white.rounded-2xl { flex: 1; display: flex; flex-direction: column; min-height: 0; max-height: none; }
+    body.learn-focus-mode .learn-focus-sidebar .focus-sidebar-content { flex: 1; min-height: 0; overflow-y: auto; max-height: none; }
+    body.learn-focus-mode .learn-focus-content { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+    @media (max-width: 639px) {
+        body.learn-focus-mode .learn-focus-sidebar { width: 220px; min-width: 200px; }
     }
-    
-    .focus-settings-panel.active {
-        right: 0;
-    }
-    
-    @media (max-width: 640px) {
-        .focus-settings-panel {
-            width: 85vw;
-            padding: 1rem;
-        }
-    }
-    
-    .focus-settings-panel::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .focus-settings-panel::-webkit-scrollbar-track {
-        background: rgb(248 250 252);
-    }
-    
-    .focus-settings-panel::-webkit-scrollbar-thumb {
-        background: rgb(203 213 225);
-        border-radius: 3px;
+    @media (max-width: 1023px) {
+        body.learn-focus-mode .learn-focus-wrapper { padding-left: 0; padding-right: 0; }
+        body.learn-focus-mode .learn-focus-content .rounded-2xl { border-radius: 0; border-right: none; border-left: none; }
     }
     
     .learn-page[data-font-size='small'] .curriculum-content {
@@ -595,15 +574,8 @@
             ->where('id', $lecture->id)
             ->value('video_platform');
         
-        \Log::info('Preparing lecture data', [
-            'lecture_id' => $lecture->id,
-            'title' => $lecture->title,
-            'recording_url_from_model' => $lecture->recording_url,
-            'recording_url_from_db' => $recordingUrl,
-            'video_platform_from_model' => $lecture->video_platform,
-            'video_platform_from_db' => $videoPlatform,
-        ]);
-        
+        $recordingUrlFinal = $recordingUrl ? trim($recordingUrl) : ($lecture->recording_url ? trim($lecture->recording_url) : null);
+        $videoPlatformFinal = $videoPlatform ? trim(strtolower($videoPlatform)) : ($lecture->video_platform ? trim(strtolower($lecture->video_platform)) : null);
         return [
             'id' => $lecture->id,
             'title' => $lecture->title,
@@ -611,56 +583,37 @@
             'scheduled_at' => $lecture->scheduled_at ? $lecture->scheduled_at->toIso8601String() : null,
             'scheduled_at_formatted' => $lecture->scheduled_at ? $lecture->scheduled_at->format('Y/m/d H:i') : null,
             'duration_minutes' => $lecture->duration_minutes ?? 60,
-            'recording_url' => $recordingUrl ? trim($recordingUrl) : ($lecture->recording_url ? trim($lecture->recording_url) : null), // استخدام البيانات من DB أولاً
-            'video_platform' => $videoPlatform ? trim($videoPlatform) : ($lecture->video_platform ? trim($lecture->video_platform) : null), // استخدام البيانات من DB أولاً
+            'recording_url' => $recordingUrlFinal,
+            'video_platform' => $videoPlatformFinal,
             'teams_meeting_link' => $lecture->teams_meeting_link ?? null,
             'teams_registration_link' => $lecture->teams_registration_link ?? null,
             'notes' => $lecture->notes ?? null
         ];
     })->keyBy('id');
     
-    // Log للتحقق من البيانات
-    \Log::info('Lectures data for student (final)', [
-        'course_id' => $course->id,
-        'lectures_count' => $lecturesData->count(),
-        'lectures' => $lecturesData->map(function($lecture) {
-            return [
-                'id' => $lecture['id'],
-                'title' => $lecture['title'],
-                'recording_url' => $lecture['recording_url'],
-                'video_platform' => $lecture['video_platform'],
-                'has_recording_url' => !empty($lecture['recording_url']),
-            ];
-        })->toArray()
-    ]);
-    
     $lecturesDataJson = json_encode($lecturesData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
-    
-    // Log JSON للتحقق
-    \Log::info('Lectures JSON', [
-        'json_length' => strlen($lecturesDataJson),
-        'first_100_chars' => substr($lecturesDataJson, 0, 100),
-    ]);
 ?>
 
 <?php $__env->startSection('content'); ?>
+<script type="application/json" id="learn-lectures-data"><?php echo $lecturesDataJson; ?></script>
 <div class="learn-page bg-slate-50/80 min-h-screen pb-8"
-     data-lectures='<?php echo $lecturesDataJson; ?>'
+     data-course-id="<?php echo e($course->id); ?>"
      data-course-progress="<?php echo e(min(100, (float)($progress ?? 0))); ?>"
+     data-lectures-url="<?php echo e(route('my-courses.lectures.show', [$course, '_LID_'])); ?>"
      :data-font-size="fontSize"
      x-data="courseFocusMode()"
-     @keydown.escape.window="window.location.href='<?php echo e(route('my-courses.show', $course)); ?>'"
+     @keydown.escape.window="if (focusMode) { focusMode = false } else { window.location.href='<?php echo e(route('my-courses.show', $course)); ?>' }"
      @keydown.ctrl.f.window.prevent="document.querySelector('.search-box input')?.focus()"
      @keydown.ctrl.p.window.prevent="printCurriculum()"
-     @keydown.ctrl.comma.window.prevent="showSettings = !showSettings"
      x-init="
          $watch('searchQuery', () => filterItems());
+         $watch('focusMode', v => { document.body.classList.toggle('learn-focus-mode', !!v); });
          updateProgressBar();
          setInterval(() => updateProgressBar(), 100);
          document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; });
      ">
     
-    <nav class="bg-white border-b border-slate-200 px-4 py-2 lg:px-6" aria-label="Breadcrumb">
+    <nav x-show="!focusMode" class="bg-white border-b border-slate-200 px-4 py-2 lg:px-6" aria-label="Breadcrumb">
         <ol class="w-full flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <li><a href="<?php echo e(route('dashboard')); ?>" class="hover:text-sky-600 transition-colors"><?php echo e(__('auth.dashboard')); ?></a></li>
             <li class="flex items-center gap-2"><i class="fas fa-chevron-left text-slate-400 text-xs"></i></li>
@@ -673,7 +626,7 @@
     </nav>
 
     
-    <div class="w-full px-4 py-4 lg:px-6">
+    <div x-show="!focusMode" class="w-full px-4 py-4 lg:px-6">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="p-4 lg:p-5 flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-3 flex-1 min-w-0">
@@ -694,7 +647,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
-                    <button @click="showSettings = !showSettings" :class="showSettings ? 'bg-sky-100 border-sky-300 text-sky-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-sky-300'" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all" title="إعدادات"><i class="fas fa-cog"></i><span class="hidden sm:inline">إعدادات</span></button>
+                    <button @click="toggleFocusMode()" :class="focusMode ? 'bg-sky-100 border-sky-300 text-sky-700' : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-sky-300'" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium transition-all" :title="focusMode ? 'خروج من وضع التركيز' : 'وضع التركيز'"><i class="fas" :class="focusMode ? 'fa-compress-arrows-alt' : 'fa-expand-arrows-alt'"></i><span class="hidden sm:inline" x-text="focusMode ? 'خروج من التركيز' : 'وضع التركيز'"></span></button>
                     <button @click="toggleFullscreen()" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-sky-50 hover:border-sky-300 text-slate-600 hover:text-sky-600 text-sm font-medium transition-all" title="ملء الشاشة"><i class="fas" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i><span class="hidden sm:inline">ملء الشاشة</span></button>
                 </div>
             </div>
@@ -702,9 +655,25 @@
     </div>
 
     
-    <div class="w-full px-4 lg:px-6 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+    <div x-show="focusMode" class="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white flex-shrink-0">
+        <button @click="focusMode = false" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-sky-50 hover:border-sky-300 text-slate-600 hover:text-sky-600 text-sm font-medium transition-all">
+            <i class="fas fa-compress-arrows-alt"></i>
+            <span>خروج من وضع التركيز</span>
+        </button>
+        <div class="flex items-center gap-2">
+            <div class="h-2 w-24 bg-slate-200 rounded-full overflow-hidden">
+                <div class="learn-progress-fill h-full bg-gradient-to-l from-sky-400 to-sky-500 rounded-full transition-all duration-500" style="width: <?php echo e(min(100, (float)($progress ?? 0))); ?>%"></div>
+            </div>
+            <span class="text-xs font-semibold text-slate-600"><?php echo e($completedLessons ?? 0); ?>/<?php echo e($totalLessons ?? 0); ?></span>
+            <span class="text-xs font-bold text-sky-600"><?php echo e(number_format((float)($progress ?? 0), 0)); ?>%</span>
+        </div>
+    </div>
+
+    
+    <div class="learn-focus-wrapper w-full px-4 lg:px-6 flex-1 flex flex-col min-h-0">
+    <div class="learn-focus-grid w-full grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 flex-1 min-h-0">
         
-        <div class="lg:col-span-4 xl:col-span-3">
+        <div class="learn-focus-sidebar lg:col-span-4 xl:col-span-3">
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden sticky top-4">
                 <div class="p-4 border-b border-slate-200">
                     <h3 class="text-gray-900 font-bold text-sm flex items-center gap-2 mb-3">
@@ -961,7 +930,7 @@
         </div>
 
         
-        <div class="lg:col-span-8 xl:col-span-9">
+        <div class="learn-focus-content lg:col-span-8 xl:col-span-9">
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
                 <div class="focus-main-content-wrapper p-4 lg:p-6">
                     <!-- حالة ترحيب -->
@@ -1005,7 +974,12 @@
                             <button type="button" class="btn-share" title="مشاركة"><i class="fas fa-share-alt"></i> مشاركة</button>
                         </div>
                         <div class="aspect-video w-full relative bg-black" x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)">
-                            <?php echo $__env->make('student.my-courses.partials.video-player', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                            
+                            <div x-show="selectedLecture && showVideoPlayer" class="absolute inset-0 w-full h-full" id="learn-video-embed"></div>
+                            
+                            <div x-show="selectedLesson && showVideoPlayer" class="absolute inset-0 w-full h-full">
+                                <?php echo $__env->make('student.my-courses.partials.video-player', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                            </div>
                         </div>
                     </div>
                     
@@ -1039,70 +1013,6 @@
             </div>
         </div>
     </div>
-
-    <!-- لوحة الإعدادات - متناسقة مع لوحة التحكم -->
-    <div class="focus-settings-panel" :class="{ 'active': showSettings }">
-        <div class="mb-5 pb-4 border-b border-slate-200">
-            <h3 class="text-gray-900 font-bold text-lg flex items-center gap-2">
-                <span class="w-8 h-8 rounded-xl bg-sky-100 flex items-center justify-center"><i class="fas fa-cog text-sky-500"></i></span>
-                إعدادات العرض
-            </h3>
-        </div>
-        <div class="space-y-5">
-            <div>
-                <label class="text-gray-700 text-sm font-medium mb-2 block flex items-center gap-2">
-                    <i class="fas fa-font text-sky-500"></i>
-                    حجم الخط
-                </label>
-                <div class="flex gap-2">
-                    <button @click="fontSize = 'small'" 
-                            :class="fontSize === 'small' ? 'bg-sky-100 border-sky-400 text-sky-700' : 'bg-slate-50 border-slate-200 text-gray-600 hover:border-slate-300'"
-                            class="px-3 py-2 rounded-xl text-sm font-medium border transition-all">صغير</button>
-                    <button @click="fontSize = 'medium'" 
-                            :class="fontSize === 'medium' ? 'bg-sky-100 border-sky-400 text-sky-700' : 'bg-slate-50 border-slate-200 text-gray-600 hover:border-slate-300'"
-                            class="px-3 py-2 rounded-xl text-sm font-medium border transition-all">متوسط</button>
-                    <button @click="fontSize = 'large'" 
-                            :class="fontSize === 'large' ? 'bg-sky-100 border-sky-400 text-sky-700' : 'bg-slate-50 border-slate-200 text-gray-600 hover:border-slate-300'"
-                            class="px-3 py-2 rounded-xl text-sm font-medium border transition-all">كبير</button>
-                </div>
-            </div>
-            <div class="pt-4 border-t border-slate-200">
-                <p class="text-gray-600 text-xs font-medium mb-3">اختصارات لوحة المفاتيح</p>
-                <div class="space-y-2 text-xs">
-                    <div class="flex justify-between items-center text-gray-600">
-                        <span>البحث</span>
-                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-gray-700 font-mono">Ctrl+F</kbd>
-                    </div>
-                    <div class="flex justify-between items-center text-gray-600">
-                        <span>الطباعة</span>
-                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-gray-700 font-mono">Ctrl+P</kbd>
-                    </div>
-                    <div class="flex justify-between items-center text-gray-600">
-                        <span>الإعدادات</span>
-                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-gray-700 font-mono">Ctrl+,</kbd>
-                    </div>
-                    <div class="flex justify-between items-center text-gray-600">
-                        <span>إغلاق</span>
-                        <kbd class="px-2 py-1 bg-slate-100 border border-slate-200 rounded-lg text-gray-700 font-mono">ESC</kbd>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <label class="text-gray-700 text-sm font-medium mb-2 block">عرض العناصر</label>
-                <div class="space-y-2">
-                    <label class="flex items-center gap-2 text-gray-600 text-sm cursor-pointer">
-                        <input type="checkbox" x-model="showLectures" class="rounded border-slate-300 text-sky-500 focus:ring-sky-500/30">
-                        <span>إظهار المحاضرات</span>
-                    </label>
-                </div>
-            </div>
-        </div>
-        <div class="mt-6 pt-4 border-t border-slate-200">
-            <button @click="showSettings = false" class="w-full bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-xl font-medium transition-colors">
-                <i class="fas fa-times ml-2"></i>
-                إغلاق
-            </button>
-        </div>
     </div>
 </div>
 <?php $__env->stopSection(); ?>
@@ -1110,30 +1020,14 @@
 <?php $__env->startPush('scripts'); ?>
 <script>
 function courseFocusMode() {
-    // قراءة البيانات من data attribute
-    const element = document.querySelector('[data-lectures]');
+    // قراءة بيانات المحاضرات من عنصر script (أدق من data attribute مع روابط طويلة)
     let lecturesData = {};
-    
-    if (element && element.dataset.lectures) {
+    const scriptEl = document.getElementById('learn-lectures-data');
+    if (scriptEl && scriptEl.textContent) {
         try {
-            lecturesData = JSON.parse(element.dataset.lectures);
-            console.log('=== Lectures data loaded ===');
-            console.log('Total lectures:', Object.keys(lecturesData).length);
-            console.log('Lecture IDs:', Object.keys(lecturesData));
-            
-            // طباعة تفاصيل كل محاضرة
-            Object.keys(lecturesData).forEach(lectureId => {
-                const lecture = lecturesData[lectureId];
-                console.log(`Lecture ${lectureId}:`, {
-                    title: lecture.title,
-                    recording_url: lecture.recording_url,
-                    video_platform: lecture.video_platform,
-                    has_recording_url: !!lecture.recording_url
-                });
-            });
+            lecturesData = JSON.parse(scriptEl.textContent);
         } catch (e) {
             console.error('Error parsing lectures data:', e);
-            lecturesData = {};
         }
     }
     
@@ -1142,7 +1036,7 @@ function courseFocusMode() {
         showLessons: true,
         showLectures: true,
         fontSize: 'medium',
-        showSettings: false,
+        focusMode: false,
         collapsedSections: [],
         sidebarOpen: false,
         sidebarClosed: false,
@@ -1300,12 +1194,12 @@ function courseFocusMode() {
                 }
             }, 30000);
         },
-        loadLecture(lectureId) {
-            console.log('=== loadLecture called ===');
-            console.log('lectureId:', lectureId, 'Type:', typeof lectureId);
-            console.log('lecturesData:', this.lecturesData);
-            console.log('lecturesData keys:', Object.keys(this.lecturesData || {}));
-            
+        trackLectureProgress(lectureId) {
+            // تتبع تقدم المحاضرة (يمكن ربطه لاحقاً بـ API إن وُجد)
+            if (this.progressInterval) clearInterval(this.progressInterval);
+            this.progressInterval = null;
+        },
+        async loadLecture(lectureId) {
             this.selectedLecture = lectureId;
             this.selectedLesson = null;
             this.selectedPattern = null;
@@ -1315,103 +1209,64 @@ function courseFocusMode() {
             const lectures = this.lecturesData || {};
             const lectureIdStr = String(lectureId);
             const lectureIdNum = parseInt(lectureId);
-            
-            console.log('Looking for lecture with:', {
-                'as string': lectureIdStr,
-                'as number': lectureIdNum,
-                'as original': lectureId
-            });
-            
             let lecture = lectures[lectureIdStr] || lectures[lectureIdNum] || lectures[lectureId];
             
-            // محاولة إضافية - البحث في جميع المفاتيح
             if (!lecture) {
-                console.log('Trying to find lecture in all keys...');
                 Object.keys(lectures).forEach(key => {
                     const l = lectures[key];
-                    if (l && (l.id == lectureId || String(l.id) === String(lectureId))) {
-                        lecture = l;
-                        console.log('Found lecture with key:', key);
-                    }
+                    if (l && (l.id == lectureId || String(l.id) === String(lectureId))) lecture = l;
                 });
             }
             
+            // إذا لم توجد المحاضرة محلياً أو لا يوجد فيها رابط فيديو، جلبها من الخادم
+            const courseId = this.$el.closest('[data-course-id]')?.dataset?.courseId;
+            const lecturesUrlTemplate = this.$el.closest('[data-lectures-url]')?.dataset?.lecturesUrl;
+            if ((!lecture || !(lecture.recording_url && lecture.recording_url.trim())) && courseId && lecturesUrlTemplate) {
+                try {
+                    const url = lecturesUrlTemplate.replace('_LID_', lectureId);
+                    const res = await fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+                    if (res.ok) {
+                        const fromApi = await res.json();
+                        if (fromApi && fromApi.id) {
+                            lecture = fromApi;
+                            if (!this.lecturesData) this.lecturesData = {};
+                            this.lecturesData[lectureIdStr] = fromApi;
+                            this.lecturesData[lectureIdNum] = fromApi;
+                        }
+                    }
+                } catch (e) { console.warn('Fetch lecture data failed:', e); }
+            }
+            
             if (!lecture) {
-                console.error('Lecture not found:', lectureId);
-                console.error('Available lecture IDs:', Object.keys(lectures));
-                console.error('Available lectures:', lectures);
                 this.lectureContent = '<div class="text-center text-red-600 p-8"><i class="fas fa-exclamation-circle text-4xl mb-4"></i><p class="text-xl font-bold">المحاضرة غير موجودة</p><p class="text-sm mt-2">ID: ' + lectureId + '</p></div>';
                 return;
             }
             
-            console.log('=== Lecture found ===');
-            console.log('Lecture ID:', lecture.id);
-            console.log('Lecture title:', lecture.title);
-            console.log('Has recording_url:', !!lecture.recording_url);
-            console.log('video_platform:', lecture.video_platform);
-            
-            // إذا كان هناك فيديو، اعرض جزء المشاهدة
+            // إذا كان هناك فيديو: نفس أسلوب البوب أب في المنهج — بناء HTML المعاينة ووضعه في حاوية واحدة
             if (lecture.recording_url && lecture.recording_url.trim() !== '') {
-                console.log('=== Lecture has video ===');
-                console.log('video_platform:', lecture.video_platform);
-                console.log('recording_url length:', lecture.recording_url.length);
-                
                 this.showVideoPlayer = true;
                 this.currentLessonVideoUrl = lecture.recording_url;
-                
-                console.log('Set showVideoPlayer to true');
-                
-                // تحديد platform تلقائياً إذا لم يكن موجوداً
-                let platform = lecture.video_platform || null;
+                let platform = (lecture.video_platform && String(lecture.video_platform).trim()) ? String(lecture.video_platform).trim().toLowerCase() : null;
                 if (!platform) {
-                    if (lecture.recording_url.includes('youtube.com') || lecture.recording_url.includes('youtu.be')) {
-                        platform = 'youtube';
-                    } else if (lecture.recording_url.includes('vimeo.com')) {
-                        platform = 'vimeo';
-                    } else if (lecture.recording_url.includes('drive.google.com')) {
-                        platform = 'google_drive';
-                    } else if (lecture.recording_url.includes('mediadelivery.net')) {
-                        platform = 'bunny';
-                    } else if (lecture.recording_url.match(/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i)) {
-                        platform = 'direct';
-                    }
+                    const u = lecture.recording_url;
+                    if (u.includes('youtube.com') || u.includes('youtu.be')) platform = 'youtube';
+                    else if (u.includes('vimeo.com')) platform = 'vimeo';
+                    else if (u.includes('drive.google.com')) platform = 'google_drive';
+                    else if (u.includes('mediadelivery.net')) platform = 'bunny';
+                    else if (u.match(/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i)) platform = 'direct';
                 }
-                
-                console.log('Using platform for lecture video:', platform);
-                
-                // إعطاء وقت للـ DOM للتحديث ثم تحميل الفيديو مباشرة
-                setTimeout(() => {
-                    const videoContainer = document.querySelector('#video-container');
-                    if (videoContainer && videoContainer.__x) {
-                        const videoPlayerData = videoContainer.__x.$data;
-                        if (videoPlayerData && videoPlayerData.loadVideo) {
-                            videoPlayerData.currentLessonVideoUrl = lecture.recording_url;
-                            videoPlayerData.loadVideo(lecture.recording_url, platform);
-                        }
-                    }
-                }, 200);
-                
-                // محاولة أخرى بعد تأخير أطول
-                [500, 1000].forEach((delay, i) => {
-                    setTimeout(() => {
-                        const videoContainer = document.querySelector('#video-container');
-                        if (videoContainer && videoContainer.__x) {
-                            const videoPlayerData = videoContainer.__x.$data;
-                            if (videoPlayerData && videoPlayerData.loadVideo && videoPlayerData.currentLessonVideoUrl !== lecture.recording_url) {
-                                videoPlayerData.currentLessonVideoUrl = lecture.recording_url;
-                                videoPlayerData.loadVideo(lecture.recording_url, platform);
-                            }
-                        }
-                    }, delay);
-                });
-                
-                // تحديث تقدم المشاهدة
+                const url = lecture.recording_url.trim();
+                const embedHtml = this.buildLectureVideoEmbedHtml(url, platform);
+                const inject = () => {
+                    const container = document.getElementById('learn-video-embed');
+                    if (container && embedHtml) container.innerHTML = embedHtml;
+                    else if (container) container.innerHTML = '<div class="flex items-center justify-center text-white h-full"><p>لا يمكن عرض الفيديو</p></div>';
+                };
+                this.$nextTick(inject);
+                setTimeout(inject, 50);
+                setTimeout(inject, 200);
                 this.trackLectureProgress(lectureId);
                 return;
-            } else {
-                console.log('=== Lecture has NO video ===');
-                console.log('recording_url value:', lecture.recording_url);
-                console.log('recording_url is empty:', !lecture.recording_url || lecture.recording_url.trim() === '');
             }
             
             // بناء محتوى HTML (بدون فيديو)
@@ -1533,6 +1388,38 @@ function courseFocusMode() {
             div.textContent = text;
             return div.innerHTML;
         },
+        /** نفس أسلوب معاينة الفيديو في بوب أب إضافة المحاضرة بالمنهج — بناء HTML الـ iframe/video حسب المنصة */
+        buildLectureVideoEmbedHtml(url, platform) {
+            if (!url || !platform) return '';
+            const u = String(url).trim();
+            let html = '';
+            if (platform === 'youtube') {
+                let videoId = (u.match(/[?&]v=([a-zA-Z0-9_-]{11})/) || [])[1] || (u.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/) || [])[1] || (u.match(/embed\/([a-zA-Z0-9_-]{11})/) || [])[1];
+                if (videoId) {
+                    const origin = encodeURIComponent(window.location.origin);
+                    html = '<iframe src="https://www.youtube.com/embed/' + videoId + '?rel=0&modestbranding=1&showinfo=0&controls=1&enablejsapi=1&origin=' + origin + '&autoplay=0" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
+                }
+            } else if (platform === 'vimeo') {
+                const m = u.match(/vimeo\.com\/(?:.*\/)?(\d+)/);
+                if (m && m[1]) html = '<iframe src="https://player.vimeo.com/video/' + m[1] + '?title=0&byline=0&portrait=0&controls=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
+            } else if (platform === 'google_drive') {
+                const m = u.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+                if (m && m[1]) html = '<iframe src="https://drive.google.com/file/d/' + m[1] + '/preview" width="100%" height="100%" frameborder="0" allow="autoplay" style="border-radius: 0.75rem;"></iframe>';
+            } else if (platform === 'direct') {
+                if (/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i.test(u)) {
+                    const esc = u.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                    html = '<video controls width="100%" height="100%" style="max-height: 100%; border-radius: 0.75rem;" class="w-full h-full"><source src="' + esc + '" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>';
+                }
+            } else if (platform === 'bunny') {
+                const m = u.match(/mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+                if (m && m[1] && m[2]) {
+                    const embedUrl = u.split('?')[0];
+                    const src = embedUrl.startsWith('http') ? embedUrl : ('https://' + embedUrl.replace(/^\/+/, ''));
+                    html = '<iframe src="' + src.replace(/"/g, '&quot;') + '" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
+                }
+            }
+            return html;
+        },
         getYoutubeThumb(url) {
             if (!url) return '';
             const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -1603,12 +1490,13 @@ function courseFocusMode() {
                 return '<video width="100%" height="100%" controls style="border-radius: 0.75rem;"><source src="' + this.escapeHtml(url) + '" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>';
             }
             
-            // Bunny.net (Bunny Stream)
+            // Bunny.net (Bunny Stream) - نفس صيغة صفحة المنهج
             if (url.includes('mediadelivery.net')) {
-                const bunnyMatch = url.match(/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+                const bunnyMatch = url.match(/mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
                 if (bunnyMatch && bunnyMatch[1] && bunnyMatch[2]) {
                     const embedUrl = url.split('?')[0];
-                    return '<iframe src="' + this.escapeHtml(embedUrl) + '" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
+                    const src = embedUrl.startsWith('http') ? embedUrl : ('https://' + embedUrl.replace(/^\/+/, ''));
+                    return '<iframe src="' + this.escapeHtml(src) + '" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
                 }
             }
             
@@ -1639,6 +1527,10 @@ function courseFocusMode() {
         },
         printCurriculum() {
             window.print();
+        },
+        toggleFocusMode() {
+            this.focusMode = !this.focusMode;
+            document.body.classList.toggle('learn-focus-mode', this.focusMode);
         },
         toggleFullscreen() {
             if (!document.fullscreenElement) {
@@ -1765,17 +1657,19 @@ function videoPlayer() {
             return m ? m[1] : null;
         },
         getBunnyEmbedUrl(url) {
-            const m = url.match(/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+            if (!url || !url.includes('mediadelivery.net')) return null;
+            const trimmed = String(url).trim();
+            // نفس منطق صفحة المنهج: أي رابط يحتوي embed/libraryId/videoId
+            const m = trimmed.match(/mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
             if (m && m[1] && m[2]) {
-                const base = 'https://iframe.mediadelivery.net/embed/' + m[1] + '/' + m[2];
-                try {
-                    const u = new URL(url);
-                    if (u.search) return base + u.search;
-                } catch (e) {}
-                return base;
+                // إزالة query string مثل صفحة curriculum ثم استخدام الرابط
+                const embedUrl = trimmed.split('?')[0];
+                if (!embedUrl.startsWith('http')) return 'https://' + embedUrl.replace(/^\/+/, '');
+                return embedUrl;
             }
-            if (url.includes('mediadelivery.net')) return url;
-            return null;
+            // رابط Bunny بدون نمط embed (نادر): نعيده كما هو بعد إزالة الـ query
+            const noQuery = trimmed.split('?')[0];
+            return noQuery.startsWith('http') ? noQuery : ('https://' + noQuery.replace(/^\/+/, ''));
         },
         loadVideo(videoUrl, platform = null) {
             if (!videoUrl) {
@@ -1831,6 +1725,7 @@ function videoPlayer() {
                 const iframe = document.createElement('iframe');
                 iframe.src = embedUrl;
                 iframe.className = 'absolute inset-0 w-full h-full border-0';
+                iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture');
                 iframe.allowFullscreen = true;
                 surface.appendChild(iframe);
             }

@@ -5,7 +5,13 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Statistics Cards -->
+    {{-- إجمالي الماليات من كله --}}
+    <div class="mb-6">
+        <h2 class="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-chart-pie text-amber-600"></i>
+            إجمالي الماليات
+        </h2>
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg">
             <div class="flex items-center justify-between">

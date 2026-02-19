@@ -20,6 +20,7 @@ class AgreementPayment extends Model
         'description',
         'related_course_id',
         'related_lecture_id',
+        'student_course_enrollment_id',
         'hours_count',
         'payment_date',
         'paid_at',
@@ -41,6 +42,8 @@ class AgreementPayment extends Model
     public const TYPE_MONTHLY_SALARY = 'monthly_salary';
     public const TYPE_BONUS = 'bonus';
     public const TYPE_OTHER = 'other';
+    /** نسبة من تفعيل الطالب للكورس (اتفاقية نسبة من الكورس) */
+    public const TYPE_COURSE_ACTIVATION = 'course_activation';
 
     public const STATUS_PENDING = 'pending';
     public const STATUS_APPROVED = 'approved';
@@ -77,6 +80,14 @@ class AgreementPayment extends Model
         return $this->belongsTo(Lecture::class, 'related_lecture_id');
     }
 
+    /**
+     * تفعيل تسجيل الطالب المرتبط بهذا الدفع (نسبة من الكورس)
+     */
+    public function enrollment(): BelongsTo
+    {
+        return $this->belongsTo(StudentCourseEnrollment::class, 'student_course_enrollment_id');
+    }
+
     public function payment(): BelongsTo
     {
         return $this->belongsTo(Payment::class, 'payment_id');
@@ -95,6 +106,7 @@ class AgreementPayment extends Model
             self::TYPE_MONTHLY_SALARY => 'راتب شهري',
             self::TYPE_BONUS => 'مكافأة',
             self::TYPE_OTHER => 'أخرى',
+            self::TYPE_COURSE_ACTIVATION => 'نسبة من تفعيل الطالب',
             default => 'غير محدد',
         };
     }

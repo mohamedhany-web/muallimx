@@ -12,7 +12,7 @@ return [
         'brand' => 'Programming Academy',
         'learning_paths' => 'Learning Paths',
         'courses' => 'Courses',
-        'about' => 'About Us',
+        'community' => 'Data & AI Community',
         'portfolio' => 'Portfolio',
         'instructors' => 'Instructors',
         'login' => 'Login',
@@ -41,6 +41,14 @@ return [
         'title' => 'Featured',
         'title_highlight' => ' Courses',
     ],
+
+    'learning_paths' => [
+        'badge' => 'Learning Paths',
+        'title' => 'Learning',
+        'title_highlight' => ' Paths',
+    ],
+    'learning_paths_subtitle' => 'Choose your learning path and get a complete set of skills and courses',
+    'view_all_paths' => 'View all paths',
 
     'language_switcher' => [
         'en' => 'English',

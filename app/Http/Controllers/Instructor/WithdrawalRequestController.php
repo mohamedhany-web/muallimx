@@ -47,23 +47,29 @@ class WithdrawalRequestController extends Controller
     public function create()
     {
         $instructor = auth()->user();
-        
-        // حساب الماديات المتاحة
+
         $totalEarned = AgreementPayment::where('instructor_id', $instructor->id)
             ->where('status', AgreementPayment::STATUS_PAID)
             ->sum('amount');
-        
+
         $totalWithdrawn = WithdrawalRequest::where('instructor_id', $instructor->id)
             ->whereIn('status', [WithdrawalRequest::STATUS_COMPLETED, WithdrawalRequest::STATUS_PROCESSING])
             ->sum('amount');
-        
+
         $pendingWithdrawals = WithdrawalRequest::where('instructor_id', $instructor->id)
             ->whereIn('status', [WithdrawalRequest::STATUS_PENDING, WithdrawalRequest::STATUS_APPROVED])
             ->sum('amount');
 
         $availableAmount = max(0, $totalEarned - $totalWithdrawn - $pendingWithdrawals);
 
-        return view('instructor.withdrawals.create', compact('availableAmount'));
+        $stats = [
+            'total_earned' => $totalEarned,
+            'total_withdrawn' => $totalWithdrawn,
+            'pending_withdrawals' => $pendingWithdrawals,
+            'available_amount' => $availableAmount,
+        ];
+
+        return view('instructor.withdrawals.create', compact('stats'));
     }
 
     public function store(Request $request)

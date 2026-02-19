@@ -67,10 +67,21 @@
                             <p class="text-xs font-semibold text-slate-500 mb-1">نوع الاتفاقية</p>
                             <p class="text-sm font-semibold text-slate-900">{{ $agreement->type_label }}</p>
                         </div>
+                        @if(($agreement->billing_type ?? '') === 'course_percentage')
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 mb-1">الكورس الأونلاين</p>
+                            <p class="text-sm font-semibold text-slate-900">{{ $agreement->advancedCourse?->title ?? '—' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 mb-1">نسبة المدرب</p>
+                            <p class="text-sm font-semibold text-slate-900">{{ number_format($agreement->course_percentage ?? 0, 2) }}%</p>
+                        </div>
+                        @else
                         <div>
                             <p class="text-xs font-semibold text-slate-500 mb-1">السعر/المعدل</p>
                             <p class="text-sm font-semibold text-slate-900">{{ number_format($agreement->rate, 2) }} ج.م</p>
                         </div>
+                        @endif
                         <div>
                             <p class="text-xs font-semibold text-slate-500 mb-1">الحالة</p>
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {{ $agreement->status == 'active' ? 'bg-emerald-100 text-emerald-700' : ($agreement->status == 'draft' ? 'bg-gray-100 text-gray-700' : 'bg-rose-100 text-rose-700') }}">
@@ -123,11 +134,16 @@
                             @forelse($agreement->payments as $payment)
                                 <tr class="hover:bg-slate-50">
                                     <td class="px-6 py-4">{{ $payment->payment_number }}</td>
-                                    <td class="px-6 py-4">{{ $payment->type_label }}</td>
+                                    <td class="px-6 py-4">
+                                        {{ $payment->type_label ?? $payment->type }}
+                                        @if($payment->type === 'course_activation' && $payment->enrollment)
+                                            <span class="block text-xs text-slate-500 mt-1">الطالب: {{ $payment->enrollment->student->name ?? '—' }}</span>
+                                        @endif
+                                    </td>
                                     <td class="px-6 py-4 font-semibold">{{ number_format($payment->amount, 2) }} ج.م</td>
                                     <td class="px-6 py-4">
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold {{ $payment->status == 'paid' ? 'bg-emerald-100 text-emerald-700' : ($payment->status == 'approved' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700') }}">
-                                            {{ $payment->status_label }}
+                                            {{ $payment->status_label ?? $payment->status }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-xs text-slate-500">{{ $payment->created_at->format('Y-m-d') }}</td>

@@ -52,24 +52,24 @@
             </div>
 
             <!-- روابط سطح المكتب -->
-            <div class="hidden lg:flex items-center gap-2 flex-1 justify-center max-w-5xl mx-auto min-w-0 shrink" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
-                <a href="<?php echo e(route('public.learning-paths.index')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-3 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
+            <div class="hidden lg:flex items-center gap-0.5 flex-1 justify-center max-w-5xl mx-auto min-w-0 shrink" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
+                <a href="<?php echo e(route('public.learning-paths.index')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-2.5 py-2 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
                     <i class="fas fa-route text-sm <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?> opacity-90 flex-shrink-0"></i>
                     <span><?php echo e(__('landing.nav.learning_paths')); ?></span>
                 </a>
-                <a href="<?php echo e(route('public.courses')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-3 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
+                <a href="<?php echo e(route('public.courses')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-2.5 py-2 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
                     <i class="fas fa-book text-sm <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?> opacity-90 flex-shrink-0"></i>
                     <span><?php echo e(__('landing.nav.courses')); ?></span>
                 </a>
-                <a href="<?php echo e(route('public.about')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-3 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
-                    <i class="fas fa-info-circle text-sm <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?> opacity-90 flex-shrink-0"></i>
-                    <span><?php echo e(__('landing.nav.about')); ?></span>
+                <a href="<?php echo e(route('public.community.index')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-2.5 py-2 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
+                    <i class="fas fa-users-cog text-sm <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?> opacity-90 flex-shrink-0"></i>
+                    <span><?php echo e(__('landing.nav.community')); ?></span>
                 </a>
-                <a href="<?php echo e(route('public.portfolio.index')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-3 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
+                <a href="<?php echo e(route('public.portfolio.index')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-2.5 py-2 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
                     <i class="fas fa-briefcase text-sm <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?> opacity-90 flex-shrink-0"></i>
                     <span><?php echo e(__('landing.nav.portfolio')); ?></span>
                 </a>
-                <a href="<?php echo e(route('public.instructors.index')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-3 py-2.5 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
+                <a href="<?php echo e(route('public.instructors.index')); ?>" class="nav-link-modern inline-flex items-center whitespace-nowrap px-2.5 py-2 rounded-xl text-white/90 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/10 flex-shrink-0">
                     <i class="fas fa-user-tie text-sm <?php echo e(app()->getLocale() === 'ar' ? 'ml-2' : 'mr-2'); ?> opacity-90 flex-shrink-0"></i>
                     <span><?php echo e(__('landing.nav.instructors')); ?></span>
                 </a>
@@ -178,9 +178,9 @@
                     <span class="flex-1 font-bold text-[17px]"><?php echo e(__('landing.nav.courses')); ?></span>
                     <i class="fas fa-chevron-<?php echo e(app()->getLocale() === 'ar' ? 'left' : 'right'); ?> text-white/40 text-sm flex-shrink-0"></i>
                 </a>
-                <a href="<?php echo e(route('public.about')); ?>" class="mobile-sidebar-link flex items-center gap-4 text-white hover:bg-white/12 active:bg-white/18 rounded-2xl px-4 min-h-[52px] touch-manipulation transition-colors">
-                    <span class="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0"><i class="fas fa-info-circle text-white text-lg"></i></span>
-                    <span class="flex-1 font-bold text-[17px]"><?php echo e(__('landing.nav.about')); ?></span>
+                <a href="<?php echo e(route('public.community.index')); ?>" class="mobile-sidebar-link flex items-center gap-4 text-white hover:bg-white/12 active:bg-white/18 rounded-2xl px-4 min-h-[52px] touch-manipulation transition-colors">
+                    <span class="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0"><i class="fas fa-users-cog text-white text-lg"></i></span>
+                    <span class="flex-1 font-bold text-[17px]"><?php echo e(__('landing.nav.community')); ?></span>
                     <i class="fas fa-chevron-<?php echo e(app()->getLocale() === 'ar' ? 'left' : 'right'); ?> text-white/40 text-sm flex-shrink-0"></i>
                 </a>
                 <a href="<?php echo e(route('public.portfolio.index')); ?>" class="mobile-sidebar-link flex items-center gap-4 text-white hover:bg-white/12 active:bg-white/18 rounded-2xl px-4 min-h-[52px] touch-manipulation transition-colors">

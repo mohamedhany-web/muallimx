@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InstructorAgreement;
 use App\Models\AgreementPayment;
 use App\Models\User;
+use App\Models\AdvancedCourse;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -84,7 +85,11 @@ class InstructorAgreementController extends Controller
 
     public function create()
     {
-        // جلب جميع المدربين (instructor أو teacher)
+        // المدربون الذين لديهم على الأقل كورس أونلاين مُعيَّن لهم (instructor_id)
+        $instructorIdsWithCourses = AdvancedCourse::where('is_active', true)
+            ->whereNotNull('instructor_id')
+            ->distinct()
+            ->pluck('instructor_id');
         $instructors = User::where(function($q) {
                 $q->where('role', 'instructor')
                   ->orWhere('role', 'teacher')
@@ -93,17 +98,24 @@ class InstructorAgreementController extends Controller
                   });
             })
             ->where('is_active', true)
+            ->whereIn('id', $instructorIdsWithCourses)
             ->orderBy('name')
             ->get();
-        return view('admin.agreements.create', compact('instructors'));
+        $advancedCourses = AdvancedCourse::where('is_active', true)
+            ->whereNotNull('instructor_id')
+            ->orderBy('title')
+            ->get(['id', 'title', 'instructor_id']);
+        return view('admin.agreements.create', compact('instructors', 'advancedCourses'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'instructor_id' => 'required|exists:users,id',
-            'type' => 'required|in:course_price,hourly_rate,monthly_salary',
-            'rate' => 'required|numeric|min:0',
+            'type' => 'required|in:course_price,hourly_rate,monthly_salary,course_percentage',
+            'rate' => 'nullable|numeric|min:0',
+            'advanced_course_id' => 'required_if:type,course_percentage|nullable|exists:advanced_courses,id',
+            'course_percentage' => 'required_if:type,course_percentage|nullable|numeric|min:0|max:100',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_date' => 'required|date',
@@ -111,12 +123,18 @@ class InstructorAgreementController extends Controller
             'status' => 'required|in:draft,active,suspended,terminated,completed',
             'terms' => 'nullable|string',
             'notes' => 'nullable|string',
-        ]);
+        ];
+        $request->validate($rules);
 
+        $isCoursePercentage = $request->type === 'course_percentage';
         $agreement = InstructorAgreement::create([
             'instructor_id' => $request->instructor_id,
-            'type' => $request->type,
-            'rate' => $request->rate,
+            'type' => $isCoursePercentage ? 'course_price' : $request->type,
+            'rate' => $isCoursePercentage ? 0 : (float) $request->rate,
+            'billing_type' => $isCoursePercentage ? InstructorAgreement::BILLING_COURSE_PERCENTAGE : null,
+            'advanced_course_id' => $isCoursePercentage ? $request->advanced_course_id : null,
+            'course_percentage' => $isCoursePercentage ? (float) $request->course_percentage : null,
+            'agreement_number' => InstructorAgreement::generateAgreementNumber(),
             'title' => $request->title,
             'description' => $request->description,
             'start_date' => $request->start_date,
@@ -133,7 +151,7 @@ class InstructorAgreementController extends Controller
 
     public function show(InstructorAgreement $agreement)
     {
-        $agreement->load(['instructor', 'createdBy', 'payments.course', 'payments.lecture']);
+        $agreement->load(['instructor', 'createdBy', 'advancedCourse', 'payments.course', 'payments.lecture', 'payments.enrollment.student']);
         
         $stats = [
             'total_earned' => $agreement->paidPayments()->sum('amount'),
@@ -147,7 +165,14 @@ class InstructorAgreementController extends Controller
 
     public function edit(InstructorAgreement $agreement)
     {
-        // جلب جميع المدربين (instructor أو teacher)
+        $instructorIdsWithCourses = AdvancedCourse::where('is_active', true)
+            ->whereNotNull('instructor_id')
+            ->distinct()
+            ->pluck('instructor_id')
+            ->push($agreement->instructor_id)
+            ->filter()
+            ->unique()
+            ->values();
         $instructors = User::where(function($q) {
                 $q->where('role', 'instructor')
                   ->orWhere('role', 'teacher')
@@ -156,17 +181,24 @@ class InstructorAgreementController extends Controller
                   });
             })
             ->where('is_active', true)
+            ->whereIn('id', $instructorIdsWithCourses)
             ->orderBy('name')
             ->get();
-        return view('admin.agreements.edit', compact('agreement', 'instructors'));
+        $advancedCourses = AdvancedCourse::where('is_active', true)
+            ->whereNotNull('instructor_id')
+            ->orderBy('title')
+            ->get(['id', 'title', 'instructor_id']);
+        return view('admin.agreements.edit', compact('agreement', 'instructors', 'advancedCourses'));
     }
 
     public function update(Request $request, InstructorAgreement $agreement)
     {
-        $request->validate([
+        $rules = [
             'instructor_id' => 'required|exists:users,id',
-            'type' => 'required|in:course_price,hourly_rate,monthly_salary',
-            'rate' => 'required|numeric|min:0',
+            'type' => 'required|in:course_price,hourly_rate,monthly_salary,course_percentage',
+            'rate' => 'nullable|numeric|min:0',
+            'advanced_course_id' => 'required_if:type,course_percentage|nullable|exists:advanced_courses,id',
+            'course_percentage' => 'required_if:type,course_percentage|nullable|numeric|min:0|max:100',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_date' => 'required|date',
@@ -174,12 +206,25 @@ class InstructorAgreementController extends Controller
             'status' => 'required|in:draft,active,suspended,terminated,completed',
             'terms' => 'nullable|string',
             'notes' => 'nullable|string',
-        ]);
+        ];
+        $request->validate($rules);
 
-        $agreement->update($request->only([
-            'instructor_id', 'type', 'rate', 'title', 'description',
-            'start_date', 'end_date', 'status', 'terms', 'notes',
-        ]));
+        $isCoursePercentage = $request->type === 'course_percentage';
+        $agreement->update([
+            'instructor_id' => $request->instructor_id,
+            'type' => $isCoursePercentage ? 'course_price' : $request->type,
+            'rate' => $isCoursePercentage ? 0 : (float) $request->rate,
+            'billing_type' => $isCoursePercentage ? InstructorAgreement::BILLING_COURSE_PERCENTAGE : null,
+            'advanced_course_id' => $isCoursePercentage ? $request->advanced_course_id : null,
+            'course_percentage' => $isCoursePercentage ? (float) $request->course_percentage : null,
+            'title' => $request->title,
+            'description' => $request->description,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'status' => $request->status,
+            'terms' => $request->terms,
+            'notes' => $request->notes,
+        ]);
 
         return redirect()->route('admin.agreements.show', $agreement)
             ->with('success', 'تم تحديث الاتفاقية بنجاح');

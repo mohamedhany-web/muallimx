@@ -99,4 +99,14 @@ return [
     'external_pages' => 'External Pages',
     'tasks' => 'Tasks',
     'comprehensive_reports' => 'Comprehensive Reports',
+
+    'community_section' => 'Data & AI Community',
+    'community_dashboard' => 'Community Dashboard',
+    'community_competitions' => 'Competitions',
+    'community_datasets' => 'Datasets',
+    'community_submissions' => 'Submissions',
+    'community_discussions' => 'Discussions',
+    'community_settings' => 'Community Settings',
+    'top_management' => 'Top Management',
+    'about_page' => 'About Us Page',
 ];

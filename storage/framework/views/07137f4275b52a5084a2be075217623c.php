@@ -60,7 +60,12 @@
                         <div class="bg-gradient-to-br from-blue-50 to-white p-4 rounded-xl border-2 border-blue-100">
                             <p class="text-xs font-semibold text-blue-700 mb-1"><?php echo e(__('instructor.agreement_type_label')); ?></p>
                             <p class="text-sm font-black text-slate-900">
-                                <?php if($agreement->type == 'course_price'): ?>
+                                <?php if(($agreement->billing_type ?? '') === 'course_percentage'): ?>
+                                    نسبة من الكورس
+                                    <?php if($agreement->advancedCourse): ?>
+                                        <span class="block text-xs font-normal text-slate-600 mt-1"><?php echo e($agreement->advancedCourse->title); ?></span>
+                                    <?php endif; ?>
+                                <?php elseif($agreement->type == 'course_price'): ?>
                                     <?php echo e(__('instructor.course_price_full')); ?>
 
                                 <?php elseif($agreement->type == 'hourly_rate'): ?>
@@ -73,8 +78,15 @@
                             </p>
                         </div>
                         <div class="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border-2 border-purple-100">
-                            <p class="text-xs font-semibold text-purple-700 mb-1"><?php echo e(__('instructor.rate')); ?></p>
-                            <p class="text-sm font-black text-slate-900"><?php echo e(number_format($agreement->rate, 2)); ?> <?php echo e(__('public.currency_egp')); ?></p>
+                            <p class="text-xs font-semibold text-purple-700 mb-1"><?php echo e((($agreement->billing_type ?? '') === 'course_percentage') ? 'نسبة المدرب' : __('instructor.rate')); ?></p>
+                            <p class="text-sm font-black text-slate-900">
+                                <?php if(($agreement->billing_type ?? '') === 'course_percentage'): ?>
+                                    <?php echo e(number_format($agreement->course_percentage ?? 0, 2)); ?>%
+                                <?php else: ?>
+                                    <?php echo e(number_format($agreement->rate, 2)); ?> <?php echo e(__('public.currency_egp')); ?>
+
+                                <?php endif; ?>
+                            </p>
                         </div>
                         <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-xl border-2 border-emerald-100">
                             <p class="text-xs font-semibold text-emerald-700 mb-1"><?php echo e(__('common.status')); ?></p>
@@ -130,6 +142,76 @@
                 </div>
             </section>
 
+            <?php if(($agreement->billing_type ?? '') === 'course_percentage'): ?>
+            
+            <?php
+                $activationPayments = $agreement->payments->where('type', 'course_activation');
+            ?>
+            <section class="rounded-2xl bg-white/95 backdrop-blur border-2 border-blue-200/50 shadow-xl overflow-hidden">
+                <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                            <i class="fas fa-user-graduate text-blue-600"></i>
+                            تفعيلات الطلاب وحصتي من كل شراء
+                        </h3>
+                        <p class="text-sm text-slate-600 mt-1">عند كل تفعيل لطالب في الكورس تظهر نسبتك من مبلغ الشراء وحصتك.</p>
+                    </div>
+                    <a href="<?php echo e(route('instructor.agreements.export-activations', $agreement)); ?>"
+                       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25 transition-all duration-200 border-2 border-emerald-500/30 whitespace-nowrap">
+                        <i class="fas fa-file-excel"></i>
+                        تصدير إلى Excel
+                    </a>
+                </div>
+                <?php if($activationPayments->isNotEmpty()): ?>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr class="text-xs font-bold uppercase tracking-widest text-slate-700">
+                                <th class="px-6 py-4 text-right">التاريخ</th>
+                                <th class="px-6 py-4 text-right">الطالب</th>
+                                <th class="px-6 py-4 text-right">مبلغ الشراء (ج.م)</th>
+                                <th class="px-6 py-4 text-right">نسبتي</th>
+                                <th class="px-6 py-4 text-right">حصتي (ج.م)</th>
+                                <th class="px-6 py-4 text-right">الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 bg-white text-sm">
+                            <?php $__currentLoopData = $activationPayments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-4 text-slate-600"><?php echo e($p->created_at?->format('Y-m-d') ?? '—'); ?></td>
+                                <td class="px-6 py-4 font-medium text-slate-900"><?php echo e($p->enrollment?->student?->name ?? '—'); ?></td>
+                                <td class="px-6 py-4"><?php echo e($p->enrollment ? number_format($p->enrollment->final_price ?? 0, 2) : '—'); ?></td>
+                                <td class="px-6 py-4 font-semibold text-blue-700"><?php echo e(number_format($agreement->course_percentage ?? 0, 2)); ?>%</td>
+                                <td class="px-6 py-4 font-black text-slate-900"><?php echo e(number_format($p->amount, 2)); ?> ج.م</td>
+                                <td class="px-6 py-4">
+                                    <?php if($p->status === 'paid'): ?>
+                                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">مدفوع</span>
+                                    <?php elseif($p->status === 'approved'): ?>
+                                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">موافق عليه</span>
+                                    <?php else: ?>
+                                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">قيد المراجعة</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-5 py-4 sm:px-8 lg:px-12 bg-gradient-to-r from-blue-50 to-white border-t-2 border-blue-100">
+                    <p class="text-base font-black text-slate-900">
+                        إجمالي أرباحي من هذه الاتفاقية: <span class="text-blue-700"><?php echo e(number_format($activationPayments->sum('amount'), 2)); ?> ج.م</span>
+                    </p>
+                </div>
+                <?php else: ?>
+                <div class="px-5 py-8 sm:px-8 lg:px-12 text-center text-slate-500">
+                    <i class="fas fa-user-graduate text-4xl text-slate-300 mb-3"></i>
+                    <p class="font-medium">لا توجد تفعيلات للطلاب حتى الآن.</p>
+                    <p class="text-sm mt-1">عند تفعيل أي طالب في هذا الكورس ستظهر هنا نسبتك وحصتك تلقائياً.</p>
+                </div>
+                <?php endif; ?>
+            </section>
+            <?php endif; ?>
+
             <!-- Payments -->
             <section class="rounded-2xl bg-white/95 backdrop-blur border-2 border-slate-200/50 shadow-xl overflow-hidden">
                 <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
@@ -167,6 +249,7 @@
                                                 'monthly_salary' => __('instructor.monthly_salary'),
                                                 'bonus' => __('instructor.bonus'),
                                                 'other' => __('instructor.other'),
+                                                'course_activation' => 'نسبة من تفعيل الطالب',
                                             ];
                                             $typeLabel = $typeLabels[$payment->type] ?? ($payment->type ?? __('instructor.not_specified'));
                                         ?>
@@ -175,6 +258,10 @@
                                                 <?php echo e($typeLabel); ?>
 
                                             </span>
+                                            <?php if($payment->type === 'course_activation' && $payment->enrollment): ?>
+                                                <p class="text-xs text-slate-500 mt-1">الطالب: <?php echo e($payment->enrollment->student->name ?? '—'); ?></p>
+                                                <p class="text-xs text-slate-500 mt-1">مبلغ التفعيل: <?php echo e(number_format($payment->enrollment->final_price ?? 0, 2)); ?> ج.م → حصتك <?php echo e(number_format($payment->amount, 2)); ?> ج.م</p>
+                                            <?php endif; ?>
                                             <?php if($payment->course): ?>
                                                 <p class="text-xs text-slate-500 mt-1"><?php echo e($payment->course->title ?? ''); ?></p>
                                             <?php endif; ?>

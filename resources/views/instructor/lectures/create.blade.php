@@ -431,11 +431,12 @@ function videoPreviewData() {
                     }
                     if (!isValid) html = '<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"><i class="fas fa-exclamation-circle ml-1"></i> ' + directInvalid + '</div>';
                 } else if (this.selectedPlatform === 'bunny') {
-                    const bunnyMatch = url.match(/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+                    const bunnyMatch = url.match(/mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
                     if (bunnyMatch && bunnyMatch[1] && bunnyMatch[2]) {
                         isValid = true;
                         const embedUrl = url.split('?')[0];
-                        html = '<iframe src="' + embedUrl.replace(/"/g, '&quot;') + '" width="100%" height="400" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
+                        const src = embedUrl.startsWith('http') ? embedUrl : ('https://' + embedUrl.replace(/^\/+/, ''));
+                        html = '<iframe src="' + src.replace(/"/g, '&quot;') + '" width="100%" height="400" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
                     }
                     if (!isValid) html = '<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"><i class="fas fa-exclamation-circle ml-1"></i> ' + bunnyInvalid + '</div>';
                 }

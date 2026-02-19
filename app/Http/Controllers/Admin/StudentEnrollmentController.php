@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\AdvancedCourse;
 use App\Models\StudentCourseEnrollment;
+use App\Services\InstructorCoursePercentageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -85,6 +86,7 @@ class StudentEnrollmentController extends Controller
             'user_id' => 'required|exists:users,id',
             'advanced_course_id' => 'required|exists:advanced_courses,id',
             'status' => 'required|in:pending,active',
+            'final_price' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:1000',
         ], [
             'user_id.required' => 'الطالب مطلوب',
@@ -121,7 +123,17 @@ class StudentEnrollmentController extends Controller
             $enrollmentData['activated_by'] = Auth::id();
         }
 
-        StudentCourseEnrollment::create($enrollmentData);
+        // مبلغ التفعيل (اختياري) — يُستخدم لحساب نسبة المدرب عند وجود اتفاقية "نسبة من الكورس"
+        if ($request->filled('final_price') && is_numeric($request->final_price)) {
+            $enrollmentData['final_price'] = (float) $request->final_price;
+        }
+
+        $enrollment = StudentCourseEnrollment::create($enrollmentData);
+
+        // عند التفعيل: إنشاء مدفوعة نسبة المدرب إن وُجدت اتفاقية "نسبة من الكورس"
+        if ($enrollment->status === 'active') {
+            InstructorCoursePercentageService::processEnrollmentActivation($enrollment->fresh());
+        }
 
         return redirect()->route('admin.online-enrollments.index')
                         ->with('success', 'تم تسجيل الطالب في الكورس بنجاح');
@@ -153,6 +165,8 @@ class StudentEnrollmentController extends Controller
             'activated_at' => now(),
             'activated_by' => Auth::id(),
         ]);
+
+        InstructorCoursePercentageService::processEnrollmentActivation($enrollment->fresh());
 
         $message = $wasSuspended 
             ? 'تم إعادة تفعيل التسجيل وفتح الكورس للطالب بنجاح' 

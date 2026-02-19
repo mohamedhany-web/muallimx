@@ -418,6 +418,7 @@
             </div>
             </div>
             <input type="hidden" id="lectureEditId" name="lecture_id">
+            <input type="hidden" name="status" id="lectureStatus" value="scheduled">
         </form>
     </div>
 </div>
@@ -856,6 +857,8 @@ function showAddLectureModal(sectionId) {
     // مسح الحقول
     document.getElementById('lectureForm').reset();
     document.getElementById('lectureForm').querySelector('input[name="course_id"]').value = <?php echo e($course->id); ?>;
+    const statusEl = document.getElementById('lectureStatus');
+    if (statusEl) statusEl.value = 'scheduled';
     const hasAttendance = document.getElementById('lectureForm').querySelector('input[name="has_attendance_tracking"]');
     if (hasAttendance) hasAttendance.checked = true;
     // تعيين التاريخ الحالي كقيمة افتراضية
@@ -940,35 +943,32 @@ async function editLectureFromCurriculum(lectureId, sectionId) {
         document.getElementById('lectureTeamsMeeting').value = lecture.teams_meeting_link || '';
         document.getElementById('lectureNotes').value = lecture.notes || '';
         
-        // تحديد المشغل - نستخدم setTimeout لضمان أن الحقول موجودة
+        // تعيين حالة المحاضرة (مطلوب عند التحديث)
+        const statusInput = document.getElementById('lectureStatus');
+        if (statusInput) statusInput.value = lecture.status || 'scheduled';
+        
+        // تحديد المشغل - تطبيع video_platform لأحرف صغيرة لأن data-platform في HTML كلها lowercase
         setTimeout(() => {
             let platformSet = false;
+            const platformNormalized = (lecture.video_platform || '').toString().trim().toLowerCase();
             
-            // أولاً: محاولة استخدام video_platform المحفوظ
-            if (lecture.video_platform) {
-                console.log('Setting platform from lecture.video_platform:', lecture.video_platform);
-                const platformBtn = document.querySelector(`[data-platform="${lecture.video_platform}"]`);
+            // أولاً: محاولة استخدام video_platform المحفوظ (بعد التطبيع)
+            if (platformNormalized) {
+                const platformBtn = document.querySelector('[data-platform="' + platformNormalized + '"]');
                 if (platformBtn) {
-                    // حفظ قيمة الرابط قبل selectVideoPlatform (لأنه قد يمسحها)
                     const savedUrl = lecture.recording_url || '';
-                    selectVideoPlatform(lecture.video_platform, platformBtn);
-                    // استعادة الرابط بعد selectVideoPlatform
+                    selectVideoPlatform(platformNormalized, platformBtn);
+                    document.getElementById('lectureVideoPlatform').value = platformNormalized;
                     setTimeout(() => {
                         const recordingUrlInput = document.getElementById('lectureRecordingUrl');
-                        if (recordingUrlInput && savedUrl) {
-                            recordingUrlInput.value = savedUrl;
-                            console.log('Restored recording_url after platform selection:', savedUrl);
-                        }
+                        if (recordingUrlInput && savedUrl) recordingUrlInput.value = savedUrl;
                     }, 50);
                     platformSet = true;
-                } else {
-                    console.warn('Platform button not found for:', lecture.video_platform);
                 }
             }
             
-            // ثانياً: إذا لم يتم تعيين المشغل، حاول اكتشافه من الرابط
+            // ثانياً: إذا لم يتم تعيين المشغل، اكتشفه من الرابط
             if (!platformSet && lecture.recording_url) {
-                console.log('Auto-detecting platform from URL:', lecture.recording_url);
                 const url = lecture.recording_url;
                 let detectedPlatform = null;
                 let platformBtn = null;
@@ -991,17 +991,12 @@ async function editLectureFromCurriculum(lectureId, sectionId) {
                 }
                 
                 if (platformBtn && detectedPlatform) {
-                    console.log('Auto-detected:', detectedPlatform);
-                    // حفظ قيمة الرابط قبل selectVideoPlatform
                     const savedUrl = lecture.recording_url || '';
                     selectVideoPlatform(detectedPlatform, platformBtn);
-                    // استعادة الرابط بعد selectVideoPlatform
+                    document.getElementById('lectureVideoPlatform').value = detectedPlatform;
                     setTimeout(() => {
                         const recordingUrlInput = document.getElementById('lectureRecordingUrl');
-                        if (recordingUrlInput && savedUrl) {
-                            recordingUrlInput.value = savedUrl;
-                            console.log('Restored recording_url after auto-detection:', savedUrl);
-                        }
+                        if (recordingUrlInput && savedUrl) recordingUrlInput.value = savedUrl;
                     }, 50);
                     platformSet = true;
                 }
@@ -1174,8 +1169,9 @@ function saveLecture(e) {
     
     if (lectureId) {
         url = `/instructor/lectures/${lectureId}`;
-        method = 'PUT';
         formData.append('_method', 'PUT');
+        // إرسال كـ POST مع _method=PUT لأن PHP لا يفسر body طلبات PUT multipart/form-data
+        method = 'POST';
         console.log('Updating lecture:', lectureId);
     } else {
         console.log('Creating new lecture');
@@ -1490,13 +1486,14 @@ function previewLectureVideo() {
                 html = '<video controls width="100%" height="100%" style="max-height: 100%; border-radius: 0.75rem;" class="w-full h-full"><source src="' + escapedUrl + '" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>';
             }
         }
-        // Bunny.net (Bunny Stream)
+        // Bunny.net (Bunny Stream) - أي نطاق mediadelivery.net مع مسار embed
         else if (platform === 'bunny') {
-            const bunnyMatch = url.match(/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+            const bunnyMatch = url.match(/mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
             if (bunnyMatch && bunnyMatch[1] && bunnyMatch[2]) {
                 isValid = true;
                 const embedUrl = url.split('?')[0];
-                html = '<iframe src="' + embedUrl.replace(/"/g, '&quot;') + '" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
+                const src = embedUrl.startsWith('http') ? embedUrl : ('https://' + embedUrl.replace(/^\/+/, ''));
+                html = '<iframe src="' + src.replace(/"/g, '&quot;') + '" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
             }
         }
         

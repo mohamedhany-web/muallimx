@@ -23,6 +23,17 @@ return [
     'portfolio_page_title' => 'Mindlytics Portfolio - معرض أعمال الطلاب',
     'portfolio_heading' => 'Portfolio',
     'portfolio_subtitle' => 'معرض أعمال طلابنا — مشاريع حقيقية بعد إتمام الكورسات، حيث ترى الشركات الموهبة',
+
+    'community_page_title' => 'مجتمع البيانات والذكاء الاصطناعي - Mindlytics',
+    'community_heading' => 'مجتمع البيانات والذكاء الاصطناعي',
+    'community_subtitle' => 'مسابقات تنافسية، مجموعات بيانات جاهزة للتدريب، ومناقشات مع خبراء ومتعلمين — مكانك لصقل مهاراتك في البيانات والذكاء الاصطناعي',
+    'community_coming_soon' => 'قريباً',
+    'community_coming_desc' => 'نعمل على إطلاق مسابقات البرمجة والذكاء الاصطناعي، ومجموعات البيانات المفتوحة، ولوحة المتصدرين. انضم للمجتمع لتصلك آخر التحديثات.',
+    'community_features_competitions' => 'مسابقات',
+    'community_features_datasets' => 'مجموعات البيانات',
+    'community_features_discussions' => 'مناقشات المجتمع',
+    'community_enter_community' => 'الدخول للمجتمع',
+
     'learning_paths_sidebar' => 'المسارات التعليمية',
     'all' => 'الكل',
     'no_projects_yet' => 'لا توجد مشاريع منشورة بعد',

@@ -260,6 +260,14 @@
                         </a>
                     </li>
                     <li>
+                        <a href="{{ route('admin.accounting.instructor-accounts.index') }}"
+                           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.accounting.instructor-accounts.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
+                            <i class="fas fa-user-tie w-4"></i>
+                            <span>حسابات المدربين</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="{{ route('admin.expenses.index') }}" 
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.expenses.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
@@ -529,6 +537,71 @@
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ $questionBankActive ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
                             <i class="fas fa-database w-4"></i>
                             <span>{{ __('admin.question_bank') }}</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- مجتمع البيانات والذكاء الاصطناعي (مسابقات، داتاسيت، مناقشات) -->
+            @php
+                $communityOpen = request()->routeIs('admin.community.*');
+            @endphp
+            <li x-data="{ open: {{ $communityOpen ? 'true' : 'false' }} }">
+                <button @click="open = !open" 
+                        class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-users-cog w-5 text-cyan-400 group-hover:text-white"></i>
+                        <span class="font-medium">{{ __('admin.community_section') }}</span>
+                    </div>
+                    <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+                <ul x-show="open" x-transition class="mt-2 mr-4 space-y-1 border-r-2 border-slate-600/50 pr-2">
+                    <li>
+                        <a href="{{ route('admin.community.dashboard') }}" 
+                           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.community.dashboard') || request()->routeIs('admin.community') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
+                            <i class="fas fa-tachometer-alt w-4"></i>
+                            <span>{{ __('admin.community_dashboard') }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.community.competitions.index') }}" 
+                           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.community.competitions.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
+                            <i class="fas fa-trophy w-4"></i>
+                            <span>{{ __('admin.community_competitions') }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.community.datasets.index') }}" 
+                           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.community.datasets.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
+                            <i class="fas fa-database w-4"></i>
+                            <span>{{ __('admin.community_datasets') }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.community.submissions.index') }}" 
+                           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.community.submissions.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
+                            <i class="fas fa-paper-plane w-4"></i>
+                            <span>{{ __('admin.community_submissions') }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.community.discussions.index') }}" 
+                           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.community.discussions.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
+                            <i class="fas fa-comments w-4"></i>
+                            <span>{{ __('admin.community_discussions') }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.community.settings.index') }}" 
+                           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.community.settings.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
+                            <i class="fas fa-cog w-4"></i>
+                            <span>{{ __('admin.community_settings') }}</span>
                         </a>
                     </li>
                 </ul>
@@ -934,6 +1007,31 @@
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.packages.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
                             <i class="fas fa-tags w-4"></i>
                             <span>{{ __('admin.pricing_packages') }}</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+            <!-- الإدارة العليا (من نحن) -->
+            @php
+                $topManagementOpen = request()->routeIs('admin.about.*');
+            @endphp
+            <li x-data="{ open: {{ $topManagementOpen ? 'true' : 'false' }} }">
+                <button @click="open = !open" 
+                        class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white group">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-building w-5 text-amber-400 group-hover:text-white"></i>
+                        <span class="font-medium">{{ __('admin.top_management') }}</span>
+                    </div>
+                    <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+                <ul x-show="open" x-transition class="mt-2 mr-4 space-y-1 border-r-2 border-slate-600/50 pr-2">
+                    <li>
+                        <a href="{{ route('admin.about.index') }}" 
+                           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.about.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
+                            <i class="fas fa-info-circle w-4"></i>
+                            <span>{{ __('admin.about_page') }}</span>
                         </a>
                     </li>
                 </ul>

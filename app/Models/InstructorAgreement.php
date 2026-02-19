@@ -14,14 +14,17 @@ class InstructorAgreement extends Model
     public const STATUS_TERMINATED = 'terminated';
     public const STATUS_COMPLETED = 'completed';
 
-    /** نوع الاتفاقية: بالجلسة | راتب شهري | باكورس كامل */
+    /** نوع الاتفاقية: بالجلسة | راتب شهري | باكورس كامل | نسبة من الكورس */
     public const BILLING_PER_SESSION = 'per_session';
     public const BILLING_MONTHLY = 'monthly';
     public const BILLING_FULL_COURSE = 'full_course';
+    public const BILLING_COURSE_PERCENTAGE = 'course_percentage';
 
     protected $fillable = [
         'instructor_id',
         'offline_course_id',
+        'advanced_course_id',
+        'course_percentage',
         'billing_type',
         'type',
         'rate',
@@ -46,6 +49,7 @@ class InstructorAgreement extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'rate' => 'decimal:2',
+        'course_percentage' => 'decimal:2',
         'salary_per_session' => 'decimal:2',
         'total_amount' => 'decimal:2',
         'monthly_amount' => 'decimal:2',
@@ -73,6 +77,14 @@ class InstructorAgreement extends Model
     public function offlineCourse(): BelongsTo
     {
         return $this->belongsTo(OfflineCourse::class, 'offline_course_id');
+    }
+
+    /**
+     * علاقة مع الكورس الأونلاين (عند نوع الاتفاقية: نسبة من الكورس)
+     */
+    public function advancedCourse(): BelongsTo
+    {
+        return $this->belongsTo(AdvancedCourse::class, 'advanced_course_id');
     }
 
     /**
@@ -126,11 +138,39 @@ class InstructorAgreement extends Model
             self::BILLING_PER_SESSION => 'بالجلسة',
             self::BILLING_MONTHLY => 'راتب شهري',
             self::BILLING_FULL_COURSE => 'باكورس كامل',
+            self::BILLING_COURSE_PERCENTAGE => 'نسبة من الكورس',
         ];
     }
 
     public function getBillingTypeLabelAttribute(): string
     {
         return self::billingTypeLabels()[$this->billing_type] ?? $this->billing_type;
+    }
+
+    /** تسمية نوع الاتفاقية (type أو billing_type عند نسبة من الكورس) */
+    public function getTypeLabelAttribute(): string
+    {
+        if (($this->billing_type ?? '') === self::BILLING_COURSE_PERCENTAGE) {
+            return 'نسبة من الكورس';
+        }
+        $labels = [
+            'course_price' => 'سعر للكورس كاملاً',
+            'hourly_rate' => 'سعر للساعة المسجلة',
+            'monthly_salary' => 'راتب شهري',
+        ];
+        return $labels[$this->type] ?? $this->type;
+    }
+
+    /** تسمية الحالة */
+    public function getStatusLabelAttribute(): string
+    {
+        $labels = [
+            self::STATUS_DRAFT => 'مسودة',
+            self::STATUS_ACTIVE => 'نشط',
+            self::STATUS_SUSPENDED => 'معلق',
+            self::STATUS_TERMINATED => 'منتهي',
+            self::STATUS_COMPLETED => 'مكتمل',
+        ];
+        return $labels[$this->status] ?? $this->status;
     }
 }

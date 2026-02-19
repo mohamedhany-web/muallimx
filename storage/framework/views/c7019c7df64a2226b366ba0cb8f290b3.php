@@ -1804,6 +1804,34 @@
         .scrollbar-featured::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(90deg, #2563eb, #059669);
         }
+        .learning-paths-scroll {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+            box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
+            contain: layout style paint;
+        }
+        #learning-paths-track {
+            contain: layout style;
+        }
+        @media (min-width: 640px) {
+            .learning-paths-scroll {
+                padding-left: 2.5rem;
+                padding-right: 2.5rem;
+            }
+        }
+        @media (min-width: 1024px) {
+            .learning-paths-scroll {
+                padding-left: 3rem;
+                padding-right: 3rem;
+            }
+        }
 
         /* Enhanced Section Titles */
         .section-title-wrapper {
@@ -2400,6 +2428,162 @@
         </div>
     </section>
 
+    <!-- Learning Paths Section -->
+    <?php
+        $landingPathsQuery = \App\Models\AcademicYear::where('is_active', true)
+            ->with(['linkedCourses' => function($q) {
+                $q->where('is_active', true);
+            }, 'academicSubjects' => function($q) {
+                $q->where('is_active', true);
+            }])
+            ->orderBy('order')
+            ->limit(12)
+            ->get();
+        $landingPaths = $landingPathsQuery->map(function($year) {
+            $linkedCourses = $year->linkedCourses ?? collect();
+            $subjectCourses = collect();
+            if ($year->academicSubjects && $year->academicSubjects->isNotEmpty()) {
+                $subjectIds = $year->academicSubjects->pluck('id')->toArray();
+                if (!empty($subjectIds)) {
+                    $subjectCourses = \App\Models\AdvancedCourse::where('is_active', true)
+                        ->whereIn('academic_subject_id', $subjectIds)
+                        ->get();
+                }
+            }
+            $courses = $linkedCourses->merge($subjectCourses)->unique('id');
+            $totalPrice = $courses->sum('price');
+            $slug = \Illuminate\Support\Str::slug($year->name);
+            $thumb = $year->thumbnail ? str_replace('\\', '/', $year->thumbnail) : null;
+            $imageUrl = $thumb ? asset('storage/' . $thumb) : null;
+            return (object)[
+                'id' => $year->id,
+                'name' => $year->name,
+                'description' => $year->description,
+                'slug' => $slug,
+                'price' => $totalPrice,
+                'courses_count' => $courses->count(),
+                'thumbnail' => $year->thumbnail,
+                'image_url' => $imageUrl,
+            ];
+        });
+    ?>
+    <section class="py-16 md:py-20 lg:py-24 bg-gradient-to-b from-white via-blue-50/40 to-white content-wrapper relative parallax-section overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12 fade-in-up">
+                <div class="inline-block mb-4">
+                    <span class="featured-courses-badge bg-gradient-to-r from-blue-50 via-green-50/80 to-blue-50 text-blue-800 px-4 py-2 rounded-full text-sm font-bold inline-flex items-center gap-2 shadow-sm border border-blue-200/60">
+                        <i class="fas fa-route text-blue-600"></i>
+                        <span><?php echo e(__('landing.learning_paths.badge')); ?></span>
+                    </span>
+                </div>
+                <h2 class="featured-courses-title text-4xl md:text-5xl lg:text-6xl font-black mb-5 inline-block">
+                    <span class="featured-courses-title-draw">
+                        <span class="featured-courses-title-main"><?php echo e(__('landing.learning_paths.title')); ?></span><span class="featured-courses-title-highlight"><?php echo e(__('landing.learning_paths.title_highlight')); ?></span>
+                    </span>
+                    <span class="featured-courses-title-line" aria-hidden="true"></span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                    <?php echo e(__('landing.learning_paths_subtitle')); ?>
+
+                </p>
+            </div>
+        </div>
+
+        <?php if($landingPaths->count() > 0): ?>
+            <div class="learning-paths-scroll w-full">
+                <div id="learning-paths-track" class="flex gap-4 lg:gap-6 overflow-x-auto overflow-y-hidden pb-4 scroll-smooth snap-x snap-mandatory scrollbar-featured" style="scrollbar-gutter: stable;">
+                    <?php $__currentLoopData = $landingPaths; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $path): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <div class="group relative flex-shrink-0 w-[280px] sm:w-[320px] lg:w-[340px] snap-center fade-in-up bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-blue-200" style="animation-delay: <?php echo e($index * 0.05); ?>s;">
+                            <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-400 via-green-400 to-purple-400 rounded-2xl blur opacity-0 group-hover:opacity-20 transition-opacity duration-500 -z-10"></div>
+                            <div class="relative h-44 sm:h-48 bg-gradient-to-br from-blue-600 via-blue-500 to-green-500 overflow-hidden">
+                                <?php if($path->image_url): ?>
+                                    <img src="<?php echo e($path->image_url); ?>" alt="<?php echo e($path->name); ?>" class="absolute inset-0 w-full h-full object-cover">
+                                <?php else: ?>
+                                    <div class="absolute inset-0 opacity-10" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);"></div>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="relative z-10 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                                            <i class="fas fa-route text-white text-5xl lg:text-6xl drop-shadow-lg"></i>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent"></div>
+                                <div class="absolute bottom-2 right-2 z-20">
+                                    <div class="bg-white/95 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-xl border border-white/50 group-hover:scale-110 transition-transform duration-300">
+                                        <span class="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                                            <i class="fas fa-graduation-cap text-blue-600 text-[11px]"></i>
+                                            <span><?php echo e(__('public.path_courses_count', ['count' => $path->courses_count])); ?></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-white relative overflow-hidden">
+                                <div class="absolute inset-0 opacity-[0.02] pointer-events-none" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(59, 130, 246, 0.05) 5px, rgba(59, 130, 246, 0.05) 10px);"></div>
+                                <h3 class="text-base font-black text-gray-900 mb-2 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-green-600 transition-all duration-300 leading-tight relative z-10">
+                                    <?php echo e($path->name); ?>
+
+                                </h3>
+                                <p class="text-gray-600 text-xs mb-3 line-clamp-2 leading-relaxed group-hover:text-gray-700 transition-colors duration-300 relative z-10">
+                                    <?php echo e(Str::limit($path->description ?? __('public.path_description_fallback'), 70)); ?>
+
+                                </p>
+                                <div class="flex items-center justify-between pt-3 border-t border-gray-100 group-hover:border-blue-100 transition-colors duration-300 relative z-10">
+                                    <div>
+                                        <?php if(($path->price ?? 0) > 0): ?>
+                                            <span class="text-lg font-black text-blue-600 flex items-center gap-1 group-hover:scale-110 transition-transform duration-300">
+                                                <span><?php echo e(number_format($path->price, 0)); ?></span>
+                                                <span class="text-[10px] text-gray-500 font-normal"><?php echo e(__('public.currency_egp')); ?></span>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="text-lg font-black text-green-600 flex items-center gap-1.5 group-hover:scale-110 transition-transform duration-300">
+                                                <div class="w-5 h-5 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-md">
+                                                    <i class="fas fa-gift text-white text-[8px]"></i>
+                                                </div>
+                                                <span><?php echo e(__('public.free_price')); ?></span>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <a href="<?php echo e(route('public.learning-path.show', $path->slug)); ?>" class="relative bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 flex items-center gap-1.5 overflow-hidden group/btn">
+                                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover/btn:opacity-100 group-hover/btn:animate-shimmer transition-opacity duration-300"></div>
+                                        <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-green-400 rounded-lg blur opacity-0 group-hover/btn:opacity-50 transition-opacity duration-300"></div>
+                                        <span class="relative z-10"><?php echo e(__('landing.view_btn')); ?></span>
+                                        <i class="fas fa-arrow-left text-[10px] relative z-10 group-hover/btn:translate-x-1 transition-transform duration-300"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+            </div>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+                <div class="text-center fade-in-up">
+                    <a href="<?php echo e(route('public.learning-paths.index')); ?>" class="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-green-500 text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 relative overflow-hidden group">
+                        <span class="relative z-10 flex items-center gap-2">
+                            <i class="fas fa-route"></i>
+                            <span><?php echo e(__('landing.view_all_paths')); ?></span>
+                            <i class="fas fa-arrow-left transition-transform duration-300 group-hover:-translate-x-1"></i>
+                        </span>
+                        <span class="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    </a>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center py-12 fade-in-up">
+                    <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-route text-gray-400 text-4xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2"><?php echo e(__('landing.coming_soon')); ?></h3>
+                    <p class="text-gray-600 mb-6"><?php echo e(__('public.coming_soon_paths')); ?></p>
+                    <a href="<?php echo e(route('public.learning-paths.index')); ?>" class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-route"></i>
+                        <span><?php echo e(__('landing.view_all_paths')); ?></span>
+                    </a>
+                </div>
+            </div>
+        <?php endif; ?>
+    </section>
+
     <!-- Featured Courses Section -->
     <section class="py-16 md:py-20 lg:py-24 bg-gradient-to-b from-white via-blue-50/40 to-white content-wrapper relative parallax-section overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -2441,101 +2625,57 @@
                             $fcImageUrl = $fcThumb ? asset('storage/' . $fcThumb) : null;
                         ?>
                         <div class="group relative flex-shrink-0 w-[280px] sm:w-[320px] lg:w-[340px] snap-center fade-in-up bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-blue-200" style="animation-delay: <?php echo e($index * 0.05); ?>s;">
-                            <!-- Animated Background Glow -->
                             <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-400 via-green-400 to-purple-400 rounded-2xl blur opacity-0 group-hover:opacity-20 transition-opacity duration-500 -z-10"></div>
-                            
-                            <!-- Header: course image (like learning paths) or gradient -->
-                            <div class="relative h-32 bg-gradient-to-br from-blue-600 via-blue-500 to-green-500 overflow-hidden">
+                            <div class="relative h-44 sm:h-48 bg-gradient-to-br from-blue-600 via-blue-500 to-green-500 overflow-hidden">
                                 <?php if($fcImageUrl): ?>
                                     <img src="<?php echo e($fcImageUrl); ?>" alt="<?php echo e($course->title); ?>" class="absolute inset-0 w-full h-full object-cover">
                                 <?php else: ?>
-                                    <!-- Background Pattern (ثابت - بدون حركة للأداء) -->
                                     <div class="absolute inset-0 opacity-10" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);"></div>
-                                    <!-- Logo - Letter M -->
                                     <div class="absolute inset-0 flex items-center justify-center">
                                         <div class="relative z-10 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                                            <div class="text-white font-black text-5xl lg:text-6xl relative" style="font-family: 'Cairo', 'Noto Sans Arabic', sans-serif; text-shadow: 0 4px 20px rgba(0,0,0,0.4); letter-spacing: -2px;">
-                                                M
-                                            </div>
+                                            <i class="fas fa-play-circle text-white text-5xl lg:text-6xl drop-shadow-lg"></i>
                                         </div>
                                     </div>
                                 <?php endif; ?>
-                                <!-- Shimmer على الهوفر فقط -->
                                 <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent"></div>
-                                
-                                <!-- Featured Badge -->
-                                <?php if($course->is_featured): ?>
-                                    <div class="absolute top-2 left-2 z-20">
-                                        <span class="bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-500 text-yellow-900 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1 border border-yellow-300/50 backdrop-blur-sm">
-                                            <i class="fas fa-star text-[8px]"></i>
-                                            <span><?php echo e(__('landing.featured_badge')); ?></span>
-                                        </span>
-                                    </div>
-                                <?php endif; ?>
-                                
-                                <!-- Lessons Count with Enhanced Design -->
                                 <div class="absolute bottom-2 right-2 z-20">
                                     <div class="bg-white/95 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-xl border border-white/50 group-hover:scale-110 transition-transform duration-300">
                                         <span class="text-xs font-bold text-gray-800 flex items-center gap-1.5">
-                                            <i class="fas fa-play-circle text-blue-600 text-[11px] group-hover:text-green-600 transition-colors duration-300"></i>
+                                            <i class="fas fa-play-circle text-blue-600 text-[11px]"></i>
                                             <span><?php echo e($course->lessons_count ?? 0); ?> <?php echo e(__('landing.lesson_single')); ?></span>
                                         </span>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Content with Enhanced Design -->
                             <div class="p-4 bg-white relative overflow-hidden">
-                                <!-- Subtle Background Pattern -->
                                 <div class="absolute inset-0 opacity-[0.02] pointer-events-none" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(59, 130, 246, 0.05) 5px, rgba(59, 130, 246, 0.05) 10px);"></div>
-                                
-                                <!-- Instructor with Enhanced Design -->
-                                <div class="mb-3 relative z-10">
-                                    <div class="inline-flex items-center gap-1.5 bg-gradient-to-r from-blue-50 to-green-50 px-2.5 py-1.5 rounded-full border border-blue-100 group-hover:border-blue-200 transition-colors duration-300 shadow-sm group-hover:shadow-md">
-                                        <div class="w-4 h-4 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-user text-white text-[8px]"></i>
-                                        </div>
-                                        <span class="text-xs font-semibold text-blue-700 group-hover:text-blue-800 transition-colors duration-300"><?php echo e(Str::limit($course->instructor->name ?? __('public.instructor_fallback'), 18)); ?></span>
-                                    </div>
-                                </div>
-
-                                <!-- Title with Enhanced Design -->
                                 <h3 class="text-base font-black text-gray-900 mb-2 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-green-600 transition-all duration-300 leading-tight relative z-10">
                                     <?php echo e($course->title); ?>
 
                                 </h3>
-                                
-                                <!-- Description with Enhanced Design -->
                                 <p class="text-gray-600 text-xs mb-3 line-clamp-2 leading-relaxed group-hover:text-gray-700 transition-colors duration-300 relative z-10">
                                     <?php echo e(Str::limit($course->description ?? __('landing.course_description_fallback'), 70)); ?>
 
                                 </p>
-                                
-                                <!-- Footer with Enhanced Design -->
                                 <div class="flex items-center justify-between pt-3 border-t border-gray-100 group-hover:border-blue-100 transition-colors duration-300 relative z-10">
-                                    <!-- Price with Enhanced Design -->
                                     <div>
                                         <?php if($course->is_free): ?>
                                             <span class="text-lg font-black text-green-600 flex items-center gap-1.5 group-hover:scale-110 transition-transform duration-300">
                                                 <div class="w-5 h-5 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-md">
                                                     <i class="fas fa-gift text-white text-[8px]"></i>
                                                 </div>
-                                                <span><?php echo e(__('landing.free')); ?></span>
+                                                <span><?php echo e(__('public.free_price')); ?></span>
                                             </span>
                                         <?php else: ?>
                                             <span class="text-lg font-black text-blue-600 flex items-center gap-1 group-hover:scale-110 transition-transform duration-300">
                                                 <span><?php echo e(number_format($course->price ?? 0)); ?></span>
-                                                <span class="text-[10px] text-gray-500 font-normal"><?php echo e(__('landing.currency')); ?></span>
+                                                <span class="text-[10px] text-gray-500 font-normal"><?php echo e(__('public.currency_egp')); ?></span>
                                             </span>
                                         <?php endif; ?>
                                     </div>
-                                    
-                                    <!-- CTA Button with Enhanced Design -->
                                     <a href="<?php echo e(route('public.course.show', $course->id)); ?>" class="relative bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 flex items-center gap-1.5 overflow-hidden group/btn">
-                                        <!-- Shimmer Effect -->
                                         <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover/btn:opacity-100 group-hover/btn:animate-shimmer transition-opacity duration-300"></div>
-                                        <!-- Glow Effect -->
                                         <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-green-400 rounded-lg blur opacity-0 group-hover/btn:opacity-50 transition-opacity duration-300"></div>
                                         <span class="relative z-10"><?php echo e(__('landing.view_btn')); ?></span>
                                         <i class="fas fa-arrow-left text-[10px] relative z-10 group-hover/btn:translate-x-1 transition-transform duration-300"></i>
@@ -2578,6 +2718,38 @@
     <script>
     (function() {
         var track = document.getElementById('featured-courses-track');
+        if (!track) return;
+        var stepMs = 5000;
+        var isPaused = false;
+        track.addEventListener('mouseenter', function() { isPaused = true; });
+        track.addEventListener('mouseleave', function() { isPaused = false; });
+        track.addEventListener('touchstart', function() { isPaused = true; }, { passive: true });
+        track.addEventListener('touchend', function() { setTimeout(function() { isPaused = false; }, 3000); }, { passive: true });
+        setInterval(function() {
+            if (isPaused) return;
+            var card = track.querySelector('.flex-shrink-0');
+            var gap = 16;
+            if (window.matchMedia('(min-width: 1024px)').matches) gap = 24;
+            var step = (card ? card.offsetWidth : 320) + gap;
+            var maxScroll = track.scrollWidth - track.clientWidth;
+            if (maxScroll <= 0) return;
+            var isRtl = document.documentElement.getAttribute('dir') === 'rtl';
+            if (isRtl) {
+                track.scrollBy({ left: -step, behavior: 'auto' });
+                if (track.scrollLeft <= -maxScroll || track.scrollLeft >= maxScroll) track.scrollLeft = 0;
+            } else {
+                track.scrollBy({ left: step, behavior: 'auto' });
+                if (track.scrollLeft >= maxScroll - 10) track.scrollLeft = 0;
+            }
+        }, stepMs);
+    })();
+    </script>
+    <?php endif; ?>
+
+    <?php if(isset($landingPaths) && $landingPaths->count() > 0): ?>
+    <script>
+    (function() {
+        var track = document.getElementById('learning-paths-track');
         if (!track) return;
         var stepMs = 5000;
         var isPaused = false;

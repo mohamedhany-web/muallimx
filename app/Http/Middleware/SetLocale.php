@@ -36,7 +36,9 @@ class SetLocale
                 session(['locale' => $saved]);
             }
         } else {
-            App::setLocale(config('app.locale', 'ar'));
+            // الافتراضي دائماً العربية (اللغة الأساسية للموقع)
+            App::setLocale('ar');
+            session(['locale' => 'ar', 'landing_locale' => 'ar']);
         }
 
         return $next($request);

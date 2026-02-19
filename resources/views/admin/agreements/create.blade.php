@@ -55,15 +55,37 @@
                         <option value="course_price" {{ old('type') == 'course_price' ? 'selected' : '' }}>سعر للكورس كاملاً</option>
                         <option value="hourly_rate" {{ old('type') == 'hourly_rate' ? 'selected' : '' }}>سعر للساعة المسجلة</option>
                         <option value="monthly_salary" {{ old('type') == 'monthly_salary' ? 'selected' : '' }}>راتب شهري</option>
+                        <option value="course_percentage" {{ old('type') == 'course_percentage' ? 'selected' : '' }}>نسبة من الكورس</option>
                     </select>
+                    <p class="mt-1 text-xs text-slate-500">نسبة من الكورس: يُحتسب للمدرب نسبة من مبلغ كل تفعيل للطالب في الكورس الأونلاين.</p>
                     @error('type')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                 </div>
 
-                <div>
+                <div id="rate-field">
                     <label class="block text-sm font-semibold text-slate-700 mb-2">السعر/المعدل (ج.م) <span class="text-red-500">*</span></label>
-                    <input type="number" name="rate" step="0.01" min="0" value="{{ old('rate') }}" required class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-400 transition-all" placeholder="0.00" />
+                    <input type="number" name="rate" id="rate" step="0.01" min="0" value="{{ old('rate') }}" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-400 transition-all" placeholder="0.00" />
                     <p class="mt-1 text-xs text-slate-500" id="rate-help">المبلغ المحدد لكل كورس</p>
                     @error('rate')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                </div>
+
+                <div id="course-percentage-fields" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6" style="display: none;">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">الكورس الأونلاين <span class="text-red-500">*</span></label>
+                        <select name="advanced_course_id" id="advanced_course_id" class="w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all">
+                            <option value="">اختر المدرب أولاً ثم الكورس</option>
+                            @foreach($advancedCourses ?? [] as $ac)
+                                <option value="{{ $ac->id }}" data-instructor-id="{{ $ac->instructor_id ?? '' }}" {{ old('advanced_course_id') == $ac->id ? 'selected' : '' }}>{{ $ac->title }}</option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 text-xs text-slate-500">تظهر فقط الكورسات المُعيَّنة للمدرب المختار.</p>
+                        @error('advanced_course_id')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">نسبة المدرب (%) <span class="text-red-500">*</span></label>
+                        <input type="number" name="course_percentage" id="course_percentage" step="0.01" min="0" max="100" value="{{ old('course_percentage') }}" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-400 transition-all" placeholder="مثال: 30" />
+                        <p class="mt-1 text-xs text-slate-500">من 0 إلى 100. تُحسب من مبلغ تفعيل الطالب في الكورس.</p>
+                        @error('course_percentage')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                    </div>
                 </div>
 
                 <div>
@@ -128,18 +150,58 @@
 
 @push('scripts')
 <script>
-    document.getElementById('type').addEventListener('change', function() {
-        const rateHelp = document.getElementById('rate-help');
-        const type = this.value;
-        
-        if (type === 'course_price') {
-            rateHelp.textContent = 'المبلغ المحدد لكل كورس';
-        } else if (type === 'hourly_rate') {
-            rateHelp.textContent = 'المبلغ المحدد لكل ساعة تدريس';
-        } else if (type === 'monthly_salary') {
-            rateHelp.textContent = 'الراتب الشهري الثابت';
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('type');
+    const rateField = document.getElementById('rate-field');
+    const rateInput = document.getElementById('rate');
+    const rateHelp = document.getElementById('rate-help');
+    const coursePercentageBlock = document.getElementById('course-percentage-fields');
+    const advancedCourseId = document.getElementById('advanced_course_id');
+    const coursePercentageInput = document.getElementById('course_percentage');
+
+    function filterCoursesByInstructor() {
+        const instructorSelect = document.querySelector('select[name="instructor_id"]');
+        if (!advancedCourseId || !instructorSelect) return;
+        const selectedInstructor = instructorSelect.value;
+        const options = advancedCourseId.querySelectorAll('option[data-instructor-id]');
+        options.forEach(function(opt) {
+            const show = !selectedInstructor || (opt.getAttribute('data-instructor-id') === selectedInstructor);
+            opt.style.display = show ? '' : 'none';
+            opt.disabled = !show;
+            if (opt.value && !show) advancedCourseId.value = '';
+        });
+        if (advancedCourseId.value) {
+            const chosen = advancedCourseId.querySelector('option:checked');
+            if (chosen && chosen.disabled) advancedCourseId.value = '';
         }
+    }
+
+    function toggleTypeFields() {
+        const type = typeSelect.value;
+        const isPercentage = type === 'course_percentage';
+        if (rateField) rateField.style.display = isPercentage ? 'none' : 'block';
+        if (coursePercentageBlock) coursePercentageBlock.style.display = isPercentage ? 'grid' : 'none';
+        if (rateInput) {
+            rateInput.required = !isPercentage;
+            rateInput.value = isPercentage ? '0' : rateInput.value;
+        }
+        if (advancedCourseId) advancedCourseId.required = isPercentage;
+        if (coursePercentageInput) coursePercentageInput.required = isPercentage;
+        if (isPercentage) filterCoursesByInstructor();
+
+        if (!isPercentage && rateHelp) {
+            if (type === 'course_price') rateHelp.textContent = 'المبلغ المحدد لكل كورس';
+            else if (type === 'hourly_rate') rateHelp.textContent = 'المبلغ المحدد لكل ساعة تدريس';
+            else if (type === 'monthly_salary') rateHelp.textContent = 'الراتب الشهري الثابت';
+        }
+    }
+
+    typeSelect.addEventListener('change', toggleTypeFields);
+    document.querySelector('select[name="instructor_id"]').addEventListener('change', function() {
+        if (document.getElementById('type').value === 'course_percentage') filterCoursesByInstructor();
     });
+    toggleTypeFields();
+});
 </script>
 @endpush
 @endsection

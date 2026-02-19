@@ -100,8 +100,27 @@ if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
                     <p class="mt-1 text-xs text-gray-500">
-                        "نشط" يعني أن الطالب يمكنه الوصول للكورس فوراً
+                        "نشط" يعني أن الطالب يمكنه الوصول للكورس فوراً. عند النشط يُحتسب للمدرب نسبة من الكورس إن وُجدت اتفاقية.
                     </p>
+                </div>
+
+                <!-- مبلغ التفعيل (يظهر عند اختيار "نشط") — يُستخدم لحساب نسبة المدرب -->
+                <div id="final_price_wrap" class="<?php echo e(old('status', 'active') !== 'active' ? 'hidden' : ''); ?>">
+                    <label for="final_price" class="block text-sm font-medium text-gray-700 mb-2">
+                        مبلغ التفعيل (ج.م) <span class="text-gray-400 text-xs">اختياري</span>
+                    </label>
+                    <input type="number" name="final_price" id="final_price" value="<?php echo e(old('final_price')); ?>" min="0" step="0.01"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="اتركه فارغاً لاستخدام سعر الكورس">
+                    <p class="mt-1 text-xs text-gray-500">إن وُجدت اتفاقية "نسبة من الكورس" للمدرب، تُحسب حصته من هذا المبلغ (أو سعر الكورس إن تركت الحقل فارغاً).</p>
+                    <?php $__errorArgs = ['final_price'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><p class="mt-1 text-sm text-red-600"><?php echo e($message); ?></p><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
             </div>
 
@@ -169,6 +188,12 @@ unset($__errorArgs, $__bag); ?>
 </div>
 
 <script>
+// إظهار/إخفاء حقل مبلغ التفعيل حسب حالة التسجيل
+document.getElementById('status').addEventListener('change', function() {
+    var wrap = document.getElementById('final_price_wrap');
+    wrap.classList.toggle('hidden', this.value !== 'active');
+});
+
 // عرض معلومات الطالب عند الاختيار
 document.getElementById('user_id').addEventListener('change', function() {
     const selectedOption = this.options[this.selectedIndex];

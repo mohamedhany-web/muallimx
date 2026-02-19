@@ -23,6 +23,17 @@ return [
     'portfolio_page_title' => 'Mindlytics Portfolio - Student Work Gallery',
     'portfolio_heading' => 'Portfolio',
     'portfolio_subtitle' => 'Our students\' work — real projects after completing courses, where companies see talent',
+
+    'community_page_title' => 'Data & AI Community - Mindlytics',
+    'community_heading' => 'Data & AI Community',
+    'community_subtitle' => 'Competitions, ready-to-use datasets, and discussions with experts and learners — your place to sharpen your data and AI skills',
+    'community_coming_soon' => 'Coming Soon',
+    'community_coming_desc' => 'We are launching programming and AI competitions, open datasets, and leaderboards. Join the community to get the latest updates.',
+    'community_features_competitions' => 'Competitions',
+    'community_features_datasets' => 'Datasets',
+    'community_features_discussions' => 'Community Discussions',
+    'community_enter_community' => 'Enter Community',
+
     'learning_paths_sidebar' => 'Learning paths',
     'all' => 'All',
     'no_projects_yet' => 'No projects published yet',

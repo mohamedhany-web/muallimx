@@ -12,7 +12,7 @@ return [
         'brand' => 'أكاديمية البرمجة',
         'learning_paths' => 'المسارات التعليمية',
         'courses' => 'الكورسات',
-        'about' => 'من نحن',
+        'community' => 'مجتمع البيانات والذكاء الاصطناعي',
         'portfolio' => 'البورتفوليو',
         'instructors' => 'المدربون',
         'login' => 'تسجيل دخول',
@@ -41,6 +41,14 @@ return [
         'title' => 'الكورسات',
         'title_highlight' => ' المميزة',
     ],
+
+    'learning_paths' => [
+        'badge' => 'مسارات تعليمية',
+        'title' => 'المسارات',
+        'title_highlight' => ' التعليمية',
+    ],
+    'learning_paths_subtitle' => 'اختر مسارك التعليمي المناسب واحصل على مجموعة متكاملة من المهارات والكورسات',
+    'view_all_paths' => 'عرض المسارات',
 
     'language_switcher' => [
         'en' => 'English',

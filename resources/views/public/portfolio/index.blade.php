@@ -3,19 +3,19 @@
 @section('title', __('public.portfolio_page_title'))
 
 @section('content')
-<section class="py-8 md:py-12 bg-gradient-to-b from-slate-50 to-white" style="padding-top: 6rem;">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="mb-8 text-center">
-            <h1 class="text-3xl md:text-4xl font-black text-gray-900 mb-2" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
+<section class="py-8 md:py-12 bg-gradient-to-b from-slate-50 to-white w-full" style="padding-top: 6rem;">
+    <div class="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
+        <div class="mb-10 md:mb-12 text-center">
+            <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-2" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
                 Mindlytics <span class="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">{{ __('public.portfolio_heading') }}</span>
             </h1>
-            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
                 {{ __('public.portfolio_subtitle') }}
             </p>
         </div>
 
-        <div class="flex flex-col lg:flex-row gap-8">
-            <aside class="lg:w-64 flex-shrink-0">
+        <div class="flex flex-col lg:flex-row gap-8 lg:gap-10">
+            <aside class="lg:w-72 xl:w-64 flex-shrink-0">
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sticky top-24">
                     <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i class="fas fa-route text-blue-600"></i>
@@ -40,10 +40,10 @@
                 </div>
             </aside>
 
-            <!-- المشاريع -->
-            <div class="flex-1 min-w-0">
+            <!-- المشاريع - عرض كامل -->
+            <div class="flex-1 min-w-0 w-full">
                 @if($projects->count() > 0)
-                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8">
                         @foreach($projects as $project)
                             <a href="{{ route('public.portfolio.show', $project->id) }}" class="group block bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl hover:border-blue-500/30 transition-all duration-300">
                                 @if($project->image_path)

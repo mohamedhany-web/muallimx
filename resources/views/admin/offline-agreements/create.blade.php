@@ -56,8 +56,9 @@
                         <option value="per_session" {{ old('billing_type', 'per_session') == 'per_session' ? 'selected' : '' }}>بالجلسة</option>
                         <option value="monthly" {{ old('billing_type') == 'monthly' ? 'selected' : '' }}>راتب شهري</option>
                         <option value="full_course" {{ old('billing_type') == 'full_course' ? 'selected' : '' }}>باكورس كامل</option>
+                        <option value="course_percentage" {{ old('billing_type') == 'course_percentage' ? 'selected' : '' }}>نسبة من الكورس</option>
                     </select>
-                    <p class="text-xs text-gray-500 mt-1">حدد طريقة احتساب التعويض: لكل جلسة، أو راتب شهري، أو مبلغ إجمالي للكورس بالكامل.</p>
+                    <p class="text-xs text-gray-500 mt-1">حدد طريقة احتساب التعويض. "نسبة من الكورس": يُحتسب للمدرب نسبة من مبلغ كل تفعيل للطالب في الكورس الأونلاين.</p>
                     @error('billing_type')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
 
@@ -132,6 +133,28 @@
                     @error('total_amount')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
 
+                <!-- حقول نوع: نسبة من الكورس -->
+                <div id="billing_course_percentage_fields" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 billing-type-fields" style="display: none;">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الكورس الأونلاين *</label>
+                        <select name="advanced_course_id" id="advanced_course_id" 
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="">اختر الكورس الأونلاين</option>
+                            @foreach($advancedCourses ?? [] as $ac)
+                                <option value="{{ $ac->id }}" {{ old('advanced_course_id') == $ac->id ? 'selected' : '' }}>{{ $ac->title }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">الكورس الذي تُحتسب منه النسبة عند كل تفعيل للطالب.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">نسبة المدرب (%) *</label>
+                        <input type="number" name="course_percentage" id="course_percentage" value="{{ old('course_percentage') }}" min="0" max="100" step="0.01" 
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <p class="text-xs text-gray-500 mt-1">من 0 إلى 100. تُحسب من مبلغ تفعيل الطالب في الكورس.</p>
+                        @error('course_percentage')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
                 <!-- الحالة -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">الحالة *</label>
@@ -178,23 +201,29 @@ document.addEventListener('DOMContentLoaded', function() {
     var perSession = document.getElementById('billing_per_session_fields');
     var monthly = document.getElementById('billing_monthly_fields');
     var fullCourse = document.getElementById('billing_full_course_fields');
+    var coursePercentageBlock = document.getElementById('billing_course_percentage_fields');
     var salaryPerSession = document.getElementById('salary_per_session');
     var sessionsCount = document.getElementById('sessions_count');
     var monthlyAmount = document.getElementById('monthly_amount');
     var monthsCount = document.getElementById('months_count');
     var totalAmountInput = document.getElementById('total_amount_input');
+    var advancedCourseId = document.getElementById('advanced_course_id');
+    var coursePercentage = document.getElementById('course_percentage');
 
     function toggleBillingFields() {
         var v = billingType.value;
         perSession.style.display = v === 'per_session' ? 'grid' : 'none';
         monthly.style.display = v === 'monthly' ? 'grid' : 'none';
         fullCourse.style.display = v === 'full_course' ? 'block' : 'none';
+        if (coursePercentageBlock) coursePercentageBlock.style.display = v === 'course_percentage' ? 'grid' : 'none';
 
         salaryPerSession.required = (v === 'per_session');
         sessionsCount.required = (v === 'per_session');
         monthlyAmount.required = (v === 'monthly');
         monthsCount.required = (v === 'monthly');
         totalAmountInput.required = (v === 'full_course');
+        if (advancedCourseId) advancedCourseId.required = (v === 'course_percentage');
+        if (coursePercentage) coursePercentage.required = (v === 'course_percentage');
     }
 
     billingType.addEventListener('change', toggleBillingFields);

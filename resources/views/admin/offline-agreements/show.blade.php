@@ -73,11 +73,27 @@
                     <p class="text-sm text-gray-600 mb-1">عدد الأشهر</p>
                     <p class="font-semibold text-gray-900 text-lg">{{ $agreement->months_count ?? 0 }}</p>
                 </div>
+                @elseif(($agreement->billing_type ?? '') === 'course_percentage')
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">الكورس الأونلاين</p>
+                    <p class="font-semibold text-gray-900 text-lg">{{ $agreement->advancedCourse?->title ?? '—' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">نسبة المدرب</p>
+                    <p class="font-semibold text-gray-900 text-lg">{{ number_format($agreement->course_percentage ?? 0, 2) }}%</p>
+                </div>
                 @endif
+                @if(($agreement->billing_type ?? '') !== 'course_percentage')
                 <div>
                     <p class="text-sm text-gray-600 mb-1">المبلغ الإجمالي</p>
                     <p class="font-semibold text-gray-900 text-2xl text-blue-600">{{ number_format($agreement->total_amount ?? 0, 2) }} ج.م</p>
                 </div>
+                @else
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">إجمالي أرباح التفعيلات</p>
+                    <p class="font-semibold text-gray-900 text-2xl text-blue-600">{{ number_format($agreement->payments->where('type', 'course_activation')->sum('amount'), 2) }} ج.م</p>
+                </div>
+                @endif
                 <div>
                     <p class="text-sm text-gray-600 mb-1">حالة الدفع</p>
                     @php
@@ -135,6 +151,46 @@
             <div class="mt-6 pt-6 border-t border-gray-200">
                 <p class="text-sm text-gray-600 mb-2">ملاحظات</p>
                 <p class="text-gray-900 leading-relaxed">{{ $agreement->notes }}</p>
+            </div>
+            @endif
+
+            @if(($agreement->billing_type ?? '') === 'course_percentage' && $agreement->payments->where('type', 'course_activation')->isNotEmpty())
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">تفعيلات الطلاب (نسبة المدرب)</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr class="text-xs font-semibold text-gray-700 uppercase">
+                                <th class="px-4 py-3 text-right">التاريخ</th>
+                                <th class="px-4 py-3 text-right">الطالب</th>
+                                <th class="px-4 py-3 text-right">مبلغ التفعيل (ج.م)</th>
+                                <th class="px-4 py-3 text-right">نسبة المدرب (ج.م)</th>
+                                <th class="px-4 py-3 text-right">حالة الدفع</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white">
+                            @foreach($agreement->payments->where('type', 'course_activation') as $p)
+                            <tr>
+                                <td class="px-4 py-3 text-sm text-gray-900">{{ $p->created_at?->format('Y-m-d') ?? '—' }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ $p->enrollment?->student?->name ?? '—' }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900">{{ $p->enrollment ? number_format($p->enrollment->final_price ?? 0, 2) : '—' }}</td>
+                                <td class="px-4 py-3 text-sm font-semibold text-blue-600">{{ number_format($p->amount, 2) }}</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                        @if($p->status === 'paid') bg-green-100 text-green-800
+                                        @elseif($p->status === 'approved') bg-amber-100 text-amber-800
+                                        @else bg-gray-100 text-gray-800 @endif">
+                                        @if($p->status === 'paid') مدفوع
+                                        @elseif($p->status === 'approved') موافق عليه
+                                        @else قيد المراجعة
+                                        @endif
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
             @endif
         </div>

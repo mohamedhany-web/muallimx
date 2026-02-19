@@ -93,6 +93,10 @@ class LectureController extends Controller
     {
         $instructor = Auth::user();
         
+        if ($request->filled('video_platform')) {
+            $request->merge(['video_platform' => strtolower(trim($request->input('video_platform')))]);
+        }
+        
         $validated = $request->validate([
             'course_id' => 'required|exists:advanced_courses,id',
             'course_lesson_id' => 'nullable|exists:course_lessons,id',
@@ -204,6 +208,7 @@ class LectureController extends Controller
                 'video_platform' => $lecture->video_platform,
             ]);
             
+            $videoPlatform = $lecture->video_platform ? strtolower(trim($lecture->video_platform)) : '';
             return response()->json([
                 'id' => $lecture->id,
                 'title' => $lecture->title,
@@ -212,8 +217,8 @@ class LectureController extends Controller
                 'course_lesson_id' => $lecture->course_lesson_id,
                 'scheduled_at' => $lecture->scheduled_at ? $lecture->scheduled_at->toIso8601String() : null,
                 'duration_minutes' => $lecture->duration_minutes,
-                'recording_url' => $lecture->recording_url ?? '', // التأكد من إرجاع string حتى لو كان null
-                'video_platform' => $lecture->video_platform ?? '', // التأكد من إرجاع string حتى لو كان null
+                'recording_url' => $lecture->recording_url ?? '',
+                'video_platform' => $videoPlatform,
                 'teams_registration_link' => $lecture->teams_registration_link ?? '',
                 'teams_meeting_link' => $lecture->teams_meeting_link ?? '',
                 'notes' => $lecture->notes ?? '',
@@ -286,6 +291,11 @@ class LectureController extends Controller
             abort(403, 'غير مسموح لك بتعديل هذه المحاضرة');
         }
         
+        // تطبيع video_platform لأحرف صغيرة حتى يمر التحقق (القيم المسموحة: youtube, vimeo, ...)
+        if ($request->filled('video_platform')) {
+            $request->merge(['video_platform' => strtolower(trim($request->input('video_platform')))]);
+        }
+        
         $validated = $request->validate([
             'course_id' => 'required|exists:advanced_courses,id',
             'course_lesson_id' => 'nullable|exists:course_lessons,id',
@@ -295,10 +305,10 @@ class LectureController extends Controller
             'duration_minutes' => 'required|integer|min:15|max:480',
             'teams_registration_link' => 'nullable|url',
             'teams_meeting_link' => 'nullable|url',
-            'recording_url' => 'nullable|url',
+            'recording_url' => 'nullable|string|max:2000',
             'video_platform' => 'nullable|in:youtube,vimeo,google_drive,direct,bunny',
             'notes' => 'nullable|string',
-            'status' => 'required|in:scheduled,in_progress,completed,cancelled',
+            'status' => 'nullable|in:scheduled,in_progress,completed,cancelled',
             'has_attendance_tracking' => 'boolean',
             'has_assignment' => 'boolean',
             'has_evaluation' => 'boolean',
@@ -312,6 +322,17 @@ class LectureController extends Controller
         $validated['has_attendance_tracking'] = $request->has('has_attendance_tracking');
         $validated['has_assignment'] = $request->has('has_assignment');
         $validated['has_evaluation'] = $request->has('has_evaluation');
+        $validated['status'] = $validated['status'] ?? $lecture->status;
+        // تطبيع recording_url: إذا كان فارغاً استخدم null، وإلا تحقق من صحة الرابط
+        $recordingUrl = $request->input('recording_url');
+        if ($recordingUrl === null || trim((string) $recordingUrl) === '') {
+            $validated['recording_url'] = null;
+        } else {
+            $validated['recording_url'] = trim($recordingUrl);
+            if (!filter_var($validated['recording_url'], FILTER_VALIDATE_URL)) {
+                unset($validated['recording_url']);
+            }
+        }
         
         // إذا تم تغيير recording_url دون video_platform، اكتشاف المنصة تلقائياً
         if (!empty($validated['recording_url']) && empty($validated['video_platform'])) {

@@ -7,6 +7,7 @@ use App\Models\AdvancedCourse;
 use App\Models\AcademicYear;
 use App\Models\StudentCourseEnrollment;
 use App\Models\LearningPathEnrollment;
+use App\Services\InstructorCoursePercentageService;
 use App\Models\Order;
 use App\Models\Invoice;
 use App\Models\Payment;
@@ -206,15 +207,16 @@ class CheckoutController extends Controller
         DB::beginTransaction();
         try {
             // إذا كان هناك تسجيل غير نشط، تفعيله
+            $enrollment = null;
             if ($existingEnrollment) {
                 $existingEnrollment->update([
                     'status' => 'active',
                     'activated_at' => now(),
                     'activated_by' => Auth::id(),
                 ]);
+                $enrollment = $existingEnrollment->fresh();
             } else {
-                // إنشاء تسجيل جديد
-                StudentCourseEnrollment::create([
+                $enrollment = StudentCourseEnrollment::create([
                     'user_id' => Auth::id(),
                     'advanced_course_id' => $course->id,
                     'enrolled_at' => now(),
@@ -223,6 +225,9 @@ class CheckoutController extends Controller
                     'status' => 'active',
                     'progress' => 0,
                 ]);
+            }
+            if ($enrollment) {
+                InstructorCoursePercentageService::processEnrollmentActivation($enrollment);
             }
 
             DB::commit();
@@ -522,7 +527,7 @@ class CheckoutController extends Controller
 
         // تسجيل الطالب في جميع الكورسات (المجانية والمدفوعة)
         foreach ($courses as $course) {
-            StudentCourseEnrollment::firstOrCreate(
+            $courseEnrollment = StudentCourseEnrollment::firstOrCreate(
                 [
                     'user_id' => $enrollment->user_id,
                     'advanced_course_id' => $course->id,
@@ -535,6 +540,9 @@ class CheckoutController extends Controller
                     'progress' => 0,
                 ]
             );
+            if ($courseEnrollment->status === 'active') {
+                InstructorCoursePercentageService::processEnrollmentActivation($courseEnrollment->fresh());
+            }
         }
     }
 }

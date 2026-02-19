@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\InstructorAgreement;
 use App\Models\OfflineCourse;
+use App\Models\AdvancedCourse;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -54,8 +55,9 @@ class OfflineAgreementController extends Controller
     {
         $instructors = User::where('role', 'instructor')->where('is_active', true)->get();
         $offlineCourses = OfflineCourse::where('is_active', true)->get();
+        $advancedCourses = AdvancedCourse::where('is_active', true)->orderBy('title')->get(['id', 'title', 'instructor_id']);
 
-        return view('admin.offline-agreements.create', compact('instructors', 'offlineCourses'));
+        return view('admin.offline-agreements.create', compact('instructors', 'offlineCourses', 'advancedCourses'));
     }
 
     /**
@@ -66,7 +68,9 @@ class OfflineAgreementController extends Controller
         $rules = [
             'instructor_id' => 'required|exists:users,id',
             'offline_course_id' => 'nullable|exists:offline_courses,id',
-            'billing_type' => 'required|in:per_session,monthly,full_course',
+            'advanced_course_id' => 'required_if:billing_type,course_percentage|nullable|exists:advanced_courses,id',
+            'course_percentage' => 'required_if:billing_type,course_percentage|nullable|numeric|min:0|max:100',
+            'billing_type' => 'required|in:per_session,monthly,full_course,course_percentage',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_date' => 'required|date',
@@ -91,18 +95,32 @@ class OfflineAgreementController extends Controller
             $validated['total_amount'] = $validated['salary_per_session'] * max(1, $validated['sessions_count']);
             $validated['monthly_amount'] = null;
             $validated['months_count'] = null;
+            $validated['advanced_course_id'] = null;
+            $validated['course_percentage'] = null;
         } elseif ($billingType === 'monthly') {
             $validated['monthly_amount'] = (float) ($request->input('monthly_amount', 0) ?: 0);
             $validated['months_count'] = (int) ($request->input('months_count', 1) ?: 1);
             $validated['total_amount'] = $validated['monthly_amount'] * max(1, $validated['months_count']);
             $validated['salary_per_session'] = 0;
             $validated['sessions_count'] = 0;
+            $validated['advanced_course_id'] = null;
+            $validated['course_percentage'] = null;
+        } elseif ($billingType === 'course_percentage') {
+            $validated['advanced_course_id'] = $request->input('advanced_course_id') ?: null;
+            $validated['course_percentage'] = (float) ($request->input('course_percentage', 0) ?: 0);
+            $validated['salary_per_session'] = 0;
+            $validated['sessions_count'] = 0;
+            $validated['monthly_amount'] = null;
+            $validated['months_count'] = null;
+            $validated['total_amount'] = 0;
         } else {
             $validated['total_amount'] = (float) ($request->input('total_amount', 0) ?: 0);
             $validated['salary_per_session'] = 0;
             $validated['sessions_count'] = 0;
             $validated['monthly_amount'] = null;
             $validated['months_count'] = null;
+            $validated['advanced_course_id'] = null;
+            $validated['course_percentage'] = null;
         }
 
         $validated['agreement_number'] = InstructorAgreement::generateAgreementNumber();
@@ -118,7 +136,9 @@ class OfflineAgreementController extends Controller
      */
     public function show(InstructorAgreement $agreement)
     {
-        $agreement->load(['instructor', 'course']);
+        $agreement->load(['instructor', 'course', 'advancedCourse', 'payments' => function ($q) {
+            $q->with(['enrollment.student', 'course']);
+        }]);
         
         return view('admin.offline-agreements.show', compact('agreement'));
     }
@@ -130,8 +150,9 @@ class OfflineAgreementController extends Controller
     {
         $instructors = User::where('role', 'instructor')->where('is_active', true)->get();
         $offlineCourses = OfflineCourse::where('is_active', true)->get();
+        $advancedCourses = AdvancedCourse::where('is_active', true)->orderBy('title')->get(['id', 'title', 'instructor_id']);
 
-        return view('admin.offline-agreements.edit', compact('agreement', 'instructors', 'offlineCourses'));
+        return view('admin.offline-agreements.edit', compact('agreement', 'instructors', 'offlineCourses', 'advancedCourses'));
     }
 
     /**
@@ -142,7 +163,9 @@ class OfflineAgreementController extends Controller
         $rules = [
             'instructor_id' => 'required|exists:users,id',
             'offline_course_id' => 'nullable|exists:offline_courses,id',
-            'billing_type' => 'required|in:per_session,monthly,full_course',
+            'advanced_course_id' => 'required_if:billing_type,course_percentage|nullable|exists:advanced_courses,id',
+            'course_percentage' => 'required_if:billing_type,course_percentage|nullable|numeric|min:0|max:100',
+            'billing_type' => 'required|in:per_session,monthly,full_course,course_percentage',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'start_date' => 'required|date',
@@ -168,18 +191,32 @@ class OfflineAgreementController extends Controller
             $validated['total_amount'] = $validated['salary_per_session'] * max(1, $validated['sessions_count']);
             $validated['monthly_amount'] = null;
             $validated['months_count'] = null;
+            $validated['advanced_course_id'] = null;
+            $validated['course_percentage'] = null;
         } elseif ($billingType === 'monthly') {
             $validated['monthly_amount'] = (float) ($request->input('monthly_amount', 0) ?: 0);
             $validated['months_count'] = (int) ($request->input('months_count', 1) ?: 1);
             $validated['total_amount'] = $validated['monthly_amount'] * max(1, $validated['months_count']);
             $validated['salary_per_session'] = 0;
             $validated['sessions_count'] = 0;
+            $validated['advanced_course_id'] = null;
+            $validated['course_percentage'] = null;
+        } elseif ($billingType === 'course_percentage') {
+            $validated['advanced_course_id'] = $request->input('advanced_course_id') ?: null;
+            $validated['course_percentage'] = (float) ($request->input('course_percentage', 0) ?: 0);
+            $validated['salary_per_session'] = 0;
+            $validated['sessions_count'] = 0;
+            $validated['monthly_amount'] = null;
+            $validated['months_count'] = null;
+            $validated['total_amount'] = 0;
         } else {
             $validated['total_amount'] = (float) ($request->input('total_amount', 0) ?: 0);
             $validated['salary_per_session'] = 0;
             $validated['sessions_count'] = 0;
             $validated['monthly_amount'] = null;
             $validated['months_count'] = null;
+            $validated['advanced_course_id'] = null;
+            $validated['course_percentage'] = null;
         }
 
         $agreement->update($validated);

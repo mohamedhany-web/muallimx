@@ -174,6 +174,27 @@ Route::get('/blog/{slug}', [\App\Http\Controllers\Public\BlogController::class, 
 Route::get('/portfolio', [\App\Http\Controllers\Public\PortfolioController::class, 'index'])->name('public.portfolio.index');
 Route::get('/portfolio/{id}', [\App\Http\Controllers\Public\PortfolioController::class, 'show'])->name('public.portfolio.show')->where('id', '[0-9]+');
 
+// مجتمع البيانات والذكاء الاصطناعي (مسابقات، داتاسيت، مجتمع)
+Route::get('/community', [\App\Http\Controllers\Public\CommunityController::class, 'index'])->name('public.community.index');
+
+// مصادقة مجتمع البيانات (تسجيل دخول وإنشاء حساب منفصلان - نفس المستخدمين)
+Route::prefix('community')->name('community.')->group(function () {
+    Route::middleware(['guest', 'guest-only'])->group(function () {
+        Route::get('/login', [\App\Http\Controllers\Community\AuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [\App\Http\Controllers\Community\AuthController::class, 'login'])->middleware('throttle:5,15')->name('login.post');
+        Route::get('/register', [\App\Http\Controllers\Community\AuthController::class, 'showRegister'])->name('register');
+        Route::post('/register', [\App\Http\Controllers\Community\AuthController::class, 'register'])->middleware('throttle:5,1')->name('register.post');
+    });
+    Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Community\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/competitions', [\App\Http\Controllers\Community\CommunityPageController::class, 'competitions'])->name('competitions.index');
+        Route::get('/datasets', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasets'])->name('datasets.index');
+        Route::get('/datasets/{dataset}', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetShow'])->name('datasets.show');
+        Route::get('/datasets/{dataset}/download', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetDownload'])->name('datasets.download');
+        Route::get('/discussions', [\App\Http\Controllers\Community\CommunityPageController::class, 'discussions'])->name('discussions.index');
+    });
+});
+
 // التواصل
 Route::get('/contact', [\App\Http\Controllers\Public\ContactController::class, 'index'])->name('public.contact');
 Route::post('/contact', [\App\Http\Controllers\Public\ContactController::class, 'store'])->name('public.contact.store');
@@ -389,6 +410,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/my-courses/{course}/learn', [\App\Http\Controllers\Student\MyCourseController::class, 'learn'])
             ->middleware(['ownership:course,course'])
             ->name('my-courses.learn');
+        Route::get('/my-courses/{course}/lectures/{lecture}', [\App\Http\Controllers\Student\MyCourseController::class, 'getLectureData'])
+            ->middleware(['ownership:course,course'])
+            ->name('my-courses.lectures.show');
         Route::get('/my-courses/{course}/lessons/{lesson}/watch', [\App\Http\Controllers\Student\MyCourseController::class, 'watchLesson'])
             ->middleware([\App\Http\Middleware\VideoProtectionMiddleware::class, 'ownership:course,course'])
             ->name('my-courses.lesson.watch');
@@ -785,6 +809,21 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('portfolio', [\App\Http\Controllers\Admin\PortfolioController::class, 'index'])->name('portfolio.index');
         Route::get('portfolio/{project}', [\App\Http\Controllers\Admin\PortfolioController::class, 'show'])->name('portfolio.show');
         Route::post('portfolio/{project}/toggle-visibility', [\App\Http\Controllers\Admin\PortfolioController::class, 'toggleVisibility'])->name('portfolio.toggle-visibility');
+
+        // مجتمع البيانات والذكاء الاصطناعي — للإدارة العليا فقط (صلاحية super_admin أو admin)
+        Route::prefix('community')->name('community.')->middleware('role:super_admin')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\CommunityController::class, 'dashboard'])->name('dashboard');
+            Route::resource('competitions', \App\Http\Controllers\Admin\CommunityCompetitionController::class)->except(['show']);
+            Route::resource('datasets', \App\Http\Controllers\Admin\CommunityDatasetController::class)->except(['show']);
+            Route::get('/submissions', [\App\Http\Controllers\Admin\CommunityController::class, 'submissions'])->name('submissions.index');
+            Route::get('/discussions', [\App\Http\Controllers\Admin\CommunityController::class, 'discussions'])->name('discussions.index');
+            Route::get('/settings', [\App\Http\Controllers\Admin\CommunityController::class, 'settings'])->name('settings.index');
+        });
+
+        // الإدارة العليا (من نحن وغيرها)
+        Route::get('about', [\App\Http\Controllers\Admin\AboutPageController::class, 'index'])->name('about.index');
+        Route::get('about/view', [\App\Http\Controllers\Admin\AboutPageController::class, 'viewPublic'])->name('about.view-public');
+
         Route::resource('contact-messages', \App\Http\Controllers\Admin\ContactMessageController::class);
         Route::post('/contact-messages/{contactMessage}/mark-as-read', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markAsRead'])->name('contact-messages.mark-as-read');
         Route::post('/contact-messages/{contactMessage}/mark-as-unread', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markAsUnread'])->name('contact-messages.mark-as-unread');
@@ -996,6 +1035,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->middleware('throttle:60,1');
         Route::post('/subscriptions/{subscription}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'update'])->middleware('throttle:20,5')->name('subscriptions.update');
         Route::delete('/subscriptions/{subscription}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'destroy'])->middleware('throttle:10,1')->name('subscriptions.destroy');
+        Route::get('/accounting/instructor-accounts', [\App\Http\Controllers\Admin\InstructorAccountController::class, 'index'])->name('accounting.instructor-accounts.index');
+        Route::get('/accounting/instructor-accounts/{instructor}', [\App\Http\Controllers\Admin\InstructorAccountController::class, 'show'])->name('accounting.instructor-accounts.show');
+
         Route::get('/accounting/reports', [\App\Http\Controllers\Admin\AccountingReportsController::class, 'index'])->name('accounting.reports');
         Route::get('/accounting/reports/export', [\App\Http\Controllers\Admin\AccountingReportsController::class, 'export'])->name('accounting.reports.export');
         Route::get('/accounting/reports/invoices', [\App\Http\Controllers\Admin\AccountingReportsController::class, 'invoices'])->name('accounting.reports.invoices');
@@ -1279,6 +1321,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // نظام الاتفاقيات للمدرب
         Route::prefix('agreements')->name('agreements.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Instructor\AgreementController::class, 'index'])->name('index');
+            Route::get('/{agreement}/export-activations', [\App\Http\Controllers\Instructor\AgreementController::class, 'exportActivations'])->name('export-activations');
             Route::get('/{agreement}', [\App\Http\Controllers\Instructor\AgreementController::class, 'show'])->name('show');
         });
 

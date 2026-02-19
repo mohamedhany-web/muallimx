@@ -60,7 +60,12 @@
                         <div class="bg-gradient-to-br from-blue-50 to-white p-4 rounded-xl border-2 border-blue-100">
                             <p class="text-xs font-semibold text-blue-700 mb-1">{{ __('instructor.agreement_type_label') }}</p>
                             <p class="text-sm font-black text-slate-900">
-                                @if($agreement->type == 'course_price')
+                                @if(($agreement->billing_type ?? '') === 'course_percentage')
+                                    نسبة من الكورس
+                                    @if($agreement->advancedCourse)
+                                        <span class="block text-xs font-normal text-slate-600 mt-1">{{ $agreement->advancedCourse->title }}</span>
+                                    @endif
+                                @elseif($agreement->type == 'course_price')
                                     {{ __('instructor.course_price_full') }}
                                 @elseif($agreement->type == 'hourly_rate')
                                     {{ __('instructor.hourly_rate_recorded') }}
@@ -70,8 +75,14 @@
                             </p>
                         </div>
                         <div class="bg-gradient-to-br from-purple-50 to-white p-4 rounded-xl border-2 border-purple-100">
-                            <p class="text-xs font-semibold text-purple-700 mb-1">{{ __('instructor.rate') }}</p>
-                            <p class="text-sm font-black text-slate-900">{{ number_format($agreement->rate, 2) }} {{ __('public.currency_egp') }}</p>
+                            <p class="text-xs font-semibold text-purple-700 mb-1">{{ (($agreement->billing_type ?? '') === 'course_percentage') ? 'نسبة المدرب' : __('instructor.rate') }}</p>
+                            <p class="text-sm font-black text-slate-900">
+                                @if(($agreement->billing_type ?? '') === 'course_percentage')
+                                    {{ number_format($agreement->course_percentage ?? 0, 2) }}%
+                                @else
+                                    {{ number_format($agreement->rate, 2) }} {{ __('public.currency_egp') }}
+                                @endif
+                            </p>
                         </div>
                         <div class="bg-gradient-to-br from-emerald-50 to-white p-4 rounded-xl border-2 border-emerald-100">
                             <p class="text-xs font-semibold text-emerald-700 mb-1">{{ __('common.status') }}</p>
@@ -122,6 +133,76 @@
                 </div>
             </section>
 
+            @if(($agreement->billing_type ?? '') === 'course_percentage')
+            {{-- تفعيلات الطلاب وحصتي من كل شراء — يظهر عند اتفاقية "نسبة من الكورس" فقط --}}
+            @php
+                $activationPayments = $agreement->payments->where('type', 'course_activation');
+            @endphp
+            <section class="rounded-2xl bg-white/95 backdrop-blur border-2 border-blue-200/50 shadow-xl overflow-hidden">
+                <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                            <i class="fas fa-user-graduate text-blue-600"></i>
+                            تفعيلات الطلاب وحصتي من كل شراء
+                        </h3>
+                        <p class="text-sm text-slate-600 mt-1">عند كل تفعيل لطالب في الكورس تظهر نسبتك من مبلغ الشراء وحصتك.</p>
+                    </div>
+                    <a href="{{ route('instructor.agreements.export-activations', $agreement) }}"
+                       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25 transition-all duration-200 border-2 border-emerald-500/30 whitespace-nowrap">
+                        <i class="fas fa-file-excel"></i>
+                        تصدير إلى Excel
+                    </a>
+                </div>
+                @if($activationPayments->isNotEmpty())
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr class="text-xs font-bold uppercase tracking-widest text-slate-700">
+                                <th class="px-6 py-4 text-right">التاريخ</th>
+                                <th class="px-6 py-4 text-right">الطالب</th>
+                                <th class="px-6 py-4 text-right">مبلغ الشراء (ج.م)</th>
+                                <th class="px-6 py-4 text-right">نسبتي</th>
+                                <th class="px-6 py-4 text-right">حصتي (ج.م)</th>
+                                <th class="px-6 py-4 text-right">الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 bg-white text-sm">
+                            @foreach($activationPayments as $p)
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-6 py-4 text-slate-600">{{ $p->created_at?->format('Y-m-d') ?? '—' }}</td>
+                                <td class="px-6 py-4 font-medium text-slate-900">{{ $p->enrollment?->student?->name ?? '—' }}</td>
+                                <td class="px-6 py-4">{{ $p->enrollment ? number_format($p->enrollment->final_price ?? 0, 2) : '—' }}</td>
+                                <td class="px-6 py-4 font-semibold text-blue-700">{{ number_format($agreement->course_percentage ?? 0, 2) }}%</td>
+                                <td class="px-6 py-4 font-black text-slate-900">{{ number_format($p->amount, 2) }} ج.م</td>
+                                <td class="px-6 py-4">
+                                    @if($p->status === 'paid')
+                                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">مدفوع</span>
+                                    @elseif($p->status === 'approved')
+                                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">موافق عليه</span>
+                                    @else
+                                        <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">قيد المراجعة</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-5 py-4 sm:px-8 lg:px-12 bg-gradient-to-r from-blue-50 to-white border-t-2 border-blue-100">
+                    <p class="text-base font-black text-slate-900">
+                        إجمالي أرباحي من هذه الاتفاقية: <span class="text-blue-700">{{ number_format($activationPayments->sum('amount'), 2) }} ج.م</span>
+                    </p>
+                </div>
+                @else
+                <div class="px-5 py-8 sm:px-8 lg:px-12 text-center text-slate-500">
+                    <i class="fas fa-user-graduate text-4xl text-slate-300 mb-3"></i>
+                    <p class="font-medium">لا توجد تفعيلات للطلاب حتى الآن.</p>
+                    <p class="text-sm mt-1">عند تفعيل أي طالب في هذا الكورس ستظهر هنا نسبتك وحصتك تلقائياً.</p>
+                </div>
+                @endif
+            </section>
+            @endif
+
             <!-- Payments -->
             <section class="rounded-2xl bg-white/95 backdrop-blur border-2 border-slate-200/50 shadow-xl overflow-hidden">
                 <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white">
@@ -158,6 +239,7 @@
                                                 'monthly_salary' => __('instructor.monthly_salary'),
                                                 'bonus' => __('instructor.bonus'),
                                                 'other' => __('instructor.other'),
+                                                'course_activation' => 'نسبة من تفعيل الطالب',
                                             ];
                                             $typeLabel = $typeLabels[$payment->type] ?? ($payment->type ?? __('instructor.not_specified'));
                                         @endphp
@@ -165,6 +247,10 @@
                                             <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
                                                 {{ $typeLabel }}
                                             </span>
+                                            @if($payment->type === 'course_activation' && $payment->enrollment)
+                                                <p class="text-xs text-slate-500 mt-1">الطالب: {{ $payment->enrollment->student->name ?? '—' }}</p>
+                                                <p class="text-xs text-slate-500 mt-1">مبلغ التفعيل: {{ number_format($payment->enrollment->final_price ?? 0, 2) }} ج.م → حصتك {{ number_format($payment->amount, 2) }} ج.م</p>
+                                            @endif
                                             @if($payment->course)
                                                 <p class="text-xs text-slate-500 mt-1">{{ $payment->course->title ?? '' }}</p>
                                             @endif
