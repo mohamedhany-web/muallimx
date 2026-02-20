@@ -562,22 +562,21 @@
 @endpush
 
 @php
-    // تحضير بيانات المحاضرات للـ JavaScript
-    $lecturesData = $course->lectures->map(function($lecture) {
-        // إعادة تحميل المحاضرة من قاعدة البيانات للتأكد من أحدث البيانات
+    // تحضير بيانات المحاضرات للـ JavaScript (مع المواد الظاهرة للطالب)
+    $lecturesData = $course->lectures->map(function($lecture) use ($course) {
         $lecture->refresh();
-        
-        // جلب البيانات مباشرة من قاعدة البيانات للتأكد
-        $recordingUrl = \DB::table('lectures')
-            ->where('id', $lecture->id)
-            ->value('recording_url');
-        
-        $videoPlatform = \DB::table('lectures')
-            ->where('id', $lecture->id)
-            ->value('video_platform');
-        
+        $recordingUrl = \DB::table('lectures')->where('id', $lecture->id)->value('recording_url');
+        $videoPlatform = \DB::table('lectures')->where('id', $lecture->id)->value('video_platform');
         $recordingUrlFinal = $recordingUrl ? trim($recordingUrl) : ($lecture->recording_url ? trim($lecture->recording_url) : null);
         $videoPlatformFinal = $videoPlatform ? trim(strtolower($videoPlatform)) : ($lecture->video_platform ? trim(strtolower($lecture->video_platform)) : null);
+        $materials = $lecture->materials()->where('is_visible_to_student', true)->orderBy('sort_order')->get()->map(function($m) use ($course, $lecture) {
+            return [
+                'id' => $m->id,
+                'title' => $m->title ?: $m->file_name,
+                'file_name' => $m->file_name,
+                'download_url' => route('my-courses.lectures.material.download', [$course->id, $lecture->id, $m->id]),
+            ];
+        })->values()->all();
         return [
             'id' => $lecture->id,
             'title' => $lecture->title,
@@ -589,7 +588,8 @@
             'video_platform' => $videoPlatformFinal,
             'teams_meeting_link' => $lecture->teams_meeting_link ?? null,
             'teams_registration_link' => $lecture->teams_registration_link ?? null,
-            'notes' => $lecture->notes ?? null
+            'notes' => $lecture->notes ?? null,
+            'materials' => $materials,
         ];
     })->keyBy('id');
     
@@ -601,6 +601,8 @@
 <div class="learn-page bg-slate-50/80 min-h-screen pb-8"
      data-course-id="{{ $course->id }}"
      data-course-progress="{{ min(100, (float)($progress ?? 0)) }}"
+     data-total-items="{{ $totalLessons ?? 0 }}"
+     data-completed-items="{{ $completedLessons ?? 0 }}"
      data-lectures-url="{{ route('my-courses.lectures.show', [$course, '_LID_']) }}"
      :data-font-size="fontSize"
      x-data="courseFocusMode()"
@@ -613,6 +615,11 @@
          updateProgressBar();
          setInterval(() => updateProgressBar(), 100);
          document.addEventListener('fullscreenchange', () => { isFullscreen = !!document.fullscreenElement; });
+         const _learnComp = this;
+         window.addEventListener('video-progress-report', (e) => {
+             const d = e.detail || {};
+             _learnComp.reportVideoProgressFromPlayer(d.currentSec, d.durationSec, d.isPlaying);
+         });
      ">
     {{-- Breadcrumb (مخفي في وضع التركيز) --}}
     <nav x-show="!focusMode" class="bg-white border-b border-slate-200 px-4 py-2 lg:px-6" aria-label="Breadcrumb">
@@ -643,8 +650,8 @@
                             <div class="h-2 flex-1 max-w-[140px] bg-slate-200 rounded-full overflow-hidden">
                                 <div class="learn-progress-fill h-full bg-gradient-to-l from-sky-400 to-sky-500 rounded-full transition-all duration-500" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
                             </div>
-                            <span class="text-xs font-semibold text-slate-600 whitespace-nowrap">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
-                            <span class="text-xs font-bold text-sky-600">{{ number_format((float)($progress ?? 0), 0) }}%</span>
+                            <span class="learn-progress-count text-xs font-semibold text-slate-600 whitespace-nowrap">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
+                            <span class="learn-progress-pct text-xs font-bold text-sky-600">{{ number_format((float)($progress ?? 0), 0) }}%</span>
                         </div>
                     </div>
                 </div>
@@ -666,8 +673,8 @@
             <div class="h-2 w-24 bg-slate-200 rounded-full overflow-hidden">
                 <div class="learn-progress-fill h-full bg-gradient-to-l from-sky-400 to-sky-500 rounded-full transition-all duration-500" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
             </div>
-            <span class="text-xs font-semibold text-slate-600">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
-            <span class="text-xs font-bold text-sky-600">{{ number_format((float)($progress ?? 0), 0) }}%</span>
+            <span class="learn-progress-count text-xs font-semibold text-slate-600">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
+            <span class="learn-progress-pct text-xs font-bold text-sky-600">{{ number_format((float)($progress ?? 0), 0) }}%</span>
         </div>
     </div>
 
@@ -686,8 +693,8 @@
                         <div class="h-1.5 flex-1 rounded-full bg-slate-200 overflow-hidden">
                             <div class="h-full bg-gradient-to-l from-sky-400 to-sky-500 rounded-full" style="width: {{ min(100, (float)($progress ?? 0)) }}%"></div>
                         </div>
-                        <span class="text-[10px] font-bold text-gray-600 whitespace-nowrap">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
-                        <span class="text-[10px] font-bold text-sky-600">{{ number_format((float)($progress ?? 0), 0) }}%</span>
+                        <span class="learn-progress-count text-[10px] font-bold text-gray-600 whitespace-nowrap">{{ $completedLessons ?? 0 }}/{{ $totalLessons ?? 0 }}</span>
+                        <span class="learn-progress-pct text-[10px] font-bold text-sky-600">{{ number_format((float)($progress ?? 0), 0) }}%</span>
                     </div>
                     <div class="search-box relative">
                         <input type="text" 
@@ -975,7 +982,18 @@
                             </button>
                             <button type="button" class="btn-share" title="مشاركة"><i class="fas fa-share-alt"></i> مشاركة</button>
                         </div>
-                        <div class="aspect-video w-full relative bg-black" x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)">
+                        <!-- شريط تقدم المشاهدة للفيديو (دائماً ظاهر مع مشغل الفيديو) -->
+                        <div class="flex-shrink-0 px-3 py-2.5 bg-slate-800 border-b border-slate-600 min-h-[52px] flex flex-col justify-center">
+                            <div class="flex items-center justify-between gap-2 mb-1.5">
+                                <span class="text-sm font-semibold text-sky-300">نسبة المشاهدة</span>
+                                <span class="text-sm font-bold text-white tabular-nums" x-text="(Math.round((videoProgressPercent || 0) * 10) / 10).toFixed(1) + '%'">0.0%</span>
+                            </div>
+                            <div class="h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-sky-400 to-sky-500 rounded-full transition-all duration-300 min-w-[2px]"
+                                     :style="'width: ' + Math.min(100, Math.max(0, videoProgressPercent || 0)) + '%'"></div>
+                            </div>
+                        </div>
+                        <div class="aspect-video w-full relative bg-black flex-1 min-h-0" x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)">
                             {{-- محاضرة: نفس أسلوب البوب أب في المنهج — حاوية واحدة و innerHTML مباشر --}}
                             <div x-show="selectedLecture && showVideoPlayer" class="absolute inset-0 w-full h-full" id="learn-video-embed"></div>
                             {{-- درس: مشغل الفيديو الحالي --}}
@@ -988,6 +1006,39 @@
                     <!-- محتوى المحاضرة (بدون فيديو) -->
                     <div x-show="selectedLecture && !showVideoPlayer" x-transition class="lesson-content-viewer">
                         <div x-html="lectureContent"></div>
+                    </div>
+
+                    <!-- مواد المحاضرة (ظاهرة عند اختيار محاضرة ولديها مواد) -->
+                    <div x-show="selectedLecture && lectureMaterials && lectureMaterials.length" x-transition
+                         class="mt-5 rounded-2xl border border-slate-200 dark:border-slate-600 overflow-hidden bg-white dark:bg-slate-800/50 shadow-sm">
+                        <div class="px-4 sm:px-5 py-3.5 bg-gradient-to-l from-sky-50 to-white dark:from-slate-800 dark:to-slate-800/80 border-b border-slate-100 dark:border-slate-600 flex items-center justify-between gap-3 flex-wrap">
+                            <h3 class="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2.5">
+                                <span class="w-9 h-9 rounded-xl bg-sky-100 dark:bg-sky-900/40 flex items-center justify-center">
+                                    <i class="fas fa-paperclip text-sky-600 dark:text-sky-400"></i>
+                                </span>
+                                مواد المحاضرة
+                                <span class="text-xs font-semibold text-sky-600 dark:text-sky-400 bg-sky-100 dark:bg-sky-900/40 px-2.5 py-0.5 rounded-full" x-text="lectureMaterials.length"></span>
+                            </h3>
+                        </div>
+                        <div class="p-4 sm:p-5">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <template x-for="mat in lectureMaterials" :key="mat.id">
+                                    <a :href="mat.download_url" target="_blank" rel="noopener"
+                                       class="group flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 hover:bg-sky-50 dark:hover:bg-sky-900/20 hover:border-sky-200 dark:hover:border-sky-700 transition-all duration-200">
+                                        <span class="w-12 h-12 rounded-xl bg-white dark:bg-slate-600 shadow-sm border border-slate-200 dark:border-slate-500 flex items-center justify-center shrink-0 group-hover:bg-sky-100 dark:group-hover:bg-sky-900/30 transition-colors">
+                                            <i class="fas text-lg" :class="getMaterialIconClass(mat)"></i>
+                                        </span>
+                                        <div class="flex-1 min-w-0">
+                                            <span class="block font-semibold text-slate-800 dark:text-white truncate group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors" x-text="mat.title"></span>
+                                            <span class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 block truncate" x-text="mat.file_name"></span>
+                                        </div>
+                                        <span class="w-10 h-10 rounded-lg bg-sky-500 text-white flex items-center justify-center shrink-0 group-hover:bg-sky-600 transition-colors">
+                                            <i class="fas fa-download text-sm"></i>
+                                        </span>
+                                    </a>
+                                </template>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- النمط التعليمي -->
@@ -1047,6 +1098,7 @@ function courseFocusMode() {
         selectedPattern: null,
         lessonContent: '',
         lectureContent: '',
+        lectureMaterials: [],
         lecturesData: lecturesData,
         progressInterval: null,
         isFullscreen: false,
@@ -1060,6 +1112,12 @@ function courseFocusMode() {
         videoProgressPercent: 0,
         videoTimeCurrent: '0:00',
         videoTimeTotal: '0:00',
+        lastVideoProgressPercent: 0,
+        lastVideoWatchTimeSec: 0,
+        lastVideoDurationSec: 0,
+        watchedSeconds: 0,
+        lastReportedTime: null,
+        SEEK_THRESHOLD: 2.5,
         async loadLesson(lessonId) {
             this.selectedLesson = lessonId;
             this.selectedLecture = null;
@@ -1088,6 +1146,12 @@ function courseFocusMode() {
                 this.currentLessonDuration = lesson.duration_minutes || null;
                 this.currentLessonThumbnail = this.getYoutubeThumb(lesson.video_url) || '';
                 this.currentLessonCompleted = !!(lesson.progress && lesson.progress.is_completed);
+                this.watchedSeconds = (lesson.progress && lesson.progress.watch_time != null) ? lesson.progress.watch_time : 0;
+                this.lastReportedTime = null;
+                const pct = (lesson.progress && lesson.progress.progress_percent != null) ? lesson.progress.progress_percent : 0;
+                const watchSec = this.watchedSeconds;
+                const durSec = (lesson.duration_minutes && lesson.duration_minutes > 0) ? lesson.duration_minutes * 60 : 0;
+                this.reportVideoProgress(pct, watchSec, durSec);
                 
                 // إذا كان هناك فيديو، اعرض جزء المشاهدة
                 if (lesson.video_url) {
@@ -1168,33 +1232,77 @@ function courseFocusMode() {
                 this.lessonContent = '<div class="text-center text-red-600 p-8"><i class="fas fa-exclamation-circle text-4xl mb-4"></i><p class="text-xl font-bold">حدث خطأ أثناء تحميل الدرس</p><p class="text-sm text-gray-600 mt-2">' + this.escapeHtml(error.message) + '</p></div>';
             }
         },
-        trackLessonProgress(lessonId) {
-            // إيقاف أي interval سابق
-            if (this.progressInterval) {
-                clearInterval(this.progressInterval);
+        reportVideoProgress(percent, currentSec, durationSec) {
+            this.videoProgressPercent = percent;
+            this.lastVideoProgressPercent = percent;
+            this.lastVideoWatchTimeSec = currentSec;
+            this.lastVideoDurationSec = durationSec;
+            this.videoTimeCurrent = this.formatVideoTime(currentSec);
+            this.videoTimeTotal = durationSec > 0 ? this.formatVideoTime(durationSec) : (this.currentLessonDuration ? this.currentLessonDuration + ' د' : '0:00');
+        },
+        reportVideoProgressFromPlayer(currentSec, durationSec, isPlaying) {
+            const t = Number(currentSec) || 0;
+            const dur = Number(durationSec) || 0;
+            const playing = !!isPlaying;
+            this.videoTimeCurrent = this.formatVideoTime(t);
+            if (dur > 0) this.videoTimeTotal = this.formatVideoTime(dur);
+            if (!Number.isFinite(dur) || dur <= 0) {
+                this.lastReportedTime = t;
+                return;
             }
-            
-            // تحديث تقدم المشاهدة كل 30 ثانية
+            if (this.lastReportedTime === null) {
+                this.lastReportedTime = t;
+            } else if (playing) {
+                const delta = t - this.lastReportedTime;
+                if (delta >= 0 && delta <= this.SEEK_THRESHOLD) {
+                    this.watchedSeconds = Math.min(dur, this.watchedSeconds + delta);
+                }
+                this.lastReportedTime = t;
+            } else {
+                this.lastReportedTime = t;
+            }
+            const pct = Math.min(100, (this.watchedSeconds / dur) * 100);
+            this.lastVideoProgressPercent = pct;
+            this.lastVideoWatchTimeSec = this.watchedSeconds;
+            this.lastVideoDurationSec = dur;
+            this.videoProgressPercent = pct;
+        },
+        formatVideoTime(seconds) {
+            const s = Math.floor(Number(seconds) || 0);
+            const m = Math.floor(s / 60);
+            const h = Math.floor(m / 60);
+            if (h > 0) return h + ':' + String(m % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+            return m + ':' + String(s % 60).padStart(2, '0');
+        },
+        trackLessonProgress(lessonId) {
+            if (this.progressInterval) clearInterval(this.progressInterval);
             this.progressInterval = setInterval(async () => {
+                const pct = this.lastVideoProgressPercent || 0;
+                const watchTime = this.lastVideoWatchTimeSec || 0;
                 try {
                     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
-                    await fetch(`{{ route('my-courses.lesson.progress', [$course, ':lessonId']) }}`.replace(':lessonId', lessonId), {
+                    const res = await fetch(`{{ route('my-courses.lesson.progress', [$course, ':lessonId']) }}`.replace(':lessonId', lessonId), {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken,
-                            'Accept': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
                         body: JSON.stringify({
-                            watch_time: 30, // 30 ثانية لكل تحديث
-                            completed: false,
-                            progress_percent: 0
+                            watch_time: watchTime,
+                            completed: pct >= 90,
+                            progress_percent: pct
                         })
                     });
-                } catch (error) {
-                    console.error('Error tracking progress:', error);
-                }
-            }, 30000);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.success && data.course_progress != null) {
+                            const wrapper = document.querySelector('.learn-page');
+                            if (wrapper) wrapper.dataset.courseProgress = data.course_progress;
+                            if (data.total_items != null) wrapper.dataset.totalItems = data.total_items;
+                            if (data.completed_items != null) wrapper.dataset.completedItems = data.completed_items;
+                            if (pct >= 90) this.currentLessonCompleted = true;
+                            updateProgressBar();
+                        }
+                    }
+                } catch (e) { console.error('Error tracking progress:', e); }
+            }, 15000);
         },
         trackLectureProgress(lectureId) {
             // تتبع تقدم المحاضرة (يمكن ربطه لاحقاً بـ API إن وُجد)
@@ -1207,6 +1315,7 @@ function courseFocusMode() {
             this.selectedPattern = null;
             this.showVideoPlayer = false;
             this.currentLessonVideoUrl = null;
+            this.lectureMaterials = [];
             
             const lectures = this.lecturesData || {};
             const lectureIdStr = String(lectureId);
@@ -1243,6 +1352,8 @@ function courseFocusMode() {
                 this.lectureContent = '<div class="text-center text-red-600 p-8"><i class="fas fa-exclamation-circle text-4xl mb-4"></i><p class="text-xl font-bold">المحاضرة غير موجودة</p><p class="text-sm mt-2">ID: ' + lectureId + '</p></div>';
                 return;
             }
+
+            this.lectureMaterials = lecture.materials || [];
             
             // إذا كان هناك فيديو: نفس أسلوب البوب أب في المنهج — بناء HTML المعاينة ووضعه في حاوية واحدة
             if (lecture.recording_url && lecture.recording_url.trim() !== '') {
@@ -1384,6 +1495,15 @@ function courseFocusMode() {
                 this.lectureContent = '<div class="text-center text-red-600 p-8"><i class="fas fa-exclamation-triangle text-4xl mb-4"></i><p class="text-xl font-bold">فشل تحميل الاختبار</p></div>';
             }
         },
+        getMaterialIconClass(mat) {
+            const n = (mat && mat.file_name ? mat.file_name : '').toLowerCase();
+            if (/\.(xlsx|xls)$/.test(n)) return 'fa-file-excel text-emerald-600 dark:text-emerald-400';
+            if (n.endsWith('.pdf')) return 'fa-file-pdf text-red-600 dark:text-red-400';
+            if (/\.(docx?|doc)$/.test(n)) return 'fa-file-word text-blue-600 dark:text-blue-400';
+            if (/\.(pptx?|ppt)$/.test(n)) return 'fa-file-powerpoint text-orange-600 dark:text-orange-400';
+            if (/\.(zip|rar|7z)$/.test(n)) return 'fa-file-archive text-amber-600 dark:text-amber-400';
+            return 'fa-file-alt text-sky-600 dark:text-sky-400';
+        },
         escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -1443,6 +1563,8 @@ function courseFocusMode() {
                         this.currentLessonCompleted = true;
                         if (this.$el.dataset.courseProgress !== undefined && data.course_progress != null)
                             this.$el.dataset.courseProgress = data.course_progress;
+                        if (data.total_items != null) this.$el.dataset.totalItems = data.total_items;
+                        if (data.completed_items != null) this.$el.dataset.completedItems = data.completed_items;
                         updateProgressBar();
                     }
                 }
@@ -1551,10 +1673,14 @@ function courseFocusMode() {
         },
         updateProgressBar() {
             const wrapper = document.querySelector('.learn-page');
-            const progressBar = document.querySelector('.learn-progress-fill');
-            if (progressBar && wrapper && wrapper.dataset.courseProgress !== undefined) {
-                const pct = Math.min(100, parseFloat(wrapper.dataset.courseProgress) || 0);
-                progressBar.style.width = pct + '%';
+            if (!wrapper) return;
+            const pct = Math.min(100, parseFloat(wrapper.dataset.courseProgress) || 0);
+            document.querySelectorAll('.learn-progress-fill').forEach(el => { el.style.width = pct + '%'; });
+            const total = wrapper.dataset.totalItems;
+            const completed = wrapper.dataset.completedItems;
+            if (total !== undefined && completed !== undefined) {
+                document.querySelectorAll('.learn-progress-count').forEach(el => { el.textContent = completed + '/' + total; });
+                document.querySelectorAll('.learn-progress-pct').forEach(el => { el.textContent = Math.round(pct) + '%'; });
             }
         },
         isExternalVideo(url) {
@@ -1674,6 +1800,7 @@ function videoPlayer() {
             return noQuery.startsWith('http') ? noQuery : ('https://' + noQuery.replace(/^\/+/, ''));
         },
         loadVideo(videoUrl, platform = null) {
+            if (this.ytProgressInterval) { clearInterval(this.ytProgressInterval); this.ytProgressInterval = null; }
             if (!videoUrl) {
                 this.currentLessonVideoUrl = null;
                 return;
@@ -1692,11 +1819,13 @@ function videoPlayer() {
                 const vid = this.getYoutubeVideoId(videoUrl);
                 if (!vid) return;
                 const iframe = document.createElement('iframe');
-                iframe.src = 'https://www.youtube.com/embed/' + vid + '?rel=0&modestbranding=1';
+                iframe.id = 'yt-player-' + Date.now();
+                iframe.src = 'https://www.youtube.com/embed/' + vid + '?rel=0&modestbranding=1&enablejsapi=1&origin=' + encodeURIComponent(window.location.origin);
                 iframe.className = 'absolute inset-0 w-full h-full border-0';
                 iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
                 iframe.allowFullscreen = true;
                 surface.appendChild(iframe);
+                this.setupYoutubeProgressTracking(surface, vid, iframe.id);
             } else if (platform === 'vimeo') {
                 const vid = this.getVimeoVideoId(videoUrl);
                 if (!vid) return;
@@ -1714,6 +1843,7 @@ function videoPlayer() {
                 const src = this.escapeHtml(videoUrl);
                 video.innerHTML = '<source src="' + src + '" type="video/mp4">';
                 surface.appendChild(video);
+                this.attachVideoProgressTracking(video);
             } else if (platform === 'google_drive') {
                 const fileId = this.getDriveFileId(videoUrl);
                 if (!fileId) return;
@@ -1731,6 +1861,72 @@ function videoPlayer() {
                 iframe.allowFullscreen = true;
                 surface.appendChild(iframe);
             }
+        },
+        attachVideoProgressTracking(video) {
+            const report = () => {
+                if (!video) return;
+                const ct = video.currentTime || 0, dur = video.duration;
+                if (Number.isFinite(ct) && Number.isFinite(dur) && dur > 0) {
+                    const isPlaying = !video.paused;
+                    window.dispatchEvent(new CustomEvent('video-progress-report', { detail: { currentSec: ct, durationSec: dur, isPlaying } }));
+                }
+            };
+            video.addEventListener('loadedmetadata', report);
+            video.addEventListener('timeupdate', report);
+            video.addEventListener('durationchange', report);
+            video.addEventListener('play', report);
+            video.addEventListener('pause', report);
+            video.addEventListener('progress', () => { if (video.duration && isFinite(video.duration)) report(); });
+            if (video.readyState >= 1 && video.duration && isFinite(video.duration)) report();
+        },
+        setupYoutubeProgressTracking(surface, vid, iframeId) {
+            const self = this;
+            if (self.ytProgressInterval) { clearInterval(self.ytProgressInterval); self.ytProgressInterval = null; }
+            const loadYT = () => {
+                if (!window.YT || !window.YT.Player) return;
+                const el = document.getElementById(iframeId);
+                if (!el) return;
+                try {
+                    const player = new window.YT.Player(iframeId, {
+                        events: {
+                            onStateChange: function(e) {
+                                if (e.data === 1) {
+                                    if (self.ytProgressInterval) clearInterval(self.ytProgressInterval);
+                                    self.ytProgressInterval = setInterval(function poll() {
+                                        try {
+                                            const p = e.target;
+                                            if (p && typeof p.getCurrentTime === 'function') {
+                                                const ct = p.getCurrentTime();
+                                                const dur = p.getDuration();
+                                                if (typeof ct === 'number' && typeof dur === 'number' && dur > 0) {
+                                                    window.dispatchEvent(new CustomEvent('video-progress-report', { detail: { currentSec: ct, durationSec: dur, isPlaying: true } }));
+                                                }
+                                            }
+                                        } catch (err) {}
+                                    }, 800);
+                                }
+                                if (e.data === 0 || e.data === 2) {
+                                    if (self.ytProgressInterval) { clearInterval(self.ytProgressInterval); self.ytProgressInterval = null; }
+                                }
+                            }
+                        }
+                    });
+                    self.ytPlayer = player;
+                } catch (err) { console.warn('YT Player init:', err); }
+            };
+            if (window.YT && window.YT.Player) {
+                setTimeout(loadYT, 800);
+                return;
+            }
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            const first = document.getElementsByTagName('script')[0];
+            first.parentNode.insertBefore(tag, first);
+            const prevReady = window.onYouTubeIframeAPIReady;
+            window.onYouTubeIframeAPIReady = function() {
+                if (prevReady) prevReady();
+                setTimeout(loadYT, 500);
+            };
         },
         escapeHtml(text) {
             if (!text) return '';

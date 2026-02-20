@@ -894,13 +894,9 @@
                             <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
                                 <div class="h-full bg-sky-500 rounded-full transition-all duration-500" style="width: {{ min($progress, 100) }}%;"></div>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1">{{ $completedLessons }} من {{ $totalLessons }} درس</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $progress }}% مكتمل</p>
                         </div>
                         <div class="flex gap-4">
-                            <div class="text-center px-4 py-2 bg-sky-50 rounded-lg border border-sky-100">
-                                <span class="text-lg font-bold text-sky-600 block">{{ $totalLessons }}</span>
-                                <span class="text-xs text-gray-600">دروس</span>
-                            </div>
                             <div class="text-center px-4 py-2 bg-emerald-50 rounded-lg border border-emerald-100">
                                 <span class="text-lg font-bold text-emerald-600 block">{{ $completedLessons }}</span>
                                 <span class="text-xs text-gray-600">مكتمل</span>
@@ -929,13 +925,6 @@
                         class="py-3.5 px-5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap">
                     <i class="fas fa-info-circle"></i>
                     نظرة عامة
-                </button>
-                <button @click="activeTab = 'lessons'" 
-                        :class="activeTab === 'lessons' ? 'border-sky-500 text-sky-600 bg-sky-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'"
-                        class="py-3.5 px-5 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap">
-                    <i class="fas fa-book"></i>
-                    الدروس
-                    <span class="bg-sky-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">{{ $totalLessons }}</span>
                 </button>
                 <button @click="activeTab = 'lectures'" 
                         :class="activeTab === 'lectures' ? 'border-sky-500 text-sky-600 bg-sky-50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'"
@@ -972,21 +961,12 @@
                                     <span class="text-sm font-semibold text-gray-900">{{ $course->duration_hours }} ساعة</span>
                                 </div>
                                 <div class="flex items-center justify-between py-2.5 px-3 bg-white rounded-lg border border-gray-100">
-                                    <span class="text-sm text-gray-600 flex items-center gap-2"><i class="fas fa-book text-sky-500 w-4"></i> الدروس</span>
-                                    <span class="text-sm font-semibold text-gray-900">{{ $totalLessons }}</span>
-                                </div>
-                                <div class="flex items-center justify-between py-2.5 px-3 bg-white rounded-lg border border-gray-100">
                                     <span class="text-sm text-gray-600 flex items-center gap-2"><i class="fas fa-chalkboard-teacher text-sky-500 w-4"></i> المحاضرات</span>
                                     <span class="text-sm font-semibold text-gray-900">{{ $course->lectures->count() }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Lessons Tab -->
-                <div x-show="activeTab === 'lessons'" x-transition>
-                    @include('student.my-courses.partials.lessons-list', ['course' => $course])
                 </div>
 
                 <!-- Lectures Tab -->
@@ -1391,7 +1371,7 @@ function courseFocusMode() {
         activeTab: (() => {
             const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');
-            return tab && ['overview', 'lessons', 'lectures'].includes(tab) ? tab : 'overview';
+            return tab && ['overview', 'lectures'].includes(tab) ? tab : 'overview';
         })(),
         loadLesson(lessonId) {
             const lessonUrl = '{{ route('my-courses.lesson.watch', [$course, ':lessonId']) }}'.replace(':lessonId', lessonId);

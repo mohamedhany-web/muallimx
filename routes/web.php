@@ -192,6 +192,14 @@ Route::prefix('community')->name('community.')->group(function () {
         Route::get('/datasets/{dataset}', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetShow'])->name('datasets.show');
         Route::get('/datasets/{dataset}/download', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetDownload'])->name('datasets.download');
         Route::get('/discussions', [\App\Http\Controllers\Community\CommunityPageController::class, 'discussions'])->name('discussions.index');
+
+        // لوحة تحكم المساهمين (للمستخدمين الذين is_community_contributor = true فقط)
+        Route::middleware('community.contributor')->prefix('contributor')->name('contributor.')->group(function () {
+            Route::get('/dashboard', [\App\Http\Controllers\Community\ContributorController::class, 'dashboard'])->name('dashboard');
+            Route::get('/datasets', [\App\Http\Controllers\Community\ContributorController::class, 'datasets'])->name('datasets.index');
+            Route::get('/datasets/create', [\App\Http\Controllers\Community\ContributorController::class, 'createDataset'])->name('datasets.create');
+            Route::post('/datasets', [\App\Http\Controllers\Community\ContributorController::class, 'storeDataset'])->name('datasets.store');
+        });
     });
 });
 
@@ -412,6 +420,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/my-courses/{course}/lectures/{lecture}', [\App\Http\Controllers\Student\MyCourseController::class, 'getLectureData'])
             ->middleware(['ownership:course,course'])
             ->name('my-courses.lectures.show');
+        Route::get('/my-courses/{course}/lectures/{lecture}/materials/{material}/download', [\App\Http\Controllers\Student\MyCourseController::class, 'downloadLectureMaterial'])
+            ->middleware(['ownership:course,course'])
+            ->name('my-courses.lectures.material.download');
         Route::get('/my-courses/{course}/lessons/{lesson}/watch', [\App\Http\Controllers\Student\MyCourseController::class, 'watchLesson'])
             ->middleware([\App\Http\Middleware\VideoProtectionMiddleware::class, 'ownership:course,course'])
             ->name('my-courses.lesson.watch');
@@ -471,7 +482,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             'video_url' => $lesson->video_url ? trim($lesson->video_url) : null,
             'duration_minutes' => $lesson->duration_minutes,
             'attachments' => $lesson->attachments ? json_decode($lesson->attachments, true) : null,
-            'progress' => $progress ? ['is_completed' => (bool) $progress->is_completed] : null
+            'progress' => $progress ? [
+                'is_completed' => (bool) $progress->is_completed,
+                'progress_percent' => (int) ($progress->progress_percent ?? 0),
+                'watch_time' => (int) ($progress->watch_time ?? 0),
+            ] : null
         ]);
     });
 
@@ -818,6 +833,14 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::resource('competitions', \App\Http\Controllers\Admin\CommunityCompetitionController::class)->except(['show']);
             Route::resource('datasets', \App\Http\Controllers\Admin\CommunityDatasetController::class)->except(['show']);
             Route::get('/submissions', [\App\Http\Controllers\Admin\CommunityController::class, 'submissions'])->name('submissions.index');
+            Route::get('/submissions/dataset/{dataset}', [\App\Http\Controllers\Admin\CommunityController::class, 'showSubmission'])->name('submissions.dataset.show');
+            Route::get('/submissions/dataset/{dataset}/download', [\App\Http\Controllers\Admin\CommunityController::class, 'downloadSubmission'])->name('submissions.dataset.download');
+            Route::post('/submissions/dataset/{dataset}/approve', [\App\Http\Controllers\Admin\CommunityController::class, 'approveDataset'])->name('submissions.dataset.approve');
+            Route::post('/submissions/dataset/{dataset}/reject', [\App\Http\Controllers\Admin\CommunityController::class, 'rejectDataset'])->name('submissions.dataset.reject');
+            Route::get('/contributors', [\App\Http\Controllers\Admin\CommunityController::class, 'contributors'])->name('contributors.index');
+            Route::post('/contributors', [\App\Http\Controllers\Admin\CommunityController::class, 'addContributor'])->name('contributors.store');
+            Route::post('/contributors/new', [\App\Http\Controllers\Admin\CommunityController::class, 'storeNewContributor'])->name('contributors.new.store');
+            Route::delete('/contributors/{user}', [\App\Http\Controllers\Admin\CommunityController::class, 'removeContributor'])->name('contributors.destroy');
             Route::get('/discussions', [\App\Http\Controllers\Admin\CommunityController::class, 'discussions'])->name('discussions.index');
             Route::get('/settings', [\App\Http\Controllers\Admin\CommunityController::class, 'settings'])->name('settings.index');
         });

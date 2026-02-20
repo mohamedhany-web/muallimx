@@ -228,7 +228,26 @@ class AdminController extends Controller
             ->whereIn('status', ['pending', 'awaiting_approval'])
             ->first();
 
+        $communityStats = [
+            'competitions_count' => \App\Models\CommunityCompetition::count(),
+            'competitions_active' => \App\Models\CommunityCompetition::active()->count(),
+            'datasets_count' => \App\Models\CommunityDataset::count(),
+            'datasets_active' => \App\Models\CommunityDataset::active()->count(),
+        ];
+
         $quickActions = [
+            [
+                'title' => 'مجتمع الذكاء الاصطناعي',
+                'count' => (int) ($communityStats['competitions_active'] + $communityStats['datasets_active']),
+                'meta' => $communityStats['competitions_active'] . ' مسابقة، ' . $communityStats['datasets_active'] . ' مجموعة بيانات',
+                'icon' => 'fas fa-robot',
+                'background' => 'from-cyan-100 to-teal-50',
+                'icon_background' => 'from-cyan-500 to-teal-600',
+                'count_class' => 'text-cyan-700',
+                'meta_class' => 'text-cyan-600',
+                'cta' => 'لوحة المجتمع',
+                'route' => route('admin.community.dashboard'),
+            ],
             [
                 'title' => 'فواتير معلقة',
                 'count' => (int) ($pendingInvoicesSummary->count ?? 0),
@@ -304,8 +323,7 @@ class AdminController extends Controller
             'weeklyActivity',
             'monthlyActivity',
             'quickActions',
-            'weeklyActivity',
-            'monthlyActivity'
+            'communityStats'
         ));
     }
 

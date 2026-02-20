@@ -29,10 +29,12 @@
                 </div>
             </div>
             <nav class="flex-1 p-3 space-y-0.5 overflow-y-auto">
+                <p class="px-3 py-2 text-xs font-bold text-cyan-400/90 uppercase tracking-wide">مراقبة عامة</p>
                 <a href="{{ route('admin.community.dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white {{ request()->routeIs('admin.community.dashboard') || request()->routeIs('admin.community') ? 'bg-slate-700/80 text-white' : '' }}">
                     <i class="fas fa-tachometer-alt w-5"></i>
-                    <span>{{ __('admin.community_dashboard') }}</span>
+                    <span>لوحة المراقبة</span>
                 </a>
+                <p class="px-3 py-2 mt-2 text-xs font-bold text-cyan-400/90 uppercase tracking-wide">المحتوى</p>
                 <a href="{{ route('admin.community.competitions.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white {{ request()->routeIs('admin.community.competitions.*') ? 'bg-slate-700/80 text-white' : '' }}">
                     <i class="fas fa-trophy w-5"></i>
                     <span>{{ __('admin.community_competitions') }}</span>
@@ -41,10 +43,16 @@
                     <i class="fas fa-database w-5"></i>
                     <span>{{ __('admin.community_datasets') }}</span>
                 </a>
+                <p class="px-3 py-2 mt-2 text-xs font-bold text-cyan-400/90 uppercase tracking-wide">المساهمون والمراجعة</p>
                 <a href="{{ route('admin.community.submissions.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white {{ request()->routeIs('admin.community.submissions.*') ? 'bg-slate-700/80 text-white' : '' }}">
                     <i class="fas fa-paper-plane w-5"></i>
-                    <span>{{ __('admin.community_submissions') }}</span>
+                    <span>مراجعة التقديمات</span>
                 </a>
+                <a href="{{ route('admin.community.contributors.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white {{ request()->routeIs('admin.community.contributors.*') ? 'bg-slate-700/80 text-white' : '' }}">
+                    <i class="fas fa-user-plus w-5"></i>
+                    <span>إنشاء وإدارة المساهمين</span>
+                </a>
+                <p class="px-3 py-2 mt-2 text-xs font-bold text-cyan-400/90 uppercase tracking-wide">أخرى</p>
                 <a href="{{ route('admin.community.discussions.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white {{ request()->routeIs('admin.community.discussions.*') ? 'bg-slate-700/80 text-white' : '' }}">
                     <i class="fas fa-comments w-5"></i>
                     <span>{{ __('admin.community_discussions') }}</span>

@@ -71,7 +71,7 @@
 
             <!-- إدارة النظام -->
             <?php
-                $systemManagementOpen = request()->routeIs('admin.users.*') || request()->routeIs('admin.orders.*') || request()->routeIs('admin.notifications.*') || request()->routeIs('admin.employee-notifications.*') || request()->routeIs('admin.activity-log*') || request()->routeIs('admin.statistics.*') || request()->routeIs('admin.performance.*');
+                $systemManagementOpen = request()->routeIs('admin.users.*') || request()->routeIs('admin.orders.*') || request()->routeIs('admin.notifications.*') || request()->routeIs('admin.employee-notifications.*') || request()->routeIs('admin.activity-log*') || request()->routeIs('admin.two-factor-logs.*') || request()->routeIs('admin.statistics.*') || request()->routeIs('admin.performance.*');
             ?>
             <li x-data="{ open: <?php echo e($systemManagementOpen ? 'true' : 'false'); ?> }">
                 <button @click="open = !open" 
@@ -127,6 +127,14 @@
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.activity-log*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-history w-4"></i>
                             <span><?php echo e(__('admin.activity_log')); ?></span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<?php echo e(route('admin.two-factor-logs.index')); ?>" 
+                           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.two-factor-logs.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
+                            <i class="fas fa-shield-alt w-4"></i>
+                            <span><?php echo e(__('admin.two_factor_logs')); ?></span>
                         </a>
                     </li>
                     <li>
@@ -557,13 +565,19 @@
                     <i class="fas fa-chevron-down transition-transform duration-300 text-slate-400" :class="open ? 'rotate-180' : ''"></i>
                 </button>
                 <ul x-show="open" x-transition class="mt-2 mr-4 space-y-1 border-r-2 border-slate-600/50 pr-2">
+                    <li class="pt-1">
+                        <p class="px-4 py-1 text-xs font-bold text-cyan-400/90 uppercase tracking-wide">مراقبة عامة</p>
+                    </li>
                     <li>
                         <a href="<?php echo e(route('admin.community.dashboard')); ?>" 
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.community.dashboard') || request()->routeIs('admin.community') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-tachometer-alt w-4"></i>
-                            <span><?php echo e(__('admin.community_dashboard')); ?></span>
+                            <span>لوحة المراقبة</span>
                         </a>
+                    </li>
+                    <li class="pt-2">
+                        <p class="px-4 py-1 text-xs font-bold text-cyan-400/90 uppercase tracking-wide">المحتوى</p>
                     </li>
                     <li>
                         <a href="<?php echo e(route('admin.community.competitions.index')); ?>" 
@@ -581,13 +595,27 @@
                             <span><?php echo e(__('admin.community_datasets')); ?></span>
                         </a>
                     </li>
+                    <li class="pt-2">
+                        <p class="px-4 py-1 text-xs font-bold text-cyan-400/90 uppercase tracking-wide">المساهمون والمراجعة</p>
+                    </li>
                     <li>
                         <a href="<?php echo e(route('admin.community.submissions.index')); ?>" 
                            @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.community.submissions.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
                             <i class="fas fa-paper-plane w-4"></i>
-                            <span><?php echo e(__('admin.community_submissions')); ?></span>
+                            <span>مراجعة التقديمات</span>
                         </a>
+                    </li>
+                    <li>
+                        <a href="<?php echo e(route('admin.community.contributors.index')); ?>" 
+                           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white <?php echo e(request()->routeIs('admin.community.contributors.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : ''); ?>">
+                            <i class="fas fa-user-plus w-4"></i>
+                            <span>إنشاء وإدارة المساهمين</span>
+                        </a>
+                    </li>
+                    <li class="pt-2">
+                        <p class="px-4 py-1 text-xs font-bold text-cyan-400/90 uppercase tracking-wide">أخرى</p>
                     </li>
                     <li>
                         <a href="<?php echo e(route('admin.community.discussions.index')); ?>" 

@@ -112,7 +112,7 @@
     </div>
 
     <!-- Form -->
-    <form action="{{ route('instructor.lectures.store') }}" method="POST"
+    <form action="{{ route('instructor.lectures.store') }}" method="POST" enctype="multipart/form-data"
           class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden"
           x-data="videoPreviewData()">
         @csrf
@@ -288,6 +288,37 @@
                         @error('teams_meeting_link')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                     </div>
                 </div>
+            </div>
+
+            <!-- مواد المحاضرة -->
+            <div class="space-y-6 pt-6 border-t border-slate-200">
+                <h2 class="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2">
+                    <i class="fas fa-paperclip text-sky-600 ml-1"></i>
+                    مواد المحاضرة (اختياري)
+                </h2>
+                <p class="text-sm text-slate-600">يمكنك رفع ملفات (PDF، Word، عروض...) وتحديد ظهورها للطالب.</p>
+                <div id="materials-container" class="space-y-4">
+                    <div class="material-row flex flex-wrap items-end gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="flex-1 min-w-[180px]">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">الملف</label>
+                            <input type="file" name="material_files[]" class="w-full text-sm text-slate-700 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-sky-100 file:text-sky-700 file:font-semibold file:cursor-pointer hover:file:bg-sky-200" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.png,.jpg,.jpeg">
+                        </div>
+                        <div class="w-48">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">عنوان (اختياري)</label>
+                            <input type="text" name="material_titles[]" placeholder="مثال: ملخص المحاضرة" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                        </div>
+                        <label class="flex items-center gap-2 pb-2">
+                            <input type="hidden" name="material_visible[]" value="0">
+                            <input type="checkbox" name="material_visible[]" value="1" checked class="w-4 h-4 text-sky-600 rounded">
+                            <span class="text-sm font-medium text-slate-700">ظاهر للطالب</span>
+                        </label>
+                        <button type="button" class="remove-material px-3 py-2 bg-rose-100 text-rose-700 rounded-lg text-sm font-medium hover:bg-rose-200" style="display:none;"><i class="fas fa-times ml-1"></i> حذف</button>
+                    </div>
+                </div>
+                <button type="button" id="add-material-btn" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-100 text-sky-700 rounded-xl font-semibold text-sm hover:bg-sky-200 transition-colors">
+                    <i class="fas fa-plus"></i>
+                    إضافة مادة أخرى
+                </button>
             </div>
 
             <!-- Notes -->
@@ -472,6 +503,27 @@ function videoPreviewData() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    var materialsContainer = document.getElementById('materials-container');
+    var addMaterialBtn = document.getElementById('add-material-btn');
+    if (materialsContainer && addMaterialBtn) {
+        addMaterialBtn.addEventListener('click', function() {
+            var first = materialsContainer.querySelector('.material-row');
+            if (!first) return;
+            var clone = first.cloneNode(true);
+            clone.querySelector('input[type="file"]').value = '';
+            clone.querySelector('input[type="text"]').value = '';
+            clone.querySelector('input[type="checkbox"]').checked = true;
+            clone.querySelector('.remove-material').style.display = 'inline-flex';
+            materialsContainer.appendChild(clone);
+        });
+        materialsContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-material')) {
+                var row = e.target.closest('.material-row');
+                if (materialsContainer.querySelectorAll('.material-row').length > 1) row.remove();
+            }
+        });
+    }
+
     const courseSelect = document.getElementById('course_id');
     if (!courseSelect) return;
     courseSelect.addEventListener('change', function() {

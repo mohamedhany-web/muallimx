@@ -25,6 +25,11 @@ class EnsureTwoFactorEnabled
             return $next($request);
         }
 
+        // مسارات مجتمع الذكاء الاصطناعي: لا نفرض 2FA
+        if ($request->is('community') || $request->is('community/*')) {
+            return $next($request);
+        }
+
         $user = auth()->user();
 
         // إذا كان إلزام 2FA للأدمن معطّلاً من الإعدادات (للمرونة عند فقدان الرمز أو مشكلة)

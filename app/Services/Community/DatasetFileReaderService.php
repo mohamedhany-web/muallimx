@@ -2,11 +2,13 @@
 
 namespace App\Services\Community;
 
+use Illuminate\Support\Facades\Storage;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Reader\Csv;
 
 /**
  * قراءة ملفات مجموعات البيانات (Excel / CSV) لعرض معاينة في الصفحة.
+ * يدعم القرص المحلي و Cloudflare R2 (عن طريق ملف مؤقت).
  */
 class DatasetFileReaderService
 {
@@ -14,7 +16,34 @@ class DatasetFileReaderService
     public const PREVIEW_MAX_ROWS = 500;
 
     /**
-     * قراءة الملف وإرجاع مصفوفة صفوف (أول صف = عناوين إن وُجدت).
+     * قراءة معاينة من أي قرص (local أو r2).
+     *
+     * @return array{headers: array<int, string>, rows: array<int, array<int, mixed>>}
+     */
+    public function readPreviewFromStorage(string $disk, string $path): array
+    {
+        if (!Storage::disk($disk)->exists($path)) {
+            return ['headers' => [], 'rows' => []];
+        }
+
+        if ($disk === 'local') {
+            $fullPath = Storage::disk($disk)->path($path);
+            return $this->readPreview($fullPath);
+        }
+
+        $content = Storage::disk($disk)->get($path);
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION)) ?: 'csv';
+        $tmp = tempnam(sys_get_temp_dir(), 'dataset_') . '.' . $ext;
+        file_put_contents($tmp, $content);
+        try {
+            return $this->readPreview($tmp);
+        } finally {
+            @unlink($tmp);
+        }
+    }
+
+    /**
+     * قراءة الملف من مسار محلي وإرجاع مصفوفة صفوف (أول صف = عناوين إن وُجدت).
      *
      * @return array{headers: array<int, string>, rows: array<int, array<int, mixed>>}
      */

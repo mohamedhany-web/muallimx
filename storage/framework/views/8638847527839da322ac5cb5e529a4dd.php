@@ -62,6 +62,12 @@
                     <i class="fas fa-comments w-5"></i>
                     <span><?php echo e(__('admin.community_discussions')); ?></span>
                 </a>
+                <?php if(auth()->user()->is_community_contributor ?? false): ?>
+                <a href="<?php echo e(route('community.contributor.dashboard')); ?>" @click="if(!isLg) sidebarOpen = false" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-cyan-300 hover:bg-slate-800 hover:text-white <?php echo e(request()->routeIs('community.contributor.*') ? 'bg-cyan-600/30 text-white' : ''); ?>">
+                    <i class="fas fa-user-edit w-5"></i>
+                    <span>لوحة المساهم</span>
+                </a>
+                <?php endif; ?>
                 <a href="<?php echo e(route('public.courses')); ?>" @click="if(!isLg) sidebarOpen = false" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white">
                     <i class="fas fa-book w-5"></i>
                     <span><?php echo e(__('landing.nav.courses')); ?></span>

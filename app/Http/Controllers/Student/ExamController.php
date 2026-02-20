@@ -249,6 +249,15 @@ class ExamController extends Controller
         // حساب النتيجة
         $attempt->calculateScore();
 
+        // تحديث تقدم الكورس في صفحة التعلم
+        if ($exam->advanced_course_id) {
+            try {
+                app(\App\Http\Controllers\Student\MyCourseController::class)->updateCourseProgress($user->id, $exam->advanced_course_id);
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to update course progress after exam submit: ' . $e->getMessage());
+            }
+        }
+
         if ($exam->show_results_immediately) {
             return redirect()->route('student.exams.result', [$exam, $attempt]);
         }

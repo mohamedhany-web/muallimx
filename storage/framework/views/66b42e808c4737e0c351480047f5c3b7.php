@@ -375,18 +375,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">رابط تسجيل Teams</label>
-                        <input type="url" name="teams_registration_link" id="lectureTeamsRegistration" placeholder="https://teams.microsoft.com/..."
-                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">رابط اجتماع Teams</label>
-                        <input type="url" name="teams_meeting_link" id="lectureTeamsMeeting" placeholder="https://teams.microsoft.com/..."
-                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800">
-                    </div>
-                </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-2">الملاحظات</label>
                     <textarea name="notes" id="lectureNotes" rows="3" placeholder="ملاحظات إضافية..."
@@ -405,6 +393,36 @@
                         <input type="checkbox" name="has_evaluation" value="1" class="w-4 h-4 text-sky-500 border-slate-300 rounded">
                         <span class="font-semibold text-slate-800">يوجد تقييم</span>
                     </label>
+                </div>
+                <!-- مواد المحاضرة -->
+                <div class="border-t border-slate-200 pt-5 mt-5">
+                    <h4 class="text-sm font-bold text-slate-800 mb-2 flex items-center gap-2">
+                        <i class="fas fa-paperclip text-sky-500"></i>
+                        مواد المحاضرة (اختياري)
+                    </h4>
+                    <p class="text-xs text-slate-500 mb-3">يمكنك رفع ملفات (PDF، Word، عروض...) وتحديد ظهورها للطالب.</p>
+                    <div id="curriculum-materials-container" class="space-y-3">
+                        <div class="curriculum-material-row flex flex-wrap items-end gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                            <div class="flex-1 min-w-[160px]">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">الملف</label>
+                                <input type="file" name="material_files[]" class="w-full text-sm text-slate-700 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-sky-100 file:text-sky-700 file:text-sm file:font-semibold" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.png,.jpg,.jpeg">
+                            </div>
+                            <div class="w-40">
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">عنوان (اختياري)</label>
+                                <input type="text" name="material_titles[]" placeholder="مثال: ملخص المحاضرة" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                            </div>
+                            <label class="flex items-center gap-2 pb-2">
+                                <input type="hidden" name="material_visible[]" value="0">
+                                <input type="checkbox" name="material_visible[]" value="1" checked class="w-4 h-4 text-sky-600 rounded">
+                                <span class="text-sm font-medium text-slate-700">ظاهر للطالب</span>
+                            </label>
+                            <button type="button" class="curriculum-remove-material px-3 py-2 bg-rose-100 text-rose-700 rounded-lg text-sm font-medium hover:bg-rose-200" style="display:none;"><i class="fas fa-times ml-1"></i> حذف</button>
+                        </div>
+                    </div>
+                    <button type="button" id="curriculum-add-material" class="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-sky-100 text-sky-700 rounded-xl font-semibold text-sm hover:bg-sky-200 transition-colors">
+                        <i class="fas fa-plus"></i>
+                        إضافة مادة أخرى
+                    </button>
                 </div>
             </div>
             <div class="flex gap-3 mt-6 col-span-full">
@@ -939,8 +957,6 @@ async function editLectureFromCurriculum(lectureId, sectionId) {
             }
         }, 100);
         
-        document.getElementById('lectureTeamsRegistration').value = lecture.teams_registration_link || '';
-        document.getElementById('lectureTeamsMeeting').value = lecture.teams_meeting_link || '';
         document.getElementById('lectureNotes').value = lecture.notes || '';
         
         // تعيين حالة المحاضرة (مطلوب عند التحديث)
@@ -1082,7 +1098,14 @@ function closeLectureModal() {
     document.getElementById('lectureEditId').value = '';
     document.getElementById('lectureSectionId').value = '';
     currentSectionId = null;
-    
+    // إعادة صفوف المواد إلى صف واحد
+    var matContainer = document.getElementById('curriculum-materials-container');
+    if (matContainer) {
+        var rows = matContainer.querySelectorAll('.curriculum-material-row');
+        for (var i = 1; i < rows.length; i++) rows[i].remove();
+        var firstRemove = matContainer.querySelector('.curriculum-remove-material');
+        if (firstRemove) firstRemove.style.display = 'none';
+    }
     // إعادة تعيين المشغل
     selectedVideoPlatform = '';
     document.getElementById('lectureVideoPlatform').value = '';
@@ -1092,6 +1115,30 @@ function closeLectureModal() {
         btn.classList.add('border-slate-200');
     });
 }
+
+(function initCurriculumMaterials() {
+    var container = document.getElementById('curriculum-materials-container');
+    var addBtn = document.getElementById('curriculum-add-material');
+    if (container && addBtn) {
+        addBtn.addEventListener('click', function() {
+            var first = container.querySelector('.curriculum-material-row');
+            if (!first) return;
+            var clone = first.cloneNode(true);
+            clone.querySelector('input[type="file"]').value = '';
+            clone.querySelector('input[type="text"]').value = '';
+            clone.querySelector('input[type="checkbox"]').checked = true;
+            var removeBtn = clone.querySelector('.curriculum-remove-material');
+            if (removeBtn) removeBtn.style.display = 'inline-flex';
+            container.appendChild(clone);
+        });
+        container.addEventListener('click', function(e) {
+            if (e.target.closest('.curriculum-remove-material')) {
+                var row = e.target.closest('.curriculum-material-row');
+                if (container.querySelectorAll('.curriculum-material-row').length > 1) row.remove();
+            }
+        });
+    }
+})();
 
 function saveLecture(e) {
     e.preventDefault();
@@ -1162,6 +1209,21 @@ function saveLecture(e) {
     
     // إضافة section_id للبيانات
     formData.append('section_id', sectionId);
+    
+    // مواد المحاضرة: إرسال فقط الصفوف التي تحتوي ملفاً حتى تتطابق المؤشرات مع الـ backend
+    formData.delete('material_files[]');
+    formData.delete('material_titles[]');
+    formData.delete('material_visible[]');
+    var materialRows = document.querySelectorAll('#curriculum-materials-container .curriculum-material-row');
+    materialRows.forEach(function(row) {
+        var fileInput = row.querySelector('input[type="file"]');
+        var titleInput = row.querySelector('input[type="text"]');
+        var visibleCb = row.querySelector('input[type="checkbox"]');
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+        formData.append('material_files[]', fileInput.files[0]);
+        formData.append('material_titles[]', titleInput ? titleInput.value : '');
+        formData.append('material_visible[]', (visibleCb && visibleCb.checked) ? '1' : '0');
+    });
     
     // تحديد URL والـ method
     let url = '<?php echo e(route("instructor.lectures.store")); ?>';

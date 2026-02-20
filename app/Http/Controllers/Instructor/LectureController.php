@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lecture;
+use App\Models\LectureMaterial;
 use App\Models\AdvancedCourse;
 use App\Models\AttendanceRecord;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class LectureController extends Controller
 {
@@ -112,6 +114,12 @@ class LectureController extends Controller
             'has_attendance_tracking' => 'boolean',
             'has_assignment' => 'boolean',
             'has_evaluation' => 'boolean',
+            'material_files' => 'nullable|array',
+            'material_files.*' => 'nullable|file|max:20480', // 20MB - nullable لتفادي فشل التحقق عند صفوف بدون ملف
+            'material_titles' => 'nullable|array',
+            'material_titles.*' => 'nullable|string|max:255',
+            'material_visible' => 'nullable|array',
+            'material_visible.*' => 'in:0,1',
         ], [
             'course_id.required' => 'يجب اختيار الكورس',
             'course_id.exists' => 'الكورس المحدد غير موجود',
@@ -169,6 +177,29 @@ class LectureController extends Controller
         ]);
         
         $lecture = Lecture::create($validated);
+
+        // حفظ مواد المحاضرة (ملفات مرفوعة)
+        $materialFiles = $request->file('material_files');
+        if ($materialFiles && is_array($materialFiles)) {
+            $titles = $request->input('material_titles', []);
+            $visible = $request->input('material_visible', []);
+            $sortOrder = 0;
+            foreach ($materialFiles as $index => $file) {
+                if (!$file || !$file->isValid()) continue;
+                $path = $file->store('lecture-materials/' . $lecture->id, 'public');
+                if (!$path) continue;
+                // دعم كلا النموذجين: منهج (قيمة واحدة لكل ملف) أو إضافة محاضرة (قيمتان لكل صف: hidden ثم checkbox)
+                $visibleVal = $visible[$index] ?? $visible[2 * $index + 1] ?? $visible[2 * $index] ?? 1;
+                LectureMaterial::create([
+                    'lecture_id' => $lecture->id,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'title' => $titles[$index] ?? null,
+                    'is_visible_to_student' => (int)$visibleVal === 1,
+                    'sort_order' => $sortOrder++,
+                ]);
+            }
+        }
         
         // إذا كان الطلب AJAX (من popup)، أرجع JSON
         if ($request->ajax() || $request->wantsJson()) {
@@ -312,6 +343,16 @@ class LectureController extends Controller
             'has_attendance_tracking' => 'boolean',
             'has_assignment' => 'boolean',
             'has_evaluation' => 'boolean',
+            'material_visible_old' => 'nullable|array',
+            'material_visible_old.*' => 'in:0,1',
+            'material_delete_old' => 'nullable|array',
+            'material_delete_old.*' => 'exists:lecture_materials,id',
+            'material_files' => 'nullable|array',
+            'material_files.*' => 'nullable|file|max:20480',
+            'material_titles' => 'nullable|array',
+            'material_titles.*' => 'nullable|string|max:255',
+            'material_visible' => 'nullable|array',
+            'material_visible.*' => 'in:0,1',
         ]);
         
         // التحقق من أن الكورس يخص هذا المدرب
@@ -351,6 +392,44 @@ class LectureController extends Controller
         }
         
         $lecture->update($validated);
+
+        // مواد المحاضرة: حذف المحددة
+        $deleteIds = $request->input('material_delete_old', []);
+        if (!empty($deleteIds)) {
+            $toDelete = LectureMaterial::where('lecture_id', $lecture->id)->whereIn('id', $deleteIds)->get();
+            foreach ($toDelete as $m) {
+                Storage::disk('public')->delete($m->file_path);
+                $m->delete();
+            }
+        }
+        // تحديث ظهور المواد الحالية
+        $visibleOld = $request->input('material_visible_old', []);
+        foreach ($visibleOld as $matId => $val) {
+            $visible = is_array($val) ? in_array('1', $val, true) : ((int)$val === 1);
+            LectureMaterial::where('lecture_id', $lecture->id)->where('id', $matId)->update(['is_visible_to_student' => $visible]);
+        }
+        // إضافة مواد جديدة
+        $materialFiles = $request->file('material_files');
+        if ($materialFiles && is_array($materialFiles)) {
+            $titles = $request->input('material_titles', []);
+            $visible = $request->input('material_visible', []);
+            $sortStart = (int) $lecture->materials()->max('sort_order') + 1;
+            $sortOrder = $sortStart;
+            foreach ($materialFiles as $index => $file) {
+                if (!$file || !$file->isValid()) continue;
+                $path = $file->store('lecture-materials/' . $lecture->id, 'public');
+                if (!$path) continue;
+                $visibleVal = $visible[$index] ?? $visible[2 * $index + 1] ?? $visible[2 * $index] ?? 1;
+                LectureMaterial::create([
+                    'lecture_id' => $lecture->id,
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'title' => $titles[$index] ?? null,
+                    'is_visible_to_student' => (int)$visibleVal === 1,
+                    'sort_order' => $sortOrder++,
+                ]);
+            }
+        }
         
         // إذا كان الطلب AJAX (من popup)، أرجع JSON
         if ($request->ajax() || $request->wantsJson()) {

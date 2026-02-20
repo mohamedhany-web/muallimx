@@ -70,4 +70,9 @@ class Lecture extends Model
     {
         return $this->morphMany(CurriculumItem::class, 'item');
     }
+
+    public function materials()
+    {
+        return $this->hasMany(LectureMaterial::class)->orderBy('sort_order');
+    }
 }

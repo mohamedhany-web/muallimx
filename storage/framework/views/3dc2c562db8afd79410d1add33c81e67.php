@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', __('instructor.create_question_bank_new') . ' - Mindlytics'); ?>
 <?php $__env->startSection('header', __('instructor.create_question_bank_new')); ?>
 

@@ -19,11 +19,11 @@ class DashboardController extends Controller
 
         $stats = [
             'competitions_count' => CommunityCompetition::active()->count(),
-            'datasets_count' => CommunityDataset::active()->count(),
+            'datasets_count' => CommunityDataset::public()->count(),
         ];
 
         $recentCompetitions = CommunityCompetition::active()->ordered()->take(3)->get();
-        $recentDatasets = CommunityDataset::active()->ordered()->take(3)->get();
+        $recentDatasets = CommunityDataset::public()->ordered()->take(3)->get();
 
         return view('community.dashboard.index', [
             'user' => $user,

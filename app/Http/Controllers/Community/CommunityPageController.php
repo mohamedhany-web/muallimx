@@ -25,21 +25,21 @@ class CommunityPageController extends Controller
 
     public function datasets(): View
     {
-        $datasets = CommunityDataset::active()->ordered()->paginate(12);
+        $datasets = CommunityDataset::public()->ordered()->paginate(12);
         return view('community.datasets.index', compact('datasets'));
     }
 
     public function datasetShow(DatasetFileReaderService $reader, CommunityDataset $dataset): View|RedirectResponse
     {
-        if (!$dataset->is_active) {
+        if ($dataset->status !== CommunityDataset::STATUS_APPROVED || !$dataset->is_active) {
             abort(404);
         }
 
+        $disk = config('filesystems.community_disk', 'local');
         $preview = ['headers' => [], 'rows' => []];
 
         if ($dataset->file_path) {
-            $fullPath = Storage::disk('local')->path($dataset->file_path);
-            $preview = $reader->readPreview($fullPath);
+            $preview = $reader->readPreviewFromStorage($disk, $dataset->file_path);
         }
 
         return view('community.datasets.show', [
@@ -51,17 +51,18 @@ class CommunityPageController extends Controller
 
     public function datasetDownload(CommunityDataset $dataset): StreamedResponse
     {
-        if (!$dataset->is_active || !$dataset->file_path) {
+        if ($dataset->status !== CommunityDataset::STATUS_APPROVED || !$dataset->is_active || !$dataset->file_path) {
             abort(404);
         }
 
-        if (!Storage::disk('local')->exists($dataset->file_path)) {
+        $disk = config('filesystems.community_disk', 'local');
+        if (!Storage::disk($disk)->exists($dataset->file_path)) {
             abort(404);
         }
 
         $name = basename($dataset->file_path);
 
-        return Storage::disk('local')->download($dataset->file_path, $name);
+        return Storage::disk($disk)->download($dataset->file_path, $name);
     }
 
     public function discussions(): View

@@ -60,7 +60,32 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Cloudflare R2 — متوافق مع واجهة S3.
+         * يُستخدم لرفع ملفات مجتمع الذكاء الاصطناعي (تقديمات المساهمين).
+         */
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION', 'auto'),
+            'bucket' => env('AWS_BUCKET'),
+            'url' => env('AWS_URL'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', true),
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | قرص ملفات المجتمع (مساهمون + أدمن)
+    |--------------------------------------------------------------------------
+    | استخدم 'r2' لرفع الملفات على Cloudflare R2، أو 'local' للتطوير المحلي.
+    */
+    'community_disk' => env('FILESYSTEM_DISK_COMMUNITY', 'local'),
 
     /*
     |--------------------------------------------------------------------------

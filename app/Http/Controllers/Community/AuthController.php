@@ -5,15 +5,11 @@ namespace App\Http\Controllers\Community;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CommunityLoginRequest;
 use App\Http\Requests\CommunityRegisterRequest;
-use App\Mail\TwoFactorCodeMail;
-use App\Models\TwoFactorLog;
 use App\Models\User;
 use App\Services\Community\CommunityRegistrationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -69,34 +65,15 @@ class AuthController extends Controller
 
         RateLimiter::clear($key);
 
-        if (config('app.admin_2fa_required', true) && $user->requiresTwoFactor()) {
-            $request->session()->put('login.id', $user->id);
-            $request->session()->put('login.remember', $request->boolean('remember'));
-            $request->session()->put('url.intended', route('community.dashboard'));
-            $request->session()->save();
-            $code = (string) random_int(100000, 999999);
-            Cache::put('2fa_code_' . $user->id, $code, now()->addMinutes(10));
-            try {
-                Mail::to($user->email)->send(new TwoFactorCodeMail($code));
-                TwoFactorLog::create([
-                    'user_id' => $user->id,
-                    'email' => $user->email,
-                    'event' => TwoFactorLog::EVENT_CHALLENGE_SENT,
-                    'ip_address' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                ]);
-            } catch (\Throwable $e) {
-                report($e);
-                Cache::forget('2fa_code_' . $user->id);
-                return back()->withErrors(['email' => 'تعذر إرسال رمز التحقق إلى بريدك. تحقق من إعدادات البريد أو حاول لاحقاً.'])->withInput();
-            }
-            return redirect()->route('two-factor.challenge');
-        }
-
+        // مجتمع الذكاء الاصطناعي: لا نفرض 2FA — الدخول مباشرة إلى لوحة المجتمع
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
         $user->update(['last_login_at' => now()]);
 
+        // إذا كان المستخدم مساهماً، توجيهه إلى لوحة المساهم
+        if ($user->is_community_contributor) {
+            return redirect()->intended(route('community.contributor.dashboard'));
+        }
         return redirect()->intended(route('community.dashboard'));
     }
 

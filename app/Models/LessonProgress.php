@@ -16,6 +16,7 @@ class LessonProgress extends Model
         'is_completed',
         'completed_at',
         'watch_time',
+        'progress_percent',
         'notes',
     ];
 
@@ -23,6 +24,7 @@ class LessonProgress extends Model
         'is_completed' => 'boolean',
         'completed_at' => 'datetime',
         'watch_time' => 'integer',
+        'progress_percent' => 'integer',
     ];
 
     /**

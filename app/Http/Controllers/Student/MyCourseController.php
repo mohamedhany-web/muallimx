@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\LectureMaterial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class MyCourseController extends Controller
 {
@@ -75,55 +77,23 @@ class MyCourseController extends Controller
             ->orderBy('order')
             ->get();
         
-        // تحميل تقدم الدروس والأنماط في العناصر
+        // تحميل تقدم الدروس والأنماط والامتحانات والواجبات في العناصر
         foreach ($sections as $section) {
             foreach ($section->activeItems as $curriculumItem) {
-                if ($curriculumItem->item instanceof \App\Models\CourseLesson) {
-                    $curriculumItem->item->load(['progress' => function($q) use ($user) {
-                        $q->where('user_id', $user->id);
-                    }]);
-                } elseif ($curriculumItem->item instanceof \App\Models\LearningPattern) {
-                    $curriculumItem->item->load(['attempts' => function($q) use ($user) {
-                        $q->where('user_id', $user->id)->latest();
-                    }]);
+                $entity = $curriculumItem->item;
+                if ($entity instanceof \App\Models\CourseLesson) {
+                    $entity->load(['progress' => function($q) use ($user) { $q->where('user_id', $user->id); }]);
+                } elseif ($entity instanceof \App\Models\LearningPattern) {
+                    $entity->load(['attempts' => function($q) use ($user) { $q->where('user_id', $user->id)->latest(); }]);
+                } elseif ($entity instanceof \App\Models\AdvancedExam) {
+                    $entity->load(['attempts' => function($q) use ($user) { $q->where('user_id', $user->id)->whereNotNull('submitted_at'); }]);
+                } elseif ($entity instanceof \App\Models\Assignment) {
+                    $entity->load(['submissions' => function($q) use ($user) { $q->where('student_id', $user->id); }]);
                 }
             }
         }
 
-        // حساب التقدم من المنهج
-        $totalItems = 0;
-        $completedItems = 0;
-        
-        foreach ($sections as $section) {
-            foreach ($section->activeItems as $item) {
-                if ($item->item instanceof \App\Models\CourseLesson) {
-                    $totalItems++;
-                    $progress = $item->item->progress->first();
-                    if ($progress && $progress->is_completed) {
-                        $completedItems++;
-                    }
-                } elseif ($item->item instanceof \App\Models\LearningPattern) {
-                    $totalItems++;
-                    $bestAttempt = $item->item->getUserBestAttempt($user->id);
-                    if ($bestAttempt && $bestAttempt->status === 'completed') {
-                        $completedItems++;
-                    }
-                }
-            }
-        }
-
-        // إذا لم يكن هناك منهج، استخدم الدروس القديمة
-        if ($sections->isEmpty()) {
-            $totalLessons = $course->lessons->count();
-            $completedLessons = $course->lessons->filter(function($lesson) {
-                return $lesson->progress->isNotEmpty() && $lesson->progress->first()->is_completed;
-            })->count();
-            $progress = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100, 2) : 0;
-        } else {
-            $progress = $totalItems > 0 ? round(($completedItems / $totalItems) * 100, 2) : 0;
-            $totalLessons = $totalItems;
-            $completedLessons = $completedItems;
-        }
+        list($progress, $totalLessons, $completedLessons) = $this->calculateProgressFromSections($user, $course, $sections);
 
         // تجميع المحاضرات حسب الدرس (للتوافق مع الكود القديم)
         $lecturesByLesson = $course->lectures->groupBy('course_lesson_id');
@@ -228,55 +198,13 @@ class MyCourseController extends Controller
                     $curriculumItem->item->load(['attempts' => function($q) use ($user) {
                         $q->where('user_id', $user->id)->whereNotNull('submitted_at');
                     }]);
+                } elseif ($curriculumItem->item instanceof \App\Models\Assignment) {
+                    $curriculumItem->item->load(['submissions' => function($q) use ($user) { $q->where('student_id', $user->id); }]);
                 }
             }
         }
 
-        // حساب التقدم من المنهج (جميع العناصر: دروس، محاضرات، واجبات، امتحانات، أنماط)
-        $totalItems = 0;
-        $completedItems = 0;
-        
-        foreach ($sections as $section) {
-            foreach ($section->activeItems as $item) {
-                $entity = $item->item;
-                if (!$entity) {
-                    continue;
-                }
-                $totalItems++;
-                if ($entity instanceof \App\Models\CourseLesson) {
-                    $progress = $entity->progress->first();
-                    if ($progress && $progress->is_completed) {
-                        $completedItems++;
-                    }
-                } elseif ($entity instanceof \App\Models\LearningPattern) {
-                    $bestAttempt = $entity->getUserBestAttempt($user->id);
-                    if ($bestAttempt && $bestAttempt->status === 'completed') {
-                        $completedItems++;
-                    }
-                } elseif ($entity instanceof \App\Models\AdvancedExam) {
-                    $passingMarks = (float) ($entity->passing_marks ?? 0);
-                    $passed = $entity->attempts->contains(function ($attempt) use ($passingMarks) {
-                        return $attempt->score !== null && (float) $attempt->score >= $passingMarks;
-                    });
-                    if ($passed) {
-                        $completedItems++;
-                    }
-                }
-            }
-        }
-
-        // إذا لم يكن هناك منهج، استخدم الدروس القديمة
-        if ($sections->isEmpty()) {
-            $totalLessons = $course->lessons->count();
-            $completedLessons = $course->lessons->filter(function($lesson) {
-                return $lesson->progress->isNotEmpty() && $lesson->progress->first()->is_completed;
-            })->count();
-            $progress = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100, 2) : 0;
-        } else {
-            $progress = $totalItems > 0 ? round(($completedItems / $totalItems) * 100, 2) : 0;
-            $totalLessons = $totalItems;
-            $completedLessons = $completedItems;
-        }
+        list($progress, $totalLessons, $completedLessons) = $this->calculateProgressFromSections($user, $course, $sections);
 
         // تجميع المحاضرات حسب الدرس (للتوافق مع الكود القديم)
         $lecturesByLesson = $course->lectures->groupBy('course_lesson_id');
@@ -316,6 +244,19 @@ class MyCourseController extends Controller
         $recordingUrl = $lecture->recording_url ? trim($lecture->recording_url) : null;
         $videoPlatform = $lecture->video_platform ? trim(strtolower($lecture->video_platform)) : null;
 
+        $materials = $lecture->materials()
+            ->where('is_visible_to_student', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function ($m) use ($courseId, $lectureId) {
+                return [
+                    'id' => $m->id,
+                    'title' => $m->title ?: $m->file_name,
+                    'file_name' => $m->file_name,
+                    'download_url' => route('my-courses.lectures.material.download', [$courseId, $lectureId, $m->id]),
+                ];
+            });
+
         return response()->json([
             'id' => $lecture->id,
             'title' => $lecture->title,
@@ -328,7 +269,29 @@ class MyCourseController extends Controller
             'teams_meeting_link' => $lecture->teams_meeting_link ?? null,
             'teams_registration_link' => $lecture->teams_registration_link ?? null,
             'notes' => $lecture->notes ?? null,
+            'materials' => $materials,
         ]);
+    }
+
+    /**
+     * تحميل مادة محاضرة (للطالب - المواد الظاهرة فقط)
+     */
+    public function downloadLectureMaterial($courseId, $lectureId, $materialId)
+    {
+        $user = Auth::user();
+        $course = $user->activeCourses()->findOrFail($courseId);
+        $lecture = $course->lectures()->findOrFail($lectureId);
+        $material = LectureMaterial::where('lecture_id', $lecture->id)
+            ->where('id', $materialId)
+            ->where('is_visible_to_student', true)
+            ->firstOrFail();
+
+        $path = Storage::disk('public')->path($material->file_path);
+        if (!is_file($path)) {
+            abort(404, 'الملف غير موجود');
+        }
+
+        return response()->download($path, $material->file_name);
     }
 
     /**
@@ -391,8 +354,16 @@ class MyCourseController extends Controller
         $course = $user->activeCourses()->findOrFail($courseId);
         $lesson = $course->lessons()->findOrFail($lessonId);
 
-        $watchTime = $request->input('watch_time', 0);
-        $progressPercent = $request->input('progress_percent', 0);
+        $watchTime = (int) $request->input('watch_time', 0);
+        $clientPercent = (int) min(100, max(0, $request->input('progress_percent', 0)));
+
+        // احتساب النسبة من الثواني المشاهدة فعلياً (منع الغش: لا نعتمد على currentTime فقط)
+        $totalSeconds = $lesson->duration_minutes ? (int) ($lesson->duration_minutes * 60) : 0;
+        if ($totalSeconds > 0) {
+            $progressPercent = (int) min(100, round(($watchTime / $totalSeconds) * 100));
+        } else {
+            $progressPercent = $clientPercent;
+        }
         $isCompleted = $request->boolean('completed') || $progressPercent >= 90;
 
         // تحديث أو إنشاء تقدم الدرس
@@ -404,59 +375,125 @@ class MyCourseController extends Controller
             [
                 'is_completed' => $isCompleted,
                 'completed_at' => $isCompleted ? now() : null,
-                'watch_time' => $watchTime
+                'watch_time' => $watchTime,
+                'progress_percent' => $progressPercent,
             ]
         );
 
         // تحديث التقدم الإجمالي للكورس
         $this->updateCourseProgress($user->id, $courseId);
 
+        $course = $user->activeCourses()->findOrFail($courseId);
+        $sections = $course->activeSections()->with(['activeItems' => fn ($q) => $q->with('item')])->orderBy('order')->get();
+        foreach ($sections as $section) {
+            foreach ($section->activeItems as $curriculumItem) {
+                $entity = $curriculumItem->item;
+                if ($entity instanceof \App\Models\CourseLesson) {
+                    $entity->load(['progress' => fn ($q) => $q->where('user_id', $user->id)]);
+                } elseif ($entity instanceof \App\Models\LearningPattern) {
+                    $entity->load(['attempts' => fn ($q) => $q->where('user_id', $user->id)->latest()]);
+                } elseif ($entity instanceof \App\Models\AdvancedExam) {
+                    $entity->load(['attempts' => fn ($q) => $q->where('user_id', $user->id)->whereNotNull('submitted_at')]);
+                } elseif ($entity instanceof \App\Models\Assignment) {
+                    $entity->load(['submissions' => fn ($q) => $q->where('student_id', $user->id)]);
+                }
+            }
+        }
+        list($progressPct, $totalItems, $completedItems) = $this->calculateProgressFromSections($user, $course, $sections);
+
         return response()->json([
             'success' => true,
             'message' => 'تم تحديث التقدم بنجاح',
             'progress' => $progress,
-            'course_progress' => $this->getCourseProgress($user->id, $courseId)
+            'course_progress' => $progressPct,
+            'total_items' => $totalItems,
+            'completed_items' => $completedItems,
         ]);
     }
 
     /**
-     * الحصول على تقدم الكورس
+     * حساب التقدم من المنهج (أقسام + عناصر) أو من الدروس فقط
+     * يُرجع: [نسبة التقدم، إجمالي العناصر، العناصر المكتملة]
+     */
+    private function calculateProgressFromSections($user, $course, $sections)
+    {
+        if ($sections->isEmpty()) {
+            $total = $course->lessons()->where('is_active', true)->count();
+            $completed = \App\Models\LessonProgress::where('user_id', $user->id)
+                ->whereIn('course_lesson_id', $course->lessons()->where('is_active', true)->pluck('id'))
+                ->where('is_completed', true)
+                ->count();
+            $progress = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+            return [$progress, $total, $completed];
+        }
+
+        $totalItems = 0;
+        $completedItems = 0;
+
+        foreach ($sections as $section) {
+            foreach ($section->activeItems as $item) {
+                $entity = $item->item;
+                if (!$entity) continue;
+
+                $totalItems++;
+                if ($entity instanceof \App\Models\CourseLesson) {
+                    $p = $entity->progress->first();
+                    if ($p && $p->is_completed) $completedItems++;
+                } elseif ($entity instanceof \App\Models\Lecture) {
+                    // المحاضرات تُحسب في المجموع فقط (لا يوجد تتبع إكمال حالياً)
+                } elseif ($entity instanceof \App\Models\Assignment) {
+                    if ($entity->submissions->where('student_id', $user->id)->isNotEmpty()) $completedItems++;
+                } elseif ($entity instanceof \App\Models\LearningPattern) {
+                    $best = $entity->getUserBestAttempt($user->id);
+                    if ($best && $best->status === 'completed') $completedItems++;
+                } elseif ($entity instanceof \App\Models\AdvancedExam) {
+                    $passing = (float) ($entity->passing_marks ?? 0);
+                    $passed = $entity->attempts->contains(fn ($a) => $a->score !== null && (float) $a->score >= $passing);
+                    if ($passed) $completedItems++;
+                }
+            }
+        }
+
+        $progress = $totalItems > 0 ? round(($completedItems / $totalItems) * 100, 2) : 0;
+        return [$progress, $totalItems, $completedItems];
+    }
+
+    /**
+     * الحصول على تقدم الكورس (نسبة مئوية)
      */
     private function getCourseProgress($userId, $courseId)
     {
         $course = \App\Models\AdvancedCourse::findOrFail($courseId);
-        $totalLessons = $course->lessons()->where('is_active', true)->count();
-        
-        if ($totalLessons === 0) return 0;
+        $user = \App\Models\User::findOrFail($userId);
+        $sections = $course->activeSections()->with(['activeItems' => fn ($q) => $q->with('item')])->orderBy('order')->get();
 
-        $completedLessons = \App\Models\LessonProgress::where('user_id', $userId)
-            ->whereIn('course_lesson_id', $course->lessons()->where('is_active', true)->pluck('id'))
-            ->where('is_completed', true)
-            ->count();
+        foreach ($sections as $section) {
+            foreach ($section->activeItems as $curriculumItem) {
+                $entity = $curriculumItem->item;
+                if ($entity instanceof \App\Models\CourseLesson) {
+                    $entity->load(['progress' => fn ($q) => $q->where('user_id', $userId)]);
+                } elseif ($entity instanceof \App\Models\LearningPattern) {
+                    $entity->load(['attempts' => fn ($q) => $q->where('user_id', $userId)->latest()]);
+                } elseif ($entity instanceof \App\Models\AdvancedExam) {
+                    $entity->load(['attempts' => fn ($q) => $q->where('user_id', $userId)->whereNotNull('submitted_at')]);
+                } elseif ($entity instanceof \App\Models\Assignment) {
+                    $entity->load(['submissions' => fn ($q) => $q->where('student_id', $userId)]);
+                }
+            }
+        }
 
-        return round(($completedLessons / $totalLessons) * 100, 2);
+        list($progress) = $this->calculateProgressFromSections($user, $course, $sections);
+        return $progress;
     }
 
     /**
-     * تحديث التقدم الإجمالي للكورس
+     * تحديث التقدم الإجمالي للكورس في جدول التسجيلات (يُستدعى أيضاً بعد تسليم الامتحان)
      */
-    private function updateCourseProgress($userId, $courseId)
+    public function updateCourseProgress($userId, $courseId)
     {
-        $course = \App\Models\AdvancedCourse::findOrFail($courseId);
-        $totalLessons = $course->lessons()->count();
-        
-        if ($totalLessons > 0) {
-            $completedLessons = \App\Models\LessonProgress::where('user_id', $userId)
-                ->whereIn('course_lesson_id', $course->lessons()->pluck('id'))
-                ->where('is_completed', true)
-                ->count();
-
-            $progressPercentage = round(($completedLessons / $totalLessons) * 100, 2);
-
-            // تحديث التقدم في جدول التسجيلات
-            \App\Models\StudentCourseEnrollment::where('user_id', $userId)
-                ->where('advanced_course_id', $courseId)
-                ->update(['progress' => $progressPercentage]);
-        }
+        $progress = $this->getCourseProgress($userId, $courseId);
+        \App\Models\StudentCourseEnrollment::where('user_id', $userId)
+            ->where('advanced_course_id', $courseId)
+            ->update(['progress' => $progress]);
     }
 }

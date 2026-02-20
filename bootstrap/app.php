@@ -40,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest-only' => \App\Http\Middleware\EnsureGuestOnly::class,
             'prevent-concurrent' => \App\Http\Middleware\PreventConcurrentSessions::class,
             'landing.locale' => \App\Http\Middleware\SetLandingLocale::class,
+            'community.contributor' => \App\Http\Middleware\EnsureCommunityContributor::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -53,7 +54,11 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'يجب تسجيل الدخول'], 401);
             }
-            return redirect()->guest($e->redirectTo($request) ?? route('login'));
+            // إذا كان الطلب من مسارات المجتمع → تسجيل دخول المجتمع، وإلا → الأكاديمية
+            $loginRoute = $request->is('community') || $request->is('community/*')
+                ? route('community.login')
+                : ($e->redirectTo($request) ?? route('login'));
+            return redirect()->guest($loginRoute);
         });
 
         // توجيه الأخطاء إلى صفحاتنا المخصصة

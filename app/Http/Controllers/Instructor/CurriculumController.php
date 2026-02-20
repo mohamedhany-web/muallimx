@@ -282,6 +282,7 @@ class CurriculumController extends Controller
             'show_explanations' => false,
             'allow_review' => true,
             'is_active' => true,
+            'is_published' => true,
             'show_in_sidebar' => true,
         ]);
 
