@@ -72,6 +72,7 @@ class AuthController extends Controller
             $request->session()->put('login.id', $user->id);
             $request->session()->put('login.remember', $request->boolean('remember'));
             $request->session()->put('url.intended', route('community.dashboard'));
+            $request->session()->save();
             $code = (string) random_int(100000, 999999);
             Cache::put('2fa_code_' . $user->id, $code, now()->addMinutes(10));
             try {

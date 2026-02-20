@@ -184,6 +184,7 @@ class AuthController extends Controller
             if (config('app.admin_2fa_required', true) && $user->requiresTwoFactor()) {
                 $request->session()->put('login.id', $user->id);
                 $request->session()->put('login.remember', $request->boolean('remember'));
+                $request->session()->save();
                 $code = (string) random_int(100000, 999999);
                 Cache::put('2fa_code_' . $user->id, $code, now()->addMinutes(10));
                 try {

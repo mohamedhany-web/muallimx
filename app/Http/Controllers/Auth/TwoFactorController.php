@@ -38,13 +38,14 @@ class TwoFactorController extends Controller
     public function verifyChallenge(Request $request)
     {
         $request->validate([
-            'code' => 'required|string|size:6',
+            'code' => 'required|string|min:6|max:10',
         ], [
             'code.required' => 'رمز التحقق مطلوب',
-            'code.size' => 'رمز التحقق يتكون من 6 أرقام',
+            'code.min' => 'رمز التحقق يتكون من 6 أرقام',
         ]);
 
         if (!$request->session()->has('login.id')) {
+            \Log::warning('2FA verify: session missing login.id', ['session_id' => $request->session()->getId()]);
             return redirect()->route('login')->withErrors(['code' => 'انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.']);
         }
 
@@ -54,10 +55,14 @@ class TwoFactorController extends Controller
             return redirect()->route('login');
         }
 
-        // 2FA للأدمن والمدربين عبر البريد فقط — التحقق من الرمز المرسل إلى الإيميل
-        $codeInput = str_replace(' ', '', trim($request->code));
+        // توحيد الرمز: أرقام إنجليزية فقط (دعم الأرقام العربية إن وُجدت)
+        $codeInput = $this->normalize2FACode($request->code);
+        if (strlen($codeInput) !== 6) {
+            return back()->withErrors(['code' => 'رمز التحقق يتكون من 6 أرقام.']);
+        }
+
         $cachedCode = Cache::get('2fa_code_' . $user->id);
-        $valid = $cachedCode !== null && $cachedCode === $codeInput;
+        $valid = $cachedCode !== null && (string) $cachedCode === $codeInput;
         if ($valid) {
             Cache::forget('2fa_code_' . $user->id);
         }
@@ -72,6 +77,11 @@ class TwoFactorController extends Controller
 
         Auth::login($user, $remember);
         $user->update(['last_login_at' => now()]);
+
+        // تحديث الكاش بمعرف الجلسة الحالية حتى لا يعتبر PreventConcurrentSessions الجلسة «متزامنة» ويُخرج المستخدم
+        $sessionId = $request->session()->getId();
+        $cacheKey = "user_session_{$user->id}";
+        Cache::put($cacheKey, $sessionId, now()->addDays(7));
 
         if ($user->isEmployee()) {
             return redirect()->intended(route('employee.dashboard'));
@@ -189,5 +199,16 @@ class TwoFactorController extends Controller
             return 'instructor.courses.index';
         }
         return 'dashboard';
+    }
+
+    /** توحيد رمز 2FA: استخراج 6 أرقام فقط مع دعم الأرقام العربية ٠-٩ */
+    private function normalize2FACode(string $input): string
+    {
+        $arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+        $english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        $s = str_replace($arabic, $english, trim($input));
+        $digits = preg_replace('/\D/', '', $s);
+
+        return strlen($digits) >= 6 ? substr($digits, 0, 6) : $digits;
     }
 }
