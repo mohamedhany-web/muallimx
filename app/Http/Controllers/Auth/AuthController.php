@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\TwoFactorCodeMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\Validator;
 
@@ -86,9 +89,9 @@ class AuthController extends Controller
         }
 
         try {
-            // Rate Limiting محسن - حماية من Brute Force
+            // Rate Limiting - حماية من Brute Force (محاولات فاشلة فقط؛ النجاح يمسح العداد)
             $key = 'login_attempts_' . $request->ip();
-            $maxAttempts = 5;
+            $maxAttempts = 10;
             $decayMinutes = 15;
             
             if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, $maxAttempts)) {
@@ -177,10 +180,21 @@ class AuthController extends Controller
             // مسح عداد المحاولات عند النجاح
             \Illuminate\Support\Facades\RateLimiter::clear($key);
 
-            // إذا كان المستخدم مطلوب له 2FA وله مصادقة ثنائية مفعّلة وإلزام 2FA مفعّل من الإعدادات → طلب رمز 2FA
-            if (config('app.admin_2fa_required', true) && $user->requiresTwoFactor() && $user->hasTwoFactorEnabled()) {
+            // إذا كان المستخدم مطلوب له 2FA (أدمن/مدرب) → إرسال رمز عبر البريد فقط ثم طلب التحدي
+            if (config('app.admin_2fa_required', true) && $user->requiresTwoFactor()) {
                 $request->session()->put('login.id', $user->id);
                 $request->session()->put('login.remember', $request->boolean('remember'));
+                $code = (string) random_int(100000, 999999);
+                Cache::put('2fa_code_' . $user->id, $code, now()->addMinutes(10));
+                try {
+                    Mail::to($user->email)->send(new TwoFactorCodeMail($code));
+                    \Log::info('تم إرسال رمز 2FA إلى البريد', ['user_id' => $user->id, 'email' => $user->email]);
+                } catch (\Throwable $e) {
+                    report($e);
+                    Cache::forget('2fa_code_' . $user->id);
+                    \Log::error('فشل إرسال رمز 2FA', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+                    return back()->withErrors(['email' => 'تعذر إرسال رمز التحقق إلى بريدك. تحقق من إعدادات البريد أو حاول لاحقاً.'])->withInput();
+                }
                 return redirect()->route('two-factor.challenge');
             }
             

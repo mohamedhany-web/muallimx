@@ -181,7 +181,7 @@ Route::get('/community', [\App\Http\Controllers\Public\CommunityController::clas
 Route::prefix('community')->name('community.')->group(function () {
     Route::middleware(['guest', 'guest-only'])->group(function () {
         Route::get('/login', [\App\Http\Controllers\Community\AuthController::class, 'showLogin'])->name('login');
-        Route::post('/login', [\App\Http\Controllers\Community\AuthController::class, 'login'])->middleware('throttle:5,15')->name('login.post');
+        Route::post('/login', [\App\Http\Controllers\Community\AuthController::class, 'login'])->middleware('throttle:20,15')->name('login.post');
         Route::get('/register', [\App\Http\Controllers\Community\AuthController::class, 'showRegister'])->name('register');
         Route::post('/register', [\App\Http\Controllers\Community\AuthController::class, 'register'])->middleware('throttle:5,1')->name('register.post');
     });
@@ -350,7 +350,7 @@ Route::get('/package/{slug}', function ($slug) {
 // مسارات المصادقة - محمية بحيث لا يمكن الوصول إليها إذا كان المستخدم مسجل دخول
 Route::middleware(['guest', 'guest-only'])->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,15'); // 5 محاولات كل 15 دقيقة - حماية من Brute Force
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:20,15'); // 20 طلب كل 15 دقيقة — يتضمن الدخول + إعادة المحاولة مع 2FA
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     // Rate limiting للتسجيل: 5 محاولات في الدقيقة من نفس IP
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
@@ -360,8 +360,7 @@ Route::middleware(['guest', 'guest-only'])->group(function () {
 });
 
 // المصادقة الثنائية (2FA) - بعد إدخال البريد وكلمة المرور للمدربين/الإدمن/الموظفين
-// throttle: 30 طلب كل دقيقتين لتقليل ظهور "طلبات كثيرة جداً" أثناء الاستخدام العادي
-Route::middleware(['web', 'throttle:30,2'])->group(function () {
+Route::middleware(['web', 'throttle:60,5'])->group(function () {
     Route::get('/2fa/challenge', [\App\Http\Controllers\Auth\TwoFactorController::class, 'showChallenge'])->name('two-factor.challenge');
     Route::post('/2fa/verify', [\App\Http\Controllers\Auth\TwoFactorController::class, 'verifyChallenge'])->name('two-factor.verify');
 });

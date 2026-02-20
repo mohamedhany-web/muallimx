@@ -105,11 +105,19 @@ class User extends Authenticatable
     }
 
     /**
-     * هل هذا المستخدم مطلوب له تفعيل المصادقة الثنائية (أدمن ومدير عام فقط)
+     * هل هذا المستخدم مطلوب له تفعيل المصادقة الثنائية (أدمن ومدير عام والمدربين فقط)
      */
     public function requiresTwoFactor(): bool
     {
-        return $this->role === 'super_admin' || $this->role === 'admin';
+        return in_array($this->role, ['super_admin', 'admin', 'instructor'], true);
+    }
+
+    /**
+     * هل يستخدم هذا المستخدم 2FA عبر البريد (بدون تطبيق TOTP)
+     */
+    public function usesEmailTwoFactor(): bool
+    {
+        return $this->requiresTwoFactor() && !$this->hasTwoFactorEnabled();
     }
 
     /**

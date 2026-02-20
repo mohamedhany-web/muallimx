@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use PragmaRX\Google2FA\Google2FA;
@@ -22,11 +23,13 @@ class TwoFactorController extends Controller
         }
         $userId = $request->session()->get('login.id');
         $user = User::find($userId);
-        if (!$user || !$user->requiresTwoFactor() || !$user->hasTwoFactorEnabled()) {
+        if (!$user || !$user->requiresTwoFactor()) {
             $request->session()->forget(['login.id', 'login.remember']);
             return redirect()->route('login');
         }
-        return view('auth.two-factor.challenge');
+        // 2FA للأدمن والمدربين عبر البريد فقط
+        $useEmail = true;
+        return view('auth.two-factor.challenge', compact('useEmail'));
     }
 
     /**
@@ -46,24 +49,17 @@ class TwoFactorController extends Controller
         }
 
         $user = User::find($request->session()->get('login.id'));
-        if (!$user || !$user->hasTwoFactorEnabled()) {
+        if (!$user || !$user->requiresTwoFactor()) {
             $request->session()->forget(['login.id', 'login.remember']);
             return redirect()->route('login');
         }
 
-        $google2fa = new Google2FA();
-        $secret = $user->two_factor_secret ? decrypt($user->two_factor_secret) : '';
-        $valid = $secret && $google2fa->verifyKey($secret, $request->code, 2);
-
-        if (!$valid) {
-            // التحقق من رموز الاسترداد (مشفرة في DB إن استخدمت)
-            $recoveryCodes = $user->two_factor_recovery_codes ?? [];
-            $codeToCheck = str_replace(' ', '', $request->code);
-            if (in_array($codeToCheck, $recoveryCodes)) {
-                $recoveryCodes = array_values(array_filter($recoveryCodes, fn($c) => $c !== $codeToCheck));
-                $user->forceFill(['two_factor_recovery_codes' => $recoveryCodes])->save();
-                $valid = true;
-            }
+        // 2FA للأدمن والمدربين عبر البريد فقط — التحقق من الرمز المرسل إلى الإيميل
+        $codeInput = str_replace(' ', '', trim($request->code));
+        $cachedCode = Cache::get('2fa_code_' . $user->id);
+        $valid = $cachedCode !== null && $cachedCode === $codeInput;
+        if ($valid) {
+            Cache::forget('2fa_code_' . $user->id);
         }
 
         if (!$valid) {

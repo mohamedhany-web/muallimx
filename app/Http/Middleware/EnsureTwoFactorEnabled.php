@@ -32,8 +32,13 @@ class EnsureTwoFactorEnabled
             return $next($request);
         }
 
-        // من لديه 2FA مفعّلة يمرّ بشكل طبيعي
+        // من لديه 2FA بتطبيق (TOTP) مفعّلة يمرّ بشكل طبيعي
         if ($user->hasTwoFactorEnabled()) {
+            return $next($request);
+        }
+
+        // من يستخدم 2FA عبر البريد فقط (أدمن/مدرب بدون TOTP) لا يحتاج صفحة إعداد — يتم إرسال الرمز عند كل دخول
+        if ($user->usesEmailTwoFactor()) {
             return $next($request);
         }
 

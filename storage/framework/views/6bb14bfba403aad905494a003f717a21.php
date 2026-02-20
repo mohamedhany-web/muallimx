@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title>المصادقة الثنائية - Mindlytics</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,21 +33,22 @@
                     <i class="fas fa-shield-alt text-2xl"></i>
                 </div>
                 <h1 class="text-xl font-black text-gray-900">المصادقة الثنائية</h1>
-                @if(!empty($useEmail))
+                <?php if(!empty($useEmail)): ?>
                     <p class="text-sm text-gray-600 mt-2">أرسلنا رمزاً مكوناً من 6 أرقام إلى بريدك الإلكتروني. أدخل الرمز أدناه.</p>
-                @else
+                <?php else: ?>
                     <p class="text-sm text-gray-600 mt-2">أدخل الرمز المكون من 6 أرقام من تطبيق Google Authenticator أو من بريدك الإلكتروني.</p>
-                @endif
+                <?php endif; ?>
             </div>
 
-            @if($errors->has('code'))
+            <?php if($errors->has('code')): ?>
                 <div class="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
-                    {{ $errors->first('code') }}
-                </div>
-            @endif
+                    <?php echo e($errors->first('code')); ?>
 
-            <form action="{{ route('two-factor.verify') }}" method="POST" class="space-y-4">
-                @csrf
+                </div>
+            <?php endif; ?>
+
+            <form action="<?php echo e(route('two-factor.verify')); ?>" method="POST" class="space-y-4">
+                <?php echo csrf_field(); ?>
                 <div>
                     <label for="code" class="block text-sm font-bold text-gray-800 mb-2">رمز التحقق</label>
                     <input type="text"
@@ -69,17 +70,17 @@
                 </button>
             </form>
 
-            @if(empty($useEmail))
+            <?php if(empty($useEmail)): ?>
                 <p class="text-xs text-gray-500 mt-4 text-center">
                     إذا فقدت جهازك، استخدم أحد رموز الاسترداد التي حصلت عليها عند التفعيل.
                 </p>
-            @else
+            <?php else: ?>
                 <p class="text-xs text-gray-500 mt-4 text-center">
                     لم يصلك الرمز؟ تحقق من مجلد البريد المزعج أو أعد تسجيل الدخول لإرسال رمز جديد.
                 </p>
-            @endif
+            <?php endif; ?>
 
-            <a href="{{ route('login') }}" class="block text-center text-sm text-blue-600 hover:text-blue-800 font-medium mt-4">
+            <a href="<?php echo e(route('login')); ?>" class="block text-center text-sm text-blue-600 hover:text-blue-800 font-medium mt-4">
                 <i class="fas fa-arrow-right ml-1"></i>
                 العودة لتسجيل الدخول
             </a>
@@ -87,3 +88,4 @@
     </div>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\mindly tics\Mindlytics\resources\views/auth/two-factor/challenge.blade.php ENDPATH**/ ?>
