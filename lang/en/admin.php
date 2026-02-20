@@ -12,6 +12,7 @@ return [
     'notifications' => 'Notifications',
     'employee_notifications' => 'Employee Notifications',
     'activity_log' => 'Activity Log',
+    'two_factor_logs' => '2FA Login Logs',
     'statistics' => 'Statistics',
     'performance' => 'Site Performance',
     'agreements_system' => 'Agreements System',

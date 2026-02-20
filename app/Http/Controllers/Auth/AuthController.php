@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\TwoFactorCodeMail;
+use App\Models\TwoFactorLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -190,6 +191,13 @@ class AuthController extends Controller
                 try {
                     Mail::to($user->email)->send(new TwoFactorCodeMail($code));
                     \Log::info('تم إرسال رمز 2FA إلى البريد', ['user_id' => $user->id, 'email' => $user->email]);
+                    TwoFactorLog::create([
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'event' => TwoFactorLog::EVENT_CHALLENGE_SENT,
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->userAgent(),
+                    ]);
                 } catch (\Throwable $e) {
                     report($e);
                     Cache::forget('2fa_code_' . $user->id);

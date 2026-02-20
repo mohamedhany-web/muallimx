@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CommunityLoginRequest;
 use App\Http\Requests\CommunityRegisterRequest;
 use App\Mail\TwoFactorCodeMail;
+use App\Models\TwoFactorLog;
 use App\Models\User;
 use App\Services\Community\CommunityRegistrationService;
 use Illuminate\Http\RedirectResponse;
@@ -77,6 +78,13 @@ class AuthController extends Controller
             Cache::put('2fa_code_' . $user->id, $code, now()->addMinutes(10));
             try {
                 Mail::to($user->email)->send(new TwoFactorCodeMail($code));
+                TwoFactorLog::create([
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'event' => TwoFactorLog::EVENT_CHALLENGE_SENT,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
             } catch (\Throwable $e) {
                 report($e);
                 Cache::forget('2fa_code_' . $user->id);

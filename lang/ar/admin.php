@@ -12,6 +12,7 @@ return [
     'notifications' => 'الإشعارات',
     'employee_notifications' => 'إشعارات الموظفين',
     'activity_log' => 'سجل النشاطات',
+    'two_factor_logs' => 'تسجيلات الدخول (2FA)',
     'statistics' => 'الإحصائيات',
     'performance' => 'أداء الموقع',
     'agreements_system' => 'نظام الاتفاقيات',

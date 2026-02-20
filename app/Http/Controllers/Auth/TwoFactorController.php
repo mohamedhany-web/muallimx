@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\TwoFactorLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -68,8 +69,23 @@ class TwoFactorController extends Controller
         }
 
         if (!$valid) {
+            TwoFactorLog::create([
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'event' => TwoFactorLog::EVENT_FAILED,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
             return back()->withErrors(['code' => 'رمز التحقق غير صحيح.']);
         }
+
+        TwoFactorLog::create([
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'event' => TwoFactorLog::EVENT_VERIFIED,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
         $remember = $request->session()->get('login.remember', false);
         $request->session()->forget(['login.id', 'login.remember']);
