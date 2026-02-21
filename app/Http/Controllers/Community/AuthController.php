@@ -70,11 +70,14 @@ class AuthController extends Controller
         $request->session()->regenerate();
         $user->update(['last_login_at' => now()]);
 
-        // إذا كان المستخدم مساهماً، توجيهه إلى لوحة المساهم
+        // إزالة أي توجيه سابق محفوظ لصفحة المنصة الرئيسية حتى لا يُعاد التوجيه لـ /login
+        $request->session()->forget('url.intended');
+
+        // توجيه فوري إلى لوحة تحكم المجتمع (دائماً من صفحة community/login)
         if ($user->is_community_contributor) {
-            return redirect()->intended(route('community.contributor.dashboard'));
+            return redirect()->route('community.contributor.dashboard');
         }
-        return redirect()->intended(route('community.dashboard'));
+        return redirect()->route('community.dashboard');
     }
 
     public function register(CommunityRegisterRequest $request): RedirectResponse
@@ -89,6 +92,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('community.dashboard'));
+        $request->session()->forget('url.intended');
+        return redirect()->route('community.dashboard');
     }
 }
