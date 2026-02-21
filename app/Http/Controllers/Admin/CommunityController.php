@@ -66,7 +66,7 @@ class CommunityController extends Controller
     public function showSubmission(DatasetFileReaderService $reader, CommunityDataset $dataset): View
     {
         $dataset->load('creator');
-        $disk = config('filesystems.community_disk', 'local');
+        $disk = community_disk();
         $preview = ['headers' => [], 'rows' => []];
         if ($dataset->file_path) {
             $preview = $reader->readPreviewFromStorage($disk, $dataset->file_path);
@@ -86,7 +86,7 @@ class CommunityController extends Controller
         if (!$dataset->file_path) {
             abort(404);
         }
-        $disk = config('filesystems.community_disk', 'local');
+        $disk = community_disk();
         if (!Storage::disk($disk)->exists($dataset->file_path)) {
             abort(404);
         }

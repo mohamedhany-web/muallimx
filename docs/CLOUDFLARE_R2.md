@@ -42,6 +42,24 @@ php artisan cache:clear
 
 الملفات المُرفعة سابقاً على `local` تبقى في `storage/app/private/community_datasets/`. بعد التبديل إلى `r2` الملفات الجديدة فقط ستُرفع على R2.
 
+## التخزين يذهب إلى محلي (storage/app/private) بدل R2؟
+
+1. **مسح كاش الإعدادات (مهم):**
+   ```bash
+   php artisan config:clear
+   php artisan cache:clear
+   ```
+2. **التأكد من `.env`:**
+   - السطر `FILESYSTEM_DISK_COMMUNITY=r2` موجود بدون مسافات قبل أو بعد القيمة.
+   - لا يوجد تعليق `#` أمامه.
+3. **على السيرفر (إن كنت تستخدم `config:cache`):**
+   بعد تعديل `.env` نفّذ مرة واحدة:
+   ```bash
+   php artisan config:cache
+   ```
+   حتى يُحفظ قيمة `FILESYSTEM_DISK_COMMUNITY=r2` في الكاش.
+4. **إعادة تشغيل:** إن كنت تستخدم queue أو supervisor أعد تشغيلها بعد تغيير `.env` ومسح الكاش.
+
 ## رابط تحميل عام من R2 (اختياري)
 
 إذا فعّلت **Public Access** على الـ bucket وربطت دومين (مثلاً عبر R2 custom domain)، يمكنك تعيين:

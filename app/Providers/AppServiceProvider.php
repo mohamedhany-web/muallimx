@@ -29,6 +29,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // تحميل دوال المساعدة (تُحمّل من هنا لضمان توفرها حتى قبل composer dump-autoload)
+        $filesystemHelper = app_path('Helpers/FilesystemHelper.php');
+        if (file_exists($filesystemHelper)) {
+            require_once $filesystemHelper;
+        }
+
         // ضمان وجود صورة الخلفية في التخزين (نفس مسار صور المسارات) لتعمل على السيرفر عبر /storage/
         $authStoragePath = self::AUTH_BACKGROUND_STORAGE_PATH;
         $disk = Storage::disk('public');

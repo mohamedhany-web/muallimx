@@ -35,7 +35,7 @@ class CommunityPageController extends Controller
             abort(404);
         }
 
-        $disk = config('filesystems.community_disk', 'local');
+        $disk = community_disk();
         $preview = ['headers' => [], 'rows' => []];
 
         if ($dataset->file_path) {
@@ -55,7 +55,7 @@ class CommunityPageController extends Controller
             abort(404);
         }
 
-        $disk = config('filesystems.community_disk', 'local');
+        $disk = community_disk();
         if (!Storage::disk($disk)->exists($dataset->file_path)) {
             abort(404);
         }

@@ -84,6 +84,7 @@ return [
     | قرص ملفات المجتمع (مساهمون + أدمن)
     |--------------------------------------------------------------------------
     | استخدم 'r2' لرفع الملفات على Cloudflare R2، أو 'local' للتطوير المحلي.
+    | بعد تغيير .env نفّذ: php artisan config:clear
     */
     'community_disk' => env('FILESYSTEM_DISK_COMMUNITY', 'local'),
 

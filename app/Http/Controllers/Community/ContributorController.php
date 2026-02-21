@@ -17,7 +17,7 @@ class ContributorController extends Controller
 
     private static function disk(): string
     {
-        return config('filesystems.community_disk', 'local');
+        return community_disk();
     }
 
     public function dashboard(): View
