@@ -3,8 +3,8 @@
 @section('title', 'مجموعات البيانات - مجتمع الذكاء الاصطناعي')
 
 @section('content')
-<section class="min-h-screen bg-gradient-to-b from-slate-50 to-white" style="padding-top: 6rem;">
-    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+<section class="min-h-screen bg-gradient-to-b from-slate-50 to-white w-full" style="padding-top: 6rem;">
+    <div class="w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-8 md:py-12">
         {{-- الهيدر: عنوان + وصف + زر --}}
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-8">
             <div class="flex-1">
@@ -80,36 +80,36 @@
         </div>
 
         @if($datasets->isNotEmpty())
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
                 @foreach($datasets as $dataset)
-                    <a href="{{ route('community.data.show', $dataset) }}" class="group block bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-cyan-200 overflow-hidden transition-all duration-300">
-                        <div class="aspect-[16/10] bg-gradient-to-br from-cyan-50 to-blue-50 flex items-center justify-center border-b border-slate-100">
-                            <div class="w-16 h-16 rounded-2xl bg-white/80 shadow-md flex items-center justify-center text-cyan-600 group-hover:scale-105 transition-transform">
-                                <i class="fas fa-database text-3xl"></i>
+                    <a href="{{ route('community.data.show', $dataset) }}" class="group block bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-cyan-200 overflow-hidden transition-all duration-300">
+                        <div class="aspect-[3/1] bg-gradient-to-br from-cyan-50 to-blue-50 flex items-center justify-center border-b border-slate-100">
+                            <div class="w-10 h-10 rounded-xl bg-white/80 shadow flex items-center justify-center text-cyan-600 group-hover:scale-105 transition-transform">
+                                <i class="fas fa-database text-lg"></i>
                             </div>
                         </div>
-                        <div class="p-4">
-                            <h3 class="text-base font-bold text-slate-900 mb-2 line-clamp-2 group-hover:text-cyan-700 transition-colors">{{ $dataset->title }}</h3>
+                        <div class="p-3">
+                            <h3 class="text-sm font-bold text-slate-900 mb-1 line-clamp-2 group-hover:text-cyan-700 transition-colors">{{ $dataset->title }}</h3>
                             @if($dataset->creator)
-                                <p class="text-sm text-slate-500 mb-2 truncate">{{ $dataset->creator->name }}</p>
+                                <p class="text-xs text-slate-500 mb-1.5 truncate">{{ $dataset->creator->name }}</p>
                             @endif
-                            <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <div class="flex flex-wrap items-center gap-1.5 mb-2">
                                 @if($dataset->category)
-                                    <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600">{{ $dataset->category_label }}</span>
+                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600">{{ $dataset->category_label }}</span>
                                 @endif
                                 @if($dataset->file_size)
-                                    <span class="text-xs text-slate-400">{{ $dataset->file_size }}</span>
+                                    <span class="text-[10px] text-slate-400">{{ $dataset->file_size }}</span>
                                 @endif
                             </div>
-                            <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
+                            <div class="flex items-center justify-between pt-1.5 border-t border-slate-100 text-[10px] text-slate-500">
                                 @if($dataset->downloads_count > 0)
-                                    <span><i class="fas fa-download ml-1"></i> {{ number_format($dataset->downloads_count) }} تحميل</span>
+                                    <span><i class="fas fa-download ml-0.5"></i> {{ number_format($dataset->downloads_count) }} تحميل</span>
                                 @else
                                     <span></span>
                                 @endif
-                                <span class="inline-flex items-center gap-1 font-bold text-cyan-600 group-hover:underline">
+                                <span class="inline-flex items-center gap-0.5 font-bold text-cyan-600 group-hover:underline">
                                     <span>عرض</span>
-                                    <i class="fas fa-arrow-left text-[10px]"></i>
+                                    <i class="fas fa-arrow-left text-[8px]"></i>
                                 </span>
                             </div>
                         </div>
