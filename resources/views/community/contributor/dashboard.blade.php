@@ -85,19 +85,28 @@
         </div>
         <div class="divide-y divide-slate-100">
             @foreach($recentSubmissions as $d)
-            <div class="px-6 py-4 flex items-center justify-between gap-4">
+            <div class="px-6 py-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <p class="font-bold text-slate-900">{{ $d->title }}</p>
                     <p class="text-sm text-slate-500">{{ $d->created_at->diffForHumans() }}</p>
                 </div>
-                <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold
-                    @if($d->status === 'pending') bg-amber-100 text-amber-700
-                    @elseif($d->status === 'approved') bg-emerald-100 text-emerald-700
-                    @else bg-red-100 text-red-700 @endif">
-                    @if($d->status === 'pending') قيد المراجعة
-                    @elseif($d->status === 'approved') معتمدة
-                    @else مرفوضة @endif
-                </span>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold
+                        @if($d->status === 'pending') bg-amber-100 text-amber-700
+                        @elseif($d->status === 'approved') bg-emerald-100 text-emerald-700
+                        @else bg-red-100 text-red-700 @endif">
+                        @if($d->status === 'pending') قيد المراجعة
+                        @elseif($d->status === 'approved') معتمدة
+                        @else مرفوضة @endif
+                    </span>
+                    @if($d->status === 'approved' && $d->is_active)
+                        @php $shareUrl = 'https://www.linkedin.com/sharing/share-offsite/?url=' . urlencode(url(route('community.data.show', $d))); @endphp
+                        <a href="{{ $shareUrl }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0A66C2] text-white text-xs font-bold hover:bg-[#004182] transition-colors" title="مشاركة على LinkedIn — ساهمت في مجتمع البيانات والذكاء الاصطناعي">
+                            <i class="fab fa-linkedin"></i>
+                            <span>مشاركة LinkedIn</span>
+                        </a>
+                    @endif
+                </div>
             </div>
             @endforeach
         </div>

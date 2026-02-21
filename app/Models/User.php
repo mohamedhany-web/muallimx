@@ -85,6 +85,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function contributorProfile()
+    {
+        return $this->hasOne(ContributorProfile::class);
+    }
+
     /**
      * رابط صورة الملف الشخصي.
      * الصور في storage/app/public تُعرض عبر Storage::disk('public')->url() لضمان الرابط الصحيح.

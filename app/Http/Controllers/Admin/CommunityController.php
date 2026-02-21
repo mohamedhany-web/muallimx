@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CommunityCompetition;
 use App\Models\CommunityDataset;
+use App\Models\ContributorProfile;
 use App\Models\User;
 use App\Services\Community\DatasetFileReaderService;
 use Illuminate\Contracts\View\View;
@@ -115,7 +116,43 @@ class CommunityController extends Controller
     public function contributors(): View
     {
         $contributors = User::where('is_community_contributor', true)->orderBy('name')->get();
-        return view('admin.community.contributors', ['contributors' => $contributors]);
+        $pendingProfiles = ContributorProfile::pending()->with('user')->orderBy('submitted_at', 'desc')->get();
+        return view('admin.community.contributors', [
+            'contributors' => $contributors,
+            'pendingProfiles' => $pendingProfiles,
+        ]);
+    }
+
+    /**
+     * الموافقة على ملف مساهم لعرضه في صفحة المساهمين.
+     */
+    public function approveContributorProfile(ContributorProfile $profile): RedirectResponse
+    {
+        if ($profile->status !== ContributorProfile::STATUS_PENDING) {
+            return back()->with('error', 'هذا الملف تمت مراجعته مسبقاً.');
+        }
+        $profile->update([
+            'status' => ContributorProfile::STATUS_APPROVED,
+            'reviewed_at' => now(),
+        ]);
+        return redirect()->route('admin.community.contributors.index')
+            ->with('success', 'تمت الموافقة على ملف المساهم: ' . ($profile->user->name ?? '—'));
+    }
+
+    /**
+     * رفض ملف مساهم.
+     */
+    public function rejectContributorProfile(ContributorProfile $profile): RedirectResponse
+    {
+        if ($profile->status !== ContributorProfile::STATUS_PENDING) {
+            return back()->with('error', 'هذا الملف تمت مراجعته مسبقاً.');
+        }
+        $profile->update([
+            'status' => ContributorProfile::STATUS_REJECTED,
+            'reviewed_at' => now(),
+        ]);
+        return redirect()->route('admin.community.contributors.index')
+            ->with('success', 'تم رفض ملف المساهم.');
     }
 
     public function addContributor(Request $request): RedirectResponse

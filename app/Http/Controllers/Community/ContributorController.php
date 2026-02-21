@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Community;
 
 use App\Http\Controllers\Controller;
 use App\Models\CommunityDataset;
+use App\Models\ContributorProfile;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,6 +56,7 @@ class ContributorController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'category' => 'nullable|string|in:' . implode(',', array_keys(CommunityDataset::CATEGORIES)),
             'file' => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
             'file_url' => 'nullable|url|max:500',
         ]);
@@ -74,6 +76,45 @@ class ContributorController extends Controller
         CommunityDataset::create($validated);
         return redirect()->route('community.contributor.datasets.index')
             ->with('success', 'تم إرسال مجموعة البيانات بنجاح. ستتم مراجعتها من الإدارة قبل النشر.');
+    }
+
+    public function profileEdit(): View
+    {
+        $user = Auth::user();
+        $profile = $user->contributorProfile ?? new ContributorProfile(['user_id' => $user->id]);
+        return view('community.contributor.profile.edit', compact('user', 'profile'));
+    }
+
+    public function profileStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'bio' => 'nullable|string|max:2000',
+            'experience' => 'nullable|string|max:3000',
+            'linkedin_url' => 'nullable|url|max:500',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ], [
+            'photo.image' => 'يجب أن يكون الملف صورة (jpeg, png, jpg, webp).',
+            'photo.max' => 'حجم الصورة لا يتجاوز 2 ميجا.',
+        ]);
+
+        $user = Auth::user();
+        $profile = $user->contributorProfile ?? new ContributorProfile(['user_id' => $user->id]);
+
+        if ($request->hasFile('photo')) {
+            if ($profile->photo_path && Storage::disk('public')->exists($profile->photo_path)) {
+                Storage::disk('public')->delete($profile->photo_path);
+            }
+            $path = $request->file('photo')->store('contributor-profiles', 'public');
+            $validated['photo_path'] = $path;
+        }
+
+        $validated['status'] = ContributorProfile::STATUS_PENDING;
+        $validated['submitted_at'] = now();
+        $profile->fill($validated);
+        $profile->save();
+
+        return redirect()->route('community.contributor.profile.edit')
+            ->with('success', 'تم إرسال نبذتك بنجاح. ستتم مراجعتها من الإدارة قبل ظهورها في صفحة المساهمين.');
     }
 
     private function uniqueFilename(string $directory, string $originalName): string

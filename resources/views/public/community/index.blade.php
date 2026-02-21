@@ -42,6 +42,17 @@
             </div>
         </div>
 
+        <div class="flex flex-wrap items-center justify-center gap-4 mb-10">
+            <a href="{{ route('community.data.index') }}" class="inline-flex items-center gap-2 bg-white border-2 border-slate-200 text-slate-800 px-6 py-3.5 rounded-2xl font-bold shadow-lg hover:border-blue-400 hover:bg-blue-50 transition-all">
+                <i class="fas fa-database text-blue-600"></i>
+                <span>صفحة البيانات</span>
+            </a>
+            <a href="{{ route('community.contributors.index') }}" class="inline-flex items-center gap-2 bg-white border-2 border-slate-200 text-slate-800 px-6 py-3.5 rounded-2xl font-bold shadow-lg hover:border-cyan-400 hover:bg-cyan-50 transition-all">
+                <i class="fas fa-user-friends text-cyan-600"></i>
+                <span>المساهمون</span>
+            </a>
+        </div>
+
         <div class="rounded-3xl bg-gradient-to-r from-blue-600 via-blue-500 to-green-600 p-8 md:p-12 text-center text-white shadow-2xl">
             <h2 class="text-2xl md:text-3xl font-black mb-4">{{ __('public.community_coming_soon') }}</h2>
             <p class="text-blue-100 text-lg mb-8 max-w-2xl mx-auto">{{ __('public.community_coming_desc') }}</p>

@@ -30,6 +30,7 @@
                             <th class="py-3 px-4 text-sm font-bold text-slate-700">العنوان</th>
                             <th class="py-3 px-4 text-sm font-bold text-slate-700">التاريخ</th>
                             <th class="py-3 px-4 text-sm font-bold text-slate-700">الحالة</th>
+                            <th class="py-3 px-4 text-sm font-bold text-slate-700">إجراء</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -44,6 +45,16 @@
                                 <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">معتمدة</span>
                                 <?php else: ?>
                                 <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">مرفوضة</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="py-3 px-4">
+                                <?php if($d->status === 'approved' && $d->is_active): ?>
+                                    <a href="https://www.linkedin.com/sharing/share-offsite/?url=<?php echo e(urlencode(url(route('community.data.show', $d)))); ?>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#0A66C2] text-white text-sm font-bold hover:bg-[#004182] transition-colors" title="مشاركة تجربتك على LinkedIn — ساهمت في مجتمع البيانات والذكاء الاصطناعي">
+                                        <i class="fab fa-linkedin text-base"></i>
+                                        <span>مشاركة على LinkedIn</span>
+                                    </a>
+                                <?php else: ?>
+                                    <span class="text-slate-400 text-xs">—</span>
                                 <?php endif; ?>
                             </td>
                         </tr>

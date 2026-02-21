@@ -28,14 +28,36 @@ AWS_USE_PATH_STYLE_ENDPOINT=true
 
 (استبدل `YOUR_ACCOUNT_ID` بمعرّف الحساب من لوحة Cloudflare.)
 
-### 3. مسح الكاش
+### 3. على السيرفر: تثبيت حزمة R2/S3 (مهم)
+
+خطأ **"Class League\Flysystem\AwsS3V3\PortableVisibilityConverter not found"** يعني أن الحزمة غير مثبتة في بيئة الإنتاج. نفّذ على السيرفر (SSH أو من مجلد المشروع):
+
+```bash
+cd /home/u387718849/domains/mindlytics-academy.com/public_html/Mindlytics
+composer install --no-dev
+```
+
+إن استمر الخطأ، ثبّت الحزمة صراحة:
+
+```bash
+composer require league/flysystem-aws-s3-v3:^3.25 --no-interaction
+```
+
+ثم مسح الكاش:
 
 ```bash
 php artisan config:clear
 php artisan cache:clear
 ```
 
-### 4. التجربة
+### 4. مسح الكاش (بعد أي تعديل على .env)
+
+```bash
+php artisan config:clear
+php artisan cache:clear
+```
+
+### 5. التجربة
 
 - من لوحة المساهم: رفع مجموعة بيانات (ملف).
 - من أدمن المجتمع: مراجعة التقديمات → عرض البيانات / تحميل الملف.

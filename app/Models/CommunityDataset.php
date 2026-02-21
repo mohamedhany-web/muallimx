@@ -11,6 +11,7 @@ class CommunityDataset extends Model
         'title',
         'slug',
         'description',
+        'category',
         'file_path',
         'file_url',
         'file_size',
@@ -19,6 +20,17 @@ class CommunityDataset extends Model
         'status',
         'sort_order',
         'created_by_user_id',
+    ];
+
+    /** تصنيفات مجموعة البيانات (للعرض والفلترة) */
+    public const CATEGORIES = [
+        'education' => 'تعليمي',
+        'finance' => 'مالي',
+        'health' => 'صحي',
+        'commerce' => 'تجاري',
+        'marketing' => 'تسويق',
+        'general' => 'عام',
+        'other' => 'أخرى',
     ];
 
     protected function casts(): array
@@ -61,5 +73,30 @@ class CommunityDataset extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('sort_order')->orderByDesc('created_at');
+    }
+
+    public function scopeCategory(Builder $query, ?string $category): Builder
+    {
+        if ($category === null || $category === '') {
+            return $query;
+        }
+        return $query->where('category', $category);
+    }
+
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        if ($term === null || trim($term) === '') {
+            return $query;
+        }
+        $term = trim($term);
+        return $query->where(function (Builder $q) use ($term) {
+            $q->where('title', 'like', '%' . $term . '%')
+                ->orWhere('description', 'like', '%' . $term . '%');
+        });
+    }
+
+    public function getCategoryLabelAttribute(): string
+    {
+        return self::CATEGORIES[$this->category] ?? $this->category ?? '—';
     }
 }

@@ -31,6 +31,16 @@
         </div>
 
         <div>
+            <label for="category" class="block text-sm font-bold text-slate-700 mb-2">التصنيف</label>
+            <select name="category" id="category" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20">
+                <option value="">— اختر تصنيفاً —</option>
+                @foreach(\App\Models\CommunityDataset::CATEGORIES as $key => $label)
+                    <option value="{{ $key }}" {{ old('category') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div>
             <label for="file" class="block text-sm font-bold text-slate-700 mb-2">ملف البيانات (اختياري)</label>
             <input type="file" name="file" id="file" accept=".xlsx,.xls,.csv"
                    class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-cyan-50 file:text-cyan-700 file:font-bold">

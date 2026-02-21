@@ -179,6 +179,13 @@ Route::get('/community', [\App\Http\Controllers\Public\CommunityController::clas
 
 // مصادقة مجتمع البيانات (تسجيل دخول وإنشاء حساب منفصلان - نفس المستخدمين)
 Route::prefix('community')->name('community.')->group(function () {
+    // صفحة المساهمين عامة (بدون تسجيل دخول)
+    Route::get('/contributors', [\App\Http\Controllers\Community\CommunityPageController::class, 'contributors'])->name('contributors.index');
+    Route::get('/contributors/{user}', [\App\Http\Controllers\Community\CommunityPageController::class, 'contributorShow'])->name('contributors.show');
+    // صفحة البيانات عامة (بدون تسجيل — استكشاف آلاف مجموعات البيانات)
+    Route::get('/data', [\App\Http\Controllers\Community\CommunityPageController::class, 'publicDatasets'])->name('data.index');
+    Route::get('/data/{dataset}', [\App\Http\Controllers\Community\CommunityPageController::class, 'publicDatasetShow'])->name('data.show');
+    Route::get('/data/{dataset}/download', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetDownload'])->name('data.download');
     Route::middleware(['guest', 'guest-only'])->group(function () {
         Route::get('/login', [\App\Http\Controllers\Community\AuthController::class, 'showLogin'])->name('login');
         Route::post('/login', [\App\Http\Controllers\Community\AuthController::class, 'login'])->middleware('throttle:20,15')->name('login.post');
@@ -196,6 +203,8 @@ Route::prefix('community')->name('community.')->group(function () {
         // لوحة تحكم المساهمين (للمستخدمين الذين is_community_contributor = true فقط)
         Route::middleware('community.contributor')->prefix('contributor')->name('contributor.')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\Community\ContributorController::class, 'dashboard'])->name('dashboard');
+            Route::get('/profile', [\App\Http\Controllers\Community\ContributorController::class, 'profileEdit'])->name('profile.edit');
+            Route::post('/profile', [\App\Http\Controllers\Community\ContributorController::class, 'profileStore'])->name('profile.store');
             Route::get('/datasets', [\App\Http\Controllers\Community\ContributorController::class, 'datasets'])->name('datasets.index');
             Route::get('/datasets/create', [\App\Http\Controllers\Community\ContributorController::class, 'createDataset'])->name('datasets.create');
             Route::post('/datasets', [\App\Http\Controllers\Community\ContributorController::class, 'storeDataset'])->name('datasets.store');
@@ -840,6 +849,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/contributors', [\App\Http\Controllers\Admin\CommunityController::class, 'contributors'])->name('contributors.index');
             Route::post('/contributors', [\App\Http\Controllers\Admin\CommunityController::class, 'addContributor'])->name('contributors.store');
             Route::post('/contributors/new', [\App\Http\Controllers\Admin\CommunityController::class, 'storeNewContributor'])->name('contributors.new.store');
+            Route::post('/contributors/profiles/{profile}/approve', [\App\Http\Controllers\Admin\CommunityController::class, 'approveContributorProfile'])->name('contributors.profiles.approve');
+            Route::post('/contributors/profiles/{profile}/reject', [\App\Http\Controllers\Admin\CommunityController::class, 'rejectContributorProfile'])->name('contributors.profiles.reject');
             Route::delete('/contributors/{user}', [\App\Http\Controllers\Admin\CommunityController::class, 'removeContributor'])->name('contributors.destroy');
             Route::get('/discussions', [\App\Http\Controllers\Admin\CommunityController::class, 'discussions'])->name('discussions.index');
             Route::get('/settings', [\App\Http\Controllers\Admin\CommunityController::class, 'settings'])->name('settings.index');

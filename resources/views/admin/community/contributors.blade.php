@@ -8,9 +8,83 @@
     @if(session('success'))
         <div class="p-4 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-800">{{ session('success') }}</div>
     @endif
+    @if(session('error'))
+        <div class="p-4 rounded-xl bg-red-100 border border-red-300 text-red-800">{{ session('error') }}</div>
+    @endif
     @if($errors->any())
         <div class="p-4 rounded-xl bg-red-100 border border-red-300 text-red-800">
             <ul class="list-disc list-inside">{{ $errors->first() }}</ul>
+        </div>
+    @endif
+
+    <!-- مراجعة ملفات المساهمين المعلقة -->
+    @if(isset($pendingProfiles) && $pendingProfiles->isNotEmpty())
+        <div class="bg-white rounded-2xl shadow border border-amber-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-amber-200 bg-amber-50">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-user-check text-amber-600"></i>
+                    مراجعة ملفات المساهمين المعلقة ({{ $pendingProfiles->count() }})
+                </h2>
+                <p class="text-sm text-slate-600 mt-1">ملفات نبذة عنك التي أرسلها المساهمون — وافق أو ارفض لعرضهم في صفحة المساهمين.</p>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach($pendingProfiles as $profile)
+                        @php $user = $profile->user; @endphp
+                        <div class="rounded-2xl border border-slate-200 overflow-hidden bg-slate-50/50 hover:shadow-lg transition-shadow">
+                            <div class="p-4 border-b border-slate-200 flex items-center gap-4">
+                                <div class="w-14 h-14 rounded-xl overflow-hidden bg-slate-200 flex-shrink-0">
+                                    @if($profile->photo_url)
+                                        <img src="{{ $profile->photo_url }}" alt="{{ $user->name ?? '' }}" class="w-full h-full object-cover">
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center text-xl font-black text-slate-400">{{ mb_substr($user->name ?? 'م', 0, 1) }}</div>
+                                    @endif
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-bold text-slate-900 truncate">{{ $user->name ?? '—' }}</p>
+                                    <p class="text-xs text-slate-500 truncate">{{ $user->email ?? '—' }}</p>
+                                    @if($profile->submitted_at)
+                                        <p class="text-xs text-slate-400 mt-1">{{ $profile->submitted_at->diffForHumans() }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="p-4 space-y-2 text-sm">
+                                @if($profile->bio)
+                                    <p class="text-slate-600 line-clamp-3">{{ Str::limit($profile->bio, 120) }}</p>
+                                @endif
+                                @if($profile->experience)
+                                    <p class="text-slate-500 line-clamp-2">{{ Str::limit($profile->experience, 80) }}</p>
+                                @endif
+                                <div class="flex flex-wrap gap-2 pt-2">
+                                    @if($profile->linkedin_url)
+                                        <a href="{{ $profile->linkedin_url }}" target="_blank" rel="noopener" class="text-[#0A66C2] text-xs font-semibold">LinkedIn</a>
+                                    @endif
+                                    @if($profile->twitter_url)
+                                        <a href="{{ $profile->twitter_url }}" target="_blank" rel="noopener" class="text-slate-600 text-xs font-semibold">X</a>
+                                    @endif
+                                    @if($profile->website_url)
+                                        <a href="{{ $profile->website_url }}" target="_blank" rel="noopener" class="text-cyan-600 text-xs font-semibold">الموقع</a>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="p-4 border-t border-slate-200 flex gap-2">
+                                <form action="{{ route('admin.community.contributors.profiles.approve', $profile) }}" method="POST" class="flex-1">
+                                    @csrf
+                                    <button type="submit" class="w-full py-2 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 transition-colors">
+                                        <i class="fas fa-check ml-1"></i> موافقة
+                                    </button>
+                                </form>
+                                <form action="{{ route('admin.community.contributors.profiles.reject', $profile) }}" method="POST" class="flex-1" onsubmit="return confirm('رفض ملف هذا المساهم؟');">
+                                    @csrf
+                                    <button type="submit" class="w-full py-2 rounded-xl bg-red-100 text-red-700 font-bold text-sm hover:bg-red-200 transition-colors">
+                                        <i class="fas fa-times ml-1"></i> رفض
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
     @endif
 

@@ -206,6 +206,15 @@
                 <div class="flex-1 min-w-0"><div class="font-bold text-slate-800 text-sm">{{ __('instructor.personal_branding') }}</div><div class="text-xs text-slate-500 mt-0.5">{{ __('instructor.profile_for_publishing') }}</div></div>
                 <i class="fas fa-chevron-left text-slate-400 text-xs"></i>
             </a>
+
+            @if($user->is_community_contributor ?? false)
+            <a href="{{ route('community.dashboard') }}" @click="if (window.innerWidth < 1024) sidebarOpen = false"
+               class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors {{ request()->routeIs('community.*') ? 'bg-cyan-50 border border-cyan-200' : 'hover:bg-slate-50 border border-transparent' }}">
+                <div class="w-9 h-9 rounded-lg bg-cyan-500 text-white flex items-center justify-center flex-shrink-0"><i class="fas fa-brain text-sm"></i></div>
+                <div class="flex-1 min-w-0"><div class="font-bold text-slate-800 text-sm">مجتمع الذكاء الاصطناعي</div><div class="text-xs text-slate-500 mt-0.5">الدخول للمجتمع</div></div>
+                <i class="fas fa-chevron-left text-slate-400 text-xs"></i>
+            </a>
+            @endif
         @endif
 
         @if(auth()->user()->isAdmin() || auth()->user()->isInstructor())
