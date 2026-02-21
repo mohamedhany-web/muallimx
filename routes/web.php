@@ -852,6 +852,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/contributors/profiles/{profile}/approve', [\App\Http\Controllers\Admin\CommunityController::class, 'approveContributorProfile'])->name('contributors.profiles.approve');
             Route::post('/contributors/profiles/{profile}/reject', [\App\Http\Controllers\Admin\CommunityController::class, 'rejectContributorProfile'])->name('contributors.profiles.reject');
             Route::delete('/contributors/{user}', [\App\Http\Controllers\Admin\CommunityController::class, 'removeContributor'])->name('contributors.destroy');
+            Route::get('/notifications', [\App\Http\Controllers\Admin\CommunityController::class, 'notificationsForm'])->name('notifications.index');
+            Route::post('/notifications/send', [\App\Http\Controllers\Admin\CommunityController::class, 'sendNotifications'])->name('notifications.send');
             Route::get('/discussions', [\App\Http\Controllers\Admin\CommunityController::class, 'discussions'])->name('discussions.index');
             Route::get('/settings', [\App\Http\Controllers\Admin\CommunityController::class, 'settings'])->name('settings.index');
         });

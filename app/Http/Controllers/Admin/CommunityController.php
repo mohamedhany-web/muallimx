@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\CommunityNotificationMail;
 use App\Models\CommunityCompetition;
 use App\Models\CommunityDataset;
 use App\Models\ContributorProfile;
@@ -12,6 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -229,5 +231,80 @@ class CommunityController extends Controller
     public function settings(): View
     {
         return view('admin.community.coming-soon', ['section' => 'settings']);
+    }
+
+    /**
+     * صفحة إرسال الإشعارات للمجتمع (بريد Gmail يصل للمساهمين).
+     */
+    public function notificationsForm(): View
+    {
+        $contributorsCount = User::where('is_community_contributor', true)->where('is_active', true)->count();
+        return view('admin.community.notifications', ['contributorsCount' => $contributorsCount]);
+    }
+
+    /**
+     * إرسال الإشعار بالبريد: إما لمساهمي المجتمع فقط أو لشخص/قائمة معينة.
+     */
+    public function sendNotifications(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'audience' => 'required|in:contributors,specific',
+            'subject' => 'required|string|max:255',
+            'body' => 'required|string|max:10000',
+            'emails' => 'required_if:audience,specific|nullable|string|max:5000',
+        ], [
+            'audience.required' => 'اختر جهة الإرسال.',
+            'subject.required' => 'عنوان الإشعار مطلوب.',
+            'body.required' => 'نص الإشعار مطلوب.',
+            'emails.required_if' => 'أدخل بريداً واحداً على الأقل عند الإرسال لشخص معين.',
+        ]);
+
+        $recipients = collect();
+
+        if ($validated['audience'] === 'contributors') {
+            $recipients = User::where('is_community_contributor', true)->where('is_active', true)->get();
+            if ($recipients->isEmpty()) {
+                return back()->with('error', 'لا يوجد مساهمون نشطون لإرسال الإشعار لهم.')->withInput();
+            }
+        } else {
+            $emailsRaw = preg_replace('/[\s,،]+/', "\n", $validated['emails'] ?? '');
+            $emails = array_unique(array_filter(array_map('trim', explode("\n", $emailsRaw))));
+            $validEmails = array_filter($emails, fn ($e) => filter_var($e, FILTER_VALIDATE_EMAIL));
+            if (empty($validEmails)) {
+                return back()->withErrors(['emails' => 'أدخل بريداً إلكترونياً صالحاً واحداً على الأقل.'])->withInput();
+            }
+            foreach ($validEmails as $email) {
+                $user = User::where('email', $email)->first();
+                $recipients->push((object) [
+                    'email' => $email,
+                    'name' => $user?->name,
+                ]);
+            }
+        }
+
+        $sent = 0;
+        foreach ($recipients as $r) {
+            $email = $r->email ?? null;
+            $name = $r->name ?? null;
+            if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                continue;
+            }
+            try {
+                Mail::to($email)->send(new CommunityNotificationMail(
+                    $validated['subject'],
+                    $validated['body'],
+                    $name
+                ));
+                $sent++;
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        $message = $validated['audience'] === 'contributors'
+            ? 'تم إرسال الإشعار إلى ' . $sent . ' مساهم عبر البريد الإلكتروني.'
+            : 'تم إرسال الإشعار إلى ' . $sent . ' مستلم عبر البريد الإلكتروني.';
+
+        return redirect()->route('admin.community.notifications.index')->with('success', $message);
     }
 }
