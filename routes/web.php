@@ -185,8 +185,11 @@ Route::prefix('community')->name('community.')->group(function () {
     // صفحة البيانات عامة (بدون تسجيل — استكشاف آلاف مجموعات البيانات)
     Route::get('/data', [\App\Http\Controllers\Community\CommunityPageController::class, 'publicDatasets'])->name('data.index');
     Route::get('/data/{dataset}', [\App\Http\Controllers\Community\CommunityPageController::class, 'publicDatasetShow'])->name('data.show');
+    Route::get('/data/{dataset}/download-all', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetDownloadAll'])->name('data.download-all');
+    Route::get('/data/{dataset}/download/{index}', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetDownloadFile'])->name('data.download-file')->whereNumber('index');
     Route::get('/data/{dataset}/download', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetDownload'])->name('data.download');
     Route::get('/data/{dataset}/preview', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetPreview'])->name('data.preview');
+    Route::get('/data/{dataset}/zip-contents', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetZipContents'])->name('data.zip-contents');
     Route::middleware(['guest', 'guest-only'])->group(function () {
         Route::get('/login', [\App\Http\Controllers\Community\AuthController::class, 'showLogin'])->name('login');
         Route::post('/login', [\App\Http\Controllers\Community\AuthController::class, 'login'])->middleware('throttle:20,15')->name('login.post');

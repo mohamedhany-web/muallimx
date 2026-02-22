@@ -217,4 +217,36 @@ class DatasetFileReaderService
 
         return ['headers' => $headers, 'rows' => $dataRows];
     }
+
+    /**
+     * إرجاع قائمة ملفات داخل أرشيف ZIP من التخزين.
+     *
+     * @return array<int, array{name: string, size: int}>
+     */
+    public function listZipEntriesFromStorage(string $disk, string $path): array
+    {
+        if (!Storage::disk($disk)->exists($path) || strtolower(pathinfo($path, PATHINFO_EXTENSION)) !== 'zip') {
+            return [];
+        }
+        $content = Storage::disk($disk)->get($path);
+        $tmp = tempnam(sys_get_temp_dir(), 'zip_') . '.zip';
+        file_put_contents($tmp, $content);
+        $entries = [];
+        try {
+            $zip = new \ZipArchive;
+            if ($zip->open($tmp, \ZipArchive::RDONLY) !== true) {
+                return [];
+            }
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $stat = $zip->statIndex($i);
+                if ($stat && !str_ends_with($stat['name'], '/')) {
+                    $entries[] = ['name' => $stat['name'], 'size' => (int) $stat['size']];
+                }
+            }
+            $zip->close();
+        } finally {
+            @unlink($tmp);
+        }
+        return $entries;
+    }
 }
