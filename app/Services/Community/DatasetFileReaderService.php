@@ -249,4 +249,40 @@ class DatasetFileReaderService
         }
         return $entries;
     }
+
+    /**
+     * قراءة معاينة لملف داخل أرشيف ZIP (مثل CSV أو Excel داخل الـ ZIP).
+     *
+     * @return array{headers: array<int, string>, rows: array<int, array<int, mixed>>}
+     */
+    public function readPreviewFromZipEntry(string $disk, string $zipPath, string $entryName): array
+    {
+        if (!Storage::disk($disk)->exists($zipPath) || strtolower(pathinfo($zipPath, PATHINFO_EXTENSION)) !== 'zip') {
+            return ['headers' => [], 'rows' => []];
+        }
+        $content = Storage::disk($disk)->get($zipPath);
+        $tmpZip = tempnam(sys_get_temp_dir(), 'zip_') . '.zip';
+        file_put_contents($tmpZip, $content);
+        try {
+            $zip = new \ZipArchive();
+            if ($zip->open($tmpZip, \ZipArchive::RDONLY) !== true) {
+                return ['headers' => [], 'rows' => []];
+            }
+            $entryContent = $zip->getFromName($entryName);
+            $zip->close();
+            if ($entryContent === false) {
+                return ['headers' => [], 'rows' => []];
+            }
+            $ext = strtolower(pathinfo($entryName, PATHINFO_EXTENSION)) ?: 'csv';
+            $tmpFile = tempnam(sys_get_temp_dir(), 'zipentry_') . '.' . $ext;
+            file_put_contents($tmpFile, $entryContent);
+            try {
+                return $this->readPreview($tmpFile);
+            } finally {
+                @unlink($tmpFile);
+            }
+        } finally {
+            @unlink($tmpZip);
+        }
+    }
 }

@@ -189,6 +189,7 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::get('/data/{dataset}/download/{index}', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetDownloadFile'])->name('data.download-file')->whereNumber('index');
     Route::get('/data/{dataset}/download', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetDownload'])->name('data.download');
     Route::get('/data/{dataset}/preview', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetPreview'])->name('data.preview');
+    Route::get('/data/{dataset}/preview-zip-entry', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetPreviewZipEntry'])->name('data.preview-zip-entry');
     Route::get('/data/{dataset}/zip-contents', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetZipContents'])->name('data.zip-contents');
     Route::middleware(['guest', 'guest-only'])->group(function () {
         Route::get('/login', [\App\Http\Controllers\Community\AuthController::class, 'showLogin'])->name('login');
@@ -850,6 +851,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/submissions', [\App\Http\Controllers\Admin\CommunityController::class, 'submissions'])->name('submissions.index');
             Route::get('/submissions/dataset/{dataset}', [\App\Http\Controllers\Admin\CommunityController::class, 'showSubmission'])->name('submissions.dataset.show');
             Route::get('/submissions/dataset/{dataset}/download', [\App\Http\Controllers\Admin\CommunityController::class, 'downloadSubmission'])->name('submissions.dataset.download');
+            Route::get('/submissions/dataset/{dataset}/preview', [\App\Http\Controllers\Admin\CommunityController::class, 'submissionPreview'])->name('submissions.dataset.preview');
+            Route::get('/submissions/dataset/{dataset}/preview-zip-entry', [\App\Http\Controllers\Admin\CommunityController::class, 'submissionPreviewZipEntry'])->name('submissions.dataset.preview-zip-entry');
+            Route::get('/submissions/dataset/{dataset}/download/{index}', [\App\Http\Controllers\Admin\CommunityController::class, 'submissionDownloadFile'])->name('submissions.dataset.download-file')->whereNumber('index');
+            Route::get('/submissions/dataset/{dataset}/download-all', [\App\Http\Controllers\Admin\CommunityController::class, 'submissionDownloadAll'])->name('submissions.dataset.download-all');
+            Route::get('/submissions/dataset/{dataset}/zip-contents', [\App\Http\Controllers\Admin\CommunityController::class, 'submissionZipContents'])->name('submissions.dataset.zip-contents');
             Route::post('/submissions/dataset/{dataset}/approve', [\App\Http\Controllers\Admin\CommunityController::class, 'approveDataset'])->name('submissions.dataset.approve');
             Route::post('/submissions/dataset/{dataset}/reject', [\App\Http\Controllers\Admin\CommunityController::class, 'rejectDataset'])->name('submissions.dataset.reject');
             Route::get('/contributors', [\App\Http\Controllers\Admin\CommunityController::class, 'contributors'])->name('contributors.index');

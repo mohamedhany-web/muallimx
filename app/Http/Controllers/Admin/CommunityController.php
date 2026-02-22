@@ -10,6 +10,7 @@ use App\Models\ContributorProfile;
 use App\Models\User;
 use App\Services\Community\DatasetFileReaderService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -64,37 +65,169 @@ class CommunityController extends Controller
     }
 
     /**
-     * عرض تقديم مجموعة بيانات: الوصف، معاينة الملف، روابط التحميل.
+     * عرض تقديم مجموعة بيانات: نفس تجربة الموقع العام (قائمة ملفات + معاينة كسولة).
      */
-    public function showSubmission(DatasetFileReaderService $reader, CommunityDataset $dataset): View
+    public function showSubmission(CommunityDataset $dataset): View
     {
         $dataset->load('creator');
-        $disk = community_disk();
-        $preview = ['headers' => [], 'rows' => []];
-        if ($dataset->file_path) {
-            $preview = $reader->readPreviewFromStorage($disk, $dataset->file_path);
+        return view('admin.community.submissions-show', ['dataset' => $dataset]);
+    }
+
+    /**
+     * تحميل ملف مجموعة البيانات (أول ملف أو التوافق مع الرابط القديم).
+     */
+    public function downloadSubmission(CommunityDataset $dataset): StreamedResponse
+    {
+        $list = $dataset->files_list;
+        if (!empty($list)) {
+            $first = $list[0];
+            $path = is_array($first) ? ($first['path'] ?? null) : null;
+            $name = is_array($first) ? ($first['original_name'] ?? basename($path)) : basename($path);
+            if ($path) {
+                $disk = community_disk();
+                if (Storage::disk($disk)->exists($path)) {
+                    return Storage::disk($disk)->download($path, $name);
+                }
+            }
         }
-        return view('admin.community.submissions-show', [
-            'dataset' => $dataset,
-            'previewHeaders' => $preview['headers'],
-            'previewRows' => $preview['rows'],
+        if ($dataset->file_path) {
+            $disk = community_disk();
+            if (Storage::disk($disk)->exists($dataset->file_path)) {
+                return Storage::disk($disk)->download($dataset->file_path, basename($dataset->file_path));
+            }
+        }
+        abort(404);
+    }
+
+    /**
+     * معاينة بيانات التقديم (JSON) — كما في الموقع العام.
+     */
+    public function submissionPreview(Request $request, DatasetFileReaderService $reader, CommunityDataset $dataset): JsonResponse
+    {
+        $disk = community_disk();
+        $list = $dataset->files_list;
+        $fileIndex = (int) $request->input('file', 0);
+        if ($fileIndex < 0 || $fileIndex >= count($list)) {
+            $fileIndex = 0;
+        }
+        $item = $list[$fileIndex] ?? null;
+        if (!$item) {
+            return response()->json(['headers' => [], 'rows' => []]);
+        }
+        $pathToRead = $item['path'] ?? null;
+        if (!$pathToRead || !Storage::disk($disk)->exists($pathToRead)) {
+            return response()->json(['headers' => [], 'rows' => []]);
+        }
+        $ext = strtolower(pathinfo($pathToRead, PATHINFO_EXTENSION));
+        if ($ext === 'zip') {
+            $entries = $reader->listZipEntriesFromStorage($disk, $pathToRead);
+            return response()->json(['zip' => true, 'entries' => $entries]);
+        }
+        $preview = $reader->readPreviewFromStorage($disk, $pathToRead);
+        return response()->json([
+            'headers' => $preview['headers'],
+            'rows' => $preview['rows'],
         ]);
     }
 
     /**
-     * تحميل ملف مجموعة البيانات (للمراجعة).
+     * تحميل ملف واحد من التقديم بالرقم.
      */
-    public function downloadSubmission(CommunityDataset $dataset): StreamedResponse
+    public function submissionDownloadFile(CommunityDataset $dataset, int $index): StreamedResponse
     {
-        if (!$dataset->file_path) {
+        $list = $dataset->files_list;
+        if ($index < 0 || $index >= count($list)) {
+            abort(404);
+        }
+        $item = $list[$index];
+        $path = $item['path'] ?? null;
+        $name = $item['original_name'] ?? basename($path);
+        if (!$path) {
             abort(404);
         }
         $disk = community_disk();
-        if (!Storage::disk($disk)->exists($dataset->file_path)) {
+        if (!Storage::disk($disk)->exists($path)) {
             abort(404);
         }
-        $name = basename($dataset->file_path);
-        return Storage::disk($disk)->download($dataset->file_path, $name);
+        return Storage::disk($disk)->download($path, $name);
+    }
+
+    /**
+     * تحميل جميع ملفات التقديم كأرشيف ZIP.
+     */
+    public function submissionDownloadAll(CommunityDataset $dataset): StreamedResponse
+    {
+        $list = $dataset->files_list;
+        if (empty($list)) {
+            abort(404);
+        }
+        $disk = community_disk();
+        $zipPath = tempnam(sys_get_temp_dir(), 'dataset_zip_') . '.zip';
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            abort(500, 'تعذر إنشاء الأرشيف');
+        }
+        foreach ($list as $i => $item) {
+            $path = $item['path'] ?? null;
+            $name = $item['original_name'] ?? ('file_' . $i);
+            if (!$path || !Storage::disk($disk)->exists($path)) {
+                continue;
+            }
+            $content = Storage::disk($disk)->get($path);
+            $zip->addFromString($name, $content);
+        }
+        $zip->close();
+        $downloadName = \Illuminate\Support\Str::slug($dataset->title) . '-all.zip';
+        try {
+            return response()->download($zipPath, $downloadName, ['Content-Type' => 'application/zip'])->deleteFileAfterSend(true);
+        } catch (\Throwable $e) {
+            @unlink($zipPath);
+            throw $e;
+        }
+    }
+
+    /**
+     * معاينة ملف داخل أرشيف ZIP في التقديم.
+     */
+    public function submissionPreviewZipEntry(Request $request, DatasetFileReaderService $reader, CommunityDataset $dataset): JsonResponse
+    {
+        $disk = community_disk();
+        $list = $dataset->files_list;
+        $fileIndex = (int) $request->input('file', 0);
+        $entryName = $request->input('entry', '');
+        if ($fileIndex < 0 || $fileIndex >= count($list) || $entryName === '') {
+            return response()->json(['headers' => [], 'rows' => []]);
+        }
+        $item = $list[$fileIndex] ?? null;
+        $path = $item['path'] ?? null;
+        if (!$path || strtolower(pathinfo($path, PATHINFO_EXTENSION)) !== 'zip') {
+            return response()->json(['headers' => [], 'rows' => []]);
+        }
+        $preview = $reader->readPreviewFromZipEntry($disk, $path, $entryName);
+        return response()->json([
+            'headers' => $preview['headers'],
+            'rows' => $preview['rows'],
+        ]);
+    }
+
+    /**
+     * محتويات ملف ZIP داخل التقديم.
+     */
+    public function submissionZipContents(Request $request, DatasetFileReaderService $reader, CommunityDataset $dataset): JsonResponse
+    {
+        $list = $dataset->files_list;
+        $fileIndex = (int) $request->input('file', 0);
+        if ($fileIndex < 0 || $fileIndex >= count($list)) {
+            return response()->json(['entries' => []]);
+        }
+        $item = $list[$fileIndex] ?? null;
+        $path = $item['path'] ?? null;
+        if (!$path || strtolower(pathinfo($path, PATHINFO_EXTENSION)) !== 'zip') {
+            return response()->json(['entries' => []]);
+        }
+        $disk = community_disk();
+        $entries = $reader->listZipEntriesFromStorage($disk, $path);
+        return response()->json(['entries' => $entries]);
     }
 
     public function approveDataset(Request $request, CommunityDataset $dataset): RedirectResponse

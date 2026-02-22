@@ -188,6 +188,34 @@ class CommunityPageController extends Controller
     }
 
     /**
+     * معاينة ملف داخل أرشيف ZIP (مثل CSV داخل الـ ZIP).
+     * المعاملات: file=رقم الملف المضغوط، entry=اسم الملف داخل الأرشيف.
+     */
+    public function datasetPreviewZipEntry(Request $request, DatasetFileReaderService $reader, CommunityDataset $dataset): JsonResponse
+    {
+        if ($dataset->status !== CommunityDataset::STATUS_APPROVED || !$dataset->is_active) {
+            abort(404);
+        }
+        $disk = community_disk();
+        $list = $dataset->files_list;
+        $fileIndex = (int) $request->input('file', 0);
+        $entryName = $request->input('entry', '');
+        if ($fileIndex < 0 || $fileIndex >= count($list) || $entryName === '') {
+            return response()->json(['headers' => [], 'rows' => []]);
+        }
+        $item = $list[$fileIndex] ?? null;
+        $path = $item['path'] ?? null;
+        if (!$path || strtolower(pathinfo($path, PATHINFO_EXTENSION)) !== 'zip') {
+            return response()->json(['headers' => [], 'rows' => []]);
+        }
+        $preview = $reader->readPreviewFromZipEntry($disk, $path, $entryName);
+        return response()->json([
+            'headers' => $preview['headers'],
+            'rows' => $preview['rows'],
+        ]);
+    }
+
+    /**
      * إرجاع قائمة ملفات داخل ZIP (للمعاينة في الصفحة).
      */
     public function datasetZipContents(Request $request, DatasetFileReaderService $reader, CommunityDataset $dataset): JsonResponse
