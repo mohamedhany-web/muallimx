@@ -59,6 +59,14 @@
                         <i class="fas fa-edit"></i>
                         تعديل البيانات
                     </a>
+                    <form action="{{ route('admin.wallets.destroy', $wallet) }}" method="POST" class="inline" onsubmit="return confirm('هل أنت متأكد من إزالة هذه المحفظة؟ سيتم حذف المحفظة نهائياً.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-red-500/90 text-white font-semibold border border-red-400/50 hover:bg-red-600 transition-all">
+                            <i class="fas fa-trash"></i>
+                            إزالة المحفظة
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

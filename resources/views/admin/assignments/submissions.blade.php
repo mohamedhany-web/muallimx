@@ -12,6 +12,7 @@
         <div class="rounded-xl bg-red-100 text-red-800 px-4 py-3 font-medium">{{ session('error') }}</div>
     @endif
 
+    @php $courseId = $assignment->advanced_course_id ?? $assignment->course_id; @endphp
     <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="min-w-0">
@@ -19,6 +20,8 @@
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-white">لوحة التحكم</a>
                     <span class="mx-2">/</span>
                     <a href="{{ route('admin.assignments.index') }}" class="hover:text-white">الواجبات</a>
+                    <span class="mx-2">/</span>
+                    <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="hover:text-white">{{ Str::limit($assignment->course?->title ?? '', 25) }}</a>
                     <span class="mx-2">/</span>
                     <a href="{{ route('admin.assignments.show', $assignment) }}" class="hover:text-white truncate">{{ Str::limit($assignment->title, 25) }}</a>
                     <span class="mx-2">/</span>
@@ -32,9 +35,9 @@
                     <i class="fas fa-eye"></i>
                     تفاصيل الواجب
                 </a>
-                <a href="{{ route('admin.assignments.index') }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
+                <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
                     <i class="fas fa-arrow-right"></i>
-                    العودة للواجبات
+                    رجوع لواجبات الكورس
                 </a>
             </div>
         </div>
@@ -156,8 +159,12 @@
                 <h3 class="text-xl font-bold text-gray-900 mb-2">لا توجد تسليمات</h3>
                 <p class="mb-6">لم يسلّم أي طالب هذا الواجب بعد</p>
                 <a href="{{ route('admin.assignments.show', $assignment) }}" class="inline-flex items-center gap-2 text-indigo-600 font-semibold hover:underline">
+                    <i class="fas fa-eye"></i>
+                    تفاصيل الواجب
+                </a>
+                <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="inline-flex items-center gap-2 text-gray-600 font-medium hover:underline">
                     <i class="fas fa-arrow-right"></i>
-                    العودة لتفاصيل الواجب
+                    واجبات الكورس
                 </a>
             </div>
         @endif

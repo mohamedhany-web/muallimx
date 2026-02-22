@@ -104,11 +104,6 @@
                                         </div>
                                     </div>
                                     <div class="flex flex-wrap items-center gap-2 flex-shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t border-gray-100 sm:border-t-0">
-                                        @if($lecture->teams_meeting_link)
-                                            <a href="{{ $lecture->teams_meeting_link }}" target="_blank" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-lg text-sm font-semibold bg-sky-500 hover:bg-sky-600 text-white transition-colors">
-                                                <i class="fas fa-video"></i> انضم
-                                            </a>
-                                        @endif
                                         @if($lecture->recording_url)
                                             <a href="{{ $lecture->recording_url }}" target="_blank" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
                                                 <i class="fas fa-play-circle"></i> التسجيل
@@ -186,11 +181,6 @@
                                 </div>
                             </div>
                             <div class="flex flex-wrap items-center gap-2 flex-shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t border-gray-100 sm:border-t-0">
-                                @if($lecture->teams_meeting_link)
-                                    <a href="{{ $lecture->teams_meeting_link }}" target="_blank" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-lg text-sm font-semibold bg-sky-500 hover:bg-sky-600 text-white transition-colors">
-                                        <i class="fas fa-video"></i> انضم
-                                    </a>
-                                @endif
                                 @if($lecture->recording_url)
                                     <a href="{{ $lecture->recording_url }}" target="_blank" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
                                         <i class="fas fa-play-circle"></i> التسجيل

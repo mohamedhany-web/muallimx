@@ -62,12 +62,84 @@ class DatasetFileReaderService
             if (in_array($extension, ['xlsx', 'xls'], true)) {
                 return $this->readSpreadsheet($fullPath);
             }
+            if ($extension === 'json') {
+                return $this->readJsonPreview($fullPath);
+            }
+            if ($extension === 'txt') {
+                return $this->readTxtPreview($fullPath);
+            }
         } catch (\Throwable $e) {
             report($e);
             return ['headers' => [], 'rows' => []];
         }
 
         return ['headers' => [], 'rows' => []];
+    }
+
+    /**
+     * معاينة JSON: إذا كان مصفوفة نعرض أول عناصر كصفوف؛ إذا كان كائناً نعرض المفاتيح كصف.
+     */
+    private function readJsonPreview(string $path): array
+    {
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            return ['headers' => [], 'rows' => []];
+        }
+        $data = json_decode($raw, true);
+        if ($data === null) {
+            return ['headers' => [], 'rows' => []];
+        }
+        if (array_is_list($data)) {
+            $rows = array_slice($data, 0, self::PREVIEW_MAX_ROWS);
+            $headers = [];
+            foreach ($rows as $row) {
+                if (is_array($row)) {
+                    $headers = array_unique(array_merge($headers, array_keys($row)));
+                }
+            }
+            $headers = array_values($headers);
+            if (empty($headers) && !empty($rows)) {
+                $first = $rows[0];
+                $headers = is_array($first) ? array_map(fn ($i) => 'العمود ' . ($i + 1), range(0, count($first) - 1)) : ['القيمة'];
+            }
+            $out = [];
+            foreach ($rows as $row) {
+                if (!is_array($row)) {
+                    $out[] = [$row];
+                    continue;
+                }
+                $r = [];
+                foreach ($headers as $h) {
+                    $r[] = $row[$h] ?? '';
+                }
+                $out[] = $r;
+            }
+            return $this->normalizeRows([$headers] + $out);
+        }
+        $headers = array_keys($data);
+        $row = array_map(fn ($v) => is_scalar($v) ? $v : json_encode($v), array_values($data));
+        return ['headers' => $headers, 'rows' => [$row]];
+    }
+
+    /**
+     * معاينة TXT: أسطر كصفوف، أعمدة بمحدد تبويب أو فاصلة.
+     */
+    private function readTxtPreview(string $path): array
+    {
+        $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($lines === false) {
+            return ['headers' => [], 'rows' => []];
+        }
+        $lines = array_slice($lines, 0, self::PREVIEW_MAX_ROWS + 1);
+        $rows = [];
+        foreach ($lines as $line) {
+            if (strpos($line, "\t") !== false) {
+                $rows[] = array_map('trim', explode("\t", $line));
+            } else {
+                $rows[] = array_map('trim', str_getcsv($line));
+            }
+        }
+        return $this->normalizeRows($rows);
     }
 
     /**

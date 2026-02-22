@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', __('instructor.add_new_lecture') . ' - Mindlytics'); ?>
 <?php $__env->startSection('header', __('instructor.add_new_lecture')); ?>
 
@@ -82,6 +80,7 @@
         'vimeo' => __('instructor.paste_vimeo'),
         'google_drive' => __('instructor.paste_drive'),
         'direct' => __('instructor.paste_direct'),
+        'bunny' => __('instructor.paste_bunny'),
         'default' => __('instructor.paste_video'),
     ];
 ?>
@@ -112,7 +111,7 @@
     </div>
 
     <!-- Form -->
-    <form action="<?php echo e(route('instructor.lectures.store')); ?>" method="POST"
+    <form action="<?php echo e(route('instructor.lectures.store')); ?>" method="POST" enctype="multipart/form-data"
           class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden"
           x-data="videoPreviewData()">
         <?php echo csrf_field(); ?>
@@ -214,6 +213,10 @@ unset($__errorArgs, $__bag); ?>
                             <i class="fas fa-file-video text-purple-600"></i>
                             <div class="font-bold text-slate-800 text-sm mt-1"><?php echo e(__('instructor.direct_link')); ?></div>
                         </div>
+                        <div class="platform-option" :class="{ 'active': selectedPlatform === 'bunny' }" @click="selectPlatform('bunny')">
+                            <i class="fas fa-cloud text-orange-600"></i>
+                            <div class="font-bold text-slate-800 text-sm mt-1">Bunny.net</div>
+                        </div>
                     </div>
                     <input type="hidden" name="video_platform" x-model="selectedPlatform" required>
                 </div>
@@ -313,43 +316,35 @@ unset($__errorArgs, $__bag); ?>
                 </div>
             </div>
 
-            <!-- Teams links -->
+            <!-- مواد المحاضرة -->
             <div class="space-y-6 pt-6 border-t border-slate-200">
                 <h2 class="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2">
-                    <i class="fab fa-microsoft text-sky-600 ml-1"></i>
-                    <?php echo e(__('instructor.teams_links')); ?>
-
+                    <i class="fas fa-paperclip text-sky-600 ml-1"></i>
+                    مواد المحاضرة (اختياري)
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="teams_registration_link" class="block text-sm font-semibold text-slate-700 mb-1"><?php echo e(__('instructor.teams_registration_link')); ?></label>
-                        <input type="url" name="teams_registration_link" id="teams_registration_link" value="<?php echo e(old('teams_registration_link')); ?>"
-                               placeholder="<?php echo e(__('instructor.teams_placeholder')); ?>"
-                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 bg-white">
-                        <?php $__errorArgs = ['teams_registration_link'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><p class="mt-1 text-sm text-red-600"><?php echo e($message); ?></p><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                    </div>
-                    <div>
-                        <label for="teams_meeting_link" class="block text-sm font-semibold text-slate-700 mb-1"><?php echo e(__('instructor.teams_meeting_link')); ?></label>
-                        <input type="url" name="teams_meeting_link" id="teams_meeting_link" value="<?php echo e(old('teams_meeting_link')); ?>"
-                               placeholder="<?php echo e(__('instructor.teams_placeholder')); ?>"
-                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 bg-white">
-                        <?php $__errorArgs = ['teams_meeting_link'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?><p class="mt-1 text-sm text-red-600"><?php echo e($message); ?></p><?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
+                <p class="text-sm text-slate-600">يمكنك رفع ملفات (PDF، Word، عروض...) وتحديد ظهورها للطالب.</p>
+                <div id="materials-container" class="space-y-4">
+                    <div class="material-row flex flex-wrap items-end gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="flex-1 min-w-[180px]">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">الملف</label>
+                            <input type="file" name="material_files[]" class="w-full text-sm text-slate-700 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-sky-100 file:text-sky-700 file:font-semibold file:cursor-pointer hover:file:bg-sky-200" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar,.png,.jpg,.jpeg">
+                        </div>
+                        <div class="w-48">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">عنوان (اختياري)</label>
+                            <input type="text" name="material_titles[]" placeholder="مثال: ملخص المحاضرة" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                        </div>
+                        <label class="flex items-center gap-2 pb-2">
+                            <input type="hidden" name="material_visible[]" value="0">
+                            <input type="checkbox" name="material_visible[]" value="1" checked class="w-4 h-4 text-sky-600 rounded">
+                            <span class="text-sm font-medium text-slate-700">ظاهر للطالب</span>
+                        </label>
+                        <button type="button" class="remove-material px-3 py-2 bg-rose-100 text-rose-700 rounded-lg text-sm font-medium hover:bg-rose-200" style="display:none;"><i class="fas fa-times ml-1"></i> حذف</button>
                     </div>
                 </div>
+                <button type="button" id="add-material-btn" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-100 text-sky-700 rounded-xl font-semibold text-sm hover:bg-sky-200 transition-colors">
+                    <i class="fas fa-plus"></i>
+                    إضافة مادة أخرى
+                </button>
             </div>
 
             <!-- Notes -->
@@ -451,6 +446,7 @@ function videoPreviewData() {
             if (this.selectedPlatform === 'vimeo') return p.vimeo || '';
             if (this.selectedPlatform === 'google_drive') return p.google_drive || '';
             if (this.selectedPlatform === 'direct') return p.direct || '';
+            if (this.selectedPlatform === 'bunny') return p.bunny || '';
             return p.default || '';
         },
         updatePreview() {
@@ -470,6 +466,7 @@ function videoPreviewData() {
                 const vimeoInvalid = '<?php echo e(addslashes(__('instructor.vimeo_invalid'))); ?>';
                 const driveNote = '<?php echo e(addslashes(__('instructor.drive_note'))); ?>';
                 const directInvalid = '<?php echo e(addslashes(__('instructor.direct_invalid'))); ?>';
+                const bunnyInvalid = '<?php echo e(addslashes(__('instructor.bunny_invalid'))); ?>';
                 const previewError = '<?php echo e(addslashes(__('instructor.preview_error'))); ?>';
 
                 if (this.selectedPlatform === 'youtube') {
@@ -504,6 +501,15 @@ function videoPreviewData() {
                         html = '<video controls width="100%" height="400" style="max-height: 400px; border-radius: 0.75rem;" class="w-full"><source src="' + esc + '" type="video/mp4">Your browser does not support video.</video>';
                     }
                     if (!isValid) html = '<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"><i class="fas fa-exclamation-circle ml-1"></i> ' + directInvalid + '</div>';
+                } else if (this.selectedPlatform === 'bunny') {
+                    const bunnyMatch = url.match(/mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
+                    if (bunnyMatch && bunnyMatch[1] && bunnyMatch[2]) {
+                        isValid = true;
+                        const embedUrl = url.split('?')[0];
+                        const src = embedUrl.startsWith('http') ? embedUrl : ('https://' + embedUrl.replace(/^\/+/, ''));
+                        html = '<iframe src="' + src.replace(/"/g, '&quot;') + '" width="100%" height="400" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
+                    }
+                    if (!isValid) html = '<div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"><i class="fas fa-exclamation-circle ml-1"></i> ' + bunnyInvalid + '</div>';
                 }
                 if (html) { container.innerHTML = html; this.hasPreview = true; } else { this.clearPreview(); }
             } catch (e) {
@@ -537,6 +543,27 @@ function videoPreviewData() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    var materialsContainer = document.getElementById('materials-container');
+    var addMaterialBtn = document.getElementById('add-material-btn');
+    if (materialsContainer && addMaterialBtn) {
+        addMaterialBtn.addEventListener('click', function() {
+            var first = materialsContainer.querySelector('.material-row');
+            if (!first) return;
+            var clone = first.cloneNode(true);
+            clone.querySelector('input[type="file"]').value = '';
+            clone.querySelector('input[type="text"]').value = '';
+            clone.querySelector('input[type="checkbox"]').checked = true;
+            clone.querySelector('.remove-material').style.display = 'inline-flex';
+            materialsContainer.appendChild(clone);
+        });
+        materialsContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-material')) {
+                var row = e.target.closest('.material-row');
+                if (materialsContainer.querySelectorAll('.material-row').length > 1) row.remove();
+            }
+        });
+    }
+
     const courseSelect = document.getElementById('course_id');
     if (!courseSelect) return;
     courseSelect.addEventListener('change', function() {

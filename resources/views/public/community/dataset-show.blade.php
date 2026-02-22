@@ -42,54 +42,93 @@
         </div>
     @endif
 
-    @if($dataset->file_path)
-        <div class="mb-2">
+    @if($dataset->file_path || !empty($dataset->files))
+        <div class="mb-2 flex flex-wrap items-center gap-3">
             <a href="{{ route('community.data.download', $dataset) }}" class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-bold text-sm">
                 <i class="fas fa-download"></i>
                 <span>تحميل الملف</span>
             </a>
+            @if(count($dataset->files_list ?? []) > 1)
+                <span class="text-slate-500 text-sm">({{ count($dataset->files_list) }} ملفات)</span>
+            @endif
         </div>
     @endif
 
-    @if(!empty($previewHeaders) || !empty($previewRows))
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-wrap gap-2">
-                <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                    <i class="fas fa-table text-blue-600"></i>
-                    معاينة البيانات
-                </h2>
-                <span class="text-slate-500 text-sm">أول {{ count($previewRows ?? []) }} صف</span>
-            </div>
-            <div class="overflow-auto max-h-[70vh] border-b border-slate-100">
-                <table class="w-full min-w-full border-collapse text-right">
-                    <thead class="sticky top-0 z-10 bg-slate-100 border-b-2 border-slate-200">
-                        <tr>
-                            @foreach($previewHeaders ?? [] as $cell)
-                                <th class="px-4 py-3 text-sm font-bold text-slate-800 whitespace-nowrap border-l border-slate-200">{{ e($cell) }}</th>
-                            @endforeach
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @foreach($previewRows ?? [] as $row)
-                            <tr class="hover:bg-slate-50/80 transition-colors">
-                                @foreach($previewHeaders ?? [] as $i => $header)
-                                    <td class="px-4 py-2.5 text-sm text-slate-700 whitespace-nowrap border-l border-slate-100">{{ e($row[$i] ?? '') }}</td>
-                                @endforeach
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+    <div id="previewContainer" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                <i class="fas fa-table text-blue-600"></i>
+                معاينة البيانات
+            </h2>
+            <span id="previewCount" class="text-slate-500 text-sm"></span>
         </div>
-    @else
-        @if($dataset->file_url)
-            <p class="text-slate-500 text-sm mt-4">لا يمكن معاينة المحتوى لهذا الرابط. استخدم زر «فتح رابط التحميل» أعلاه.</p>
-        @elseif($dataset->file_path)
-            <p class="text-slate-500 text-sm mt-4">تعذر قراءة معاينة الملف أو الملف غير مدعوم. يمكنك تحميل الملف أعلاه.</p>
-        @else
-            <p class="text-slate-500 text-sm mt-4">لا يوجد ملف مرفق لهذه المجموعة حالياً.</p>
-        @endif
-    @endif
+        <div id="previewLoading" class="p-8 text-center text-slate-500">
+            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+            <p>جاري تحميل المعاينة...</p>
+        </div>
+        <div id="previewTableWrap" class="overflow-auto max-h-[70vh] border-b border-slate-100 hidden">
+            <table class="w-full min-w-full border-collapse text-right" id="previewTable">
+                <thead class="sticky top-0 z-10 bg-slate-100 border-b-2 border-slate-200"><tr id="previewThead"></tr></thead>
+                <tbody class="divide-y divide-slate-100" id="previewTbody"></tbody>
+            </table>
+        </div>
+        <div id="previewEmpty" class="p-6 text-center text-slate-500 text-sm hidden"></div>
+    </div>
+
+    @push('scripts')
+    <script>
+    (function() {
+        var previewUrl = @json($previewUrl ?? null);
+        if (!previewUrl) {
+            document.getElementById('previewLoading').classList.add('hidden');
+            var empty = document.getElementById('previewEmpty');
+            empty.textContent = 'لا يوجد ملف مرفق لهذه المجموعة أو المعاينة غير متاحة.';
+            empty.classList.remove('hidden');
+            return;
+        }
+        fetch(previewUrl, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                document.getElementById('previewLoading').classList.add('hidden');
+                var headers = data.headers || [];
+                var rows = data.rows || [];
+                if (headers.length || rows.length) {
+                    var thead = document.getElementById('previewThead');
+                    headers.forEach(function(cell) {
+                        var th = document.createElement('th');
+                        th.className = 'px-4 py-3 text-sm font-bold text-slate-800 whitespace-nowrap border-l border-slate-200';
+                        th.textContent = cell;
+                        thead.appendChild(th);
+                    });
+                    var tbody = document.getElementById('previewTbody');
+                    rows.forEach(function(row) {
+                        var tr = document.createElement('tr');
+                        tr.className = 'hover:bg-slate-50/80 transition-colors';
+                        headers.forEach(function(_, i) {
+                            var td = document.createElement('td');
+                            td.className = 'px-4 py-2.5 text-sm text-slate-700 whitespace-nowrap border-l border-slate-100';
+                            td.textContent = row[i] != null ? row[i] : '';
+                            tr.appendChild(td);
+                        });
+                        tbody.appendChild(tr);
+                    });
+                    document.getElementById('previewCount').textContent = 'أول ' + rows.length + ' صف';
+                    document.getElementById('previewTableWrap').classList.remove('hidden');
+                } else {
+                    var empty = document.getElementById('previewEmpty');
+                    empty.textContent = 'تعذر قراءة معاينة الملف أو الملف غير مدعوم. يمكنك تحميل الملف أعلاه.';
+                    empty.classList.remove('hidden');
+                }
+            })
+            .catch(function() {
+                document.getElementById('previewLoading').classList.add('hidden');
+                var empty = document.getElementById('previewEmpty');
+                empty.textContent = 'تعذر تحميل المعاينة. جرّب تحديث الصفحة.';
+                empty.classList.remove('hidden');
+            });
+    })();
+    </script>
+    @endpush
 
     <div class="mt-8">
         <a href="{{ route('community.data.index') }}" class="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 font-semibold">

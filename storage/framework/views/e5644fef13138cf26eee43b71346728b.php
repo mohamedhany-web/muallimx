@@ -825,8 +825,6 @@
             'scheduled_at_formatted' => $lecture->scheduled_at->format('Y/m/d'),
             'scheduled_at_time' => $lecture->scheduled_at->format('H:i'),
             'duration_minutes' => $lecture->duration_minutes ?? 60,
-            'teams_meeting_link' => $lecture->teams_meeting_link,
-            'teams_registration_link' => $lecture->teams_registration_link,
             'notes' => $lecture->notes
         ];
     })->keyBy('id');
@@ -1423,20 +1421,6 @@ function courseFocusMode() {
                 html += '<div class="bg-gray-50 border-2 border-gray-200 rounded-xl p-6 text-center w-full">';
                 html += '<i class="fas fa-video text-gray-400 text-3xl mb-3"></i>';
                 html += '<p class="text-gray-600 font-semibold">لا يوجد فيديو متاح لهذه المحاضرة</p></div>';
-            }
-            
-            // روابط Teams
-            if (lecture.teams_meeting_link || lecture.teams_registration_link) {
-                html += '<div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 w-full">';
-                html += '<h3 class="text-xl font-black text-gray-900 mb-4 flex items-center gap-2"><i class="fas fa-video text-[#2CA9BD]"></i><span>روابط Microsoft Teams</span></h3>';
-                html += '<div class="space-y-3">';
-                if (lecture.teams_meeting_link) {
-                    html += '<a href="' + this.escapeHtml(lecture.teams_meeting_link) + '" target="_blank" class="block bg-white border-2 border-blue-300 rounded-lg p-4 hover:bg-blue-50 transition-all hover:shadow-lg w-full"><div class="flex items-center justify-between"><div class="flex items-center gap-3"><i class="fas fa-video text-[#2CA9BD] text-xl"></i><div><div class="font-bold text-gray-900">رابط الاجتماع</div><div class="text-sm text-gray-600">انقر للانضمام</div></div></div><i class="fas fa-external-link-alt text-gray-400"></i></div></a>';
-                }
-                if (lecture.teams_registration_link) {
-                    html += '<a href="' + this.escapeHtml(lecture.teams_registration_link) + '" target="_blank" class="block bg-white border-2 border-blue-300 rounded-lg p-4 hover:bg-blue-50 transition-all hover:shadow-lg w-full"><div class="flex items-center justify-between"><div class="flex items-center gap-3"><i class="fas fa-user-plus text-[#2CA9BD] text-xl"></i><div><div class="font-bold text-gray-900">رابط التسجيل</div><div class="text-sm text-gray-600">سجل للانضمام</div></div></div><i class="fas fa-external-link-alt text-gray-400"></i></div></a>';
-                }
-                html += '</div></div>';
             }
             
             // الملاحظات

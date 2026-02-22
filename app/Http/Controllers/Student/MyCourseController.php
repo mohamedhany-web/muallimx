@@ -175,16 +175,16 @@ class MyCourseController extends Controller
             }
         }
 
-        // جلب الأقسام مع العناصر مرتبة
-        $sections = $course->activeSections()
+        // جلب كل الأقسام (مسطحة) مع العناصر لاحتساب التقدم وبناء الشجرة
+        $allSections = $course->activeSections()
             ->with(['activeItems' => function($query) {
                 $query->orderBy('order')->with('item');
             }])
             ->orderBy('order')
             ->get();
-        
+
         // تحميل تقدم الدروس والأنماط والامتحانات في العناصر
-        foreach ($sections as $section) {
+        foreach ($allSections as $section) {
             foreach ($section->activeItems as $curriculumItem) {
                 if ($curriculumItem->item instanceof \App\Models\CourseLesson) {
                     $curriculumItem->item->load(['progress' => function($q) use ($user) {
@@ -204,7 +204,14 @@ class MyCourseController extends Controller
             }
         }
 
-        list($progress, $totalLessons, $completedLessons) = $this->calculateProgressFromSections($user, $course, $sections);
+        list($progress, $totalLessons, $completedLessons) = $this->calculateProgressFromSections($user, $course, $allSections);
+
+        // بناء شجرة الأقسام (جذور + أطفال) للعرض في السايدبار
+        foreach ($allSections as $section) {
+            $section->setRelation('children', $allSections->where('parent_id', $section->id)->values());
+        }
+        $sections = $allSections->whereNull('parent_id')->values();
+        $sectionDescriptions = $allSections->pluck('description', 'id')->map(fn ($d) => $d ?? '')->toArray();
 
         // تجميع المحاضرات حسب الدرس (للتوافق مع الكود القديم)
         $lecturesByLesson = $course->lectures->groupBy('course_lesson_id');
@@ -221,12 +228,13 @@ class MyCourseController extends Controller
             ->get();
 
         return view('student.my-courses.learn', compact(
-            'course', 
-            'progress', 
-            'totalLessons', 
-            'completedLessons', 
+            'course',
+            'progress',
+            'totalLessons',
+            'completedLessons',
             'lecturesByLesson',
             'sections',
+            'sectionDescriptions',
             'sidebarExams',
             'lesson'
         ));

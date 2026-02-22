@@ -1,8 +1,8 @@
 <?php $__env->startSection('title', 'تعديل مسار التعلم'); ?>
 
 <?php $__env->startSection('content'); ?>
-<div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" style="background: #f8fafc; min-height: 100vh;">
-    <div class="max-w-6xl mx-auto space-y-6">
+<div class="w-full max-w-full px-4 py-6 space-y-6" style="background: #f8fafc; min-height: 100vh;">
+    <div class="w-full max-w-full space-y-6">
         <div class="bg-gradient-to-br from-sky-500 via-sky-600 to-indigo-700 rounded-3xl p-6 sm:p-8 shadow-xl text-white relative overflow-hidden">
             <div class="absolute inset-y-0 left-0 w-40 bg-white/10 blur-3xl pointer-events-none"></div>
             <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">

@@ -15,61 +15,42 @@ use Illuminate\Http\RedirectResponse;
 class AssignmentController extends Controller
 {
     /**
-     * عرض جميع الواجبات (لكل المدربين) - رقابة الأدمن
+     * عرض قائمة الكورسات لاختيار واحد منها وعرض واجباته
      */
-    public function index(Request $request): View
+    public function index(): View
     {
-        $query = Assignment::with(['course.instructor', 'lesson', 'teacher'])
-            ->withCount('submissions');
+        $courses = AdvancedCourse::where('is_active', true)
+            ->withCount('assignments')
+            ->with('academicSubject')
+            ->orderBy('title')
+            ->get();
 
-        if ($request->filled('course_id')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('advanced_course_id', $request->course_id)
-                    ->orWhere('course_id', $request->course_id);
-            });
-        }
+        return view('admin.assignments.index', compact('courses'));
+    }
 
-        if ($request->filled('instructor_id')) {
-            $query->whereHas('course', function ($q) use ($request) {
-                $q->where('instructor_id', $request->instructor_id);
-            });
-        }
+    /**
+     * عرض واجبات كورس معين مع روابط CRUD
+     */
+    public function indexByCourse(AdvancedCourse $course): View
+    {
+        $course->loadCount('assignments')->load('academicSubject');
+        $assignments = $course->assignments()
+            ->withCount('submissions')
+            ->with(['lesson', 'teacher'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        $assignments = $query->orderBy('created_at', 'desc')->paginate(20);
-
-        $courses = AdvancedCourse::where('is_active', true)->orderBy('title')->get(['id', 'title']);
-        $instructors = User::whereIn('role', ['instructor', 'teacher'])->orderBy('name')->get(['id', 'name']);
-
-        $stats = [
-            'total' => Assignment::count(),
-            'published' => Assignment::where('status', 'published')->count(),
-            'draft' => Assignment::where('status', 'draft')->count(),
-            'archived' => Assignment::where('status', 'archived')->count(),
-            'total_submissions' => AssignmentSubmission::count(),
-        ];
-
-        return view('admin.assignments.index', compact('assignments', 'courses', 'instructors', 'stats'));
+        return view('admin.assignments.by-course', compact('course', 'assignments'));
     }
 
     /**
      * نموذج إنشاء واجب جديد
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $courses = AdvancedCourse::where('is_active', true)->with(['instructor:id,name', 'lessons:id,advanced_course_id,title,order'])->orderBy('title')->get();
-        return view('admin.assignments.create', compact('courses'));
+        $selectedCourse = $request->get('course_id');
+        return view('admin.assignments.create', compact('courses', 'selectedCourse'));
     }
 
     /**
@@ -104,8 +85,9 @@ class AssignmentController extends Controller
         $validated['allow_late_submission'] = $request->has('allow_late_submission');
 
         $assignment = Assignment::create($validated);
+        $courseId = $validated['advanced_course_id'];
 
-        return redirect()->route('admin.assignments.show', $assignment)
+        return redirect()->route('admin.assignments.by-course', $courseId)
             ->with('success', 'تم إنشاء الواجب بنجاح');
     }
 
@@ -174,8 +156,9 @@ class AssignmentController extends Controller
         $validated['teacher_id'] = $course->instructor_id ?? $assignment->teacher_id;
 
         $assignment->update($validated);
+        $courseId = (int) $validated['advanced_course_id'];
 
-        return redirect()->route('admin.assignments.show', $assignment)
+        return redirect()->route('admin.assignments.by-course', $courseId)
             ->with('success', 'تم تحديث الواجب بنجاح');
     }
 
@@ -184,8 +167,9 @@ class AssignmentController extends Controller
      */
     public function destroy(Assignment $assignment): RedirectResponse
     {
+        $courseId = $assignment->advanced_course_id ?? $assignment->course_id;
         $assignment->delete();
-        return redirect()->route('admin.assignments.index')
+        return redirect()->route('admin.assignments.by-course', $courseId)
             ->with('success', 'تم حذف الواجب بنجاح');
     }
 

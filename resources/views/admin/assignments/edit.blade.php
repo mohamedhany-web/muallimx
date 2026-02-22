@@ -12,6 +12,7 @@
         <div class="rounded-xl bg-red-100 text-red-800 px-4 py-3 font-medium">{{ session('error') }}</div>
     @endif
 
+    @php $courseId = $assignment->advanced_course_id ?? $assignment->course_id; @endphp
     <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="min-w-0">
@@ -19,6 +20,8 @@
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-white">لوحة التحكم</a>
                     <span class="mx-2">/</span>
                     <a href="{{ route('admin.assignments.index') }}" class="hover:text-white">الواجبات</a>
+                    <span class="mx-2">/</span>
+                    <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="hover:text-white">{{ Str::limit($assignment->course?->title ?? '', 25) }}</a>
                     <span class="mx-2">/</span>
                     <a href="{{ route('admin.assignments.show', $assignment) }}" class="hover:text-white truncate">{{ Str::limit($assignment->title, 25) }}</a>
                     <span class="mx-2">/</span>
@@ -28,13 +31,13 @@
                 <p class="text-sm text-white/90 mt-1 truncate">{{ $assignment->title }}</p>
             </div>
             <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ route('admin.assignments.show', $assignment) }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
+                <a href="{{ route('admin.assignments.show', $assignment) }}" class="inline-flex items-center gap-2 bg-white text-indigo-600 hover:bg-gray-100 px-4 py-2.5 rounded-xl font-semibold transition-colors">
                     <i class="fas fa-eye"></i>
                     عرض
                 </a>
-                <a href="{{ route('admin.assignments.index') }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
+                <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
                     <i class="fas fa-arrow-right"></i>
-                    العودة للواجبات
+                    رجوع لواجبات الكورس
                 </a>
             </div>
         </div>
@@ -153,7 +156,7 @@
                     <i class="fas fa-save"></i>
                     حفظ التعديلات
                 </button>
-                <a href="{{ route('admin.assignments.show', $assignment) }}" class="inline-flex items-center gap-2 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-xl font-semibold transition-colors">
+                <a href="{{ route('admin.assignments.by-course', $courseId) }}" class="inline-flex items-center gap-2 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-xl font-semibold transition-colors">
                     <i class="fas fa-times"></i>
                     إلغاء
                 </a>

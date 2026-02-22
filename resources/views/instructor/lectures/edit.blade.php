@@ -136,33 +136,6 @@
                 @enderror
             </div>
 
-            <!-- روابط Teams -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="teams_registration_link" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        رابط تسجيل Teams
-                    </label>
-                    <input type="url" name="teams_registration_link" id="teams_registration_link" 
-                           value="{{ old('teams_registration_link', $lecture->teams_registration_link) }}"
-                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">
-                    @error('teams_registration_link')
-                        <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="teams_meeting_link" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        رابط اجتماع Teams
-                    </label>
-                    <input type="url" name="teams_meeting_link" id="teams_meeting_link" 
-                           value="{{ old('teams_meeting_link', $lecture->teams_meeting_link) }}"
-                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white">
-                    @error('teams_meeting_link')
-                        <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-
             <!-- رابط التسجيل -->
             <div>
                 <label for="recording_url" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">

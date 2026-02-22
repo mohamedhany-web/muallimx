@@ -9,6 +9,7 @@ use App\Models\ContributorProfile;
 use App\Models\User;
 use App\Services\Community\DatasetFileReaderService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -87,6 +88,32 @@ class CommunityPageController extends Controller
         return Storage::disk($disk)->download($dataset->file_path, $name);
     }
 
+    /**
+     * معاينة البيانات كـ JSON (تحميل كسول — لا يُبطئ فتح الصفحة).
+     */
+    public function datasetPreview(DatasetFileReaderService $reader, CommunityDataset $dataset): JsonResponse
+    {
+        if ($dataset->status !== CommunityDataset::STATUS_APPROVED || !$dataset->is_active) {
+            abort(404);
+        }
+
+        $disk = community_disk();
+        $pathToRead = $dataset->file_path;
+        if (!$pathToRead && !empty($dataset->files)) {
+            $first = $dataset->files[0];
+            $pathToRead = is_array($first) ? ($first['path'] ?? null) : null;
+        }
+        if (!$pathToRead || !Storage::disk($disk)->exists($pathToRead)) {
+            return response()->json(['headers' => [], 'rows' => []]);
+        }
+
+        $preview = $reader->readPreviewFromStorage($disk, $pathToRead);
+        return response()->json([
+            'headers' => $preview['headers'],
+            'rows' => $preview['rows'],
+        ]);
+    }
+
     public function discussions(): View
     {
         return view('community.discussions.index');
@@ -125,23 +152,15 @@ class CommunityPageController extends Controller
     /**
      * عرض مجموعة بيانات واحدة (عام — بدون تسجيل).
      */
-    public function publicDatasetShow(DatasetFileReaderService $reader, CommunityDataset $dataset): View|RedirectResponse
+    public function publicDatasetShow(CommunityDataset $dataset): View|RedirectResponse
     {
         if ($dataset->status !== CommunityDataset::STATUS_APPROVED || !$dataset->is_active) {
             abort(404);
         }
 
-        $disk = community_disk();
-        $preview = ['headers' => [], 'rows' => []];
-
-        if ($dataset->file_path) {
-            $preview = $reader->readPreviewFromStorage($disk, $dataset->file_path);
-        }
-
         return view('public.community.dataset-show', [
             'dataset' => $dataset,
-            'previewHeaders' => $preview['headers'],
-            'previewRows' => $preview['rows'],
+            'previewUrl' => route('community.data.preview', $dataset),
         ]);
     }
 

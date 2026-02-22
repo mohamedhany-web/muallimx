@@ -15,45 +15,32 @@ use Illuminate\Support\Facades\DB;
 class ExamController extends Controller
 {
     /**
-     * عرض قائمة الامتحانات
+     * عرض قائمة الكورسات (الدخول للكورس يعرض امتحاناته).
      */
-    public function index(Request $request)
+    public function index()
     {
-        $query = Exam::with(['course.academicSubject', 'lesson'])
-                    ->withCount(['questions', 'attempts']);
+        $courses = AdvancedCourse::active()
+            ->withCount('exams')
+            ->with(['academicSubject'])
+            ->orderBy('title')
+            ->get();
 
-        // فلترة حسب الكورس
-        if ($request->filled('course_id')) {
-            $query->where('advanced_course_id', $request->course_id);
-        }
+        return view('admin.exams.index', compact('courses'));
+    }
 
-        // فلترة حسب الحالة
-        if ($request->filled('status')) {
-            if ($request->status === 'active') {
-                $query->where('is_active', true);
-            } elseif ($request->status === 'published') {
-                $query->where('is_published', true);
-            }
-        }
+    /**
+     * عرض امتحانات كورس معين مع روابط CRUD.
+     */
+    public function indexByCourse(AdvancedCourse $course)
+    {
+        $course->loadCount('exams')->load('academicSubject');
+        $exams = $course->exams()
+            ->withCount(['questions', 'attempts'])
+            ->with(['lesson'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
 
-        // البحث
-        if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
-        }
-
-        $exams = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
-
-        // بيانات للفلاتر
-        $courses = AdvancedCourse::active()->with(['academicSubject'])->orderBy('title')->get();
-
-        $stats = [
-            'total' => Exam::count(),
-            'active' => Exam::where('is_active', true)->count(),
-            'published' => Exam::where('is_published', true)->count(),
-            'total_attempts' => \App\Models\ExamAttempt::count(),
-        ];
-
-        return view('admin.exams.index', compact('exams', 'courses', 'stats'));
+        return view('admin.exams.by-course', compact('course', 'exams'));
     }
 
     /**
@@ -191,7 +178,7 @@ class ExamController extends Controller
 
         $exam->update($data);
 
-        return redirect()->route('admin.exams.show', $exam)
+        return redirect()->route('admin.exams.by-course', $exam->advanced_course_id)
             ->with('success', 'تم تحديث الامتحان بنجاح');
     }
 
@@ -205,9 +192,10 @@ class ExamController extends Controller
             return back()->with('error', 'لا يمكن حذف الامتحان لأنه يحتوي على محاولات طلاب');
         }
 
+        $courseId = $exam->advanced_course_id;
         $exam->delete();
 
-        return redirect()->route('admin.exams.index')
+        return redirect()->route('admin.exams.by-course', $courseId)
             ->with('success', 'تم حذف الامتحان بنجاح');
     }
 
@@ -216,7 +204,7 @@ class ExamController extends Controller
      */
     public function manageQuestions(Exam $exam)
     {
-        $exam->load(['examQuestions.question.category']);
+        $exam->load(['examQuestions.question.category', 'course']);
         
         $categories = QuestionCategory::active()
                                     ->with(['questions' => function($query) {
@@ -348,7 +336,7 @@ class ExamController extends Controller
      */
     public function statistics(Exam $exam)
     {
-        $exam->load(['attempts.user']);
+        $exam->load(['attempts.user', 'course', 'examQuestions']);
 
         $stats = [
             'overview' => $exam->stats,
@@ -381,7 +369,7 @@ class ExamController extends Controller
      */
     public function preview(Exam $exam)
     {
-        $exam->load(['examQuestions.question']);
+        $exam->load(['examQuestions.question.category', 'course']);
         
         return view('admin.exams.preview', compact('exam'));
     }
@@ -414,7 +402,7 @@ class ExamController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.exams.edit', $newExam)
+            return redirect()->route('admin.exams.by-course', $newExam->advanced_course_id)
                 ->with('success', 'تم نسخ الامتحان بنجاح');
 
         } catch (\Exception $e) {

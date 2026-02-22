@@ -19,10 +19,10 @@
                 <p class="text-sm text-white/90 mt-1">إنشاء محاضرة جديدة وربطها بكورس ومحاضر</p>
             </div>
             <div class="flex flex-wrap gap-2 flex-shrink-0">
-                <a href="{{ route('admin.lectures.index') }}" 
+                <a href="{{ $preselectedCourseId ? route('admin.lectures.by-course', $preselectedCourseId) : route('admin.lectures.index') }}" 
                    class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
                     <i class="fas fa-arrow-right"></i>
-                    العودة للمحاضرات
+                    {{ $preselectedCourseId ? 'العودة لمحاضرات الكورس' : 'العودة للمحاضرات' }}
                 </a>
             </div>
         </div>
@@ -45,7 +45,7 @@
                                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                             <option value="">اختر الكورس</option>
                             @foreach($courses as $course)
-                                <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }}>{{ Str::limit($course->title, 60) }}</option>
+                                <option value="{{ $course->id }}" {{ old('course_id', $preselectedCourseId ?? null) == $course->id ? 'selected' : '' }}>{{ Str::limit($course->title, 60) }}</option>
                             @endforeach
                         </select>
                         @error('course_id')
@@ -102,27 +102,6 @@
                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                placeholder="60">
                         @error('duration_minutes')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">رابط تسجيل Teams</label>
-                        <input type="url" name="teams_registration_link" value="{{ old('teams_registration_link') }}"
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                               placeholder="https://teams.microsoft.com/...">
-                        @error('teams_registration_link')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">رابط اجتماع Teams</label>
-                        <input type="url" name="teams_meeting_link" value="{{ old('teams_meeting_link') }}"
-                               class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                               placeholder="https://teams.microsoft.com/...">
-                        @error('teams_meeting_link')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

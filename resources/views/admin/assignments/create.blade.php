@@ -3,13 +3,30 @@
 @section('title', 'إضافة واجب جديد')
 @section('header', 'إضافة واجب جديد')
 
+@php
+    $selectedCourse = $selectedCourse ?? null;
+    $backUrl = $selectedCourse ? route('admin.assignments.by-course', $selectedCourse) : route('admin.assignments.index');
+@endphp
+
 @section('content')
 <div class="w-full max-w-full px-4 py-6 space-y-6">
     @if(session('success'))
-        <div class="rounded-xl bg-green-100 text-green-800 px-4 py-3 font-medium">{{ session('success') }}</div>
+        <div class="rounded-xl bg-green-50 border border-green-200 text-green-800 px-4 py-3 flex items-center gap-2">
+            <i class="fas fa-check-circle text-green-600"></i>
+            <span>{{ session('success') }}</span>
+        </div>
     @endif
     @if(session('error'))
-        <div class="rounded-xl bg-red-100 text-red-800 px-4 py-3 font-medium">{{ session('error') }}</div>
+        <div class="rounded-xl bg-red-50 border border-red-200 text-red-800 px-4 py-3 flex items-center gap-2">
+            <i class="fas fa-exclamation-circle text-red-600"></i>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="rounded-xl bg-red-50 border border-red-200 text-red-800 px-4 py-3">
+            <p class="font-semibold mb-1">يرجى تصحيح الأخطاء:</p>
+            <ul class="list-disc list-inside text-sm">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        </div>
     @endif
 
     <div class="bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500 rounded-2xl p-6 text-white shadow-lg">
@@ -19,15 +36,22 @@
                     <a href="{{ route('admin.dashboard') }}" class="hover:text-white">لوحة التحكم</a>
                     <span class="mx-2">/</span>
                     <a href="{{ route('admin.assignments.index') }}" class="hover:text-white">الواجبات</a>
+                    @if($selectedCourse)
+                        @php $course = $courses->firstWhere('id', $selectedCourse); @endphp
+                        @if($course)
+                            <span class="mx-2">/</span>
+                            <a href="{{ route('admin.assignments.by-course', $course) }}" class="hover:text-white">{{ Str::limit($course->title, 25) }}</a>
+                        @endif
+                    @endif
                     <span class="mx-2">/</span>
                     <span class="text-white">إضافة واجب</span>
                 </nav>
                 <h1 class="text-xl sm:text-2xl font-bold mt-1">إضافة واجب جديد</h1>
                 <p class="text-sm text-white/90 mt-1">إنشاء واجب وربطه بكورس ودرس (اختياري)</p>
             </div>
-            <a href="{{ route('admin.assignments.index') }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
+            <a href="{{ $backUrl }}" class="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2.5 rounded-xl font-medium transition-colors border border-white/30">
                 <i class="fas fa-arrow-right"></i>
-                العودة للواجبات
+                {{ $selectedCourse ? 'رجوع لواجبات الكورس' : 'العودة للواجبات' }}
             </a>
         </div>
     </div>
@@ -48,7 +72,7 @@
                                 class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors">
                             <option value="">اختر الكورس</option>
                             @foreach($courses as $course)
-                                <option value="{{ $course->id }}" {{ old('advanced_course_id') == $course->id ? 'selected' : '' }}>{{ Str::limit($course->title, 50) }}</option>
+                                <option value="{{ $course->id }}" {{ old('advanced_course_id', $selectedCourse) == $course->id ? 'selected' : '' }}>{{ Str::limit($course->title, 50) }}</option>
                             @endforeach
                         </select>
                         @error('advanced_course_id')
@@ -142,7 +166,7 @@
                     <i class="fas fa-save"></i>
                     إنشاء الواجب
                 </button>
-                <a href="{{ route('admin.assignments.index') }}" class="inline-flex items-center gap-2 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-xl font-semibold transition-colors">
+                <a href="{{ $backUrl }}" class="inline-flex items-center gap-2 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 px-6 py-2.5 rounded-xl font-semibold transition-colors">
                     <i class="fas fa-times"></i>
                     إلغاء
                 </a>
@@ -201,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
 
-    @if(old('advanced_course_id'))
+    @if(old('advanced_course_id', $selectedCourse))
         courseSelect.dispatchEvent(new Event('change'));
         setTimeout(function() {
             lessonSelect.value = '{{ old("lesson_id") }}';

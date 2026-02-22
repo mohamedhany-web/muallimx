@@ -266,30 +266,6 @@
                 </div>
             </div>
 
-            <!-- Teams links -->
-            <div class="space-y-6 pt-6 border-t border-slate-200">
-                <h2 class="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2">
-                    <i class="fab fa-microsoft text-sky-600 ml-1"></i>
-                    {{ __('instructor.teams_links') }}
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="teams_registration_link" class="block text-sm font-semibold text-slate-700 mb-1">{{ __('instructor.teams_registration_link') }}</label>
-                        <input type="url" name="teams_registration_link" id="teams_registration_link" value="{{ old('teams_registration_link') }}"
-                               placeholder="{{ __('instructor.teams_placeholder') }}"
-                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 bg-white">
-                        @error('teams_registration_link')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label for="teams_meeting_link" class="block text-sm font-semibold text-slate-700 mb-1">{{ __('instructor.teams_meeting_link') }}</label>
-                        <input type="url" name="teams_meeting_link" id="teams_meeting_link" value="{{ old('teams_meeting_link') }}"
-                               placeholder="{{ __('instructor.teams_placeholder') }}"
-                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 bg-white">
-                        @error('teams_meeting_link')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                    </div>
-                </div>
-            </div>
-
             <!-- مواد المحاضرة -->
             <div class="space-y-6 pt-6 border-t border-slate-200">
                 <h2 class="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2">

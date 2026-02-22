@@ -16,6 +16,15 @@ class ContributorController extends Controller
 {
     private const DIRECTORY = 'community_datasets';
 
+    /** امتدادات مسموحة للرفع (ملفات بيانات، أرشيفات، نصوص) — تُخزَّن على Cloudflare R2 عند ضبط FILESYSTEM_DISK_COMMUNITY=r2 */
+    public const ALLOWED_EXTENSIONS = 'xlsx,xls,csv,json,txt,zip,pdf,xml,tsv';
+
+    /** حد حجم ملف واحد بالكيلوبايت (25 ميجا) */
+    public const MAX_FILE_KB = 25600;
+
+    /** أقصى عدد ملفات في تقديم واحد */
+    public const MAX_FILES = 20;
+
     private static function disk(): string
     {
         return community_disk();
@@ -57,8 +66,13 @@ class ContributorController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category' => 'nullable|string|in:' . implode(',', array_keys(CommunityDataset::CATEGORIES)),
-            'file' => 'nullable|file|mimes:xlsx,xls,csv|max:10240',
+            'file' => 'nullable|file|mimes:xlsx,xls,csv,json,txt,zip,pdf,xml|max:' . self::MAX_FILE_KB,
+            'files' => 'nullable|array|max:' . self::MAX_FILES,
+            'files.*' => 'file|mimes:xlsx,xls,csv,json,txt,zip,pdf,xml,tsv|max:' . self::MAX_FILE_KB,
             'file_url' => 'nullable|url|max:500',
+        ], [
+            'files.*.mimes' => 'الملفات المسموحة: xlsx, xls, csv, json, txt, zip, pdf, xml, tsv',
+            'files.*.max' => 'حجم كل ملف لا يتجاوز ' . (self::MAX_FILE_KB / 1024) . ' ميجا',
         ]);
 
         $validated['slug'] = Str::slug($validated['title']) . '-' . uniqid();
@@ -66,11 +80,42 @@ class ContributorController extends Controller
         $validated['is_active'] = false;
         $validated['created_by_user_id'] = Auth::id();
 
+        $uploadedFiles = [];
+        $disk = self::disk();
+
         if ($request->hasFile('file')) {
-            $name = $this->uniqueFilename(self::DIRECTORY, $request->file('file')->getClientOriginalName());
-            $path = $request->file('file')->storeAs(self::DIRECTORY, $name, self::disk());
-            $validated['file_path'] = $path;
-            $validated['file_size'] = $this->humanFileSize($request->file('file')->getSize());
+            $file = $request->file('file');
+            $name = $this->uniqueFilename(self::DIRECTORY, $file->getClientOriginalName());
+            $path = $file->storeAs(self::DIRECTORY, $name, $disk);
+            $uploadedFiles[] = [
+                'path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'size' => $this->humanFileSize($file->getSize()),
+            ];
+        }
+
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                if (!$file->isValid()) {
+                    continue;
+                }
+                $name = $this->uniqueFilename(self::DIRECTORY, $file->getClientOriginalName());
+                $path = $file->storeAs(self::DIRECTORY, $name, $disk);
+                $uploadedFiles[] = [
+                    'path' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'size' => $this->humanFileSize($file->getSize()),
+                ];
+            }
+        }
+
+        if (!empty($uploadedFiles)) {
+            $validated['files'] = $uploadedFiles;
+            $first = $uploadedFiles[0];
+            $validated['file_path'] = $first['path'];
+            $validated['file_size'] = count($uploadedFiles) > 1
+                ? $first['size'] . ' + ' . (count($uploadedFiles) - 1) . ' ملف'
+                : $first['size'];
         }
 
         CommunityDataset::create($validated);

@@ -186,6 +186,7 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::get('/data', [\App\Http\Controllers\Community\CommunityPageController::class, 'publicDatasets'])->name('data.index');
     Route::get('/data/{dataset}', [\App\Http\Controllers\Community\CommunityPageController::class, 'publicDatasetShow'])->name('data.show');
     Route::get('/data/{dataset}/download', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetDownload'])->name('data.download');
+    Route::get('/data/{dataset}/preview', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetPreview'])->name('data.preview');
     Route::middleware(['guest', 'guest-only'])->group(function () {
         Route::get('/login', [\App\Http\Controllers\Community\AuthController::class, 'showLogin'])->name('login');
         Route::post('/login', [\App\Http\Controllers\Community\AuthController::class, 'login'])->middleware('throttle:20,15')->name('login.post');
@@ -744,8 +745,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/subjects-by-year/{year}', [\App\Http\Controllers\Admin\QuestionCategoryController::class, 'getSubjectsByYear'])->name('subjects-by-year');
         });
 
-        // إدارة الامتحانات
+        // إدارة الامتحانات (مسار الكورس قبل المسارات الأخرى لتفادي التعارض)
         Route::prefix('exams')->name('exams.')->group(function () {
+            Route::get('/course/{course}', [\App\Http\Controllers\Admin\ExamController::class, 'indexByCourse'])->name('by-course');
             Route::get('/', [\App\Http\Controllers\Admin\ExamController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\Admin\ExamController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\Admin\ExamController::class, 'store'])->name('store');
@@ -818,7 +820,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/groups/{group}/members', [\App\Http\Controllers\Admin\GroupController::class, 'addMember'])->name('groups.add-member');
         Route::delete('/groups/{group}/members/{member}', [\App\Http\Controllers\Admin\GroupController::class, 'removeMember'])->name('groups.remove-member');
 
-        // إدارة الواجبات والمشاريع
+        // إدارة الواجبات والمشاريع (مسار الكورس قبل المسارات الأخرى لتفادي التعارض)
+        Route::get('/assignments/course/{course}', [\App\Http\Controllers\Admin\AssignmentController::class, 'indexByCourse'])->name('assignments.by-course');
         Route::resource('assignments', \App\Http\Controllers\Admin\AssignmentController::class);
         Route::get('/assignments/{assignment}/submissions', [\App\Http\Controllers\Admin\AssignmentController::class, 'submissions'])->name('assignments.submissions');
         Route::post('/assignments/{assignment}/grade/{submission}', [\App\Http\Controllers\Admin\AssignmentController::class, 'grade'])->name('assignments.grade');
@@ -1202,9 +1205,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::resource('badges', \App\Http\Controllers\Admin\BadgeController::class);
         Route::resource('reviews', \App\Http\Controllers\Admin\ReviewController::class);
 
-        // إدارة المحاضرات
+        // إدارة المحاضرات (مسار الكورس قبل الـ resource لتفادي التعارض)
+        Route::get('/lectures/course/{course}', [\App\Http\Controllers\Admin\LectureController::class, 'indexByCourse'])->name('lectures.by-course');
         Route::resource('lectures', \App\Http\Controllers\Admin\LectureController::class);
-        Route::get('/lectures/course/{course}', [\App\Http\Controllers\Admin\LectureController::class, 'index'])->name('lectures.by-course');
 
         // إدارة الحضور
         Route::prefix('attendance')->name('attendance.')->group(function () {

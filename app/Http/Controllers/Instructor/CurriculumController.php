@@ -28,13 +28,18 @@ class CurriculumController extends Controller
             abort(403, 'غير مسموح لك بالوصول لهذا الكورس');
         }
         
-        // جلب الأقسام مع العناصر
-        $sections = $course->sections()
+        // جلب كل الأقسام مع العناصر ثم ربط كل قسم بأبنائه لعرض الشجرة
+        $allSections = $course->sections()
             ->with(['items' => function($query) {
                 $query->orderBy('order');
             }])
             ->orderBy('order')
             ->get();
+        foreach ($allSections as $section) {
+            $section->setRelation('children', $allSections->where('parent_id', $section->id)->values());
+        }
+        $sections = $allSections->whereNull('parent_id')->values();
+        $sectionsFlatForSelect = $this->flattenSectionsForSelect($sections);
         
         // جلب العناصر المتاحة (محاضرات، واجبات، امتحانات، أنماط) — تم إلغاء الدروس
         $availableLectures = $course->lectures()
@@ -64,6 +69,7 @@ class CurriculumController extends Controller
         return view('instructor.curriculum.index', compact(
             'course',
             'sections',
+            'sectionsFlatForSelect',
             'availableLectures',
             'availableAssignments',
             'availableExams',
@@ -86,17 +92,24 @@ class CurriculumController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'parent_id' => 'nullable|exists:course_sections,id',
         ], [
             'title.required' => 'عنوان القسم مطلوب',
         ]);
         
-        // الحصول على آخر ترتيب
-        $lastOrder = $course->sections()->max('order') ?? 0;
+        $parentId = $validated['parent_id'] ?? null;
+        if ($parentId) {
+            $parent = CourseSection::where('id', $parentId)->where('advanced_course_id', $course->id)->firstOrFail();
+            $lastOrder = CourseSection::where('parent_id', $parentId)->max('order') ?? 0;
+        } else {
+            $lastOrder = $course->sections()->whereNull('parent_id')->max('order') ?? 0;
+        }
         
         $section = CourseSection::create([
             'advanced_course_id' => $course->id,
+            'parent_id' => $parentId,
             'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
+            'description' => $parentId ? null : ($validated['description'] ?? null),
             'order' => $lastOrder + 1,
             'is_active' => true,
         ]);
@@ -124,7 +137,9 @@ class CurriculumController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
-        
+        if ($section->parent_id) {
+            $validated['description'] = null;
+        }
         $section->update($validated);
         
         return response()->json([
@@ -438,5 +453,18 @@ class CurriculumController extends Controller
             'success' => true,
             'message' => 'تم تحديث الترتيب بنجاح',
         ]);
+    }
+
+    /**
+     * تسطيح شجرة الأقسام مع العمق لعرضها في قائمة الاختيار (محاضرة/امتحان/واجب)
+     */
+    private function flattenSectionsForSelect($sections, int $depth = 0): \Illuminate\Support\Collection
+    {
+        $result = collect();
+        foreach ($sections as $section) {
+            $result->push((object)['section' => $section, 'depth' => $depth]);
+            $result = $result->merge($this->flattenSectionsForSelect($section->children, $depth + 1));
+        }
+        return $result;
     }
 }

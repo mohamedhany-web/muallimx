@@ -11,6 +11,7 @@ class CourseSection extends Model
 
     protected $fillable = [
         'advanced_course_id',
+        'parent_id',
         'title',
         'description',
         'order',
@@ -20,6 +21,23 @@ class CourseSection extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    protected static function booted()
+    {
+        static::deleting(function (CourseSection $section) {
+            $section->children()->each(fn ($child) => $child->delete());
+        });
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(CourseSection::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(CourseSection::class, 'parent_id')->orderBy('order');
+    }
 
     public function course()
     {
@@ -47,5 +65,10 @@ class CourseSection extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('order');
+    }
+
+    public function scopeRoots($query)
+    {
+        return $query->whereNull('parent_id');
     }
 }

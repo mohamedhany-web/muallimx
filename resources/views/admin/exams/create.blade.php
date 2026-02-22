@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'إنشاء امتحان جديد')
 @section('header', 'إنشاء امتحان جديد')
@@ -12,14 +12,18 @@
                 <a href="{{ route('admin.dashboard') }}" class="hover:text-primary-600">لوحة التحكم</a>
                 <span class="mx-2">/</span>
                 <a href="{{ route('admin.exams.index') }}" class="hover:text-primary-600">الامتحانات</a>
+                @if($selectedCourse)
+                    <span class="mx-2">/</span>
+                    <a href="{{ route('admin.exams.by-course', $selectedCourse) }}" class="hover:text-primary-600">امتحانات الكورس</a>
+                @endif
                 <span class="mx-2">/</span>
                 <span>إنشاء امتحان جديد</span>
             </nav>
         </div>
-        <a href="{{ route('admin.exams.index') }}" 
+        <a href="{{ $selectedCourse ? route('admin.exams.by-course', $selectedCourse) : route('admin.exams.index') }}" 
            class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
             <i class="fas fa-arrow-right ml-2"></i>
-            العودة
+            {{ $selectedCourse ? 'العودة لامتحانات الكورس' : 'العودة' }}
         </a>
     </div>
 

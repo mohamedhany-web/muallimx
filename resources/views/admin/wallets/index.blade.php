@@ -303,6 +303,13 @@
                                 <a href="{{ route('admin.wallets.edit', $wallet) }}" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all" title="تعديل">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                                <form action="{{ route('admin.wallets.destroy', $wallet) }}" method="POST" class="inline" onsubmit="return confirm('هل أنت متأكد من إزالة هذه المحفظة؟ سيتم حذف المحفظة نهائياً.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-red-100 text-red-600 hover:bg-red-200 transition-all" title="إزالة المحفظة">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>

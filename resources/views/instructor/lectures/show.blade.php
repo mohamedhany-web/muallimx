@@ -298,38 +298,11 @@ function updateStatus(status) {
                     </div>
                     @endif
 
-                    <!-- الروابط -->
-                    @if($lecture->teams_registration_link || $lecture->teams_meeting_link || $lecture->recording_url)
+                    <!-- رابط تسجيل المحاضرة -->
+                    @if($lecture->recording_url)
                     <div class="pt-4 border-t-2 border-[#2CA9BD]/10">
                         <label class="block text-xs font-bold text-[#1F3A56] mb-3 uppercase tracking-wide">الروابط</label>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            @if($lecture->teams_registration_link)
-                            <a href="{{ $lecture->teams_registration_link }}" target="_blank" 
-                               class="link-card flex items-center gap-3 p-4 bg-gradient-to-r from-[#2CA9BD]/5 to-[#65DBE4]/5 rounded-xl border-2 border-[#2CA9BD]/10 hover:from-[#2CA9BD]/10 hover:to-[#65DBE4]/10 transition-all">
-                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2CA9BD] to-[#65DBE4] flex items-center justify-center text-white shadow-md flex-shrink-0">
-                                    <i class="fas fa-link text-lg"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="font-black text-[#1C2C39] text-sm">تسجيل Teams</div>
-                                    <div class="text-xs text-[#1F3A56] font-medium mt-0.5">رابط التسجيل</div>
-                                </div>
-                                <i class="fas fa-external-link-alt text-[#2CA9BD] text-sm"></i>
-                            </a>
-                            @endif
-                            @if($lecture->teams_meeting_link)
-                            <a href="{{ $lecture->teams_meeting_link }}" target="_blank" 
-                               class="link-card flex items-center gap-3 p-4 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 rounded-xl border-2 border-blue-500/10 hover:from-blue-500/10 hover:to-indigo-500/10 transition-all">
-                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md flex-shrink-0">
-                                    <i class="fas fa-video text-lg"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="font-black text-[#1C2C39] text-sm">اجتماع Teams</div>
-                                    <div class="text-xs text-[#1F3A56] font-medium mt-0.5">رابط الاجتماع</div>
-                                </div>
-                                <i class="fas fa-external-link-alt text-blue-600 text-sm"></i>
-                            </a>
-                            @endif
-                            @if($lecture->recording_url)
                             <a href="{{ $lecture->recording_url }}" target="_blank" 
                                class="link-card flex items-center gap-3 p-4 bg-gradient-to-r from-purple-500/5 to-indigo-500/5 rounded-xl border-2 border-purple-500/10 hover:from-purple-500/10 hover:to-indigo-500/10 transition-all">
                                 <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-md flex-shrink-0">
@@ -341,7 +314,6 @@ function updateStatus(status) {
                                 </div>
                                 <i class="fas fa-external-link-alt text-purple-600 text-sm"></i>
                             </a>
-                            @endif
                         </div>
                     </div>
                     @endif

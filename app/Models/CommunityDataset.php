@@ -15,6 +15,7 @@ class CommunityDataset extends Model
         'file_path',
         'file_url',
         'file_size',
+        'files',
         'downloads_count',
         'is_active',
         'status',
@@ -37,7 +38,21 @@ class CommunityDataset extends Model
     {
         return [
             'is_active' => 'boolean',
+            'files' => 'array',
         ];
+    }
+
+    /** الملفات المرفوعة (عند وجود عدة ملفات) */
+    public function getFilesListAttribute(): array
+    {
+        $files = $this->files;
+        if (is_array($files) && !empty($files)) {
+            return $files;
+        }
+        if ($this->file_path) {
+            return [['path' => $this->file_path, 'original_name' => basename($this->file_path), 'size' => $this->file_size ?? '']];
+        }
+        return [];
     }
 
     public const STATUS_PENDING = 'pending';
