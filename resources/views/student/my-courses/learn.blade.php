@@ -83,6 +83,12 @@
     .curriculum-item.locked:hover {
         transform: none;
     }
+    .curriculum-section-header.section-locked {
+        color: rgb(100 116 139);
+    }
+    .curriculum-section-header.section-locked .curriculum-section-chevron {
+        opacity: 0.7;
+    }
     
     /* شريط تفاصيل الدرس */
     .lesson-details-bar {
@@ -562,8 +568,9 @@
 @endpush
 
 @php
-    // تحضير بيانات المحاضرات للـ JavaScript (مع المواد الظاهرة للطالب)
-    $lecturesData = $course->lectures->map(function($lecture) use ($course) {
+    // تحضير بيانات المحاضرات للـ JavaScript (مع المواد الظاهرة للطالب + تقدم المشاهدة + نسبة فتح التالي)
+    $currentUser = auth()->user();
+    $lecturesData = $course->lectures->map(function($lecture) use ($course, $currentUser) {
         $lecture->refresh();
         $recordingUrl = \DB::table('lectures')->where('id', $lecture->id)->value('recording_url');
         $videoPlatform = \DB::table('lectures')->where('id', $lecture->id)->value('video_platform');
@@ -577,6 +584,26 @@
                 'download_url' => route('my-courses.lectures.material.download', [$course->id, $lecture->id, $m->id]),
             ];
         })->values()->all();
+        $videoQuestions = $lecture->videoQuestions()->orderBy('timestamp_seconds')->get()->map(function($vq) {
+            $payload = $vq->getPayloadForStudent();
+            return [
+                'id' => $vq->id,
+                'timestamp_seconds' => $vq->timestamp_seconds,
+                'text' => $payload['text'] ?? '',
+                'options' => $payload['options'] ?? [],
+                'type' => $payload['type'] ?? 'multiple_choice',
+                'points' => $vq->points,
+                'on_wrong' => $vq->on_wrong,
+                'rewind_seconds' => $vq->rewind_seconds,
+            ];
+        })->values()->all();
+        $watchProgress = \App\Models\LectureWatchProgress::where('lecture_id', $lecture->id)->where('user_id', $currentUser->id)->first();
+        $progressData = $watchProgress ? [
+            'progress_percent' => (int) $watchProgress->progress_percent,
+            'is_completed' => (bool) $watchProgress->is_completed,
+            'watch_time_seconds' => (int) $watchProgress->watch_time_seconds,
+            'video_duration_seconds' => (int) $watchProgress->video_duration_seconds,
+        ] : null;
         return [
             'id' => $lecture->id,
             'title' => $lecture->title,
@@ -584,10 +611,13 @@
             'scheduled_at' => $lecture->scheduled_at ? $lecture->scheduled_at->toIso8601String() : null,
             'scheduled_at_formatted' => $lecture->scheduled_at ? $lecture->scheduled_at->format('Y/m/d H:i') : null,
             'duration_minutes' => $lecture->duration_minutes ?? 60,
+            'min_watch_percent_to_unlock_next' => $lecture->min_watch_percent_to_unlock_next,
             'recording_url' => $recordingUrlFinal,
             'video_platform' => $videoPlatformFinal,
             'notes' => $lecture->notes ?? null,
             'materials' => $materials,
+            'video_questions' => $videoQuestions,
+            'progress' => $progressData,
         ];
     })->keyBy('id');
     
@@ -596,6 +626,7 @@
 
 @section('content')
 <script type="application/json" id="learn-lectures-data">{!! $lecturesDataJson !!}</script>
+<script type="application/json" id="learn-next-item-map">{!! json_encode($nextItemByLectureId ?? []) !!}</script>
 <div class="learn-page bg-slate-50/80 min-h-screen pb-8"
      data-course-id="{{ $course->id }}"
      data-course-progress="{{ min(100, (float)($progress ?? 0)) }}"
@@ -620,6 +651,18 @@
          window.addEventListener('video-progress-report', (e) => {
              const d = e.detail || {};
              _learnComp.reportVideoProgressFromPlayer(d.currentSec, d.durationSec, d.isPlaying);
+             if (_learnComp.selectedLecture) _learnComp.lectureProgressPercent = _learnComp.videoProgressPercent;
+         });
+         window.addEventListener('learn-lecture-progress', (e) => {
+             if (e.detail && typeof e.detail.progress_percent === 'number') _learnComp.lectureProgressPercent = e.detail.progress_percent;
+         });
+         window.addEventListener('learn-open-next-item', (e) => {
+             var d = e.detail || {};
+             if (d.type === 'lecture' && d.id) _learnComp.loadLecture(d.id);
+             else if (d.type === 'lesson' && d.id) _learnComp.loadLesson(d.id);
+             else if (d.type === 'exam' && d.id) _learnComp.loadExam(d.id);
+             else if (d.type === 'assignment' && d.id) _learnComp.loadAssignment(d.id);
+             else if (d.type === 'pattern' && d.id) _learnComp.loadPattern(d.id);
          });
      ">
     {{-- Breadcrumb (مخفي في وضع التركيز) --}}
@@ -816,15 +859,20 @@
                             </button>
                             <button type="button" class="btn-share" title="مشاركة"><i class="fas fa-share-alt"></i> مشاركة</button>
                         </div>
-                        <!-- شريط تقدم المشاهدة للفيديو (دائماً ظاهر مع مشغل الفيديو) -->
-                        <div class="flex-shrink-0 px-3 py-2.5 bg-slate-800 border-b border-slate-600 min-h-[52px] flex flex-col justify-center">
+                        <!-- شريط تقدم المشاهدة — للمحاضرة: تحديث مباشر من سكربت الفيديو (بدون Alpine). للدرس: Alpine -->
+                        <div class="flex-shrink-0 px-3 py-2.5 bg-slate-800 border-b border-slate-600 min-h-[52px] flex flex-col justify-center" id="learn-watch-percent-bar">
                             <div class="flex items-center justify-between gap-2 mb-1.5">
                                 <span class="text-sm font-semibold text-sky-300">نسبة المشاهدة</span>
-                                <span class="text-sm font-bold text-white tabular-nums" x-text="(Math.round((videoProgressPercent || 0) * 10) / 10).toFixed(1) + '%'">0.0%</span>
+                                <template x-if="selectedLecture">
+                                    <span id="lecture-watch-pct-text" class="text-sm font-bold text-white tabular-nums">0.0%</span>
+                                </template>
+                                <span x-show="selectedLesson && showVideoPlayer" x-text="(Math.round((videoProgressPercent || 0) * 10) / 10).toFixed(1) + '%'" class="text-sm font-bold text-white tabular-nums">0.0%</span>
                             </div>
                             <div class="h-2.5 bg-slate-700 rounded-full overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-sky-400 to-sky-500 rounded-full transition-all duration-300 min-w-[2px]"
-                                     :style="'width: ' + Math.min(100, Math.max(0, videoProgressPercent || 0)) + '%'"></div>
+                                <template x-if="selectedLecture">
+                                    <div id="lecture-watch-pct-fill" class="h-full bg-gradient-to-r from-sky-400 to-sky-500 rounded-full transition-all duration-300 min-w-[2px]" style="width: 0%;"></div>
+                                </template>
+                                <div x-show="selectedLesson && showVideoPlayer" class="h-full bg-gradient-to-r from-sky-400 to-sky-500 rounded-full transition-all duration-300 min-w-[2px]" :style="'width: ' + Math.min(100, Math.max(0, videoProgressPercent || 0)) + '%'"></div>
                             </div>
                         </div>
                         <div class="aspect-video w-full relative bg-black flex-1 min-h-0" x-show="(selectedLesson && showVideoPlayer) || (selectedLecture && showVideoPlayer)">
@@ -945,6 +993,7 @@ function courseFocusMode() {
         currentLessonDuration: null,
         currentLessonCompleted: false,
         videoProgressPercent: 0,
+        lectureProgressPercent: 0,
         videoTimeCurrent: '0:00',
         videoTimeTotal: '0:00',
         lastVideoProgressPercent: 0,
@@ -1189,6 +1238,9 @@ function courseFocusMode() {
             }
 
             this.lectureMaterials = lecture.materials || [];
+            this.lectureProgressPercent = (lecture.progress && lecture.progress.progress_percent != null) ? lecture.progress.progress_percent : 0;
+            this.watchedSeconds = (lecture.progress && lecture.progress.watch_time_seconds != null) ? Number(lecture.progress.watch_time_seconds) : 0;
+            this.lastReportedTime = null;
             
             // إذا كان هناك فيديو: نفس أسلوب البوب أب في المنهج — بناء HTML المعاينة ووضعه في حاوية واحدة
             if (lecture.recording_url && lecture.recording_url.trim() !== '') {
@@ -1204,15 +1256,22 @@ function courseFocusMode() {
                     else if (u.match(/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i)) platform = 'direct';
                 }
                 const url = lecture.recording_url.trim();
-                const embedHtml = this.buildLectureVideoEmbedHtml(url, platform);
-                const inject = () => {
+                const courseId = this.$el.closest('[data-course-id]')?.dataset?.courseId;
+                const canControl = (platform === 'youtube' || platform === 'vimeo' || platform === 'bunny');
+                if (canControl && courseId) {
                     const container = document.getElementById('learn-video-embed');
-                    if (container && embedHtml) container.innerHTML = embedHtml;
-                    else if (container) container.innerHTML = '<div class="flex items-center justify-center text-white h-full"><p>لا يمكن عرض الفيديو</p></div>';
-                };
-                this.$nextTick(inject);
-                setTimeout(inject, 50);
-                setTimeout(inject, 200);
+                    if (container) window.initLectureVideoWithQuestions(container, lecture, platform, url, courseId, lectureId);
+                } else {
+                    const embedHtml = this.buildLectureVideoEmbedHtml(url, platform);
+                    const inject = () => {
+                        const container = document.getElementById('learn-video-embed');
+                        if (container && embedHtml) container.innerHTML = embedHtml;
+                        else if (container) container.innerHTML = '<div class="flex items-center justify-center text-white h-full"><p>لا يمكن عرض الفيديو</p></div>';
+                    };
+                    this.$nextTick(inject);
+                    setTimeout(inject, 50);
+                    setTimeout(inject, 200);
+                }
                 this.trackLectureProgress(lectureId);
                 return;
             }
@@ -1757,5 +1816,453 @@ function videoPlayer() {
         }
     };
 }
+</script>
+<script>
+(function() {
+    function getYoutubeVideoId(url) {
+        if (!url) return null;
+        var u = String(url).trim();
+        return (u.match(/[?&]v=([a-zA-Z0-9_-]{11})/) || [])[1] || (u.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/) || [])[1] || (u.match(/embed\/([a-zA-Z0-9_-]{11})/) || [])[1] || null;
+    }
+    function getVimeoVideoId(url) {
+        if (!url) return null;
+        var m = String(url).trim().match(/vimeo\.com\/(?:.*\/)?(\d+)/);
+        return m && m[1] ? m[1] : null;
+    }
+    window.initLectureVideoWithQuestions = function(container, lecture, platform, url, courseId, lectureId) {
+        if (!container || !lecture) return;
+        var questions = (lecture.video_questions && lecture.video_questions.length) ? lecture.video_questions : [];
+        var shownIds = new Set();
+        var currentQuestion = null;
+        var player = null;
+        var checkInterval = null;
+        var lastProgressSentAt = 0;
+        var overlay = null;
+        var submitBtn = null;
+        var optionsEl = null;
+        var textEl = null;
+        var startFromSec = (lecture.progress && lecture.progress.watch_time_seconds > 0) ? Math.floor(lecture.progress.watch_time_seconds) : 0;
+        var savedDurationSec = (lecture.progress && lecture.progress.video_duration_seconds > 0) ? lecture.progress.video_duration_seconds : 0;
+        var durationMinutesFromLecture = (lecture.duration_minutes && parseInt(lecture.duration_minutes, 10) > 0) ? parseInt(lecture.duration_minutes, 10) : 0;
+        var fallbackDurationSec = durationMinutesFromLecture > 0 ? durationMinutesFromLecture * 60 : savedDurationSec;
+        var hasOpenedNext = false;
+        var minPercentToUnlock = (lecture.min_watch_percent_to_unlock_next != null && lecture.min_watch_percent_to_unlock_next !== '') ? parseInt(lecture.min_watch_percent_to_unlock_next, 10) : 90;
+
+        function updateLectureBar(pct) {
+            var elText = document.getElementById('lecture-watch-pct-text');
+            var elFill = document.getElementById('lecture-watch-pct-fill');
+            if (elText) elText.textContent = (Math.round((pct || 0) * 10) / 10).toFixed(1) + '%';
+            if (elFill) elFill.style.width = Math.min(100, Math.max(0, pct || 0)) + '%';
+        }
+        var initialPct = (lecture.progress && lecture.progress.progress_percent != null) ? lecture.progress.progress_percent : 0;
+        setTimeout(function() { updateLectureBar(initialPct); }, 400);
+
+        function seekToStartPosition() {
+            if (startFromSec <= 0 || !player) return;
+            if (platform === 'youtube' && player.seekTo) {
+                player.seekTo(startFromSec, true);
+            } else if (platform === 'vimeo' && player.setCurrentTime) {
+                player.setCurrentTime(startFromSec);
+            } else if (platform === 'bunny' && player.setCurrentTime) {
+                player.setCurrentTime(startFromSec);
+            }
+        }
+
+        container.innerHTML = '<div id="lecture-yt-player-box" class="absolute inset-0 w-full h-full"></div>' +
+            '<div id="lecture-vq-overlay" class="hidden absolute inset-0 bg-black/85 flex items-center justify-center p-4 z-20" style="direction:rtl">' +
+            '<div class="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90%] overflow-y-auto shadow-xl">' +
+            '<h3 class="text-lg font-bold text-slate-800 mb-2">سؤال</h3>' +
+            '<p id="lecture-vq-text" class="text-slate-700 mb-4"></p>' +
+            '<div id="lecture-vq-options" class="space-y-2 mb-4"></div>' +
+            '<button type="button" id="lecture-vq-submit" class="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold">إرسال</button>' +
+            '</div></div>';
+        overlay = document.getElementById('lecture-vq-overlay');
+        submitBtn = document.getElementById('lecture-vq-submit');
+        optionsEl = document.getElementById('lecture-vq-options');
+        textEl = document.getElementById('lecture-vq-text');
+
+        function showQuestion(q) {
+            currentQuestion = q;
+            if (textEl) textEl.textContent = q.text || '';
+            if (optionsEl) {
+                optionsEl.innerHTML = '';
+                (q.options || []).forEach(function(opt, i) {
+                    var label = document.createElement('label');
+                    label.className = 'flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 cursor-pointer';
+                    var radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = 'lecture_vq_answer';
+                    radio.value = opt;
+                    radio.className = 'text-sky-500';
+                    label.appendChild(radio);
+                    label.appendChild(document.createTextNode(opt));
+                    optionsEl.appendChild(label);
+                });
+            }
+            if (overlay) overlay.classList.remove('hidden');
+        }
+        function hideOverlay() {
+            if (overlay) overlay.classList.add('hidden');
+            currentQuestion = null;
+        }
+        function doRewind(rewindSec) {
+            if (!player) return;
+            if (platform === 'youtube' && player.getCurrentTime && player.seekTo && player.playVideo) {
+                var t = player.getCurrentTime();
+                player.seekTo(Math.max(0, t - rewindSec), true);
+                player.playVideo();
+                return;
+            }
+            if (platform === 'vimeo' && player.getCurrentTime) {
+                player.getCurrentTime().then(function(sec) {
+                    var t = sec || 0;
+                    player.setCurrentTime(Math.max(0, t - rewindSec)).then(function() { player.play(); });
+                });
+                return;
+            }
+            if (platform === 'bunny' && player.getCurrentTime && player.setCurrentTime && player.play) {
+                player.getCurrentTime(function(sec) {
+                    var t = sec || 0;
+                    player.setCurrentTime(Math.max(0, t - rewindSec));
+                    player.play();
+                });
+                return;
+            }
+        }
+        function doContinue() {
+            if (player && platform === 'youtube' && player.playVideo) player.playVideo();
+            if (player && platform === 'vimeo' && player.play) player.play();
+            if (player && platform === 'bunny' && player.play) player.play();
+        }
+        function onSubmit() {
+            if (!currentQuestion) return;
+            var selected = document.querySelector('input[name="lecture_vq_answer"]:checked');
+            var answer = selected ? selected.value : '';
+            if (!answer) { alert('اختر إجابة'); return; }
+            if (submitBtn) submitBtn.disabled = true;
+            var answerUrl = '/my-courses/' + courseId + '/lectures/' + lectureId + '/video-questions/' + currentQuestion.id + '/answer';
+            var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            fetch(answerUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                body: JSON.stringify({ answer: answer })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                shownIds.add(currentQuestion.id);
+                hideOverlay();
+                if (submitBtn) submitBtn.disabled = false;
+                if (data.on_wrong === 'rewind' && !data.correct && data.rewind_seconds) doRewind(data.rewind_seconds || 0);
+                else doContinue();
+            }).catch(function() {
+                if (submitBtn) submitBtn.disabled = false;
+                hideOverlay();
+                doContinue();
+            });
+        }
+        if (submitBtn) submitBtn.addEventListener('click', onSubmit);
+
+        function startTimeCheck() {
+            if (checkInterval) return;
+            checkInterval = setInterval(function() {
+                if (currentQuestion) return;
+                var t = 0;
+                if (platform === 'youtube' && player && player.getCurrentTime) t = player.getCurrentTime();
+                else if (platform === 'vimeo' && player && player.getCurrentTime) {
+                    player.getCurrentTime().then(function(sec) {
+                        t = sec;
+                        for (var i = 0; i < questions.length; i++) {
+                            var q = questions[i];
+                            if (t >= q.timestamp_seconds && !shownIds.has(q.id)) {
+                                if (player.pause) player.pause();
+                                showQuestion(q);
+                                break;
+                            }
+                        }
+                        var currentSec = t;
+                        var durForBar = fallbackDurationSec;
+                        if (player.getDuration) {
+                            player.getDuration().then(function(d) {
+                                durForBar = (d && d > 0) ? d : fallbackDurationSec;
+                                if (durForBar > 0 && typeof currentSec === 'number' && currentSec >= 0) {
+                                    window.dispatchEvent(new CustomEvent('video-progress-report', { detail: { currentSec: currentSec, durationSec: durForBar, isPlaying: true } }));
+                                    window.dispatchEvent(new CustomEvent('learn-lecture-progress', { detail: { progress_percent: Math.min(100, Math.round((currentSec / durForBar) * 100)) } }));
+                                    updateLectureBar(Math.min(100, Math.round((currentSec / durForBar) * 100)));
+                                }
+                                var now = Date.now();
+                                if (!lastProgressSentAt || now - lastProgressSentAt > 5000) {
+                                    lastProgressSentAt = now;
+                                    var send = function(cs, ds) {
+                                        var dur = (ds && ds > 0) ? ds : (savedDurationSec > 0 ? savedDurationSec : fallbackDurationSec);
+                                        if (!dur) return;
+                                        var pct = Math.min(100, Math.round((cs / dur) * 100));
+                                        window.dispatchEvent(new CustomEvent('learn-lecture-progress', { detail: { progress_percent: pct } }));
+                                        var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                                        fetch('/my-courses/' + courseId + '/lectures/' + lectureId + '/progress', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                                            body: JSON.stringify({ current_sec: cs, duration_sec: dur })
+                                        }).then(function(r) { return r.json(); }).then(function(data) {
+                                            if (data && data.success) {
+                                                var wrapper = document.querySelector('.learn-page');
+                                                if (wrapper && data.course_progress != null) wrapper.dataset.courseProgress = data.course_progress;
+                                                if (data.total_items != null) wrapper.dataset.totalItems = data.total_items;
+                                                if (data.completed_items != null) wrapper.dataset.completedItems = data.completed_items;
+                                                if (typeof updateProgressBar === 'function') updateProgressBar();
+                                                if (typeof data.progress_percent === 'number') {
+                                                    window.dispatchEvent(new CustomEvent('learn-lecture-progress', { detail: { progress_percent: data.progress_percent } }));
+                                                }
+                                                if (!hasOpenedNext && (data.is_completed || (data.progress_percent >= minPercentToUnlock))) {
+                                                    hasOpenedNext = true;
+                                                    try {
+                                                        var nextMap = document.getElementById('learn-next-item-map');
+                                                        var nextByLecture = nextMap && nextMap.textContent ? JSON.parse(nextMap.textContent) : {};
+                                                        var nextItem = nextByLecture[lectureId];
+                                                        if (nextItem && nextItem.type && nextItem.id) {
+                                                            window.dispatchEvent(new CustomEvent('learn-open-next-item', { detail: { type: nextItem.type, id: nextItem.id } }));
+                                                        }
+                                                    } catch (err) { console.warn('learn-open-next', err); }
+                                                }
+                                            }
+                                        }).catch(function() {});
+                                    };
+                                    send(currentSec, durForBar);
+                                }
+                            });
+                        } else if (durForBar > 0 && typeof currentSec === 'number' && currentSec >= 0) {
+                            window.dispatchEvent(new CustomEvent('video-progress-report', { detail: { currentSec: currentSec, durationSec: durForBar, isPlaying: true } }));
+                            window.dispatchEvent(new CustomEvent('learn-lecture-progress', { detail: { progress_percent: Math.min(100, Math.round((currentSec / durForBar) * 100)) } }));
+                            updateLectureBar(Math.min(100, Math.round((currentSec / durForBar) * 100)));
+                        }
+                    });
+                    return;
+                } else if (platform === 'bunny' && player && player.getCurrentTime) {
+                    player.getCurrentTime(function(sec) {
+                        t = sec || 0;
+                        for (var i = 0; i < questions.length; i++) {
+                            var q = questions[i];
+                            if (t >= q.timestamp_seconds && !shownIds.has(q.id)) {
+                                if (player.pause) player.pause();
+                                showQuestion(q);
+                                break;
+                            }
+                        }
+                        var currentSec = t;
+                        var durForBar = fallbackDurationSec;
+                        if (player.getDuration) {
+                            player.getDuration(function(d) {
+                                durForBar = (d && d > 0) ? d : fallbackDurationSec;
+                                if (durForBar > 0 && typeof currentSec === 'number' && currentSec >= 0) {
+                                    window.dispatchEvent(new CustomEvent('video-progress-report', { detail: { currentSec: currentSec, durationSec: durForBar, isPlaying: true } }));
+                                    window.dispatchEvent(new CustomEvent('learn-lecture-progress', { detail: { progress_percent: Math.min(100, Math.round((currentSec / durForBar) * 100)) } }));
+                                    updateLectureBar(Math.min(100, Math.round((currentSec / durForBar) * 100)));
+                                }
+                                var now = Date.now();
+                                if (!lastProgressSentAt || now - lastProgressSentAt > 5000) {
+                                    lastProgressSentAt = now;
+                                    var send = function(cs, ds) {
+                                        var dur = (ds && ds > 0) ? ds : (savedDurationSec > 0 ? savedDurationSec : fallbackDurationSec);
+                                        if (!dur) return;
+                                        var pct = Math.min(100, Math.round((cs / dur) * 100));
+                                        window.dispatchEvent(new CustomEvent('learn-lecture-progress', { detail: { progress_percent: pct } }));
+                                        var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                                        fetch('/my-courses/' + courseId + '/lectures/' + lectureId + '/progress', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                                            body: JSON.stringify({ current_sec: cs, duration_sec: dur })
+                                        }).then(function(r) { return r.json(); }).then(function(data) {
+                                            if (data && data.success) {
+                                                var wrapper = document.querySelector('.learn-page');
+                                                if (wrapper && data.course_progress != null) wrapper.dataset.courseProgress = data.course_progress;
+                                                if (data.total_items != null) wrapper.dataset.totalItems = data.total_items;
+                                                if (data.completed_items != null) wrapper.dataset.completedItems = data.completed_items;
+                                                if (typeof updateProgressBar === 'function') updateProgressBar();
+                                                if (typeof data.progress_percent === 'number') {
+                                                    window.dispatchEvent(new CustomEvent('learn-lecture-progress', { detail: { progress_percent: data.progress_percent } }));
+                                                }
+                                                if (!hasOpenedNext && (data.is_completed || (data.progress_percent >= minPercentToUnlock))) {
+                                                    hasOpenedNext = true;
+                                                    try {
+                                                        var nextMap = document.getElementById('learn-next-item-map');
+                                                        var nextByLecture = nextMap && nextMap.textContent ? JSON.parse(nextMap.textContent) : {};
+                                                        var nextItem = nextByLecture[lectureId];
+                                                        if (nextItem && nextItem.type && nextItem.id) {
+                                                            window.dispatchEvent(new CustomEvent('learn-open-next-item', { detail: { type: nextItem.type, id: nextItem.id } }));
+                                                        }
+                                                    } catch (err) { console.warn('learn-open-next', err); }
+                                                }
+                                            }
+                                        }).catch(function() {});
+                                    };
+                                    send(currentSec, durForBar);
+                                }
+                            });
+                        } else if (durForBar > 0 && typeof currentSec === 'number' && currentSec >= 0) {
+                            window.dispatchEvent(new CustomEvent('video-progress-report', { detail: { currentSec: currentSec, durationSec: durForBar, isPlaying: true } }));
+                            window.dispatchEvent(new CustomEvent('learn-lecture-progress', { detail: { progress_percent: Math.min(100, Math.round((currentSec / durForBar) * 100)) } }));
+                            updateLectureBar(Math.min(100, Math.round((currentSec / durForBar) * 100)));
+                        }
+                    });
+                    return;
+                }
+                // تحديث شريط النسبة باستمرار (كل ثانية) ثم إرسال للسيرفر كل 5 ثوانٍ — نفس آلية الدروس: video-progress-report
+                if (player && typeof t === 'number' && t >= 0) {
+                    var durForBar = (platform === 'youtube' && player.getDuration) ? player.getDuration() : null;
+                    if (durForBar === 0 || !durForBar) durForBar = fallbackDurationSec;
+                    if (durForBar > 0) {
+                        var pctBar = Math.min(100, Math.round((t / durForBar) * 100));
+                        window.dispatchEvent(new CustomEvent('learn-lecture-progress', { detail: { progress_percent: pctBar } }));
+                        var isPlaying = (platform === 'youtube' && player.getPlayerState && player.getPlayerState() === 1);
+                        window.dispatchEvent(new CustomEvent('video-progress-report', { detail: { currentSec: t, durationSec: durForBar, isPlaying: !!isPlaying } }));
+                        updateLectureBar(pctBar);
+                    }
+                    var now = Date.now();
+                    if (!lastProgressSentAt || now - lastProgressSentAt > 5000) {
+                        lastProgressSentAt = now;
+                        var send = function(currentSec, durationSec) {
+                            var dur = (durationSec && durationSec > 0) ? durationSec : (savedDurationSec > 0 ? savedDurationSec : fallbackDurationSec);
+                            if (!dur) return;
+                            var pct = Math.min(100, Math.round((currentSec / dur) * 100));
+                            window.dispatchEvent(new CustomEvent('learn-lecture-progress', { detail: { progress_percent: pct } }));
+                            var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                            fetch('/my-courses/' + courseId + '/lectures/' + lectureId + '/progress', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                                body: JSON.stringify({ current_sec: currentSec, duration_sec: dur })
+                            }).then(function(r) { return r.json(); }).then(function(data) {
+                                if (data && data.success) {
+                                    var wrapper = document.querySelector('.learn-page');
+                                    if (wrapper && data.course_progress != null) wrapper.dataset.courseProgress = data.course_progress;
+                                    if (data.total_items != null) wrapper.dataset.totalItems = data.total_items;
+                                    if (data.completed_items != null) wrapper.dataset.completedItems = data.completed_items;
+                                    if (typeof updateProgressBar === 'function') updateProgressBar();
+                                    if (typeof data.progress_percent === 'number') {
+                                        window.dispatchEvent(new CustomEvent('learn-lecture-progress', { detail: { progress_percent: data.progress_percent } }));
+                                    }
+                                    if (!hasOpenedNext && (data.is_completed || (data.progress_percent >= minPercentToUnlock))) {
+                                        hasOpenedNext = true;
+                                        try {
+                                            var nextMap = document.getElementById('learn-next-item-map');
+                                            var nextByLecture = nextMap && nextMap.textContent ? JSON.parse(nextMap.textContent) : {};
+                                            var nextItem = nextByLecture[lectureId];
+                                            if (nextItem && nextItem.type && nextItem.id) {
+                                                window.dispatchEvent(new CustomEvent('learn-open-next-item', { detail: { type: nextItem.type, id: nextItem.id } }));
+                                            }
+                                        } catch (err) { console.warn('learn-open-next', err); }
+                                    }
+                                }
+                            }).catch(function() {});
+                        };
+                        if (platform === 'youtube') {
+                            var d = (player.getDuration && player.getDuration()) || savedDurationSec || fallbackDurationSec;
+                            if (d) send(t, d);
+                        } else if (platform === 'vimeo' && player.getDuration) {
+                            player.getDuration().then(function(d) { send(t, d || savedDurationSec || fallbackDurationSec); });
+                        } else if (platform === 'bunny' && player.getDuration) {
+                            player.getDuration(function(d) { send(t, d || savedDurationSec || fallbackDurationSec); });
+                        } else {
+                            send(t, fallbackDurationSec || savedDurationSec);
+                        }
+                    }
+                }
+                for (var i = 0; i < questions.length; i++) {
+                    var q = questions[i];
+                    if (t >= q.timestamp_seconds && !shownIds.has(q.id)) {
+                        if (player && player.pauseVideo) player.pauseVideo();
+                        showQuestion(q);
+                        break;
+                    }
+                }
+            }, 1000);
+        }
+
+        if (platform === 'youtube') {
+            var videoId = getYoutubeVideoId(url);
+            if (!videoId) { container.innerHTML = '<div class="flex items-center justify-center text-white h-full"><p>رابط يوتيوب غير صالح</p></div>'; return; }
+            function createYT() {
+                if (player) return;
+                player = new YT.Player('lecture-yt-player-box', {
+                    videoId: videoId,
+                    width: '100%',
+                    height: '100%',
+                    playerVars: { enablejsapi: 1, origin: window.location.origin, rel: 0 },
+                    events: {
+                        onReady: function() {
+                            startTimeCheck();
+                            setTimeout(seekToStartPosition, 300);
+                        }
+                    }
+                });
+            }
+            if (window.YT && window.YT.Player) {
+                createYT();
+            } else {
+                window.onYouTubeIframeAPIReady = function() {
+                    createYT();
+                };
+                var tag = document.createElement('script');
+                tag.src = 'https://www.youtube.com/iframe_api';
+                var first = document.getElementsByTagName('script')[0];
+                first.parentNode.insertBefore(tag, first);
+            }
+        } else if (platform === 'vimeo') {
+            var vimeoId = getVimeoVideoId(url);
+            if (!vimeoId) { container.innerHTML = '<div class="flex items-center justify-center text-white h-full"><p>رابط فيميوه غير صالح</p></div>'; return; }
+            if (!window.Vimeo) {
+                var s = document.createElement('script');
+                s.src = 'https://player.vimeo.com/api/player.js';
+                s.onload = function() {
+                    player = new Vimeo.Player(document.getElementById('lecture-yt-player-box'), { id: parseInt(vimeoId, 10), width: '100%', height: '100%' });
+                    startTimeCheck();
+                    setTimeout(seekToStartPosition, 500);
+                };
+                document.head.appendChild(s);
+            } else {
+                player = new Vimeo.Player(document.getElementById('lecture-yt-player-box'), { id: parseInt(vimeoId, 10), width: '100%', height: '100%' });
+                startTimeCheck();
+                setTimeout(seekToStartPosition, 500);
+            }
+        } else if (platform === 'bunny') {
+            var root = document.getElementById('lecture-yt-player-box');
+            if (!root) return;
+            var iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.setAttribute('frameborder', '0');
+            iframe.setAttribute('allowfullscreen', 'allowfullscreen');
+            iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+            root.appendChild(iframe);
+
+            function createBunnyPlayer() {
+                if (player) return;
+                if (!window.playerjs || !window.playerjs.Player) return;
+                player = new window.playerjs.Player(iframe);
+                player.on('ready', function() {
+                    startTimeCheck();
+                    setTimeout(seekToStartPosition, 500);
+                });
+            }
+            window.addEventListener('beforeunload', function() {
+                if (!player) return;
+                var t = 0;
+                if (platform === 'youtube' && player.getCurrentTime) t = player.getCurrentTime();
+                var dur = (platform === 'youtube' && player.getDuration) ? player.getDuration() : savedDurationSec;
+                if (t > 0 && dur > 0) {
+                    var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                    var payload = JSON.stringify({ current_sec: t, duration_sec: dur, _token: csrf });
+                    navigator.sendBeacon('/my-courses/' + courseId + '/lectures/' + lectureId + '/progress', new Blob([payload], { type: 'application/json' }));
+                }
+            });
+
+            if (window.playerjs && window.playerjs.Player) {
+                createBunnyPlayer();
+            } else {
+                var s = document.createElement('script');
+                s.src = '//assets.mediadelivery.net/playerjs/playerjs-latest.min.js';
+                s.onload = function() { createBunnyPlayer(); };
+                document.head.appendChild(s);
+            }
+        }
+    };
+})();
 </script>
 @endpush

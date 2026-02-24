@@ -26,7 +26,7 @@
         @method('PUT')
         
         <div class="p-6 space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- الكورس -->
                 <div>
                     <label for="course_id" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -116,6 +116,17 @@
                     @error('duration_minutes')
                         <p class="mt-1 text-sm text-rose-500">{{ $message }}</p>
                     @enderror
+                </div>
+                <!-- نسبة المشاهدة المطلوبة للمحاضرة التالية -->
+                <div>
+                    <label for="min_watch_percent_to_unlock_next" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        نسبة المشاهدة المطلوبة لفتح المحاضرة التالية
+                    </label>
+                    <input type="number" name="min_watch_percent_to_unlock_next" id="min_watch_percent_to_unlock_next"
+                           value="{{ old('min_watch_percent_to_unlock_next', $lecture->min_watch_percent_to_unlock_next ?? 0) }}" min="0" max="100"
+                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 dark:bg-gray-700 dark:text-white"
+                           placeholder="مثال: 80 يعني يجب مشاهدة 80% من هذه المحاضرة لفتح التالية">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">اتركها 0 أو فارغة إذا لم ترغب في قفل المحاضرة التالية على نسبة مشاهدة معينة.</p>
                 </div>
             </div>
 

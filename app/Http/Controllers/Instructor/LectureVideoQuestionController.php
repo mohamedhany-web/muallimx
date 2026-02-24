@@ -1,0 +1,138 @@
+<?php
+
+namespace App\Http\Controllers\Instructor;
+
+use App\Http\Controllers\Controller;
+use App\Models\Lecture;
+use App\Models\LectureVideoQuestion;
+use App\Models\QuestionBank;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class LectureVideoQuestionController extends Controller
+{
+    private function authorizeLecture(Lecture $lecture): void
+    {
+        if ($lecture->course->instructor_id !== Auth::id()) {
+            abort(403, 'غير مسموح لك بإدارة أسئلة هذه المحاضرة');
+        }
+    }
+
+    /**
+     * قائمة أسئلة الفيديو لمحاضرة + بنوك الأسئلة (للمودال).
+     */
+    public function index(Lecture $lecture): JsonResponse
+    {
+        $this->authorizeLecture($lecture);
+        $questions = $lecture->videoQuestions()->with('question')->orderBy('timestamp_seconds')->get()->map(function ($q) {
+            $payload = $q->getPayloadForStudent();
+            return [
+                'id' => $q->id,
+                'timestamp_seconds' => $q->timestamp_seconds,
+                'timestamp_label' => floor($q->timestamp_seconds / 60) . ':' . str_pad($q->timestamp_seconds % 60, 2, '0', STR_PAD_LEFT),
+                'question_source' => $q->question_source,
+                'question_text' => $payload['text'] ?? '',
+                'on_wrong' => $q->on_wrong,
+                'rewind_seconds' => $q->rewind_seconds,
+                'points' => $q->points,
+            ];
+        });
+        $instructor = Auth::user();
+        $banks = QuestionBank::where(function ($q) use ($instructor) {
+            $q->where('instructor_id', $instructor->id)->orWhereNull('instructor_id');
+        })->orderBy('title')->get(['id', 'title']);
+        $bankQuestions = [];
+        foreach ($banks as $bank) {
+            $bankQuestions[$bank->id] = $bank->questions()->where('is_active', true)->orderBy('created_at')->get(['id', 'question', 'type', 'options', 'correct_answer'])->map(function ($q) {
+                return ['id' => $q->id, 'text' => $q->question, 'type' => $q->type, 'options' => $q->options];
+            })->toArray();
+        }
+        return response()->json([
+            'video_questions' => $questions,
+            'question_banks' => $banks,
+            'bank_questions' => $bankQuestions,
+        ]);
+    }
+
+    /**
+     * إضافة سؤال فيديو.
+     */
+    public function store(Request $request, Lecture $lecture): JsonResponse
+    {
+        $this->authorizeLecture($lecture);
+        $validated = $request->validate([
+            'timestamp_minutes' => 'required|numeric|min:0|max:999',
+            'timestamp_seconds_extra' => 'nullable|integer|min:0|max:59',
+            'question_source' => 'required|in:bank,custom',
+            'question_id' => 'required_if:question_source,bank|nullable|exists:questions,id',
+            'custom_question_text' => 'required_if:question_source,custom|nullable|string|max:5000',
+            'custom_options' => 'required_if:question_source,custom|nullable|array',
+            'custom_options.*' => 'string|max:1000',
+            'custom_correct_answer' => 'required_if:question_source,custom|nullable|string|max:500',
+            'on_wrong' => 'required|in:rewind,continue',
+            'rewind_seconds' => 'nullable|integer|min:0|max:3600',
+            'points' => 'nullable|integer|min:1|max:100',
+        ], [
+            'timestamp_minutes.required' => 'حدد الدقيقة في الفيديو',
+            'question_source.required' => 'حدد مصدر السؤال',
+            'custom_question_text.required_if' => 'نص السؤال المخصص مطلوب',
+            'custom_correct_answer.required_if' => 'الإجابة الصحيحة مطلوبة',
+        ]);
+
+        $minutes = (int) floor((float) $validated['timestamp_minutes']);
+        $extra = (int) ($validated['timestamp_seconds_extra'] ?? 0);
+        $timestamp_seconds = $minutes * 60 + min(59, $extra);
+
+        if ($validated['question_source'] === 'bank') {
+            $q = \App\Models\Question::find($validated['question_id']);
+            if (!$q || ($q->question_bank_id && $q->questionBank->instructor_id !== Auth::id() && $q->questionBank->instructor_id !== null)) {
+                return response()->json(['success' => false, 'message' => 'السؤال غير متاح'], 422);
+            }
+        }
+
+        $lastOrder = $lecture->videoQuestions()->max('order') ?? 0;
+        $vq = LectureVideoQuestion::create([
+            'lecture_id' => $lecture->id,
+            'timestamp_seconds' => $timestamp_seconds,
+            'question_source' => $validated['question_source'],
+            'question_id' => $validated['question_source'] === 'bank' ? $validated['question_id'] : null,
+            'custom_question_text' => $validated['question_source'] === 'custom' ? $validated['custom_question_text'] : null,
+            'custom_options' => $validated['question_source'] === 'custom' ? array_values($validated['custom_options']) : null,
+            'custom_correct_answer' => $validated['question_source'] === 'custom' ? $validated['custom_correct_answer'] : null,
+            'on_wrong' => $validated['on_wrong'],
+            'rewind_seconds' => $validated['on_wrong'] === 'rewind' ? (int) ($validated['rewind_seconds'] ?? 0) : 0,
+            'points' => (int) ($validated['points'] ?? 1),
+            'order' => $lastOrder + 1,
+        ]);
+
+        $payload = $vq->getPayloadForStudent();
+        return response()->json([
+            'success' => true,
+            'message' => 'تمت إضافة السؤال',
+            'question' => [
+                'id' => $vq->id,
+                'timestamp_seconds' => $vq->timestamp_seconds,
+                'timestamp_label' => floor($vq->timestamp_seconds / 60) . ':' . str_pad($vq->timestamp_seconds % 60, 2, '0', STR_PAD_LEFT),
+                'question_source' => $vq->question_source,
+                'question_text' => $payload['text'] ?? '',
+                'on_wrong' => $vq->on_wrong,
+                'rewind_seconds' => $vq->rewind_seconds,
+                'points' => $vq->points,
+            ],
+        ]);
+    }
+
+    /**
+     * حذف سؤال فيديو.
+     */
+    public function destroy(Lecture $lecture, LectureVideoQuestion $videoQuestion): JsonResponse
+    {
+        $this->authorizeLecture($lecture);
+        if ($videoQuestion->lecture_id !== $lecture->id) {
+            abort(404);
+        }
+        $videoQuestion->delete();
+        return response()->json(['success' => true, 'message' => 'تم حذف السؤال']);
+    }
+}

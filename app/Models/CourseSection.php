@@ -16,6 +16,8 @@ class CourseSection extends Model
         'description',
         'order',
         'is_active',
+        'unlock_rule',
+        'unlock_percent',
     ];
 
     protected $casts = [

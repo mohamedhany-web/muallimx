@@ -176,6 +176,20 @@
                 <textarea id="sectionDescription" rows="3"
                           class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800"></textarea>
             </div>
+            <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                <label class="block text-sm font-semibold text-slate-700 mb-2">فتح هذا القسم للطالب</label>
+                <p class="text-xs text-slate-600 mb-2">متى يُسمح للطالب بفتح هذا القسم؟ (القسم التالي لا يفتح إلا بتحقيق الشرط)</p>
+                <select id="sectionUnlockRule" onchange="var w=document.getElementById('sectionUnlockPercentWrap');if(w) w.classList.toggle('hidden', this.value !== 'previous_percent');" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800 mb-2">
+                    <option value="always">دائماً مفتوح (لا يشترط إكمال قسم سابق)</option>
+                    <option value="previous_percent">عند تحقيق نسبة معينة من القسم السابق</option>
+                    <option value="previous_all_items">عند إكمال كل عناصر القسم السابق</option>
+                </select>
+                <div id="sectionUnlockPercentWrap" class="hidden">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">النسبة المئوية من القسم السابق %</label>
+                    <input type="number" id="sectionUnlockPercent" min="0" max="100" value="100" placeholder="مثال: 80"
+                           class="w-full px-4 py-2 border border-slate-200 rounded-lg text-slate-800">
+                </div>
+            </div>
             <div class="flex gap-3">
                 <button type="submit" class="flex-1 px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
                     حفظ
@@ -224,6 +238,12 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-2">المدة (بالدقائق) <span class="text-red-500">*</span></label>
                         <input type="number" name="duration_minutes" id="lectureDuration" value="60" min="15" max="480" required
                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">نسبة المشاهدة لفتح الفيديو التالي %</label>
+                        <input type="number" name="min_watch_percent_to_unlock_next" id="lectureMinWatchPercent" min="0" max="100" placeholder="مثال: 80 — اترك فارغاً لعدم اشتراط نسبة"
+                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800">
+                        <p class="mt-1 text-xs text-slate-500">يجب على الطالب مشاهدة هذه النسبة من الفيديو ليتاح له الانتقال للمحاضرة التالية (0–100، اختياري)</p>
                     </div>
                 </div>
             </div>
@@ -335,6 +355,81 @@
             <input type="hidden" id="lectureEditId" name="lecture_id">
             <input type="hidden" name="status" id="lectureStatus" value="scheduled">
         </form>
+    </div>
+</div>
+
+<!-- Modal أسئلة الفيديو للمحاضرة -->
+<div id="videoQuestionsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-3xl my-8 max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="px-6 py-4 border-b border-slate-200 bg-amber-50 flex items-center justify-between shrink-0">
+            <h3 class="text-lg font-bold text-slate-800" id="videoQuestionsModalTitle"><i class="fas fa-question-circle text-amber-600 ml-1"></i> أسئلة الفيديو</h3>
+            <button type="button" onclick="closeVideoQuestionsModal()" class="p-2 rounded-lg text-slate-500 hover:bg-slate-200"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="p-4 overflow-y-auto flex-1">
+            <p class="text-sm text-slate-600 mb-4">تظهر الأسئلة للطالب عند الوصول للدقيقة المحددة ويتوقف الفيديو. يمكن استيراد سؤال من البنك أو كتابة سؤال مخصص.</p>
+            <div id="videoQuestionsList" class="space-y-2 mb-6"></div>
+            <hr class="border-slate-200 my-4">
+            <h4 class="text-base font-bold text-slate-800 mb-3">إضافة سؤال جديد</h4>
+            <form id="videoQuestionForm" onsubmit="submitVideoQuestion(event)" class="space-y-4">
+                @csrf
+                <input type="hidden" id="vqLectureId" name="lecture_id" value="">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">الدقيقة في الفيديو <span class="text-red-500">*</span></label>
+                        <input type="number" id="vqTimestampMinutes" name="timestamp_minutes" min="0" max="999" value="0" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">ثوانٍ إضافية (0–59)</label>
+                        <input type="number" id="vqTimestampSeconds" name="timestamp_seconds_extra" min="0" max="59" value="0" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">مصدر السؤال</label>
+                    <div class="flex gap-4">
+                        <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="question_source" value="bank" class="text-sky-500" onchange="toggleVqSource('bank')"> من بنك الأسئلة</label>
+                        <label class="inline-flex items-center gap-2 cursor-pointer"><input type="radio" name="question_source" value="custom" checked class="text-sky-500" onchange="toggleVqSource('custom')"> سؤال مخصص</label>
+                    </div>
+                </div>
+                <div id="vqBankWrap" class="hidden space-y-2">
+                    <label class="block text-sm font-semibold text-slate-700">البنك</label>
+                    <select id="vqBankId" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800">
+                        <option value="">-- اختر البنك --</option>
+                    </select>
+                    <label class="block text-sm font-semibold text-slate-700">السؤال</label>
+                    <select name="question_id" id="vqQuestionId" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800">
+                        <option value="">-- اختر السؤال --</option>
+                    </select>
+                </div>
+                <div id="vqCustomWrap" class="space-y-2">
+                    <label class="block text-sm font-semibold text-slate-700">نص السؤال <span class="text-red-500">*</span></label>
+                    <textarea id="vqCustomText" name="custom_question_text" rows="2" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800" placeholder="اكتب السؤال..."></textarea>
+                    <label class="block text-sm font-semibold text-slate-700">الخيارات (سطر لكل خيار)</label>
+                    <textarea id="vqCustomOptions" name="custom_options_text" rows="3" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800 font-mono text-sm" placeholder="الخيار أ&#10;الخيار ب&#10;الخيار ج"></textarea>
+                    <label class="block text-sm font-semibold text-slate-700">الإجابة الصحيحة <span class="text-red-500">*</span></label>
+                    <input type="text" id="vqCustomCorrect" name="custom_correct_answer" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800" placeholder="نفس النص كما في أحد الخيارات">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">عند الإجابة الخاطئة</label>
+                        <select id="vqOnWrong" name="on_wrong" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800" onchange="toggleVqRewind()">
+                            <option value="continue">متابعة الفيديو</option>
+                            <option value="rewind">إعادة جزء من الفيديو</option>
+                        </select>
+                    </div>
+                    <div id="vqRewindWrap" class="hidden">
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">كم ثانية للرجوع؟</label>
+                        <input type="number" name="rewind_seconds" id="vqRewindSeconds" min="0" max="3600" value="0" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">النقاط</label>
+                        <input type="number" name="points" id="vqPoints" value="1" min="1" max="100" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold transition-colors">
+                    <i class="fas fa-plus ml-1"></i> إضافة السؤال
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -638,6 +733,10 @@ function showAddSectionModal() {
     var wrap = document.getElementById('sectionDescriptionWrap');
     if (wrap) wrap.style.display = '';
     document.getElementById('modalTitle').textContent = 'إضافة قسم جديد';
+    var ruleEl = document.getElementById('sectionUnlockRule');
+    var percentWrap = document.getElementById('sectionUnlockPercentWrap');
+    if (ruleEl) ruleEl.value = 'previous_all_items';
+    if (percentWrap) percentWrap.classList.add('hidden');
     document.getElementById('sectionModal').classList.remove('hidden');
     document.getElementById('sectionModal').classList.add('flex');
 }
@@ -650,17 +749,27 @@ function showAddSubSectionModal(parentId) {
     var wrap = document.getElementById('sectionDescriptionWrap');
     if (wrap) wrap.style.display = 'none';
     document.getElementById('modalTitle').textContent = 'إضافة قسم فرعي';
+    var ruleEl = document.getElementById('sectionUnlockRule');
+    var percentWrap = document.getElementById('sectionUnlockPercentWrap');
+    if (ruleEl) ruleEl.value = 'previous_all_items';
+    if (percentWrap) percentWrap.classList.add('hidden');
     document.getElementById('sectionModal').classList.remove('hidden');
     document.getElementById('sectionModal').classList.add('flex');
 }
 
-function editSection(id, title, description, parentId) {
+function editSection(id, title, description, parentId, unlockRule, unlockPercent) {
     document.getElementById('sectionId').value = id;
     document.getElementById('sectionParentId').value = parentId || '';
     document.getElementById('sectionTitle').value = title;
     document.getElementById('sectionDescription').value = description || '';
     var wrap = document.getElementById('sectionDescriptionWrap');
     if (wrap) wrap.style.display = (parentId ? 'none' : '');
+    var ruleEl = document.getElementById('sectionUnlockRule');
+    var percentWrap = document.getElementById('sectionUnlockPercentWrap');
+    var percentEl = document.getElementById('sectionUnlockPercent');
+    if (ruleEl) ruleEl.value = unlockRule || 'previous_all_items';
+    if (percentEl) percentEl.value = (unlockPercent != null && unlockPercent !== '') ? unlockPercent : 100;
+    if (percentWrap) percentWrap.classList.toggle('hidden', ruleEl && ruleEl.value !== 'previous_percent');
     document.getElementById('modalTitle').textContent = 'تعديل القسم';
     document.getElementById('sectionModal').classList.remove('hidden');
     document.getElementById('sectionModal').classList.add('flex');
@@ -678,12 +787,17 @@ function saveSection(e) {
     const description = document.getElementById('sectionDescription').value;
     const parentIdEl = document.getElementById('sectionParentId');
     const parentId = parentIdEl && parentIdEl.value ? parentIdEl.value : null;
+    const unlockRule = document.getElementById('sectionUnlockRule').value || 'previous_all_items';
+    const unlockPercentEl = document.getElementById('sectionUnlockPercent');
+    const unlockPercent = (unlockRule === 'previous_percent' && unlockPercentEl) ? parseInt(unlockPercentEl.value, 10) : null;
     
     const url = id 
         ? `/instructor/sections/${id}`
         : `/instructor/courses/{{ $course->id }}/sections`;
     const method = id ? 'PUT' : 'POST';
-    const body = id ? { title, description } : { title, description, parent_id: parentId };
+    const body = id 
+        ? { title, description, unlock_rule: unlockRule, unlock_percent: (unlockRule === 'previous_percent' ? unlockPercent : null) } 
+        : { title, description, parent_id: parentId };
     
     fetch(url, {
         method: method,
@@ -802,6 +916,8 @@ function showAddLectureModal(sectionId) {
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('lectureScheduledAt').value = now.toISOString().slice(0, 16);
     document.getElementById('lectureDuration').value = 60;
+    var minWatchEl = document.getElementById('lectureMinWatchPercent');
+    if (minWatchEl) minWatchEl.value = '';
     
     // تحديث العنوان والنص
     document.querySelector('#lectureModal h3').textContent = 'إضافة محاضرة جديدة';
@@ -858,6 +974,8 @@ async function editLectureFromCurriculum(lectureId, sectionId) {
         }
         
         document.getElementById('lectureDuration').value = lecture.duration_minutes || 60;
+        var minWatchEl = document.getElementById('lectureMinWatchPercent');
+        if (minWatchEl) minWatchEl.value = (lecture.min_watch_percent_to_unlock_next != null && lecture.min_watch_percent_to_unlock_next !== '') ? lecture.min_watch_percent_to_unlock_next : '';
         
         // تعيين الرابط - مهم جداً - نستخدم setTimeout لضمان أن الحقل موجود
         setTimeout(() => {
@@ -1009,6 +1127,133 @@ async function deleteLectureFromCurriculum(lectureId, curriculumItemId) {
     }
 }
 
+// --- أسئلة الفيديو للمحاضرة ---
+let videoQuestionsLectureId = null;
+let videoQuestionsBankData = {};
+
+function openVideoQuestionsModal(lectureId, title) {
+    videoQuestionsLectureId = lectureId;
+    document.getElementById('videoQuestionsModalTitle').textContent = 'أسئلة الفيديو — ' + (title || 'المحاضرة');
+    document.getElementById('vqLectureId').value = lectureId;
+    document.getElementById('videoQuestionsModal').classList.remove('hidden');
+    document.getElementById('videoQuestionsModal').classList.add('flex');
+    loadVideoQuestionsData(lectureId);
+}
+
+function closeVideoQuestionsModal() {
+    document.getElementById('videoQuestionsModal').classList.add('hidden');
+    document.getElementById('videoQuestionsModal').classList.remove('flex');
+    videoQuestionsLectureId = null;
+}
+
+function toggleVqSource(source) {
+    document.getElementById('vqBankWrap').classList.toggle('hidden', source !== 'bank');
+    document.getElementById('vqCustomWrap').classList.toggle('hidden', source !== 'custom');
+}
+
+function toggleVqRewind() {
+    var onWrong = document.getElementById('vqOnWrong').value;
+    document.getElementById('vqRewindWrap').classList.toggle('hidden', onWrong !== 'rewind');
+}
+
+async function loadVideoQuestionsData(lectureId) {
+    var listEl = document.getElementById('videoQuestionsList');
+    listEl.innerHTML = '<p class="text-slate-500 text-sm"><i class="fas fa-spinner fa-spin ml-1"></i> جاري التحميل...</p>';
+    try {
+        var res = await fetch('/instructor/lectures/' + lectureId + '/video-questions', { headers: { 'Accept': 'application/json' } });
+        var data = await res.json();
+        videoQuestionsBankData = data.bank_questions || {};
+        var banks = data.question_banks || [];
+        var bankSelect = document.getElementById('vqBankId');
+        bankSelect.innerHTML = '<option value="">-- اختر البنك --</option>';
+        banks.forEach(function(b) { bankSelect.innerHTML += '<option value="' + b.id + '">' + (b.title || '') + '</option>'; });
+        listEl.innerHTML = '';
+        (data.video_questions || []).forEach(function(q) {
+            var row = document.createElement('div');
+            row.className = 'flex items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200';
+            row.innerHTML = '<div class="min-w-0 flex-1"><span class="font-semibold text-slate-800">' + (q.timestamp_label || '0:00') + '</span><span class="text-slate-500 mx-2">—</span><span class="text-slate-700 text-sm truncate">' + (q.question_text || '').substring(0, 60) + (q.question_text && q.question_text.length > 60 ? '...' : '') + '</span><span class="text-xs text-slate-400 mr-2">(' + (q.on_wrong === 'rewind' ? 'إعادة' : 'متابعة') + ')</span></div><button type="button" onclick="deleteVideoQuestion(' + lectureId + ',' + q.id + ')" class="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-sm"><i class="fas fa-trash"></i></button>';
+            listEl.appendChild(row);
+        });
+        if ((data.video_questions || []).length === 0) listEl.innerHTML = '<p class="text-slate-500 text-sm">لا توجد أسئلة بعد. أضف سؤالاً أدناه.</p>';
+        document.getElementById('vqQuestionId').innerHTML = '<option value="">-- اختر السؤال --</option>';
+        document.getElementById('vqQuestionId').dispatchEvent(new Event('change'));
+    } catch (e) {
+        listEl.innerHTML = '<p class="text-red-600 text-sm">فشل تحميل البيانات.</p>';
+    }
+}
+
+document.getElementById('vqBankId').addEventListener('change', function() {
+    var bankId = this.value;
+    var qSelect = document.getElementById('vqQuestionId');
+    qSelect.innerHTML = '<option value="">-- اختر السؤال --</option>';
+    var questions = videoQuestionsBankData[bankId] || [];
+    questions.forEach(function(q) {
+        qSelect.innerHTML += '<option value="' + q.id + '">' + (q.text || '').substring(0, 50) + (q.text && q.text.length > 50 ? '...' : '') + '</option>';
+    });
+});
+
+async function submitVideoQuestion(e) {
+    e.preventDefault();
+    var form = document.getElementById('videoQuestionForm');
+    var source = form.querySelector('input[name="question_source"]:checked').value;
+    var payload = {
+        _token: '{{ csrf_token() }}',
+        timestamp_minutes: document.getElementById('vqTimestampMinutes').value,
+        timestamp_seconds_extra: document.getElementById('vqTimestampSeconds').value,
+        question_source: source,
+        on_wrong: document.getElementById('vqOnWrong').value,
+        rewind_seconds: document.getElementById('vqRewindSeconds').value || 0,
+        points: document.getElementById('vqPoints').value || 1
+    };
+    if (source === 'bank') {
+        payload.question_id = document.getElementById('vqQuestionId').value;
+        if (!payload.question_id) { alert('اختر سؤالاً من البنك'); return; }
+    } else {
+        payload.custom_question_text = document.getElementById('vqCustomText').value.trim();
+        payload.custom_correct_answer = document.getElementById('vqCustomCorrect').value.trim();
+        var opts = document.getElementById('vqCustomOptions').value.split(/\n/).map(function(s) { return s.trim(); }).filter(Boolean);
+        payload.custom_options = opts;
+        if (!payload.custom_question_text || !payload.custom_correct_answer) { alert('أدخل نص السؤال والإجابة الصحيحة'); return; }
+    }
+    try {
+        var res = await fetch('/instructor/lectures/' + videoQuestionsLectureId + '/video-questions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if (!data.success) { alert(data.message || 'فشل الإضافة'); return; }
+        var q = data.question;
+        var listEl = document.getElementById('videoQuestionsList');
+        if (listEl.querySelector('p')) listEl.innerHTML = '';
+        var row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200';
+        row.innerHTML = '<div class="min-w-0 flex-1"><span class="font-semibold text-slate-800">' + (q.timestamp_label || '0:00') + '</span><span class="text-slate-500 mx-2">—</span><span class="text-slate-700 text-sm truncate">' + (q.question_text || '').substring(0, 60) + (q.question_text && q.question_text.length > 60 ? '...' : '') + '</span><span class="text-xs text-slate-400 mr-2">(' + (q.on_wrong === 'rewind' ? 'إعادة' : 'متابعة') + ')</span></div><button type="button" onclick="deleteVideoQuestion(' + videoQuestionsLectureId + ',' + q.id + ')" class="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-sm"><i class="fas fa-trash"></i></button>';
+        listEl.appendChild(row);
+        form.reset();
+        document.getElementById('vqTimestampMinutes').value = 0;
+        document.getElementById('vqTimestampSeconds').value = 0;
+        document.getElementById('vqPoints').value = 1;
+    } catch (err) {
+        alert('حدث خطأ: ' + (err.message || 'فشل الإضافة'));
+    }
+}
+
+async function deleteVideoQuestion(lectureId, vqId) {
+    if (!confirm('حذف هذا السؤال؟')) return;
+    try {
+        var res = await fetch('/instructor/lectures/' + lectureId + '/video-questions/' + vqId, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+        });
+        var data = await res.json();
+        if (data.success) loadVideoQuestionsData(lectureId);
+        else alert(data.message || 'فشل الحذف');
+    } catch (e) {
+        alert('فشل الحذف');
+    }
+}
+
 function closeLectureModal() {
     document.getElementById('lectureModal').classList.add('hidden');
     document.getElementById('lectureModal').classList.remove('flex');
@@ -1127,7 +1372,10 @@ function saveLecture(e) {
     
     // إضافة section_id للبيانات
     formData.append('section_id', sectionId);
-    
+
+    var minWatchVal = document.getElementById('lectureMinWatchPercent') ? document.getElementById('lectureMinWatchPercent').value.trim() : '';
+    formData.set('min_watch_percent_to_unlock_next', minWatchVal === '' ? '' : minWatchVal);
+
     // مواد المحاضرة: إرسال فقط الصفوف التي تحتوي ملفاً حتى تتطابق المؤشرات مع الـ backend
     formData.delete('material_files[]');
     formData.delete('material_titles[]');

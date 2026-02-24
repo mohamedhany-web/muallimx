@@ -1,9 +1,10 @@
 @php
     $depth = $depth ?? 0;
     $sectionItemCount = $section->activeItems->filter(fn($ci) => $ci->item && !($ci->item instanceof \App\Models\CourseLesson))->count();
+    $isSectionLocked = $section->is_locked ?? false;
 @endphp
-<div class="mb-4 {{ $depth > 0 ? 'pr-2 border-r-2 border-slate-100' : '' }}" style="{{ $depth > 0 ? 'margin-right: ' . ($depth * 0.5) . 'rem;' : '' }}">
-    <div class="curriculum-section-header mb-2"
+<div class="mb-4 {{ $depth > 0 ? 'pr-2 border-r-2 border-slate-100' : '' }} {{ $isSectionLocked ? 'opacity-80' : '' }}" style="{{ $depth > 0 ? 'margin-right: ' . ($depth * 0.5) . 'rem;' : '' }}">
+    <div class="curriculum-section-header mb-2 {{ $isSectionLocked ? 'section-locked' : '' }}"
          :class="{ 'collapsed': isSectionCollapsed({{ $section->id }}) }"
          @click="toggleSection({{ $section->id }})"
          role="button"
@@ -11,7 +12,11 @@
          @keydown.enter.prevent="toggleSection({{ $section->id }})"
          @keydown.space.prevent="toggleSection({{ $section->id }})">
         <span class="flex items-center gap-1.5">
-            <i class="fas fa-folder text-sky-400/90 text-[10px]"></i>
+            @if($isSectionLocked)
+                <i class="fas fa-lock text-amber-500 text-[10px]" title="أكمل القسم السابق لفتح هذا القسم"></i>
+            @else
+                <i class="fas fa-folder text-sky-400/90 text-[10px]"></i>
+            @endif
             <span>{{ $section->title }}</span>
             @if($sectionItemCount > 0)
                 <span class="text-gray-500 text-[10px]">({{ $sectionItemCount }})</span>
@@ -28,7 +33,7 @@
 
                 $isCompleted = false;
                 $isCurrent = false;
-                $isLocked = false;
+                $isLocked = $isSectionLocked;
 
                 if ($item instanceof \App\Models\CourseLesson) {
                     $lessonProgress = $item->progress->first();
@@ -51,12 +56,27 @@
                         }
                     }
                     $isCurrent = !$isCompleted && ($curriculumItem->order == 1 || $allPreviousCompleted);
-                    $isLocked = !$isCurrent && !$isCompleted;
+                    $isLocked = $isSectionLocked || (!$isCurrent && !$isCompleted);
+                } elseif ($item instanceof \App\Models\Lecture) {
+                    $watchProgress = $item->watchProgress->first();
+                    $minPercent = $item->min_watch_percent_to_unlock_next;
+                    $threshold = $minPercent !== null ? (int) $minPercent : 90;
+                    $isCompleted = $watchProgress && (int) $watchProgress->progress_percent >= $threshold;
+                    $prevLecturesInSection = $section->activeItems->where('order', '<', $curriculumItem->order)->filter(fn($i) => $i->item instanceof \App\Models\Lecture);
+                    $lastPrevLecture = $prevLecturesInSection->sortByDesc('order')->first();
+                    if ($lastPrevLecture) {
+                        $prevLec = $lastPrevLecture->item;
+                        $prevWp = $prevLec->watchProgress->first();
+                        $prevMin = $prevLec->min_watch_percent_to_unlock_next;
+                        $prevThreshold = $prevMin !== null ? (int) $prevMin : 90;
+                        $isLocked = $isLocked || !$prevWp || (int) $prevWp->progress_percent < $prevThreshold;
+                    }
+                    $isCurrent = !$isCompleted && !$isLocked;
                 } elseif ($item instanceof \App\Models\LearningPattern) {
                     $bestAttempt = $item->getUserBestAttempt(auth()->id());
                     $isCompleted = $bestAttempt && $bestAttempt->status === 'completed';
-                    $isCurrent = !$isCompleted;
-                    $isLocked = false;
+                    $isCurrent = !$isCompleted && !$isSectionLocked;
+                    $isLocked = $isSectionLocked;
                 }
             @endphp
 
@@ -65,7 +85,7 @@
                  @if($item instanceof \App\Models\CourseLesson)
                      @click="currentSectionDescription = (window.learnSectionDescriptions || {})[$event.currentTarget.dataset.sectionId] || ''; if ({{ $isLocked ? 'true' : 'false' }}) return; selectedLesson = {{ $item->id }}; loadLesson({{ $item->id }})"
                  @elseif($item instanceof \App\Models\Lecture)
-                     @click="currentSectionDescription = (window.learnSectionDescriptions || {})[$event.currentTarget.dataset.sectionId] || ''; loadLecture({{ $item->id }})"
+                     @click="currentSectionDescription = (window.learnSectionDescriptions || {})[$event.currentTarget.dataset.sectionId] || ''; if ({{ $isLocked ? 'true' : 'false' }}) return; loadLecture({{ $item->id }})"
                  @elseif($item instanceof \App\Models\Assignment)
                      @click="currentSectionDescription = (window.learnSectionDescriptions || {})[$event.currentTarget.dataset.sectionId] || ''; loadAssignment({{ $item->id }})"
                  @elseif($item instanceof \App\Models\AdvancedExam || $item instanceof \App\Models\Exam)
@@ -91,9 +111,19 @@
                                 </div>
                             @endif
                         @elseif($item instanceof \App\Models\Lecture)
-                            <div class="w-6 h-6 {{ $item->status === 'completed' ? 'bg-green-500' : ($item->status === 'in_progress' ? 'bg-yellow-500' : 'bg-blue-500') }} rounded-md flex items-center justify-center">
-                                <i class="fas fa-chalkboard-teacher text-white text-[10px]"></i>
-                            </div>
+                            @if($isCompleted)
+                                <div class="w-6 h-6 bg-green-500 rounded-md flex items-center justify-center">
+                                    <i class="fas fa-check text-white text-[10px]"></i>
+                                </div>
+                            @elseif($isLocked)
+                                <div class="w-6 h-6 bg-gray-600 rounded-md flex items-center justify-center">
+                                    <i class="fas fa-lock text-white text-[10px]"></i>
+                                </div>
+                            @else
+                                <div class="w-6 h-6 bg-sky-500 rounded-md flex items-center justify-center">
+                                    <i class="fas fa-chalkboard-teacher text-white text-[10px]"></i>
+                                </div>
+                            @endif
                         @elseif($item instanceof \App\Models\Assignment)
                             <div class="w-6 h-6 bg-purple-500 rounded-md flex items-center justify-center">
                                 <i class="fas fa-tasks text-white text-[10px]"></i>

@@ -136,9 +136,15 @@ class CurriculumController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'unlock_rule' => 'nullable|string|in:always,previous_percent,previous_all_items',
+            'unlock_percent' => 'nullable|integer|min:0|max:100',
         ]);
         if ($section->parent_id) {
             $validated['description'] = null;
+        }
+        $validated['unlock_rule'] = $validated['unlock_rule'] ?? 'previous_all_items';
+        if (($validated['unlock_rule'] ?? '') !== 'previous_percent') {
+            $validated['unlock_percent'] = null;
         }
         $section->update($validated);
         

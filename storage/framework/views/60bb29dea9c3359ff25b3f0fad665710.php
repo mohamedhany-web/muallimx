@@ -16,7 +16,7 @@
             </div>
         </div>
         <div class="flex items-center gap-2 shrink-0" onclick="event.stopPropagation();">
-            <button onclick="event.stopPropagation(); editSection(<?php echo e($section->id); ?>, '<?php echo e(addslashes($section->title)); ?>', '<?php echo e(addslashes($section->description ?? '')); ?>', <?php echo e($section->parent_id ?? 'null'); ?>)"
+            <button onclick="event.stopPropagation(); editSection(<?php echo e($section->id); ?>, '<?php echo e(addslashes($section->title)); ?>', '<?php echo e(addslashes($section->description ?? '')); ?>', <?php echo e($section->parent_id ?? 'null'); ?>, '<?php echo e($section->unlock_rule ?? 'previous_all_items'); ?>', <?php echo e($section->unlock_percent !== null ? (int)$section->unlock_percent : 'null'); ?>)"
                     class="p-2 rounded-lg bg-sky-100 hover:bg-sky-200 text-sky-600 text-sm transition-colors" title="تعديل القسم">
                 <i class="fas fa-edit"></i>
             </button>
@@ -71,6 +71,7 @@
                                 <span class="font-semibold text-slate-800 truncate"><?php echo e($item->item->title); ?></span>
                                 <span class="text-xs text-slate-500 shrink-0">(محاضرة)</span>
                                 <div class="flex items-center gap-1 shrink-0">
+                                    <button type="button" onclick="openVideoQuestionsModal(<?php echo e($item->item->id); ?>, '<?php echo e(addslashes($item->item->title)); ?>')" class="p-1.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs" title="أسئلة الفيديو"><i class="fas fa-question-circle"></i></button>
                                     <button onclick="editLectureFromCurriculum(<?php echo e($item->item->id); ?>, <?php echo e($section->id); ?>)" class="p-1.5 rounded bg-sky-100 hover:bg-sky-200 text-sky-600 text-xs" title="تعديل المحاضرة"><i class="fas fa-edit"></i></button>
                                     <button onclick="deleteLectureFromCurriculum(<?php echo e($item->item->id); ?>, <?php echo e($item->id); ?>)" class="p-1.5 rounded bg-red-50 hover:bg-red-100 text-red-600 text-xs" title="حذف المحاضرة"><i class="fas fa-trash"></i></button>
                                 </div>

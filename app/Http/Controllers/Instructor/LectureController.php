@@ -98,6 +98,10 @@ class LectureController extends Controller
         if ($request->filled('video_platform')) {
             $request->merge(['video_platform' => strtolower(trim($request->input('video_platform')))]);
         }
+        $minWatch = $request->input('min_watch_percent_to_unlock_next');
+        if ($minWatch === '' || (is_string($minWatch) && trim($minWatch) === '')) {
+            $request->merge(['min_watch_percent_to_unlock_next' => null]);
+        }
         
         $validated = $request->validate([
             'course_id' => 'required|exists:advanced_courses,id',
@@ -106,6 +110,7 @@ class LectureController extends Controller
             'description' => 'nullable|string',
             'scheduled_at' => 'required|date',
             'duration_minutes' => 'required|integer|min:15|max:480',
+            'min_watch_percent_to_unlock_next' => 'nullable|integer|min:0|max:100',
             'teams_registration_link' => 'nullable|url',
             'teams_meeting_link' => 'nullable|url',
             'recording_url' => 'nullable|url',
@@ -141,7 +146,13 @@ class LectureController extends Controller
         $validated['has_attendance_tracking'] = $request->has('has_attendance_tracking');
         $validated['has_assignment'] = $request->has('has_assignment');
         $validated['has_evaluation'] = $request->has('has_evaluation');
-        
+        $rawMin = $request->get('min_watch_percent_to_unlock_next');
+        $minWatchValue = null;
+        if ($rawMin !== null && $rawMin !== '' && is_numeric($rawMin)) {
+            $minWatchValue = (int) min(100, max(0, (float) $rawMin));
+        }
+        $validated['min_watch_percent_to_unlock_next'] = $minWatchValue;
+
         // التأكد من حفظ recording_url و video_platform بشكل صريح
         if ($request->has('recording_url')) {
             $validated['recording_url'] = $request->input('recording_url');
@@ -177,6 +188,10 @@ class LectureController extends Controller
         ]);
         
         $lecture = Lecture::create($validated);
+        if (array_key_exists('min_watch_percent_to_unlock_next', $validated)) {
+            $lecture->min_watch_percent_to_unlock_next = $validated['min_watch_percent_to_unlock_next'];
+            $lecture->save();
+        }
 
         // حفظ مواد المحاضرة (ملفات مرفوعة)
         $materialFiles = $request->file('material_files');
@@ -248,6 +263,7 @@ class LectureController extends Controller
                 'course_lesson_id' => $lecture->course_lesson_id,
                 'scheduled_at' => $lecture->scheduled_at ? $lecture->scheduled_at->toIso8601String() : null,
                 'duration_minutes' => $lecture->duration_minutes,
+                'min_watch_percent_to_unlock_next' => $lecture->min_watch_percent_to_unlock_next,
                 'recording_url' => $lecture->recording_url ?? '',
                 'video_platform' => $videoPlatform,
                 'teams_registration_link' => $lecture->teams_registration_link ?? '',
@@ -326,6 +342,10 @@ class LectureController extends Controller
         if ($request->filled('video_platform')) {
             $request->merge(['video_platform' => strtolower(trim($request->input('video_platform')))]);
         }
+        $minWatch = $request->input('min_watch_percent_to_unlock_next');
+        if ($minWatch === '' || (is_string($minWatch) && trim($minWatch) === '')) {
+            $request->merge(['min_watch_percent_to_unlock_next' => null]);
+        }
         
         $validated = $request->validate([
             'course_id' => 'required|exists:advanced_courses,id',
@@ -334,6 +354,7 @@ class LectureController extends Controller
             'description' => 'nullable|string',
             'scheduled_at' => 'required|date',
             'duration_minutes' => 'required|integer|min:15|max:480',
+            'min_watch_percent_to_unlock_next' => 'nullable|integer|min:0|max:100',
             'teams_registration_link' => 'nullable|url',
             'teams_meeting_link' => 'nullable|url',
             'recording_url' => 'nullable|string|max:2000',
@@ -364,6 +385,12 @@ class LectureController extends Controller
         $validated['has_assignment'] = $request->has('has_assignment');
         $validated['has_evaluation'] = $request->has('has_evaluation');
         $validated['status'] = $validated['status'] ?? $lecture->status;
+        $rawMin = $request->get('min_watch_percent_to_unlock_next');
+        $minWatchValue = null;
+        if ($rawMin !== null && $rawMin !== '' && is_numeric($rawMin)) {
+            $minWatchValue = (int) min(100, max(0, (float) $rawMin));
+        }
+        $validated['min_watch_percent_to_unlock_next'] = $minWatchValue;
         // تطبيع recording_url: إذا كان فارغاً استخدم null، وإلا تحقق من صحة الرابط
         $recordingUrl = $request->input('recording_url');
         if ($recordingUrl === null || trim((string) $recordingUrl) === '') {
@@ -392,6 +419,8 @@ class LectureController extends Controller
         }
         
         $lecture->update($validated);
+        $lecture->min_watch_percent_to_unlock_next = $validated['min_watch_percent_to_unlock_next'];
+        $lecture->save();
 
         // مواد المحاضرة: حذف المحددة
         $deleteIds = $request->input('material_delete_old', []);

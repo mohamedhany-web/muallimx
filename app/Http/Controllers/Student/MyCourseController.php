@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\LectureMaterial;
+use App\Models\LectureWatchProgress;
+use App\Models\LectureVideoQuestion;
+use App\Models\LectureVideoQuestionAnswer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -200,6 +204,8 @@ class MyCourseController extends Controller
                     }]);
                 } elseif ($curriculumItem->item instanceof \App\Models\Assignment) {
                     $curriculumItem->item->load(['submissions' => function($q) use ($user) { $q->where('student_id', $user->id); }]);
+                } elseif ($curriculumItem->item instanceof \App\Models\Lecture) {
+                    $curriculumItem->item->load(['watchProgress' => function($q) use ($user) { $q->where('user_id', $user->id); }]);
                 }
             }
         }
@@ -211,7 +217,11 @@ class MyCourseController extends Controller
             $section->setRelation('children', $allSections->where('parent_id', $section->id)->values());
         }
         $sections = $allSections->whereNull('parent_id')->values();
+        $this->computeSectionLockState($user, $allSections);
         $sectionDescriptions = $allSections->pluck('description', 'id')->map(fn ($d) => $d ?? '')->toArray();
+
+        // بناء خريطة "العنصر التالي" لكل محاضرة (للفتح التلقائي عند بلوغ النسبة)
+        $nextItemByLectureId = $this->buildNextItemMapByLectureId($sections);
 
         // تجميع المحاضرات حسب الدرس (للتوافق مع الكود القديم)
         $lecturesByLesson = $course->lectures->groupBy('course_lesson_id');
@@ -236,8 +246,55 @@ class MyCourseController extends Controller
             'sections',
             'sectionDescriptions',
             'sidebarExams',
-            'lesson'
+            'lesson',
+            'nextItemByLectureId'
         ));
+    }
+
+    /**
+     * بناء خريطة: لكل محاضرة، العنصر التالي في المنهج (للفتح التلقائي عند بلوغ نسبة المشاهدة).
+     */
+    private function buildNextItemMapByLectureId($sections): array
+    {
+        $flat = $this->flattenCurriculumItems($sections);
+        $nextMap = [];
+        for ($i = 0; $i < count($flat); $i++) {
+            if (($flat[$i]['type'] ?? '') === 'lecture' && isset($flat[$i]['id'])) {
+                $next = $flat[$i + 1] ?? null;
+                $nextMap[$flat[$i]['id']] = $next;
+            }
+        }
+        return $nextMap;
+    }
+
+    /**
+     * تسطيح عناصر المنهج حسب ترتيب العرض (أقسام ثم أطفال).
+     */
+    private function flattenCurriculumItems($sections): array
+    {
+        $flat = [];
+        foreach ($sections as $section) {
+            $items = $section->activeItems->sortBy('order')->values();
+            foreach ($items as $curriculumItem) {
+                $item = $curriculumItem->item;
+                if (!$item || $item instanceof \App\Models\CourseLesson) {
+                    continue;
+                }
+                if ($item instanceof \App\Models\Lecture) {
+                    $flat[] = ['type' => 'lecture', 'id' => $item->id];
+                } elseif ($item instanceof \App\Models\Assignment) {
+                    $flat[] = ['type' => 'assignment', 'id' => $item->id];
+                } elseif ($item instanceof \App\Models\AdvancedExam || $item instanceof \App\Models\Exam) {
+                    $flat[] = ['type' => 'exam', 'id' => $item->id];
+                } elseif ($item instanceof \App\Models\LearningPattern) {
+                    $flat[] = ['type' => 'pattern', 'id' => $item->id];
+                }
+            }
+            if ($section->children && $section->children->isNotEmpty()) {
+                $flat = array_merge($flat, $this->flattenCurriculumItems($section->children));
+            }
+        }
+        return $flat;
     }
 
     /**
@@ -265,6 +322,24 @@ class MyCourseController extends Controller
                 ];
             });
 
+        $videoQuestions = $lecture->videoQuestions()->orderBy('timestamp_seconds')->get()->map(function ($vq) {
+            $payload = $vq->getPayloadForStudent();
+            return [
+                'id' => $vq->id,
+                'timestamp_seconds' => $vq->timestamp_seconds,
+                'text' => $payload['text'] ?? '',
+                'options' => $payload['options'] ?? [],
+                'type' => $payload['type'] ?? 'multiple_choice',
+                'points' => $vq->points,
+                'on_wrong' => $vq->on_wrong,
+                'rewind_seconds' => $vq->rewind_seconds,
+            ];
+        });
+
+        $watchProgress = LectureWatchProgress::where('lecture_id', $lecture->id)
+            ->where('user_id', $user->id)
+            ->first();
+
         return response()->json([
             'id' => $lecture->id,
             'title' => $lecture->title,
@@ -272,12 +347,20 @@ class MyCourseController extends Controller
             'scheduled_at' => $lecture->scheduled_at ? $lecture->scheduled_at->toIso8601String() : null,
             'scheduled_at_formatted' => $lecture->scheduled_at ? $lecture->scheduled_at->format('Y/m/d H:i') : null,
             'duration_minutes' => $lecture->duration_minutes ?? 60,
+            'min_watch_percent_to_unlock_next' => $lecture->min_watch_percent_to_unlock_next,
             'recording_url' => $recordingUrl,
             'video_platform' => $videoPlatform,
             'teams_meeting_link' => $lecture->teams_meeting_link ?? null,
             'teams_registration_link' => $lecture->teams_registration_link ?? null,
             'notes' => $lecture->notes ?? null,
             'materials' => $materials,
+            'video_questions' => $videoQuestions,
+            'progress' => $watchProgress ? [
+                'progress_percent' => (int) $watchProgress->progress_percent,
+                'is_completed' => (bool) $watchProgress->is_completed,
+                'watch_time_seconds' => (int) $watchProgress->watch_time_seconds,
+                'video_duration_seconds' => (int) $watchProgress->video_duration_seconds,
+            ] : null,
         ]);
     }
 
@@ -300,6 +383,89 @@ class MyCourseController extends Controller
         }
 
         return response()->download($path, $material->file_name);
+    }
+
+    /**
+     * تحديث تقدم مشاهدة محاضرة (نسبة المشاهدة من الفيديو).
+     */
+    public function updateLectureProgress(Request $request, $courseId, $lectureId): JsonResponse
+    {
+        $user = Auth::user();
+        $course = $user->activeCourses()->findOrFail($courseId);
+        $lecture = $course->lectures()->findOrFail($lectureId);
+
+        $data = $request->validate([
+            'current_sec' => 'required|numeric|min:0',
+            'duration_sec' => 'required|numeric|min:1',
+        ]);
+
+        $currentSec = (int) round($data['current_sec']);
+        $durationSec = (int) round($data['duration_sec']);
+
+        /** @var LectureWatchProgress $progress */
+        $progress = LectureWatchProgress::firstOrNew([
+            'lecture_id' => $lecture->id,
+            'user_id' => $user->id,
+        ]);
+        $minPercent = $lecture->min_watch_percent_to_unlock_next;
+        $progress->updateFromSample($currentSec, $durationSec, $minPercent);
+
+        $this->updateCourseProgress($user->id, (int) $courseId);
+
+        $sectionsForProgress = $course->activeSections()
+            ->with(['activeItems' => fn ($q) => $q->with('item')])
+            ->orderBy('order')
+            ->get();
+        foreach ($sectionsForProgress as $section) {
+            foreach ($section->activeItems as $curriculumItem) {
+                if ($curriculumItem->item instanceof \App\Models\Lecture) {
+                    $curriculumItem->item->load(['watchProgress' => fn ($q) => $q->where('user_id', $user->id)]);
+                }
+            }
+        }
+        list($courseProgressPct, $totalItems, $completedItems) = $this->calculateProgressFromSections($user, $course, $sectionsForProgress);
+
+        return response()->json([
+            'success' => true,
+            'progress_percent' => $progress->progress_percent,
+            'is_completed' => $progress->is_completed,
+            'course_progress' => $courseProgressPct,
+            'total_items' => $totalItems,
+            'completed_items' => $completedItems,
+        ]);
+    }
+
+    /**
+     * تسجيل إجابة الطالب على سؤال فيديو في المحاضرة (يُحسب كدرجة للتخرج).
+     */
+    public function submitLectureVideoQuestionAnswer(Request $request, $courseId, $lectureId, $videoQuestionId): JsonResponse
+    {
+        $user = Auth::user();
+        $course = $user->activeCourses()->findOrFail($courseId);
+        $lecture = $course->lectures()->findOrFail($lectureId);
+        $videoQuestion = LectureVideoQuestion::where('id', $videoQuestionId)
+            ->where('lecture_id', $lecture->id)
+            ->firstOrFail();
+
+        $answer = $request->input('answer', '');
+        $isCorrect = $videoQuestion->checkAnswer($answer);
+        $scoreEarned = $isCorrect ? (float) $videoQuestion->points : 0.0;
+
+        LectureVideoQuestionAnswer::create([
+            'user_id' => $user->id,
+            'lecture_video_question_id' => $videoQuestion->id,
+            'answer' => $answer,
+            'is_correct' => $isCorrect,
+            'score_earned' => $scoreEarned,
+            'answered_at' => now(),
+        ]);
+
+        return response()->json([
+            'correct' => $isCorrect,
+            'score_earned' => $scoreEarned,
+            'on_wrong' => $videoQuestion->on_wrong,
+            'rewind_seconds' => $videoQuestion->rewind_seconds,
+        ]);
     }
 
     /**
@@ -420,6 +586,69 @@ class MyCourseController extends Controller
     }
 
     /**
+     * حساب قفل كل قسم بناءً على إعدادات فتح القسم (unlock_rule) وتقدم القسم السابق
+     */
+    private function computeSectionLockState($user, $allSections)
+    {
+        foreach ($allSections as $section) {
+            $total = 0;
+            $completed = 0;
+            foreach ($section->activeItems as $item) {
+                $entity = $item->item;
+                if (!$entity) continue;
+                $total++;
+                if ($entity instanceof \App\Models\CourseLesson) {
+                    $p = $entity->progress->first();
+                    if ($p && $p->is_completed) $completed++;
+                } elseif ($entity instanceof \App\Models\Lecture) {
+                    $wp = $entity->watchProgress->first();
+                    $minPercent = $entity->min_watch_percent_to_unlock_next;
+                    $threshold = $minPercent !== null ? (int) $minPercent : 90;
+                    if ($wp && $wp->progress_percent >= $threshold) $completed++;
+                    elseif ($entity->videoQuestions()->count() > 0) {
+                        $answered = \App\Models\LectureVideoQuestionAnswer::where('user_id', $user->id)
+                            ->whereIn('lecture_video_question_id', $entity->videoQuestions()->pluck('id'))
+                            ->distinct('lecture_video_question_id')->count('lecture_video_question_id');
+                        if ($answered >= $entity->videoQuestions()->count()) $completed++;
+                    }
+                } elseif ($entity instanceof \App\Models\Assignment) {
+                    if ($entity->submissions->where('student_id', $user->id)->isNotEmpty()) $completed++;
+                } elseif ($entity instanceof \App\Models\LearningPattern) {
+                    $best = $entity->getUserBestAttempt($user->id);
+                    if ($best && $best->status === 'completed') $completed++;
+                } elseif ($entity instanceof \App\Models\AdvancedExam) {
+                    $passing = (float) ($entity->passing_marks ?? 0);
+                    if ($entity->attempts->contains(fn ($a) => $a->score !== null && (float) $a->score >= $passing)) $completed++;
+                }
+            }
+            $section->progress_percent = $total > 0 ? round(($completed / $total) * 100, 2) : 0;
+            $section->all_items_completed = $total > 0 && $completed >= $total;
+        }
+        foreach ($allSections as $section) {
+            $prev = $allSections->where('parent_id', $section->parent_id)->where('order', '<', $section->order)->sortByDesc('order')->first();
+            if (!$prev) {
+                $section->is_locked = false;
+                continue;
+            }
+            $rule = $section->unlock_rule ?? 'previous_all_items';
+            if ($rule === 'always') {
+                $section->is_locked = false;
+                continue;
+            }
+            if ($rule === 'previous_all_items') {
+                $section->is_locked = !($prev->all_items_completed ?? false);
+                continue;
+            }
+            if ($rule === 'previous_percent') {
+                $required = (int) ($section->unlock_percent ?? 100);
+                $section->is_locked = ($prev->progress_percent ?? 0) < $required;
+                continue;
+            }
+            $section->is_locked = false;
+        }
+    }
+
+    /**
      * حساب التقدم من المنهج (أقسام + عناصر) أو من الدروس فقط
      * يُرجع: [نسبة التقدم، إجمالي العناصر، العناصر المكتملة]
      */
@@ -448,7 +677,21 @@ class MyCourseController extends Controller
                     $p = $entity->progress->first();
                     if ($p && $p->is_completed) $completedItems++;
                 } elseif ($entity instanceof \App\Models\Lecture) {
-                    // المحاضرات تُحسب في المجموع فقط (لا يوجد تتبع إكمال حالياً)
+                    $wp = $entity->watchProgress->first();
+                    $minPercent = $entity->min_watch_percent_to_unlock_next;
+                    $threshold = $minPercent !== null ? (int) $minPercent : 90;
+                    if ($wp && $wp->progress_percent >= $threshold) {
+                        $completedItems++;
+                    } else {
+                        $vqCount = $entity->videoQuestions()->count();
+                        if ($vqCount > 0) {
+                            $answered = \App\Models\LectureVideoQuestionAnswer::where('user_id', $user->id)
+                                ->whereIn('lecture_video_question_id', $entity->videoQuestions()->pluck('id'))
+                                ->distinct('lecture_video_question_id')
+                                ->count('lecture_video_question_id');
+                            if ($answered >= $vqCount) $completedItems++;
+                        }
+                    }
                 } elseif ($entity instanceof \App\Models\Assignment) {
                     if ($entity->submissions->where('student_id', $user->id)->isNotEmpty()) $completedItems++;
                 } elseif ($entity instanceof \App\Models\LearningPattern) {

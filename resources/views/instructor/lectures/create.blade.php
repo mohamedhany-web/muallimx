@@ -250,7 +250,7 @@
                     <i class="fas fa-calendar-alt text-sky-600 ml-1"></i>
                     {{ __('instructor.date_time') }}
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label for="scheduled_at" class="block text-sm font-semibold text-slate-700 mb-1">{{ __('instructor.date_time') }} <span class="text-red-500">*</span></label>
                         <input type="datetime-local" name="scheduled_at" id="scheduled_at" value="{{ old('scheduled_at') }}" required
@@ -262,6 +262,14 @@
                         <input type="number" name="duration_minutes" id="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="15" max="480" required
                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 bg-white">
                         @error('duration_minutes')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label for="min_watch_percent_to_unlock_next" class="block text-sm font-semibold text-slate-700 mb-1">نسبة المشاهدة المطلوبة لفتح المحاضرة التالية</label>
+                        <input type="number" name="min_watch_percent_to_unlock_next" id="min_watch_percent_to_unlock_next"
+                               value="{{ old('min_watch_percent_to_unlock_next', 0) }}" min="0" max="100"
+                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 bg-white"
+                               placeholder="مثال: 80 يعني يجب مشاهدة 80% من هذه المحاضرة لفتح التالية">
+                        <p class="mt-1 text-xs text-slate-500">اتركها 0 أو فارغة إذا لم ترغب في قفل المحاضرة التالية على نسبة مشاهدة معينة.</p>
                     </div>
                 </div>
             </div>

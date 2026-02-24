@@ -22,6 +22,7 @@ class Lecture extends Model
         'video_platform',
         'scheduled_at',
         'duration_minutes',
+        'min_watch_percent_to_unlock_next',
         'status',
         'notes',
         'has_attendance_tracking',
@@ -74,5 +75,15 @@ class Lecture extends Model
     public function materials()
     {
         return $this->hasMany(LectureMaterial::class)->orderBy('sort_order');
+    }
+
+    public function videoQuestions()
+    {
+        return $this->hasMany(LectureVideoQuestion::class)->orderBy('timestamp_seconds');
+    }
+
+    public function watchProgress()
+    {
+        return $this->hasMany(LectureWatchProgress::class);
     }
 }
