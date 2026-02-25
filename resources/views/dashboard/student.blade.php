@@ -431,11 +431,12 @@
                                     <p class="text-sm text-gray-600 mb-3 truncate">
                                         {{ $course->academicSubject->name ?? __('student.not_specified') }} - {{ $course->academicYear->name ?? __('student.not_specified') }}
                                     </p>
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex-1 progress-container">
+                                    <div class="flex items-center gap-3 flex-wrap">
+                                        <div class="flex-1 progress-container min-w-0">
                                             <div class="progress-fill" style="width: {{ $progress }}%"></div>
                                         </div>
                                         <span class="text-sm font-semibold text-gray-700 min-w-[45px] text-left">{{ $progress }}%</span>
+                                        <span class="text-xs font-semibold text-amber-600"><i class="fas fa-star text-amber-500 ml-0.5"></i> {{ number_format((float)($course->student_points ?? 0), 0) }} نقطة</span>
                                     </div>
                                 </div>
                             </div>

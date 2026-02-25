@@ -1017,19 +1017,8 @@
             </div>
         </div>
     <?php endif; ?>
-    <?php
-        $courseThumb = $course->thumbnail ? str_replace('\\', '/', $course->thumbnail) : null;
-        $courseImageUrl = $courseThumb ? asset('storage/' . $courseThumb) : null;
-    ?>
-    <!-- Hero Section -->
+    <!-- Hero Section - بدون صورة الكورس في الخلفية -->
     <section class="hero-section relative overflow-hidden min-h-[70vh] flex items-center pt-16 lg:pt-20">
-        <?php if($courseImageUrl): ?>
-        <!-- Course cover image (like learning paths) -->
-        <div class="absolute inset-0 z-0">
-            <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('<?php echo e($courseImageUrl); ?>');"></div>
-            <div class="absolute inset-0 bg-gradient-to-b from-white/92 via-white/75 to-white"></div>
-        </div>
-        <?php endif; ?>
         <!-- Animated Background -->
         <div class="animated-background absolute inset-0 overflow-hidden">
             <!-- Floating Circles -->
@@ -1190,10 +1179,6 @@
                 <div class="relative fade-in-up" style="animation-delay: 0.2s;">
                     <div class="bg-white rounded-3xl p-6 lg:p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300">
                         <div class="text-center">
-                            <div class="w-20 h-20 bg-gradient-to-br from-blue-600 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                                <i class="fas fa-code text-white text-3xl"></i>
-                            </div>
-                            
                             <!-- Price -->
                             <div class="mb-6">
                                 <?php if(($course->price ?? 0) > 0): ?>
@@ -1514,7 +1499,7 @@
                                         <?php if($relImageUrl): ?>
                                             <img src="<?php echo e($relImageUrl); ?>" alt="<?php echo e($related->title); ?>" class="w-full h-full object-cover">
                                         <?php else: ?>
-                                            <i class="fas fa-code text-white text-2xl"></i>
+                                            <i class="fas fa-book text-white text-2xl"></i>
                                         <?php endif; ?>
                                     </div>
                                     <div class="p-4 flex-1 min-w-0">

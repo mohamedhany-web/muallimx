@@ -553,10 +553,10 @@
                 }
             }
 
-            /* Course Card Styles - Matches welcome page */
+            /* Course Card Styles - مثل كاردات الصفحة الرئيسية */
             .course-card {
-                transition: all 0.3s ease;
-                background: #ffffff;
+                transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+                background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
                 position: relative;
                 overflow: hidden;
                 border: 2px solid rgba(226, 232, 240, 0.8);
@@ -564,6 +564,7 @@
                 flex-direction: column;
                 margin: 0;
                 height: 100%;
+                border-radius: 1.5rem;
             }
 
             .course-card::before {
@@ -572,25 +573,42 @@
                 top: 0;
                 left: 0;
                 right: 0;
-                height: 3px;
-                background: linear-gradient(90deg, #3b82f6, #10b981);
+                height: 5px;
+                background: linear-gradient(90deg, #3b82f6, #10b981, #3b82f6);
                 opacity: 0;
-                transition: opacity 0.3s ease;
+                transition: opacity 0.4s ease;
                 z-index: 1;
+            }
+
+            .course-card::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.03), rgba(16, 185, 129, 0.03));
+                opacity: 0;
+                transition: opacity 0.4s ease;
+                pointer-events: none;
             }
 
             .course-card:hover::before {
                 opacity: 1;
             }
 
+            .course-card:hover::after {
+                opacity: 1;
+            }
+
             .course-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15), 0 0 20px rgba(16, 185, 129, 0.1);
+                transform: translateY(-15px) scale(1.04);
+                box-shadow: 0 30px 60px rgba(59, 130, 246, 0.3), 0 0 40px rgba(16, 185, 129, 0.2);
                 border-color: rgba(59, 130, 246, 0.3);
             }
 
             .course-card .course-image {
-                transition: transform 0.3s ease;
+                transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
                 position: relative;
             }
 
@@ -598,9 +616,9 @@
                 content: '';
                 position: absolute;
                 inset: 0;
-                background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.1));
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(16, 185, 129, 0.2));
                 opacity: 0;
-                transition: opacity 0.3s ease;
+                transition: opacity 0.4s ease;
                 z-index: 1;
                 pointer-events: none;
             }
@@ -631,7 +649,7 @@
             }
 
             .course-card:hover .course-image {
-                transform: scale(1.05);
+                transform: scale(1.12);
             }
 
             .course-card:hover .course-image::before {
@@ -639,7 +657,7 @@
             }
 
             .course-card:hover .course-image i {
-                transform: scale(1.1);
+                transform: scale(1.2) rotate(5deg);
             }
 
             /* Fade in animations */
@@ -657,6 +675,23 @@
                     opacity: 1;
                     transform: translateY(0);
                 }
+            }
+
+            @keyframes shimmer {
+                0% {
+                    transform: translateX(-100%) skewX(-15deg);
+                }
+                100% {
+                    transform: translateX(200%) skewX(-15deg);
+                }
+            }
+
+            .animate-shimmer {
+                animation: shimmer 3s infinite;
+            }
+
+            .group\/btn:hover .btn-shimmer {
+                animation: shimmer 3s infinite;
             }
 
             /* Grid Fixes for Course Cards */
@@ -1158,83 +1193,83 @@
                 <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">{{ __('public.courses_section_subtitle') }}</p>
             </div>
             
-            <!-- Courses Grid -->
+            <!-- Courses Grid - نفس تصميم كاردات الصفحة الرئيسية -->
             @if(isset($courses) && is_array($courses) && count($courses) > 0)
-            <!-- Display courses directly from PHP as fallback -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-12 auto-rows-fr">
                 @foreach($courses as $index => $course)
                 @php
                     $thumbnailPath = $course['thumbnail'] ?? null;
-                    // تنظيف المسار من backslashes
                     $thumbnailPath = $thumbnailPath ? str_replace('\\', '/', $thumbnailPath) : null;
                     $hasThumbnail = $thumbnailPath && !empty(trim($thumbnailPath));
-                    // إنشاء URL كامل للصورة
                     $imageUrl = $hasThumbnail ? asset('storage/' . $thumbnailPath) : null;
                 @endphp
-                <div class="course-card rounded-3xl overflow-hidden shadow-xl fade-in-up group h-full" style="animation-delay: {{ $index * 0.1 }}s;"
-                     data-thumbnail="{{ $thumbnailPath ?? '' }}"
-                     data-image-url="{{ $imageUrl ?? '' }}">
-                    <div class="h-48 lg:h-44 bg-gradient-to-br from-blue-600 via-blue-500 to-green-500 flex items-center justify-center relative course-image overflow-hidden flex-shrink-0">
+                <div class="group relative fade-in-up bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-blue-200 h-full" style="animation-delay: {{ $index * 0.05 }}s;">
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-400 via-green-400 to-purple-400 rounded-2xl blur opacity-0 group-hover:opacity-20 transition-opacity duration-500 -z-10"></div>
+                    <div class="relative h-44 sm:h-48 bg-gradient-to-br from-blue-600 via-blue-500 to-green-500 overflow-hidden">
                         @if($hasThumbnail && $imageUrl)
-                            <img src="{{ $imageUrl }}" alt="{{ $course['title'] ?? __('public.course_fallback') }}" class="w-full h-full object-cover absolute inset-0 z-0" style="display: block !important; position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; z-index: 0 !important;" onload="console.log('Image loaded: {{ $imageUrl }}');" onerror="console.error('Image failed to load: {{ $imageUrl }}'); this.style.display='none';">
+                            <img src="{{ $imageUrl }}" alt="{{ $course['title'] ?? __('public.course_fallback') }}" class="absolute inset-0 w-full h-full object-cover">
                         @else
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent z-10"></div>
-                            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" style="background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, transparent 70%);"></div>
-                            <i class="fas fa-code text-white text-3xl lg:text-4xl relative z-20 transition-transform duration-300 drop-shadow-lg"></i>
+                            <div class="absolute inset-0 opacity-10" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="relative z-10 transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                                    <i class="fas fa-play-circle text-white text-5xl lg:text-6xl drop-shadow-lg"></i>
+                                </div>
+                            </div>
                         @endif
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-black/10 to-transparent z-10"></div>
-                        
+                        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-black/5 to-transparent"></div>
                         @if(isset($course['is_featured']) && $course['is_featured'])
                             <span class="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 px-2 py-0.5 rounded-full text-[9px] font-bold shadow-md flex items-center gap-0.5 z-20">
                                 <i class="fas fa-star text-[8px]"></i>
                                 <span>{{ __('public.featured_badge') }}</span>
                             </span>
                         @endif
-                        
-                        <div class="absolute bottom-3 right-3 bg-white/20 backdrop-blur-md rounded-full px-2 py-1 z-20">
-                            <span class="text-white text-[10px] font-bold flex items-center gap-1">
-                                <i class="fas fa-play-circle text-[10px]"></i>
-                                <span>{{ $course['lessons_count'] ?? 0 }} {{ __('public.lesson_single') }}</span>
-                            </span>
+                        <div class="absolute bottom-2 right-2 z-20">
+                            <div class="bg-white/95 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-xl border border-white/50 group-hover:scale-110 transition-transform duration-300">
+                                <span class="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                                    <i class="fas fa-play-circle text-blue-600 text-[11px]"></i>
+                                    <span>{{ $course['lessons_count'] ?? 0 }} {{ __('public.lesson_single') }}</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="p-6 bg-white flex-grow flex flex-col justify-between">
-                        <div class="flex items-center gap-2 mb-3">
-                            @if(isset($course['academic_subject']['name']))
-                            <div class="flex items-center gap-1.5 text-xs lg:text-sm text-gray-500 bg-blue-50 px-2 lg:px-3 py-1 lg:py-1.5 rounded-full">
-                                <i class="fas fa-user text-blue-600 text-[10px] lg:text-xs"></i>
+                    <div class="p-4 bg-white relative overflow-hidden flex-grow flex flex-col">
+                        <div class="absolute inset-0 opacity-[0.02] pointer-events-none" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(59, 130, 246, 0.05) 5px, rgba(59, 130, 246, 0.05) 10px);"></div>
+                        @if(isset($course['academic_subject']['name']))
+                        <div class="mb-2 relative z-10">
+                            <span class="inline-flex items-center gap-1.5 text-xs text-gray-500 bg-blue-50 px-2 py-1 rounded-full">
+                                <i class="fas fa-user text-blue-600 text-[10px]"></i>
                                 <span class="text-blue-700 font-medium">{{ Str::limit($course['academic_subject']['name'], 15) }}</span>
-                            </div>
-                            @endif
+                            </span>
                         </div>
-
-                        <h3 class="text-lg lg:text-xl font-black text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors duration-300 leading-tight min-h-[3.5rem]">{{ $course['title'] ?? __('public.no_title_fallback') }}</h3>
-                        
-                        <p class="text-gray-600 text-xs lg:text-sm mb-3 line-clamp-2 leading-relaxed min-h-[3rem]">
-                            {{ Str::limit($course['description'] ?? __('public.course_description_fallback'), 80) }}
+                        @endif
+                        <h3 class="text-base font-black text-gray-900 mb-2 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-green-600 transition-all duration-300 leading-tight relative z-10">
+                            {{ $course['title'] ?? __('public.no_title_fallback') }}
+                        </h3>
+                        <p class="text-gray-600 text-xs mb-3 line-clamp-2 leading-relaxed group-hover:text-gray-700 transition-colors duration-300 relative z-10 flex-grow">
+                            {{ Str::limit($course['description'] ?? __('public.course_description_fallback'), 70) }}
                         </p>
-                        
-                        <div class="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto gap-2 relative z-10">
-                            <div class="flex flex-col">
+                        <div class="flex items-center justify-between pt-3 border-t border-gray-100 group-hover:border-blue-100 transition-colors duration-300 relative z-10">
+                            <div>
                                 @if(isset($course['price']) && $course['price'] > 0)
-                                    <span class="text-base lg:text-lg font-black text-blue-600 flex items-center gap-1">
+                                    <span class="text-lg font-black text-blue-600 flex items-center gap-1 group-hover:scale-110 transition-transform duration-300">
                                         <span>{{ number_format($course['price'], 0) }}</span>
                                         <span class="text-[10px] text-gray-500 font-normal">{{ __('public.currency_egp') }}</span>
                                     </span>
                                 @else
-                                    <span class="text-base lg:text-lg font-black text-green-600 flex items-center gap-1">
-                                        <i class="fas fa-gift text-xs"></i>
+                                    <span class="text-lg font-black text-green-600 flex items-center gap-1.5 group-hover:scale-110 transition-transform duration-300">
+                                        <div class="w-5 h-5 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-md">
+                                            <i class="fas fa-gift text-white text-[8px]"></i>
+                                        </div>
                                         <span>{{ __('public.free_price') }}</span>
                                     </span>
                                 @endif
                             </div>
-                            <a href="{{ route('public.course.show', $course['id']) }}" class="bg-gradient-to-r from-blue-600 to-green-500 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-[10px] lg:text-xs font-bold shadow-md hover:shadow-lg hover:opacity-90 transition-all duration-200 whitespace-nowrap relative z-50 pointer-events-auto">
-                                <span class="flex items-center gap-1">
-                                    <span class="hidden sm:inline">{{ __('public.view_details') }}</span>
-                                    <span class="sm:hidden">{{ __('public.details_short') }}</span>
-                                    <i class="fas fa-arrow-left text-[10px]"></i>
-                                </span>
+                            <a href="{{ route('public.course.show', $course['id']) }}" class="group/btn relative bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 flex items-center gap-1.5 overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 btn-shimmer"></div>
+                                <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-green-400 rounded-lg blur opacity-0 group-hover/btn:opacity-50 transition-opacity duration-300"></div>
+                                <span class="relative z-10">{{ __('public.view_details') }}</span>
+                                <i class="fas fa-arrow-left text-[10px] relative z-10 group-hover/btn:translate-x-1 transition-transform duration-300"></i>
                             </a>
                         </div>
                     </div>

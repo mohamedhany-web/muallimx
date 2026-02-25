@@ -705,10 +705,10 @@
                         </div>
 
                         <div class="input-wrap">
-                            <label for="email_m">{{ __('auth.email_optional') }}</label>
+                            <label for="email_m">{{ __('auth.email') }} <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <i class="input-icon fas fa-envelope"></i>
-                                <input type="email" name="email" id="email_m" value="{{ old('email') }}" class="form-input w-full" placeholder="example@email.com" dir="ltr">
+                                <input type="email" name="email" id="email_m" value="{{ old('email') }}" required class="form-input w-full" placeholder="example@email.com" dir="ltr">
                             </div>
                             @error('email')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                         </div>
@@ -861,12 +861,13 @@
                             <!-- البريد الإلكتروني -->
                             <div>
                                 <label for="email" class="block text-sm font-bold text-[var(--text-dark)] mb-1.5">
-                                    {{ __('auth.email_optional') }}
+                                    {{ __('auth.email') }} <span class="text-red-500">*</span>
                                 </label>
                                 <input type="email" 
                                        name="email" 
                                        id="email" 
                                        value="{{ old('email') }}"
+                                       required
                                        class="form-input w-full px-4 py-3 rounded-xl text-[var(--text-dark)] font-medium @error('email') border-red-500 @enderror" 
                                        placeholder="example@email.com"
                                        dir="ltr">

@@ -424,6 +424,18 @@
                         <label class="block text-sm font-semibold text-slate-700 mb-1">النقاط</label>
                         <input type="number" name="points" id="vqPoints" value="1" min="1" max="100" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800">
                     </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1">عدد مرات الظهور</label>
+                        <select name="show_count" id="vqShowCount" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800">
+                            <option value="0">كل مرة (عند كل مشاهدة)</option>
+                            <option value="1" selected>مرة واحدة فقط</option>
+                            <option value="2">مرتين</option>
+                            <option value="3">3 مرات</option>
+                            <option value="5">5 مرات</option>
+                            <option value="10">10 مرات</option>
+                        </select>
+                        <p class="text-xs text-slate-500 mt-1">متى يظهر السؤال للطالب أثناء المشاهدة</p>
+                    </div>
                 </div>
                 <button type="submit" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-semibold transition-colors">
                     <i class="fas fa-plus ml-1"></i> إضافة السؤال
@@ -1171,7 +1183,7 @@ async function loadVideoQuestionsData(lectureId) {
         (data.video_questions || []).forEach(function(q) {
             var row = document.createElement('div');
             row.className = 'flex items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200';
-            row.innerHTML = '<div class="min-w-0 flex-1"><span class="font-semibold text-slate-800">' + (q.timestamp_label || '0:00') + '</span><span class="text-slate-500 mx-2">—</span><span class="text-slate-700 text-sm truncate">' + (q.question_text || '').substring(0, 60) + (q.question_text && q.question_text.length > 60 ? '...' : '') + '</span><span class="text-xs text-slate-400 mr-2">(' + (q.on_wrong === 'rewind' ? 'إعادة' : 'متابعة') + ')</span></div><button type="button" onclick="deleteVideoQuestion(' + lectureId + ',' + q.id + ')" class="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-sm"><i class="fas fa-trash"></i></button>';
+            row.innerHTML = '<div class="min-w-0 flex-1"><span class="font-semibold text-slate-800">' + (q.timestamp_label || '0:00') + '</span><span class="text-slate-500 mx-2">—</span><span class="text-slate-700 text-sm truncate">' + (q.question_text || '').substring(0, 60) + (q.question_text && q.question_text.length > 60 ? '...' : '') + '</span><span class="text-xs text-slate-400 mr-2">(' + (q.on_wrong === 'rewind' ? 'إعادة' : 'متابعة') + ')</span><span class="text-xs text-amber-600 mr-2">· ' + (q.show_count_label || 'مرة واحدة') + '</span></div><button type="button" onclick="deleteVideoQuestion(' + lectureId + ',' + q.id + ')" class="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-sm"><i class="fas fa-trash"></i></button>';
             listEl.appendChild(row);
         });
         if ((data.video_questions || []).length === 0) listEl.innerHTML = '<p class="text-slate-500 text-sm">لا توجد أسئلة بعد. أضف سؤالاً أدناه.</p>';
@@ -1203,7 +1215,8 @@ async function submitVideoQuestion(e) {
         question_source: source,
         on_wrong: document.getElementById('vqOnWrong').value,
         rewind_seconds: document.getElementById('vqRewindSeconds').value || 0,
-        points: document.getElementById('vqPoints').value || 1
+        points: document.getElementById('vqPoints').value || 1,
+        show_count: document.getElementById('vqShowCount').value !== undefined ? document.getElementById('vqShowCount').value : '1'
     };
     if (source === 'bank') {
         payload.question_id = document.getElementById('vqQuestionId').value;
@@ -1228,12 +1241,13 @@ async function submitVideoQuestion(e) {
         if (listEl.querySelector('p')) listEl.innerHTML = '';
         var row = document.createElement('div');
         row.className = 'flex items-center justify-between gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200';
-        row.innerHTML = '<div class="min-w-0 flex-1"><span class="font-semibold text-slate-800">' + (q.timestamp_label || '0:00') + '</span><span class="text-slate-500 mx-2">—</span><span class="text-slate-700 text-sm truncate">' + (q.question_text || '').substring(0, 60) + (q.question_text && q.question_text.length > 60 ? '...' : '') + '</span><span class="text-xs text-slate-400 mr-2">(' + (q.on_wrong === 'rewind' ? 'إعادة' : 'متابعة') + ')</span></div><button type="button" onclick="deleteVideoQuestion(' + videoQuestionsLectureId + ',' + q.id + ')" class="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-sm"><i class="fas fa-trash"></i></button>';
+        row.innerHTML = '<div class="min-w-0 flex-1"><span class="font-semibold text-slate-800">' + (q.timestamp_label || '0:00') + '</span><span class="text-slate-500 mx-2">—</span><span class="text-slate-700 text-sm truncate">' + (q.question_text || '').substring(0, 60) + (q.question_text && q.question_text.length > 60 ? '...' : '') + '</span><span class="text-xs text-slate-400 mr-2">(' + (q.on_wrong === 'rewind' ? 'إعادة' : 'متابعة') + ')</span><span class="text-xs text-amber-600 mr-2">· ' + (q.show_count_label || 'مرة واحدة') + '</span></div><button type="button" onclick="deleteVideoQuestion(' + videoQuestionsLectureId + ',' + q.id + ')" class="p-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-sm"><i class="fas fa-trash"></i></button>';
         listEl.appendChild(row);
         form.reset();
         document.getElementById('vqTimestampMinutes').value = 0;
         document.getElementById('vqTimestampSeconds').value = 0;
         document.getElementById('vqPoints').value = 1;
+        document.getElementById('vqShowCount').value = '1';
     } catch (err) {
         alert('حدث خطأ: ' + (err.message || 'فشل الإضافة'));
     }

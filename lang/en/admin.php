@@ -32,6 +32,7 @@ return [
     'payment_agreements' => 'Payment Agreements',
     'accounting_reports' => 'Accounting Reports',
     'marketing' => 'Marketing',
+    'popup_ads' => 'Popup Ads (Home)',
     'personal_branding' => 'Personal Branding (Instructors)',
     'coupons_discounts' => 'Coupons and Discounts',
     'referral_programs' => 'Referral Programs',

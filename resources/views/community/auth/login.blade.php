@@ -14,29 +14,27 @@
         </div>
 
         @if($errors->any())
-            <div class="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+            <div class="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
                 {{ $errors->first() }}
             </div>
         @endif
 
         <form method="POST" action="{{ route('community.login.post') }}" class="space-y-4">
             @csrf
-            <input type="text" name="website" value="" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
             <div>
-                <label for="email" class="block text-sm font-bold text-slate-700 mb-1">{{ __('auth.email') }}</label>
-                <input type="email" name="email" id="email" value="{{ old('email') }}" required autofocus
+                <label for="email" class="block text-sm font-bold text-slate-700 mb-1">{{ __('auth.email') }} <span class="text-red-500">*</span></label>
+                <input type="email" name="email" id="email" value="{{ old('email') }}" required autocomplete="email" dir="ltr"
                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                       placeholder="{{ __('auth.email') }}" dir="ltr">
+                       placeholder="example@email.com">
             </div>
             <div>
-                <label for="password" class="block text-sm font-bold text-slate-700 mb-1">{{ __('auth.password') }}</label>
-                <input type="password" name="password" id="password" required
-                       class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
-                       placeholder="{{ __('auth.password') }}">
+                <label for="password" class="block text-sm font-bold text-slate-700 mb-1">{{ __('auth.password') }} <span class="text-red-500">*</span></label>
+                <input type="password" name="password" id="password" required autocomplete="current-password"
+                       class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors">
             </div>
             <div class="flex items-center gap-2">
                 <input type="checkbox" name="remember" id="remember" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                <label for="remember" class="text-sm text-slate-600 font-medium">{{ __('auth.remember') }}</label>
+                <label for="remember" class="text-sm text-slate-600">{{ __('auth.remember') }}</label>
             </div>
             <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold shadow-lg hover:from-blue-700 hover:to-cyan-700 transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                 {{ __('auth.login') }}
@@ -49,7 +47,7 @@
                 <a href="{{ route('community.register') }}" class="text-blue-600 font-bold hover:text-blue-700 hover:underline">{{ __('auth.no_account_register_now') }}</a>
             </p>
             <p class="text-center text-slate-500 text-xs">
-                <a href="{{ route('login') }}" class="hover:text-slate-700 hover:underline">تسجيل الدخول من المنصة الرئيسية</a>
+                <a href="{{ route('login') }}" class="hover:text-slate-700 hover:underline">الذهاب لصفحة تسجيل الدخول الرئيسية</a>
             </p>
         </div>
     </div>

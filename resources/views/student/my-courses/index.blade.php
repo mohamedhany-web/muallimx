@@ -144,9 +144,13 @@
                         {{ $course->academicSubject->name ?? '—' }} · {{ $course->teacher->name ?? '—' }} · {{ $course->lessons->count() }} {{ __('student.lesson_singular') }}
                     </p>
 
-                    <div class="flex items-center justify-between gap-2 mb-3">
+                    <div class="flex items-center justify-between gap-2 mb-2">
                         <span class="text-xs font-medium text-gray-600">{{ __('student.progress') }}</span>
                         <span class="text-sm font-bold text-sky-600">{{ $progress }}%</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <span class="text-xs font-medium text-gray-600">النقاط</span>
+                        <span class="text-sm font-bold text-amber-600"><i class="fas fa-star text-amber-500 ml-1"></i>{{ number_format((float)($course->student_points ?? 0), 0) }}</span>
                     </div>
                     <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
                         <div class="h-full bg-sky-500 rounded-full transition-all duration-500" style="width: {{ min($progress, 100) }}%;"></div>

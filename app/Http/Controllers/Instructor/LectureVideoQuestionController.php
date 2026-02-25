@@ -27,6 +27,8 @@ class LectureVideoQuestionController extends Controller
         $this->authorizeLecture($lecture);
         $questions = $lecture->videoQuestions()->with('question')->orderBy('timestamp_seconds')->get()->map(function ($q) {
             $payload = $q->getPayloadForStudent();
+            $showCount = $q->show_count;
+            $showCountLabel = $showCount === null || $showCount == 0 ? 'كل مرة' : ($showCount == 1 ? 'مرة واحدة' : $showCount . ' مرات');
             return [
                 'id' => $q->id,
                 'timestamp_seconds' => $q->timestamp_seconds,
@@ -36,6 +38,8 @@ class LectureVideoQuestionController extends Controller
                 'on_wrong' => $q->on_wrong,
                 'rewind_seconds' => $q->rewind_seconds,
                 'points' => $q->points,
+                'show_count' => $showCount,
+                'show_count_label' => $showCountLabel,
             ];
         });
         $instructor = Auth::user();
@@ -73,6 +77,7 @@ class LectureVideoQuestionController extends Controller
             'on_wrong' => 'required|in:rewind,continue',
             'rewind_seconds' => 'nullable|integer|min:0|max:3600',
             'points' => 'nullable|integer|min:1|max:100',
+            'show_count' => 'nullable|integer|min:0|max:255',
         ], [
             'timestamp_minutes.required' => 'حدد الدقيقة في الفيديو',
             'question_source.required' => 'حدد مصدر السؤال',
@@ -103,6 +108,7 @@ class LectureVideoQuestionController extends Controller
             'on_wrong' => $validated['on_wrong'],
             'rewind_seconds' => $validated['on_wrong'] === 'rewind' ? (int) ($validated['rewind_seconds'] ?? 0) : 0,
             'points' => (int) ($validated['points'] ?? 1),
+            'show_count' => isset($validated['show_count']) ? (int) $validated['show_count'] : 1,
             'order' => $lastOrder + 1,
         ]);
 
@@ -119,6 +125,8 @@ class LectureVideoQuestionController extends Controller
                 'on_wrong' => $vq->on_wrong,
                 'rewind_seconds' => $vq->rewind_seconds,
                 'points' => $vq->points,
+                'show_count' => $vq->show_count,
+                'show_count_label' => ($vq->show_count === null || $vq->show_count == 0) ? 'كل مرة' : ($vq->show_count == 1 ? 'مرة واحدة' : $vq->show_count . ' مرات'),
             ],
         ]);
     }

@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 /**
- * مصادقة مجتمع البيانات: تسجيل دخول وإنشاء حساب منفصلين عن المنصة الرئيسية.
+ * مصادقة مجتمع البيانات: تسجيل دخول وإنشاء حساب بالبريد الإلكتروني وكلمة المرور فقط.
  * يستخدم نفس جدول المستخدمين لتمكين المستخدمين الحاليين من الدخول بدون إنشاء حساب جديد.
  */
 class AuthController extends Controller
@@ -26,11 +26,13 @@ class AuthController extends Controller
 
     public function showLogin(): View
     {
+        session()->put('url.intended', route('community.dashboard'));
         return view('community.auth.login');
     }
 
-    public function showRegister(): View
+    public function showRegister(): View|RedirectResponse
     {
+        session()->put('url.intended', route('community.dashboard'));
         $data = $this->registrationService->getPhoneCountriesData();
         return view('community.auth.register', $data);
     }
@@ -65,15 +67,12 @@ class AuthController extends Controller
 
         RateLimiter::clear($key);
 
-        // مجتمع الذكاء الاصطناعي: لا نفرض 2FA — الدخول مباشرة إلى لوحة المجتمع
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
         $user->update(['last_login_at' => now()]);
 
-        // إزالة أي توجيه سابق محفوظ لصفحة المنصة الرئيسية حتى لا يُعاد التوجيه لـ /login
         $request->session()->forget('url.intended');
 
-        // توجيه فوري إلى لوحة تحكم المجتمع (دائماً من صفحة community/login)
         if ($user->is_community_contributor) {
             return redirect()->route('community.contributor.dashboard');
         }

@@ -18,7 +18,7 @@ class GoogleAuthController extends Controller
     {
         if (empty(config('services.google.client_id')) || empty(config('services.google.client_secret'))) {
             return redirect()->route('login')
-                ->withErrors(['email' => 'تسجيل الدخول بـ Google غير مفعّل. يرجى استخدام البريد وكلمة المرور، أو تواصل مع الإدارة.']);
+                ->withErrors(['email' => __('auth.login_register_google_only')]);
         }
         return app(SocialiteFactory::class)->driver('google')->redirect();
     }
@@ -33,7 +33,7 @@ class GoogleAuthController extends Controller
         } catch (\Exception $e) {
             \Log::warning('Google OAuth error', ['message' => $e->getMessage()]);
             return redirect()->route('login')
-                ->withErrors(['email' => 'فشل تسجيل الدخول عبر Google. حاول مرة أخرى أو سجّل الدخول بالبريد وكلمة المرور.']);
+                ->withErrors(['email' => __('auth.login_register_google_only')]);
         }
 
         $email = $googleUser->getEmail();
@@ -42,7 +42,7 @@ class GoogleAuthController extends Controller
 
         if (empty($email)) {
             return redirect()->route('login')
-                ->withErrors(['email' => 'لم نتمكن من الحصول على بريدك من Google. يرجى السماح بمشاركة البريد أو التسجيل يدوياً.']);
+                ->withErrors(['email' => __('auth.login_register_google_only')]);
         }
 
         $user = User::where('google_id', $googleId)->first();
@@ -79,6 +79,8 @@ class GoogleAuthController extends Controller
         request()->session()->regenerate();
         $user->update(['last_login_at' => now()]);
 
+        $intended = session('url.intended');
+
         if ($user->isEmployee()) {
             return redirect()->intended(route('employee.dashboard'));
         }
@@ -87,6 +89,12 @@ class GoogleAuthController extends Controller
         }
         if ($user->isInstructor()) {
             return redirect()->intended(route('instructor.dashboard'));
+        }
+
+        // إذا كان القصد من مجتمع الذكاء الاصطناعي والمساهم → لوحة المساهم
+        if ($intended && str_contains($intended, 'community') && $user->is_community_contributor) {
+            session()->forget('url.intended');
+            return redirect()->route('community.contributor.dashboard');
         }
 
         return redirect()->intended(route('dashboard'));

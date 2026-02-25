@@ -584,8 +584,14 @@
                 'download_url' => route('my-courses.lectures.material.download', [$course->id, $lecture->id, $m->id]),
             ];
         })->values()->all();
-        $videoQuestions = $lecture->videoQuestions()->orderBy('timestamp_seconds')->get()->map(function($vq) {
+        $videoQuestions = $lecture->videoQuestions()->orderBy('timestamp_seconds')->get()->filter(function($vq) use ($currentUser) {
+            $showCount = $vq->show_count;
+            if ($showCount === null || $showCount == 0) return true;
+            $answered = \App\Models\LectureVideoQuestionAnswer::where('lecture_video_question_id', $vq->id)->where('user_id', $currentUser->id)->count();
+            return $answered < $showCount;
+        })->map(function($vq) {
             $payload = $vq->getPayloadForStudent();
+            $showEveryTime = $vq->show_count === null || $vq->show_count == 0;
             return [
                 'id' => $vq->id,
                 'timestamp_seconds' => $vq->timestamp_seconds,
@@ -595,6 +601,7 @@
                 'points' => $vq->points,
                 'on_wrong' => $vq->on_wrong,
                 'rewind_seconds' => $vq->rewind_seconds,
+                'show_every_time' => $showEveryTime,
             ];
         })->values()->all();
         $watchProgress = \App\Models\LectureWatchProgress::where('lecture_id', $lecture->id)->where('user_id', $currentUser->id)->first();
@@ -1870,19 +1877,51 @@ function videoPlayer() {
 
         container.innerHTML = '<div id="lecture-yt-player-box" class="absolute inset-0 w-full h-full"></div>' +
             '<div id="lecture-vq-overlay" class="hidden absolute inset-0 bg-black/85 flex items-center justify-center p-4 z-20" style="direction:rtl">' +
-            '<div class="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90%] overflow-y-auto shadow-xl">' +
+            '<div id="lecture-vq-card" class="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90%] overflow-y-auto shadow-xl">' +
+            '<div id="lecture-vq-question-view">' +
             '<h3 class="text-lg font-bold text-slate-800 mb-2">سؤال</h3>' +
             '<p id="lecture-vq-text" class="text-slate-700 mb-4"></p>' +
             '<div id="lecture-vq-options" class="space-y-2 mb-4"></div>' +
             '<button type="button" id="lecture-vq-submit" class="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold">إرسال</button>' +
-            '</div></div>';
+            '</div>' +
+            '<div id="lecture-vq-feedback-view" class="hidden text-center">' +
+            '<p id="lecture-vq-result-label" class="text-xl font-bold mb-2"></p>' +
+            '<p id="lecture-vq-result-emoji" class="text-4xl mb-3"></p>' +
+            '<p id="lecture-vq-result-message" class="text-slate-600 mb-4"></p>' +
+            '<button type="button" id="lecture-vq-continue-btn" class="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold">متابعة</button>' +
+            '</div></div></div>';
         overlay = document.getElementById('lecture-vq-overlay');
         submitBtn = document.getElementById('lecture-vq-submit');
         optionsEl = document.getElementById('lecture-vq-options');
         textEl = document.getElementById('lecture-vq-text');
+        var questionView = document.getElementById('lecture-vq-question-view');
+        var feedbackView = document.getElementById('lecture-vq-feedback-view');
+        var resultLabel = document.getElementById('lecture-vq-result-label');
+        var resultEmoji = document.getElementById('lecture-vq-result-emoji');
+        var resultMessage = document.getElementById('lecture-vq-result-message');
+        var continueBtn = document.getElementById('lecture-vq-continue-btn');
+        var correctMessages = [
+            'واو! عقلك يعمل بشكل ممتاز اليوم 🧠✨',
+            'ماشاء الله! إجابة ذكية جداً 🎯🔥',
+            'برافو! أنت منتبه ومتابع 👏💡',
+            'صح ١٠٠٪! استمر هيك 🌟👍',
+            'فهمت الفكرة صح، رائع! 🏆😊',
+            'إجابة صحيحة بامتياز! متفوق اليوم 🎓✨'
+        ];
+        var wrongMessages = [
+            'لا بأس! جرّب التركيز والمشاهدة مرة أخرى 🔄💪',
+            'هيك نتعلم! رجّع شوي وشوف الجزء مرة تانية 📚😊',
+            'غلطة بسيطة، المهم إنك تحاول 💪❤️',
+            'راجع الدقيقة اللي فاتت وارجع جرب 🎬✨',
+            'ما في مشكلة، كلنا بنتعلم من الأخطاء 🌱🙌',
+            'شوي تركيز وراح تضبط! أنت قادر 💯🔥'
+        ];
+        var continueHandler = null;
 
         function showQuestion(q) {
             currentQuestion = q;
+            if (questionView) questionView.classList.remove('hidden');
+            if (feedbackView) feedbackView.classList.add('hidden');
             if (textEl) textEl.textContent = q.text || '';
             if (optionsEl) {
                 optionsEl.innerHTML = '';
@@ -1900,6 +1939,27 @@ function videoPlayer() {
                 });
             }
             if (overlay) overlay.classList.remove('hidden');
+        }
+        function showFeedback(correct, data) {
+            if (questionView) questionView.classList.add('hidden');
+            if (feedbackView) feedbackView.classList.remove('hidden');
+            if (resultLabel) {
+                resultLabel.textContent = correct ? 'إجابة صحيحة ✓' : 'إجابة خاطئة';
+                resultLabel.className = 'text-xl font-bold mb-2 ' + (correct ? 'text-emerald-600' : 'text-amber-600');
+            }
+            if (resultEmoji) resultEmoji.textContent = correct ? '🎉' : '💪';
+            if (resultMessage) {
+                var arr = correct ? correctMessages : wrongMessages;
+                resultMessage.textContent = arr[Math.floor(Math.random() * arr.length)];
+            }
+            if (continueHandler && continueBtn) continueBtn.removeEventListener('click', continueHandler);
+            continueHandler = function() {
+                hideOverlay();
+                if (submitBtn) submitBtn.disabled = false;
+                if (data.on_wrong === 'rewind' && !data.correct && data.rewind_seconds) doRewind(data.rewind_seconds || 0);
+                else doContinue();
+            };
+            if (continueBtn) continueBtn.addEventListener('click', continueHandler);
         }
         function hideOverlay() {
             if (overlay) overlay.classList.add('hidden');
@@ -1947,11 +2007,8 @@ function videoPlayer() {
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
                 body: JSON.stringify({ answer: answer })
             }).then(function(r) { return r.json(); }).then(function(data) {
-                shownIds.add(currentQuestion.id);
-                hideOverlay();
-                if (submitBtn) submitBtn.disabled = false;
-                if (data.on_wrong === 'rewind' && !data.correct && data.rewind_seconds) doRewind(data.rewind_seconds || 0);
-                else doContinue();
+                if (!(currentQuestion && currentQuestion.show_every_time)) shownIds.add(currentQuestion.id);
+                showFeedback(!!data.correct, data);
             }).catch(function() {
                 if (submitBtn) submitBtn.disabled = false;
                 hideOverlay();

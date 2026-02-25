@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\PopupAd;
 use Illuminate\View\View;
 
 /**
@@ -13,6 +14,16 @@ class LandingController extends Controller
 {
     public function index(): View
     {
-        return view('welcome');
+        $popupAd = null;
+        $ad = PopupAd::activeNow()->first();
+        if ($ad) {
+            $key = 'popup_ad_' . $ad->id . '_views';
+            $views = (int) session($key, 0);
+            if ($views < $ad->max_views_per_visitor) {
+                session([$key => $views + 1]);
+                $popupAd = $ad;
+            }
+        }
+        return view('welcome', compact('popupAd'));
     }
 }

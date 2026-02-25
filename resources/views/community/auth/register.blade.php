@@ -40,9 +40,11 @@
                 </div>
             </div>
             <div>
-                <label for="email" class="block text-sm font-bold text-slate-700 mb-1">{{ __('auth.email_optional') }}</label>
-                <input type="email" name="email" id="email" value="{{ old('email') }}" dir="ltr"
-                       class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors">
+                <label for="email" class="block text-sm font-bold text-slate-700 mb-1">{{ __('auth.email') }} <span class="text-red-500">*</span></label>
+                <input type="email" name="email" id="email" value="{{ old('email') }}" required dir="ltr"
+                       class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
+                       placeholder="example@email.com">
+                @error('email')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label for="password" class="block text-sm font-bold text-slate-700 mb-1">{{ __('auth.password') }}</label>

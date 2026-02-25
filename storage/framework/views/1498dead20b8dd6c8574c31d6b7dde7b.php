@@ -699,6 +699,13 @@
                 <div class="login-mobile-form-card">
                     <form action="<?php echo e(route('login')); ?>" method="POST">
                         <?php echo csrf_field(); ?>
+                        <?php if(session('status')): ?>
+                            <div class="mb-4 p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-600"></i>
+                                <?php echo e(session('status')); ?>
+
+                            </div>
+                        <?php endif; ?>
                         <div class="input-wrap">
                             <label for="email_mobile"><?php echo e(__('auth.email')); ?></label>
                             <div class="relative">
@@ -747,7 +754,7 @@ unset($__errorArgs, $__bag); ?>
                                 <input type="checkbox" name="remember" class="w-4 h-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]">
                                 <span class="text-[var(--text-muted)]"><?php echo e(__('auth.remember')); ?></span>
                             </label>
-                            <a href="#" class="link-primary text-sm"><?php echo e(__('auth.forgot_password')); ?></a>
+                            <a href="<?php echo e(route('password.request')); ?>" class="link-primary text-sm"><?php echo e(__('auth.forgot_password')); ?></a>
                         </div>
                         <button type="submit" class="btn-login w-full py-3 rounded-xl text-white font-bold text-base flex items-center justify-center gap-2">
                             <span><?php echo e(__('auth.login')); ?></span>
@@ -826,7 +833,13 @@ unset($__errorArgs, $__bag); ?>
 
                     <form action="<?php echo e(route('login')); ?>" method="POST" class="space-y-5">
                         <?php echo csrf_field(); ?>
-                        
+                        <?php if(session('status')): ?>
+                            <div class="p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-check-circle text-green-600"></i>
+                                <?php echo e(session('status')); ?>
+
+                            </div>
+                        <?php endif; ?>
                         <div>
                             <input type="email" 
                                    name="email" 
@@ -899,7 +912,7 @@ unset($__errorArgs, $__bag); ?>
                                        class="w-4 h-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]">
                                 <span class="text-[var(--text-muted)] font-medium"><?php echo e(__('auth.remember')); ?></span>
                             </label>
-                            <a href="#" class="link-primary text-sm"><?php echo e(__('auth.forgot_password')); ?></a>
+                            <a href="<?php echo e(route('password.request')); ?>" class="link-primary text-sm"><?php echo e(__('auth.forgot_password')); ?></a>
                         </div>
 
                         <button type="submit" 

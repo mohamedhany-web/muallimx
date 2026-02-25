@@ -26,6 +26,12 @@ class MyCourseController extends Controller
             ->with(['academicYear', 'academicSubject', 'teacher', 'lessons'])
             ->paginate(12);
 
+        // إضافة نقاط الطالب من أسئلة الفيديو لكل كورس
+        $activeCourses->getCollection()->transform(function ($course) use ($user) {
+            $course->student_points = LectureVideoQuestionAnswer::totalScoreForUserInCourse($user->id, $course->id);
+            return $course;
+        });
+
         // إحصائيات
         $stats = [
             'total_active' => $user->activeCourses()->count(),
@@ -99,6 +105,8 @@ class MyCourseController extends Controller
 
         list($progress, $totalLessons, $completedLessons) = $this->calculateProgressFromSections($user, $course, $sections);
 
+        $coursePoints = LectureVideoQuestionAnswer::totalScoreForUserInCourse($user->id, $course->id);
+
         // تجميع المحاضرات حسب الدرس (للتوافق مع الكود القديم)
         $lecturesByLesson = $course->lectures->groupBy('course_lesson_id');
 
@@ -107,6 +115,7 @@ class MyCourseController extends Controller
             'progress', 
             'totalLessons', 
             'completedLessons', 
+            'coursePoints',
             'lecturesByLesson',
             'sections'
         ));
@@ -322,8 +331,16 @@ class MyCourseController extends Controller
                 ];
             });
 
-        $videoQuestions = $lecture->videoQuestions()->orderBy('timestamp_seconds')->get()->map(function ($vq) {
+        $videoQuestions = $lecture->videoQuestions()->orderBy('timestamp_seconds')->get()->filter(function ($vq) use ($user) {
+            $showCount = $vq->show_count;
+            if ($showCount === null || $showCount == 0) {
+                return true;
+            }
+            $answered = LectureVideoQuestionAnswer::where('lecture_video_question_id', $vq->id)->where('user_id', $user->id)->count();
+            return $answered < $showCount;
+        })->map(function ($vq) {
             $payload = $vq->getPayloadForStudent();
+            $showEveryTime = $vq->show_count === null || $vq->show_count == 0;
             return [
                 'id' => $vq->id,
                 'timestamp_seconds' => $vq->timestamp_seconds,
@@ -333,8 +350,9 @@ class MyCourseController extends Controller
                 'points' => $vq->points,
                 'on_wrong' => $vq->on_wrong,
                 'rewind_seconds' => $vq->rewind_seconds,
+                'show_every_time' => $showEveryTime,
             ];
-        });
+        })->values()->all();
 
         $watchProgress = LectureWatchProgress::where('lecture_id', $lecture->id)
             ->where('user_id', $user->id)

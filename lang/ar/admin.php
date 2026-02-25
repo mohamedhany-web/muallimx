@@ -32,6 +32,7 @@ return [
     'payment_agreements' => 'اتفاقيات السداد',
     'accounting_reports' => 'التقارير المحاسبية',
     'marketing' => 'إدارة التسويق',
+    'popup_ads' => 'الإعلانات (الصفحة الرئيسية)',
     'personal_branding' => 'التسويق الشخصي (المدربين)',
     'coupons_discounts' => 'الكوبونات والخصومات',
     'referral_programs' => 'برامج الإحالات',

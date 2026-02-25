@@ -19,6 +19,7 @@ class LectureVideoQuestion extends Model
         'on_wrong',
         'rewind_seconds',
         'points',
+        'show_count',
         'order',
     ];
 
@@ -27,6 +28,7 @@ class LectureVideoQuestion extends Model
         'timestamp_seconds' => 'integer',
         'rewind_seconds' => 'integer',
         'points' => 'integer',
+        'show_count' => 'integer',
         'order' => 'integer',
     ];
 

@@ -3389,5 +3389,8 @@
             }, { passive: true, capture: true });
         })();
     </script>
+    @if(isset($popupAd) && $popupAd)
+        @include('partials.popup-ad', ['ad' => $popupAd])
+    @endif
     </body>
 </html>

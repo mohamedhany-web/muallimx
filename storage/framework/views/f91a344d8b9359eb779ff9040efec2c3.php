@@ -719,10 +719,10 @@ unset($__errorArgs, $__bag); ?>
                         </div>
 
                         <div class="input-wrap">
-                            <label for="email_m"><?php echo e(__('auth.email_optional')); ?></label>
+                            <label for="email_m"><?php echo e(__('auth.email')); ?> <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <i class="input-icon fas fa-envelope"></i>
-                                <input type="email" name="email" id="email_m" value="<?php echo e(old('email')); ?>" class="form-input w-full" placeholder="example@email.com" dir="ltr">
+                                <input type="email" name="email" id="email_m" value="<?php echo e(old('email')); ?>" required class="form-input w-full" placeholder="example@email.com" dir="ltr">
                             </div>
                             <?php $__errorArgs = ['email'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
@@ -929,13 +929,13 @@ unset($__errorArgs, $__bag); ?>
                             <!-- البريد الإلكتروني -->
                             <div>
                                 <label for="email" class="block text-sm font-bold text-[var(--text-dark)] mb-1.5">
-                                    <?php echo e(__('auth.email_optional')); ?>
-
+                                    <?php echo e(__('auth.email')); ?> <span class="text-red-500">*</span>
                                 </label>
                                 <input type="email" 
                                        name="email" 
                                        id="email" 
                                        value="<?php echo e(old('email')); ?>"
+                                       required
                                        class="form-input w-full px-4 py-3 rounded-xl text-[var(--text-dark)] font-medium <?php $__errorArgs = ['email'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :

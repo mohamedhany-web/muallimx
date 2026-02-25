@@ -3408,5 +3408,8 @@
             }, { passive: true, capture: true });
         })();
     </script>
+    <?php if(isset($popupAd) && $popupAd): ?>
+        <?php echo $__env->make('partials.popup-ad', ['ad' => $popupAd], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php endif; ?>
     </body>
 </html><?php /**PATH C:\xampp\htdocs\mindly tics\Mindlytics\resources\views/welcome.blade.php ENDPATH**/ ?>

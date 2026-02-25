@@ -14,6 +14,7 @@ use App\Models\ContactMessage;
 use App\Models\LectureAssignment;
 use App\Models\Exam;
 use App\Models\Certificate;
+use App\Models\LectureVideoQuestionAnswer;
 
 class DashboardController extends Controller
 {
@@ -213,7 +214,7 @@ class DashboardController extends Controller
             ->get()
             ->keyBy('advanced_course_id');
 
-        $activeCourses->each(function ($course) use ($enrollments) {
+        $activeCourses->each(function ($course) use ($enrollments, $user) {
             if ($enrollment = $enrollments->get($course->id)) {
                 $course->setRelation('enrollment', $enrollment);
 
@@ -221,6 +222,7 @@ class DashboardController extends Controller
                     $course->pivot->progress = (float) ($course->pivot->progress ?? $enrollment->progress ?? 0);
                 }
             }
+            $course->student_points = LectureVideoQuestionAnswer::totalScoreForUserInCourse($user->id, $course->id);
         });
 
         $recentOrders = Order::where('user_id', $user->id)

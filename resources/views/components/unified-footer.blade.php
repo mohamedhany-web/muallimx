@@ -14,10 +14,6 @@
             <!-- About Section - Enhanced -->
             <div class="fade-in-left lg:col-span-1 col-span-2 md:col-span-1">
                 <div class="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
-                    <div class="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-blue-600 via-blue-500 to-green-500 rounded-lg md:rounded-xl flex items-center justify-center shadow-xl relative group hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-code text-white text-base md:text-lg lg:text-xl relative z-10"></i>
-                        <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-blue-600 rounded-lg md:rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </div>
                     <div>
                         <h3 class="font-black text-base md:text-lg lg:text-xl bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">Mindlytics</h3>
                         <p class="text-gray-600 text-[10px] md:text-xs font-medium">{{ __('public.brand') }}</p>
