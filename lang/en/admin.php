@@ -106,6 +106,7 @@ return [
     'community_dashboard' => 'Community Dashboard',
     'community_competitions' => 'Competitions',
     'community_datasets' => 'Datasets',
+    'community_models' => 'Model Zoo',
     'community_submissions' => 'Submissions',
     'community_discussions' => 'Discussions',
     'community_settings' => 'Community Settings',

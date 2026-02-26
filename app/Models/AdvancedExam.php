@@ -94,6 +94,14 @@ class AdvancedExam extends Model
     }
 
     /**
+     * علاقة مع أسئلة الامتحان (جدول الربط exam_questions) — للتوافق مع Exam واستخدامها في تحميل النتائج
+     */
+    public function examQuestions()
+    {
+        return $this->hasMany(ExamQuestion::class, 'exam_id')->orderBy('order');
+    }
+
+    /**
      * علاقة مع الأسئلة
      */
     public function questions()

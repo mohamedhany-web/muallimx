@@ -106,6 +106,7 @@ return [
     'community_dashboard' => 'لوحة المجتمع',
     'community_competitions' => 'المسابقات',
     'community_datasets' => 'مجموعات البيانات',
+    'community_models' => 'مكتبة النماذج',
     'community_submissions' => 'التقديمات',
     'community_discussions' => 'المناقشات',
     'community_settings' => 'إعدادات المجتمع',

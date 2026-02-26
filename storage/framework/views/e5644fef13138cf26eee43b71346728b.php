@@ -894,6 +894,10 @@
                             <p class="text-xs text-gray-500 mt-1"><?php echo e($progress); ?>% مكتمل</p>
                         </div>
                         <div class="flex gap-4">
+                            <div class="text-center px-4 py-2 bg-amber-50 rounded-lg border border-amber-100">
+                                <span class="text-lg font-bold text-amber-600 block"><i class="fas fa-star text-amber-500 ml-1"></i><?php echo e(number_format((float)($coursePoints ?? 0), 0)); ?></span>
+                                <span class="text-xs text-gray-600">نقاط</span>
+                            </div>
                             <div class="text-center px-4 py-2 bg-emerald-50 rounded-lg border border-emerald-100">
                                 <span class="text-lg font-bold text-emerald-600 block"><?php echo e($completedLessons); ?></span>
                                 <span class="text-xs text-gray-600">مكتمل</span>

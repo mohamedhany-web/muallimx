@@ -415,12 +415,31 @@ class CurriculumController extends Controller
             'sections' => 'required|array',
             'sections.*.id' => 'required|exists:course_sections,id',
             'sections.*.order' => 'required|integer',
+            'sections.*.parent_id' => 'nullable|exists:course_sections,id',
         ]);
         
-        DB::transaction(function() use ($validated) {
+        $sectionIds = collect($validated['sections'])->pluck('id')->all();
+        $courseSectionIds = $course->sections()->pluck('id')->all();
+        if (count(array_intersect($sectionIds, $courseSectionIds)) !== count($sectionIds)) {
+            abort(403, 'بعض الأقسام لا تخص هذا الكورس');
+        }
+        
+        DB::transaction(function() use ($validated, $course) {
             foreach ($validated['sections'] as $sectionData) {
+                $updates = ['order' => $sectionData['order']];
+                if (array_key_exists('parent_id', $sectionData)) {
+                    $parentId = $sectionData['parent_id'];
+                    if ($parentId && !in_array($parentId, $course->sections()->pluck('id')->all())) {
+                        continue;
+                    }
+                    if ((int) $sectionData['id'] === (int) $parentId) {
+                        continue;
+                    }
+                    $updates['parent_id'] = $parentId;
+                }
                 CourseSection::where('id', $sectionData['id'])
-                    ->update(['order' => $sectionData['order']]);
+                    ->where('advanced_course_id', $course->id)
+                    ->update($updates);
             }
         });
         
@@ -458,6 +477,37 @@ class CurriculumController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'تم تحديث الترتيب بنجاح',
+        ]);
+    }
+
+    /**
+     * نقل عنصر منهج إلى قسم آخر (سحب وإفلات بين الأقسام)
+     */
+    public function moveItem(Request $request, CurriculumItem $item)
+    {
+        $instructor = Auth::user();
+        $section = $item->section;
+        if (!$section || $section->course->instructor_id !== $instructor->id) {
+            abort(403, 'غير مسموح لك بنقل هذا العنصر');
+        }
+        
+        $validated = $request->validate([
+            'section_id' => 'required|exists:course_sections,id',
+            'order' => 'required|integer|min:0',
+        ]);
+        
+        $targetSection = CourseSection::where('id', $validated['section_id'])
+            ->where('advanced_course_id', $section->advanced_course_id)
+            ->firstOrFail();
+        
+        $item->update([
+            'course_section_id' => $targetSection->id,
+            'order' => $validated['order'],
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'تم نقل العنصر بنجاح',
         ]);
     }
 

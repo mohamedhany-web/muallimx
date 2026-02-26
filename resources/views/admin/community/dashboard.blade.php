@@ -45,12 +45,24 @@
         <a href="{{ route('admin.community.submissions.index') }}" class="group block bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-lg hover:border-green-200 transition-all duration-300">
             <div class="flex items-start justify-between">
                 <div>
-                    <p class="text-slate-500 text-sm font-semibold mb-1">{{ __('admin.community_submissions') }}</p>
-                    <p class="text-3xl font-black text-green-600">0</p>
-                    <p class="text-xs text-slate-400 mt-1">قريباً</p>
+                    <p class="text-slate-500 text-sm font-semibold mb-1">تقديمات البيانات</p>
+                    <p class="text-3xl font-black text-green-600">{{ $stats['pending_submissions'] ?? 0 }}</p>
+                    <p class="text-xs text-slate-400 mt-1">معلقة</p>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-green-100 text-green-600 flex items-center justify-center group-hover:bg-green-500 group-hover:text-white transition-colors">
                     <i class="fas fa-paper-plane text-xl"></i>
+                </div>
+            </div>
+        </a>
+        <a href="{{ route('admin.community.submissions.models.index') }}" class="group block bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-lg hover:border-amber-200 transition-all duration-300">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-slate-500 text-sm font-semibold mb-1">{{ __('admin.community_models') }}</p>
+                    <p class="text-3xl font-black text-amber-600">{{ $stats['pending_models'] ?? 0 }}</p>
+                    <p class="text-xs text-slate-400 mt-1">تقديمات معلقة</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                    <i class="fas fa-brain text-xl"></i>
                 </div>
             </div>
         </a>
@@ -94,7 +106,11 @@
             </a>
             <a href="{{ route('admin.community.submissions.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors">
                 <i class="fas fa-paper-plane"></i>
-                <span>{{ __('admin.community_submissions') }}</span>
+                <span>تقديمات البيانات</span>
+            </a>
+            <a href="{{ route('admin.community.submissions.models.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-100 text-amber-800 font-bold hover:bg-amber-200 transition-colors">
+                <i class="fas fa-brain"></i>
+                <span>تقديمات النماذج</span>
             </a>
             <a href="{{ route('admin.community.discussions.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors">
                 <i class="fas fa-comments"></i>

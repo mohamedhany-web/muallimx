@@ -191,6 +191,12 @@ Route::prefix('community')->name('community.')->group(function () {
     Route::get('/data/{dataset}/preview', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetPreview'])->name('data.preview');
     Route::get('/data/{dataset}/preview-zip-entry', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetPreviewZipEntry'])->name('data.preview-zip-entry');
     Route::get('/data/{dataset}/zip-contents', [\App\Http\Controllers\Community\CommunityPageController::class, 'datasetZipContents'])->name('data.zip-contents');
+    // صفحة النماذج (Model Zoo) عامة — بدون تسجيل (مثل البيانات)
+    Route::get('/models', [\App\Http\Controllers\Community\CommunityPageController::class, 'publicModels'])->name('models.index');
+    Route::get('/models/{model}', [\App\Http\Controllers\Community\CommunityPageController::class, 'publicModelShow'])->name('models.show');
+    Route::get('/models/{model}/download', [\App\Http\Controllers\Community\CommunityPageController::class, 'publicModelDownload'])->name('models.download');
+    Route::get('/models/{model}/download/{index}', [\App\Http\Controllers\Community\CommunityPageController::class, 'publicModelDownloadFile'])->name('models.download-file')->whereNumber('index');
+    Route::get('/models/{model}/file/{index}/preview', [\App\Http\Controllers\Community\CommunityPageController::class, 'publicModelFilePreview'])->name('models.file-preview')->whereNumber('index');
     Route::middleware(['guest', 'guest-only'])->group(function () {
         Route::get('/login', [\App\Http\Controllers\Community\AuthController::class, 'showLogin'])->name('login');
         Route::post('/login', [\App\Http\Controllers\Community\AuthController::class, 'login'])->middleware('throttle:20,15')->name('login.post');
@@ -213,6 +219,9 @@ Route::prefix('community')->name('community.')->group(function () {
             Route::get('/datasets', [\App\Http\Controllers\Community\ContributorController::class, 'datasets'])->name('datasets.index');
             Route::get('/datasets/create', [\App\Http\Controllers\Community\ContributorController::class, 'createDataset'])->name('datasets.create');
             Route::post('/datasets', [\App\Http\Controllers\Community\ContributorController::class, 'storeDataset'])->name('datasets.store');
+            Route::get('/models', [\App\Http\Controllers\Community\ContributorController::class, 'models'])->name('models.index');
+            Route::get('/models/create', [\App\Http\Controllers\Community\ContributorController::class, 'createModel'])->name('models.create');
+            Route::post('/models', [\App\Http\Controllers\Community\ContributorController::class, 'storeModel'])->name('models.store');
         });
     });
 });
@@ -866,6 +875,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/submissions/dataset/{dataset}/zip-contents', [\App\Http\Controllers\Admin\CommunityController::class, 'submissionZipContents'])->name('submissions.dataset.zip-contents');
             Route::post('/submissions/dataset/{dataset}/approve', [\App\Http\Controllers\Admin\CommunityController::class, 'approveDataset'])->name('submissions.dataset.approve');
             Route::post('/submissions/dataset/{dataset}/reject', [\App\Http\Controllers\Admin\CommunityController::class, 'rejectDataset'])->name('submissions.dataset.reject');
+            Route::get('/submissions/models', [\App\Http\Controllers\Admin\CommunityController::class, 'modelSubmissions'])->name('submissions.models.index');
+            Route::get('/submissions/model/{community_model}', [\App\Http\Controllers\Admin\CommunityController::class, 'showModelSubmission'])->name('submissions.model.show');
+            Route::post('/submissions/model/{community_model}/approve', [\App\Http\Controllers\Admin\CommunityController::class, 'approveModel'])->name('submissions.model.approve');
+            Route::post('/submissions/model/{community_model}/reject', [\App\Http\Controllers\Admin\CommunityController::class, 'rejectModel'])->name('submissions.model.reject');
             Route::get('/contributors', [\App\Http\Controllers\Admin\CommunityController::class, 'contributors'])->name('contributors.index');
             Route::post('/contributors', [\App\Http\Controllers\Admin\CommunityController::class, 'addContributor'])->name('contributors.store');
             Route::post('/contributors/new', [\App\Http\Controllers\Admin\CommunityController::class, 'storeNewContributor'])->name('contributors.new.store');
@@ -1307,6 +1320,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::delete('sections/{section}', [\App\Http\Controllers\Instructor\CurriculumController::class, 'destroySection'])->name('sections.destroy');
         Route::post('sections/{section}/items', [\App\Http\Controllers\Instructor\CurriculumController::class, 'addItem'])->name('sections.items.store');
         Route::delete('curriculum-items/{item}', [\App\Http\Controllers\Instructor\CurriculumController::class, 'removeItem'])->name('curriculum-items.destroy');
+        Route::post('curriculum-items/{item}/move', [\App\Http\Controllers\Instructor\CurriculumController::class, 'moveItem'])->name('curriculum-items.move');
         Route::post('courses/{course}/sections/order', [\App\Http\Controllers\Instructor\CurriculumController::class, 'updateSectionsOrder'])->name('courses.sections.order');
         Route::post('sections/{section}/items/order', [\App\Http\Controllers\Instructor\CurriculumController::class, 'updateItemsOrder'])->name('sections.items.order');
         Route::get('lectures/{lecture}/video-questions', [\App\Http\Controllers\Instructor\LectureVideoQuestionController::class, 'index'])->name('lectures.video-questions.index');

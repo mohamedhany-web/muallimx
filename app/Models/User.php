@@ -25,6 +25,7 @@ class User extends Authenticatable
         'google_id',
         'role',
         'is_community_contributor',
+        'community_contributor_type',
         'parent_id',
         'is_active',
         'profile_image',
@@ -83,6 +84,21 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_recovery_codes' => 'array',
         ];
+    }
+
+    /** مساهم في مجتمع البيانات فقط */
+    public const COMMUNITY_CONTRIBUTOR_TYPE_DATA = 'data';
+    /** مساهم في الذكاء الاصطناعي (Model Zoo، نماذج، إلخ) */
+    public const COMMUNITY_CONTRIBUTOR_TYPE_AI = 'ai';
+
+    public function isCommunityDataContributor(): bool
+    {
+        return $this->community_contributor_type === self::COMMUNITY_CONTRIBUTOR_TYPE_DATA;
+    }
+
+    public function isCommunityAiContributor(): bool
+    {
+        return $this->community_contributor_type === self::COMMUNITY_CONTRIBUTOR_TYPE_AI;
     }
 
     public function contributorProfile()

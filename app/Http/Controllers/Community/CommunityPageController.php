@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Community;
 use App\Http\Controllers\Controller;
 use App\Models\CommunityCompetition;
 use App\Models\CommunityDataset;
+use App\Models\CommunityModel;
 use App\Models\ContributorProfile;
 use App\Models\User;
 use App\Services\Community\DatasetFileReaderService;
@@ -241,6 +242,164 @@ class CommunityPageController extends Controller
     public function discussions(): View
     {
         return view('community.discussions.index');
+    }
+
+    /**
+     * صفحة النماذج العامة (Model Zoo) — بدون تسجيل دخول — مثل البيانات.
+     */
+    public function publicModels(Request $request): View
+    {
+        $search = $request->input('q');
+        $query = CommunityModel::public()
+            ->with(['creator', 'dataset'])
+            ->search($search)
+            ->ordered();
+        $models = $query->paginate(24)->withQueryString();
+        return view('public.community.models', [
+            'models' => $models,
+            'currentSearch' => $search,
+        ]);
+    }
+
+    /** عرض نموذج واحد (عام — بدون تسجيل) */
+    public function publicModelShow(CommunityModel $model): View|RedirectResponse
+    {
+        if ($model->status !== CommunityModel::STATUS_APPROVED || !$model->is_active) {
+            abort(404);
+        }
+        $model->load(['creator', 'dataset']);
+        return view('public.community.model-show', compact('model'));
+    }
+
+    /** تحميل ملف النموذج (أول ملف) — عام */
+    public function publicModelDownload(CommunityModel $model): StreamedResponse
+    {
+        $list = $model->files_list;
+        if (empty($list)) {
+            abort(404);
+        }
+        $first = $list[0];
+        $path = is_array($first) ? ($first['path'] ?? null) : null;
+        $name = is_array($first) ? ($first['original_name'] ?? basename($path)) : basename($path);
+        if (!$path || $model->status !== CommunityModel::STATUS_APPROVED || !$model->is_active) {
+            abort(404);
+        }
+        $disk = community_disk();
+        if (!Storage::disk($disk)->exists($path)) {
+            abort(404);
+        }
+        $model->increment('downloads_count');
+        return Storage::disk($disk)->download($path, $name);
+    }
+
+    /** تحميل ملف بالرقم — عام */
+    public function publicModelDownloadFile(CommunityModel $model, int $index): StreamedResponse
+    {
+        if ($model->status !== CommunityModel::STATUS_APPROVED || !$model->is_active) {
+            abort(404);
+        }
+        $list = $model->files_list;
+        if ($index < 0 || $index >= count($list)) {
+            abort(404);
+        }
+        $item = $list[$index];
+        $path = is_array($item) ? ($item['path'] ?? null) : null;
+        $name = is_array($item) ? ($item['original_name'] ?? basename($path)) : basename($path);
+        if (!$path) {
+            abort(404);
+        }
+        $disk = community_disk();
+        if (!Storage::disk($disk)->exists($path)) {
+            abort(404);
+        }
+        $model->increment('downloads_count');
+        return Storage::disk($disk)->download($path, $name);
+    }
+
+    /** تحميل ملف النموذج (أول ملف) */
+    public function modelDownload(CommunityModel $model): StreamedResponse
+    {
+        $list = $model->files_list;
+        if (empty($list)) {
+            abort(404);
+        }
+        $first = $list[0];
+        $path = is_array($first) ? ($first['path'] ?? null) : null;
+        $name = is_array($first) ? ($first['original_name'] ?? basename($path)) : basename($path);
+        if (!$path || $model->status !== CommunityModel::STATUS_APPROVED || !$model->is_active) {
+            abort(404);
+        }
+        $disk = community_disk();
+        if (!Storage::disk($disk)->exists($path)) {
+            abort(404);
+        }
+        $model->increment('downloads_count');
+        return Storage::disk($disk)->download($path, $name);
+    }
+
+    /** تحميل ملف بالرقم من قائمة الملفات */
+    public function modelDownloadFile(CommunityModel $model, int $index): StreamedResponse
+    {
+        if ($model->status !== CommunityModel::STATUS_APPROVED || !$model->is_active) {
+            abort(404);
+        }
+        $list = $model->files_list;
+        if ($index < 0 || $index >= count($list)) {
+            abort(404);
+        }
+        $item = $list[$index];
+        $path = is_array($item) ? ($item['path'] ?? null) : null;
+        $name = is_array($item) ? ($item['original_name'] ?? basename($path)) : basename($path);
+        if (!$path) {
+            abort(404);
+        }
+        $disk = community_disk();
+        if (!Storage::disk($disk)->exists($path)) {
+            abort(404);
+        }
+        $model->increment('downloads_count');
+        return Storage::disk($disk)->download($path, $name);
+    }
+
+    /** امتدادات الملفات التي يمكن عرض محتواها (كود/نص) */
+    private const PREVIEWABLE_EXTENSIONS = ['py', 'pyw', 'ipynb', 'json', 'txt', 'md'];
+
+    /** أقصى حجم للمعاينة (512 كيلوبايت) */
+    private const PREVIEW_MAX_BYTES = 524288;
+
+    /** عرض محتوى ملف نصي/كود (مثل .py) — للمعاينة فقط */
+    public function publicModelFilePreview(CommunityModel $model, int $index): \Illuminate\Http\Response
+    {
+        if ($model->status !== CommunityModel::STATUS_APPROVED || !$model->is_active) {
+            abort(404);
+        }
+        $list = $model->files_list;
+        if ($index < 0 || $index >= count($list)) {
+            abort(404);
+        }
+        $item = $list[$index];
+        $path = is_array($item) ? ($item['path'] ?? null) : null;
+        $name = is_array($item) ? ($item['original_name'] ?? basename($path)) : basename($path);
+        if (!$path) {
+            abort(404);
+        }
+        $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+        if (!in_array($ext, self::PREVIEWABLE_EXTENSIONS, true)) {
+            abort(404);
+        }
+        $disk = community_disk();
+        if (!Storage::disk($disk)->exists($path)) {
+            abort(404);
+        }
+        $content = Storage::disk($disk)->get($path);
+        $size = strlen($content);
+        if ($size > self::PREVIEW_MAX_BYTES) {
+            $content = substr($content, 0, self::PREVIEW_MAX_BYTES) . "\n\n... (تم اقتطاع العرض — حجم الملف أكبر من " . (self::PREVIEW_MAX_BYTES / 1024) . " كيلوبايت. حمّل الملف لعرضه بالكامل)";
+        }
+        return response($content, 200, [
+            'Content-Type' => 'text/plain; charset=utf-8',
+            'Content-Disposition' => 'inline; filename="' . $name . '"',
+        ]);
     }
 
     /**

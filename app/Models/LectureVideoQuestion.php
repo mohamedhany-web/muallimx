@@ -11,6 +11,7 @@ class LectureVideoQuestion extends Model
     protected $fillable = [
         'lecture_id',
         'timestamp_seconds',
+        'show_at_end',
         'question_source',
         'question_id',
         'custom_question_text',
@@ -26,6 +27,7 @@ class LectureVideoQuestion extends Model
     protected $casts = [
         'custom_options' => 'array',
         'timestamp_seconds' => 'integer',
+        'show_at_end' => 'boolean',
         'rewind_seconds' => 'integer',
         'points' => 'integer',
         'show_count' => 'integer',

@@ -5,32 +5,37 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 
-class CommunityDataset extends Model
+class CommunityModel extends Model
 {
     protected $fillable = [
         'title',
         'slug',
         'description',
-        'category',
+        'methodology_steps',
+        'community_dataset_id',
+        'performance_metrics',
+        'license',
+        'usage_instructions',
         'file_path',
-        'file_url',
         'file_size',
         'files',
         'downloads_count',
-        'is_active',
         'status',
+        'is_active',
         'sort_order',
         'created_by_user_id',
     ];
 
-    /** تصنيفات مجموعة البيانات (للعرض والفلترة) */
-    public const CATEGORIES = [
-        'education' => 'تعليمي',
-        'finance' => 'مالي',
-        'health' => 'صحي',
-        'commerce' => 'تجاري',
-        'marketing' => 'تسويق',
-        'general' => 'عام',
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_REJECTED = 'rejected';
+
+    /** تراخيص شائعة للعرض والاختيار */
+    public const LICENSES = [
+        'MIT' => 'MIT',
+        'Apache-2.0' => 'Apache 2.0',
+        'CC-BY-4.0' => 'Creative Commons BY 4.0',
+        'personal' => 'استخدام شخصي / تعليمي فقط',
         'other' => 'أخرى',
     ];
 
@@ -38,11 +43,11 @@ class CommunityDataset extends Model
     {
         return [
             'is_active' => 'boolean',
+            'performance_metrics' => 'array',
             'files' => 'array',
         ];
     }
 
-    /** الملفات المرفوعة (عند وجود عدة ملفات) */
     public function getFilesListAttribute(): array
     {
         $files = $this->files;
@@ -55,13 +60,14 @@ class CommunityDataset extends Model
         return [];
     }
 
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_APPROVED = 'approved';
-    public const STATUS_REJECTED = 'rejected';
-
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    public function dataset()
+    {
+        return $this->belongsTo(CommunityDataset::class, 'community_dataset_id');
     }
 
     public function scopeActive(Builder $query): Builder
@@ -69,7 +75,6 @@ class CommunityDataset extends Model
         return $query->where('is_active', true);
     }
 
-    /** للمحتوى المعروض للجمهور: معتمد ونشط فقط */
     public function scopePublic(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_APPROVED)->where('is_active', true);
@@ -90,14 +95,6 @@ class CommunityDataset extends Model
         return $query->orderBy('sort_order')->orderByDesc('created_at');
     }
 
-    public function scopeCategory(Builder $query, ?string $category): Builder
-    {
-        if ($category === null || $category === '') {
-            return $query;
-        }
-        return $query->where('category', $category);
-    }
-
     public function scopeSearch(Builder $query, ?string $term): Builder
     {
         if ($term === null || trim($term) === '') {
@@ -106,18 +103,8 @@ class CommunityDataset extends Model
         $term = trim($term);
         return $query->where(function (Builder $q) use ($term) {
             $q->where('title', 'like', '%' . $term . '%')
-                ->orWhere('description', 'like', '%' . $term . '%');
+                ->orWhere('description', 'like', '%' . $term . '%')
+                ->orWhere('methodology_steps', 'like', '%' . $term . '%');
         });
-    }
-
-    public function getCategoryLabelAttribute(): string
-    {
-        return self::CATEGORIES[$this->category] ?? $this->category ?? '—';
-    }
-
-    /** النماذج المدربة المرتبطة بهذه المجموعة */
-    public function communityModels()
-    {
-        return $this->hasMany(CommunityModel::class, 'community_dataset_id');
     }
 }

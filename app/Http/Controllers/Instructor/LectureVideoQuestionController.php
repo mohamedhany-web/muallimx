@@ -29,10 +29,12 @@ class LectureVideoQuestionController extends Controller
             $payload = $q->getPayloadForStudent();
             $showCount = $q->show_count;
             $showCountLabel = $showCount === null || $showCount == 0 ? 'كل مرة' : ($showCount == 1 ? 'مرة واحدة' : $showCount . ' مرات');
+            $timestampLabel = $q->show_at_end ? 'نهاية الفيديو' : (floor($q->timestamp_seconds / 60) . ':' . str_pad($q->timestamp_seconds % 60, 2, '0', STR_PAD_LEFT));
             return [
                 'id' => $q->id,
                 'timestamp_seconds' => $q->timestamp_seconds,
-                'timestamp_label' => floor($q->timestamp_seconds / 60) . ':' . str_pad($q->timestamp_seconds % 60, 2, '0', STR_PAD_LEFT),
+                'show_at_end' => (bool) $q->show_at_end,
+                'timestamp_label' => $timestampLabel,
                 'question_source' => $q->question_source,
                 'question_text' => $payload['text'] ?? '',
                 'on_wrong' => $q->on_wrong,
@@ -66,7 +68,8 @@ class LectureVideoQuestionController extends Controller
     {
         $this->authorizeLecture($lecture);
         $validated = $request->validate([
-            'timestamp_minutes' => 'required|numeric|min:0|max:999',
+            'show_at_end' => 'nullable|boolean',
+            'timestamp_minutes' => 'required_unless:show_at_end,true|nullable|numeric|min:0|max:999',
             'timestamp_seconds_extra' => 'nullable|integer|min:0|max:59',
             'question_source' => 'required|in:bank,custom',
             'question_id' => 'required_if:question_source,bank|nullable|exists:questions,id',
@@ -85,9 +88,13 @@ class LectureVideoQuestionController extends Controller
             'custom_correct_answer.required_if' => 'الإجابة الصحيحة مطلوبة',
         ]);
 
-        $minutes = (int) floor((float) $validated['timestamp_minutes']);
-        $extra = (int) ($validated['timestamp_seconds_extra'] ?? 0);
-        $timestamp_seconds = $minutes * 60 + min(59, $extra);
+        $showAtEnd = !empty($validated['show_at_end']);
+        $timestamp_seconds = 0;
+        if (!$showAtEnd) {
+            $minutes = (int) floor((float) ($validated['timestamp_minutes'] ?? 0));
+            $extra = (int) ($validated['timestamp_seconds_extra'] ?? 0);
+            $timestamp_seconds = $minutes * 60 + min(59, $extra);
+        }
 
         if ($validated['question_source'] === 'bank') {
             $q = \App\Models\Question::find($validated['question_id']);
@@ -100,6 +107,7 @@ class LectureVideoQuestionController extends Controller
         $vq = LectureVideoQuestion::create([
             'lecture_id' => $lecture->id,
             'timestamp_seconds' => $timestamp_seconds,
+            'show_at_end' => $showAtEnd,
             'question_source' => $validated['question_source'],
             'question_id' => $validated['question_source'] === 'bank' ? $validated['question_id'] : null,
             'custom_question_text' => $validated['question_source'] === 'custom' ? $validated['custom_question_text'] : null,
@@ -119,7 +127,8 @@ class LectureVideoQuestionController extends Controller
             'question' => [
                 'id' => $vq->id,
                 'timestamp_seconds' => $vq->timestamp_seconds,
-                'timestamp_label' => floor($vq->timestamp_seconds / 60) . ':' . str_pad($vq->timestamp_seconds % 60, 2, '0', STR_PAD_LEFT),
+                'show_at_end' => (bool) $vq->show_at_end,
+                'timestamp_label' => $vq->show_at_end ? 'نهاية الفيديو' : (floor($vq->timestamp_seconds / 60) . ':' . str_pad($vq->timestamp_seconds % 60, 2, '0', STR_PAD_LEFT)),
                 'question_source' => $vq->question_source,
                 'question_text' => $payload['text'] ?? '',
                 'on_wrong' => $vq->on_wrong,

@@ -394,6 +394,12 @@
             li.querySelector('.dataset-file-preview').addEventListener('click', function(e) { e.preventDefault(); loadPreview(index); });
             li.querySelector('div[data-active]').addEventListener('click', function() { loadPreview(index); });
         });
+        var zipBackBtn = document.getElementById('previewZipBackBtn');
+        if (zipBackBtn) {
+            zipBackBtn.addEventListener('click', function() {
+                if (currentZipFileIndex !== null) loadPreview(currentZipFileIndex);
+            });
+        }
 
         var searchInput = document.getElementById('previewSearch');
         if (searchInput) {

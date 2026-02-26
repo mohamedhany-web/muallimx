@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\CommunityNotificationMail;
 use App\Models\CommunityCompetition;
 use App\Models\CommunityDataset;
+use App\Models\CommunityModel;
 use App\Models\ContributorProfile;
 use App\Models\User;
 use App\Services\Community\DatasetFileReaderService;
@@ -37,6 +38,9 @@ class CommunityController extends Controller
             'datasets_count' => CommunityDataset::count(),
             'datasets_active' => CommunityDataset::active()->count(),
             'pending_submissions' => CommunityDataset::pending()->count(),
+            'models_count' => CommunityModel::count(),
+            'models_active' => CommunityModel::approved()->where('is_active', true)->count(),
+            'pending_models' => CommunityModel::pending()->count(),
         ];
         $recentCompetitions = CommunityCompetition::ordered()->take(4)->get();
         $recentDatasets = CommunityDataset::approved()->ordered()->take(4)->get();
@@ -248,12 +252,48 @@ class CommunityController extends Controller
         return redirect()->route('admin.community.submissions.index')->with('success', 'تم رفض مجموعة البيانات.');
     }
 
+    /** قائمة تقديمات النماذج المعلقة (Model Zoo) */
+    public function modelSubmissions(): View
+    {
+        $pendingModels = CommunityModel::pending()->with(['creator', 'dataset'])->ordered()->get();
+        return view('admin.community.submissions-models', ['pendingModels' => $pendingModels]);
+    }
+
+    /** عرض تقديم نموذج واحد — المنهجية، الأداء، الملفات، موافقة/رفض */
+    public function showModelSubmission(CommunityModel $community_model): View
+    {
+        $community_model->load(['creator', 'dataset']);
+        return view('admin.community.submissions-model-show', ['model' => $community_model]);
+    }
+
+    /** الموافقة على نموذج ونشره في مكتبة النماذج */
+    public function approveModel(Request $request, CommunityModel $community_model): RedirectResponse
+    {
+        if ($community_model->status !== CommunityModel::STATUS_PENDING) {
+            return back()->with('error', 'هذا النموذج تمت مراجعته مسبقاً.');
+        }
+        $community_model->update(['status' => CommunityModel::STATUS_APPROVED, 'is_active' => true]);
+        return redirect()->route('admin.community.submissions.models.index')->with('success', 'تمت الموافقة على النموذج ونشره في مكتبة النماذج.');
+    }
+
+    /** رفض نموذج */
+    public function rejectModel(Request $request, CommunityModel $community_model): RedirectResponse
+    {
+        if ($community_model->status !== CommunityModel::STATUS_PENDING) {
+            return back()->with('error', 'هذا النموذج تمت مراجعته مسبقاً.');
+        }
+        $community_model->update(['status' => CommunityModel::STATUS_REJECTED]);
+        return redirect()->route('admin.community.submissions.models.index')->with('success', 'تم رفض النموذج.');
+    }
+
     public function contributors(): View
     {
-        $contributors = User::where('is_community_contributor', true)->orderBy('name')->get();
+        $contributorsData = User::where('community_contributor_type', User::COMMUNITY_CONTRIBUTOR_TYPE_DATA)->orderBy('name')->get();
+        $contributorsAi = User::where('community_contributor_type', User::COMMUNITY_CONTRIBUTOR_TYPE_AI)->orderBy('name')->get();
         $pendingProfiles = ContributorProfile::pending()->with('user')->orderBy('submitted_at', 'desc')->get();
         return view('admin.community.contributors', [
-            'contributors' => $contributors,
+            'contributorsData' => $contributorsData,
+            'contributorsAi' => $contributorsAi,
             'pendingProfiles' => $pendingProfiles,
         ]);
     }
@@ -292,34 +332,39 @@ class CommunityController extends Controller
 
     public function addContributor(Request $request): RedirectResponse
     {
-        $email = $request->input('email');
-        $userId = $request->input('user_id');
+        $request->validate([
+            'contributor_type' => 'required|in:data,ai',
+            'email' => 'required_without:user_id|nullable|email|exists:users,email',
+            'user_id' => 'required_without:email|nullable|exists:users,id',
+        ], [
+            'contributor_type.required' => 'اختر نوع المساهم: مجتمع البيانات أو الذكاء الاصطناعي.',
+            'contributor_type.in' => 'نوع المساهم غير صالح.',
+            'email.required_without' => 'أدخل البريد الإلكتروني أو اختر المستخدم.',
+            'email.exists' => 'لا يوجد حساب بهذا البريد.',
+            'user_id.exists' => 'المستخدم غير موجود.',
+        ]);
 
-        if (!filled($email) && !filled($userId)) {
-            return back()->withErrors(['email' => 'يجب إدخال البريد الإلكتروني للمستخدم.'])->withInput();
-        }
-
-        if (filled($userId)) {
-            $request->validate(['user_id' => 'exists:users,id'], ['user_id.exists' => 'المستخدم غير موجود.']);
-            $user = User::findOrFail($userId);
+        if (filled($request->user_id)) {
+            $user = User::findOrFail($request->user_id);
         } else {
-            $request->validate([
-                'email' => 'required|email|exists:users,email',
-            ], [
-                'email.required' => 'يجب إدخال البريد الإلكتروني.',
-                'email.email' => 'صيغة البريد غير صحيحة.',
-                'email.exists' => 'لا يوجد حساب بهذا البريد.',
-            ]);
             $user = User::where('email', $request->email)->firstOrFail();
         }
 
-        $user->update(['is_community_contributor' => true]);
-        return redirect()->route('admin.community.contributors.index')->with('success', 'تمت إضافة المساهم: ' . $user->name);
+        $type = $request->contributor_type;
+        $user->update([
+            'is_community_contributor' => true,
+            'community_contributor_type' => $type,
+        ]);
+        $label = $type === User::COMMUNITY_CONTRIBUTOR_TYPE_DATA ? 'مجتمع البيانات' : 'الذكاء الاصطناعي';
+        return redirect()->route('admin.community.contributors.index')->with('success', 'تمت إضافة المساهم (' . $label . '): ' . $user->name);
     }
 
     public function removeContributor(User $user): RedirectResponse
     {
-        $user->update(['is_community_contributor' => false]);
+        $user->update([
+            'is_community_contributor' => false,
+            'community_contributor_type' => null,
+        ]);
         return redirect()->route('admin.community.contributors.index')->with('success', 'تمت إزالة صلاحية المساهم.');
     }
 
@@ -333,6 +378,7 @@ class CommunityController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'nullable|string|max:50',
+            'contributor_type' => 'required|in:data,ai',
         ], [
             'name.required' => 'الاسم مطلوب.',
             'email.required' => 'البريد الإلكتروني مطلوب.',
@@ -340,6 +386,8 @@ class CommunityController extends Controller
             'password.required' => 'كلمة المرور مطلوبة.',
             'password.min' => 'كلمة المرور 8 أحرف على الأقل.',
             'password.confirmed' => 'تأكيد كلمة المرور غير مطابق.',
+            'contributor_type.required' => 'اختر نوع المساهم.',
+            'contributor_type.in' => 'نوع المساهم غير صالح.',
         ]);
 
         $user = User::create([
@@ -349,6 +397,7 @@ class CommunityController extends Controller
             'password' => Hash::make($validated['password']),
             'role' => 'student',
             'is_community_contributor' => true,
+            'community_contributor_type' => $validated['contributor_type'],
             'is_active' => true,
         ]);
 

@@ -19,7 +19,7 @@
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-16">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-16">
             <div class="rounded-3xl bg-white p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-blue-100 transition-all duration-300 text-center">
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center mx-auto mb-5 shadow-lg">
                     <i class="fas fa-trophy text-2xl"></i>
@@ -34,6 +34,13 @@
                 <h3 class="text-xl font-black text-gray-900 mb-2"><?php echo e(__('public.community_features_datasets')); ?></h3>
                 <p class="text-gray-600 text-sm">مجموعات بيانات مفتوحة للتدريب والتجربة</p>
             </div>
+            <div class="rounded-3xl bg-white p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-amber-100 transition-all duration-300 text-center">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center mx-auto mb-5 shadow-lg">
+                    <i class="fas fa-brain text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-black text-gray-900 mb-2">مكتبة النماذج (Model Zoo)</h3>
+                <p class="text-gray-600 text-sm">نماذج مدربة جاهزة مع منهجية وأداء وطريقة استخدام</p>
+            </div>
             <div class="rounded-3xl bg-white p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-blue-100 transition-all duration-300 text-center">
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white flex items-center justify-center mx-auto mb-5 shadow-lg">
                     <i class="fas fa-comments text-2xl"></i>
@@ -47,6 +54,10 @@
             <a href="<?php echo e(route('community.data.index')); ?>" class="inline-flex items-center gap-2 bg-white border-2 border-slate-200 text-slate-800 px-6 py-3.5 rounded-2xl font-bold shadow-lg hover:border-blue-400 hover:bg-blue-50 transition-all">
                 <i class="fas fa-database text-blue-600"></i>
                 <span>صفحة البيانات</span>
+            </a>
+            <a href="<?php echo e(route('community.models.index')); ?>" class="inline-flex items-center gap-2 bg-white border-2 border-slate-200 text-slate-800 px-6 py-3.5 rounded-2xl font-bold shadow-lg hover:border-amber-400 hover:bg-amber-50 transition-all">
+                <i class="fas fa-brain text-amber-600"></i>
+                <span>صفحة النماذج</span>
             </a>
             <a href="<?php echo e(route('community.contributors.index')); ?>" class="inline-flex items-center gap-2 bg-white border-2 border-slate-200 text-slate-800 px-6 py-3.5 rounded-2xl font-bold shadow-lg hover:border-cyan-400 hover:bg-cyan-50 transition-all">
                 <i class="fas fa-user-friends text-cyan-600"></i>

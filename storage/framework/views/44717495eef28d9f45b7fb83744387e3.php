@@ -432,11 +432,12 @@
                                         <?php echo e($course->academicSubject->name ?? __('student.not_specified')); ?> - <?php echo e($course->academicYear->name ?? __('student.not_specified')); ?>
 
                                     </p>
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex-1 progress-container">
+                                    <div class="flex items-center gap-3 flex-wrap">
+                                        <div class="flex-1 progress-container min-w-0">
                                             <div class="progress-fill" style="width: <?php echo e($progress); ?>%"></div>
                                         </div>
                                         <span class="text-sm font-semibold text-gray-700 min-w-[45px] text-left"><?php echo e($progress); ?>%</span>
+                                        <span class="text-xs font-semibold text-amber-600"><i class="fas fa-star text-amber-500 ml-0.5"></i> <?php echo e(number_format((float)($course->student_points ?? 0), 0)); ?> نقطة</span>
                                     </div>
                                 </div>
                             </div>

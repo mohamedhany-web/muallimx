@@ -2028,6 +2028,7 @@ function videoPlayer() {
                         t = sec;
                         for (var i = 0; i < questions.length; i++) {
                             var q = questions[i];
+                            if (q.show_at_end) continue;
                             if (t >= q.timestamp_seconds && !shownIds.has(q.id)) {
                                 if (player.pause) player.pause();
                                 showQuestion(q);
@@ -2096,6 +2097,7 @@ function videoPlayer() {
                         t = sec || 0;
                         for (var i = 0; i < questions.length; i++) {
                             var q = questions[i];
+                            if (q.show_at_end) continue;
                             if (t >= q.timestamp_seconds && !shownIds.has(q.id)) {
                                 if (player.pause) player.pause();
                                 showQuestion(q);
@@ -2222,6 +2224,7 @@ function videoPlayer() {
                 }
                 for (var i = 0; i < questions.length; i++) {
                     var q = questions[i];
+                    if (q.show_at_end) continue;
                     if (t >= q.timestamp_seconds && !shownIds.has(q.id)) {
                         if (player && player.pauseVideo) player.pauseVideo();
                         showQuestion(q);
@@ -2229,6 +2232,18 @@ function videoPlayer() {
                     }
                 }
             }, 1000);
+        }
+
+        function showEndOfVideoQuestions() {
+            for (var i = 0; i < questions.length; i++) {
+                var q = questions[i];
+                if (q.show_at_end && !shownIds.has(q.id)) {
+                    if (player && player.pauseVideo) player.pauseVideo();
+                    if (player && player.pause) player.pause();
+                    showQuestion(q);
+                    return;
+                }
+            }
         }
 
         if (platform === 'youtube') {
@@ -2245,6 +2260,9 @@ function videoPlayer() {
                         onReady: function() {
                             startTimeCheck();
                             setTimeout(seekToStartPosition, 300);
+                        },
+                        onStateChange: function(ev) {
+                            if (ev.data === 0) showEndOfVideoQuestions();
                         }
                     }
                 });
@@ -2268,12 +2286,14 @@ function videoPlayer() {
                 s.src = 'https://player.vimeo.com/api/player.js';
                 s.onload = function() {
                     player = new Vimeo.Player(document.getElementById('lecture-yt-player-box'), { id: parseInt(vimeoId, 10), width: '100%', height: '100%' });
+                    player.on('ended', showEndOfVideoQuestions);
                     startTimeCheck();
                     setTimeout(seekToStartPosition, 500);
                 };
                 document.head.appendChild(s);
             } else {
                 player = new Vimeo.Player(document.getElementById('lecture-yt-player-box'), { id: parseInt(vimeoId, 10), width: '100%', height: '100%' });
+                player.on('ended', showEndOfVideoQuestions);
                 startTimeCheck();
                 setTimeout(seekToStartPosition, 500);
             }
@@ -2297,6 +2317,7 @@ function videoPlayer() {
                     startTimeCheck();
                     setTimeout(seekToStartPosition, 500);
                 });
+                player.on('ended', showEndOfVideoQuestions);
             }
             window.addEventListener('beforeunload', function() {
                 if (!player) return;

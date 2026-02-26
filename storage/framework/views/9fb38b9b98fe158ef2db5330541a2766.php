@@ -582,8 +582,14 @@
                 'download_url' => route('my-courses.lectures.material.download', [$course->id, $lecture->id, $m->id]),
             ];
         })->values()->all();
-        $videoQuestions = $lecture->videoQuestions()->orderBy('timestamp_seconds')->get()->map(function($vq) {
+        $videoQuestions = $lecture->videoQuestions()->orderBy('timestamp_seconds')->get()->filter(function($vq) use ($currentUser) {
+            $showCount = $vq->show_count;
+            if ($showCount === null || $showCount == 0) return true;
+            $answered = \App\Models\LectureVideoQuestionAnswer::where('lecture_video_question_id', $vq->id)->where('user_id', $currentUser->id)->count();
+            return $answered < $showCount;
+        })->map(function($vq) {
             $payload = $vq->getPayloadForStudent();
+            $showEveryTime = $vq->show_count === null || $vq->show_count == 0;
             return [
                 'id' => $vq->id,
                 'timestamp_seconds' => $vq->timestamp_seconds,
@@ -593,6 +599,7 @@
                 'points' => $vq->points,
                 'on_wrong' => $vq->on_wrong,
                 'rewind_seconds' => $vq->rewind_seconds,
+                'show_every_time' => $showEveryTime,
             ];
         })->values()->all();
         $watchProgress = \App\Models\LectureWatchProgress::where('lecture_id', $lecture->id)->where('user_id', $currentUser->id)->first();
@@ -1998,7 +2005,7 @@ function videoPlayer() {
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
                 body: JSON.stringify({ answer: answer })
             }).then(function(r) { return r.json(); }).then(function(data) {
-                shownIds.add(currentQuestion.id);
+                if (!(currentQuestion && currentQuestion.show_every_time)) shownIds.add(currentQuestion.id);
                 showFeedback(!!data.correct, data);
             }).catch(function() {
                 if (submitBtn) submitBtn.disabled = false;

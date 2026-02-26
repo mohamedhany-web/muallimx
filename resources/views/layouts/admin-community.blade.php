@@ -44,9 +44,13 @@
                     <span>{{ __('admin.community_datasets') }}</span>
                 </a>
                 <p class="px-3 py-2 mt-2 text-xs font-bold text-cyan-400/90 uppercase tracking-wide">المساهمون والمراجعة</p>
-                <a href="{{ route('admin.community.submissions.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white {{ request()->routeIs('admin.community.submissions.*') ? 'bg-slate-700/80 text-white' : '' }}">
+                <a href="{{ route('admin.community.submissions.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white {{ request()->routeIs('admin.community.submissions.index') || request()->routeIs('admin.community.submissions.dataset.*') ? 'bg-slate-700/80 text-white' : '' }}">
                     <i class="fas fa-paper-plane w-5"></i>
-                    <span>مراجعة التقديمات</span>
+                    <span>مراجعة تقديمات البيانات</span>
+                </a>
+                <a href="{{ route('admin.community.submissions.models.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white {{ request()->routeIs('admin.community.submissions.models.*') || request()->routeIs('admin.community.submissions.model.*') ? 'bg-slate-700/80 text-white' : '' }}">
+                    <i class="fas fa-brain w-5"></i>
+                    <span>تقديمات النماذج (Model Zoo)</span>
                 </a>
                 <a href="{{ route('admin.community.contributors.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800 hover:text-white {{ request()->routeIs('admin.community.contributors.*') ? 'bg-slate-700/80 text-white' : '' }}">
                     <i class="fas fa-user-plus w-5"></i>

@@ -344,6 +344,7 @@ class MyCourseController extends Controller
             return [
                 'id' => $vq->id,
                 'timestamp_seconds' => $vq->timestamp_seconds,
+                'show_at_end' => (bool) $vq->show_at_end,
                 'text' => $payload['text'] ?? '',
                 'options' => $payload['options'] ?? [],
                 'type' => $payload['type'] ?? 'multiple_choice',

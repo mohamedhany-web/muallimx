@@ -66,25 +66,11 @@
                 <span class="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center"><i class="fas fa-link"></i></span>
                 روابطك
             </h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="linkedin_url" class="block text-sm font-bold text-slate-700 mb-1">LinkedIn</label>
-                    <input type="url" name="linkedin_url" id="linkedin_url" value="<?php echo e(old('linkedin_url', $profile->linkedin_url)); ?>"
-                           placeholder="https://linkedin.com/in/..."
-                           class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20">
-                </div>
-                <div>
-                    <label for="twitter_url" class="block text-sm font-bold text-slate-700 mb-1">X (تويتر)</label>
-                    <input type="url" name="twitter_url" id="twitter_url" value="<?php echo e(old('twitter_url', $profile->twitter_url)); ?>"
-                           placeholder="https://x.com/..."
-                           class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20">
-                </div>
-                <div>
-                    <label for="website_url" class="block text-sm font-bold text-slate-700 mb-1">موقعك أو مدونتك</label>
-                    <input type="url" name="website_url" id="website_url" value="<?php echo e(old('website_url', $profile->website_url)); ?>"
-                           placeholder="https://..."
-                           class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20">
-                </div>
+            <div>
+                <label for="linkedin_url" class="block text-sm font-bold text-slate-700 mb-1">LinkedIn</label>
+                <input type="url" name="linkedin_url" id="linkedin_url" value="<?php echo e(old('linkedin_url', $profile->linkedin_url)); ?>"
+                       placeholder="https://linkedin.com/in/..."
+                       class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20">
             </div>
         </div>
 

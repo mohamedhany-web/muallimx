@@ -116,11 +116,13 @@
         </div>
 
         <?php if($section->children && $section->children->count() > 0): ?>
-            <div class="mt-4 pr-4 border-r-2 border-slate-100" style="margin-right: 1rem;">
+            <div class="sections-children mt-4 pr-4 border-r-2 border-slate-100 space-y-4" data-parent-id="<?php echo e($section->id); ?>" style="margin-right: 1rem;">
                 <?php $__currentLoopData = $section->children; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $child): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <?php echo $__env->make('instructor.curriculum.partials.section', ['section' => $child, 'depth' => $depth + 1], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
+        <?php else: ?>
+            <div class="sections-children empty-drop-zone mt-4 pr-4 border-r-2 border-slate-100 border-dashed min-h-[52px] rounded-lg bg-slate-50/70 flex items-center justify-center transition-all" data-parent-id="<?php echo e($section->id); ?>" style="margin-right: 1rem;" data-empty="1"><span class="text-xs text-slate-400 opacity-0 group-hover:opacity-100 curriculum-drag-hint">أفلت قسم هنا</span></div>
         <?php endif; ?>
     </div>
 </div>

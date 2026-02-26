@@ -5,10 +5,17 @@
 
 @push('styles')
 <style>
-    .sortable-ghost { opacity: 0.4; }
     #lectureModal { backdrop-filter: blur(4px); }
     .section-block.collapsed .section-body { display: none; }
     .section-block.collapsed .section-chevron { transform: rotate(-90deg); }
+    /* سحب وإفلات احترافي */
+    .sortable-ghost { opacity: 0.35; background: #e0f2fe !important; border-color: #0ea5e9 !important; border-style: dashed !important; transform: scale(0.98); }
+    .sortable-drag { opacity: 1; box-shadow: 0 10px 40px rgba(0,0,0,0.15); cursor: grabbing !important; z-index: 1000; }
+    .sortable-chosen { background: #f0f9ff !important; border-color: #0ea5e9 !important; }
+    .items-container.sortable-dragging { min-height: 52px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 0.75rem; }
+    body.curriculum-dragging .curriculum-drag-hint { opacity: 1 !important; }
+    .section-block .section-header { touch-action: none; }
+    .item-card .fa-grip-vertical { pointer-events: none; }
 </style>
 @endpush
 
@@ -228,15 +235,11 @@
                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800"></textarea>
                 </div>
                 <input type="hidden" name="course_lesson_id" value="">
+                <input type="hidden" name="duration_minutes" id="lectureDuration" value="60">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">التاريخ والوقت <span class="text-red-500">*</span></label>
                         <input type="datetime-local" name="scheduled_at" id="lectureScheduledAt" required
-                               class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">المدة (بالدقائق) <span class="text-red-500">*</span></label>
-                        <input type="number" name="duration_minutes" id="lectureDuration" value="60" min="15" max="480" required
                                class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800">
                     </div>
                     <div>
@@ -373,10 +376,17 @@
             <form id="videoQuestionForm" onsubmit="submitVideoQuestion(event)" class="space-y-4">
                 @csrf
                 <input type="hidden" id="vqLectureId" name="lecture_id" value="">
-                <div class="grid grid-cols-2 gap-4">
+                <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <label class="inline-flex items-center gap-2 cursor-pointer flex-1">
+                        <input type="checkbox" id="vqShowAtEnd" name="show_at_end" value="1" class="w-4 h-4 text-amber-500 rounded border-slate-300" onchange="toggleVqTimestampFields()">
+                        <span class="font-semibold text-slate-800">يظهر السؤال في نهاية الفيديو</span>
+                    </label>
+                    <span class="text-xs text-slate-500">لا حاجة لتحديد الدقيقة عند التفعيل</span>
+                </div>
+                <div id="vqTimestampWrap" class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">الدقيقة في الفيديو <span class="text-red-500">*</span></label>
-                        <input type="number" id="vqTimestampMinutes" name="timestamp_minutes" min="0" max="999" value="0" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800">
+                        <input type="number" id="vqTimestampMinutes" name="timestamp_minutes" min="0" max="999" value="0" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-800">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">ثوانٍ إضافية (0–59)</label>
@@ -609,6 +619,7 @@
 </div>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
 let currentSectionId = null;
 let currentItemType = null;
@@ -1147,6 +1158,8 @@ function openVideoQuestionsModal(lectureId, title) {
     videoQuestionsLectureId = lectureId;
     document.getElementById('videoQuestionsModalTitle').textContent = 'أسئلة الفيديو — ' + (title || 'المحاضرة');
     document.getElementById('vqLectureId').value = lectureId;
+    var showAtEndEl = document.getElementById('vqShowAtEnd');
+    if (showAtEndEl) { showAtEndEl.checked = false; toggleVqTimestampFields(); }
     document.getElementById('videoQuestionsModal').classList.remove('hidden');
     document.getElementById('videoQuestionsModal').classList.add('flex');
     loadVideoQuestionsData(lectureId);
@@ -1162,7 +1175,13 @@ function toggleVqSource(source) {
     document.getElementById('vqBankWrap').classList.toggle('hidden', source !== 'bank');
     document.getElementById('vqCustomWrap').classList.toggle('hidden', source !== 'custom');
 }
-
+function toggleVqTimestampFields() {
+    var showAtEnd = document.getElementById('vqShowAtEnd').checked;
+    var wrap = document.getElementById('vqTimestampWrap');
+    var minutesInput = document.getElementById('vqTimestampMinutes');
+    if (wrap) wrap.style.display = showAtEnd ? 'none' : 'grid';
+    if (minutesInput) minutesInput.required = !showAtEnd;
+}
 function toggleVqRewind() {
     var onWrong = document.getElementById('vqOnWrong').value;
     document.getElementById('vqRewindWrap').classList.toggle('hidden', onWrong !== 'rewind');
@@ -1208,8 +1227,10 @@ async function submitVideoQuestion(e) {
     e.preventDefault();
     var form = document.getElementById('videoQuestionForm');
     var source = form.querySelector('input[name="question_source"]:checked').value;
+    var showAtEnd = document.getElementById('vqShowAtEnd') && document.getElementById('vqShowAtEnd').checked;
     var payload = {
         _token: '{{ csrf_token() }}',
+        show_at_end: showAtEnd,
         timestamp_minutes: document.getElementById('vqTimestampMinutes').value,
         timestamp_seconds_extra: document.getElementById('vqTimestampSeconds').value,
         question_source: source,
@@ -1248,6 +1269,8 @@ async function submitVideoQuestion(e) {
         document.getElementById('vqTimestampSeconds').value = 0;
         document.getElementById('vqPoints').value = 1;
         document.getElementById('vqShowCount').value = '1';
+        var showAtEndEl = document.getElementById('vqShowAtEnd');
+        if (showAtEndEl) { showAtEndEl.checked = false; toggleVqTimestampFields(); }
     } catch (err) {
         alert('حدث خطأ: ' + (err.message || 'فشل الإضافة'));
     }
@@ -1762,6 +1785,146 @@ function closeLectureModal() {
         btn.classList.add('border-slate-200');
     });
 }
+
+// ——— سحب وإفلات المنهج (أقسام + عناصر) ———
+(function curriculumSortable() {
+    if (typeof Sortable === 'undefined') return;
+    var courseId = {{ $course->id }};
+    var sectionsOrderUrl = '{{ route("instructor.courses.sections.order", $course) }}';
+    var moveItemUrlBase = '{{ url("instructor/curriculum-items") }}';
+    var token = '{{ csrf_token() }}';
+
+    function showToast(msg, isError) {
+        var t = document.createElement('div');
+        t.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl text-white text-sm font-semibold shadow-lg z-[9999] ' + (isError ? 'bg-red-500' : 'bg-emerald-500');
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(function() { t.remove(); }, 2500);
+    }
+
+    function buildSectionsPayload() {
+        var sections = [];
+        var root = document.getElementById('sections-container');
+        if (!root) return sections;
+        var rootBlocks = root.querySelectorAll(':scope > .section-block');
+        rootBlocks.forEach(function(el, i) {
+            sections.push({ id: parseInt(el.dataset.sectionId, 10), order: i, parent_id: null });
+        });
+        document.querySelectorAll('.sections-children').forEach(function(container) {
+            var parentId = parseInt(container.dataset.parentId, 10);
+            var blocks = container.querySelectorAll(':scope > .section-block');
+            blocks.forEach(function(el, i) {
+                sections.push({ id: parseInt(el.dataset.sectionId, 10), order: i, parent_id: parentId });
+            });
+        });
+        return sections;
+    }
+
+    function saveSectionsOrder() {
+        var payload = buildSectionsPayload();
+        if (payload.length === 0) return;
+        fetch(sectionsOrderUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+            body: JSON.stringify({ sections: payload })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) showToast('تم تحديث ترتيب الأقسام');
+            else showToast(data.message || 'حدث خطأ', true);
+        })
+        .catch(function() { showToast('حدث خطأ في الاتصال', true); });
+    }
+
+    function saveItemsOrder(sectionId, itemIds) {
+        var items = itemIds.map(function(id, i) { return { id: id, order: i }; });
+        var url = '/instructor/sections/' + sectionId + '/items/order';
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+            body: JSON.stringify({ items: items })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) showToast('تم تحديث الترتيب');
+            else showToast(data.message || 'حدث خطأ', true);
+        })
+        .catch(function() { showToast('حدث خطأ في الاتصال', true); });
+    }
+
+    function moveCurriculumItem(itemId, sectionId, order) {
+        fetch(moveItemUrlBase + '/' + itemId + '/move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+            body: JSON.stringify({ section_id: sectionId, order: order })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) showToast('تم نقل العنصر');
+            else showToast(data.message || 'حدث خطأ', true);
+        })
+        .catch(function() { showToast('حدث خطأ في الاتصال', true); });
+    }
+
+    var sectionOpts = {
+        group: 'sections',
+        animation: 200,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        draggable: '.section-block',
+        onStart: function() { document.body.classList.add('curriculum-dragging'); },
+        onEnd: function() {
+            document.body.classList.remove('curriculum-dragging');
+            saveSectionsOrder();
+        }
+    };
+
+    var itemOpts = {
+        group: 'curriculum-items',
+        animation: 200,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        draggable: '.item-card',
+        onStart: function() { document.body.classList.add('curriculum-dragging'); },
+        onEnd: function(evt) {
+            document.body.classList.remove('curriculum-dragging');
+            var from = evt.from;
+            var to = evt.to;
+            var sectionId = to.dataset.sectionId;
+            if (!sectionId) return;
+            if (from === to) {
+                var ids = [];
+                to.querySelectorAll('.item-card').forEach(function(card) {
+                    var id = card.dataset.itemId;
+                    if (id) ids.push(parseInt(id, 10));
+                });
+                if (ids.length) saveItemsOrder(sectionId, ids);
+            } else {
+                var itemId = evt.item.dataset.itemId;
+                if (itemId) moveCurriculumItem(parseInt(itemId, 10), parseInt(sectionId, 10), evt.newIndex);
+                var fromIds = [];
+                from.querySelectorAll('.item-card').forEach(function(card) {
+                    var id = card.dataset.itemId;
+                    if (id) fromIds.push(parseInt(id, 10));
+                });
+                if (fromIds.length && from.dataset.sectionId) saveItemsOrder(from.dataset.sectionId, fromIds);
+            }
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var root = document.getElementById('sections-container');
+        if (root) Sortable.create(root, sectionOpts);
+        document.querySelectorAll('.sections-children').forEach(function(el) {
+            Sortable.create(el, sectionOpts);
+        });
+        document.querySelectorAll('.items-container').forEach(function(el) {
+            Sortable.create(el, itemOpts);
+        });
+    });
+})();
 </script>
 @endpush
 @endsection
