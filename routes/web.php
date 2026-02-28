@@ -324,6 +324,11 @@ Route::post('/course/{courseId}/checkout/complete', [\App\Http\Controllers\Publi
     ->middleware('auth')
     ->name('public.course.checkout.complete');
 
+// التوجيه لبوابة الدفع كاشير (كورس)
+Route::post('/course/{courseId}/checkout/kashier', [\App\Http\Controllers\Public\CheckoutController::class, 'redirectToKashier'])
+    ->middleware('auth')
+    ->name('public.course.checkout.kashier');
+
 // تسجيل مجاني للكورسات المجانية
 Route::post('/course/{courseId}/enroll-free', [\App\Http\Controllers\Public\CheckoutController::class, 'enrollFree'])
     ->middleware('auth')
@@ -346,6 +351,15 @@ Route::get('/learning-path/{slug}/checkout', [\App\Http\Controllers\Public\Check
 Route::post('/learning-path/{slug}/checkout/complete', [\App\Http\Controllers\Public\CheckoutController::class, 'completeLearningPath'])
     ->middleware('auth')
     ->name('public.learning-path.checkout.complete');
+
+// التوجيه لبوابة الدفع كاشير (مسار تعليمي)
+Route::post('/learning-path/{slug}/checkout/kashier', [\App\Http\Controllers\Public\CheckoutController::class, 'redirectToKashierLearningPath'])
+    ->middleware('auth')
+    ->name('public.learning-path.checkout.kashier');
+
+// استقبال العودة من بوابة كاشير بعد الدفع (بدون auth لأن كاشير يوجّه المتصفح هنا)
+Route::get('/checkout/kashier/callback', [\App\Http\Controllers\Public\CheckoutController::class, 'kashierCallback'])
+    ->name('public.checkout.kashier.callback');
 
 // تسجيل مجاني للمسارات المجانية
 Route::post('/learning-path/{slug}/enroll-free', [\App\Http\Controllers\Public\CheckoutController::class, 'enrollFreeLearningPath'])

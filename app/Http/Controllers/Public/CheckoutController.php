@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Transaction;
+use App\Services\KashierService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -71,6 +72,442 @@ class CheckoutController extends Controller
             ->get();
 
         return view('public.checkout', compact('course', 'wallets'));
+    }
+
+    /**
+     * التوجيه لبوابة الدفع كاشير (كورس)
+     */
+    public function redirectToKashier($courseId)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
+        }
+
+        $course = AdvancedCourse::where('id', $courseId)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $isEnrolled = StudentCourseEnrollment::where('user_id', Auth::id())
+            ->where('advanced_course_id', $course->id)
+            ->where('status', 'active')
+            ->exists();
+        if ($isEnrolled) {
+            return redirect()->route('public.course.show', $course->id)
+                ->with('info', 'أنت مسجل بالفعل في هذا الكورس');
+        }
+
+        $existingOrder = Order::where('user_id', Auth::id())
+            ->where('advanced_course_id', $course->id)
+            ->where('status', Order::STATUS_PENDING)
+            ->first();
+        if ($existingOrder) {
+            return redirect()->route('public.course.show', $course->id)
+                ->with('info', 'لديك طلب قيد الانتظار لهذا الكورس');
+        }
+
+        $amount = (float) ($course->price ?? 0);
+        if ($amount <= 0) {
+            return redirect()->route('public.course.show', $course->id)
+                ->with('info', 'هذا الكورس مجاني يمكنك التسجيل مباشرة.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $order = Order::create([
+                'user_id' => Auth::id(),
+                'advanced_course_id' => $course->id,
+                'original_amount' => $amount,
+                'discount_amount' => 0,
+                'amount' => $amount,
+                'payment_method' => 'online',
+                'payment_proof' => null,
+                'wallet_id' => null,
+                'notes' => 'دفع عبر بوابة كاشير',
+                'status' => Order::STATUS_PENDING,
+            ]);
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Kashier redirect: order create failed', ['course_id' => $courseId, 'message' => $e->getMessage()]);
+            return redirect()->route('public.course.show', $course->id)
+                ->with('error', 'حدث خطأ أثناء إنشاء الطلب. يرجى المحاولة مرة أخرى.');
+        }
+
+        $kashier = app(KashierService::class);
+        $callbackUrl = $this->getKashierCallbackUrl();
+        try {
+            $hppUrl = $kashier->getHppUrl(
+                (string) $order->id,
+                $amount,
+                $callbackUrl,
+                null,
+                Auth::user()->email,
+                (string) Auth::id(),
+                'Course order #' . $order->id
+            );
+        } catch (\RuntimeException $e) {
+            $order->delete();
+            return redirect()->route('public.course.checkout', $course->id)
+                ->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            Log::error('Kashier getHppUrl failed', ['course_id' => $courseId, 'message' => $e->getMessage()]);
+            $order->delete();
+            return redirect()->route('public.course.checkout', $course->id)
+                ->with('error', 'حدث خطأ أثناء التوجيه للدفع. يرجى المحاولة مرة أخرى.');
+        }
+
+        return redirect()->away($hppUrl);
+    }
+
+    /**
+     * التوجيه لبوابة الدفع كاشير (مسار تعليمي)
+     */
+    public function redirectToKashierLearningPath($slug)
+    {
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
+        }
+
+        $learningPath = AcademicYear::active()
+            ->get()
+            ->first(fn ($year) => Str::slug($year->name) === $slug);
+        if (!$learningPath) {
+            abort(404, 'المسار التعليمي غير موجود');
+        }
+
+        $isEnrolled = LearningPathEnrollment::where('user_id', Auth::id())
+            ->where('academic_year_id', $learningPath->id)
+            ->where('status', 'active')
+            ->exists();
+        if ($isEnrolled) {
+            return redirect()->route('public.learning-path.show', $slug)
+                ->with('info', 'أنت مسجل بالفعل في هذا المسار');
+        }
+
+        $existingOrder = Order::where('user_id', Auth::id())
+            ->where('academic_year_id', $learningPath->id)
+            ->where('status', Order::STATUS_PENDING)
+            ->first();
+        if ($existingOrder) {
+            return redirect()->route('public.learning-path.show', $slug)
+                ->with('info', 'لديك طلب قيد الانتظار لهذا المسار');
+        }
+
+        $amount = (float) ($learningPath->price ?? 0);
+        if ($amount <= 0) {
+            return redirect()->route('public.learning-path.show', $slug)
+                ->with('info', 'هذا المسار مجاني يمكنك التسجيل مباشرة.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $order = Order::create([
+                'user_id' => Auth::id(),
+                'academic_year_id' => $learningPath->id,
+                'original_amount' => $amount,
+                'discount_amount' => 0,
+                'amount' => $amount,
+                'payment_method' => 'online',
+                'payment_proof' => null,
+                'wallet_id' => null,
+                'notes' => 'دفع عبر بوابة كاشير',
+                'status' => Order::STATUS_PENDING,
+            ]);
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Kashier redirect: order create failed (path)', ['slug' => $slug, 'message' => $e->getMessage()]);
+            return redirect()->route('public.learning-path.show', $slug)
+                ->with('error', 'حدث خطأ أثناء إنشاء الطلب. يرجى المحاولة مرة أخرى.');
+        }
+
+        $kashier = app(KashierService::class);
+        $callbackUrl = $this->getKashierCallbackUrl();
+        try {
+            $hppUrl = $kashier->getHppUrl(
+                (string) $order->id,
+                $amount,
+                $callbackUrl,
+                null,
+                Auth::user()->email,
+                (string) Auth::id(),
+                'Learning path order #' . $order->id
+            );
+        } catch (\RuntimeException $e) {
+            $order->delete();
+            return redirect()->route('public.learning-path.checkout', $slug)
+                ->with('error', $e->getMessage());
+        } catch (\Exception $e) {
+            Log::error('Kashier getHppUrl failed (path)', ['slug' => $slug, 'message' => $e->getMessage()]);
+            $order->delete();
+            return redirect()->route('public.learning-path.checkout', $slug)
+                ->with('error', 'حدث خطأ أثناء التوجيه للدفع. يرجى المحاولة مرة أخرى.');
+        }
+
+        return redirect()->away($hppUrl);
+    }
+
+    /**
+     * رابط العودة من كاشير بعد الدفع (يجب أن يكون URL صالحًا — كاشير قد يرفض localhost أو غير https).
+     */
+    private function getKashierCallbackUrl(): string
+    {
+        $configured = config('kashier.merchant_redirect_url');
+        if (!empty($configured)) {
+            return rtrim($configured, '/');
+        }
+        return url()->route('public.checkout.kashier.callback');
+    }
+
+    /**
+     * استقبال callback من بوابة كاشير بعد إتمام الدفع
+     */
+    public function kashierCallback(Request $request)
+    {
+        $kashier = app(KashierService::class);
+        $query = $request->query();
+
+        if (!$kashier->validateCallback($query)) {
+            Log::warning('Kashier callback: invalid signature', ['query_keys' => array_keys($query)]);
+            return redirect()->route('public.courses')->with('error', 'فشل التحقق من الدفع. يرجى التواصل مع الدعم.');
+        }
+
+        $merchantOrderId = $query['merchantOrderId'] ?? null;
+        if (!$merchantOrderId || !ctype_digit((string) $merchantOrderId)) {
+            Log::warning('Kashier callback: invalid merchantOrderId', ['merchantOrderId' => $merchantOrderId]);
+            return redirect()->route('public.courses')->with('error', 'بيانات الطلب غير صحيحة.');
+        }
+
+        $order = Order::with(['course', 'learningPath'])->find($merchantOrderId);
+        if (!$order || $order->status !== Order::STATUS_PENDING) {
+            Log::warning('Kashier callback: order not found or not pending', ['order_id' => $merchantOrderId]);
+            return redirect()->route('public.courses')->with('error', 'الطلب غير موجود أو تم معالجته مسبقاً.');
+        }
+
+        if (!$kashier->isPaymentSuccess($query)) {
+            if ($order->academic_year_id) {
+                $slug = Str::slug($order->learningPath->name ?? '');
+                return redirect()->route('public.learning-path.show', $slug)
+                    ->with('error', 'لم يتم إتمام الدفع. يمكنك المحاولة مرة أخرى.');
+            }
+            return redirect()->route('public.course.show', $order->advanced_course_id)
+                ->with('error', 'لم يتم إتمام الدفع. يمكنك المحاولة مرة أخرى.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $isLearningPath = !empty($order->academic_year_id);
+            $orderTitle = $isLearningPath
+                ? ($order->learningPath->name ?? 'مسار تعليمي')
+                : ($order->course->title ?? 'كورس');
+
+            $invoiceNumber = 'INV-' . str_pad(Invoice::count() + 1, 8, '0', STR_PAD_LEFT);
+            $invoice = Invoice::create([
+                'invoice_number' => $invoiceNumber,
+                'user_id' => $order->user_id,
+                'type' => $isLearningPath ? 'learning_path' : 'course',
+                'description' => $isLearningPath ? 'تسجيل في المسار: ' . $orderTitle : 'تسجيل في الكورس: ' . $orderTitle,
+                'subtotal' => $order->amount,
+                'tax_amount' => 0,
+                'discount_amount' => 0,
+                'total_amount' => $order->amount,
+                'status' => 'paid',
+                'due_date' => now(),
+                'paid_at' => now(),
+                'notes' => 'دفع عبر كاشير - طلب #' . $order->id,
+                'items' => [
+                    [
+                        'description' => $isLearningPath ? 'المسار: ' . $orderTitle : 'الكورس: ' . $orderTitle,
+                        'quantity' => 1,
+                        'price' => $order->amount,
+                        'total' => $order->amount,
+                    ],
+                ],
+            ]);
+
+            $paymentNumber = 'PAY-' . str_pad(Payment::count() + 1, 8, '0', STR_PAD_LEFT);
+            $payment = Payment::create([
+                'payment_number' => $paymentNumber,
+                'invoice_id' => $invoice->id,
+                'user_id' => $order->user_id,
+                'payment_method' => 'online',
+                'payment_gateway' => 'kashier',
+                'amount' => $order->amount,
+                'currency' => 'EGP',
+                'status' => 'completed',
+                'transaction_id' => $query['transactionId'] ?? null,
+                'gateway_response' => $query,
+                'paid_at' => now(),
+                'notes' => 'دفع عبر كاشير - طلب #' . $order->id,
+            ]);
+
+            $transactionNumber = 'TXN-' . str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT);
+            Transaction::create([
+                'transaction_number' => $transactionNumber,
+                'user_id' => $order->user_id,
+                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
+                'expense_id' => null,
+                'subscription_id' => null,
+                'type' => 'credit',
+                'category' => 'course_payment',
+                'amount' => $order->amount,
+                'currency' => 'EGP',
+                'description' => ($isLearningPath ? 'دفع مسار: ' : 'دفع كورس: ') . $orderTitle . ' - طلب #' . $order->id,
+                'status' => 'completed',
+                'metadata' => [
+                    'order_id' => $order->id,
+                    'invoice_id' => $invoice->id,
+                    'payment_id' => $payment->id,
+                    'course_id' => $order->advanced_course_id,
+                    'academic_year_id' => $order->academic_year_id,
+                ],
+            ]);
+
+            $order->update([
+                'status' => Order::STATUS_APPROVED,
+                'approved_at' => now(),
+                'approved_by' => null,
+                'invoice_id' => $invoice->id,
+                'payment_id' => $payment->id,
+            ]);
+
+            if ($order->academic_year_id) {
+                $existingPath = LearningPathEnrollment::where('user_id', $order->user_id)
+                    ->where('academic_year_id', $order->academic_year_id)
+                    ->first();
+                if (!$existingPath) {
+                    $pathEnrollment = LearningPathEnrollment::create([
+                        'user_id' => $order->user_id,
+                        'academic_year_id' => $order->academic_year_id,
+                        'status' => 'active',
+                        'enrolled_at' => now(),
+                        'activated_at' => now(),
+                        'activated_by' => $order->user_id,
+                        'progress' => 0,
+                    ]);
+                    $this->enrollInPathCourses($pathEnrollment);
+                } else {
+                    if ($existingPath->status !== 'active') {
+                        $existingPath->update([
+                            'status' => 'active',
+                            'activated_at' => now(),
+                            'activated_by' => $order->user_id,
+                        ]);
+                        $this->enrollInPathCourses($existingPath);
+                    }
+                }
+            }
+
+            if ($order->advanced_course_id) {
+                $existingEnrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
+                    ->where('advanced_course_id', $order->advanced_course_id)
+                    ->first();
+                if (!$existingEnrollment) {
+                    StudentCourseEnrollment::create([
+                        'user_id' => $order->user_id,
+                        'advanced_course_id' => $order->advanced_course_id,
+                        'enrolled_at' => now(),
+                        'activated_at' => now(),
+                        'activated_by' => $order->user_id,
+                        'status' => 'active',
+                        'progress' => 0,
+                        'invoice_id' => $invoice->id,
+                        'payment_id' => $payment->id,
+                        'payment_method' => 'online',
+                        'final_price' => $order->amount,
+                    ]);
+                } else {
+                    $existingEnrollment->update([
+                        'status' => 'active',
+                        'activated_at' => now(),
+                        'activated_by' => $order->user_id,
+                        'invoice_id' => $invoice->id,
+                        'payment_id' => $payment->id,
+                        'payment_method' => 'online',
+                        'final_price' => $order->amount,
+                    ]);
+                }
+                $enrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
+                    ->where('advanced_course_id', $order->advanced_course_id)
+                    ->first();
+                if ($enrollment) {
+                    InstructorCoursePercentageService::processEnrollmentActivation($enrollment);
+                }
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Kashier callback: approval failed', [
+                'order_id' => $order->id,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return redirect()->route('public.courses')->with('error', 'حدث خطأ أثناء تفعيل الطلب. يرجى التواصل مع الدعم.');
+        }
+
+        if ($order->academic_year_id) {
+            $slug = Str::slug($order->learningPath->name ?? '');
+            return redirect()->route('public.learning-path.show', $slug)
+                ->with('success', 'تم الدفع بنجاح! تم تفعيل المسار التعليمي على حسابك.');
+        }
+
+        return redirect()->route('public.course.show', $order->advanced_course_id)
+            ->with('success', 'تم الدفع بنجاح! تم تفعيل الكورس على حسابك.');
+    }
+
+    /**
+     * تسجيل الطالب في كورسات المسار (للاستخدام من callback كاشير)
+     */
+    private function enrollInPathCourses(LearningPathEnrollment $enrollment): void
+    {
+        $learningPath = $enrollment->learningPath()->with(['academicSubjects'])->first();
+        if (!$learningPath) {
+            return;
+        }
+        $courses = collect();
+        if (\Illuminate\Support\Facades\Schema::hasTable('academic_year_courses')) {
+            try {
+                $learningPath->load('linkedCourses');
+                $linked = $learningPath->linkedCourses()->where('advanced_courses.is_active', true)->get();
+                $courses = $courses->merge($linked);
+            } catch (\Throwable $e) {
+                Log::warning('enrollInPathCourses: linkedCourses failed', ['message' => $e->getMessage()]);
+            }
+        }
+        $subjects = $learningPath->academicSubjects ?? collect();
+        foreach ($subjects as $subject) {
+            try {
+                $subjectCourses = $subject->advancedCourses()->where('is_active', true)->get();
+                $courses = $courses->merge($subjectCourses);
+            } catch (\Throwable $e) {
+                Log::warning('enrollInPathCourses: subject courses failed', ['subject_id' => $subject->id ?? null]);
+            }
+        }
+        $courses = $courses->unique('id');
+        foreach ($courses as $course) {
+            try {
+                $courseEnrollment = StudentCourseEnrollment::firstOrCreate(
+                    [
+                        'user_id' => $enrollment->user_id,
+                        'advanced_course_id' => $course->id,
+                    ],
+                    [
+                        'status' => 'active',
+                        'enrolled_at' => now(),
+                        'activated_at' => now(),
+                        'activated_by' => $enrollment->user_id,
+                        'progress' => 0,
+                    ]
+                );
+                if ($courseEnrollment->status === 'active') {
+                    InstructorCoursePercentageService::processEnrollmentActivation($courseEnrollment->fresh());
+                }
+            } catch (\Throwable $e) {
+                Log::warning('enrollInPathCourses: firstOrCreate failed', ['course_id' => $course->id ?? null]);
+            }
+        }
     }
 
     /**
@@ -496,53 +933,6 @@ class CheckoutController extends Controller
             DB::rollBack();
             return redirect()->route('public.learning-path.show', $slug)
                 ->with('error', 'حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.');
-        }
-    }
-
-    /**
-     * تسجيل الطالب في جميع الكورسات في المسار (المجانية والمدفوعة)
-     */
-    private function enrollInPathCourses(LearningPathEnrollment $enrollment)
-    {
-        // تحميل المسار مع العلاقات المطلوبة
-        $learningPath = $enrollment->learningPath()->with(['linkedCourses', 'academicSubjects'])->first();
-        
-        if (!$learningPath) {
-            return;
-        }
-        
-        // جمع الكورسات من المسار
-        $courses = collect();
-        
-        // الكورسات المرتبطة مباشرة
-        $linkedCourses = $learningPath->linkedCourses()->where('is_active', true)->get();
-        $courses = $courses->merge($linkedCourses);
-        
-        // الكورسات من المواد الدراسية
-        $subjectCourses = $learningPath->academicSubjects->flatMap(function($subject) {
-            return $subject->advancedCourses()->where('is_active', true)->get();
-        });
-        
-        $courses = $courses->merge($subjectCourses)->unique('id');
-
-        // تسجيل الطالب في جميع الكورسات (المجانية والمدفوعة)
-        foreach ($courses as $course) {
-            $courseEnrollment = StudentCourseEnrollment::firstOrCreate(
-                [
-                    'user_id' => $enrollment->user_id,
-                    'advanced_course_id' => $course->id,
-                ],
-                [
-                    'status' => 'active',
-                    'enrolled_at' => now(),
-                    'activated_at' => now(),
-                    'activated_by' => Auth::id(),
-                    'progress' => 0,
-                ]
-            );
-            if ($courseEnrollment->status === 'active') {
-                InstructorCoursePercentageService::processEnrollmentActivation($courseEnrollment->fresh());
-            }
         }
     }
 }

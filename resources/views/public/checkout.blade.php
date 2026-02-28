@@ -502,12 +502,12 @@
                         </div>
                     </div>
 
-                    <!-- Checkout Form -->
+                    <!-- طرق الدفع المتاحة (فيزا، محفظة، تقسيط عبر كاشير) -->
                     <div class="lg:col-span-2">
                         <div class="course-card p-6 md:p-8 fade-in-up" style="animation-delay: 0.3s;">
                             <h2 class="text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
                                 <i class="fas fa-credit-card text-blue-600"></i>
-                                معلومات الدفع
+                                طرق الدفع المتاحة
                             </h2>
                             
                             @if(session('error'))
@@ -521,10 +521,6 @@
 
                             @if($errors->any())
                                 <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl fade-in-up">
-                                    <h4 class="text-red-800 font-bold mb-2 flex items-center gap-2">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        يرجى تصحيح الأخطاء التالية:
-                                    </h4>
                                     <ul class="list-disc list-inside space-y-1 text-red-700 text-sm">
                                         @foreach($errors->all() as $error)
                                             <li>{{ $error }}</li>
@@ -542,174 +538,53 @@
                                 </div>
                             @endif
 
-                            <form action="{{ isset($course) ? route('public.course.checkout.complete', $course->id) : route('public.learning-path.checkout.complete', Str::slug($learningPath->name)) }}" method="POST" enctype="multipart/form-data" x-data="{ paymentMethod: '', walletId: '', bankWalletId: '', isSubmitting: false }" @submit="isSubmitting = true">
-                                @csrf
-
-                                @php
-                                    $bankWallets = $wallets->where('type', 'bank_transfer');
-                                    $electronicWallets = $wallets->whereIn('type', ['vodafone_cash', 'instapay']);
-                                @endphp
-
-                                <!-- Payment Method -->
-                                <div class="mb-6">
-                                    <label class="block text-sm font-bold text-gray-900 mb-4">
-                                        <i class="fas fa-credit-card text-blue-600 ml-2"></i>
-                                        طريقة الدفع <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <label class="cursor-pointer group">
-                                            <input type="radio" name="payment_method" value="bank_transfer" x-model="paymentMethod" required class="hidden peer">
-                                            <div class="p-5 border-2 border-gray-200 rounded-xl hover:border-blue-500 peer-checked:border-blue-600 peer-checked:bg-blue-50 transition-all text-center group-hover:shadow-lg">
-                                                <i class="fas fa-university text-3xl text-gray-400 peer-checked:text-blue-600 mb-3 block transition-colors"></i>
-                                                <span class="font-bold text-sm peer-checked:text-blue-900">تحويل بنكي</span>
-                                            </div>
-                                        </label>
-                                        <label class="cursor-pointer group">
-                                            <input type="radio" name="payment_method" value="wallet" x-model="paymentMethod" required class="hidden peer">
-                                            <div class="p-5 border-2 border-gray-200 rounded-xl hover:border-blue-500 peer-checked:border-blue-600 peer-checked:bg-blue-50 transition-all text-center group-hover:shadow-lg">
-                                                <i class="fas fa-wallet text-3xl text-gray-400 peer-checked:text-blue-600 mb-3 block transition-colors"></i>
-                                                <span class="font-bold text-sm peer-checked:text-blue-900">محفظة إلكترونية</span>
-                                            </div>
-                                        </label>
-                                        <label class="cursor-pointer group">
-                                            <input type="radio" name="payment_method" value="online" x-model="paymentMethod" required class="hidden peer">
-                                            <div class="p-5 border-2 border-gray-200 rounded-xl hover:border-blue-500 peer-checked:border-blue-600 peer-checked:bg-blue-50 transition-all text-center group-hover:shadow-lg">
-                                                <i class="fas fa-globe text-3xl text-gray-400 peer-checked:text-blue-600 mb-3 block transition-colors"></i>
-                                                <span class="font-bold text-sm peer-checked:text-blue-900">دفع إلكتروني</span>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    @error('payment_method')
-                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
-
-                                <!-- تحويل بنكي: عرض بيانات المحافظ البنكية للتحويل عليها -->
-                                <div x-show="paymentMethod === 'bank_transfer'" x-cloak class="mb-6">
-                                    <div class="p-5 bg-slate-50 rounded-xl border-2 border-blue-200">
-                                        <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                            <i class="fas fa-university text-blue-600"></i>
-                                            بيانات التحويل البنكي — انقل المبلغ إلى أحد الحسابات التالية
-                                        </h4>
-                                        @if($bankWallets->isEmpty())
-                                            <p class="text-sm text-amber-700">لا توجد حسابات بنكية مضافة حالياً. يمكنك اختيار "محفظة إلكترونية" أو التواصل معنا.</p>
-                                        @else
-                                            <div class="space-y-4">
-                                                @foreach($bankWallets as $w)
-                                                    <label class="flex cursor-pointer gap-4 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50 transition-all">
-                                                        <input type="radio" name="bank_wallet_id" value="{{ $w->id }}" class="mt-1" x-model="bankWalletId">
-                                                        <div class="flex-1 space-y-2 text-sm">
-                                                            <p class="font-bold text-gray-900">{{ $w->name ?? \App\Models\Wallet::typeLabel($w->type) }}</p>
-                                                            @if($w->account_number)
-                                                                <p class="text-gray-700"><span class="text-gray-500">رقم الحساب / الآيبان:</span> <span class="font-mono font-semibold text-gray-900">{{ $w->account_number }}</span></p>
-                                                            @endif
-                                                            @if($w->bank_name)
-                                                                <p class="text-gray-700"><span class="text-gray-500">البنك:</span> <span class="font-semibold">{{ $w->bank_name }}</span></p>
-                                                            @endif
-                                                            @if($w->account_holder)
-                                                                <p class="text-gray-700"><span class="text-gray-500">صاحب الحساب:</span> <span class="font-semibold">{{ $w->account_holder }}</span></p>
-                                                            @endif
-                                                        </div>
-                                                    </label>
-                                                @endforeach
-                                            </div>
-                                            <p class="mt-3 text-xs text-amber-700 flex items-center gap-1">
-                                                <i class="fas fa-info-circle"></i>
-                                                قم بالتحويل إلى الحساب أعلاه ثم أرفق صورة الإيصال.
-                                            </p>
-                                        @endif
-                                    </div>
-                                    <!-- يُرسل wallet_id عند اختيار تحويل بنكي (اختياري) أو محفظة إلكترونية (مطلوب عند المحفظة) -->
-                                    <input type="hidden" name="wallet_id" :value="paymentMethod === 'bank_transfer' ? (bankWalletId || '') : (paymentMethod === 'wallet' ? (walletId || '') : '')">
-                                </div>
-
-                                <!-- محفظة إلكترونية: اختيار المحفظة وعرض بيانات التحويل -->
-                                <div x-show="paymentMethod === 'wallet'" x-cloak class="mb-6 fade-in-up">
-                                    <label class="block text-sm font-bold text-gray-900 mb-3">
-                                        <i class="fas fa-wallet text-blue-600 ml-2"></i>
-                                        اختر المحفظة للتحويل عليها <span class="text-red-500">*</span>
-                                    </label>
-                                    <p class="text-xs text-gray-600 mb-3">اختر المحفظة التي ستقوم بالتحويل إليها ثم انقل المبلغ على البيانات الظاهرة.</p>
-                                    <div class="space-y-3">
-                                        @foreach($wallets as $wallet)
-                                            <label class="flex cursor-pointer gap-4 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 peer-checked:border-blue-600 transition-all has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/50">
-                                                <input type="radio" name="wallet_id_radio" value="{{ $wallet->id }}" class="mt-1" x-model="walletId">
-                                                <div class="flex-1">
-                                                    <p class="font-bold text-gray-900">{{ $wallet->name ?? \App\Models\Wallet::typeLabel($wallet->type) }}</p>
-                                                    <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700">
-                                                        @if($wallet->account_number)
-                                                            <span><span class="text-gray-500">رقم المحفظة:</span> <span class="font-mono font-semibold">{{ $wallet->account_number }}</span></span>
-                                                        @endif
-                                                        @if($wallet->account_holder)
-                                                            <span><span class="text-gray-500">صاحب الحساب:</span> <span class="font-semibold">{{ $wallet->account_holder }}</span></span>
-                                                        @endif
-                                                        @if($wallet->bank_name)
-                                                            <span><span class="text-gray-500">البنك:</span> {{ $wallet->bank_name }}</span>
-                                                        @endif
-                                                    </div>
-                                                    @if($wallet->notes)
-                                                        <p class="mt-1 text-xs text-gray-500">{{ $wallet->notes }}</p>
-                                                    @endif
-                                                </div>
-                                            </label>
-                                        @endforeach
-                                        @if($wallets->isEmpty())
-                                            <p class="text-sm text-amber-700">لا توجد محافظ إلكترونية متاحة حالياً.</p>
-                                        @endif
-                                    </div>
-                                    <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                                        <p class="text-xs text-amber-800 flex items-center gap-2">
-                                            <i class="fas fa-exclamation-triangle"></i>
-                                            <span>قم بالتحويل على رقم المحفظة أعلاه ثم أرفق صورة الإيصال عند إتمام الطلب.</span>
-                                        </p>
-                                    </div>
-                                    @error('wallet_id')
-                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
-                                </div>
-
-                                <!-- Payment Proof -->
-                                <div class="mb-6">
-                                    <label class="block text-sm font-bold text-gray-900 mb-3">
-                                        <i class="fas fa-image text-blue-600 ml-2"></i>
-                                        صورة إيصال الدفع <span class="text-red-500">*</span>
-                                    </label>
-                                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-500 transition-colors bg-gray-50">
-                                        <input type="file" name="payment_proof" accept="image/*" required 
-                                               class="hidden" id="payment_proof" onchange="previewImage(this)">
-                                        <label for="payment_proof" class="cursor-pointer">
-                                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3 block"></i>
-                                            <p class="text-sm text-gray-700 mb-1 font-medium">اضغط لرفع صورة الإيصال</p>
-                                            <p class="text-xs text-gray-500">JPEG, PNG, JPG - حد أقصى 2 ميجابايت</p>
-                                        </label>
-                                        <div id="image-preview" class="hidden mt-4">
-                                            <img id="preview-img" src="" alt="Preview" class="max-w-full h-40 object-cover rounded-lg mx-auto border-2 border-gray-200">
+                            <!-- طرق الدفع المسموحة من كاشير -->
+                            <div class="mb-6 p-5 bg-slate-50 rounded-xl border-2 border-slate-200">
+                                <p class="text-sm font-bold text-gray-900 mb-4">يمكنك الدفع بإحدى الطرق التالية:</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200">
+                                        <div class="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
+                                            <i class="fas fa-credit-card text-2xl text-blue-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-gray-900 text-sm">البطاقات</p>
+                                            <p class="text-xs text-gray-600">فيزا، ماستركارد، ميزة</p>
                                         </div>
                                     </div>
-                                    @error('payment_proof')
-                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
+                                    <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200">
+                                        <div class="w-12 h-12 rounded-lg bg-emerald-50 flex items-center justify-center">
+                                            <i class="fas fa-wallet text-2xl text-emerald-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-gray-900 text-sm">المحفظة الإلكترونية</p>
+                                            <p class="text-xs text-gray-600">فودافون كاش وغيرها</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200">
+                                        <div class="w-12 h-12 rounded-lg bg-amber-50 flex items-center justify-center">
+                                            <i class="fas fa-calendar-alt text-2xl text-amber-600"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-gray-900 text-sm">التقسيط</p>
+                                            <p class="text-xs text-gray-600">تقسيط عبر البنوك</p>
+                                        </div>
+                                    </div>
                                 </div>
+                                <p class="mt-4 text-xs text-gray-500">
+                                    <i class="fas fa-info-circle text-blue-500 ml-1"></i>
+                                    عند الضغط على «متابعة للدفع» ستُنقل لصفحة دفع آمنة لاختيار طريقة الدفع وإتمام العملية.
+                                </p>
+                            </div>
 
-                                <!-- Notes -->
-                                <div class="mb-6">
-                                    <label class="block text-sm font-bold text-gray-900 mb-3">
-                                        <i class="fas fa-sticky-note text-blue-600 ml-2"></i>
-                                        ملاحظات (اختياري)
-                                    </label>
-                                    <textarea name="notes" rows="3" 
-                                              class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
-                                              placeholder="أي ملاحظات إضافية..."></textarea>
-                                </div>
-
-                                <!-- Submit Button -->
+                            <form action="{{ isset($course) ? route('public.course.checkout.kashier', $course->id) : route('public.learning-path.checkout.kashier', Str::slug($learningPath->name)) }}" method="POST" x-data="{ isSubmitting: false }" @submit="isSubmitting = true">
+                                @csrf
                                 <div class="flex flex-col sm:flex-row gap-4">
                                     <button type="submit" 
                                             :disabled="isSubmitting"
                                             class="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-green-500 text-white px-6 py-4 rounded-full font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                                        <i class="fas fa-shopping-cart" x-show="!isSubmitting"></i>
+                                        <i class="fas fa-lock" x-show="!isSubmitting"></i>
                                         <i class="fas fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
-                                        <span x-text="isSubmitting ? 'جاري الإرسال...' : 'إتمام الطلب'"></span>
+                                        <span x-text="isSubmitting ? 'جاري التوجيه...' : 'متابعة للدفع'"></span>
                                     </button>
                                     <a href="{{ isset($course) ? route('public.course.show', $course->id) : route('public.learning-path.show', Str::slug($learningPath->name)) }}" 
                                        :class="{ 'pointer-events-none opacity-50': isSubmitting }"
@@ -718,10 +593,9 @@
                                         <span>إلغاء</span>
                                     </a>
                                 </div>
-
                                 <p class="mt-4 text-xs text-gray-500 text-center">
                                     <i class="fas fa-shield-alt ml-1"></i>
-                                    سيتم تفعيل الكورس تلقائياً على حسابك بعد موافقة الإدارة على الطلب
+                                    تفعيل فوري بعد إتمام الدفع بنجاح
                                 </p>
                             </form>
                         </div>

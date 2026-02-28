@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -120,7 +121,7 @@ class CommunityPageController extends Controller
     /**
      * تحميل جميع الملفات كأرشيف ZIP واحد.
      */
-    public function datasetDownloadAll(CommunityDataset $dataset): StreamedResponse
+    public function datasetDownloadAll(CommunityDataset $dataset): Response
     {
         if ($dataset->status !== CommunityDataset::STATUS_APPROVED || !$dataset->is_active) {
             abort(404);
