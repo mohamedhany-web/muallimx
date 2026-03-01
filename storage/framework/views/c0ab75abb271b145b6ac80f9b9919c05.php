@@ -1,27 +1,27 @@
-@extends('layouts.employee')
 
-@section('title', 'تفاصيل المهمة')
-@section('header', 'تفاصيل المهمة')
 
-@section('content')
+<?php $__env->startSection('title', 'تفاصيل المهمة'); ?>
+<?php $__env->startSection('header', 'تفاصيل المهمة'); ?>
+
+<?php $__env->startSection('content'); ?>
 <div class="space-y-6">
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
         <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
             <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-2 mb-2">
-                    <h1 class="text-2xl font-bold text-gray-900">{{ $task->title }}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900"><?php echo e($task->title); ?></h1>
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold
-                        {{ $task->isVideoEditing() ? 'bg-violet-100 text-violet-800' : 'bg-slate-100 text-slate-700' }}">
-                        @if($task->isVideoEditing())
+                        <?php echo e($task->isVideoEditing() ? 'bg-violet-100 text-violet-800' : 'bg-slate-100 text-slate-700'); ?>">
+                        <?php if($task->isVideoEditing()): ?>
                             <i class="fas fa-video"></i> مونتاج فيديو
-                        @else
+                        <?php else: ?>
                             <i class="fas fa-tasks"></i> مهمة عامة
-                        @endif
+                        <?php endif; ?>
                     </span>
                 </div>
                 <p class="text-gray-600">عرض تفاصيل المهمة والتسليمات</p>
             </div>
-            <a href="{{ route('employee.tasks.index') }}" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors shrink-0">
+            <a href="<?php echo e(route('employee.tasks.index')); ?>" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors shrink-0">
                 <i class="fas fa-arrow-right mr-2"></i>العودة
             </a>
         </div>
@@ -29,67 +29,68 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">المكلف</p>
-                <p class="font-semibold text-gray-900">{{ $task->assigner->name }}</p>
+                <p class="font-semibold text-gray-900"><?php echo e($task->assigner->name); ?></p>
             </div>
             <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">الأولوية</p>
                 <span class="inline-block px-2 py-1 rounded-lg text-sm font-semibold
-                    @if($task->priority === 'urgent') bg-red-100 text-red-800
-                    @elseif($task->priority === 'high') bg-orange-100 text-orange-800
-                    @elseif($task->priority === 'medium') bg-yellow-100 text-yellow-800
-                    @else bg-gray-100 text-gray-800
-                    @endif">
-                    @if($task->priority === 'urgent') عاجل
-                    @elseif($task->priority === 'high') عالي
-                    @elseif($task->priority === 'medium') متوسط
-                    @else منخفض
-                    @endif
+                    <?php if($task->priority === 'urgent'): ?> bg-red-100 text-red-800
+                    <?php elseif($task->priority === 'high'): ?> bg-orange-100 text-orange-800
+                    <?php elseif($task->priority === 'medium'): ?> bg-yellow-100 text-yellow-800
+                    <?php else: ?> bg-gray-100 text-gray-800
+                    <?php endif; ?>">
+                    <?php if($task->priority === 'urgent'): ?> عاجل
+                    <?php elseif($task->priority === 'high'): ?> عالي
+                    <?php elseif($task->priority === 'medium'): ?> متوسط
+                    <?php else: ?> منخفض
+                    <?php endif; ?>
                 </span>
             </div>
-            @if($task->deadline)
+            <?php if($task->deadline): ?>
             <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">الموعد النهائي</p>
-                <p class="font-semibold {{ $task->deadline < now() && !in_array($task->status, ['completed', 'cancelled']) ? 'text-red-600' : 'text-gray-900' }}">
-                    {{ $task->deadline->format('Y-m-d') }}
+                <p class="font-semibold <?php echo e($task->deadline < now() && !in_array($task->status, ['completed', 'cancelled']) ? 'text-red-600' : 'text-gray-900'); ?>">
+                    <?php echo e($task->deadline->format('Y-m-d')); ?>
+
                 </p>
             </div>
-            @endif
+            <?php endif; ?>
             <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">التقدم</p>
                 <div class="flex items-center gap-2">
                     <div class="flex-1 bg-gray-200 rounded-full h-2 min-w-[60px]">
-                        <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: {{ $task->progress }}%"></div>
+                        <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: <?php echo e($task->progress); ?>%"></div>
                     </div>
-                    <span class="text-sm font-semibold text-gray-700">{{ $task->progress }}%</span>
+                    <span class="text-sm font-semibold text-gray-700"><?php echo e($task->progress); ?>%</span>
                 </div>
             </div>
         </div>
 
-        @if($task->description)
+        <?php if($task->description): ?>
         <div class="mb-6 pt-6 border-t border-gray-200">
             <p class="text-sm font-medium text-gray-600 mb-2">الوصف</p>
-            <p class="text-gray-900 leading-relaxed whitespace-pre-wrap">{{ $task->description }}</p>
+            <p class="text-gray-900 leading-relaxed whitespace-pre-wrap"><?php echo e($task->description); ?></p>
         </div>
-        @endif
+        <?php endif; ?>
 
         <!-- تحديث الحالة -->
         <div class="mb-6 p-5 bg-slate-50 rounded-xl border border-slate-200">
             <h3 class="text-base font-semibold text-gray-900 mb-3">تحديث حالة المهمة</h3>
-            <form action="{{ route('employee.tasks.update-status', $task) }}" method="POST" class="flex flex-wrap items-end gap-4">
-                @csrf
-                @method('PUT')
+            <form action="<?php echo e(route('employee.tasks.update-status', $task)); ?>" method="POST" class="flex flex-wrap items-end gap-4">
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('PUT'); ?>
                 <div class="flex-1 min-w-[140px]">
                     <label class="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
                     <select name="status" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        <option value="pending" {{ $task->status == 'pending' ? 'selected' : '' }}>معلقة</option>
-                        <option value="in_progress" {{ $task->status == 'in_progress' ? 'selected' : '' }}>قيد التنفيذ</option>
-                        <option value="completed" {{ $task->status == 'completed' ? 'selected' : '' }}>مكتملة</option>
-                        <option value="on_hold" {{ $task->status == 'on_hold' ? 'selected' : '' }}>معلقة مؤقتاً</option>
+                        <option value="pending" <?php echo e($task->status == 'pending' ? 'selected' : ''); ?>>معلقة</option>
+                        <option value="in_progress" <?php echo e($task->status == 'in_progress' ? 'selected' : ''); ?>>قيد التنفيذ</option>
+                        <option value="completed" <?php echo e($task->status == 'completed' ? 'selected' : ''); ?>>مكتملة</option>
+                        <option value="on_hold" <?php echo e($task->status == 'on_hold' ? 'selected' : ''); ?>>معلقة مؤقتاً</option>
                     </select>
                 </div>
                 <div class="w-24">
                     <label class="block text-sm font-medium text-gray-700 mb-1">التقدم %</label>
-                    <input type="number" name="progress" value="{{ $task->progress }}" min="0" max="100" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <input type="number" name="progress" value="<?php echo e($task->progress); ?>" min="0" max="100" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
                 <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
                     <i class="fas fa-save mr-2"></i>تحديث
@@ -99,24 +100,25 @@
 
         <!-- زر التسليمات: عند النقر يفتح ويظهر كامل التسليمات -->
         <div class="border-t border-gray-200 pt-8 mt-8">
-            <details class="group rounded-2xl border-2 border-slate-200 bg-white overflow-hidden" id="deliverables-section" {{ request()->has('open') ? 'open' : '' }}>
+            <details class="group rounded-2xl border-2 border-slate-200 bg-white overflow-hidden" id="deliverables-section" <?php echo e(request()->has('open') ? 'open' : ''); ?>>
                 <summary class="flex items-center justify-between gap-4 w-full cursor-pointer list-none px-6 py-4 bg-gradient-to-l from-slate-50 to-white hover:from-blue-50/50 hover:to-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-2xl">
                     <span class="flex items-center gap-3 font-bold text-gray-900 text-lg">
-                        @if($task->isVideoEditing())
+                        <?php if($task->isVideoEditing()): ?>
                             <span class="w-12 h-12 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
                                 <i class="fas fa-film text-xl"></i>
                             </span>
-                        @else
+                        <?php else: ?>
                             <span class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                                 <i class="fas fa-inbox text-xl"></i>
                             </span>
-                        @endif
+                        <?php endif; ?>
                         <span>التسليمات</span>
-                        @if($task->deliverables->count() > 0)
+                        <?php if($task->deliverables->count() > 0): ?>
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">
-                                {{ $task->deliverables->count() }}
+                                <?php echo e($task->deliverables->count()); ?>
+
                             </span>
-                        @endif
+                        <?php endif; ?>
                     </span>
                     <span class="flex items-center gap-2 text-gray-500 group-open:rotate-180 transition-transform">
                         <i class="fas fa-chevron-down"></i>
@@ -125,13 +127,13 @@
                 </summary>
                 <div class="px-6 pb-6 pt-2 bg-slate-50/50 border-t border-slate-100">
             <!-- نموذج التسليم (فوق) -->
-            @if($task->isVideoEditing())
+            <?php if($task->isVideoEditing()): ?>
                 <div class="bg-violet-50/30 border-2 border-violet-200 rounded-xl p-6 mb-6">
                     <h4 class="text-base font-semibold text-gray-900 mb-4">
                         <i class="fas fa-plus-circle text-violet-600 mr-2"></i>تسليم مونتاج جديد
                     </h4>
-                    <form action="{{ route('employee.tasks.submit-deliverable', $task) }}" method="POST">
-                        @csrf
+                    <form action="<?php echo e(route('employee.tasks.submit-deliverable', $task)); ?>" method="POST">
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="task_type_context" value="video_editing">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
@@ -142,9 +144,16 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">رابط الفيديو من Bunny <span class="text-red-500">*</span></label>
                                 <input type="url" name="video_link_url" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500" placeholder="https://...bunny.net أو b-cdn.net أو mediadelivery.net">
                                 <p class="text-xs text-gray-500 mt-1">رابط من Bunny: bunny.net أو b-cdn.net أو mediadelivery.net — لا يتم رفع ملفات</p>
-                                @error('video_link_url')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                                @enderror
+                                <?php $__errorArgs = ['video_link_url'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <p class="mt-1 text-xs text-red-600"><?php echo e($message); ?></p>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">ممن استلمته <span class="text-red-500">*</span></label>
@@ -168,11 +177,11 @@
                         </button>
                     </form>
                 </div>
-            @else
+            <?php else: ?>
                 <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-6">
                     <h4 class="text-base font-semibold text-gray-900 mb-4">إضافة تسليم جديد</h4>
-                    <form action="{{ route('employee.tasks.submit-deliverable', $task) }}" method="POST" enctype="multipart/form-data" id="deliverableForm">
-                        @csrf
+                    <form action="<?php echo e(route('employee.tasks.submit-deliverable', $task)); ?>" method="POST" enctype="multipart/form-data" id="deliverableForm">
+                        <?php echo csrf_field(); ?>
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">عنوان التسليم *</label>
@@ -230,107 +239,109 @@
                         });
                     </script>
                 </div>
-            @endif
+            <?php endif; ?>
 
             <!-- جميع التسليمات (تحت) -->
             <h4 class="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <i class="fas fa-list text-slate-500"></i>
                 جميع التسليمات
             </h4>
-            @if($task->deliverables->count() > 0)
+            <?php if($task->deliverables->count() > 0): ?>
                 <div class="space-y-4" id="task-deliverables-list">
-                    @foreach($task->deliverables as $index => $deliverable)
+                    <?php $__currentLoopData = $task->deliverables; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $deliverable): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="border border-gray-200 rounded-xl p-5 hover:border-blue-300 transition-colors bg-white shadow-sm">
                             <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                                 <div class="flex-1 space-y-3">
                                     <div class="flex flex-wrap items-center gap-2">
                                         <h4 class="font-semibold text-gray-900">
-                                            {{ $deliverable->title ?: ($task->isVideoEditing() ? 'فيديو ' . ($index + 1) : 'تسليم ' . ($index + 1)) }}
+                                            <?php echo e($deliverable->title ?: ($task->isVideoEditing() ? 'فيديو ' . ($index + 1) : 'تسليم ' . ($index + 1))); ?>
+
                                         </h4>
                                         <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                            @if($deliverable->status === 'approved') bg-green-100 text-green-800
-                                            @elseif($deliverable->status === 'rejected') bg-red-100 text-red-800
-                                            @elseif($deliverable->status === 'submitted') bg-blue-100 text-blue-800
-                                            @else bg-gray-100 text-gray-800
-                                            @endif">
-                                            @if($deliverable->status === 'approved') معتمد
-                                            @elseif($deliverable->status === 'rejected') مرفوض
-                                            @elseif($deliverable->status === 'submitted') مقدم
-                                            @else معلق
-                                            @endif
+                                            <?php if($deliverable->status === 'approved'): ?> bg-green-100 text-green-800
+                                            <?php elseif($deliverable->status === 'rejected'): ?> bg-red-100 text-red-800
+                                            <?php elseif($deliverable->status === 'submitted'): ?> bg-blue-100 text-blue-800
+                                            <?php else: ?> bg-gray-100 text-gray-800
+                                            <?php endif; ?>">
+                                            <?php if($deliverable->status === 'approved'): ?> معتمد
+                                            <?php elseif($deliverable->status === 'rejected'): ?> مرفوض
+                                            <?php elseif($deliverable->status === 'submitted'): ?> مقدم
+                                            <?php else: ?> معلق
+                                            <?php endif; ?>
                                         </span>
-                                        @if($task->isVideoEditing() && ($deliverable->received_from || $deliverable->duration_before || $deliverable->duration_after))
+                                        <?php if($task->isVideoEditing() && ($deliverable->received_from || $deliverable->duration_before || $deliverable->duration_after)): ?>
                                             <span class="px-2 py-1 text-xs font-medium rounded-full bg-violet-50 text-violet-700">
                                                 <i class="fas fa-video"></i> مونتاج
                                             </span>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
 
-                                    @if($task->isVideoEditing() && ($deliverable->received_from || $deliverable->duration_before || $deliverable->duration_after))
+                                    <?php if($task->isVideoEditing() && ($deliverable->received_from || $deliverable->duration_before || $deliverable->duration_after)): ?>
                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-                                            @if($deliverable->received_from)
+                                            <?php if($deliverable->received_from): ?>
                                                 <div class="bg-violet-50/50 rounded-lg p-3">
                                                     <p class="text-xs font-medium text-violet-600 mb-0.5">ممن استلمته</p>
-                                                    <p class="text-gray-900 font-medium">{{ $deliverable->received_from }}</p>
+                                                    <p class="text-gray-900 font-medium"><?php echo e($deliverable->received_from); ?></p>
                                                 </div>
-                                            @endif
-                                            @if($deliverable->duration_before)
+                                            <?php endif; ?>
+                                            <?php if($deliverable->duration_before): ?>
                                                 <div class="bg-amber-50/50 rounded-lg p-3">
                                                     <p class="text-xs font-medium text-amber-700 mb-0.5">مدة قبل المونتاج</p>
-                                                    <p class="text-gray-900 font-medium">{{ $deliverable->duration_before }}</p>
+                                                    <p class="text-gray-900 font-medium"><?php echo e($deliverable->duration_before); ?></p>
                                                 </div>
-                                            @endif
-                                            @if($deliverable->duration_after)
+                                            <?php endif; ?>
+                                            <?php if($deliverable->duration_after): ?>
                                                 <div class="bg-emerald-50/50 rounded-lg p-3">
                                                     <p class="text-xs font-medium text-emerald-700 mb-0.5">مدة بعد المونتاج</p>
-                                                    <p class="text-gray-900 font-medium">{{ $deliverable->duration_after }}</p>
+                                                    <p class="text-gray-900 font-medium"><?php echo e($deliverable->duration_after); ?></p>
                                                 </div>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
-                                    @endif
+                                    <?php endif; ?>
 
-                                    @if($deliverable->description)
-                                        <p class="text-sm text-gray-600">{{ $deliverable->description }}</p>
-                                    @endif
+                                    <?php if($deliverable->description): ?>
+                                        <p class="text-sm text-gray-600"><?php echo e($deliverable->description); ?></p>
+                                    <?php endif; ?>
 
-                                    @if($deliverable->delivery_type === 'link' && $deliverable->link_url)
+                                    <?php if($deliverable->delivery_type === 'link' && $deliverable->link_url): ?>
                                         <div class="flex flex-wrap items-center gap-2 text-sm">
-                                            @if($task->isVideoEditing())
+                                            <?php if($task->isVideoEditing()): ?>
                                                 <i class="fas fa-video text-violet-500"></i>
                                                 <span class="text-gray-600">رابط الفيديو (Bunny):</span>
-                                            @else
+                                            <?php else: ?>
                                                 <i class="fas fa-link text-gray-500"></i>
-                                            @endif
-                                            <a href="{{ $deliverable->link_url }}" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 font-medium break-all">
-                                                {{ Str::limit($deliverable->link_url, 60) }}
+                                            <?php endif; ?>
+                                            <a href="<?php echo e($deliverable->link_url); ?>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 font-medium break-all">
+                                                <?php echo e(Str::limit($deliverable->link_url, 60)); ?>
+
                                                 <i class="fas fa-external-link-alt text-xs mr-1"></i>
                                             </a>
                                         </div>
-                                    @elseif($deliverable->file_name)
+                                    <?php elseif($deliverable->file_name): ?>
                                         <div class="flex items-center gap-2 text-sm">
                                             <i class="fas fa-file-video text-violet-500"></i>
-                                            <span class="text-gray-700">{{ $deliverable->file_name }}</span>
-                                            @if($deliverable->file_path)
-                                                <a href="{{ Storage::url($deliverable->file_path) }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                            <span class="text-gray-700"><?php echo e($deliverable->file_name); ?></span>
+                                            <?php if($deliverable->file_path): ?>
+                                                <a href="<?php echo e(Storage::url($deliverable->file_path)); ?>" target="_blank" class="text-blue-600 hover:text-blue-800">
                                                     <i class="fas fa-download"></i> تحميل
                                                 </a>
-                                            @endif
+                                            <?php endif; ?>
                                         </div>
-                                    @endif
+                                    <?php endif; ?>
 
-                                    @if($deliverable->feedback)
+                                    <?php if($deliverable->feedback): ?>
                                         <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                                             <p class="text-xs font-semibold text-amber-800 mb-1">ملاحظات المراجع</p>
-                                            <p class="text-sm text-gray-900">{{ $deliverable->feedback }}</p>
+                                            <p class="text-sm text-gray-900"><?php echo e($deliverable->feedback); ?></p>
                                         </div>
-                                    @endif
-                                    <p class="text-xs text-gray-400">{{ $deliverable->created_at->format('Y-m-d H:i') }}</p>
+                                    <?php endif; ?>
+                                    <p class="text-xs text-gray-400"><?php echo e($deliverable->created_at->format('Y-m-d H:i')); ?></p>
                                 </div>
                             </div>
                         </div>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
-            @else
+            <?php else: ?>
                 <div class="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-8 text-center">
                     <div class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center mx-auto mb-3">
                         <i class="fas fa-inbox text-2xl text-gray-400"></i>
@@ -338,10 +349,12 @@
                     <p class="text-gray-600 font-medium">لا توجد تسليمات حتى الآن</p>
                     <p class="text-sm text-gray-500 mt-1">التسليمات التي تقدمها من النموذج أعلاه ستظهر هنا</p>
                 </div>
-            @endif
+            <?php endif; ?>
                 </div>
             </details>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.employee', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\mindly tics\Mindlytics\resources\views/employee/tasks/show.blade.php ENDPATH**/ ?>

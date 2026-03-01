@@ -13,6 +13,7 @@ class EmployeeTask extends Model
         'assigned_by',
         'title',
         'description',
+        'task_type',
         'priority',
         'status',
         'deadline',
@@ -75,6 +76,14 @@ class EmployeeTask extends Model
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
+    }
+
+    /**
+     * هل المهمة من نوع مونتاج فيديو
+     */
+    public function isVideoEditing(): bool
+    {
+        return $this->task_type === 'video_editing';
     }
 
     /**

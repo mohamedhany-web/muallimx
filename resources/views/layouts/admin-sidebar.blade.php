@@ -215,7 +215,7 @@
 
             <!-- إدارة المحاسبة -->
             @php
-                $accountingOpen = request()->routeIs('admin.invoices.*') || request()->routeIs('admin.payments.*') || request()->routeIs('admin.transactions.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.subscriptions.*') || request()->routeIs('admin.installments.*') || request()->routeIs('admin.accounting.*') || request()->routeIs('admin.salaries.*');
+                $accountingOpen = request()->routeIs('admin.invoices.*') || request()->routeIs('admin.payments.*') || request()->routeIs('admin.transactions.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.subscriptions.*') || request()->routeIs('admin.installments.*') || request()->routeIs('admin.accounting.*') || request()->routeIs('admin.salaries.*') || request()->routeIs('admin.employee-agreements.*');
             @endphp
             <li x-data="{ open: {{ $accountingOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" 
@@ -273,6 +273,14 @@
                            class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.accounting.instructor-accounts.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
                             <i class="fas fa-user-tie w-4"></i>
                             <span>حسابات المدربين</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.employee-agreements.index') }}"
+                           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }"
+                           class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-slate-700/50 transition-all duration-300 text-slate-300 hover:text-white {{ request()->routeIs('admin.employee-agreements.*') ? 'bg-blue-600/30 text-white font-semibold shadow-md border-r-2 border-blue-500' : '' }}">
+                            <i class="fas fa-users-cog w-4"></i>
+                            <span>اتفاقيات الموظفين ورواتبهم</span>
                         </a>
                     </li>
                     <li>

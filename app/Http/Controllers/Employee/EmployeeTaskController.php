@@ -61,7 +61,9 @@ class EmployeeTaskController extends Controller
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
         }
 
-        $task->load(['assigner', 'deliverables.reviewer']);
+        $task->load(['assigner', 'deliverables' => function ($q) {
+            $q->with('reviewer')->orderByDesc('created_at');
+        }]);
         
         return view('employee.tasks.show', compact('task'));
     }
@@ -103,61 +105,100 @@ class EmployeeTaskController extends Controller
     public function submitDeliverable(Request $request, EmployeeTask $task)
     {
         $user = Auth::user();
-        
+
         if (!$user->isEmployee() || $task->employee_id !== $user->id) {
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
         }
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'delivery_type' => 'required|in:file,image,link',
-            'file' => 'nullable|file|max:10240|required_if:delivery_type,file,image', // 10MB max
-            'link_url' => 'nullable|url|required_if:delivery_type,link',
-        ]);
+        $isVideoEditing = $task->isVideoEditing()
+            || $request->input('task_type_context') === 'video_editing';
+
+        if ($isVideoEditing) {
+            $validated = $request->validate([
+                'title' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
+                'video_link_url' => [
+                    'required',
+                    'url',
+                    function ($attribute, $value, $fail) {
+                        $host = parse_url($value, PHP_URL_HOST);
+                        $hostLower = $host ? strtolower($host) : '';
+                        $allowed = str_contains($hostLower, 'bunny')
+                            || str_contains($hostLower, 'b-cdn')
+                            || str_contains($hostLower, 'mediadelivery');
+                        if (!$host || !$allowed) {
+                            $fail('رابط الفيديو يجب أن يكون من Bunny (bunny.net أو b-cdn.net أو mediadelivery.net) فقط.');
+                        }
+                    },
+                ],
+                'received_from' => 'required|string|max:255',
+                'duration_before' => 'nullable|string|max:100',
+                'duration_after' => 'nullable|string|max:100',
+            ]);
+        } else {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'delivery_type' => 'required|in:file,image,link',
+                'file' => 'nullable|file|max:10240|required_if:delivery_type,file,image',
+                'link_url' => 'nullable|url|required_if:delivery_type,link',
+            ]);
+        }
 
         $filePath = null;
         $fileName = null;
         $fileType = null;
         $fileSize = null;
         $linkUrl = null;
+        $deliveryType = 'file';
+        $receivedFrom = null;
+        $durationBefore = null;
+        $durationAfter = null;
 
-        // معالجة الملفات (ملف أو صورة)
-        if (in_array($validated['delivery_type'], ['file', 'image']) && $request->hasFile('file')) {
-            $file = $request->file('file');
-            $fileName = $file->getClientOriginalName();
-            $fileType = $file->getClientMimeType();
-            $fileSize = $file->getSize();
-            
-            // حفظ الملفات في مجلدات مختلفة حسب النوع
-            $folder = $validated['delivery_type'] === 'image' ? 'employee-deliverables/images' : 'employee-deliverables/files';
-            $filePath = $file->store($folder, 'public');
-        }
-
-        // معالجة الرابط
-        if ($validated['delivery_type'] === 'link') {
-            $linkUrl = $validated['link_url'];
+        if ($isVideoEditing) {
+            $linkUrl = $validated['video_link_url'];
+            $deliveryType = 'link';
+            $receivedFrom = $validated['received_from'] ?? null;
+            $durationBefore = $validated['duration_before'] ?? null;
+            $durationAfter = $validated['duration_after'] ?? null;
+        } else {
+            if (in_array($validated['delivery_type'], ['file', 'image']) && $request->hasFile('file')) {
+                $file = $request->file('file');
+                $fileName = $file->getClientOriginalName();
+                $fileType = $file->getClientMimeType();
+                $fileSize = $file->getSize();
+                $folder = $validated['delivery_type'] === 'image' ? 'employee-deliverables/images' : 'employee-deliverables/files';
+                $filePath = $file->store($folder, 'public');
+            }
+            $deliveryType = $validated['delivery_type'];
+            if ($deliveryType === 'link') {
+                $linkUrl = $validated['link_url'];
+            }
         }
 
         EmployeeTaskDeliverable::create([
             'task_id' => $task->id,
-            'title' => $validated['title'],
-            'description' => $validated['description'],
-            'delivery_type' => $validated['delivery_type'],
-            'link_url' => $linkUrl,
+            'title' => $validated['title'] ?? ('تسليم مونتاج ' . now()->format('Y-m-d H:i')),
+            'description' => $validated['description'] ?? null,
+            'delivery_type' => $deliveryType,
+            'link_url' => $linkUrl ?? ($isVideoEditing ? $validated['video_link_url'] : null),
             'file_path' => $filePath,
             'file_name' => $fileName,
             'file_type' => $fileType,
             'file_size' => $fileSize,
+            'received_from' => $receivedFrom,
+            'duration_before' => $durationBefore,
+            'duration_after' => $durationAfter,
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);
 
-        // تحديث حالة المهمة إلى قيد المراجعة إذا كانت مكتملة
         if ($task->status !== 'completed') {
             $task->update(['status' => 'in_progress']);
         }
 
-        return back()->with('success', 'تم تسليم المهمة بنجاح');
+        $message = $isVideoEditing ? 'تم تسليم المونتاج بنجاح' : 'تم تسليم المهمة بنجاح';
+        return redirect()->to(route('employee.tasks.show', $task) . '?open=1')
+            ->with('success', $message);
     }
 }

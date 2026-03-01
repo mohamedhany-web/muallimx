@@ -103,6 +103,44 @@
                 </div>
             </div>
 
+            <!-- البيانات البنكية لاستلام الراتب -->
+            <div class="border-b border-gray-200 pb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4"><i class="fas fa-university text-indigo-600 mr-2"></i>البيانات البنكية لاستلام الراتب</h2>
+                <p class="text-sm text-gray-600 mb-4">يمكن للموظف أيضاً إضافة أو تعديل هذه البيانات من قسم المحاسبة في لوحته.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم البنك</label>
+                        <input type="text" name="bank_name" value="{{ old('bank_name', $employee->bank_name) }}" placeholder="مثال: البنك الأهلي"
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        @error('bank_name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الفرع</label>
+                        <input type="text" name="bank_branch" value="{{ old('bank_branch', $employee->bank_branch) }}" placeholder="مثال: فرع المعادي"
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        @error('bank_branch')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">رقم الحساب البنكي</label>
+                        <input type="text" name="bank_account_number" value="{{ old('bank_account_number', $employee->bank_account_number) }}" placeholder="رقم الحساب"
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        @error('bank_account_number')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم صاحب الحساب</label>
+                        <input type="text" name="bank_account_holder_name" value="{{ old('bank_account_holder_name', $employee->bank_account_holder_name) }}" placeholder="الاسم كما في البطاقة"
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        @error('bank_account_holder_name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">الآيبان (اختياري)</label>
+                        <input type="text" name="bank_iban" value="{{ old('bank_iban', $employee->bank_iban) }}" placeholder="EG..."
+                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        @error('bank_iban')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+            </div>
+
             <!-- القسم الإداري -->
             <div>
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">الإعدادات</h2>

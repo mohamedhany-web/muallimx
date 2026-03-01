@@ -7,6 +7,7 @@ use App\Models\EmployeeAgreement;
 use App\Models\EmployeeSalaryDeduction;
 use App\Models\EmployeeSalaryPayment;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -96,7 +97,7 @@ class EmployeeAgreementController extends Controller
             'description' => 'nullable|string',
             'salary' => 'required|numeric|min:0',
             'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'status' => 'required|in:draft,active,suspended,terminated,completed',
             'contract_terms' => 'nullable|string',
             'agreement_terms' => 'nullable|string',
@@ -187,13 +188,13 @@ class EmployeeAgreementController extends Controller
      */
     public function update(Request $request, EmployeeAgreement $employeeAgreement)
     {
-        $request->validate([
+        $validated = $request->validate([
             'employee_id' => 'required|exists:users,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'salary' => 'required|numeric|min:0',
             'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'status' => 'required|in:draft,active,suspended,terminated,completed',
             'contract_terms' => 'nullable|string',
             'agreement_terms' => 'nullable|string',
@@ -204,19 +205,23 @@ class EmployeeAgreementController extends Controller
             DB::beginTransaction();
 
             $oldValues = $employeeAgreement->toArray();
-            $employeeAgreement->update($request->all());
+            $employeeAgreement->update($validated);
 
-            // تسجيل النشاط
-            ActivityLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'employee_agreement_updated',
-                'model_type' => 'EmployeeAgreement',
-                'model_id' => $employeeAgreement->id,
-                'old_values' => $oldValues,
-                'new_values' => $employeeAgreement->toArray(),
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
+            // تسجيل النشاط (لا نوقف التحديث إذا فشل التسجيل)
+            try {
+                ActivityLog::create([
+                    'user_id' => Auth::id(),
+                    'action' => 'employee_agreement_updated',
+                    'model_type' => 'EmployeeAgreement',
+                    'model_id' => $employeeAgreement->id,
+                    'old_values' => $oldValues,
+                    'new_values' => $employeeAgreement->fresh()->toArray(),
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('ActivityLog failed for employee agreement update: ' . $e->getMessage());
+            }
 
             DB::commit();
 
@@ -261,5 +266,67 @@ class EmployeeAgreementController extends Controller
             Log::error('Error deleting employee agreement: ' . $e->getMessage());
             return back()->with('error', 'حدث خطأ أثناء حذف الاتفاقية');
         }
+    }
+
+    /**
+     * إنشاء دفعة راتب جديدة للاتفاقية
+     */
+    public function storePayment(Request $request, EmployeeAgreement $employeeAgreement)
+    {
+        $request->validate([
+            'payment_date' => 'required|date',
+            'total_deductions' => 'nullable|numeric|min:0',
+        ]);
+
+        $baseSalary = (float) $employeeAgreement->salary;
+        $totalDeductions = (float) ($request->total_deductions ?? 0);
+        $netSalary = $baseSalary - $totalDeductions;
+
+        $payment = EmployeeSalaryPayment::create([
+            'employee_id' => $employeeAgreement->employee_id,
+            'agreement_id' => $employeeAgreement->id,
+            'payment_number' => EmployeeSalaryPayment::generatePaymentNumber(),
+            'base_salary' => $baseSalary,
+            'total_deductions' => $totalDeductions,
+            'net_salary' => $netSalary,
+            'payment_date' => $request->payment_date,
+            'status' => 'pending',
+            'notes' => $request->notes,
+            'created_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('admin.employee-agreements.show', $employeeAgreement)
+            ->with('success', 'تم إنشاء دفعة الراتب. قم بالتحويل للموظف ثم ارفع إيصال التحويل من جدول المدفوعات.');
+    }
+
+    /**
+     * تسجيل دفع الراتب ورفع إيصال التحويل
+     */
+    public function markPaymentPaid(Request $request, EmployeeSalaryPayment $payment)
+    {
+        if ($payment->status !== 'pending' && $payment->status !== 'overdue') {
+            return back()->with('error', 'هذه الدفعة ليست قيد الانتظار للدفع.');
+        }
+
+        $request->validate([
+            'transfer_receipt' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $file = $request->file('transfer_receipt');
+        $path = $file->store('receipts/employee-salary-payments', 'public');
+
+        $payment->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+            'transfer_receipt_path' => $path,
+            'notes' => $request->filled('notes')
+                ? trim(($payment->notes ?? '') . "\n" . '[تحويل] ' . $request->notes)
+                : $payment->notes,
+        ]);
+
+        $agreement = $payment->agreement;
+        return redirect()->route('admin.employee-agreements.show', $agreement)
+            ->with('success', 'تم تسجيل الدفع ورفع إيصال التحويل. ستظهر المدفوعة في قسم المحاسبة للموظف.');
     }
 }

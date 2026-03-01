@@ -57,6 +57,11 @@ class AccountingController extends Controller
             ->orderBy('payment_date', 'asc')
             ->get();
 
+        // جميع المدفوعات (لعرضها في قسم المحاسبة مع الإيصالات)
+        $allPayments = EmployeeSalaryPayment::where('employee_id', $user->id)
+            ->orderByDesc('payment_date')
+            ->get();
+
         // الحصول على الخصومات الأخيرة
         $recentDeductions = EmployeeSalaryDeduction::where('employee_id', $user->id)
             ->where('status', 'applied')
@@ -87,8 +92,32 @@ class AccountingController extends Controller
             'activeAgreement',
             'lastPayment',
             'upcomingPayments',
+            'allPayments',
             'recentDeductions',
             'stats'
         ));
+    }
+
+    /**
+     * تحديث البيانات البنكية لاستلام الراتب
+     */
+    public function updateBankAccount(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user->isEmployee()) {
+            abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
+        }
+
+        $validated = $request->validate([
+            'bank_name' => 'nullable|string|max:255',
+            'bank_branch' => 'nullable|string|max:255',
+            'bank_account_number' => 'nullable|string|max:100',
+            'bank_account_holder_name' => 'nullable|string|max:255',
+            'bank_iban' => 'nullable|string|max:50',
+        ]);
+
+        $user->update($validated);
+
+        return back()->with('success', 'تم حفظ البيانات البنكية بنجاح');
     }
 }

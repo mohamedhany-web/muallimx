@@ -1,0 +1,126 @@
+@extends('layouts.admin')
+
+@section('title', 'تعديل المهمة')
+@section('header', 'تعديل المهمة')
+
+@section('content')
+<div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" style="background: #f8fafc; min-height: 100vh;">
+    <div class="dashboard-card rounded-2xl card-hover-effect border-2 border-blue-200/50 hover:border-blue-300/70 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 249, 255, 0.95) 50%, rgba(224, 242, 254, 0.9) 100%);">
+        <div class="px-4 py-6 sm:px-8 sm:py-8 relative overflow-hidden">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div class="space-y-4">
+                    <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">
+                        <i class="fas fa-edit"></i>
+                        تعديل المهمة
+                    </span>
+                    <h1 class="text-3xl font-black text-gray-900 leading-tight">تعديل مهمة: {{ $employeeTask->title }}</h1>
+                </div>
+                <a href="{{ route('admin.employee-tasks.show', $employeeTask) }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gray-500 hover:bg-gray-600 text-white text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto">
+                    <i class="fas fa-arrow-right"></i>
+                    العودة للتفاصيل
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-card rounded-2xl card-hover-effect border-2 border-gray-200/50 hover:border-blue-300/70 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);">
+        <form action="{{ route('admin.employee-tasks.update', $employeeTask) }}" method="POST" class="p-6 sm:p-8 space-y-8">
+            @csrf
+            @method('PUT')
+
+            <div class="space-y-6">
+                <h2 class="text-xl font-bold text-gray-900 border-b border-gray-200 pb-3">معلومات المهمة</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label for="employee_id" class="block text-sm font-semibold text-gray-700 mb-2">الموظف <span class="text-red-500">*</span></label>
+                        <select name="employee_id" id="employee_id" required class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition">
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->id }}" data-job-name="{{ $employee->employeeJob?->name ?? '' }}" {{ old('employee_id', $employeeTask->employee_id) == $employee->id ? 'selected' : '' }}>
+                                    {{ $employee->name }}
+                                    @if($employee->employee_code)({{ $employee->employee_code }})@endif
+                                    @if($employee->employeeJob) - {{ $employee->employeeJob->name }}@endif
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('employee_id')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="task_type" class="block text-sm font-semibold text-gray-700 mb-2">نوع المهمة <span class="text-red-500">*</span></label>
+                        <select name="task_type" id="task_type" required class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition">
+                            <option value="general" {{ old('task_type', $employeeTask->task_type ?? 'general') == 'general' ? 'selected' : '' }}>مهمة عامة</option>
+                            <option value="video_editing" {{ old('task_type', $employeeTask->task_type ?? '') == 'video_editing' ? 'selected' : '' }}>مونتاج فيديو</option>
+                        </select>
+                        @error('task_type')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="title" class="block text-sm font-semibold text-gray-700 mb-2">عنوان المهمة <span class="text-red-500">*</span></label>
+                        <input type="text" name="title" id="title" value="{{ old('title', $employeeTask->title) }}" required class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition">
+                        @error('title')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">وصف المهمة</label>
+                        <textarea name="description" id="description" rows="4" class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition">{{ old('description', $employeeTask->description) }}</textarea>
+                        @error('description')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label for="priority" class="block text-sm font-semibold text-gray-700 mb-2">الأولوية <span class="text-red-500">*</span></label>
+                        <select name="priority" id="priority" required class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition">
+                            <option value="low" {{ old('priority', $employeeTask->priority) == 'low' ? 'selected' : '' }}>منخفضة</option>
+                            <option value="medium" {{ old('priority', $employeeTask->priority) == 'medium' ? 'selected' : '' }}>متوسطة</option>
+                            <option value="high" {{ old('priority', $employeeTask->priority) == 'high' ? 'selected' : '' }}>عالية</option>
+                            <option value="urgent" {{ old('priority', $employeeTask->priority) == 'urgent' ? 'selected' : '' }}>عاجلة</option>
+                        </select>
+                        @error('priority')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label for="status" class="block text-sm font-semibold text-gray-700 mb-2">الحالة <span class="text-red-500">*</span></label>
+                        <select name="status" id="status" required class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition">
+                            <option value="pending" {{ old('status', $employeeTask->status) == 'pending' ? 'selected' : '' }}>معلقة</option>
+                            <option value="in_progress" {{ old('status', $employeeTask->status) == 'in_progress' ? 'selected' : '' }}>قيد التنفيذ</option>
+                            <option value="completed" {{ old('status', $employeeTask->status) == 'completed' ? 'selected' : '' }}>مكتملة</option>
+                            <option value="cancelled" {{ old('status', $employeeTask->status) == 'cancelled' ? 'selected' : '' }}>ملغاة</option>
+                            <option value="on_hold" {{ old('status', $employeeTask->status) == 'on_hold' ? 'selected' : '' }}>معلقة مؤقتاً</option>
+                        </select>
+                        @error('status')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label for="deadline" class="block text-sm font-semibold text-gray-700 mb-2">الموعد النهائي</label>
+                        <input type="date" name="deadline" id="deadline" value="{{ old('deadline', $employeeTask->deadline?->format('Y-m-d')) }}" class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition">
+                        @error('deadline')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label for="progress" class="block text-sm font-semibold text-gray-700 mb-2">التقدم (%)</label>
+                        <input type="number" name="progress" id="progress" value="{{ old('progress', $employeeTask->progress) }}" min="0" max="100" class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition">
+                        @error('progress')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label for="notes" class="block text-sm font-semibold text-gray-700 mb-2">ملاحظات إضافية</label>
+                        <textarea name="notes" id="notes" rows="3" class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition">{{ old('notes', $employeeTask->notes) }}</textarea>
+                        @error('notes')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-6 border-t border-gray-100">
+                <a href="{{ route('admin.employee-tasks.show', $employeeTask) }}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300">
+                    <i class="fas fa-times"></i>
+                    إلغاء
+                </a>
+                <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-700 hover:via-blue-600 hover:to-blue-700 text-white px-6 py-3 text-sm font-bold shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 hover:-translate-y-0.5 transition-all duration-300">
+                    <i class="fas fa-save"></i>
+                    حفظ التعديلات
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection

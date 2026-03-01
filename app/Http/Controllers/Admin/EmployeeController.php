@@ -165,6 +165,11 @@ class EmployeeController extends Controller
             'termination_date' => 'nullable|date|after:hire_date',
             'salary' => 'nullable|numeric|min:0',
             'employee_notes' => 'nullable|string',
+            'bank_name' => 'nullable|string|max:255',
+            'bank_branch' => 'nullable|string|max:255',
+            'bank_account_number' => 'nullable|string|max:100',
+            'bank_account_holder_name' => 'nullable|string|max:255',
+            'bank_iban' => 'nullable|string|max:50',
             'is_active' => 'boolean',
         ]);
 

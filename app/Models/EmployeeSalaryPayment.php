@@ -18,6 +18,7 @@ class EmployeeSalaryPayment extends Model
         'paid_at',
         'status',
         'notes',
+        'transfer_receipt_path',
         'created_by',
     ];
 

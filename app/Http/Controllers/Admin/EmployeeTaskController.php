@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\EmployeeTaskAssignedMail;
 use App\Models\EmployeeTask;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class EmployeeTaskController extends Controller
 {
@@ -74,6 +77,7 @@ class EmployeeTaskController extends Controller
     {
         $validated = $request->validate([
             'employee_id' => 'required|exists:users,id',
+            'task_type' => 'required|in:general,video_editing',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'priority' => 'required|in:low,medium,high,urgent',
@@ -86,6 +90,18 @@ class EmployeeTaskController extends Controller
 
         $task = EmployeeTask::create($validated);
 
+        try {
+            $employee = $task->employee;
+            if ($employee && $employee->email) {
+                Mail::to($employee->email)->send(new EmployeeTaskAssignedMail($task));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send employee task assigned email: ' . $e->getMessage(), [
+                'task_id' => $task->id,
+                'employee_id' => $task->employee_id,
+            ]);
+        }
+
         return redirect()->route('admin.employee-tasks.show', $task)
                         ->with('success', 'تم إضافة المهمة بنجاح');
     }
@@ -93,10 +109,30 @@ class EmployeeTaskController extends Controller
     /**
      * عرض تفاصيل مهمة
      */
-    public function show(EmployeeTask $employeeTask)
+    public function show(Request $request, EmployeeTask $employeeTask)
     {
-        $employeeTask->load(['employee.employeeJob', 'assigner', 'deliverables.reviewer']);
-        return view('admin.employee-tasks.show', compact('employeeTask'));
+        $employeeTask->load(['employee.employeeJob', 'assigner']);
+        $totalDeliverables = $employeeTask->deliverables()->count();
+
+        $deliverables = $employeeTask->deliverables()
+            ->with('reviewer')
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $s = $request->search;
+                $q->where(function ($q) use ($s) {
+                    $q->where('title', 'like', "%{$s}%")
+                        ->orWhere('description', 'like', "%{$s}%")
+                        ->orWhere('received_from', 'like', "%{$s}%")
+                        ->orWhere('link_url', 'like', "%{$s}%")
+                        ->orWhere('file_name', 'like', "%{$s}%")
+                        ->orWhere('duration_before', 'like', "%{$s}%")
+                        ->orWhere('duration_after', 'like', "%{$s}%");
+                });
+            })
+            ->orderByDesc('created_at')
+            ->paginate(25)
+            ->withQueryString();
+
+        return view('admin.employee-tasks.show', compact('employeeTask', 'deliverables', 'totalDeliverables'));
     }
 
     /**
@@ -115,6 +151,7 @@ class EmployeeTaskController extends Controller
     {
         $validated = $request->validate([
             'employee_id' => 'required|exists:users,id',
+            'task_type' => 'required|in:general,video_editing',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'priority' => 'required|in:low,medium,high,urgent',

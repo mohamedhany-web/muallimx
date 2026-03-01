@@ -640,6 +640,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         
         // المحاسبة والراتب
         Route::get('/accounting', [\App\Http\Controllers\Employee\AccountingController::class, 'index'])->name('accounting.index');
+        Route::post('/accounting/bank-account', [\App\Http\Controllers\Employee\AccountingController::class, 'updateBankAccount'])->name('accounting.update-bank');
         
         // اتفاقيات الموظف
         Route::get('/agreements', [\App\Http\Controllers\Employee\AgreementController::class, 'index'])->name('agreements.index');
@@ -1196,6 +1197,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'store'])
                 ->middleware('throttle:20,5')
                 ->name('store');
+            Route::post('payments/{payment}/mark-paid', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'markPaymentPaid'])->name('payments.mark-paid');
+            Route::post('{employeeAgreement}/payments', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'storePayment'])->name('payments.store');
             Route::get('/{employeeAgreement}', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'show'])->name('show');
             Route::get('/{employeeAgreement}/edit', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'edit'])->name('edit');
             Route::put('/{employeeAgreement}', [\App\Http\Controllers\Admin\EmployeeAgreementController::class, 'update'])
