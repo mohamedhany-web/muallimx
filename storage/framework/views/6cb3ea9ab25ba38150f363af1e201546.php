@@ -1,9 +1,7 @@
-@extends('layouts.admin')
+<?php $__env->startSection('title', 'تسجيل طالب جديد'); ?>
+<?php $__env->startSection('header', 'تسجيل طالب جديد'); ?>
 
-@section('title', 'تسجيل طالب جديد')
-@section('header', 'تسجيل طالب جديد')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" style="background: #f8fafc; min-height: 100vh;">
     <!-- معلومات التسجيل -->
     <div class="bg-white rounded-2xl shadow-xl border border-gray-200/80">
@@ -13,7 +11,7 @@
                     <i class="fas fa-user-plus text-sky-600"></i>
                     تسجيل طالب في كورس أونلاين
                 </h3>
-                <a href="{{ route('admin.online-enrollments.index') }}" 
+                <a href="<?php echo e(route('admin.online-enrollments.index')); ?>" 
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition-all duration-300">
                     <i class="fas fa-arrow-right"></i>
                     العودة للقائمة
@@ -21,8 +19,8 @@
             </div>
         </div>
 
-        <form method="POST" action="{{ route('admin.online-enrollments.store') }}" class="p-6 space-y-6">
-            @csrf
+        <form method="POST" action="<?php echo e(route('admin.online-enrollments.store')); ?>" class="p-6 space-y-6">
+            <?php echo csrf_field(); ?>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- الطالب -->
@@ -40,18 +38,27 @@
                     <select name="user_id" id="user_id" required
                             class="w-full px-3 py-2 rounded-xl border-2 border-gray-200 bg-white/70 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition">
                         <option value="">اختر الطالب</option>
-                        @foreach($students as $student)
-                            <option value="{{ $student->id }}" 
-                                    {{ (old('user_id', request('student_id')) == $student->id) ? 'selected' : '' }}
-                                    data-phone="{{ $student->phone }}"
-                                    data-parent-phone="{{ $student->parent_phone }}">
-                                {{ $student->name }} - {{ $student->phone }}
+                        <?php $__currentLoopData = $students; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $student): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($student->id); ?>" 
+                                    <?php echo e((old('user_id', request('student_id')) == $student->id) ? 'selected' : ''); ?>
+
+                                    data-phone="<?php echo e($student->phone); ?>"
+                                    data-parent-phone="<?php echo e($student->parent_phone); ?>">
+                                <?php echo e($student->name); ?> - <?php echo e($student->phone); ?>
+
                             </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
-                    @error('user_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <?php $__errorArgs = ['user_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="mt-1 text-sm text-red-600"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
 
                 <!-- الكورس -->
@@ -69,15 +76,23 @@
                     <select name="advanced_course_id" id="advanced_course_id" required
                             class="w-full px-3 py-2 rounded-xl border-2 border-gray-200 bg-white/70 focus:ring-4 focus:ring-sky-500/20 focus:border-sky-500 transition">
                         <option value="">اختر الكورس</option>
-                        @foreach($courses as $course)
-                            <option value="{{ $course->id }}" {{ old('advanced_course_id') == $course->id ? 'selected' : '' }}>
-                                {{ $course->title }} - {{ $course->academicYear->name ?? 'غير محدد' }}
+                        <?php $__currentLoopData = $courses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $course): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($course->id); ?>" <?php echo e(old('advanced_course_id') == $course->id ? 'selected' : ''); ?>>
+                                <?php echo e($course->title); ?> - <?php echo e($course->academicYear->name ?? 'غير محدد'); ?>
+
                             </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
-                    @error('advanced_course_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <?php $__errorArgs = ['advanced_course_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="mt-1 text-sm text-red-600"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
 
                 <!-- حالة التسجيل -->
@@ -88,27 +103,41 @@
                     <select name="status" id="status" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">اختر حالة التسجيل</option>
-                        <option value="pending" {{ old('status') == 'pending' ? 'selected' : '' }}>في الانتظار</option>
-                        <option value="active" {{ old('status', 'active') == 'active' ? 'selected' : '' }}>نشط</option>
+                        <option value="pending" <?php echo e(old('status') == 'pending' ? 'selected' : ''); ?>>في الانتظار</option>
+                        <option value="active" <?php echo e(old('status', 'active') == 'active' ? 'selected' : ''); ?>>نشط</option>
                     </select>
-                    @error('status')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    <?php $__errorArgs = ['status'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                        <p class="mt-1 text-sm text-red-600"><?php echo e($message); ?></p>
+                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     <p class="mt-1 text-xs text-gray-500">
                         "نشط" يعني أن الطالب يمكنه الوصول للكورس فوراً، وسيتم إرسال رسالة التفعيل إلى بريده الإلكتروني (إن كان مسجلاً)، وعند النشط تُحسب للمدرب نسبة من الكورس إن وُجدت اتفاقية.
                     </p>
                 </div>
 
                 <!-- مبلغ التفعيل (يظهر عند اختيار "نشط") — يُستخدم لحساب نسبة المدرب -->
-                <div id="final_price_wrap" class="{{ old('status', 'active') !== 'active' ? 'hidden' : '' }}">
+                <div id="final_price_wrap" class="<?php echo e(old('status', 'active') !== 'active' ? 'hidden' : ''); ?>">
                     <label for="final_price" class="block text-sm font-medium text-gray-700 mb-2">
                         مبلغ التفعيل (ج.م) <span class="text-gray-400 text-xs">اختياري</span>
                     </label>
-                    <input type="number" name="final_price" id="final_price" value="{{ old('final_price') }}" min="0" step="0.01"
+                    <input type="number" name="final_price" id="final_price" value="<?php echo e(old('final_price')); ?>" min="0" step="0.01"
                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            placeholder="اتركه فارغاً لاستخدام سعر الكورس">
                     <p class="mt-1 text-xs text-gray-500">إن وُجدت اتفاقية "نسبة من الكورس" للمدرب، تُحسب حصته من هذا المبلغ (أو سعر الكورس إن تركت الحقل فارغاً).</p>
-                    @error('final_price')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                    <?php $__errorArgs = ['final_price'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><p class="mt-1 text-sm text-red-600"><?php echo e($message); ?></p><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                 </div>
             </div>
 
@@ -119,10 +148,17 @@
                 </label>
                 <textarea name="notes" id="notes" rows="3"
                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="أي ملاحظات خاصة بهذا التسجيل (اختياري)">{{ old('notes') }}</textarea>
-                @error('notes')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
+                          placeholder="أي ملاحظات خاصة بهذا التسجيل (اختياري)"><?php echo e(old('notes')); ?></textarea>
+                <?php $__errorArgs = ['notes'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                    <p class="mt-1 text-sm text-red-600"><?php echo e($message); ?></p>
+                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
             </div>
 
             <!-- معلومات الطالب المختار -->
@@ -156,7 +192,7 @@
             <!-- أزرار الإجراءات -->
             <div class="mt-8 pt-6 border-t border-gray-200">
                 <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
-                    <a href="{{ route('admin.online-enrollments.index') }}" 
+                    <a href="<?php echo e(route('admin.online-enrollments.index')); ?>" 
                        class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition-colors duration-200 inline-flex items-center justify-center gap-2">
                         <i class="fas fa-times text-sm"></i>
                         إلغاء
@@ -219,7 +255,7 @@ function searchByPhone() {
     resultDiv.innerHTML = '<div class="text-center py-2"><i class="fas fa-spinner fa-spin text-blue-600"></i> جاري البحث...</div>';
     resultDiv.classList.remove('hidden');
     
-    fetch(`{{ route('admin.online-enrollments.search-by-phone') }}?phone=${encodeURIComponent(phone)}`)
+    fetch(`<?php echo e(route('admin.online-enrollments.search-by-phone')); ?>?phone=${encodeURIComponent(phone)}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -308,4 +344,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\mindly tics\Mindlytics\resources\views/admin/online-enrollments/create.blade.php ENDPATH**/ ?>

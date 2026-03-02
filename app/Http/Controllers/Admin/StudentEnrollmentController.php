@@ -7,9 +7,11 @@ use App\Models\User;
 use App\Models\AdvancedCourse;
 use App\Models\StudentCourseEnrollment;
 use App\Services\InstructorCoursePercentageService;
+use App\Mail\CourseEnrollmentActivatedMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
 
 class StudentEnrollmentController extends Controller
 {
@@ -132,7 +134,19 @@ class StudentEnrollmentController extends Controller
 
         // عند التفعيل: إنشاء مدفوعة نسبة المدرب إن وُجدت اتفاقية "نسبة من الكورس"
         if ($enrollment->status === 'active') {
-            InstructorCoursePercentageService::processEnrollmentActivation($enrollment->fresh());
+            $freshEnrollment = $enrollment->fresh();
+            InstructorCoursePercentageService::processEnrollmentActivation($freshEnrollment);
+
+            // إرسال بريد تفعيل الكورس للطالب
+            try {
+                $freshEnrollment->loadMissing(['student', 'course']);
+                if ($freshEnrollment->student && $freshEnrollment->student->email) {
+                    Mail::to($freshEnrollment->student->email)
+                        ->send(new CourseEnrollmentActivatedMail($freshEnrollment));
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return redirect()->route('admin.online-enrollments.index')
@@ -147,6 +161,65 @@ class StudentEnrollmentController extends Controller
         $enrollment->load(['student', 'course.academicYear', 'course.academicSubject', 'activatedBy']);
         
         return view('admin.online-enrollments.show', compact('enrollment'));
+    }
+
+    /**
+     * تفعيل سريع للتسجيل عن طريق البريد الإلكتروني ورمز الكورس
+     */
+    public function quickActivate(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'advanced_course_id' => 'required|exists:advanced_courses,id',
+        ], [
+            'email.required' => 'البريد الإلكتروني مطلوب',
+            'email.email' => 'صيغة البريد الإلكتروني غير صحيحة',
+            'advanced_course_id.required' => 'الكورس مطلوب',
+            'advanced_course_id.exists' => 'الكورس المحدد غير موجود',
+        ]);
+
+        $student = User::where('role', 'student')
+            ->where('email', $validated['email'])
+            ->first();
+
+        if (! $student) {
+            return back()->withErrors([
+                'quick_activate_email' => 'لا يوجد طالب مسجل بهذا البريد الإلكتروني.',
+            ])->withInput();
+        }
+
+        // مسح كاش الإحصائيات
+        app(\App\Services\StatisticsCacheService::class)->clearStats('enrollment_stats');
+
+        $enrollment = StudentCourseEnrollment::firstOrNew([
+            'user_id' => $student->id,
+            'advanced_course_id' => $validated['advanced_course_id'],
+        ]);
+
+        $enrollment->status = 'active';
+        $enrollment->enrolled_at = $enrollment->enrolled_at ?? now();
+        $enrollment->activated_at = now();
+        $enrollment->activated_by = Auth::id();
+        $enrollment->save();
+
+        $freshEnrollment = $enrollment->fresh();
+
+        // معالجة نسبة المدرب عند التفعيل
+        InstructorCoursePercentageService::processEnrollmentActivation($freshEnrollment);
+
+        // إرسال بريد التفعيل للطالب
+        try {
+            $freshEnrollment->loadMissing(['student', 'course']);
+            if ($freshEnrollment->student && $freshEnrollment->student->email) {
+                Mail::to($freshEnrollment->student->email)
+                    ->send(new CourseEnrollmentActivatedMail($freshEnrollment));
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
+        return redirect()->route('admin.online-enrollments.index')
+            ->with('success', 'تم تفعيل الكورس للطالب وإرسال بريد التفعيل بنجاح.');
     }
 
     /**
@@ -166,7 +239,19 @@ class StudentEnrollmentController extends Controller
             'activated_by' => Auth::id(),
         ]);
 
-        InstructorCoursePercentageService::processEnrollmentActivation($enrollment->fresh());
+        $freshEnrollment = $enrollment->fresh();
+        InstructorCoursePercentageService::processEnrollmentActivation($freshEnrollment);
+
+        // إرسال بريد تفعيل الكورس عند التفعيل اليدوي
+        try {
+            $freshEnrollment->loadMissing(['student', 'course']);
+            if ($freshEnrollment->student && $freshEnrollment->student->email) {
+                Mail::to($freshEnrollment->student->email)
+                    ->send(new CourseEnrollmentActivatedMail($freshEnrollment));
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         $message = $wasSuspended 
             ? 'تم إعادة تفعيل التسجيل وفتح الكورس للطالب بنجاح' 
