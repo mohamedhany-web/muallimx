@@ -162,7 +162,7 @@ unset($__errorArgs, $__bag); ?>
                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition"
                                placeholder="0">
                         <p class="mt-1 text-xs text-gray-500">
-                            اتركه 0 إذا كان المسار مجانياً.
+                            سعر المسار مستقل عن أسعار الكورسات. هذا السعر يظهر على الموقع للاشتراك في المسار. اتركه 0 للمسار المجاني.
                         </p>
                         <?php $__errorArgs = ['price'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');

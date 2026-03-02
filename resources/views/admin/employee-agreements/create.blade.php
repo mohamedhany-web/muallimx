@@ -17,6 +17,22 @@
                 </div>
             </div>
         </div>
+        @if(session('error'))
+            <div class="mx-5 mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-2">
+                <i class="fas fa-exclamation-circle"></i>
+                {{ session('error') }}
+            </div>
+            @endif
+            @if($errors->any())
+            <div class="mx-5 mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800">
+                <p class="font-semibold mb-1"><i class="fas fa-exclamation-triangle ml-1"></i>يرجى تصحيح الأخطاء التالية:</p>
+                <ul class="list-disc list-inside text-sm">
+                    @foreach($errors->all() as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
         <form method="POST" action="{{ route('admin.employee-agreements.store') }}" class="px-5 py-6 sm:px-8 lg:px-12">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

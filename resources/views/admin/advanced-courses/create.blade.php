@@ -170,9 +170,9 @@
                                 </label>
                                 <input type="url" name="video_url" value="{{ old('video_url') }}"
                                        class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition"
-                                       placeholder="https://www.youtube.com/watch?v=... أو https://youtu.be/...">
+                                       placeholder="https://www.youtube.com/watch?v=VIDEO_ID أو https://youtu.be/VIDEO_ID أو https://vimeo.com/VIDEO_ID">
                                 <p class="mt-1 text-xs text-gray-500">
-                                    رابط فيديو مقدمة الكورس الذي سيتم عرضه في صفحة الكورس. يدعم روابط YouTube و Vimeo.
+                                    يُعرض في صفحة الكورس على الموقع. الصيغ المدعومة: YouTube، Vimeo، أو رابط مباشر لملف .mp4
                                 </p>
                                 @error('video_url') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                             </div>

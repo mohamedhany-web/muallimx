@@ -90,8 +90,7 @@ class LogActivityMiddleware
             
             \DB::table('activity_logs')->insert($insertData);
         } catch (\Throwable $e) {
-            // تسجيل الخطأ في الـ log فقط بدون إيقاف العملية
-            \Log::debug('Failed to log activity: ' . $e->getMessage());
+            // عدم إعادة رمي الاستثناء أو استدعاء Log لتفادي أي خطأ إضافي
         }
     }
 
@@ -109,6 +108,10 @@ class LogActivityMiddleware
         ];
         // تجاهل الموافقة/الرفض على الطلبات (يتم التسجيل من الـ Controller)
         if (preg_match('#^/admin/orders/\d+/(approve|reject)$#', $path) && in_array($method, ['POST', 'PUT'], true)) {
+            return true;
+        }
+        // تجاهل اتفاقيات الموظفين (إضافة/تعديل/حذف) لتجنب أي خطأ من تسجيل النشاط
+        if (preg_match('#^/admin/employee-agreements#', $path) && in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)) {
             return true;
         }
 

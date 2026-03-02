@@ -47,7 +47,19 @@ return Application::configure(basePath: dirname(__DIR__))
         // عدم تسجيل استثناء "غير مصادق" كخطأ (سلوك متوقع عند زيارة صفحة محمية دون تسجيل الدخول)
         $exceptions->dontReport([
             \Illuminate\Auth\AuthenticationException::class,
+            \Illuminate\Validation\ValidationException::class,
         ]);
+
+        // معالجة ValidationException أولاً (قبل HttpException لأنها ترث منه): إعادة توجيه مع أخطاء الحقول — لا 500
+        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'خطأ في التحقق من البيانات',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+            return redirect()->back()->withInput()->withErrors($e->errors());
+        });
 
         // معالجة "غير مصادق": إعادة توجيه لصفحة تسجيل الدخول بدلاً من 500
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
@@ -115,6 +127,23 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // معالجة الأخطاء العامة
         $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            if ($e instanceof \Illuminate\Validation\ValidationException) {
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => 'Validation failed', 'errors' => $e->errors()], 422);
+                }
+                return redirect()->back()->withInput()->withErrors($e->errors());
+            }
+            // طلبات اتفاقيات الموظفين (إنشاء/تحديث): إعادة توجيه لصفحة النموذج مع رسالة الخطأ بدلاً من 500
+            if (!$request->expectsJson() && $request->isMethod('POST') && $request->is('*employee-agreements*')) {
+                \Illuminate\Support\Facades\Log::error('Employee agreement request failed', [
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+                $msg = mb_substr($e->getMessage(), 0, 400);
+                return redirect()->to(url('/admin/employee-agreements/create'))
+                    ->with('error', 'حدث خطأ: ' . $msg);
+            }
             // تسجيل الخطأ قبل عرض صفحة الخطأ
             \Illuminate\Support\Facades\Log::error('Unhandled exception: ' . $e->getMessage(), [
                 'exception' => get_class($e),

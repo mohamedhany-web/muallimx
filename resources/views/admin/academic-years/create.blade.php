@@ -76,9 +76,9 @@
                         </label>
                         <input type="url" name="video_url" id="video_url" value="{{ old('video_url') }}"
                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition"
-                               placeholder="https://www.youtube.com/watch?v=... أو https://youtu.be/...">
+                               placeholder="https://www.youtube.com/watch?v=VIDEO_ID أو https://youtu.be/VIDEO_ID أو https://vimeo.com/VIDEO_ID">
                         <p class="mt-1 text-xs text-gray-500">
-                            رابط فيديو مقدمة المسار التعليمي الذي سيتم عرضه في صفحة المسار. يدعم روابط YouTube و Vimeo.
+                            يُعرض في صفحة المسار على الموقع. الصيغ المدعومة: YouTube (youtube.com/watch?v=... أو youtu.be/...)، Vimeo (vimeo.com/...)، أو رابط مباشر لملف .mp4
                         </p>
                         @error('video_url')
                             <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
@@ -107,7 +107,7 @@
                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition"
                                placeholder="0">
                         <p class="mt-1 text-xs text-gray-500">
-                            اتركه 0 إذا كان المسار مجانياً.
+                            سعر المسار مستقل عن أسعار الكورسات. هذا السعر يظهر على الموقع للاشتراك في المسار. اتركه 0 للمسار المجاني.
                         </p>
                         @error('price')
                             <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>

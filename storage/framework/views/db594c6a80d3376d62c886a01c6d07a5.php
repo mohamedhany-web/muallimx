@@ -242,35 +242,24 @@
                 display: none !important;
             }
 
-            /* مشغل YouTube المخصص */
-            .custom-youtube-player-container {
+            /* حاوية الفيديو 16:9 */
+            .intro-video-container {
                 position: relative;
                 width: 100%;
-                padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+                padding-bottom: 56.25%; /* 16:9 */
                 height: 0;
                 background: #000;
                 border-radius: 1rem;
                 overflow: hidden;
-                margin: 0;
             }
 
-            .custom-youtube-player-container #custom-video-player {
+            .intro-video-container iframe {
                 position: absolute;
-                top: -60px; /* إخفاء الجزء العلوي الذي يحتوي على مشاركة ومشاهدة لاحقاً */
+                top: 0;
                 left: 0;
                 width: 100%;
-                height: calc(100% + 120px); /* زيادة الارتفاع لإخفاء الأجزاء العلوية والسفلية */
+                height: 100%;
                 border: none;
-            }
-
-            /* إخفاء جميع عناصر YouTube */
-            .custom-youtube-player-container iframe {
-                border: none !important;
-                position: absolute !important;
-                top: -60px !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: calc(100% + 120px) !important;
             }
 
             /* تخصيص ألوان المشغل */
@@ -424,66 +413,67 @@
                 </div>
 
                 <!-- Video Introduction Section (Moved from top) -->
-                <div class="relative fade-in-up" style="animation-delay: 0.2s;">
+                <div class="relative fade-in-up max-w-xl" style="animation-delay: 0.2s;">
                     <?php if($learningPath->video_url ?? null): ?>
-                    <div class="bg-white rounded-3xl p-6 lg:p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300">
-                        <div class="text-center mb-6">
-                            <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-2">
-                                <i class="fas fa-play-circle text-blue-600 ml-2"></i>
-                                مقدمة المسار التعليمي
+                    <div class="bg-white rounded-2xl p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300">
+                        <div class="text-center mb-3">
+                            <h2 class="text-lg font-bold text-gray-900 mb-0.5 flex items-center justify-center gap-2">
+                                <i class="fas fa-play-circle text-blue-600 text-base"></i>
+                                مقدمة المسار
                             </h2>
-                            <p class="text-gray-600">شاهد هذا الفيديو للتعرف على المسار التعليمي</p>
+                            <p class="text-gray-500 text-sm">شاهد المقدمة</p>
                         </div>
-                        <div class="custom-video-player-wrapper">
-                            <?php
-                                $videoUrl = $learningPath->video_url;
+                        <?php
+                                $videoUrl = trim((string) ($learningPath->video_url ?? ''));
                                 $videoId = null;
                                 $videoType = null;
-                                
-                                // استخراج ID من رابط YouTube
-                                if (strpos($videoUrl, 'youtube.com/watch') !== false || strpos($videoUrl, 'youtu.be/') !== false) {
-                                    preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches);
-                                    if (isset($matches[1])) {
-                                        $videoId = $matches[1];
+                                $embedUrl = null;
+
+                                if ($videoUrl !== '') {
+                                    // YouTube: watch, youtu.be, embed
+                                    if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/', $videoUrl, $m)) {
+                                        $videoId = $m[1];
                                         $videoType = 'youtube';
-                                    }
-                                } elseif (strpos($videoUrl, 'vimeo.com') !== false) {
-                                    preg_match('/vimeo\.com\/(?:.*\/)?(\d+)/', $videoUrl, $matches);
-                                    if (isset($matches[1])) {
-                                        $videoId = $matches[1];
+                                        $embedUrl = 'https://www.youtube.com/embed/' . $videoId . '?rel=0&modestbranding=1&showinfo=0';
+                                    } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $videoUrl, $m)) {
+                                        $videoId = $m[1];
                                         $videoType = 'vimeo';
+                                        $embedUrl = 'https://player.vimeo.com/video/' . $videoId;
+                                    } elseif (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $videoUrl)) {
+                                        $videoType = 'html5';
                                     }
-                                } elseif (preg_match('/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i', $videoUrl)) {
-                                    $videoType = 'html5';
                                 }
                             ?>
-                            
-                            <?php if($videoType === 'youtube' && $videoId): ?>
-                                <!-- مشغل الفيديو المخصص - YouTube -->
-                                <div id="custom-video-player-container" class="custom-youtube-player-container">
-                                    <div id="custom-video-player"></div>
+                            <div class="custom-video-player-wrapper">
+                            <?php if($videoType === 'youtube' && $embedUrl): ?>
+                                <div class="intro-video-container">
+                                    <iframe src="<?php echo e($embedUrl); ?>" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="مقدمة المسار"></iframe>
                                 </div>
-                            <?php elseif($videoType === 'vimeo' && $videoId): ?>
-                                <!-- مشغل الفيديو المخصص - Vimeo -->
-                                <div class="plyr__video-embed" id="custom-video-player" data-plyr-provider="vimeo" data-plyr-embed-id="<?php echo e($videoId); ?>"></div>
+                            <?php elseif($videoType === 'vimeo' && $embedUrl): ?>
+                                <div class="intro-video-container">
+                                    <iframe src="<?php echo e($embedUrl); ?>" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="مقدمة المسار"></iframe>
+                                </div>
                             <?php elseif($videoType === 'html5'): ?>
-                                <!-- مشغل الفيديو المخصص - HTML5 -->
-                                <video id="custom-video-player" class="plyr__video" playsinline controls>
-                                    <source src="<?php echo e($videoUrl); ?>" type="video/mp4">
-                                </video>
+                                <div class="intro-video-container" style="padding-bottom: 0; height: auto; min-height: 320px;">
+                                    <video class="w-full rounded-lg" style="max-height: 70vh;" playsinline controls>
+                                        <source src="<?php echo e($videoUrl); ?>" type="video/mp4">
+                                        المتصفح لا يدعم تشغيل الفيديو.
+                                    </video>
+                                </div>
                             <?php else: ?>
                                 <div class="bg-gray-100 rounded-lg p-8 text-center">
-                                    <i class="fas fa-exclamation-triangle text-yellow-500 text-3xl mb-3"></i>
-                                    <p class="text-gray-600"><?php echo e(__('public.video_unsupported')); ?></p>
+                                    <i class="fas fa-exclamation-triangle text-amber-500 text-3xl mb-3"></i>
+                                    <p class="text-gray-700 font-medium mb-1">رابط الفيديو غير مدعوم أو غير صحيح</p>
+                                    <p class="text-sm text-gray-600">استخدم رابط YouTube (مثل: https://www.youtube.com/watch?v=xxxx) أو Vimeo أو رابط مباشر لملف .mp4</p>
                                 </div>
                             <?php endif; ?>
                         </div>
                     </div>
                     <?php else: ?>
-                    <div class="bg-white rounded-3xl p-6 lg:p-8 shadow-xl border border-gray-200">
-                        <div class="text-center text-gray-500 py-12">
-                            <i class="fas fa-video text-4xl mb-4 text-gray-300"></i>
-                            <p class="text-lg"><?php echo e(__('public.no_intro_video')); ?></p>
+                    <div class="bg-white rounded-2xl p-4 shadow-lg border border-gray-200">
+                        <div class="text-center text-gray-500 py-6">
+                            <i class="fas fa-video text-2xl mb-2 text-gray-300"></i>
+                            <p class="text-sm"><?php echo e(__('public.no_intro_video')); ?></p>
                         </div>
                     </div>
                     <?php endif; ?>
@@ -653,8 +643,9 @@
                                     <h3 class="text-xl font-black text-gray-900 mb-2"><?php echo e(__('public.subscribe_path')); ?></h3>
                                 </div>
                                 
-                                <!-- Price -->
+                                <!-- Price: سعر المسار مستقل عن أسعار الكورسات -->
                                 <div class="text-center mb-6">
+                                    <p class="text-xs text-gray-500 mb-1">سعر الاشتراك في المسار</p>
                                     <?php if(($learningPath->price ?? 0) > 0): ?>
                                         <div class="text-3xl font-black text-blue-600 mb-1"><?php echo e(number_format($learningPath->price, 0)); ?> <span class="text-lg text-gray-600"><?php echo e(__('public.currency_egp')); ?></span></div>
                                     <?php else: ?>
@@ -789,264 +780,6 @@
     <!-- Unified Footer -->
     <?php echo $__env->make('components.unified-footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     
-    <!-- Plyr JavaScript -->
-    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-    
-    <!-- Script لمشغل الفيديو المخصص -->
-    <script>
-        <?php if(isset($videoType) && $videoType === 'youtube' && isset($videoId) && $videoId): ?>
-        let youtubePlayer;
-        
-        // تهيئة YouTube IFrame API
-        function onYouTubeIframeAPIReady() {
-            youtubePlayer = new YT.Player('custom-video-player', {
-                height: '100%',
-                width: '100%',
-                videoId: '<?php echo e($videoId); ?>',
-                playerVars: {
-                    'autoplay': 0,
-                    'controls': 1,
-                    'rel': 0,
-                    'showinfo': 0,
-                    'modestbranding': 1,
-                    'iv_load_policy': 3,
-                    'cc_load_policy': 0,
-                    'disablekb': 0,
-                    'fs': 1,
-                    'playsinline': 1,
-                    'origin': window.location.origin,
-                    'widget_referrer': window.location.origin,
-                    'enablejsapi': 1,
-                    'autohide': 1,
-                    'wmode': 'opaque',
-                    'loop': 0,
-                    'playlist': ''
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                }
-            });
-        }
-
-        function onPlayerReady(event) {
-            // إخفاء جميع علامات YouTube
-            hideAllYouTubeBranding();
-            setInterval(hideAllYouTubeBranding, 1000);
-        }
-
-        function onPlayerStateChange(event) {
-            setTimeout(hideAllYouTubeBranding, 500);
-        }
-
-        function hideAllYouTubeBranding() {
-            try {
-                const container = document.querySelector('.custom-youtube-player-container');
-                const iframe = container ? container.querySelector('iframe') : null;
-                
-                if (!iframe) return;
-                
-                // إضافة CSS لإخفاء علامات YouTube باستخدام CSS clipping
-                const style = document.createElement('style');
-                style.id = 'youtube-complete-hide';
-                style.textContent = `
-                    /* إخفاء جميع عناصر YouTube باستخدام CSS clipping */
-                    .custom-youtube-player-container {
-                        position: relative !important;
-                        overflow: hidden !important;
-                    }
-                    
-                    .custom-youtube-player-container #custom-video-player {
-                        position: absolute !important;
-                        top: -60px !important;
-                        left: 0 !important;
-                        width: 100% !important;
-                        height: calc(100% + 120px) !important;
-                    }
-                    
-                    .custom-youtube-player-container iframe {
-                        border: none !important;
-                        position: absolute !important;
-                        top: -60px !important;
-                        left: 0 !important;
-                        width: 100% !important;
-                        height: calc(100% + 120px) !important;
-                    }
-                `;
-                
-                const oldStyle = document.getElementById('youtube-complete-hide');
-                if (oldStyle) oldStyle.remove();
-                document.head.appendChild(style);
-            } catch(e) {
-                console.log('Hiding YouTube branding...');
-            }
-        }
-
-        // التأكد من تحميل API
-        if (typeof YT !== 'undefined' && YT.Player) {
-            onYouTubeIframeAPIReady();
-        } else {
-            window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-        }
-        <?php else: ?>
-        document.addEventListener('DOMContentLoaded', function() {
-            // تهيئة مشغل الفيديو المخصص للـ Vimeo و HTML5
-            const player = new Plyr('#custom-video-player', {
-                controls: [
-                    'play-large',
-                    'play',
-                    'progress',
-                    'current-time',
-                    'duration',
-                    'mute',
-                    'volume',
-                    'settings',
-                    'pip',
-                    'airplay',
-                    'fullscreen'
-                ],
-                settings: ['quality', 'speed'],
-                quality: {
-                    default: 720,
-                    options: [4320, 2880, 2160, 1440, 1080, 720, 576, 480, 360, 240]
-                },
-                speed: {
-                    selected: 1,
-                    options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
-                },
-                keyboard: {
-                    focused: true,
-                    global: false
-                },
-                tooltips: {
-                    controls: true,
-                    seek: true
-                },
-                hideControls: true,
-                clickToPlay: true,
-                autoplay: false,
-                volume: 1,
-                muted: false,
-                ratio: '16:9',
-                youtube: {
-                    noCookie: false,
-                    rel: 0,
-                    showinfo: 0,
-                    iv_load_policy: 3,
-                    modestbranding: 1,
-                    controls: 0,
-                    disablekb: 0,
-                    fs: 0,
-                    cc_load_policy: 0,
-                    playsinline: 1,
-                    origin: window.location.origin,
-                    enablejsapi: 1,
-                    autohide: 1,
-                    wmode: 'opaque'
-                },
-                vimeo: {
-                    byline: false,
-                    portrait: false,
-                    title: false,
-                    transparent: false
-                }
-            });
-
-            // إخفاء جميع علامات YouTube بعد تحميل المشغل
-            player.on('ready', function() {
-                hideYouTubeBranding();
-            });
-
-            // إخفاء العلامات عند تغيير حالة الفيديو
-            player.on('play', function() {
-                hideYouTubeBranding();
-            });
-
-            player.on('pause', function() {
-                hideYouTubeBranding();
-            });
-
-            function hideYouTubeBranding() {
-                try {
-                    const iframe = document.querySelector('.plyr__video-embed iframe');
-                    if (!iframe || !iframe.src.includes('youtube')) return;
-                    
-                    // إضافة CSS قوي جداً لإخفاء جميع علامات YouTube
-                    const style = document.createElement('style');
-                    style.id = 'youtube-hide-style';
-                    style.textContent = `
-                        /* إخفاء جميع عناصر YouTube */
-                        .plyr__video-embed {
-                            position: relative !important;
-                            overflow: hidden !important;
-                        }
-                        
-                        .plyr__video-embed iframe {
-                            border: none !important;
-                            position: relative !important;
-                        }
-                        
-                        /* إخفاء عناصر YouTube عبر CSS - بدون overlays */
-                        .plyr__video-embed::before,
-                        .plyr__video-embed::after {
-                            display: none !important;
-                            content: none !important;
-                        }
-                        
-                        /* إخفاء أي عناصر YouTube داخل iframe */
-                        .plyr__video-embed iframe[src*="youtube"] {
-                            pointer-events: auto !important;
-                        }
-                    `;
-                    
-                    // إزالة الستايل القديم إذا كان موجوداً
-                    const oldStyle = document.getElementById('youtube-hide-style');
-                    if (oldStyle) {
-                        oldStyle.remove();
-                    }
-                    
-                    document.head.appendChild(style);
-                    
-                    // تعديل iframe لإخفاء جميع العلامات
-                    setTimeout(function() {
-                        if (iframe) {
-                            let src = iframe.src;
-                            
-                            // إزالة جميع المعاملات الحالية وإضافة معاملات جديدة
-                            const baseUrl = src.split('?')[0];
-                            const params = new URLSearchParams();
-                            
-                            // إضافة معاملات لإخفاء جميع العلامات
-                            params.set('modestbranding', '1');
-                            params.set('rel', '0');
-                            params.set('showinfo', '0');
-                            params.set('controls', '0');
-                            params.set('fs', '0');
-                            params.set('iv_load_policy', '3');
-                            params.set('cc_load_policy', '0');
-                            params.set('playsinline', '1');
-                            params.set('enablejsapi', '1');
-                            params.set('autohide', '1');
-                            params.set('wmode', 'opaque');
-                            params.set('origin', window.location.origin);
-                            
-                            const newSrc = baseUrl + '?' + params.toString();
-                            
-                            if (iframe.src !== newSrc) {
-                                iframe.src = newSrc;
-                            }
-                        }
-                    }, 500);
-                } catch(e) {
-                    console.log('Hiding YouTube branding...');
-                }
-            }
-            
-            // إخفاء العلامات بشكل دوري ومستمر
-            setInterval(hideYouTubeBranding, 1500);
-        });
-        <?php endif; ?>
-    </script>
 </body>
 </html>
 <?php /**PATH C:\xampp\htdocs\mindly tics\Mindlytics\resources\views/public/learning-path-show.blade.php ENDPATH**/ ?>

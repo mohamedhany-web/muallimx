@@ -17,6 +17,23 @@
                 </div>
             </div>
         </div>
+        <?php if(session('error')): ?>
+            <div class="mx-5 mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-2">
+                <i class="fas fa-exclamation-circle"></i>
+                <?php echo e(session('error')); ?>
+
+            </div>
+            <?php endif; ?>
+            <?php if($errors->any()): ?>
+            <div class="mx-5 mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800">
+                <p class="font-semibold mb-1"><i class="fas fa-exclamation-triangle ml-1"></i>يرجى تصحيح الأخطاء التالية:</p>
+                <ul class="list-disc list-inside text-sm">
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $err): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($err); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </ul>
+            </div>
+            <?php endif; ?>
         <form method="POST" action="<?php echo e(route('admin.employee-agreements.store')); ?>" class="px-5 py-6 sm:px-8 lg:px-12">
             <?php echo csrf_field(); ?>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

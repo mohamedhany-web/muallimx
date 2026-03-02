@@ -21,12 +21,6 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Plyr - Custom Video Player -->
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-    
-    <!-- YouTube IFrame API -->
-    <script src="https://www.youtube.com/iframe_api"></script>
-    
         <style>
             * {
                 font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
@@ -926,35 +920,24 @@
                 display: none !important;
             }
 
-            /* مشغل YouTube المخصص */
-            .custom-youtube-player-container {
+            /* حاوية فيديو المقدمة 16:9 (نفس فكرة المسار) */
+            .intro-video-container {
                 position: relative;
                 width: 100%;
-                padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+                padding-bottom: 56.25%; /* 16:9 */
                 height: 0;
                 background: #000;
                 border-radius: 1rem;
                 overflow: hidden;
-                margin: 0;
             }
 
-            .custom-youtube-player-container #custom-video-player {
+            .intro-video-container iframe {
                 position: absolute;
-                top: -60px; /* إخفاء الجزء العلوي الذي يحتوي على مشاركة ومشاهدة لاحقاً */
+                top: 0;
                 left: 0;
                 width: 100%;
-                height: calc(100% + 120px); /* زيادة الارتفاع لإخفاء الأجزاء العلوية والسفلية */
+                height: 100%;
                 border: none;
-            }
-
-            /* إخفاء جميع عناصر YouTube */
-            .custom-youtube-player-container iframe {
-                border: none !important;
-                position: absolute !important;
-                top: -60px !important;
-                left: 0 !important;
-                width: 100% !important;
-                height: calc(100% + 120px) !important;
             }
 
             /* Hero section z-index */
@@ -1164,135 +1147,72 @@
                     </div>
                 </div>
 
-                <!-- Course Preview Card -->
-                <div class="relative fade-in-up" style="animation-delay: 0.2s;">
-                    <div class="bg-white rounded-3xl p-6 lg:p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300">
-                        <div class="text-center">
-                            <!-- Price -->
-                            <div class="mb-6">
-                                @if(($course->price ?? 0) > 0)
-                                    <div class="text-4xl font-black text-blue-600 mb-2">{{ number_format($course->price, 2) }} <span class="text-xl text-gray-600">ج.م</span></div>
-                                @else
-                                    <div class="text-4xl font-black text-green-600 mb-2">{{ __('public.free_price') }}</div>
-                                @endif
-                            </div>
-
-                            <!-- Course Features -->
-                            <div class="space-y-3 mb-6 text-right">
-                                <div class="flex items-center gap-3 text-gray-700">
-                                    <i class="fas fa-check-circle text-green-500"></i>
-                                    <span class="text-sm">وصول مدى الحياة</span>
-                                </div>
-                                <div class="flex items-center gap-3 text-gray-700">
-                                    <i class="fas fa-check-circle text-green-500"></i>
-                                    <span class="text-sm">شهادة إتمام معتمدة</span>
-                                </div>
-                                <div class="flex items-center gap-3 text-gray-700">
-                                    <i class="fas fa-check-circle text-green-500"></i>
-                                    <span class="text-sm">مشاريع عملية</span>
-                                </div>
-                                <div class="flex items-center gap-3 text-gray-700">
-                                    <i class="fas fa-check-circle text-green-500"></i>
-                                    <span class="text-sm">دعم مباشر</span>
-                                </div>
-                            </div>
-
-                            @auth
-                                @if($isEnrolled ?? false)
-                                    <a href="{{ route('courses.show', $course->id) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
-                                        <i class="fas fa-play"></i>
-                                        ابدأ الآن
-                                    </a>
-                                @else
-                                    @if(($course->price ?? 0) > 0 && !($course->is_free ?? false))
-                                        <a href="{{ route('public.course.checkout', $course->id) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
-                                            <i class="fas fa-shopping-cart"></i>
-                                            {{ __('public.buy_now') }}
-                                        </a>
-                                    @else
-                                        <a href="{{ route('public.course.enroll.free', $course->id) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
-                                            <i class="fas fa-gift"></i>
-                                            {{ __('public.register_free') }}
-                                        </a>
-                                    @endif
-                                @endif
-                            @endauth
-                            @guest
-                                @if(($course->price ?? 0) > 0 && !($course->is_free ?? false))
-                                    <a href="{{ route('register', ['redirect' => route('public.course.checkout', $course->id)]) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
-                                        <i class="fas fa-shopping-cart"></i>
-                                        {{ __('public.buy_now') }}
-                                    </a>
-                                @else
-                                    <a href="{{ route('register', ['redirect' => route('public.course.enroll.free', $course->id)]) }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-green-500 text-white px-6 py-3 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full">
-                                        <i class="fas fa-gift"></i>
-                                        {{ __('public.register_free') }}
-                                    </a>
-                                @endif
-                            @endguest
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Video Introduction Section -->
-                @if($course->video_url ?? null)
-                <div class="relative fade-in-up" style="animation-delay: 0.3s;">
-                    <div class="bg-white rounded-3xl p-6 lg:p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-all duration-300">
-                        <div class="text-center mb-6">
-                            <h2 class="text-2xl md:text-3xl font-black text-gray-900 mb-2">
-                                <i class="fas fa-video text-blue-600 ml-2"></i>
-                                {{ __('public.intro_video_title') }}
-                            </h2>
-                            <p class="text-gray-600 text-sm">{{ __('public.intro_video_desc') }}</p>
-                        </div>
-                        
-                        <div class="custom-video-player-wrapper">
-                            @php
-                                $videoUrl = $course->video_url;
-                                $videoId = null;
-                                $videoType = null;
-                                
-                                // استخراج ID من رابط YouTube
-                                if (strpos($videoUrl, 'youtube.com/watch') !== false || strpos($videoUrl, 'youtu.be/') !== false) {
-                                    preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches);
-                                    if (isset($matches[1])) {
-                                        $videoId = $matches[1];
-                                        $videoType = 'youtube';
-                                    }
-                                } elseif (strpos($videoUrl, 'vimeo.com') !== false) {
-                                    preg_match('/vimeo\.com\/(?:.*\/)?(\d+)/', $videoUrl, $matches);
-                                    if (isset($matches[1])) {
-                                        $videoId = $matches[1];
-                                        $videoType = 'vimeo';
-                                    }
-                                } elseif (preg_match('/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i', $videoUrl)) {
-                                    $videoType = 'html5';
+                <!-- Right column: Intro video + Price card -->
+                <div class="flex flex-col gap-6">
+                    <!-- مقدمة الكورس (نفس فكرة المسار) -->
+                    <div class="relative fade-in-up max-w-xl" style="animation-delay: 0.2s;">
+                        @if($course->video_url ?? null)
+                        @php
+                            $introVideoUrl = trim((string) ($course->video_url ?? ''));
+                            $introVideoId = null;
+                            $introVideoType = null;
+                            $introEmbedUrl = null;
+                            if ($introVideoUrl !== '') {
+                                if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/', $introVideoUrl, $m)) {
+                                    $introVideoId = $m[1];
+                                    $introVideoType = 'youtube';
+                                    $introEmbedUrl = 'https://www.youtube.com/embed/' . $introVideoId . '?rel=0&modestbranding=1&showinfo=0';
+                                } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $introVideoUrl, $m)) {
+                                    $introVideoId = $m[1];
+                                    $introVideoType = 'vimeo';
+                                    $introEmbedUrl = 'https://player.vimeo.com/video/' . $introVideoId;
+                                } elseif (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $introVideoUrl)) {
+                                    $introVideoType = 'html5';
                                 }
-                            @endphp
-                            
-                            @if($videoType === 'youtube' && $videoId)
-                                <!-- مشغل الفيديو المخصص - YouTube -->
-                                <div id="custom-video-player-container" class="custom-youtube-player-container">
-                                    <div id="custom-video-player"></div>
+                            }
+                        @endphp
+                        <div class="bg-white rounded-2xl p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300">
+                            <div class="text-center mb-3">
+                                <h2 class="text-lg font-bold text-gray-900 mb-0.5 flex items-center justify-center gap-2">
+                                    <i class="fas fa-play-circle text-blue-600 text-base"></i>
+                                    مقدمة الكورس
+                                </h2>
+                                <p class="text-gray-500 text-sm">شاهد المقدمة</p>
+                            </div>
+                            <div class="custom-video-player-wrapper">
+                            @if($introVideoType === 'youtube' && $introEmbedUrl)
+                                <div class="intro-video-container">
+                                    <iframe src="{{ $introEmbedUrl }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen title="مقدمة الكورس"></iframe>
                                 </div>
-                            @elseif($videoType === 'vimeo' && $videoId)
-                                <!-- مشغل الفيديو المخصص - Vimeo -->
-                                <div class="plyr__video-embed" id="custom-video-player" data-plyr-provider="vimeo" data-plyr-embed-id="{{ $videoId }}"></div>
-                            @elseif($videoType === 'html5')
-                                <!-- مشغل الفيديو المخصص - HTML5 -->
-                                <video id="custom-video-player" class="plyr__video" playsinline controls>
-                                    <source src="{{ $videoUrl }}" type="video/mp4">
-                                </video>
+                            @elseif($introVideoType === 'vimeo' && $introEmbedUrl)
+                                <div class="intro-video-container">
+                                    <iframe src="{{ $introEmbedUrl }}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="مقدمة الكورس"></iframe>
+                                </div>
+                            @elseif($introVideoType === 'html5')
+                                <div class="intro-video-container" style="padding-bottom: 0; height: auto; min-height: 320px;">
+                                    <video class="w-full rounded-lg" style="max-height: 70vh;" playsinline controls>
+                                        <source src="{{ $introVideoUrl }}" type="video/mp4">
+                                        المتصفح لا يدعم تشغيل الفيديو.
+                                    </video>
+                                </div>
                             @else
-                                <div class="bg-gray-100 rounded-lg p-8 text-center">
-                                    <i class="fas fa-exclamation-triangle text-yellow-500 text-3xl mb-3"></i>
-                                    <p class="text-gray-600">{{ __('public.video_unsupported') }}</p>
+                                <div class="bg-gray-100 rounded-lg p-6 text-center">
+                                    <i class="fas fa-exclamation-triangle text-amber-500 text-2xl mb-2"></i>
+                                    <p class="text-gray-700 text-sm font-medium">رابط الفيديو غير مدعوم. استخدم YouTube أو Vimeo أو رابط .mp4</p>
                                 </div>
                             @endif
+                            </div>
                         </div>
+                        @else
+                        <div class="bg-white rounded-2xl p-4 shadow-lg border border-gray-200">
+                            <div class="text-center text-gray-500 py-6">
+                                <i class="fas fa-video text-2xl mb-2 text-gray-300"></i>
+                                <p class="text-sm">{{ __('public.no_intro_video') ?? 'لا يوجد فيديو مقدمة' }}</p>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
-                @endif
             </div>
         </div>
     </section>
@@ -1598,179 +1518,6 @@
         setInterval(createParticle, 800);
     </script>
 
-    <!-- Plyr JavaScript -->
-    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-    
-    <!-- Script لمشغل الفيديو المخصص -->
-    <script>
-        @if(isset($course->video_url) && $course->video_url)
-        @php
-            $videoUrl = $course->video_url;
-            $videoId = null;
-            $videoType = null;
-            
-            if (strpos($videoUrl, 'youtube.com/watch') !== false || strpos($videoUrl, 'youtu.be/') !== false) {
-                preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/', $videoUrl, $matches);
-                if (isset($matches[1])) {
-                    $videoId = $matches[1];
-                    $videoType = 'youtube';
-                }
-            } elseif (strpos($videoUrl, 'vimeo.com') !== false) {
-                preg_match('/vimeo\.com\/(?:.*\/)?(\d+)/', $videoUrl, $matches);
-                if (isset($matches[1])) {
-                    $videoId = $matches[1];
-                    $videoType = 'vimeo';
-                }
-            } elseif (preg_match('/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i', $videoUrl)) {
-                $videoType = 'html5';
-            }
-        @endphp
-        
-        @if($videoType === 'youtube' && $videoId)
-        let youtubePlayer;
-        
-        // تهيئة YouTube IFrame API
-        function onYouTubeIframeAPIReady() {
-            youtubePlayer = new YT.Player('custom-video-player', {
-                height: '100%',
-                width: '100%',
-                videoId: '{{ $videoId }}',
-                playerVars: {
-                    'autoplay': 0,
-                    'controls': 1,
-                    'rel': 0,
-                    'showinfo': 0,
-                    'modestbranding': 1,
-                    'iv_load_policy': 3,
-                    'cc_load_policy': 0,
-                    'disablekb': 0,
-                    'fs': 1,
-                    'playsinline': 1,
-                    'origin': window.location.origin,
-                    'widget_referrer': window.location.origin,
-                    'enablejsapi': 1,
-                    'autohide': 1,
-                    'wmode': 'opaque',
-                    'loop': 0,
-                    'playlist': ''
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange
-                }
-            });
-        }
-
-        function onPlayerReady(event) {
-            // إخفاء جميع علامات YouTube
-            hideAllYouTubeBranding();
-            setInterval(hideAllYouTubeBranding, 1000);
-        }
-
-        function onPlayerStateChange(event) {
-            setTimeout(hideAllYouTubeBranding, 500);
-        }
-
-        function hideAllYouTubeBranding() {
-            try {
-                const container = document.querySelector('.custom-youtube-player-container');
-                const iframe = container ? container.querySelector('iframe') : null;
-                
-                if (!iframe) return;
-                
-                // إضافة CSS لإخفاء علامات YouTube باستخدام CSS clipping
-                const style = document.createElement('style');
-                style.id = 'youtube-complete-hide';
-                style.textContent = `
-                    /* إخفاء جميع عناصر YouTube باستخدام CSS clipping */
-                    .custom-youtube-player-container {
-                        position: relative !important;
-                        overflow: hidden !important;
-                    }
-                    
-                    .custom-youtube-player-container #custom-video-player {
-                        position: absolute !important;
-                        top: -60px !important;
-                        left: 0 !important;
-                        width: 100% !important;
-                        height: calc(100% + 120px) !important;
-                    }
-                    
-                    .custom-youtube-player-container iframe {
-                        border: none !important;
-                        position: absolute !important;
-                        top: -60px !important;
-                        left: 0 !important;
-                        width: 100% !important;
-                        height: calc(100% + 120px) !important;
-                    }
-                `;
-                
-                const oldStyle = document.getElementById('youtube-complete-hide');
-                if (oldStyle) oldStyle.remove();
-                document.head.appendChild(style);
-            } catch(e) {
-                console.log('Hiding YouTube branding...');
-            }
-        }
-
-        // التأكد من تحميل API
-        if (typeof YT !== 'undefined' && YT.Player) {
-            onYouTubeIframeAPIReady();
-        } else {
-            window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
-        }
-        @elseif($videoType === 'vimeo' && $videoId || $videoType === 'html5')
-        document.addEventListener('DOMContentLoaded', function() {
-            // تهيئة مشغل الفيديو المخصص للـ Vimeo و HTML5
-            const player = new Plyr('#custom-video-player', {
-                controls: [
-                    'play-large',
-                    'play',
-                    'progress',
-                    'current-time',
-                    'duration',
-                    'mute',
-                    'volume',
-                    'settings',
-                    'pip',
-                    'airplay',
-                    'fullscreen'
-                ],
-                settings: ['quality', 'speed'],
-                quality: {
-                    default: 720,
-                    options: [4320, 2880, 2160, 1440, 1080, 720, 576, 480, 360, 240]
-                },
-                speed: {
-                    selected: 1,
-                    options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
-                },
-                keyboard: {
-                    focused: true,
-                    global: false
-                },
-                tooltips: {
-                    controls: true,
-                    seek: true
-                },
-                hideControls: true,
-                clickToPlay: true,
-                autoplay: false,
-                volume: 1,
-                muted: false,
-                ratio: '16:9',
-                vimeo: {
-                    byline: false,
-                    portrait: false,
-                    title: false,
-                    transparent: false
-                }
-            });
-        });
-        @endif
-        @endif
-    </script>
 </body>
 </html>
 

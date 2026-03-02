@@ -57,10 +57,7 @@ class LearningPathController extends Controller
             // دمج الكورسات وإزالة التكرار
             $courses = $linkedCourses->merge($subjectCourses)->unique('id');
             
-            // حساب السعر الإجمالي
-            $totalPrice = $courses->sum('price');
-            
-            // إنشاء slug من الاسم
+            // سعر المسار مستقل عن أسعار الكورسات (يُحدد من لوحة الإدارة)
             $slug = Str::slug($year->name);
             
             return (object)[
@@ -68,7 +65,7 @@ class LearningPathController extends Controller
                 'name' => $year->name,
                 'description' => $year->description,
                 'slug' => $slug,
-                'price' => $totalPrice,
+                'price' => (float) ($year->price ?? 0),
                 'original_price' => null,
                 'courses_count' => $courses->count(),
                 'is_featured' => false,
@@ -161,14 +158,14 @@ class LearningPathController extends Controller
         $linkedCourses = $academicYear->linkedCourses()->where('is_active', true)->get();
         $allCourses = $linkedCourses->merge($courses)->unique('id');
         
-        // إنشاء كائن مشابه لـ Package للتوافق مع الـ view
+        // سعر المسار مستقل عن أسعار الكورسات (يُحدد من لوحة الإدارة)
         $learningPath = (object)[
             'id' => $academicYear->id,
             'name' => $academicYear->name,
             'description' => $academicYear->description,
             'video_url' => $academicYear->video_url,
             'slug' => Str::slug($academicYear->name),
-            'price' => $allCourses->sum('price'),
+            'price' => (float) ($academicYear->price ?? 0),
             'original_price' => null,
             'courses_count' => $allCourses->count(),
             'is_featured' => false,
@@ -198,6 +195,7 @@ class LearningPathController extends Controller
                 'id' => $year->id,
                 'name' => $year->name,
                 'slug' => Str::slug($year->name),
+                'price' => (float) ($year->price ?? 0),
                 'courses_count' => $yearCourses->count(),
                 'academic_subjects_count' => $year->academic_subjects_count
             ];

@@ -5,6 +5,19 @@
 
 @section('content')
 <div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" style="background: #f8fafc; min-height: 100vh;">
+    @if(session('success'))
+        <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 px-5 py-4 flex items-center gap-3 shadow-sm">
+            <i class="fas fa-check-circle text-emerald-600 text-xl"></i>
+            <span class="font-semibold">{{ session('success') }}</span>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="rounded-xl bg-red-50 border border-red-200 text-red-800 px-5 py-4 flex items-center gap-3 shadow-sm">
+            <i class="fas fa-exclamation-circle text-red-600 text-xl"></i>
+            <span class="font-semibold">{{ session('error') }}</span>
+        </div>
+    @endif
+
     <!-- الهيدر -->
     <section class="rounded-2xl bg-white/95 backdrop-blur border-2 border-slate-200/50 shadow-xl overflow-hidden">
         <div class="px-5 py-6 sm:px-8 lg:px-12 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -228,6 +241,13 @@
                                        title="تعديل">
                                         <i class="fas fa-edit text-sm"></i>
                                     </a>
+                                    <form action="{{ route('admin.employee-agreements.destroy', $agreement) }}" method="POST" class="inline-block" onsubmit="return confirm('هل أنت متأكد من حذف هذه الاتفاقية؟');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="w-9 h-9 flex items-center justify-center bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors duration-200" title="حذف">
+                                            <i class="fas fa-trash text-sm"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

@@ -2421,45 +2421,7 @@
         </div>
     </section>
 
-    <!-- Learning Paths Section -->
-    @php
-        $landingPathsQuery = \App\Models\AcademicYear::where('is_active', true)
-            ->with(['linkedCourses' => function($q) {
-                $q->where('is_active', true);
-            }, 'academicSubjects' => function($q) {
-                $q->where('is_active', true);
-            }])
-            ->orderBy('order')
-            ->limit(12)
-            ->get();
-        $landingPaths = $landingPathsQuery->map(function($year) {
-            $linkedCourses = $year->linkedCourses ?? collect();
-            $subjectCourses = collect();
-            if ($year->academicSubjects && $year->academicSubjects->isNotEmpty()) {
-                $subjectIds = $year->academicSubjects->pluck('id')->toArray();
-                if (!empty($subjectIds)) {
-                    $subjectCourses = \App\Models\AdvancedCourse::where('is_active', true)
-                        ->whereIn('academic_subject_id', $subjectIds)
-                        ->get();
-                }
-            }
-            $courses = $linkedCourses->merge($subjectCourses)->unique('id');
-            $totalPrice = $courses->sum('price');
-            $slug = \Illuminate\Support\Str::slug($year->name);
-            $thumb = $year->thumbnail ? str_replace('\\', '/', $year->thumbnail) : null;
-            $imageUrl = $thumb ? asset('storage/' . $thumb) : null;
-            return (object)[
-                'id' => $year->id,
-                'name' => $year->name,
-                'description' => $year->description,
-                'slug' => $slug,
-                'price' => $totalPrice,
-                'courses_count' => $courses->count(),
-                'thumbnail' => $year->thumbnail,
-                'image_url' => $imageUrl,
-            ];
-        });
-    @endphp
+    <!-- Learning Paths Section: نفس بيانات صفحة المسارات (من الكونترولر) -->
     <section class="py-16 md:py-20 lg:py-24 bg-gradient-to-b from-white via-blue-50/40 to-white content-wrapper relative parallax-section overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12 fade-in-up">

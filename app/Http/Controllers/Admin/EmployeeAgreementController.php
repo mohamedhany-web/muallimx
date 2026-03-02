@@ -8,11 +8,11 @@ use App\Models\EmployeeSalaryDeduction;
 use App\Models\EmployeeSalaryPayment;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
-use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class EmployeeAgreementController extends Controller
 {
@@ -91,56 +91,84 @@ class EmployeeAgreementController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'employee_id' => 'required|exists:users,id',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'salary' => 'required|numeric|min:0',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'status' => 'required|in:draft,active,suspended,terminated,completed',
-            'contract_terms' => 'nullable|string',
-            'agreement_terms' => 'nullable|string',
-            'notes' => 'nullable|string',
-        ]);
-
         try {
+            $endDateRaw = $request->input('end_date');
+            $endDateNormalized = (is_string($endDateRaw) && trim($endDateRaw) !== '') ? trim($endDateRaw) : null;
+            $request->merge(['end_date' => $endDateNormalized]);
+
+            $validator = Validator::make($request->all(), [
+                'employee_id' => 'required|exists:users,id',
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'salary' => 'required|numeric|min:0',
+                'start_date' => 'required|date',
+                'end_date' => 'nullable|date',
+                'status' => 'required|in:draft,active,suspended,terminated,completed',
+                'contract_terms' => 'nullable|string',
+                'agreement_terms' => 'nullable|string',
+                'notes' => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->route('admin.employee-agreements.create')
+                    ->withInput()
+                    ->withErrors($validator);
+            }
+
+            $validated = $validator->validated();
+
+            if (!empty($validated['end_date']) && $validated['end_date'] < $validated['start_date']) {
+                return redirect()->route('admin.employee-agreements.create')
+                    ->withInput()
+                    ->withErrors(['end_date' => ['تاريخ الانتهاء يجب أن يكون في نفس تاريخ البدء أو بعده.']]);
+            }
+
             DB::beginTransaction();
 
             $agreement = EmployeeAgreement::create([
-                'employee_id' => $request->employee_id,
+                'employee_id' => $validated['employee_id'],
                 'agreement_number' => EmployeeAgreement::generateAgreementNumber(),
-                'title' => $request->title,
-                'description' => $request->description,
-                'salary' => $request->salary,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'status' => $request->status,
-                'contract_terms' => $request->contract_terms,
-                'agreement_terms' => $request->agreement_terms,
-                'notes' => $request->notes,
-                'created_by' => Auth::id(),
-            ]);
-
-            // تسجيل النشاط
-            ActivityLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'employee_agreement_created',
-                'model_type' => 'EmployeeAgreement',
-                'model_id' => $agreement->id,
-                'new_values' => $agreement->toArray(),
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'salary' => $validated['salary'],
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'] ?? null,
+                'status' => $validated['status'],
+                'contract_terms' => $validated['contract_terms'] ?? null,
+                'agreement_terms' => $validated['agreement_terms'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'created_by' => auth()->id(),
             ]);
 
             DB::commit();
 
-            return redirect()->route('admin.employee-agreements.show', $agreement)
+            return redirect()->route('admin.employee-agreements.index')
                 ->with('success', 'تم إنشاء الاتفاقية بنجاح');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error creating employee agreement: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'حدث خطأ أثناء إنشاء الاتفاقية');
+        } catch (\Throwable $e) {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+            $msg = $e->getMessage();
+            $file = $e->getFile();
+            $line = $e->getLine();
+            Log::error('Employee agreement store FAILED', [
+                'class' => get_class($e),
+                'message' => $msg,
+                'file' => $file,
+                'line' => $line,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $safeMsg = mb_substr($msg, 0, 500);
+            try {
+                return redirect()->to(url('/admin/employee-agreements/create'))
+                    ->with('error', 'خطأ عند الحفظ: ' . $safeMsg);
+            } catch (\Throwable $redirectEx) {
+                Log::error('Redirect failed after store error', [
+                    'message' => $redirectEx->getMessage(),
+                    'original' => $msg,
+                ]);
+                abort(500, 'خطأ عند الحفظ: ' . $safeMsg);
+            }
         }
     }
 
@@ -188,49 +216,52 @@ class EmployeeAgreementController extends Controller
      */
     public function update(Request $request, EmployeeAgreement $employeeAgreement)
     {
-        $validated = $request->validate([
+        $request->merge(['end_date' => trim((string) $request->input('end_date', '')) !== '' ? $request->input('end_date') : null]);
+
+        $validator = Validator::make($request->all(), [
             'employee_id' => 'required|exists:users,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'salary' => 'required|numeric|min:0',
             'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'end_date' => 'nullable|date',
             'status' => 'required|in:draft,active,suspended,terminated,completed',
             'contract_terms' => 'nullable|string',
             'agreement_terms' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
 
+        if ($validator->fails()) {
+            return redirect()->route('admin.employee-agreements.edit', $employeeAgreement)
+                ->withInput()
+                ->withErrors($validator);
+        }
+
+        $validated = $validator->validated();
+
+        if (!empty($validated['end_date']) && $validated['end_date'] < $validated['start_date']) {
+            return redirect()->route('admin.employee-agreements.edit', $employeeAgreement)
+                ->withInput()
+                ->withErrors(['end_date' => ['تاريخ الانتهاء يجب أن يكون في نفس تاريخ البدء أو بعده.']]);
+        }
+
         try {
             DB::beginTransaction();
-
-            $oldValues = $employeeAgreement->toArray();
             $employeeAgreement->update($validated);
-
-            // تسجيل النشاط (لا نوقف التحديث إذا فشل التسجيل)
-            try {
-                ActivityLog::create([
-                    'user_id' => Auth::id(),
-                    'action' => 'employee_agreement_updated',
-                    'model_type' => 'EmployeeAgreement',
-                    'model_id' => $employeeAgreement->id,
-                    'old_values' => $oldValues,
-                    'new_values' => $employeeAgreement->fresh()->toArray(),
-                    'ip_address' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                ]);
-            } catch (\Throwable $e) {
-                Log::warning('ActivityLog failed for employee agreement update: ' . $e->getMessage());
-            }
-
             DB::commit();
 
             return redirect()->route('admin.employee-agreements.show', $employeeAgreement)
                 ->with('success', 'تم تحديث الاتفاقية بنجاح');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            Log::error('Error updating employee agreement: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'حدث خطأ أثناء تحديث الاتفاقية');
+            Log::error('Employee agreement update failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return redirect()->route('admin.employee-agreements.edit', $employeeAgreement)
+                ->withInput()
+                ->with('error', 'خطأ عند الحفظ: ' . $e->getMessage());
         }
     }
 
@@ -240,31 +271,22 @@ class EmployeeAgreementController extends Controller
     public function destroy(EmployeeAgreement $employeeAgreement)
     {
         try {
-            // التحقق من وجود مدفوعات أو خصومات مرتبطة
             if ($employeeAgreement->payments()->where('status', 'paid')->exists()) {
-                return redirect()->back()
+                return redirect()->route('admin.employee-agreements.index')
                     ->with('error', 'لا يمكن حذف الاتفاقية لأنها تحتوي على مدفوعات مكتملة');
             }
 
-            $oldValues = $employeeAgreement->toArray();
             $employeeAgreement->delete();
-
-            // تسجيل النشاط
-            ActivityLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'employee_agreement_deleted',
-                'model_type' => 'EmployeeAgreement',
-                'model_id' => $employeeAgreement->id,
-                'old_values' => $oldValues,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
 
             return redirect()->route('admin.employee-agreements.index')
                 ->with('success', 'تم حذف الاتفاقية بنجاح');
-        } catch (\Exception $e) {
-            Log::error('Error deleting employee agreement: ' . $e->getMessage());
-            return back()->with('error', 'حدث خطأ أثناء حذف الاتفاقية');
+        } catch (\Throwable $e) {
+            Log::error('Error deleting employee agreement: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return redirect()->route('admin.employee-agreements.index')
+                ->with('error', 'حدث خطأ أثناء حذف الاتفاقية');
         }
     }
 
