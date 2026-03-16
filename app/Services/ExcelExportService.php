@@ -54,7 +54,7 @@ class ExcelExportService
             try {
                 $drawing = new Drawing();
                 $drawing->setName('Logo');
-                $drawing->setDescription('Mindlytics Logo');
+                $drawing->setDescription('Platform Logo');
                 $drawing->setPath($logoPath);
                 $drawing->setHeight(60);
                 $drawing->setWidth(60);
@@ -335,7 +335,7 @@ class ExcelExportService
 
         // حماية الورقة
         $this->sheet->getProtection()->setSheet(true);
-        $this->sheet->getProtection()->setPassword('mindlytics');
+        $this->sheet->getProtection()->setPassword('teacher_assist_platform');
         
         // إعداد Writer
         $writer = new Xlsx($this->spreadsheet);

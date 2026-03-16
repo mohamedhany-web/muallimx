@@ -10,36 +10,12 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      */
+    /**
+     * Schedule is defined in bootstrap/app.php via withSchedule().
+     */
     protected function schedule(Schedule $schedule): void
     {
-        // إرسال التقارير الشهرية في أول يوم من كل شهر
-        $schedule->command('reports:send-monthly')
-                 ->monthlyOn(1, '09:00')
-                 ->withoutOverlapping()
-                 ->runInBackground()
-                 ->emailOutputOnFailure(config('mail.admin_email'));
-
-        // تنظيف الرسائل القديمة (أكثر من 6 أشهر)
-        $schedule->call(function () {
-            \App\Models\WhatsAppMessage::where('created_at', '<', now()->subMonths(6))->delete();
-            \App\Models\ActivityLog::where('created_at', '<', now()->subMonths(3))->delete();
-        })->monthly()->withoutOverlapping();
-
-        // تحديث إحصائيات المنصة يومياً
-        $schedule->call(function () {
-            // تحديث إحصائيات المستخدمين النشطين
-            cache()->remember('active_users_today', 3600, function () {
-                return \App\Models\ActivityLog::whereDate('created_at', today())
-                    ->distinct('user_id')
-                    ->count();
-            });
-        })->daily();
-
-        // معالجة حالات الأقساط وإرسال التذكيرات يومياً
-        $schedule->command('installments:process')
-                 ->dailyAt('08:00')
-                 ->runInBackground()
-                 ->withoutOverlapping();
+        //
     }
 
     /**

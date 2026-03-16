@@ -99,13 +99,6 @@
             <div class="text-xl font-bold text-slate-800">{{ $stats['total_students'] }}</div>
             <div class="text-xs text-slate-600 font-medium mt-1">{{ __('instructor.student_single') }}</div>
         </div>
-        <div class="stats-mini-card rounded-xl p-4 text-center">
-            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-2">
-                <i class="fas fa-users text-sm"></i>
-            </div>
-            <div class="text-xl font-bold text-slate-800">{{ $stats['total_groups'] }}</div>
-            <div class="text-xs text-slate-600 font-medium mt-1">{{ __('instructor.group_single') }}</div>
-        </div>
     </div>
 
     <!-- التبويبات -->
@@ -142,11 +135,6 @@
                         :class="activeTab === 'students' ? 'tab-button active' : 'tab-button'"
                         class="px-3 py-2.5 text-sm font-medium text-slate-600 hover:text-sky-600 transition-colors rounded-lg hover:bg-white">
                     <i class="fas fa-user-graduate ml-2"></i> {{ __('instructor.students') }}
-                </button>
-                <button @click="activeTab = 'groups'" 
-                        :class="activeTab === 'groups' ? 'tab-button active' : 'tab-button'"
-                        class="px-3 py-2.5 text-sm font-medium text-slate-600 hover:text-sky-600 transition-colors rounded-lg hover:bg-white">
-                    <i class="fas fa-users ml-2"></i> {{ __('instructor.groups') }}
                 </button>
                 <button @click="activeTab = 'attendance'" 
                         :class="activeTab === 'attendance' ? 'tab-button active' : 'tab-button'"
@@ -277,13 +265,6 @@
                                         <i class="fas fa-tasks text-sm"></i>
                                     </div>
                                     <span class="font-bold text-slate-800 text-sm">{{ __('instructor.create_assignment') }}</span>
-                                </a>
-                                <a href="{{ route('instructor.groups.create', ['course_id' => $course->id]) }}" 
-                                   class="flex items-center gap-3 p-3 bg-gradient-to-r from-green-500/10 to-emerald-500/10 hover:from-green-500/20 hover:to-emerald-500/20 rounded-xl border border-green-500/20 transition-all">
-                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white shadow-md">
-                                        <i class="fas fa-users text-sm"></i>
-                                    </div>
-                                    <span class="font-bold text-slate-800 text-sm">{{ __('instructor.create_group') }}</span>
                                 </a>
                             </div>
                         </div>
@@ -611,59 +592,6 @@
                         </div>
                         <p class="text-lg font-black text-slate-800 mb-2">{{ __('instructor.no_enrolled_students') }}</p>
                         <p class="text-sm text-slate-600 font-medium">{{ __('instructor.no_enrolled_description') }}</p>
-                    </div>
-                @endif
-            </div>
-
-            <!-- تبويب المجموعات -->
-            <div x-show="activeTab === 'groups'" x-transition style="display: none;">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg sm:text-xl font-black text-slate-800 flex items-center gap-2">
-                        <i class="fas fa-users text-green-600"></i>
-                        {{ __('instructor.groups') }} ({{ $groups->count() }})
-                    </h3>
-                    <a href="{{ route('instructor.groups.create') }}" 
-                       class="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-emerald-600 hover:to-green-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-green-500/30 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                        <i class="fas fa-plus"></i>
-                        <span>{{ __('instructor.create_group') }}</span>
-                    </a>
-                </div>
-                @if($groups->count() > 0)
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        @foreach($groups as $group)
-                        <div class="content-card rounded-xl p-5">
-                            <div class="flex items-center justify-between mb-3">
-                                <h4 class="font-black text-slate-800">{{ $group->name }}</h4>
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-md {{ $group->status == 'active' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white' : 'bg-amber-500 text-white' }}">
-                                    {{ $group->status == 'active' ? __('instructor.active') : __('instructor.inactive') }}
-                                </span>
-                            </div>
-                            <div class="space-y-2 text-sm mb-4">
-                                <div class="flex items-center gap-2">
-                                    <i class="fas fa-users text-green-600"></i>
-                                    <span class="text-slate-600 font-medium">{{ __('instructor.members_label') }}:</span>
-                                    <span class="text-slate-800 font-bold">{{ $group->members_count ?? 0 }} / {{ $group->max_members ?? __('instructor.unlimited') }}</span>
-                                </div>
-                            </div>
-                            <a href="{{ route('instructor.groups.show', $group) }}" 
-                               class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-emerald-600 hover:to-green-700 text-white px-4 py-2.5 rounded-xl font-bold shadow-lg shadow-green-500/30 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                                <i class="fas fa-eye"></i>
-                                <span>{{ __('instructor.view_details') }}</span>
-                            </a>
-                        </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-12">
-                        <div class="w-24 h-24 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-users text-4xl text-green-600"></i>
-                        </div>
-                        <p class="text-lg font-black text-slate-800 mb-2">{{ __('instructor.no_groups') }}</p>
-                        <a href="{{ route('instructor.groups.create') }}" 
-                           class="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-500/30 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                            <i class="fas fa-plus"></i>
-                            {{ __('instructor.create_new_group') }}
-                        </a>
                     </div>
                 @endif
             </div>

@@ -21,7 +21,7 @@
         <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div>
                 <div class="flex items-center gap-3 flex-wrap">
-                    <h1 class="text-3xl font-black tracking-tight">{{ $student->name ?? 'طالب غير معروف' }}</h1>
+                    <h1 class="text-3xl font-black tracking-tight">{{ $student->name ?? 'معلم غير معروف' }}</h1>
                     <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold
                         @class([
                             'bg-emerald-100 text-emerald-700' => $agreement->status === \App\Models\InstallmentAgreement::STATUS_ACTIVE,
@@ -77,10 +77,10 @@
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div class="xl:col-span-2 space-y-6">
             <div class="bg-white.dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 p-6 space-y-6">
-                <h2 class="text-lg font-black text-gray-900">تفاصيل الطالب والكورس</h2>
+                <h2 class="text-lg font-black text-gray-900">تفاصيل المعلم والكورس</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                     <div>
-                        <p class="text-xs text-gray-500 uppercase">اسم الطالب</p>
+                        <p class="text-xs text-gray-500 uppercase">اسم المعلم</p>
                         <p class="mt-2 text-base font-semibold text-gray-900">{{ $student->name ?? 'غير متوفر' }}</p>
                         <p class="text-xs text-gray-500">{{ $student->phone ?? 'بدون هاتف' }} · {{ $student->email ?? 'بدون بريد' }}</p>
                     </div>

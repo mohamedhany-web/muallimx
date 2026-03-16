@@ -132,7 +132,7 @@
                                     <option value="">اختر الدور</option>
                                     <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>إداري</option>
                                     <option value="instructor" {{ old('role') == 'instructor' ? 'selected' : '' }}>مدرس</option>
-                                    <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>طالب</option>
+                                    <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>{{ __('admin.student_role_label') }}</option>
                                 </select>
                                 @error('role')<p class="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>@enderror
                             </div>
@@ -164,7 +164,7 @@
                                 </li>
                                 <li class="flex items-start gap-2.5">
                                     <i class="fas fa-graduation-cap text-indigo-600 mt-0.5 flex-shrink-0"></i>
-                                    <div><strong class="text-indigo-900">طالب:</strong> الوصول للكورسات، أداء الواجبات والامتحانات.</div>
+                                    <div><strong class="text-indigo-900">{{ __('admin.student_role_label') }}:</strong> الوصول للكورسات، أداء الواجبات والامتحانات.</div>
                                 </li>
                             </ul>
                         </div>

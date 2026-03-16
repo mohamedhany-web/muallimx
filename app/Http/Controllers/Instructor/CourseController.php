@@ -96,15 +96,6 @@ class CourseController extends Controller
             ->latest()
             ->paginate(20, ['*'], 'students_page');
 
-        // المجموعات
-        $groups = \App\Models\Group::whereHas('course', function($q) use ($course) {
-                $q->where('id', $course->id);
-            })
-            ->with(['course', 'members'])
-            ->withCount('members')
-            ->latest()
-            ->get();
-
         // إحصائيات شاملة (محاضرات فقط — تم إلغاء الدروس)
         $stats = [
             'total_lectures' => \App\Models\Lecture::where('course_id', $course->id)->count(),
@@ -129,7 +120,6 @@ class CourseController extends Controller
                 ->whereNull('graded_at')
                 ->count(),
             'total_students' => $enrollments->total(),
-            'total_groups' => $groups->count(),
             'total_attendance_records' => \App\Models\AttendanceRecord::whereHas('lecture', function($q) use ($course) {
                     $q->where('course_id', $course->id);
                 })->count(),
@@ -141,7 +131,6 @@ class CourseController extends Controller
             'lectures', 
             'exams', 
             'assignments', 
-            'groups', 
             'stats'
         ));
     }

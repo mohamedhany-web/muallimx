@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('content')
 <div class="p-6 bg-gray-50 min-h-screen">
@@ -124,7 +124,7 @@
                             </div>
                             <div class="text-sm text-gray-600 flex items-center gap-2">
                                 <i class="fas fa-user-tag text-sky-600"></i>
-                                <span>{{ $message->user->role === 'student' ? __('طالب') : __('ولي أمر') }}</span>
+                                <span>{{ $message->user->role === 'student' ? __('admin.student_role_label') : __('ولي أمر') }}</span>
                             </div>
                         </div>
                     </div>

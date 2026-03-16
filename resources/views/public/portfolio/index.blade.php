@@ -1,98 +1,287 @@
-@extends('layouts.public')
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+@endphp
+<!DOCTYPE html>
+<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+    <title>{{ __('public.portfolio_page_title') }} - {{ __('public.site_suffix') }}</title>
+    <meta name="description" content="{{ __('public.portfolio_subtitle') }}">
+    <meta name="theme-color" content="#0F172A">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config={theme:{extend:{colors:{navy:{50:'#f0f4ff',100:'#dbe4ff',200:'#bac8ff',300:'#91a7ff',400:'#748ffc',500:'#5c7cfa',600:'#4c6ef5',700:'#4263eb',800:'#3b5bdb',900:'#364fc7',950:'#0F172A'},brand:{50:'#ecfeff',100:'#cffafe',200:'#a5f3fc',300:'#67e8f9',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',700:'#0e7490',800:'#155e75',900:'#164e63'}},fontFamily:{heading:['Tajawal','IBM Plex Sans Arabic','sans-serif'],body:['IBM Plex Sans Arabic','Tajawal','sans-serif']}}}}
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        [x-cloak]{display:none!important}
+        *{font-family:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
+        h1,h2,h3,h4,h5,h6,.font-heading{font-family:'Tajawal','IBM Plex Sans Arabic',sans-serif}
+        html{scroll-behavior:smooth;overflow-x:hidden!important}
+        body{overflow-x:hidden!important;background:#fff;min-height:100vh;display:flex;flex-direction:column}
+        body>*{flex-shrink:0}
+        .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+        .reveal.revealed{opacity:1;transform:translateY(0)}
+        .stagger-1{transition-delay:.05s}.stagger-2{transition-delay:.1s}.stagger-3{transition-delay:.15s}.stagger-4{transition-delay:.2s}
+        .text-gradient{background:linear-gradient(135deg,#06b6d4 0%,#3b82f6 50%,#8b5cf6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .btn-primary{position:relative;overflow:hidden;transition:all .4s cubic-bezier(.16,1,.3,1)}
+        .btn-primary::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .6s}
+        .btn-primary:hover::before{left:100%}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 20px 40px -12px rgba(6,182,212,.4)}
+        .btn-outline{transition:all .3s cubic-bezier(.16,1,.3,1)}
+        .btn-outline:hover{transform:translateY(-2px);box-shadow:0 10px 30px -10px rgba(15,23,42,.2)}
+        .card-hover{transition:all .4s cubic-bezier(.16,1,.3,1)}
+        .card-hover:hover{transform:translateY(-8px);box-shadow:0 25px 60px -15px rgba(0,0,0,.15)}
+        .noise::after{content:'';position:absolute;inset:0;opacity:.02;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none}
+        #scroll-progress{position:fixed;top:0;left:0;width:0%;height:3px;background:linear-gradient(90deg,#06b6d4,#3b82f6,#8b5cf6);z-index:9999;transition:width .1s linear}
+        .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        @media(max-width:768px){.reveal{transition-duration:.5s}.stagger-1,.stagger-2,.stagger-3,.stagger-4{transition-delay:0s}}
+    </style>
+</head>
+<body class="bg-white text-navy-950 antialiased font-body">
+    <div id="scroll-progress"></div>
+    @include('components.unified-navbar')
+    <style>.navbar-spacer{display:none}</style>
+    <script>(function(){var n=document.getElementById('navbar');if(n){n.classList.add('nav-transparent');n.classList.remove('nav-solid');}})();</script>
 
-@section('title', __('public.portfolio_page_title'))
+    <main class="flex-1">
+        {{-- ══════ HERO ══════ --}}
+        <section class="relative min-h-[60vh] flex items-center overflow-hidden bg-navy-950 noise">
+            <div class="absolute inset-0 bg-gradient-to-br from-navy-950 via-[#0c1833] to-navy-950"></div>
+            <div class="absolute top-[-20%] {{ $isRtl?'left-[-10%]':'right-[-10%]' }} w-[600px] h-[600px] rounded-full bg-purple-500/10 blur-[120px]"></div>
+            <div class="absolute bottom-[-10%] {{ $isRtl?'right-[-5%]':'left-[-5%]' }} w-[500px] h-[500px] rounded-full bg-brand-600/8 blur-[100px]"></div>
+            <div class="absolute inset-0 opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.3) 1px,transparent 0);background-size:40px 40px"></div>
 
-@section('content')
-<section class="py-8 md:py-12 bg-gradient-to-b from-slate-50 to-white w-full" style="padding-top: 6rem;">
-    <div class="w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
-        <div class="mb-10 md:mb-12 text-center">
-            <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 mb-2" style="font-family: 'Tajawal', 'Cairo', sans-serif;">
-                Mindlytics <span class="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">{{ __('public.portfolio_heading') }}</span>
-            </h1>
-            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-                {{ __('public.portfolio_subtitle') }}
-            </p>
-        </div>
+            <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-28 pb-16 md:pt-36 md:pb-20 w-full">
+                <div class="text-center max-w-4xl mx-auto">
+                    <div class="reveal">
+                        <span class="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white/[0.06] border border-white/[0.1] text-brand-300 text-sm font-medium backdrop-blur-sm">
+                            <i class="fas fa-code text-brand-400"></i>
+                            {{ __('public.portfolio_page_title') }}
+                        </span>
+                    </div>
+                    <h1 class="reveal stagger-1 font-heading text-4xl sm:text-5xl md:text-6xl font-black leading-[1.15] text-white mt-6">
+                        {{ __('public.portfolio_heading') }}
+                    </h1>
+                    <p class="reveal stagger-2 text-lg sm:text-xl text-slate-300/90 max-w-2xl mx-auto leading-relaxed font-light mt-5">
+                        {{ __('public.portfolio_subtitle') }}
+                    </p>
 
-        <div class="flex flex-col lg:flex-row gap-8 lg:gap-10">
-            <aside class="lg:w-72 xl:w-64 flex-shrink-0">
-                <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sticky top-24">
-                    <h2 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <i class="fas fa-route text-blue-600"></i>
-                        {{ __('public.learning_paths_sidebar') }}
-                    </h2>
-                    <ul class="space-y-1">
-                        <li>
-                            <a href="{{ route('public.portfolio.index') }}" class="block px-4 py-3 rounded-xl text-sm font-medium transition-all {{ !$categoryId ? 'bg-blue-600/10 text-blue-900 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-100' }}">
-                                <i class="fas fa-th-large ml-2 text-blue-600"></i>
-                                {{ __('public.all') }}
-                            </a>
-                        </li>
+                    {{-- Category filter pills --}}
+                    @if($learningPaths->count() > 0)
+                    <div class="reveal stagger-3 mt-10 flex flex-wrap justify-center gap-2.5">
+                        <a href="{{ route('public.portfolio.index') }}"
+                           class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 {{ !$categoryId ? 'bg-gradient-to-l from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-600/25' : 'bg-white/[0.06] border border-white/[0.1] text-white/80 hover:bg-white/[0.12] backdrop-blur-sm' }}">
+                            <i class="fas fa-th-large {{ $isRtl?'ml-1.5':'mr-1.5' }} text-xs"></i>{{ __('public.all') }}
+                        </a>
                         @foreach($learningPaths as $path)
-                            <li>
-                                <a href="{{ route('public.portfolio.index', ['path' => $path->id]) }}" class="block px-4 py-3 rounded-xl text-sm font-medium transition-all {{ $categoryId == $path->id ? 'bg-blue-600/10 text-blue-900 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-100' }}">
-                                    <i class="fas fa-folder ml-2 text-gray-400"></i>
-                                    {{ $path->name }}
-                                </a>
-                            </li>
+                        <a href="{{ route('public.portfolio.index', ['path' => $path->id]) }}"
+                           class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 {{ $categoryId == $path->id ? 'bg-gradient-to-l from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-600/25' : 'bg-white/[0.06] border border-white/[0.1] text-white/80 hover:bg-white/[0.12] backdrop-blur-sm' }}">
+                            {{ $path->name }}
+                        </a>
                         @endforeach
-                    </ul>
-                </div>
-            </aside>
+                    </div>
+                    @endif
 
-            <!-- المشاريع - عرض كامل -->
-            <div class="flex-1 min-w-0 w-full">
+                    {{-- Stats --}}
+                    <div class="reveal stagger-4 flex flex-wrap justify-center gap-6 mt-8">
+                        <div class="flex items-center gap-2 text-white/70 text-sm">
+                            <span class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center"><i class="fas fa-project-diagram text-purple-400 text-xs"></i></span>
+                            <span><span class="font-bold text-white">{{ $projects->total() }}</span> مشروع</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
+        </section>
+
+        {{-- ══════ PROJECTS GRID ══════ --}}
+        <section class="py-20 md:py-28 bg-white">
+            <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
                 @if($projects->count() > 0)
-                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 lg:gap-8">
-                        @foreach($projects as $project)
-                            <a href="{{ route('public.portfolio.show', $project->id) }}" class="group block bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl hover:border-blue-500/30 transition-all duration-300">
-                                @if($project->image_path)
-                                    <div class="aspect-video bg-gray-100 overflow-hidden">
-                                        <img src="{{ asset($project->image_path) }}" alt="{{ $project->title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
-                                    </div>
-                                @else
-                                    <div class="aspect-video bg-gradient-to-br from-blue-500/20 to-green-500/20 flex items-center justify-center">
-                                        <i class="fas fa-code text-4xl text-blue-500/60"></i>
-                                    </div>
-                                @endif
-                                <div class="p-5">
-                                    <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">{{ $project->title }}</h3>
-                                    <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ Str::limit(strip_tags($project->description ?? ''), 80) }}</p>
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-2">
-                                            @if($project->user->profile_image)
-                                                <img src="{{ $project->user->profile_image_url }}" alt="" class="w-8 h-8 rounded-full object-cover">
-                                            @else
-                                                <span class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">{{ mb_substr($project->user->name ?? 'ط', 0, 1) }}</span>
-                                            @endif
-                                            <span class="text-sm font-medium text-gray-700">{{ $project->user->name ?? __('public.student_fallback') }}</span>
-                                        </div>
-                                        @if($project->academicYear)
-                                            <span class="text-xs font-medium text-blue-600 bg-blue-600/10 px-2.5 py-1 rounded-lg">{{ $project->academicYear->name }}</span>
-                                        @endif
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                    @foreach($projects as $idx => $project)
+                    <a href="{{ route('public.portfolio.show', $project->id) }}"
+                       class="reveal stagger-{{ min($idx + 1, 4) }} card-hover group block rounded-3xl bg-white border border-slate-100 overflow-hidden shadow-sm">
+
+                        {{-- Image --}}
+                        <div class="relative aspect-video overflow-hidden bg-gradient-to-br from-purple-500 via-blue-500 to-brand-600">
+                            @if($project->image_path)
+                                <img src="{{ asset($project->image_path) }}" alt="{{ $project->title }}"
+                                     class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" loading="lazy">
+                            @else
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                                        <i class="fas fa-code text-white/70 text-2xl"></i>
                                     </div>
                                 </div>
-                            </a>
-                        @endforeach
-                    </div>
-                    <div class="mt-8">
-                        {{ $projects->withQueryString()->links() }}
-                    </div>
-                @else
-                    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-12 text-center">
-                        <div class="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-folder-open text-4xl text-blue-600"></i>
+                            @endif
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+
+                            {{-- Project type badge --}}
+                            @if($project->project_type)
+                            <span class="absolute top-3 {{ $isRtl?'right':'left' }}-3 px-3 py-1.5 rounded-lg bg-purple-500/90 text-white text-[11px] font-bold shadow-lg backdrop-blur-sm">
+                                {{ $project->project_type }}
+                            </span>
+                            @endif
+
+                            {{-- Links --}}
+                            <div class="absolute bottom-3 {{ $isRtl?'right':'left' }}-3 flex gap-2">
+                                @if($project->project_url)
+                                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur text-navy-800 text-[11px] font-bold shadow-sm">
+                                    <i class="fas fa-external-link-alt text-brand-500 text-[9px]"></i> رابط حي
+                                </span>
+                                @endif
+                                @if($project->github_url)
+                                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur text-navy-800 text-[11px] font-bold shadow-sm">
+                                    <i class="fab fa-github text-[10px]"></i> GitHub
+                                </span>
+                                @endif
+                            </div>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-2">{{ __('public.no_projects_yet') }}</h3>
-                        <p class="text-gray-600 mb-6">{{ __('public.no_projects_desc') }}</p>
-                        <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all">
-                            <i class="fas fa-book"></i>
+
+                        {{-- Body --}}
+                        <div class="p-5 sm:p-6">
+                            {{-- Course tag --}}
+                            @if($project->advancedCourse)
+                            <div class="mb-3">
+                                <span class="inline-flex items-center gap-1.5 text-[11px] text-brand-700 bg-brand-50 px-3 py-1 rounded-full font-semibold">
+                                    <i class="fas fa-graduation-cap text-[9px] text-brand-500"></i>
+                                    {{ $project->advancedCourse->title }}
+                                </span>
+                            </div>
+                            @elseif($project->academicYear)
+                            <div class="mb-3">
+                                <span class="inline-flex items-center gap-1.5 text-[11px] text-purple-700 bg-purple-50 px-3 py-1 rounded-full font-semibold">
+                                    <i class="fas fa-bookmark text-[9px] text-purple-500"></i>
+                                    {{ $project->academicYear->name }}
+                                </span>
+                            </div>
+                            @endif
+
+                            <h3 class="font-heading text-lg font-bold text-navy-950 mb-2 line-clamp-2 leading-snug group-hover:text-brand-600 transition-colors duration-300">
+                                {{ $project->title }}
+                            </h3>
+                            <p class="text-[13px] text-slate-500 leading-relaxed line-clamp-2 mb-5">
+                                {{ Str::limit(strip_tags($project->description ?? ''), 100) }}
+                            </p>
+
+                            {{-- Author + CTA --}}
+                            <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    @if($project->user->profile_image ?? null)
+                                        <img src="{{ $project->user->profile_image_url }}" alt="" class="w-8 h-8 rounded-lg object-cover flex-shrink-0">
+                                    @else
+                                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center flex-shrink-0">
+                                            <span class="text-white text-xs font-bold">{{ mb_substr($project->user->name ?? 'ط', 0, 1) }}</span>
+                                        </div>
+                                    @endif
+                                    <span class="text-sm font-medium text-navy-950 truncate">{{ $project->user->name ?? __('public.student_fallback') }}</span>
+                                </div>
+                                <span class="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-brand-50 flex items-center justify-center transition-colors flex-shrink-0">
+                                    <i class="fas fa-arrow-{{ $isRtl?'left':'right' }} text-[10px] text-slate-400 group-hover:text-brand-500 transition-colors"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                    @endforeach
+                </div>
+
+                {{-- Pagination --}}
+                @if($projects->hasPages())
+                <div class="mt-12 flex justify-center">
+                    <nav class="flex items-center gap-2">
+                        @if($projects->onFirstPage())
+                            <span class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-sm cursor-not-allowed">
+                                <i class="fas fa-chevron-{{ $isRtl?'right':'left' }}"></i>
+                            </span>
+                        @else
+                            <a href="{{ $projects->previousPageUrl() }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-brand-300 text-navy-950 flex items-center justify-center text-sm transition-colors">
+                                <i class="fas fa-chevron-{{ $isRtl?'right':'left' }}"></i>
+                            </a>
+                        @endif
+
+                        @foreach($projects->getUrlRange(max(1, $projects->currentPage()-2), min($projects->lastPage(), $projects->currentPage()+2)) as $page => $url)
+                            @if($page == $projects->currentPage())
+                                <span class="w-10 h-10 rounded-xl bg-gradient-to-l from-brand-500 to-brand-600 text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-brand-600/20">{{ $page }}</span>
+                            @else
+                                <a href="{{ $url }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-brand-300 text-navy-950 flex items-center justify-center text-sm font-medium transition-colors">{{ $page }}</a>
+                            @endif
+                        @endforeach
+
+                        @if($projects->hasMorePages())
+                            <a href="{{ $projects->nextPageUrl() }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-brand-300 text-navy-950 flex items-center justify-center text-sm transition-colors">
+                                <i class="fas fa-chevron-{{ $isRtl?'left':'right' }}"></i>
+                            </a>
+                        @else
+                            <span class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-sm cursor-not-allowed">
+                                <i class="fas fa-chevron-{{ $isRtl?'left':'right' }}"></i>
+                            </span>
+                        @endif
+                    </nav>
+                </div>
+                @endif
+
+                @else
+                {{-- Empty state --}}
+                <div class="text-center py-20 reveal">
+                    <div class="max-w-md mx-auto">
+                        <div class="w-24 h-24 bg-gradient-to-br from-purple-50 to-brand-50 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+                            <i class="fas fa-folder-open text-purple-400 text-4xl"></i>
+                        </div>
+                        <h3 class="font-heading text-2xl font-bold text-navy-950 mb-3">{{ __('public.no_projects_yet') }}</h3>
+                        <p class="text-slate-500 mb-8 leading-relaxed">{{ __('public.no_projects_desc') }}</p>
+                        <a href="{{ route('public.courses') }}" class="btn-primary inline-flex items-center gap-2.5 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-7 py-3.5 rounded-2xl font-bold shadow-xl shadow-brand-600/25">
+                            <i class="fas fa-book-open"></i>
                             {{ __('public.browse_courses') }}
                         </a>
                     </div>
+                </div>
                 @endif
             </div>
-        </div>
-    </div>
-</section>
-@endsection
+        </section>
+
+        {{-- ══════ CTA ══════ --}}
+        <section class="py-20 md:py-28 bg-slate-50/50">
+            <div class="max-w-4xl mx-auto px-5 sm:px-8 text-center reveal">
+                <span class="inline-block px-4 py-1.5 rounded-full bg-purple-50 text-purple-600 text-sm font-semibold mb-5">أظهر إبداعك</span>
+                <h2 class="font-heading text-3xl sm:text-4xl md:text-5xl font-black text-navy-950 mb-5 leading-tight">
+                    لديك مشروع؟
+                    <span class="text-gradient">شاركه مع العالم</span>
+                </h2>
+                <p class="text-lg text-slate-500 mb-10 font-medium leading-relaxed max-w-2xl mx-auto">
+                    سجّل في كورساتنا وأضف مشاريعك لمعرض الأعمال ليراها الجميع
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{{ route('public.courses') }}" class="btn-primary inline-flex items-center justify-center gap-3 bg-gradient-to-l from-brand-500 to-brand-600 text-white font-bold text-base sm:text-lg px-8 py-4 rounded-2xl shadow-xl shadow-brand-600/25">
+                        تصفّح الكورسات
+                        <i class="fas fa-arrow-{{ $isRtl?'left':'right' }} text-sm"></i>
+                    </a>
+                    <a href="{{ route('register') }}" class="btn-outline inline-flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-brand-300 text-navy-950 font-semibold text-base sm:text-lg px-8 py-4 rounded-2xl">
+                        سجّل مجاناً
+                        <i class="fas fa-arrow-{{ $isRtl?'left':'right' }} text-sm"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    @include('components.unified-footer')
+    <script>
+    (function(){
+        function p(){var s=window.pageYOffset||document.documentElement.scrollTop,h=document.documentElement.scrollHeight-window.innerHeight,b=document.getElementById('scroll-progress');if(b)b.style.width=(h>0?(s/h)*100:0)+'%';}
+        window.addEventListener('scroll',p,{passive:true});
+        function r(){var t=document.querySelectorAll('.reveal');if(!t.length)return;var o=new IntersectionObserver(function(e){e.forEach(function(n){if(n.isIntersecting){n.target.classList.add('revealed');o.unobserve(n.target);}});},{threshold:.08,rootMargin:'0px 0px -40px 0px'});t.forEach(function(el){o.observe(el);});}
+        if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',r);else r();
+    })();
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'تفاصيل الاشتراك')
 @section('header', 'تفاصيل الاشتراك')
@@ -6,14 +6,14 @@
 @section('content')
 @php
     $statusBadge = [
-        'active' => 'bg-emerald-100 text-emerald-700']
-        'expired' => 'bg-rose-100 text-rose-700']
-        'cancelled' => 'bg-amber-100 text-amber-700
+        'active' => 'bg-emerald-100 text-emerald-700',
+        'expired' => 'bg-rose-100 text-rose-700',
+        'cancelled' => 'bg-amber-100 text-amber-700',
     ];
 @endphp
 <div class="container mx-auto px-4 py-8 space-y-8">
     <div class="bg-gradient-to-br from-sky-500 via-sky-600 to-purple-600 rounded-3xl shadow-xl text-white p-8 relative overflow-hidden">
-        <div class="absolute inset-y-0 right-0 w-1/3 pointer-events-none opacity-20">']
+        <div class="absolute inset-y-0 right-0 w-1/3 pointer-events-none opacity-20">
             <div class="w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
         </div>
         <div class="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -76,13 +76,17 @@
                         <p class="mt-2 text-base font-semibold text-gray-900">{{ \App\Models\Subscription::billingCycleLabel($subscription->billing_cycle) }}</p>
                     </div>
                     <div>
+                        <p class="text-xs text-gray-500 uppercase">مدة الباقة</p>
+                        <p class="mt-2 text-base font-semibold text-gray-900">{{ \App\Models\Subscription::getDurationLabel($subscription->billing_cycle) }}</p>
+                    </div>
+                    <div>
                         <p class="text-xs text-gray-500 uppercase">السعر</p>
                         <p class="mt-2 text-2xl font-black text-gray-900">{{ number_format($subscription->price, 2) }} ج.م</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 uppercase">حالة التجديد التلقائي</p>
                         <p class="mt-2">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $subscription->auto_renew ? 'bg-emerald-100 text-emerald-700 ': ''bg-gray-100 text-gray-700 }}">']
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $subscription->auto_renew ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700' }}">
                                 {{ $subscription->auto_renew ? 'مفعل' : 'غير مفعل' }}
                             </span>
                         </p>
@@ -98,10 +102,11 @@
                         <p class="mt-2 text-base font-bold text-gray-900">{{ $subscription->start_date?->format('Y-m-d') ?? 'غير متوفر' }}</p>
                     </div>
                     <div class="p-4 rounded-2xl border border-sky-100 bg-sky-50/80">
-                        <p class="text-xs text-sky-600 font-semibold uppercase tracking-wide">المدة الكلية</p>
+                        <p class="text-xs text-sky-600 font-semibold uppercase tracking-wide">المدة الكلية (من التفعيل حتى الانتهاء)</p>
                         <p class="mt-2 text-base font-bold text-gray-900">
                             @if($subscription->start_date && $subscription->end_date)
                                 {{ $subscription->start_date->diffInDays($subscription->end_date) }} يوم
+                                <span class="text-gray-500 font-normal text-sm">({{ \App\Models\Subscription::getDurationLabel($subscription->billing_cycle) }})</span>
                             @else
                                 غير محدد
                             @endif

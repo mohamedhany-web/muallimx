@@ -101,7 +101,7 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">الطالب</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">المعلم</th>
                                     <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">التاريخ</th>
                                     <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">الدرجة</th>
                                     <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">الحالة</th>

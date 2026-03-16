@@ -47,7 +47,6 @@ class VerifyCourseDeleteCommand extends Command
             'exams' => 'advanced_course_id',
             'assignments' => 'advanced_course_id',
             'course_sections' => 'advanced_course_id',
-            'learning_patterns' => 'advanced_course_id',
             'installment_plans' => 'advanced_course_id',
             'installment_agreements' => 'advanced_course_id',
             'package_course' => 'course_id',

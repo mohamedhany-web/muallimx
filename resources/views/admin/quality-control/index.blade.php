@@ -108,14 +108,10 @@
     <!-- العمليات المعلقة -->
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
         <h2 class="text-xl font-bold text-gray-900 mb-4">العمليات المعلقة</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
                 <p class="text-sm text-gray-600 mb-1">تسجيلات أونلاين معلقة</p>
                 <p class="text-2xl font-bold text-yellow-700">{{ $pendingOperations['pending_enrollments'] }}</p>
-            </div>
-            <div class="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
-                <p class="text-sm text-gray-600 mb-1">تسجيلات أوفلاين معلقة</p>
-                <p class="text-2xl font-bold text-yellow-700">{{ $pendingOperations['pending_offline_enrollments'] }}</p>
             </div>
             <div class="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
                 <p class="text-sm text-gray-600 mb-1">مهام موظفين معلقة</p>

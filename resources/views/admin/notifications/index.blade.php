@@ -282,7 +282,7 @@
                             <option value="">اختر المستهدفين</option>
                             <option value="all_students">جميع الطلاب</option>
                         </select>
-                        <p class="mt-2 text-xs text-slate-600">سيتم الإرسال إلى <span id="quick-target-count" class="font-semibold text-blue-600">0</span> طالب.</p>
+                        <p class="mt-2 text-xs text-slate-600">سيتم الإرسال إلى <span id="quick-target-count" class="font-semibold text-blue-600">0</span> معلم.</p>
                     </div>
                     <div class="md:col-span-2">
                         <label class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">

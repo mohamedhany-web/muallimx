@@ -94,7 +94,7 @@
                 <i class="fas fa-filter text-blue-600"></i>
                 البحث والفلترة
             </h3>
-            <p class="text-xs text-slate-600 mt-1">فلترة الطلبات حسب الحالة، طريقة الدفع، أو بيانات الطالب.</p>
+            <p class="text-xs text-slate-600 mt-1">فلترة الطلبات حسب الحالة، طريقة الدفع، أو بيانات المعلم.</p>
         </div>
         <div class="p-6">
             <form method="GET" id="filterForm" class="flex flex-col gap-4 lg:flex-row lg:items-end lg:flex-wrap">
@@ -105,7 +105,7 @@
                     </label>
                     <div class="relative">
                         <span class="absolute inset-y-0 right-3 flex items-center text-blue-500 pointer-events-none"><i class="fas fa-search"></i></span>
-                        <input type="text" name="search" value="{{ old('search', request('search')) }}" maxlength="255" placeholder="اسم الطالب، البريد، الهاتف، أو اسم الكورس" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 pl-10 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                        <input type="text" name="search" value="{{ old('search', request('search')) }}" maxlength="255" placeholder="اسم المعلم، البريد، الهاتف، أو اسم الكورس" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 pl-10 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                     </div>
                 </div>
                 <div class="w-full sm:w-auto min-w-[180px]">
@@ -348,7 +348,7 @@
 
     document.querySelectorAll('.approve-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            if (!confirm('هل أنت متأكد من الموافقة على هذا الطلب؟\nسيتم تفعيل الكورس للطالب تلقائياً.')) return;
+            if (!confirm('هل أنت متأكد من الموافقة على هذا الطلب؟\nسيتم تفعيل الكورس للمعلم تلقائياً.')) return;
             sendRequest(btn.getAttribute('data-url'), true, btn);
         });
     });

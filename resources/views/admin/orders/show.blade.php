@@ -31,14 +31,14 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- تفاصيل الطلب -->
         <div class="lg:col-span-2 space-y-6">
-            <!-- معلومات الطالب -->
+            <!-- معلومات المعلم -->
             <div class="rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden">
                 <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">
                     <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
                         <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
                             <i class="fas fa-user-graduate text-lg"></i>
                         </div>
-                        معلومات الطالب
+                        معلومات المعلم
                     </h2>
                 </div>
                 <div class="p-6">
@@ -234,7 +234,7 @@
                         <div class="mt-4 p-4 rounded-lg border border-slate-200 bg-slate-50">
                             <label class="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">
                                 <i class="fas fa-sticky-note text-blue-600"></i>
-                                ملاحظات الطالب
+                                ملاحظات المعلم
                             </label>
                             <div class="text-sm text-slate-700">
                                 {{ htmlspecialchars($order->notes, ENT_QUOTES, 'UTF-8') }}
@@ -371,7 +371,7 @@
                                         return;
                                     }
 
-                                    const confirmed = confirm('هل أنت متأكد من الموافقة على هذا الطلب؟\nسيتم تفعيل الكورس للطالب تلقائياً.');
+                                    const confirmed = confirm('هل أنت متأكد من الموافقة على هذا الطلب؟\nسيتم تفعيل الكورس للمعلم تلقائياً.');
                                     if (!confirmed) {
                                         console.log('User cancelled approval');
                                         return;
@@ -601,7 +601,7 @@
                         <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
                             <p class="text-sm text-emerald-800 flex items-start gap-2">
                                 <i class="fas fa-check-circle mt-0.5"></i>
-                                <span>تمت الموافقة على الطلب وتم تفعيل الكورس للطالب.</span>
+                                <span>تمت الموافقة على الطلب وتم تفعيل الكورس للمعلم.</span>
                             </p>
                         </div>
                     @else

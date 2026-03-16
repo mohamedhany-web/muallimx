@@ -1,23 +1,179 @@
-@extends('layouts.public')
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+@endphp
 
-@section('title', __('public.pricing_page_title') . ' - ' . __('public.site_suffix'))
+<!DOCTYPE html>
+<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ __('public.pricing_page_title') }} - {{ __('public.site_suffix') }}</title>
 
-@section('content')
-<!-- Hero Section -->
-<section class="hero-gradient min-h-[50vh] flex items-center relative overflow-hidden" style="margin-top: 0; padding-top: 8rem; background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.85) 25%, rgba(14, 165, 233, 0.7) 50%, rgba(14, 165, 233, 0.75) 75%, rgba(2, 132, 199, 0.8) 100%);">
-    <div class="container mx-auto px-4 text-center relative z-10">
-        <h1 class="text-5xl md:text-6xl font-black text-white leading-tight mb-6 fade-in" style="text-shadow: 0 4px 16px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.6), 0 0 12px rgba(14, 165, 233, 0.4);">
-            الأسعار والخطط
-        </h1>
-        <p class="text-xl md:text-2xl text-white mb-10 fade-in font-semibold" style="text-shadow: 0 3px 12px rgba(0,0,0,0.7), 0 1px 6px rgba(0,0,0,0.5), 0 0 8px rgba(14, 165, 233, 0.3);">
-            اختر الخطة المناسبة لك
-        </p>
-    </div>
-</section>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    navy: { 950:'#020617' },
+                    brand: { 50:'#ecfeff',100:'#cffafe',200:'#a5f3fc',300:'#67e8f9',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',700:'#0e7490',800:'#155e75',900:'#164e63' }
+                },
+                fontFamily: {
+                    heading: ['Tajawal','IBM Plex Sans Arabic','sans-serif'],
+                    body: ['IBM Plex Sans Arabic','Tajawal','sans-serif'],
+                }
+            }
+        }
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<!-- Pricing Plans -->
-<section class="py-16 bg-gray-50">
-    <div class="container mx-auto px-4">
+    <style>
+        *{font-family:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
+        h1,h2,h3,h4,h5,h6,.font-heading{font-family:'Tajawal','IBM Plex Sans Arabic',sans-serif}
+        html{scroll-behavior:smooth;overflow-x:hidden}
+        body{background:#fff;overflow-x:hidden}
+        .card-hover{transition:all .4s cubic-bezier(.16,1,.3,1)}
+        .card-hover:hover{transform:translateY(-6px);box-shadow:0 20px 40px -18px rgba(15,23,42,.35)}
+        .btn-primary{position:relative;overflow:hidden;transition:all .3s cubic-bezier(.16,1,.3,1)}
+        .btn-primary::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);transition:left .5s}
+        .btn-primary:hover::before{left:100%}
+        .btn-primary:hover{transform:translateY(-1px)}
+    </style>
+</head>
+<body class="bg-white text-slate-900 antialiased">
+    @include('components.unified-navbar')
+    <style>.navbar-spacer{display:none}</style>
+    <script>(function(){var n=document.getElementById('navbar');if(n){n.classList.add('nav-transparent');n.classList.remove('nav-solid');}})();</script>
+
+    <main class="flex-1">
+        <!-- Hero Section (aligned with landing) -->
+        <section class="relative min-h-[60vh] flex items-center overflow-hidden bg-navy-950"
+                 style="background: radial-gradient(circle at top, rgba(34,211,238,0.12), transparent 60%), linear-gradient(135deg,#020617 0%,#020617 40%,#0f172a 100%);">
+            <div class="absolute inset-0 opacity-[0.03]"
+                 style="background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.4) 1px,transparent 0);background-size:32px 32px"></div>
+            <div class="absolute top-[-20%] {{ $isRtl ? 'left-[-10%]' : 'right-[-10%]' }} w-[480px] h-[480px] rounded-full bg-cyan-500/15 blur-[110px]"></div>
+            <div class="absolute bottom-[-15%] {{ $isRtl ? 'right-[-10%]' : 'left-[-10%]' }} w-[520px] h-[520px] rounded-full bg-blue-600/10 blur-[120px]"></div>
+
+            <div class="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-28 pb-20 w-full text-center">
+                <div class="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white/[0.06] border border-white/[0.12] text-brand-300 text-sm font-medium backdrop-blur-sm mb-6">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    خطط تسعير مصممة خصيصاً للمعلمين
+                </div>
+
+                <h1 class="font-heading text-4xl sm:text-5xl md:text-6xl font-black leading-tight text-white mb-4">
+                    الأسعار والباقات
+                    <br>
+                    <span class="bg-clip-text text-transparent"
+                          style="background-image:linear-gradient(135deg,#22d3ee 0%,#3b82f6 40%,#8b5cf6 100%);">
+                        للمعلمين أونلاين
+                    </span>
+                </h1>
+
+                <p class="text-lg sm:text-xl text-slate-200/90 max-w-3xl mx-auto leading-relaxed mb-6">
+                    ابدأ مسيرتك كمعلم أونلاين باستخدام أدوات احترافية ومناهج جاهزة وبروفايل مهني يفتح لك فرص عمل مع أكاديميات.
+                </p>
+
+                <p class="text-sm text-slate-400 max-w-2xl mx-auto">
+                    جميع الأسعار بالجنيه المصري (ج.م) وتشمل أدوات AI، مكتبة مناهج، ودعم فني للمعلمين.
+                </p>
+            </div>
+        </section>
+
+        <!-- Teacher Plans Section (بيانات من إعدادات مزايا اشتراك المعلمين /admin/teacher-features) -->
+        <section class="py-16 md:py-20 bg-white">
+            <div class="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12">
+                <div class="text-center mb-12">
+                    <span class="inline-block px-4 py-1.5 rounded-full bg-brand-50 text-brand-600 text-sm font-semibold mb-4">
+                        باقات المعلمين
+                    </span>
+                    <h2 class="font-heading text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">
+                        اختر الباقة المناسبة لطموحك كمعلم أونلاين
+                    </h2>
+                    <p class="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                        من بداية مشوارك وحتى بناء مسار مهني مستقر، كل باقة مصممة لتزيد دخلك وتوفّر وقتك في التحضير والمتابعة.
+                    </p>
+                </div>
+
+                @php
+                    $planKeys = ['teacher_starter', 'teacher_pro', 'teacher_premium'];
+                    $planMeta = [
+                        'teacher_starter' => ['subtitle' => 'ابدأ التدريس أونلاين بسهولة', 'badge' => null, 'priceHint' => 'أقل من 7 جنيه يوميًا.', 'cta' => 'ابدأ الآن', 'card' => 'white', 'accent' => 'sky'],
+                        'teacher_pro'     => ['subtitle' => 'أفضل اختيار للمعلمين الذين يريدون العمل أونلاين', 'badge' => 'الأفضل للبدء أونلاين', 'priceHint' => 'استثمار ربع سنوي يمنحك حضورًا مهنيًا وفرص عمل حقيقية.', 'cta' => 'ابدأ العمل الآن', 'card' => 'dark', 'accent' => 'sky'],
+                        'teacher_premium' => ['subtitle' => 'للمعلمين الجادين في بناء مسار مهني مستقر', 'badge' => null, 'priceHint' => 'اشتراك سنوي يمنحك استقرارًا وفرص تدريس مستمرة طوال العام.', 'cta' => 'ابدأ رحلتك الآن', 'card' => 'white', 'accent' => 'amber'],
+                    ];
+                    $billingPhrases = ['monthly' => 'جنيه شهريًا', 'quarterly' => 'جنيه / 3 شهور', 'yearly' => 'جنيه سنويًا'];
+                @endphp
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    @foreach($planKeys as $planKey)
+                        @php
+                            $plan = $teacherPlans[$planKey] ?? null;
+                            if (!$plan) continue;
+                            $meta = $planMeta[$planKey] ?? [];
+                            $label = $plan['label'] ?? $planKey;
+                            $price = (float) ($plan['price'] ?? 0);
+                            $cycle = $plan['billing_cycle'] ?? 'monthly';
+                            $cyclePhrase = $billingPhrases[$cycle] ?? 'جنيه';
+                            $features = $plan['features'] ?? [];
+                            $isPro = $planKey === 'teacher_pro';
+                        @endphp
+                        <div class="rounded-3xl shadow-lg border p-8 flex flex-col relative overflow-hidden card-hover
+                            @if($isPro) bg-navy-950 border-brand-500/60
+                            @elseif($planKey === 'teacher_premium') bg-white border-amber-300/80
+                            @else bg-white border-slate-100
+                            @endif">
+                            @if(!empty($meta['badge']))
+                                <div class="absolute top-3 left-3 bg-sky-500 text-white text-xs font-bold px-3 py-1 rounded-full">{{ $meta['badge'] }}</div>
+                            @endif
+                            <div class="mb-4">
+                                <h3 class="text-2xl font-bold {{ $isPro ? 'text-white' : 'text-slate-900' }} mb-1">{{ $label }}</h3>
+                                <p class="text-sm font-semibold {{ $isPro ? 'text-sky-300' : ($planKey === 'teacher_premium' ? 'text-amber-600' : 'text-sky-600') }}">
+                                    {{ $meta['subtitle'] ?? '' }}
+                                </p>
+                            </div>
+                            <div class="mb-6">
+                                <div class="text-3xl font-extrabold {{ $isPro ? 'text-white' : 'text-slate-900' }} mb-1">
+                                    {{ number_format($price, 0) }} <span class="text-lg font-bold">{{ $cyclePhrase }}</span>
+                                </div>
+                                @if(!empty($meta['priceHint']))
+                                    <p class="text-sm {{ $isPro ? 'text-slate-300' : 'text-slate-500' }}">{{ $meta['priceHint'] }}</p>
+                                @endif
+                            </div>
+                            <ul class="space-y-3 {{ $isPro ? 'text-slate-100' : 'text-slate-700' }} mb-8 flex-1 text-sm">
+                                @foreach($features as $featureKey)
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check-circle {{ $isPro ? 'text-sky-300' : ($planKey === 'teacher_premium' ? 'text-amber-500' : 'text-sky-500') }} ml-2 mt-1"></i>
+                                        <span>{{ __("student.subscription_feature.{$featureKey}") }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            @if($isPro)
+                                <div class="mb-4 text-sky-200 text-sm font-semibold">فرص حقيقية للعمل مع أكاديميات، وليس مجرد أدوات.</div>
+                            @endif
+                            @if($planKey === 'teacher_premium')
+                                <div class="mb-4 text-amber-700 text-sm font-semibold">نساعدك في الوصول إلى فرص تدريس حقيقية وبناء اسمك كمعلم أونلاين.</div>
+                            @endif
+                            <a href="{{ route('public.subscription.checkout', $planKey) }}" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors
+                                @if($isPro) bg-sky-400 hover:bg-sky-300 text-slate-900
+                                @elseif($planKey === 'teacher_premium') bg-amber-500 hover:bg-amber-600 text-white
+                                @else btn-primary bg-sky-600 hover:bg-sky-700 text-white
+                                @endif">
+                                {{ $meta['cta'] ?? 'ابدأ الآن' }}
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        <!-- Existing Platform Packages -->
+        <section class="py-16 md:py-20 bg-slate-50/60 border-t border-slate-100">
+            <div class="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12">
         @if(isset($packages) && $packages->count() > 0)
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             @foreach($packages as $index => $package)
@@ -134,4 +290,8 @@
         @endif
     </div>
 </section>
-@endsection
+    </main>
+
+    @include('components.unified-footer')
+</body>
+</html>

@@ -13,7 +13,6 @@ class AssignmentSubmission extends Model
 
     protected $fillable = [
         'assignment_id',
-        'group_id',
         'student_id',
         'content',
         'attachments',
@@ -35,11 +34,6 @@ class AssignmentSubmission extends Model
     public function assignment()
     {
         return $this->belongsTo(Assignment::class);
-    }
-
-    public function group()
-    {
-        return $this->belongsTo(Group::class);
     }
 
     public function student()

@@ -51,12 +51,6 @@
                 <i class="fas fa-tasks"></i>
                 <span>واجب</span>
             </button>
-            <a href="{{ route('instructor.learning-patterns.create', $course) }}?section_id={{ $section->id }}"
-               class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold transition-colors"
-               title="إضافة نمط تعليمي تفاعلي">
-                <i class="fas fa-puzzle-piece"></i>
-                <span>نمط تعليمي</span>
-            </a>
         </div>
 
         <div class="items-container" data-section-id="{{ $section->id }}">
@@ -91,15 +85,6 @@
                                     @if($item->item instanceof \App\Models\AdvancedExam)
                                         <a href="{{ route('instructor.exams.edit', $item->item) }}" class="p-1.5 rounded bg-violet-100 hover:bg-violet-200 text-violet-600 text-xs" title="تعديل الامتحان"><i class="fas fa-edit"></i></a>
                                     @endif
-                                    <button onclick="removeItem({{ $item->id }})" class="p-1.5 rounded bg-red-50 hover:bg-red-100 text-red-600 text-xs" title="إزالة من المنهج"><i class="fas fa-times"></i></button>
-                                </div>
-                            @elseif($item->item instanceof \App\Models\LearningPattern)
-                                @php $typeInfo = $item->item->getTypeInfo(); @endphp
-                                <i class="{{ $typeInfo['icon'] ?? 'fas fa-puzzle-piece' }} text-amber-500 shrink-0"></i>
-                                <span class="font-semibold text-slate-800 truncate">{{ $item->item->title }}</span>
-                                <span class="text-xs text-slate-500 shrink-0">({{ $typeInfo['name'] ?? 'نمط تعليمي' }})</span>
-                                <div class="flex items-center gap-1 shrink-0">
-                                    <a href="{{ route('instructor.learning-patterns.edit', [$course, $item->item]) }}" class="p-1.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-600 text-xs" title="تعديل النمط"><i class="fas fa-edit"></i></a>
                                     <button onclick="removeItem({{ $item->id }})" class="p-1.5 rounded bg-red-50 hover:bg-red-100 text-red-600 text-xs" title="إزالة من المنهج"><i class="fas fa-times"></i></button>
                                 </div>
                             @endif

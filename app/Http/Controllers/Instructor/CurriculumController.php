@@ -60,20 +60,13 @@ class CurriculumController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
         
-        $availableLearningPatterns = \App\Models\LearningPattern::where('advanced_course_id', $course->id)
-            ->whereDoesntHave('curriculumItems')
-            ->where('is_active', true)
-            ->orderBy('order')
-            ->get();
-        
         return view('instructor.curriculum.index', compact(
             'course',
             'sections',
             'sectionsFlatForSelect',
             'availableLectures',
             'availableAssignments',
-            'availableExams',
-            'availableLearningPatterns'
+            'availableExams'
         ));
     }
 

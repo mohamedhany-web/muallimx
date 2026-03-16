@@ -1,4 +1,4 @@
-@extends('layouts.student-dashboard')
+@extends('layouts.app')
 
 @section('title', $course->title . ' - ' . __('student.learn'))
 @section('header', '')
@@ -304,42 +304,6 @@
     .lecture-viewer::-webkit-scrollbar-thumb {
         background: rgb(203 213 225);
         border-radius: 3px;
-    }
-    
-    /* الحاوية الخارجية للنمط التعليمي - توسيط البطاقة في الشاشة */
-    .pattern-embed-outer {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        min-height: 0;
-        box-sizing: border-box;
-    }
-    .pattern-embed-wrapper {
-        display: flex;
-        flex-direction: column;
-        min-height: 0;
-        width: 100%;
-        max-width: 80rem;
-        box-sizing: border-box;
-    }
-    .pattern-embed-iframe-container {
-        flex: 1 1 0%;
-        min-height: 0;
-        min-width: 0;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        box-sizing: border-box;
-    }
-    .pattern-embed-iframe {
-        flex: 1 1 0%;
-        min-height: 0;
-        width: 100%;
-        max-width: 100%;
-        display: block;
-        box-sizing: border-box;
     }
     
     .empty-content-state {
@@ -669,7 +633,6 @@
              else if (d.type === 'lesson' && d.id) _learnComp.loadLesson(d.id);
              else if (d.type === 'exam' && d.id) _learnComp.loadExam(d.id);
              else if (d.type === 'assignment' && d.id) _learnComp.loadAssignment(d.id);
-             else if (d.type === 'pattern' && d.id) _learnComp.loadPattern(d.id);
          });
      ">
     {{-- Breadcrumb (مخفي في وضع التركيز) --}}
@@ -821,7 +784,7 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
                 <div class="focus-main-content-wrapper p-4 lg:p-6">
                     <!-- حالة ترحيب -->
-                    <div x-show="!selectedLesson && !selectedLecture && !selectedPattern" 
+                    <div x-show="!selectedLesson && !selectedLecture" 
                          x-transition
                          class="empty-content-state">
                         <div class="relative mb-8">
@@ -930,27 +893,6 @@
                         </div>
                     </div>
                     
-                    <!-- النمط التعليمي -->
-                    <div x-show="selectedPattern" x-transition class="pattern-embed-outer flex w-full items-center justify-center overflow-auto p-2 sm:p-3 min-h-[400px]">
-                        <div class="pattern-embed-wrapper flex flex-col w-full max-w-4xl min-h-[360px] rounded-xl overflow-hidden border border-slate-200 shadow-lg bg-white">
-                            <div class="flex items-center justify-between gap-3 px-3 py-2.5 sm:px-4 sm:py-3 bg-white border-b border-slate-200 rounded-t-xl shrink-0">
-                                <span class="text-gray-900 font-semibold text-sm flex items-center gap-2">
-                                    <i class="fas fa-puzzle-piece text-sky-500"></i>
-                                    النمط التعليمي
-                                </span>
-                                <button type="button" @click="selectedPattern = null"
-                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-gray-700 text-sm font-medium transition-colors border border-slate-200">
-                                    <i class="fas fa-arrow-right ml-1"></i>
-                                    إغلاق والعودة
-                                </button>
-                            </div>
-                            <div class="pattern-embed-iframe-container flex-1 min-h-[300px] bg-white rounded-b-xl overflow-hidden border-t-0 border-slate-200">
-                                <iframe :src="selectedPattern ? '{{ route('my-courses.learning-patterns.show', [$course, '_PID_']) }}'.replace('_PID_', selectedPattern) + '?embed=1' : ''"
-                                        class="pattern-embed-iframe w-full h-full min-h-[300px] border-0"
-                                        title="النمط التعليمي"></iframe>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -985,7 +927,6 @@ function courseFocusMode() {
         sidebarClosed: false,
         selectedLesson: null,
         selectedLecture: null,
-        selectedPattern: null,
         lessonContent: '',
         lectureContent: '',
         lectureMaterials: [],
@@ -1012,7 +953,6 @@ function courseFocusMode() {
         async loadLesson(lessonId) {
             this.selectedLesson = lessonId;
             this.selectedLecture = null;
-            this.selectedPattern = null;
             this.showVideoPlayer = false;
             this.currentLessonVideoUrl = null;
             this.currentLessonId = lessonId;
@@ -1203,7 +1143,6 @@ function courseFocusMode() {
         async loadLecture(lectureId) {
             this.selectedLecture = lectureId;
             this.selectedLesson = null;
-            this.selectedPattern = null;
             this.showVideoPlayer = false;
             this.currentLessonVideoUrl = null;
             this.lectureMaterials = [];
@@ -1316,17 +1255,9 @@ function courseFocusMode() {
         loadAssignment(assignmentId) {
             this.lectureContent = '<div class="text-center text-gray-600 p-8"><i class="fas fa-tasks text-4xl mb-4"></i><p class="text-xl font-bold">عرض الواجب قريباً</p></div>';
         },
-        loadPattern(patternId) {
-            this.selectedLesson = null;
-            this.selectedLecture = null;
-            this.selectedPattern = patternId;
-            this.showVideoPlayer = false;
-            this.currentLessonVideoUrl = null;
-        },
         async loadExam(examId) {
             this.selectedLesson = null;
             this.selectedLecture = null;
-            this.selectedPattern = null;
             this.lectureContent = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin text-4xl text-sky-500 mb-4"></i><p class="text-gray-600">جاري تحميل الاختبار...</p></div>';
 
             try {

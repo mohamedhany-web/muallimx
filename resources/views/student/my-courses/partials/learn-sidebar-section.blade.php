@@ -47,12 +47,6 @@
                                 $allPreviousCompleted = false;
                                 break;
                             }
-                        } elseif ($prevItem->item instanceof \App\Models\LearningPattern) {
-                            $prevBestAttempt = $prevItem->item->getUserBestAttempt(auth()->id());
-                            if (!$prevBestAttempt || $prevBestAttempt->status !== 'completed') {
-                                $allPreviousCompleted = false;
-                                break;
-                            }
                         }
                     }
                     $isCurrent = !$isCompleted && ($curriculumItem->order == 1 || $allPreviousCompleted);
@@ -72,11 +66,6 @@
                         $isLocked = $isLocked || !$prevWp || (int) $prevWp->progress_percent < $prevThreshold;
                     }
                     $isCurrent = !$isCompleted && !$isLocked;
-                } elseif ($item instanceof \App\Models\LearningPattern) {
-                    $bestAttempt = $item->getUserBestAttempt(auth()->id());
-                    $isCompleted = $bestAttempt && $bestAttempt->status === 'completed';
-                    $isCurrent = !$isCompleted && !$isSectionLocked;
-                    $isLocked = $isSectionLocked;
                 } elseif ($item instanceof \App\Models\AdvancedExam || $item instanceof \App\Models\Exam) {
                     // الامتحان يُعتبر مكتمل إذا كانت أفضل محاولة مساوية أو أعلى من درجة النجاح
                     $passing = (float) ($item->passing_marks ?? 0);
@@ -103,12 +92,6 @@
                                 $isLocked = true;
                                 break;
                             }
-                        } elseif ($prev instanceof \App\Models\LearningPattern) {
-                            $prevBest = $prev->getUserBestAttempt(auth()->id());
-                            if (!$prevBest || $prevBest->status !== 'completed') {
-                                $isLocked = true;
-                                break;
-                            }
                         } elseif ($prev instanceof \App\Models\Assignment) {
                             if ($prev->submissions->where('student_id', auth()->id())->isEmpty()) {
                                 $isLocked = true;
@@ -131,8 +114,6 @@
                      @click="currentSectionDescription = (window.learnSectionDescriptions || {})[$event.currentTarget.dataset.sectionId] || ''; loadAssignment({{ $item->id }})"
                  @elseif($item instanceof \App\Models\AdvancedExam || $item instanceof \App\Models\Exam)
                      @click="currentSectionDescription = (window.learnSectionDescriptions || {})[$event.currentTarget.dataset.sectionId] || ''; loadExam({{ $item->id }})"
-                 @elseif($item instanceof \App\Models\LearningPattern)
-                     @click="currentSectionDescription = (window.learnSectionDescriptions || {})[$event.currentTarget.dataset.sectionId] || ''; if ({{ $isLocked ? 'true' : 'false' }}) return; loadPattern({{ $item->id }})"
                  @endif
                  x-show="!searchQuery || '{{ strtolower($item->title) }}'.includes(searchQuery.toLowerCase())">
                 <div class="flex items-start gap-2">
@@ -183,21 +164,6 @@
                                     <i class="fas fa-lock text-white text-[10px]"></i>
                                 </div>
                             @endif
-                        @elseif($item instanceof \App\Models\LearningPattern)
-                            @php $typeInfo = $item->getTypeInfo(); @endphp
-                            @if($isCompleted)
-                                <div class="w-6 h-6 bg-green-500 rounded-md flex items-center justify-center">
-                                    <i class="fas fa-check text-white text-[10px]"></i>
-                                </div>
-                            @elseif($isCurrent)
-                                <div class="w-6 h-6 bg-orange-500 rounded-md flex items-center justify-center animate-pulse">
-                                    <i class="{{ $typeInfo['icon'] ?? 'fas fa-puzzle-piece' }} text-white text-[10px]"></i>
-                                </div>
-                            @else
-                                <div class="w-6 h-6 bg-gray-600 rounded-md flex items-center justify-center">
-                                    <i class="fas fa-lock text-white text-[10px]"></i>
-                                </div>
-                            @endif
                         @endif
                     </div>
                     <div class="flex-1 min-w-0">
@@ -222,12 +188,6 @@
                                 <span><i class="fas fa-clipboard-check ml-1"></i> امتحان</span>
                                 @if(isset($item->start_date) && $item->start_date)
                                     <span><i class="fas fa-calendar ml-1"></i> {{ $item->start_date->format('Y/m/d') }}</span>
-                                @endif
-                            @elseif($item instanceof \App\Models\LearningPattern)
-                                @php $typeInfo = $item->getTypeInfo(); @endphp
-                                <span><i class="{{ $typeInfo['icon'] ?? 'fas fa-puzzle-piece' }} ml-1"></i> {{ $typeInfo['name'] ?? 'نمط تعليمي' }}</span>
-                                @if($item->points > 0)
-                                    <span><i class="fas fa-star ml-1"></i> {{ $item->points }} نقطة</span>
                                 @endif
                             @endif
                         </div>

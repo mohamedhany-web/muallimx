@@ -279,10 +279,10 @@
                 </li>
             @endhasAnyPermission
 
-            @hasAnyPermission('manage.academic-years', 'manage.academic-subjects', 'manage.courses', 'manage.enrollments', 'manage.lectures', 'manage.groups', 'manage.assignments', 'manage.exams', 'manage.question-bank')
+            @hasAnyPermission('manage.academic-years', 'manage.academic-subjects', 'manage.courses', 'manage.enrollments', 'manage.lectures', 'manage.assignments', 'manage.exams', 'manage.question-bank')
                 <!-- إدارة المحتوى -->
                 @php
-                    $contentManagementOpen = request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.enrollments.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.groups.*') || request()->routeIs('admin.assignments.*');
+                    $contentManagementOpen = request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.enrollments.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*');
                 @endphp
                 <li x-data="{ open: {{ $contentManagementOpen ? 'true' : 'false' }} }">
                     <button @click="open = !open" 
@@ -332,12 +332,6 @@
                         <li><a href="{{ route('admin.lectures.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ request()->routeIs('admin.lectures.*') ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
                             <i class="fas fa-video w-4"></i>
                             <span>المحاضرات</span>
-                        </a></li>
-                        @endhasPermission
-                        @hasPermission('manage.groups')
-                        <li><a href="{{ route('admin.groups.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ request()->routeIs('admin.groups.*') ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
-                            <i class="fas fa-users-cog w-4"></i>
-                            <span>المجموعات</span>
                         </a></li>
                         @endhasPermission
                         @hasPermission('manage.assignments')
@@ -430,12 +424,12 @@
                 </li>
             @endhasPermission
 
-            @hasAnyPermission('manage.blog', 'manage.contact-messages', 'manage.packages')
+            @hasAnyPermission('manage.contact-messages', 'manage.packages')
                 <!-- إدارة الصفحات الخارجية -->
                 @php
-                    $blogOpen = request()->routeIs('admin.blog.*') || request()->routeIs('admin.contact-messages.*') || request()->routeIs('admin.packages.*');
+                    $externalOpen = request()->routeIs('admin.contact-messages.*') || request()->routeIs('admin.packages.*');
                 @endphp
-                <li x-data="{ open: {{ $blogOpen ? 'true' : 'false' }} }">
+                <li x-data="{ open: {{ $externalOpen ? 'true' : 'false' }} }">
                     <button @click="open = !open" 
                             class="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-700 dark:text-gray-300 group">
                         <div class="flex items-center gap-3">
@@ -445,12 +439,6 @@
                         <i class="fas fa-chevron-down transition-transform duration-300 text-gray-400 dark:text-gray-500" :class="{ 'rotate-180': open }"></i>
                     </button>
                     <ul x-show="open" x-transition class="mt-2 mr-4 space-y-1 border-r-2 border-sky-200 dark:border-sky-800 pr-2">
-                        @hasPermission('manage.blog')
-                        <li><a href="{{ route('admin.blog.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ request()->routeIs('admin.blog.*') ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
-                            <i class="fas fa-newspaper w-4"></i>
-                            <span>المدونة</span>
-                        </a></li>
-                        @endhasPermission
                         @hasPermission('manage.contact-messages')
                         <li><a href="{{ route('admin.contact-messages.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ request()->routeIs('admin.contact-messages.*') ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
                             <i class="fas fa-envelope w-4"></i>
@@ -473,7 +461,7 @@
                 </li>
             @endhasAnyPermission
 
-            @hasAnyPermission('instructor.view.courses', 'instructor.manage.lectures', 'instructor.manage.groups', 'instructor.manage.assignments', 'instructor.manage.exams', 'instructor.manage.attendance', 'instructor.view.tasks')
+            @hasAnyPermission('instructor.view.courses', 'instructor.manage.lectures', 'instructor.manage.assignments', 'instructor.manage.exams', 'instructor.manage.attendance', 'instructor.view.tasks')
                 <!-- كورساتي -->
                 @hasPermission('instructor.view.courses')
                 <li>
@@ -496,20 +484,6 @@
                         <i class="fas fa-video w-5 relative z-10 {{ request()->routeIs('instructor.lectures.*') ? 'text-white' : 'text-sky-600 dark:text-sky-400 group-hover:text-sky-600 dark:group-hover:text-sky-400' }}"></i>
                         <span class="relative z-10 font-semibold">المحاضرات</span>
                         @if(request()->routeIs('instructor.lectures.*'))
-                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-sky-400 to-slate-400 rounded-r"></div>
-                        @endif
-                    </a>
-                </li>
-                @endhasPermission
-
-                <!-- المجموعات -->
-                @hasPermission('instructor.manage.groups')
-                <li>
-                    <a href="{{ route('instructor.groups.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative overflow-hidden group {{ request()->routeIs('instructor.groups.*') ? 'bg-gradient-to-r from-sky-500 to-sky-600 text-white shadow-lg shadow-sky-500/30' : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800' }}">
-                        <div class="absolute inset-0 bg-gradient-to-r from-sky-400 to-slate-400 opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-                        <i class="fas fa-users-cog w-5 relative z-10 {{ request()->routeIs('instructor.groups.*') ? 'text-white' : 'text-sky-600 dark:text-sky-400 group-hover:text-sky-600 dark:group-hover:text-sky-400' }}"></i>
-                        <span class="relative z-10 font-semibold">المجموعات</span>
-                        @if(request()->routeIs('instructor.groups.*'))
                             <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-sky-400 to-slate-400 rounded-r"></div>
                         @endif
                     </a>

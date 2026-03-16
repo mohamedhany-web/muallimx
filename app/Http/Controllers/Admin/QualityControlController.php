@@ -5,12 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\StudentCourseEnrollment;
-use App\Models\OfflineCourseEnrollment;
 use App\Models\EmployeeTask;
 use App\Models\AdvancedCourse;
 use App\Models\Lecture;
-use App\Models\OfflineCourse;
-use App\Models\OfflineLecture;
 use App\Models\InstructorAgreement;
 use App\Models\Assignment;
 use App\Models\WithdrawalRequest;
@@ -69,7 +66,6 @@ class QualityControlController extends Controller
         // العمليات المعلقة
         $pendingOperations = [
             'pending_enrollments' => StudentCourseEnrollment::where('status', 'pending')->count(),
-            'pending_offline_enrollments' => OfflineCourseEnrollment::where('status', 'pending')->count(),
             'pending_tasks' => EmployeeTask::pending()->count(),
         ];
 
@@ -168,20 +164,9 @@ class QualityControlController extends Controller
             ->orderByDesc('scheduled_at')
             ->get();
 
-        // الكورسات الأوفلاين
-        $offlineCourses = OfflineCourse::where('instructor_id', $instructor->id)
-            ->orderByDesc('created_at')
-            ->get();
-
-        // محاضرات أوفلاين
-        $offlineLectures = OfflineLecture::where('instructor_id', $instructor->id)
-            ->with(['offlineCourse:id,title'])
-            ->orderByDesc('scheduled_at')
-            ->get();
-
         // الاتفاقيات
         $agreements = InstructorAgreement::where('instructor_id', $instructor->id)
-            ->with(['offlineCourse:id,title'])
+            ->with(['advancedCourse:id,title'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -225,8 +210,6 @@ class QualityControlController extends Controller
             'instructor',
             'advancedCourses',
             'lectures',
-            'offlineCourses',
-            'offlineLectures',
             'agreements',
             'assignments',
             'withdrawals',
@@ -370,7 +353,7 @@ class QualityControlController extends Controller
         $sheet = $spreadsheet->createSheet();
         $sheet->setTitle('الاتفاقيات');
         $sheet->setRightToLeft(true);
-        $agreements = InstructorAgreement::where('instructor_id', $instructor->id)->with('offlineCourse:id,title')->orderByDesc('created_at')->get();
+        $agreements = InstructorAgreement::where('instructor_id', $instructor->id)->with('advancedCourse:id,title')->orderByDesc('created_at')->get();
         $rows = [['رقم الاتفاقية', 'العنوان', 'نوع الفوترة', 'المبلغ الإجمالي', 'الحالة', 'من', 'إلى']];
         foreach ($agreements as $a) {
             $rows[] = [
@@ -499,8 +482,6 @@ class QualityControlController extends Controller
         $enrollmentOperations = [
             'online_pending' => StudentCourseEnrollment::where('status', 'pending')->count(),
             'online_active' => StudentCourseEnrollment::where('status', 'active')->count(),
-            'offline_pending' => OfflineCourseEnrollment::where('status', 'pending')->count(),
-            'offline_active' => OfflineCourseEnrollment::where('status', 'active')->count(),
         ];
 
         // عمليات المهام

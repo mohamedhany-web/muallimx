@@ -43,7 +43,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-500 mb-1">الطالب</label>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">المعلم</label>
                                 <div class="font-semibold text-gray-900">{{ $enrollment->student->name }}</div>
                                 <div class="text-sm text-gray-500">{{ $enrollment->student->email }}</div>
                             </div>
@@ -142,7 +142,7 @@
                         <form action="{{ route('admin.online-enrollments.activate', $enrollment) }}" method="POST" class="mb-2">
                             @csrf
                             <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors" 
-                                    onclick="return confirm('هل تريد إعادة تفعيل هذا التسجيل وفتح الكورس للطالب مرة أخرى؟')">
+                                    onclick="return confirm('هل تريد إعادة تفعيل هذا التسجيل وفتح الكورس للمعلم مرة أخرى؟')">
                                 <i class="fas fa-redo ml-1"></i>
                                 إعادة التفعيل وفتح الكورس
                             </button>
@@ -197,7 +197,7 @@
                     <div class="mt-4 pt-4 border-t border-gray-200 text-center">
                         <div class="p-4 bg-blue-50 rounded-lg">
                             <div class="text-2xl font-bold text-blue-600">{{ $enrollment->course->enrollments->where('status', 'active')->count() }}</div>
-                            <div class="text-sm text-gray-500">طالب مسجل</div>
+                            <div class="text-sm text-gray-500">معلم مسجل</div>
                         </div>
                     </div>
                 </div>

@@ -83,7 +83,7 @@
         'admin' => ['label' => 'إداري', 'badge' => 'bg-rose-100 text-rose-700 border border-rose-200'],
         'instructor' => ['label' => 'مدرب', 'badge' => 'bg-sky-100 text-sky-700 border border-sky-200'],
         'teacher' => ['label' => 'مدرس', 'badge' => 'bg-sky-100 text-sky-700 border border-sky-200'],
-        'student' => ['label' => 'طالب', 'badge' => 'bg-emerald-100 text-emerald-700 border border-emerald-200'],
+        'student' => ['label' => __('admin.student_role_label'), 'badge' => 'bg-emerald-100 text-emerald-700 border border-emerald-200'],
         'parent' => ['label' => 'ولي أمر', 'badge' => 'bg-indigo-100 text-indigo-700 border border-indigo-200'],
         'employee' => ['label' => 'موظف', 'badge' => 'bg-amber-100 text-amber-700 border border-amber-200']
     ];
@@ -250,7 +250,7 @@
                         <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>إداري</option>
                         <option value="instructor" {{ request('role') == 'instructor' ? 'selected' : '' }}>مدرب</option>
                         <option value="teacher" {{ request('role') == 'teacher' ? 'selected' : '' }}>مدرس</option>
-                        <option value="student" {{ request('role') == 'student' ? 'selected' : '' }}>طالب</option>
+                        <option value="student" {{ request('role') == 'student' ? 'selected' : '' }}>{{ __('admin.student_role_label') }}</option>
                         <option value="parent" {{ request('role') == 'parent' ? 'selected' : '' }}>ولي أمر</option>
                         <option value="employee" {{ request('role') == 'employee' ? 'selected' : '' }}>موظف</option>
                     </select>
@@ -554,7 +554,7 @@
                             'admin' => ['count' => $usersByRole['admin'] ?? 0, 'label' => 'إداري', 'color' => 'rose', 'icon' => 'fas fa-user-shield'],
                             'instructor' => ['count' => $usersByRole['instructor'] ?? 0, 'label' => 'مدرب', 'color' => 'sky', 'icon' => 'fas fa-chalkboard-teacher'],
                             'teacher' => ['count' => $usersByRole['teacher'] ?? 0, 'label' => 'مدرس', 'color' => 'sky', 'icon' => 'fas fa-chalkboard-teacher'],
-                            'student' => ['count' => $usersByRole['student'] ?? 0, 'label' => 'طالب', 'color' => 'emerald', 'icon' => 'fas fa-user-graduate'],
+                            'student' => ['count' => $usersByRole['student'] ?? 0, 'label' => __('admin.student_role_label'), 'color' => 'emerald', 'icon' => 'fas fa-user-graduate'],
                             'parent' => ['count' => $usersByRole['parent'] ?? 0, 'label' => 'ولي أمر', 'color' => 'indigo', 'icon' => 'fas fa-user-friends'],
                             'employee' => ['count' => \App\Models\User::where('is_employee', true)->count(), 'label' => 'موظف', 'color' => 'amber', 'icon' => 'fas fa-briefcase'],
                         ];

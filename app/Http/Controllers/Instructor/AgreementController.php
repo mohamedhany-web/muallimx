@@ -80,7 +80,7 @@ class AgreementController extends Controller
 
         $spreadsheet = new Spreadsheet();
         $spreadsheet->getProperties()
-            ->setCreator('Mindlytics')
+            ->setCreator('Mualimx')
             ->setTitle('تفعيلات الطلاب - اتفاقية ' . ($agreement->agreement_number ?? $agreement->id))
             ->setSubject('نسبة من الكورس');
 

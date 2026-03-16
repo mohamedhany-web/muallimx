@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Subscription;
+use App\Models\SubscriptionRequest;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Models\ActivityLog;
@@ -97,6 +98,8 @@ class SubscriptionController extends Controller
                 ->take(6)
                 ->get();
 
+            $pendingRequests = SubscriptionRequest::pending()->with(['user', 'wallet'])->latest()->get();
+
             return view('admin.subscriptions.index', compact(
                 'subscriptions',
                 'stats',
@@ -104,7 +107,8 @@ class SubscriptionController extends Controller
                 'monthlyRevenue',
                 'planDistribution',
                 'expiringSoon',
-                'recentSubscriptions'
+                'recentSubscriptions',
+                'pendingRequests'
             ));
         } catch (\Exception $e) {
             Log::error('Error in SubscriptionController@index: ' . $e->getMessage());
@@ -114,7 +118,7 @@ class SubscriptionController extends Controller
 
     public function show(Subscription $subscription)
     {
-        $subscription->load(['user', 'invoice', 'payments', 'transactions']);
+        $subscription->load(['user', 'invoice.payments', 'transactions']);
         return view('admin.subscriptions.show', compact('subscription'));
     }
 
@@ -135,12 +139,14 @@ class SubscriptionController extends Controller
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'subscription_type' => 'required|string',
+            'teacher_plan_key' => 'nullable|string|max:50',
             'plan_name' => 'required|string',
             'price' => 'required|numeric|min:0',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'auto_renew' => 'boolean',
             'billing_cycle' => 'required|string',
+            'features' => 'nullable|array',
         ]);
 
         try {
@@ -174,6 +180,7 @@ class SubscriptionController extends Controller
             $subscription = Subscription::create([
                 'user_id' => $validated['user_id'],
                 'subscription_type' => $validated['subscription_type'],
+                'teacher_plan_key' => $validated['teacher_plan_key'] ?? null,
                 'plan_name' => $validated['plan_name'],
                 'price' => $validated['price'],
                 'start_date' => $validated['start_date'],
@@ -182,6 +189,7 @@ class SubscriptionController extends Controller
                 'auto_renew' => $validated['auto_renew'] ?? false,
                 'billing_cycle' => $validated['billing_cycle'],
                 'invoice_id' => $invoice->id,
+                'features' => $validated['features'] ?? null,
             ]);
 
             DB::commit();
@@ -200,6 +208,7 @@ class SubscriptionController extends Controller
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
             'subscription_type' => 'required|string',
+            'teacher_plan_key' => 'nullable|string|max:50',
             'plan_name' => 'required|string',
             'price' => 'required|numeric|min:0',
             'start_date' => 'required|date',
@@ -207,6 +216,7 @@ class SubscriptionController extends Controller
             'status' => 'required|in:active,expired,cancelled',
             'auto_renew' => 'boolean',
             'billing_cycle' => 'required|string',
+            'features' => 'nullable|array',
         ]);
 
         $subscription->update($validated);
@@ -220,5 +230,113 @@ class SubscriptionController extends Controller
         $subscription->delete();
         return redirect()->route('admin.subscriptions.index')
             ->with('success', 'تم حذف الاشتراك بنجاح');
+    }
+
+    /**
+     * تفعيل طلب اشتراك: إنشاء اشتراك نشط للطالب وربطه بالطلب
+     */
+    public function approveRequest(SubscriptionRequest $subscriptionRequest)
+    {
+        if ($subscriptionRequest->status !== SubscriptionRequest::STATUS_PENDING) {
+            return redirect()->route('admin.subscriptions.index')
+                ->with('error', 'هذا الطلب تمت معالجته مسبقاً.');
+        }
+
+        $featuresController = new TeacherFeaturesController();
+        $settings = $featuresController->getSettings();
+        $planConfig = $settings[$subscriptionRequest->teacher_plan_key] ?? null;
+        $features = $planConfig['features'] ?? SubscriptionRequest::planDefaults($subscriptionRequest->teacher_plan_key)['features'] ?? [];
+
+        $startDate = Carbon::now();
+        $endDate = match ($subscriptionRequest->billing_cycle) {
+            'monthly' => $startDate->copy()->addMonth(),
+            'quarterly' => $startDate->copy()->addMonths(3),
+            'yearly' => $startDate->copy()->addYear(),
+            default => $startDate->copy()->addMonth(),
+        };
+
+        try {
+            DB::beginTransaction();
+
+            $invoiceNumber = 'INV-' . str_pad(Invoice::count() + 1, 8, '0', STR_PAD_LEFT);
+            $invoice = Invoice::create([
+                'invoice_number' => $invoiceNumber,
+                'user_id' => $subscriptionRequest->user_id,
+                'type' => 'subscription',
+                'description' => 'فاتورة اشتراك: ' . $subscriptionRequest->plan_name,
+                'subtotal' => $subscriptionRequest->price,
+                'tax_amount' => 0,
+                'discount_amount' => 0,
+                'total_amount' => $subscriptionRequest->price,
+                'status' => 'pending',
+                'due_date' => $startDate,
+                'notes' => 'اشتراك من طلب الطالب - ' . $subscriptionRequest->plan_name,
+                'items' => [
+                    [
+                        'description' => 'اشتراك: ' . $subscriptionRequest->plan_name,
+                        'quantity' => 1,
+                        'price' => $subscriptionRequest->price,
+                        'total' => $subscriptionRequest->price,
+                    ],
+                ],
+            ]);
+
+            $subscriptionType = match ($subscriptionRequest->billing_cycle) {
+                'monthly' => 'monthly',
+                'quarterly' => 'quarterly',
+                'yearly' => 'yearly',
+                default => 'monthly',
+            };
+
+            $subscription = Subscription::create([
+                'user_id' => $subscriptionRequest->user_id,
+                'subscription_type' => $subscriptionType,
+                'teacher_plan_key' => $subscriptionRequest->teacher_plan_key,
+                'plan_name' => $subscriptionRequest->plan_name,
+                'price' => $subscriptionRequest->price,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'status' => 'active',
+                'auto_renew' => false,
+                'billing_cycle' => $subscriptionRequest->billing_cycle,
+                'invoice_id' => $invoice->id,
+                'features' => $features,
+            ]);
+
+            $subscriptionRequest->update([
+                'status' => SubscriptionRequest::STATUS_APPROVED,
+                'subscription_id' => $subscription->id,
+                'approved_at' => now(),
+                'approved_by' => Auth::id(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('admin.subscriptions.index')
+                ->with('success', 'تم تفعيل الاشتراك للطالب بنجاح. تظهر له أقسام الباقة في لوحته.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('SubscriptionRequest approve error: ' . $e->getMessage());
+            return redirect()->route('admin.subscriptions.index')
+                ->with('error', 'حدث خطأ أثناء التفعيل: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * رفض طلب اشتراك
+     */
+    public function rejectRequest(SubscriptionRequest $subscriptionRequest)
+    {
+        if ($subscriptionRequest->status !== SubscriptionRequest::STATUS_PENDING) {
+            return redirect()->route('admin.subscriptions.index')
+                ->with('error', 'هذا الطلب تمت معالجته مسبقاً.');
+        }
+        $subscriptionRequest->update([
+            'status' => SubscriptionRequest::STATUS_REJECTED,
+            'approved_at' => now(),
+            'approved_by' => Auth::id(),
+        ]);
+        return redirect()->route('admin.subscriptions.index')
+            ->with('success', 'تم رفض طلب الاشتراك.');
     }
 }

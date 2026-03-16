@@ -216,7 +216,7 @@
                         </div>
                         <span class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
                             <i class="fas fa-users"></i>
-                            {{ number_format($course->enrollments_count) }} طالب
+                            {{ number_format($course->enrollments_count) }} معلم
                         </span>
                     </div>
                 </div>

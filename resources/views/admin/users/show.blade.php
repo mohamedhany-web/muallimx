@@ -10,7 +10,7 @@
         'admin' => ['label' => 'إداري', 'badge' => 'bg-indigo-100 text-indigo-700 border border-indigo-200'],
         'instructor' => ['label' => 'مدرب', 'badge' => 'bg-sky-100 text-sky-700 border border-sky-200'],
         'teacher' => ['label' => 'مدرس', 'badge' => 'bg-sky-100 text-sky-700 border border-sky-200'],
-        'student' => ['label' => 'طالب', 'badge' => 'bg-emerald-100 text-emerald-700 border border-emerald-200'],
+        'student' => ['label' => __('admin.student_role_label'), 'badge' => 'bg-emerald-100 text-emerald-700 border border-emerald-200'],
         'parent' => ['label' => 'ولي أمر', 'badge' => 'bg-amber-100 text-amber-700 border border-amber-200'],
         'employee' => ['label' => 'موظف', 'badge' => 'bg-amber-100 text-amber-700 border border-amber-200'],
     ];

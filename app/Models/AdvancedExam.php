@@ -10,7 +10,6 @@ class AdvancedExam extends Model
     
     protected $fillable = [
         'advanced_course_id',
-        'offline_course_id',
         'course_lesson_id',
         'title',
         'description',
@@ -62,27 +61,11 @@ class AdvancedExam extends Model
     }
 
     /**
-     * علاقة مع الكورس الأوفلاين
-     */
-    public function offlineCourse()
-    {
-        return $this->belongsTo(OfflineCourse::class, 'offline_course_id');
-    }
-
-    /**
      * علاقة مع الكورس (alias للتوافق - أونلاين فقط)
      */
     public function course()
     {
         return $this->advancedCourse();
-    }
-
-    /**
-     * هل الامتحان خاص بكورس أوفلاين
-     */
-    public function isOfflineExam(): bool
-    {
-        return !empty($this->offline_course_id);
     }
 
     /**

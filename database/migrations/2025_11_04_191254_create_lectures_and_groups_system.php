@@ -92,35 +92,6 @@ return new class extends Migration
             });
         }
 
-        // جدول المجموعات
-        if (!Schema::hasTable('groups')) {
-            Schema::create('groups', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('course_id')->constrained('advanced_courses')->onDelete('cascade');
-                $table->string('name');
-                $table->text('description')->nullable();
-                $table->foreignId('leader_id')->nullable()->constrained('users')->onDelete('set null'); // قائد المجموعة
-                $table->integer('max_members')->default(10);
-                $table->enum('status', ['active', 'inactive', 'archived'])->default('active');
-                $table->timestamps();
-                
-                $table->index(['course_id', 'status']);
-            });
-        }
-
-        // جدول أعضاء المجموعات
-        if (!Schema::hasTable('group_members')) {
-            Schema::create('group_members', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('group_id')->constrained('groups')->onDelete('cascade');
-                $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-                $table->enum('role', ['leader', 'member'])->default('member');
-                $table->timestamp('joined_at')->useCurrent();
-                $table->timestamps();
-                
-                $table->unique(['group_id', 'user_id']);
-            });
-        }
     }
 
     /**
@@ -128,8 +99,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('group_members');
-        Schema::dropIfExists('groups');
         Schema::dropIfExists('lecture_evaluations');
         Schema::dropIfExists('lecture_assignment_submissions');
         Schema::dropIfExists('lecture_assignments');

@@ -14,7 +14,7 @@
                 </div>
                 <div>
                     <h2 class="text-2xl font-black text-slate-900">التقارير الأكاديمية</h2>
-                    <p class="text-sm text-slate-600 mt-1">تقارير عن الامتحانات، الواجبات، المحاضرات، والمجموعات</p>
+                    <p class="text-sm text-slate-600 mt-1">تقارير عن الامتحانات، الواجبات، والمحاضرات</p>
                 </div>
             </div>
             <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">

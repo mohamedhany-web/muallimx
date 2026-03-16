@@ -133,11 +133,13 @@ class User extends Authenticatable
     }
 
     /**
-     * هل هذا المستخدم مطلوب له تفعيل المصادقة الثنائية (أدمن ومدير عام والمدربين فقط)
+     * هل هذا المستخدم مطلوب له تفعيل المصادقة الثنائية (أدمن ومدير عام والمدربين فقط).
+     * حالياً معطّلة من النظام — تُرجع false دائماً.
      */
     public function requiresTwoFactor(): bool
     {
-        return in_array($this->role, ['super_admin', 'admin', 'instructor'], true);
+        return false; // المصادقة الثنائية معطّلة حالياً
+        // return in_array($this->role, ['super_admin', 'admin', 'instructor'], true);
     }
 
     /**
@@ -189,29 +191,37 @@ class User extends Authenticatable
     }
 
     /**
-     * علاقة مع عضوية المجموعات (group_members)
+     * اشتراكات المستخدم (باقات المعلمين وغيرها)
      */
-    public function groupMembers()
+    public function subscriptions()
     {
-        return $this->hasMany(GroupMember::class);
+        return $this->hasMany(Subscription::class);
     }
 
     /**
-     * المجموعات التي ينتمي إليها المستخدم (كطالب)
+     * الاشتراك النشط الحالي (باقة معلم مفعلة ولم تنتهِ)
      */
-    public function groups()
+    public function activeSubscription(): ?Subscription
     {
-        return $this->belongsToMany(Group::class, 'group_members')
-            ->withPivot('role', 'joined_at')
-            ->withTimestamps();
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+            })
+            ->orderByDesc('end_date')
+            ->first();
     }
 
     /**
-     * علاقة مع تسجيلات الكورسات الأوفلاين
+     * هل لدى المستخدم ميزة معينة من اشتراكه النشط (مثل teacher_profile, library_access)
      */
-    public function offlineEnrollments()
+    public function hasSubscriptionFeature(string $featureKey): bool
     {
-        return $this->hasMany(OfflineCourseEnrollment::class, 'user_id');
+        $sub = $this->activeSubscription();
+        if (!$sub || !is_array($sub->features)) {
+            return false;
+        }
+        return in_array($featureKey, $sub->features, true);
     }
 
     /**
@@ -220,14 +230,6 @@ class User extends Authenticatable
     public function portfolioProjects()
     {
         return $this->hasMany(PortfolioProject::class, 'user_id');
-    }
-
-    /**
-     * علاقة مع الكورسات الأوفلاين (كمدرب)
-     */
-    public function offlineCourses()
-    {
-        return $this->hasMany(OfflineCourse::class, 'instructor_id');
     }
 
     /**
@@ -409,17 +411,6 @@ class User extends Authenticatable
     {
         return $this->courseEnrollments()
                     ->where('advanced_course_id', $courseId)
-                    ->where('status', 'active')
-                    ->exists();
-    }
-
-    /**
-     * التحقق من التسجيل في كورس أوفلاين
-     */
-    public function isEnrolledInOfflineCourse($offlineCourseId): bool
-    {
-        return $this->offlineEnrollments()
-                    ->where('offline_course_id', $offlineCourseId)
                     ->where('status', 'active')
                     ->exists();
     }
@@ -646,6 +637,39 @@ class User extends Authenticatable
     public function scopeEmployees($query)
     {
         return $query->where('is_employee', true);
+    }
+
+    /**
+     * رمز وظيفة الموظف (accountant, hr, sales, supervisor, general_supervision)
+     */
+    public function employeeJobCode(): ?string
+    {
+        if (!$this->is_employee || !$this->relationLoaded('employeeJob')) {
+            $this->load('employeeJob');
+        }
+        return $this->employeeJob?->code;
+    }
+
+    /**
+     * هل الموظف يملك صلاحية عرض خانة في السايدبار حسب وظيفته
+     */
+    public function employeeCan(string $permission): bool
+    {
+        if (!$this->is_employee) {
+            return false;
+        }
+        if (!$this->relationLoaded('employeeJob')) {
+            $this->load('employeeJob');
+        }
+        $job = $this->employeeJob;
+        if (!$job) {
+            return true; // قديم: بدون وظيفة يعرض كل الخانات
+        }
+        $permissions = $job->permissions;
+        if (!is_array($permissions) || empty($permissions)) {
+            return true; // بدون صلاحيات محددة يعرض كل الخانات
+        }
+        return in_array($permission, $permissions, true);
     }
 
     /**

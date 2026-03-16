@@ -117,9 +117,6 @@ class DashboardController extends Controller
                     $q->where('teacher_id', $user->id);
                 })->whereNull('graded_at')->count(),
                 'total_exams' => \App\Models\Exam::where('created_by', $user->id)->count(),
-                'total_groups' => $teachingCourseIds->isEmpty()
-                    ? 0
-                    : \App\Models\Group::whereIn('course_id', $teachingCourseIds)->count(),
             ];
 
             // المحاضرات القادمة (للكورسات التي يدرّسها فقط)
@@ -143,15 +140,6 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get();
 
-            // المجموعات (للكورسات التي يدرّسها فقط)
-            $my_groups = $teachingCourseIds->isEmpty()
-                ? collect()
-                : \App\Models\Group::whereIn('course_id', $teachingCourseIds)
-                    ->with(['course', 'members'])
-                    ->latest()
-                    ->take(5)
-                    ->get();
-                
             $my_classrooms = Classroom::where('teacher_id', $user->id)
                 ->with('students')
                 ->latest()
@@ -163,8 +151,7 @@ class DashboardController extends Controller
                 'my_courses', 
                 'my_classrooms',
                 'upcoming_lectures',
-                'pending_assignments',
-                'my_groups'
+                'pending_assignments'
             ));
         } catch (\Exception $e) {
             // في حالة وجود خطأ، نعيد لوحة تحكم بسيطة
@@ -178,21 +165,18 @@ class DashboardController extends Controller
                 'total_assignments' => 0,
                 'pending_submissions' => 0,
                 'total_exams' => 0,
-                'total_groups' => 0,
             ];
             $my_courses = collect();
             $my_classrooms = collect();
             $upcoming_lectures = collect();
             $pending_assignments = collect();
-            $my_groups = collect();
             
             return view('dashboard.instructor', compact(
                 'stats', 
                 'my_courses', 
                 'my_classrooms',
                 'upcoming_lectures',
-                'pending_assignments',
-                'my_groups'
+                'pending_assignments'
             ));
         }
     }
@@ -298,6 +282,8 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        $activeSubscription = $user->activeSubscription();
+
         return view(
             'dashboard.student',
             compact(
@@ -307,7 +293,8 @@ class DashboardController extends Controller
                 'upcomingAssignments',
                 'upcomingExams',
                 'recentExamAttempts',
-                'recentCertificates'
+                'recentCertificates',
+                'activeSubscription'
             )
         );
     }

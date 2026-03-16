@@ -15,6 +15,11 @@ class InstructorController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
+        $profiles->each(function ($profile) {
+            $profile->courses_count = \App\Models\AdvancedCourse::where('instructor_id', $profile->user_id)
+                ->where('is_active', true)->count();
+        });
+
         return view('instructors.index', compact('profiles'));
     }
 
@@ -24,7 +29,11 @@ class InstructorController extends Controller
             abort(404);
         }
         $profile = InstructorProfile::where('user_id', $instructor->id)->approved()->with('user')->firstOrFail();
-        $courses = \App\Models\AdvancedCourse::where('instructor_id', $instructor->id)->where('is_active', true)->orderBy('is_featured', 'desc')->get();
+        $courses = \App\Models\AdvancedCourse::where('instructor_id', $instructor->id)
+            ->where('is_active', true)
+            ->withCount('lessons')
+            ->orderBy('is_featured', 'desc')
+            ->get();
         return view('instructors.show', compact('profile', 'courses'));
     }
 }

@@ -76,11 +76,6 @@
         <div class="rounded-xl p-5 bg-slate-50 border border-slate-200">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold text-slate-800">العناصر المتاحة</h3>
-                <a href="{{ route('instructor.learning-patterns.index', $course) }}" 
-                   class="px-3 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-xs font-semibold transition-colors">
-                    <i class="fas fa-puzzle-piece ml-1"></i>
-                    إدارة الأنماط
-                </a>
             </div>
 
             @if($availableLectures->count() > 0)
@@ -134,29 +129,7 @@
                 </div>
             @endif
 
-            @if(isset($availableLearningPatterns) && $availableLearningPatterns->count() > 0)
-                <div class="mb-5">
-                    <h4 class="text-sm font-semibold text-slate-600 mb-2 flex items-center gap-2">
-                        <i class="fas fa-puzzle-piece text-amber-500"></i>
-                        الأنماط التعليمية ({{ $availableLearningPatterns->count() }})
-                    </h4>
-                    <div class="space-y-2">
-                        @foreach($availableLearningPatterns as $pattern)
-                            @php $typeInfo = $pattern->getTypeInfo(); @endphp
-                            <div class="p-3 bg-white rounded-lg border border-slate-200 hover:border-sky-300 hover:bg-sky-50/50 transition-all cursor-pointer"
-                                 onclick="showAddItemModal('App\\Models\\LearningPattern', {{ $pattern->id }}, '{{ addslashes($pattern->title) }}', '{{ addslashes($typeInfo['name'] ?? 'نمط تعليمي') }}')">
-                                <div class="flex items-center gap-2 mb-0.5">
-                                    <i class="{{ $typeInfo['icon'] ?? 'fas fa-puzzle-piece' }} text-amber-500"></i>
-                                    <span class="font-semibold text-sm text-slate-800">{{ $pattern->title }}</span>
-                                </div>
-                                <div class="text-xs text-slate-500">{{ $typeInfo['name'] ?? 'نمط تعليمي' }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
-            @if($availableLectures->count() == 0 && $availableAssignments->count() == 0 && (!isset($availableExams) || $availableExams->count() == 0) && (!isset($availableLearningPatterns) || $availableLearningPatterns->count() == 0))
+            @if($availableLectures->count() == 0 && $availableAssignments->count() == 0 && (!isset($availableExams) || $availableExams->count() == 0))
                 <div class="text-center py-8 text-slate-500">
                     <i class="fas fa-check-circle text-2xl mb-2 text-emerald-400"></i>
                     <p class="text-sm">جميع العناصر مضافة للمنهج</p>

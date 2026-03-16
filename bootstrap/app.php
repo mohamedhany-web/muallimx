@@ -10,6 +10,49 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
+        // إرسال التقارير الشهرية
+        $schedule->command('reports:send-monthly')
+                 ->monthlyOn(1, '09:00')
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        // تنظيف البيانات القديمة شهرياً
+        $schedule->call(function () {
+            \App\Models\WhatsAppMessage::where('created_at', '<', now()->subMonths(6))->delete();
+            \App\Models\ActivityLog::where('created_at', '<', now()->subMonths(3))->delete();
+        })->monthly()->name('cleanup-old-data')->withoutOverlapping();
+
+        // تحديث إحصائيات المنصة يومياً
+        $schedule->call(function () {
+            cache()->remember('active_users_today', 3600, function () {
+                return \App\Models\ActivityLog::whereDate('created_at', today())
+                    ->distinct('user_id')
+                    ->count();
+            });
+        })->daily()->name('update-daily-stats');
+
+        // معالجة الأقساط يومياً
+        $schedule->command('installments:process')
+                 ->dailyAt('08:00')
+                 ->runInBackground()
+                 ->withoutOverlapping();
+
+        // انتهاء الاشتراكات يومياً
+        $schedule->command('subscriptions:expire')->dailyAt('00:05');
+
+        // تذكير الطلاب قبل 10 دقائق من بدء جلسة البث المباشر
+        $schedule->command('live:send-reminders --minutes=10')
+                 ->everyMinute()
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        // إنهاء جلسات البث التي تجاوزت المدة القصوى تلقائياً
+        $schedule->command('live:auto-end-sessions')
+                 ->everyFiveMinutes()
+                 ->withoutOverlapping()
+                 ->runInBackground();
+    })
     ->withMiddleware(function (Middleware $middleware): void {
         // Security Headers - يجب أن يكون أول middleware
         $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
@@ -29,8 +72,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // إضافة Middleware للتحقق من حالة المستخدم لجميع الطلبات المصادقة عليها
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckActiveStatus::class);
 
-        // إلزام الإدمن والمدربين والموظفين بتفعيل المصادقة الثنائية (2FA) قبل الوصول لأي صفحة
-        $middleware->appendToGroup('web', \App\Http\Middleware\EnsureTwoFactorEnabled::class);
+        // إلزام الإدمن والمدربين بتفعيل المصادقة الثنائية (2FA) — معطّل حالياً
+        // $middleware->appendToGroup('web', \App\Http\Middleware\EnsureTwoFactorEnabled::class);
         
         // تسجيل Middlewares للأدوار والصلاحيات
         $middleware->alias([

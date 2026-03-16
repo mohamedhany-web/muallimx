@@ -69,15 +69,6 @@
                 </select>
             </div>
             <div>
-                <label for="offline_course_id" class="block text-sm font-semibold text-slate-700 mb-1">{{ __('instructor.offline_course') }}</label>
-                <select name="offline_course_id" id="offline_course_id" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800">
-                    <option value="">{{ __('instructor.all_offline_courses') }}</option>
-                    @foreach($offlineCourses ?? [] as $oc)
-                        <option value="{{ $oc->id }}" {{ request('offline_course_id') == $oc->id ? 'selected' : '' }}>{{ $oc->title }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
                 <label for="is_active" class="block text-sm font-semibold text-slate-700 mb-1">{{ __('common.status') }}</label>
                 <select name="is_active" id="is_active" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800">
                     <option value="">{{ __('instructor.all') }}</option>
@@ -93,7 +84,7 @@
                 <button type="submit" class="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
                     <i class="fas fa-search ml-1"></i> {{ __('common.search') }}
                 </button>
-                @if(request()->anyFilled(['course_id', 'offline_course_id', 'is_active', 'search']))
+                @if(request()->anyFilled(['course_id', 'is_active', 'search']))
                     <a href="{{ route('instructor.exams.index') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition-colors">
                         <i class="fas fa-times"></i>
                     </a>
@@ -117,7 +108,7 @@
                             <p class="text-sm text-slate-600 mb-3 line-clamp-2">{{ $exam->description }}</p>
                         @endif
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 mt-auto">
-                            <span class="truncate max-w-full" title="{{ $exam->offlineCourse->title ?? $exam->advancedCourse->title ?? '—' }}"><i class="fas fa-book text-sky-500 ml-1"></i> {{ $exam->offlineCourse->title ?? $exam->advancedCourse->title ?? '—' }} @if($exam->offline_course_id)<span class="text-amber-600">({{ __('instructor.offline_badge') }})</span>@endif</span>
+                            <span class="truncate max-w-full" title="{{ $exam->advancedCourse->title ?? '—' }}"><i class="fas fa-book text-sky-500 ml-1"></i> {{ $exam->advancedCourse->title ?? '—' }}</span>
                             <span>{{ $exam->duration_minutes }} د</span>
                             <span>{{ $exam->total_marks }} {{ __('instructor.marks') }}</span>
                             <span>{{ $exam->questions_count }} {{ __('instructor.question_single') }}</span>

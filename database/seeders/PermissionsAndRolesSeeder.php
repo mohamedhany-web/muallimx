@@ -66,10 +66,6 @@ class PermissionsAndRolesSeeder extends Seeder
             ['name' => 'wallets.manage', 'display_name' => 'إدارة المحافظ', 'group' => 'finance'],
             
             // إدارة المحتوى (CMS)
-            ['name' => 'blog.view', 'display_name' => 'عرض المدونة', 'group' => 'cms'],
-            ['name' => 'blog.create', 'display_name' => 'إنشاء مقالات', 'group' => 'cms'],
-            ['name' => 'blog.edit', 'display_name' => 'تعديل المقالات', 'group' => 'cms'],
-            ['name' => 'blog.delete', 'display_name' => 'حذف المقالات', 'group' => 'cms'],
             ['name' => 'faq.manage', 'display_name' => 'إدارة الأسئلة الشائعة', 'group' => 'cms'],
             ['name' => 'pages.manage', 'display_name' => 'إدارة الصفحات العامة', 'group' => 'cms'],
             

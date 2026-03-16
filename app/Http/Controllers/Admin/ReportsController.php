@@ -20,7 +20,6 @@ use App\Models\ExamAttempt;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\Lecture;
-use App\Models\Group;
 use App\Models\Certificate;
 use App\Models\InstructorAgreement;
 use App\Models\WithdrawalRequest;
@@ -31,7 +30,6 @@ use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\Referral;
 use App\Models\ContactMessage;
-use App\Models\BlogPost;
 use App\Models\Task;
 use App\Models\AcademicYear;
 use App\Models\AcademicSubject;
@@ -489,7 +487,6 @@ class ReportsController extends Controller
                 'total_assignments' => Assignment::count(),
                 'total_submissions' => AssignmentSubmission::count(),
                 'total_lectures' => Lecture::count(),
-                'total_groups' => Group::count(),
                 'total_certificates' => Certificate::count(),
             ];
 
@@ -521,12 +518,6 @@ class ReportsController extends Controller
                 ->orderBy('scheduled_at', 'desc')
                 ->paginate(50);
 
-            // المجموعات
-            $groups = Group::withCount('members')
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->orderBy('created_at', 'desc')
-                ->paginate(30);
-
             // الشهادات
             $certificates = Certificate::with(['user', 'course'])
                 ->whereBetween('issued_at', [$startDate, $endDate])
@@ -540,7 +531,6 @@ class ReportsController extends Controller
                 'assignments',
                 'submissions',
                 'lectures',
-                'groups',
                 'certificates',
                 'startDate',
                 'endDate',

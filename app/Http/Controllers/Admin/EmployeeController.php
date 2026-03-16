@@ -47,7 +47,7 @@ class EmployeeController extends Controller
 
         $employees = $query->latest('hire_date')->paginate(20);
 
-        $jobs = EmployeeJob::active()->orderBy('name')->get();
+        $jobs = EmployeeJob::active()->fixedJobs()->orderBy('name')->get();
 
         $stats = [
             'total' => User::employees()->count(),
@@ -64,7 +64,7 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        $jobs = EmployeeJob::active()->orderBy('name')->get();
+        $jobs = EmployeeJob::active()->fixedJobs()->orderBy('name')->get();
         return view('admin.employees.create', compact('jobs'));
     }
 
@@ -145,7 +145,7 @@ class EmployeeController extends Controller
      */
     public function edit(User $employee)
     {
-        $jobs = EmployeeJob::active()->orderBy('name')->get();
+        $jobs = EmployeeJob::active()->fixedJobs()->orderBy('name')->get();
         return view('admin.employees.edit', compact('employee', 'jobs'));
     }
 

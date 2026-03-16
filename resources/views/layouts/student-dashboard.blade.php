@@ -2,494 +2,192 @@
 <!DOCTYPE html>
 <html lang="{{ $studentLocale }}" dir="{{ $studentRtl ? 'rtl' : 'ltr' }}" class="light">
 <head>
+    <script>
+        (function() {
+            var s = localStorage.getItem('theme');
+            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (s === 'dark' || (!s && d)) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+            }
+        })();
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ config('app.name', 'MuallimX') }} - @yield('title', __('auth.dashboard'))</title>
 
-    <title>{{ config('app.name', 'Mindlytics') }} - @yield('title', __('auth.dashboard'))</title>
-
-    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('logo-removebg-preview.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('logo-removebg-preview.png') }}">
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        * {
-            font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
-        }
-
-        body {
-            background: #f9fafb;
-            overflow-x: hidden;
-        }
-
-        /* Sidebar - يتناسب مع لوحة التحكم */
-        .student-sidebar {
-            background: #ffffff;
-            border-left: 1px solid rgb(226 232 240);
-            width: 280px;
-            box-shadow: -1px 0 6px rgba(0, 0, 0, 0.04);
-        }
-
-        .nav-card {
-            background: transparent;
-            border: none;
-            border-radius: 12px;
-            padding: 10px 12px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-card::before {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: rgb(14 165 233);
-            opacity: 0;
-            border-radius: 0 3px 3px 0;
-            transition: opacity 0.2s;
-        }
-
-        .nav-card:hover {
-            background: rgb(241 245 249);
-        }
-
-        .nav-card.active {
-            background: rgb(224 242 254);
-            box-shadow: none;
-        }
-
-        .nav-card.active::before {
-            opacity: 1;
-        }
-
-        .nav-card.active .nav-icon {
-            transform: scale(1.02);
-            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
-        }
-
-        .nav-card.active .font-black { color: rgb(17 24 39); }
-        .nav-card.active .text-xs { color: rgb(75 85 99); }
-
-        .nav-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-            line-height: 1;
-            text-align: center;
-        }
-        .nav-icon i {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            margin: 0;
-            padding: 0;
-        }
-        .nav-card:hover .nav-icon { transform: scale(1.05); }
-
-        /* Navbar - يتناسب مع لوحة التحكم */
-        .student-header {
-            background: #ffffff;
-            border-bottom: 1px solid rgb(226 232 240);
-            min-height: 64px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-        }
-        @media (max-width: 640px) {
-            .student-header {
-                min-height: 56px;
-                padding-top: 0.5rem;
-                padding-bottom: 0.5rem;
-            }
-        }
-
-        .search-command {
-            background: rgb(248 250 252);
-            border: 1px solid rgb(226 232 240);
-            border-radius: 10px;
-            padding: 10px 14px;
-            transition: all 0.2s ease;
-        }
-        
-        @media (max-width: 640px) {
-            .search-command {
-                padding: 8px 12px;
-                border-radius: 10px;
-            }
-        }
-
-        .search-command:focus-within {
-            border-color: rgb(14 165 233);
-            background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1), 0 2px 8px rgba(14, 165, 233, 0.12);
-        }
-
-        .quick-action-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            background: rgb(248 250 252);
-            border: 1px solid rgb(226 232 240);
-            color: rgb(100 116 139);
-            position: relative;
-            line-height: 1;
-            text-align: center;
-        }
-        .quick-action-btn:hover {
-            background: rgb(224 242 254);
-            border-color: rgb(186 230 253);
-            color: rgb(14 165 233);
-        }
-
-        .quick-action-btn i {
-            position: relative;
-            z-index: 1;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            margin: 0;
-            padding: 0;
-            vertical-align: middle;
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 4px;
-            background: rgb(239 68 68);
-            border-radius: 9999px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: white;
-            font-weight: 700;
-            border: 2px solid white;
-            line-height: 1;
-            text-align: center;
-        }
-        
-        .notification-badge span {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            margin: 0;
-            padding: 0;
-            vertical-align: middle;
-        }
-
-        .user-menu-btn {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .user-menu-btn:hover {
-            background: rgb(248 250 252);
-        }
-
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, rgb(14 165 233), rgb(2 132 199));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 13px;
-            box-shadow: 0 1px 4px rgba(14, 165, 233, 0.25);
-            transition: all 0.2s ease;
-            line-height: 1;
-            text-align: center;
-        }
-        
-        .user-avatar img {
-            object-fit: cover;
-            object-position: center;
-        }
-        
-        .user-avatar:not(:has(img)) {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .user-menu-btn:hover .user-avatar {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-        }
-
-        /* Dropdown - نفس أسلوب بطاقات لوحة التحكم */
-        .dropdown-menu {
-            background: white;
-            border: 1px solid rgb(226 232 240);
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-        }
-        .dropdown-item {
-            transition: all 0.15s ease;
-            display: flex;
-            align-items: center;
-        }
-        .dropdown-item:hover {
-            background: rgb(248 250 252);
-        }
-        
-        .dropdown-item i {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            margin: 0;
-            padding: 0;
-            vertical-align: middle;
-        }
-
-        /* Scrollbar */
-        .sidebar-scroll::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: linear-gradient(to bottom, rgb(14 165 233), rgb(2 132 199));
-            border-radius: 3px;
-        }
-
-        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(to bottom, rgb(2 132 199), rgb(14 165 233));
-        }
-
-        .logo-section {
-            background: rgb(248 250 252);
-            border-bottom: 1px solid rgb(226 232 240);
-        }
-
-        /* Fix Logo Alignment */
-        .logo-section img,
-        .student-sidebar img[alt*="Logo"],
-        .navbar-gradient img[alt*="Logo"] {
-            transform: none !important;
-            rotate: 0deg !important;
-            object-fit: contain !important;
-            object-position: center center !important;
-            display: block !important;
-            margin: 0 auto !important;
-        }
-
-        .stats-card {
-            transition: all 0.2s ease;
-        }
-        .stats-card:hover {
-            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
-        }
-
-        .user-profile-card {
-            background: rgb(248 250 252);
-            border-top: 1px solid rgb(226 232 240);
-        }
-        .user-profile-inner {
-            transition: all 0.2s ease;
-        }
-        .user-profile-inner:hover {
-            border-color: rgb(186 230 253);
-            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.08);
-        }
-
-        /* Responsive Design */
-        @media (max-width: 1024px) {
-            .student-sidebar {
-                width: 320px;
-                max-width: 85vw;
-                min-width: 280px;
-            }
-
-            .nav-card {
-                padding: 12px 14px;
-            }
-
-            .nav-icon {
-                width: 36px;
-                height: 36px;
-                font-size: 14px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .student-sidebar {
-                width: 300px;
-                max-width: 80vw;
-                min-width: 260px;
-            }
-            
-            .student-header {
-                padding-left: 1rem;
-                padding-right: 1rem;
-                height: auto;
-                min-height: 64px;
-            }
-            
-            .search-command {
-                padding: 8px 12px;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .student-sidebar {
-                width: 280px;
-                max-width: 85vw;
-                min-width: 0;
-            }
-
-            .logo-section {
-                padding: 0.875rem;
-            }
-
-            .logo-section .w-12 {
-                width: 2.5rem;
-                height: 2.5rem;
-            }
-
-            .stats-card {
-                padding: 0.625rem;
-            }
-
-            .stats-card .text-lg {
-                font-size: 1.125rem;
-            }
-
-            .nav-card {
-                padding: 10px 12px;
-                margin-bottom: 4px;
-            }
-
-            .nav-icon {
-                width: 32px;
-                height: 32px;
-                font-size: 13px;
-            }
-
-            .user-profile-card {
-                padding: 0.625rem;
-            }
-            
-            .student-header {
-                padding-left: 0.75rem;
-                padding-right: 0.75rem;
-                gap: 0.5rem;
-            }
-            
-            .quick-action-btn {
-                width: 38px;
-                height: 38px;
-            }
-            
-            .user-avatar {
-                width: 34px;
-                height: 34px;
-                font-size: 13px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .student-sidebar {
-                width: 260px;
-                max-width: 90vw;
-            }
-            
-            .student-header {
-                padding-left: 0.5rem;
-                padding-right: 0.5rem;
-            }
-            
-            .quick-action-btn {
-                width: 36px;
-                height: 36px;
-            }
-            
-            .quick-action-btn i {
-                font-size: 12px;
-            }
-            
-            .user-avatar {
-                width: 32px;
-                height: 32px;
-                font-size: 12px;
-            }
-        }
-    </style>
-
-    @stack('styles')
-</head>
-<body x-data="{ 
-    sidebarOpen: window.innerWidth >= 1024
-}" 
-x-init="
-    function removeDarkMode() {
-        document.documentElement.classList.remove('dark');
-    }
-    removeDarkMode();
-    
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                if (document.documentElement.classList.contains('dark')) {
-                    removeDarkMode();
+    <script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                fontFamily: {
+                    heading: ['Tajawal', 'IBM Plex Sans Arabic', 'sans-serif'],
+                    body: ['IBM Plex Sans Arabic', 'Tajawal', 'sans-serif'],
+                },
+                colors: {
+                    navy: { 50:'#f0f4ff',100:'#dbe4ff',200:'#bac8ff',300:'#91a7ff',400:'#748ffc',500:'#5c7cfa',600:'#4c6ef5',700:'#4263eb',800:'#3b5bdb',900:'#364fc7',950:'#0F172A' },
+                    brand: { 50:'#ecfeff',100:'#cffafe',200:'#a5f3fc',300:'#67e8f9',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',700:'#0e7490',800:'#155e75',900:'#164e63' }
                 }
             }
-        });
-    });
-    observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['class']
-    });
-    
-    setInterval(removeDarkMode, 100);
-    
-    window.addEventListener('resize', () => {
-        sidebarOpen = window.innerWidth >= 1024;
-    });
-">
+        }
+    }
+    </script>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        * { font-family: 'IBM Plex Sans Arabic', 'Tajawal', system-ui, sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-heading { font-family: 'Tajawal', 'IBM Plex Sans Arabic', sans-serif; }
+        html, body { margin: 0; padding: 0; height: 100%; overflow-x: hidden; }
+        body { background: #f8fafc; transition: background-color 0.2s; }
+        html.dark body { background: #0f172a; }
+        [x-cloak] { display: none !important; }
+
+        .student-sidebar {
+            background: #ffffff;
+            border-left: 1px solid rgba(226, 232, 240, 0.8);
+            width: 272px;
+            box-shadow: -1px 0 8px rgba(0, 0, 0, 0.03);
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.5rem 0.75rem; border-radius: 0.75rem;
+            color: #475569; font-size: 0.8125rem; font-weight: 500;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; cursor: pointer;
+        }
+        .nav-item:hover { background: #f1f5f9; color: #1e293b; }
+        .nav-item.active {
+            background: linear-gradient(135deg, #ecfeff, #f0f9ff);
+            color: #0891b2; font-weight: 600;
+        }
+        .nav-item.active::before {
+            content: ''; position: absolute; top: 6px; bottom: 6px;
+            width: 3px; border-radius: 0 3px 3px 0;
+            background: linear-gradient(180deg, #06b6d4, #0891b2);
+        }
+        [dir="rtl"] .nav-item.active::before { right: 0; }
+        [dir="ltr"] .nav-item.active::before { left: 0; }
+        .nav-item .nav-icon {
+            width: 34px; height: 34px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8125rem; flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+        .nav-item:hover .nav-icon { transform: scale(1.06); }
+        .nav-item.active .nav-icon { box-shadow: 0 2px 8px rgba(6, 182, 212, 0.2); }
+
+        .top-navbar {
+            height: 68px;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        .search-field {
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 12px; padding: 0.5rem 0.875rem;
+            transition: all 0.2s ease;
+        }
+        .search-field:focus-within {
+            border-color: #06b6d4; background: #fff;
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+
+        .action-btn {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            color: #64748b; transition: all 0.2s ease;
+            position: relative;
+        }
+        .action-btn:hover { background: #ecfeff; border-color: #a5f3fc; color: #0891b2; }
+
+        .notif-dot {
+            position: absolute; top: -2px; right: -2px;
+            min-width: 16px; height: 16px; padding: 0 3px;
+            background: #ef4444; border-radius: 9999px;
+            font-size: 9px; color: white; font-weight: 700;
+            border: 2px solid white;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .user-btn { transition: all 0.2s ease; border-radius: 12px; padding: 4px 6px; }
+        .user-btn:hover { background: #f8fafc; }
+        .user-avatar {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 13px;
+            box-shadow: 0 1px 4px rgba(6, 182, 212, 0.25);
+            transition: transform 0.2s ease;
+        }
+        .user-btn:hover .user-avatar { transform: scale(1.05); }
+
+        .dropdown-menu {
+            background: white; border: 1px solid #e2e8f0;
+            border-radius: 14px; box-shadow: 0 10px 40px -8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .dropdown-link {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 0.75rem; border-radius: 0.5rem;
+            font-size: 0.8125rem; color: #475569;
+            transition: background 0.15s ease;
+        }
+        .dropdown-link:hover { background: #f8fafc; }
+
+        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.2); border-radius: 4px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgba(6, 182, 212, 0.35); }
+
+        .logo-area {
+            background: linear-gradient(135deg, #f8fafc 0%, #ecfeff 100%);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+        }
+
+        .stat-mini {
+            border-radius: 10px; padding: 0.5rem; transition: all 0.2s ease;
+        }
+        .stat-mini:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+
+        .user-card-bottom {
+            background: linear-gradient(135deg, #f8fafc 0%, #ecfeff 100%);
+            border-top: 1px solid rgba(226, 232, 240, 0.6);
+        }
+
+        @media (max-width: 1024px) {
+            .student-sidebar { width: 300px; max-width: 84vw; }
+        }
+        @media (max-width: 640px) {
+            .student-sidebar { width: 280px; max-width: 88vw; }
+            .top-navbar { height: 58px; }
+            .action-btn { width: 36px; height: 36px; }
+            .user-avatar { width: 32px; height: 32px; font-size: 12px; }
+        }
+    </style>
+    @stack('styles')
+</head>
+<body x-data="{ sidebarOpen: window.innerWidth >= 1024 }"
+      x-init="window.addEventListener('resize', () => { sidebarOpen = window.innerWidth >= 1024; })">
     <div class="flex h-screen overflow-hidden">
         @auth
-            <!-- Clean Sidebar -->
             <aside x-show="sidebarOpen || window.innerWidth >= 1024"
                    x-transition:enter="transition ease-out duration-150"
                    x-transition:enter-start="opacity-0 translate-x-full"
@@ -502,7 +200,6 @@ x-init="
                 @include('layouts.student-sidebar')
             </aside>
 
-            <!-- Mobile Overlay -->
             <div x-show="sidebarOpen && window.innerWidth < 1024"
                  @click="sidebarOpen = false"
                  x-transition:enter="transition ease-out duration-150"
@@ -511,136 +208,101 @@ x-init="
                  x-transition:leave="transition ease-in duration-100"
                  x-transition:leave-start="opacity-100"
                  x-transition:leave-end="opacity-0"
-                 class="fixed inset-0 bg-black/50 z-40 lg:hidden"
-                 style="will-change: opacity;"></div>
+                 class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 lg:hidden"></div>
         @endauth
 
-        <!-- Main Content Area -->
         <div class="flex flex-col flex-1 min-w-0">
             @auth
-                <!-- Enhanced Header -->
-                <header class="student-header flex items-center justify-between px-4 sm:px-6 lg:px-8 flex-shrink-0 sticky top-0 z-30">
-                    <div class="flex items-center gap-2 sm:gap-3 md:gap-5 flex-1 min-w-0">
-                        <!-- Sidebar Toggle -->
+                <header class="top-navbar flex items-center justify-between px-4 sm:px-6 lg:px-8 flex-shrink-0 sticky top-0 z-30">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
                         <button @click="sidebarOpen = !sidebarOpen"
-                                class="lg:hidden p-2 sm:p-2.5 rounded-xl bg-gradient-to-br from-sky-500/10 to-sky-400/10 hover:from-sky-500/20 hover:to-sky-400/20 transition-all duration-300 flex-shrink-0 flex items-center justify-center">
-                            <i class="fas fa-bars text-sky-500 text-sm sm:text-base"></i>
+                                class="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-brand-600 bg-brand-50 hover:bg-brand-100 transition-colors flex-shrink-0">
+                            <i class="fas fa-bars text-sm"></i>
                         </button>
-
-                        <!-- Enhanced Search - Mobile -->
-                        <div class="flex md:hidden items-center flex-1 min-w-0 ml-2">
-                            <div class="search-command flex items-center gap-2 w-full">
-                                <i class="fas fa-search text-sky-500 text-xs sm:text-sm flex-shrink-0"></i>
-                                <input type="text" 
-                                       placeholder="{{ __('common.nav_search_placeholder') }}" 
-                                       class="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-gray-700 placeholder-gray-400 font-medium min-w-0">
-                            </div>
-                        </div>
-
-                        <!-- Enhanced Search - Desktop -->
-                        <div class="hidden md:flex items-center flex-1 max-w-2xl min-w-0">
-                            <div class="search-command flex items-center gap-3 w-full">
-                                <i class="fas fa-search text-sky-500 text-sm flex-shrink-0"></i>
-                                <input type="text" 
-                                       placeholder="{{ __('common.nav_search_placeholder_long') }}" 
-                                       class="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 font-medium min-w-0">
-                                <kbd class="hidden lg:flex items-center gap-1 px-2.5 py-1 bg-gradient-to-br from-sky-500/10 to-sky-400/10 rounded text-xs font-bold text-sky-500 border border-sky-500/20 flex-shrink-0">
-                                    <span>Ctrl</span>
-                                    <span>K</span>
-                                </kbd>
-                            </div>
+                        <div class="search-field flex items-center gap-2 flex-1 max-w-xl">
+                            <i class="fas fa-search text-brand-500 text-xs"></i>
+                            <input type="text" placeholder="{{ __('common.nav_search_placeholder') }}"
+                                   class="flex-1 bg-transparent border-none outline-none text-sm text-slate-700 placeholder-slate-400 font-medium min-w-0">
+                            <kbd class="hidden lg:flex items-center gap-0.5 px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-500 border border-slate-200 flex-shrink-0">
+                                Ctrl K
+                            </kbd>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
-                        <x-language-switcher class="hidden sm:inline-flex" />
-                        <!-- Quick Actions - Desktop Only -->
+                    <div class="flex items-center gap-2 flex-shrink-0">
                         <div class="hidden lg:flex items-center gap-2">
-                            <a href="{{ route('academic-years') }}" class="quick-action-btn" title="{{ __('landing.nav.courses') }}">
-                                <i class="fas fa-search text-sm"></i>
+                            <a href="{{ route('academic-years') }}" class="action-btn" title="{{ __('landing.nav.courses') }}">
+                                <i class="fas fa-search text-xs"></i>
                             </a>
-                            <a href="{{ route('my-courses.index') }}" class="quick-action-btn" title="{{ __('common.my_courses_title') }}">
-                                <i class="fas fa-book-open text-sm"></i>
+                            <a href="{{ route('my-courses.index') }}" class="action-btn" title="{{ __('common.my_courses_title') }}">
+                                <i class="fas fa-book-open text-xs"></i>
                             </a>
                         </div>
 
-                        <!-- Notifications -->
                         <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open"
-                                    class="quick-action-btn relative">
-                                <i class="fas fa-bell text-xs sm:text-sm"></i>
-                                <span class="notification-badge text-[9px] sm:text-[10px]">3</span>
+                            <button @click="open = !open" class="action-btn">
+                                <i class="fas fa-bell text-xs"></i>
+                                <span class="notif-dot">3</span>
                             </button>
-                            <div x-show="open"
-                                 @click.away="open = false"
-                                 x-transition
-                                 class="absolute left-0 mt-3 w-72 sm:w-80 md:w-96 dropdown-menu z-50 overflow-hidden">
-                                <div class="p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-sky-400/10 to-sky-500/10">
-                                    <h3 class="font-bold text-gray-900 text-xs sm:text-sm flex items-center gap-2">
-                                        <i class="fas fa-bell text-sky-500 flex items-center justify-center"></i>
-                                        <span>الإشعارات</span>
+                            <div x-show="open" @click.away="open = false" x-transition
+                                 class="absolute left-0 mt-2 w-80 dropdown-menu z-50">
+                                <div class="p-3.5 border-b border-slate-100 bg-gradient-to-r from-brand-50 to-slate-50">
+                                    <h3 class="font-heading font-bold text-slate-800 text-sm flex items-center gap-2">
+                                        <i class="fas fa-bell text-brand-500"></i>
+                                        الإشعارات
                                     </h3>
                                 </div>
-                                <div class="max-h-96 overflow-y-auto">
-                                    <div class="p-4 sm:p-6 text-center text-gray-500 text-xs sm:text-sm">
-                                        <i class="fas fa-bell-slash text-xl sm:text-2xl mb-2 opacity-30 inline-flex items-center justify-center"></i>
-                                        <p>لا توجد إشعارات جديدة</p>
-                                    </div>
+                                <div class="p-6 text-center text-slate-400 text-sm">
+                                    <i class="fas fa-bell-slash text-2xl mb-2 opacity-30"></i>
+                                    <p>لا توجد إشعارات جديدة</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Enhanced User Profile -->
                         <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open"
-                                    class="user-menu-btn flex items-center gap-1.5 sm:gap-2 md:gap-3 p-1 sm:p-1.5 md:p-2 rounded-xl">
+                            <button @click="open = !open" class="user-btn flex items-center gap-2">
                                 <div class="user-avatar flex-shrink-0">
                                     @if(auth()->user()->profile_image)
-                                        <img src="{{ auth()->user()->profile_image_url }}" alt="" class="w-full h-full rounded-lg object-cover">
+                                        <img src="{{ auth()->user()->profile_image_url }}" alt="" class="w-full h-full rounded-[10px] object-cover">
                                     @else
-                                        {{ substr(auth()->user()->name, 0, 1) }}
+                                        {{ mb_substr(auth()->user()->name, 0, 1) }}
                                     @endif
                                 </div>
-                                <div class="hidden sm:block md:hidden lg:block text-right min-w-0">
-                                    <div class="text-xs sm:text-sm font-bold text-gray-900 truncate">{{ auth()->user()->name }}</div>
-                                    <div class="text-[10px] sm:text-xs text-gray-500">طالب</div>
+                                <div class="hidden sm:block text-right min-w-0">
+                                    <div class="text-sm font-bold text-slate-800 truncate">{{ auth()->user()->name }}</div>
+                                    <div class="text-[11px] text-slate-500">{{ __('student.student_role') }}</div>
                                 </div>
-                                <i class="fas fa-chevron-down text-[10px] sm:text-xs text-gray-400 hidden sm:block transition-transform flex-shrink-0" :class="{ 'rotate-180': open }"></i>
+                                <i class="fas fa-chevron-down text-[10px] text-slate-400 hidden sm:block transition-transform" :class="{ 'rotate-180': open }"></i>
                             </button>
-                            <div x-show="open"
-                                 @click.away="open = false"
-                                 x-transition
-                                 class="absolute left-0 mt-3 w-56 sm:w-64 dropdown-menu z-50 overflow-hidden">
-                                <div class="p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-sky-400/10 to-sky-500/10">
-                                    <div class="flex items-center gap-2 sm:gap-3">
-                                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-sky-500 to-sky-400 flex items-center justify-center text-white font-bold text-sm sm:text-base shadow-lg flex-shrink-0">
+                            <div x-show="open" @click.away="open = false" x-transition
+                                 class="absolute left-0 mt-2 w-60 dropdown-menu z-50">
+                                <div class="p-3.5 border-b border-slate-100 bg-gradient-to-r from-brand-50 to-slate-50">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
                                             @if(auth()->user()->profile_image)
                                                 <img src="{{ auth()->user()->profile_image_url }}" alt="" class="w-full h-full rounded-xl object-cover">
                                             @else
-                                                {{ substr(auth()->user()->name, 0, 1) }}
+                                                {{ mb_substr(auth()->user()->name, 0, 1) }}
                                             @endif
                                         </div>
                                         <div class="min-w-0 flex-1">
-                                            <div class="font-bold text-gray-900 text-xs sm:text-sm truncate">{{ auth()->user()->name }}</div>
-                                            <div class="text-[10px] sm:text-xs text-gray-600 truncate">{{ auth()->user()->email }}</div>
+                                            <div class="font-bold text-slate-800 text-sm truncate">{{ auth()->user()->name }}</div>
+                                            <div class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email }}</div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="p-1.5 sm:p-2">
-                                    <a href="{{ route('profile') }}" class="dropdown-item flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm text-gray-700 font-medium">
-                                        <i class="fas fa-user w-4 sm:w-5 text-sky-500 flex-shrink-0"></i>
-                                        <span>الملف الشخصي</span>
+                                <div class="p-1.5">
+                                    <a href="{{ route('profile') }}" class="dropdown-link">
+                                        <i class="fas fa-user w-4 text-brand-500"></i> الملف الشخصي
                                     </a>
-                                    <a href="{{ route('settings') }}" class="dropdown-item flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm text-gray-700 font-medium">
-                                        <i class="fas fa-cog w-4 sm:w-5 text-gray-500 flex-shrink-0"></i>
-                                        <span>الإعدادات</span>
+                                    <a href="{{ route('settings') }}" class="dropdown-link">
+                                        <i class="fas fa-cog w-4 text-slate-400"></i> الإعدادات
                                     </a>
-                                    <hr class="my-1.5 sm:my-2 border-gray-200">
+                                    <hr class="my-1.5 border-slate-100">
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="w-full dropdown-item flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm text-red-600 font-medium">
-                                            <i class="fas fa-sign-out-alt w-4 sm:w-5 flex-shrink-0"></i>
-                                            <span>تسجيل الخروج</span>
+                                        <button type="submit" class="w-full dropdown-link text-rose-600">
+                                            <i class="fas fa-sign-out-alt w-4"></i> تسجيل الخروج
                                         </button>
                                     </form>
                                 </div>
@@ -650,21 +312,18 @@ x-init="
                 </header>
             @endauth
 
-            <!-- Main Content -->
-            <main class="flex-1 overflow-auto bg-gray-50 min-w-0 w-full">
+            <main class="flex-1 overflow-auto bg-slate-50/80 min-w-0 w-full">
                 <div class="w-full max-w-full p-4 sm:p-6 lg:p-8">
                     @if(session('success'))
-                        <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm font-medium">
-                            {{ session('success') }}
+                        <div class="mb-4 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
+                            <i class="fas fa-check-circle"></i> {{ session('success') }}
                         </div>
                     @endif
-
                     @if(session('error'))
-                        <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-medium">
-                            {{ session('error') }}
+                        <div class="mb-4 bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
+                            <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
                         </div>
                     @endif
-
                     @yield('content')
                 </div>
             </main>
@@ -672,33 +331,5 @@ x-init="
     </div>
 
     @stack('scripts')
-    
-    <script>
-        function removeDarkMode() {
-            document.documentElement.classList.remove('dark');
-        }
-        
-        removeDarkMode();
-        
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    if (document.documentElement.classList.contains('dark')) {
-                        removeDarkMode();
-                    }
-                }
-            });
-        });
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
-        
-        setInterval(removeDarkMode, 50);
-        
-        document.addEventListener('DOMContentLoaded', removeDarkMode);
-        window.addEventListener('load', removeDarkMode);
-        window.addEventListener('pageshow', removeDarkMode);
-    </script>
 </body>
 </html>

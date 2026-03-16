@@ -177,7 +177,7 @@
                 <p class="text-sm font-bold text-gray-900 truncate">{{ auth()->user()->name }}</p>
                 <p class="text-xs text-gray-500 truncate">
                     @php
-                        $userRole = auth()->user()->isAdmin() ? 'مدير' : (auth()->user()->isInstructor() ? 'مدرب' : 'طالب');
+                        $userRole = auth()->user()->isAdmin() ? 'مدير' : (auth()->user()->isInstructor() ? 'مدرب' : __('student.student_role'));
                     @endphp
                     {{ $userRole }}
                 </p>

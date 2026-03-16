@@ -34,53 +34,27 @@
                                    placeholder="مثال: اختبار الوحدة الأولى">
                             @error('title')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                         </div>
-                        <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label class="block text-sm font-semibold text-slate-700 mb-1">نوع الكورس</label>
-                                <div class="flex gap-4">
-                                    <label class="inline-flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" name="course_type" value="online" {{ old('course_type', $exam->offline_course_id ? 'offline' : 'online') !== 'offline' ? 'checked' : '' }} class="course-type-radio rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                                        <span>أونلاين</span>
-                                    </label>
-                                    <label class="inline-flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" name="course_type" value="offline" {{ old('course_type', $exam->offline_course_id ? 'offline' : 'online') === 'offline' ? 'checked' : '' }} class="course-type-radio rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-                                        <span>أوفلاين</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div id="edit-online-course-wrap" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label for="advanced_course_id" class="block text-sm font-semibold text-slate-700 mb-1">الكورس (أونلاين)</label>
-                                    <select name="advanced_course_id" id="advanced_course_id" onchange="loadLessons()"
-                                            class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800">
-                                        <option value="">اختر الكورس</option>
-                                        @foreach($courses as $course)
-                                            <option value="{{ $course->id }}" {{ old('advanced_course_id', $exam->advanced_course_id) == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
-                                        @endforeach
-                                    </select>
-                                    @error('advanced_course_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                                </div>
-                                <div>
-                                    <label for="course_lesson_id" class="block text-sm font-semibold text-slate-700 mb-1">الدرس (اختياري)</label>
-                                    <select name="course_lesson_id" id="course_lesson_id"
-                                            class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800">
-                                        <option value="">اختبار عام للكورس</option>
-                                        @foreach($lessons as $lesson)
-                                            <option value="{{ $lesson->id }}" {{ old('course_lesson_id', $exam->course_lesson_id) == $lesson->id ? 'selected' : '' }}>{{ $lesson->title }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div id="edit-offline-course-wrap" style="display: none;">
-                                <label for="offline_course_id_edit" class="block text-sm font-semibold text-slate-700 mb-1">الكورس (أوفلاين)</label>
-                                <select name="offline_course_id" id="offline_course_id_edit"
+                                <label for="advanced_course_id" class="block text-sm font-semibold text-slate-700 mb-1">الكورس</label>
+                                <select name="advanced_course_id" id="advanced_course_id" onchange="loadLessons()"
                                         class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800">
-                                    <option value="">اختر الكورس الأوفلاين</option>
-                                    @foreach($offlineCourses ?? [] as $oc)
-                                        <option value="{{ $oc->id }}" {{ old('offline_course_id', $exam->offline_course_id) == $oc->id ? 'selected' : '' }}>{{ $oc->title }}</option>
+                                    <option value="">اختر الكورس</option>
+                                    @foreach($courses as $course)
+                                        <option value="{{ $course->id }}" {{ old('advanced_course_id', $exam->advanced_course_id) == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
                                     @endforeach
                                 </select>
-                                @error('offline_course_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                                @error('advanced_course_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            </div>
+                            <div>
+                                <label for="course_lesson_id" class="block text-sm font-semibold text-slate-700 mb-1">الدرس (اختياري)</label>
+                                <select name="course_lesson_id" id="course_lesson_id"
+                                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800">
+                                    <option value="">اختبار عام للكورس</option>
+                                    @foreach($lessons as $lesson)
+                                        <option value="{{ $lesson->id }}" {{ old('course_lesson_id', $exam->course_lesson_id) == $lesson->id ? 'selected' : '' }}>{{ $lesson->title }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                         <div>
@@ -244,40 +218,9 @@ function loadLessons() {
             .catch(function(e) { console.error('Error loading lessons:', e); });
     }
 }
-function toggleEditCourseType() {
-    var isOffline = document.querySelector('input[name="course_type"]:checked').value === 'offline';
-    var onlineWrap = document.getElementById('edit-online-course-wrap');
-    var offlineWrap = document.getElementById('edit-offline-course-wrap');
-    var advSelect = document.getElementById('advanced_course_id');
-    var lessonSelect = document.getElementById('course_lesson_id');
-    var offSelect = document.getElementById('offline_course_id_edit');
-    onlineWrap.style.display = isOffline ? 'none' : 'block';
-    offlineWrap.style.display = isOffline ? 'block' : 'none';
-    if (isOffline) {
-        advSelect.removeAttribute('required');
-        advSelect.disabled = true;
-        lessonSelect.disabled = true;
-        offSelect.disabled = false;
-    } else {
-        advSelect.disabled = false;
-        lessonSelect.disabled = false;
-        offSelect.disabled = true;
-        if (advSelect.value) advSelect.setAttribute('required', 'required');
-    }
-}
 document.addEventListener('DOMContentLoaded', function() {
     var courseId = document.getElementById('advanced_course_id').value;
     if (courseId) loadLessons();
-    document.querySelectorAll('.course-type-radio').forEach(function(r) {
-        r.addEventListener('change', toggleEditCourseType);
-    });
-    toggleEditCourseType();
-    document.querySelector('form').addEventListener('submit', function() {
-        var isOffline = document.querySelector('input[name="course_type"]:checked').value === 'offline';
-        document.getElementById('advanced_course_id').disabled = isOffline;
-        document.getElementById('course_lesson_id').disabled = isOffline;
-        document.getElementById('offline_course_id_edit').disabled = !isOffline;
-    });
 });
 </script>
 @endpush

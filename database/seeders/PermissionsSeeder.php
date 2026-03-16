@@ -49,13 +49,11 @@ class PermissionsSeeder extends Seeder
             ['name' => 'manage.courses', 'display_name' => 'إدارة الكورسات', 'description' => 'إدارة الكورسات والدروس', 'group' => 'إدارة المحتوى'],
             ['name' => 'manage.enrollments', 'display_name' => 'إدارة تسجيل الطلاب', 'description' => 'إدارة تسجيل الطلاب في الكورسات', 'group' => 'إدارة المحتوى'],
             ['name' => 'manage.lectures', 'display_name' => 'إدارة المحاضرات', 'description' => 'إدارة المحاضرات', 'group' => 'إدارة المحتوى'],
-            ['name' => 'manage.groups', 'display_name' => 'إدارة المجموعات', 'description' => 'إدارة المجموعات الدراسية', 'group' => 'إدارة المحتوى'],
             ['name' => 'manage.assignments', 'display_name' => 'إدارة الواجبات', 'description' => 'إدارة الواجبات والمشاريع', 'group' => 'إدارة المحتوى'],
             ['name' => 'manage.exams', 'display_name' => 'إدارة الامتحانات', 'description' => 'إدارة الامتحانات', 'group' => 'إدارة المحتوى'],
             ['name' => 'manage.question-bank', 'display_name' => 'إدارة بنك الأسئلة', 'description' => 'إدارة بنك الأسئلة', 'group' => 'إدارة المحتوى'],
 
             // إدارة الصفحات الخارجية
-            ['name' => 'manage.blog', 'display_name' => 'إدارة المدونة', 'description' => 'إدارة مقالات المدونة', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.faq', 'display_name' => 'إدارة الأسئلة الشائعة', 'description' => 'إدارة الأسئلة الشائعة', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.contact-messages', 'display_name' => 'إدارة رسائل التواصل', 'description' => 'إدارة رسائل التواصل', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.media', 'display_name' => 'إدارة معرض الصور', 'description' => 'إدارة معرض الصور والفيديوهات', 'group' => 'إدارة الصفحات الخارجية'],
@@ -76,7 +74,6 @@ class PermissionsSeeder extends Seeder
             // صلاحيات المدرب
             ['name' => 'instructor.view.courses', 'display_name' => 'عرض كورساتي', 'description' => 'عرض الكورسات الخاصة بالمدرب', 'group' => 'صلاحيات المدرب'],
             ['name' => 'instructor.manage.lectures', 'display_name' => 'إدارة محاضراتي', 'description' => 'إدارة المحاضرات الخاصة بالمدرب', 'group' => 'صلاحيات المدرب'],
-            ['name' => 'instructor.manage.groups', 'display_name' => 'إدارة مجموعاتي', 'description' => 'إدارة المجموعات الخاصة بالمدرب', 'group' => 'صلاحيات المدرب'],
             ['name' => 'instructor.manage.assignments', 'display_name' => 'إدارة واجباتي', 'description' => 'إدارة الواجبات الخاصة بالمدرب', 'group' => 'صلاحيات المدرب'],
             ['name' => 'instructor.manage.exams', 'display_name' => 'إدارة اختباراتي', 'description' => 'إدارة الامتحانات الخاصة بالمدرب', 'group' => 'صلاحيات المدرب'],
             ['name' => 'instructor.manage.attendance', 'display_name' => 'إدارة الحضور', 'description' => 'إدارة الحضور والانصراف', 'group' => 'صلاحيات المدرب'],

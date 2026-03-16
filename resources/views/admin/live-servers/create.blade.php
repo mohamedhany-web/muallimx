@@ -1,0 +1,50 @@
+@extends('layouts.admin')
+@section('title', 'إضافة سيرفر بث')
+
+@section('content')
+<div class="space-y-6">
+    <div class="flex items-center gap-3">
+        <a href="{{ route('admin.live-servers.index') }}" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors"><i class="fas fa-arrow-right"></i></a>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-white"><i class="fas fa-plus-circle text-cyan-500 ml-2"></i>إضافة سيرفر بث</h1>
+    </div>
+
+    <form method="POST" action="{{ route('admin.live-servers.store') }}" class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-5">
+        @csrf
+        <div class="grid md:grid-cols-2 gap-5">
+            <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">اسم السيرفر <span class="text-red-500">*</span></label>
+                <input type="text" name="name" value="{{ old('name') }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="مثال: Jitsi Server 1">
+                @error('name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">النطاق (Domain) <span class="text-red-500">*</span></label>
+                <input type="text" name="domain" value="{{ old('domain') }}" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="live.mualimx.com">
+                @error('domain')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">نوع المنصة <span class="text-red-500">*</span></label>
+                <select name="provider" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                    <option value="jitsi" {{ old('provider') === 'jitsi' ? 'selected' : '' }}>Jitsi Meet</option>
+                    <option value="custom" {{ old('provider') === 'custom' ? 'selected' : '' }}>مخصص</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">عنوان IP (اختياري)</label>
+                <input type="text" name="ip_address" value="{{ old('ip_address') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="xxx.xxx.xxx.xxx">
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">الحد الأقصى للمشاركين <span class="text-red-500">*</span></label>
+                <input type="number" name="max_participants" value="{{ old('max_participants', 100) }}" min="2" max="10000" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">ملاحظات</label>
+                <textarea name="notes" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="ملاحظات إضافية حول السيرفر...">{{ old('notes') }}</textarea>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 pt-2">
+            <button type="submit" class="px-6 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-xl font-semibold transition-colors"><i class="fas fa-server ml-1"></i> إضافة السيرفر</button>
+            <a href="{{ route('admin.live-servers.index') }}" class="px-6 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-medium hover:bg-slate-300 transition-colors">إلغاء</a>
+        </div>
+    </form>
+</div>
+@endsection

@@ -252,7 +252,7 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">الطالب</th>
+                                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">المعلم</th>
                                     <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">النتيجة</th>
                                     <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">الوقت</th>
                                     <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">الحالة</th>
@@ -345,7 +345,7 @@
                     </div>
                     <div class="p-5 rounded-2xl border-2 border-gray-200 hover:border-indigo-200 transition-colors">
                         <h4 class="font-bold text-gray-900 mb-1">معاينة</h4>
-                        <p class="text-sm text-gray-500 mb-4">كطالب</p>
+                        <p class="text-sm text-gray-500 mb-4">كمعلم</p>
                         <a href="{{ route('admin.exams.preview', $exam) }}" class="block w-full text-center bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-xl font-semibold transition-colors">
                             معاينة الامتحان
                         </a>

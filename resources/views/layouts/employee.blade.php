@@ -1,10 +1,23 @@
 @php $empLocale = app()->getLocale(); $empRtl = $empLocale === 'ar'; @endphp
 <!DOCTYPE html>
-<html lang="{{ $empLocale }}" dir="{{ $empRtl ? 'rtl' : 'ltr' }}">
+<html lang="{{ $empLocale }}" dir="{{ $empRtl ? 'rtl' : 'ltr' }}" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', __('auth.dashboard')) - {{ config('app.name') }}</title>
+    <script>
+        (function() {
+            var s = localStorage.getItem('theme');
+            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (s === 'dark' || (!s && d)) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+            }
+        })();
+    </script>
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -18,6 +31,7 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' };</script>
     
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -39,7 +53,7 @@
     
     @stack('styles')
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50 dark:bg-slate-900 dark:text-slate-100 transition-colors">
     <div x-data="{ sidebarOpen: window.innerWidth >= 1024 }" 
          x-init="
           // إغلاق السايدبار عند النقر على الروابط

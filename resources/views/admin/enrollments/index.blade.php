@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'إدارة تسجيل الطلاب')
 @section('header', 'إدارة تسجيل الطلاب')
@@ -79,7 +79,7 @@
             <a href="{{ route('admin.enrollments.create') }}" 
                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
                 <i class="fas fa-plus mr-2"></i>
-                تسجيل طالب جديد
+                تسجيل معلم جديد
             </a>
         </div>
         
@@ -233,7 +233,7 @@
                                         <form method="POST" action="{{ route('admin.enrollments.activate', $enrollment) }}" class="inline">
                                             @csrf
                                             <button type="submit" class="text-emerald-600 hover:text-emerald-900" 
-                                                    onclick="return confirm('هل تريد إعادة تفعيل هذا التسجيل وفتح الكورس للطالب مرة أخرى؟')"
+                                                    onclick="return confirm('هل تريد إعادة تفعيل هذا التسجيل وفتح الكورس للمعلم مرة أخرى؟')"
                                                     title="إعادة تفعيل التسجيل">
                                                 <i class="fas fa-redo"></i>
                                             </button>
@@ -297,10 +297,10 @@ function quickSearchByPhone() {
                 const student = data.student;
                 resultDiv.innerHTML = `
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <h4 class="font-medium text-green-900 mb-2">تم العثور على الطالب:</h4>
+                        <h4 class="font-medium text-green-900 mb-2">تم العثور على المعلم:</h4>
                         <div class="text-sm">
                             <p><strong>الاسم:</strong> ${student.name}</p>
-                            <p><strong>هاتف الطالب:</strong> ${student.phone}</p>
+                            <p><strong>هاتف المعلم:</strong> ${student.phone}</p>
                             ${student.parent_phone ? `<p><strong>هاتف ولي الأمر:</strong> ${student.parent_phone}</p>` : ''}
                         </div>
                         <div class="mt-3">

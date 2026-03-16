@@ -22,7 +22,6 @@ class InstructorAgreement extends Model
 
     protected $fillable = [
         'instructor_id',
-        'offline_course_id',
         'advanced_course_id',
         'course_percentage',
         'billing_type',
@@ -61,22 +60,6 @@ class InstructorAgreement extends Model
     public function instructor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'instructor_id');
-    }
-
-    /**
-     * علاقة مع الكورس الأوفلاين
-     */
-    public function course(): BelongsTo
-    {
-        return $this->belongsTo(OfflineCourse::class, 'offline_course_id');
-    }
-
-    /**
-     * علاقة مع الكورس الأوفلاين (اسم بديل للتوافق)
-     */
-    public function offlineCourse(): BelongsTo
-    {
-        return $this->belongsTo(OfflineCourse::class, 'offline_course_id');
     }
 
     /**

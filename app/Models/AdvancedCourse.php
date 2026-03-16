@@ -33,8 +33,6 @@ class AdvancedCourse extends Model
             ['table' => 'installment_agreements', 'column' => 'advanced_course_id', 'direct' => true],
             ['table' => 'installment_plans', 'column' => 'advanced_course_id', 'direct' => true],
             ['table' => 'course_sections', 'column' => 'advanced_course_id', 'direct' => true],
-            ['table' => 'learning_pattern_attempts', 'column' => 'learning_pattern_id', 'parent' => 'learning_patterns', 'parent_column' => 'advanced_course_id'],
-            ['table' => 'learning_patterns', 'column' => 'advanced_course_id', 'direct' => true],
             ['table' => 'exam_anti_cheat_logs', 'column' => 'exam_id', 'parent' => 'exams', 'parent_column' => 'advanced_course_id'],
             ['table' => 'exam_tab_switch_logs', 'column' => 'exam_id', 'parent' => 'exams', 'parent_column' => 'advanced_course_id'],
             ['table' => 'exam_activity_logs', 'column' => 'exam_id', 'parent' => 'exams', 'parent_column' => 'advanced_course_id'],
@@ -155,11 +153,6 @@ class AdvancedCourse extends Model
     public function assignments()
     {
         return $this->hasMany(Assignment::class, 'advanced_course_id');
-    }
-
-    public function learningPatterns()
-    {
-        return $this->hasMany(LearningPattern::class, 'advanced_course_id');
     }
 
     public function sections()

@@ -25,13 +25,8 @@ class AdvancedCourseController extends Controller
      */
     public function index(Request $request)
     {
-        $query = AdvancedCourse::with(['instructor', 'academicYear', 'academicSubject'])
+        $query = AdvancedCourse::with(['instructor'])
             ->withCount(['lessons', 'enrollments', 'orders']);
-
-        // فلترة حسب لغة البرمجة
-        if ($request->filled('programming_language')) {
-            $query->where('programming_language', $request->programming_language);
-        }
 
         // فلترة حسب التصنيف
         if ($request->filled('category')) {
@@ -48,13 +43,6 @@ class AdvancedCourseController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
-        // فلترة حسب مجموعة المهارات (cluster)
-        $selectedCluster = null;
-        if ($request->filled('cluster')) {
-            $query->where('academic_subject_id', $request->cluster);
-            $selectedCluster = AcademicSubject::find($request->cluster);
-        }
-
         // البحث في العنوان والوصف
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
@@ -65,13 +53,6 @@ class AdvancedCourseController extends Controller
 
         $courses = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        // بيانات للفلاتر
-        $programmingLanguages = AdvancedCourse::whereNotNull('programming_language')
-            ->distinct()
-            ->pluck('programming_language')
-            ->sort()
-            ->values();
-        
         $categories = AdvancedCourse::whereNotNull('category')
             ->distinct()
             ->pluck('category')
@@ -80,16 +61,11 @@ class AdvancedCourseController extends Controller
 
         $instructors = User::where('role', 'instructor')->where('is_active', true)->get();
 
-        $academicYears = AcademicYear::orderBy('order')->orderBy('name')->get(['id', 'name', 'code']);
-
         try {
             return view('admin.advanced-courses.index', compact(
                 'courses',
-                'programmingLanguages',
                 'categories',
-                'instructors',
-                'academicYears',
-                'selectedCluster'
+                'instructors'
             ));
         } catch (\Throwable $e) {
             Log::error('AdvancedCourse index view error', [
@@ -107,39 +83,12 @@ class AdvancedCourseController extends Controller
      */
     public function create(Request $request): View
     {
-        $trackOptions = AcademicYear::with(['subjects' => function ($q) {
-                $q->select('id', 'academic_year_id', 'name');
-            }])
-            ->orderBy('order')
-            ->orderBy('name')
-            ->get(['id', 'name'])
-            ->map(function (AcademicYear $year) {
-                return [
-                    'id' => $year->id,
-                    'name' => $year->name,
-                    'subjects' => $year->subjects
-                        ->map(function (AcademicSubject $subject) {
-                            return [
-                                'id' => $subject->id,
-                                'name' => $subject->name,
-                            ];
-                        })
-                        ->values()
-                        ->toArray(),
-                ];
-            })
-            ->values()
-            ->toArray();
-
-        $selectedTrack = old('academic_year_id');
-        $selectedSubject = old('academic_subject_id');
+        $trackOptions = [];
 
         $instructors = User::whereIn('role', ['instructor', 'teacher'])
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $languages = AdvancedCourse::select('programming_language')->whereNotNull('programming_language')->distinct()->pluck('programming_language');
-        $frameworks = AdvancedCourse::select('framework')->whereNotNull('framework')->distinct()->pluck('framework');
         $categories = AdvancedCourse::select('category')->whereNotNull('category')->distinct()->pluck('category');
         $skills = AdvancedCourse::selectRaw('DISTINCT JSON_EXTRACT(skills, "$[*]") as skill')
             ->whereNotNull('skills')
@@ -154,11 +103,7 @@ class AdvancedCourseController extends Controller
 
         return view('admin.advanced-courses.create', compact(
             'trackOptions',
-            'selectedTrack',
-            'selectedSubject',
             'instructors',
-            'languages',
-            'frameworks',
             'categories',
             'skills'
         ));
@@ -332,51 +277,13 @@ class AdvancedCourseController extends Controller
     {
         $instructors = User::where('role', 'instructor')->where('is_active', true)->orderBy('name')->get();
 
-        $academicYears = AcademicYear::orderBy('order')
-            ->orderBy('name')
-            ->with(['academicSubjects' => function ($query) {
-                $query->orderBy('order')->orderBy('name');
-            }])
-            ->get();
-
-        $academicSubjects = AcademicSubject::with('academicYear')
-            ->orderBy('academic_year_id')
-            ->orderBy('order')
-            ->orderBy('name')
-            ->get();
-
-        $languages = AdvancedCourse::whereNotNull('programming_language')
-            ->distinct()
-            ->orderBy('programming_language')
-            ->pluck('programming_language');
-
-        $frameworks = AdvancedCourse::whereNotNull('framework')
-            ->distinct()
-            ->orderBy('framework')
-            ->pluck('framework');
-
         $categories = AdvancedCourse::whereNotNull('category')
             ->distinct()
             ->orderBy('category')
             ->pluck('category');
 
-        // تحضير بيانات المسارات للـ Alpine.js
-        $trackOptions = $academicYears->map(function($year) {
-            return [
-                'id' => $year->id,
-                'name' => $year->name,
-                'subjects' => $year->academicSubjects->map(function($subject) {
-                    return ['id' => $subject->id, 'name' => $subject->name];
-                })->values()->toArray()
-            ];
-        })->values()->toArray();
+        $trackOptions = [];
 
-        // التأكد من أن trackOptions ليس فارغاً
-        if (empty($trackOptions)) {
-            $trackOptions = [];
-        }
-
-        // تحضير المهارات للتعديل (لتجنب أخطاء Blade في الـ view)
         $selectedSkills = old('skills');
         if ($selectedSkills === null) {
             $skills = $advancedCourse->skills;
@@ -387,10 +294,6 @@ class AdvancedCourseController extends Controller
         return view('admin.advanced-courses.edit', compact(
             'advancedCourse',
             'instructors',
-            'academicYears',
-            'academicSubjects',
-            'languages',
-            'frameworks',
             'categories',
             'trackOptions',
             'selectedSkills'

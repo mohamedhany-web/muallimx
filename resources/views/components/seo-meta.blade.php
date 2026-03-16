@@ -1,8 +1,8 @@
 {{-- SEO Meta Tags Component --}}
 @php
-    $title = $title ?? 'Mindlytics - أكاديمية البرمجة والذكاء الاصطناعي';
-    $description = $description ?? 'تعلم البرمجة والذكاء الاصطناعي من الصفر إلى الاحتراف مع Mindlytics. كورسات برمجة عربية شاملة، دروس تفاعلية، مشاريع عملية، وشهادات معتمدة.';
-    $keywords = $keywords ?? 'برمجة, ذكاء اصطناعي, تعلم البرمجة, كورسات برمجة, دورات برمجة, برمجة عربية';
+    $title = $title ?? 'MuallimX — منصة تأهيل المعلمين للعمل أونلاين باحتراف';
+    $description = $description ?? 'MuallimX منصة عربية متخصصة في تأهيل وتطوير المعلمين للعمل أونلاين — تدريب تطبيقي، أدوات AI للتحضير، مناهج جاهزة، وبناء بروفايل يفتح فرص عمل حقيقية.';
+    $keywords = $keywords ?? 'تأهيل المعلمين, تدريب المعلمين أونلاين, أدوات AI للمعلم, مولد خطة الدرس, بناء بروفايل المعلم, توظيف المعلمين, دبلومات تعليمية, مناهج تفاعلية, MuallimX';
     $image = $image ?? asset('images/og-image.jpg');
     $url = $url ?? url()->current();
     $type = $type ?? 'website';
@@ -13,7 +13,7 @@
 <meta name="title" content="{{ $title }}">
 <meta name="description" content="{{ $description }}">
 <meta name="keywords" content="{{ $keywords }}">
-<meta name="author" content="Mindlytics">
+<meta name="author" content="Mualimx">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="language" content="Arabic">
 <meta name="revisit-after" content="7 days">
@@ -30,7 +30,7 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="ar_AR">
-<meta property="og:site_name" content="Mindlytics">
+<meta property="og:site_name" content="Mualimx">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">

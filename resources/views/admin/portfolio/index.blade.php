@@ -12,10 +12,12 @@
         </div>
     @endif
 
-    <p class="text-gray-600">مراقبة مشاريع البورتفوليو — يمكنك إخفاء أي مشروع من المعرض العام.</p>
+    <p class="text-gray-600">مراجعة مشاريع البورتفوليو من الأدمن فقط — اعتماد أو رفض أو نشر، ثم إظهار/إخفاء من المعرض.</p>
 
     <div class="flex flex-wrap gap-2 mb-4">
-        <a href="{{ route('admin.portfolio.index') }}" class="px-4 py-2 rounded-xl text-sm font-bold {{ !request('status') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' }}">الكل</a>
+        <a href="{{ route('admin.portfolio.index') }}" class="px-4 py-2 rounded-xl text-sm font-bold {{ !request('status') && !request()->has('visible') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' }}">الكل</a>
+        <a href="{{ route('admin.portfolio.index', ['status' => 'pending_review']) }}" class="px-4 py-2 rounded-xl text-sm font-bold {{ request('status') === 'pending_review' ? 'bg-amber-600 text-white' : 'bg-gray-200 text-gray-700' }}">قيد المراجعة</a>
+        <a href="{{ route('admin.portfolio.index', ['status' => 'approved']) }}" class="px-4 py-2 rounded-xl text-sm font-bold {{ request('status') === 'approved' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700' }}">معتمد</a>
         <a href="{{ route('admin.portfolio.index', ['status' => 'published']) }}" class="px-4 py-2 rounded-xl text-sm font-bold {{ request('status') === 'published' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700' }}">منشور</a>
         <a href="{{ route('admin.portfolio.index', ['visible' => '1']) }}" class="px-4 py-2 rounded-xl text-sm font-bold {{ request('visible') === '1' ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-700' }}">ظاهر</a>
         <a href="{{ route('admin.portfolio.index', ['visible' => '0']) }}" class="px-4 py-2 rounded-xl text-sm font-bold {{ request('visible') === '0' ? 'bg-amber-600 text-white' : 'bg-gray-200 text-gray-700' }}">مخفي</a>
@@ -27,7 +29,7 @@
                 <thead class="bg-gray-50 border-b-2 border-gray-200">
                     <tr>
                         <th class="px-4 py-3 text-sm font-bold text-gray-900">المشروع</th>
-                        <th class="px-4 py-3 text-sm font-bold text-gray-900">الطالب</th>
+                        <th class="px-4 py-3 text-sm font-bold text-gray-900">المعلم</th>
                         <th class="px-4 py-3 text-sm font-bold text-gray-900">المسار</th>
                         <th class="px-4 py-3 text-sm font-bold text-gray-900">الحالة</th>
                         <th class="px-4 py-3 text-sm font-bold text-gray-900">ظاهر</th>

@@ -44,7 +44,7 @@ return [
     'login_google_aria' => 'Login or sign up with Google',
     'login_register_google_only' => 'Registration and login are only available via Google (Gmail). Use the "Continue with Google" or "Sign up with Google" button.',
     'join_us' => 'Join us',
-    'create_account_desc' => 'Create your account and start your learning journey with Mindlytics',
+    'create_account_desc' => 'Create your account and start your learning journey on the platform',
     'register_subtitle' => 'Enter your details to create your new account',
     'students_only_note' => 'Student registration only',
     'full_name' => 'Full name',

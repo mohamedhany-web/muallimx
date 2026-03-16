@@ -11,7 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('calendar_events', function (Blueprint $table) {
+        if (Schema::hasTable('calendar_events')) {
+            return;
+        }
+
+        $hasAcademicYears = Schema::hasTable('academic_years');
+        $hasAcademicSubjects = Schema::hasTable('academic_subjects');
+
+        Schema::create('calendar_events', function (Blueprint $table) use ($hasAcademicYears, $hasAcademicSubjects) {
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
@@ -27,8 +34,18 @@ return new class extends Migration
             // المنشئ والمستهدفين
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->enum('visibility', ['public', 'private', 'course', 'year', 'subject'])->default('private');
-            $table->foreignId('academic_year_id')->nullable()->constrained('academic_years')->onDelete('cascade');
-            $table->foreignId('academic_subject_id')->nullable()->constrained('academic_subjects')->onDelete('cascade');
+
+            if ($hasAcademicYears) {
+                $table->foreignId('academic_year_id')->nullable()->constrained('academic_years')->onDelete('cascade');
+            } else {
+                $table->unsignedBigInteger('academic_year_id')->nullable()->index();
+            }
+
+            if ($hasAcademicSubjects) {
+                $table->foreignId('academic_subject_id')->nullable()->constrained('academic_subjects')->onDelete('cascade');
+            } else {
+                $table->unsignedBigInteger('academic_subject_id')->nullable()->index();
+            }
             $table->foreignId('advanced_course_id')->nullable()->constrained('advanced_courses')->onDelete('cascade');
             
             // التذكيرات

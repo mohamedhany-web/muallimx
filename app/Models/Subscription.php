@@ -12,6 +12,7 @@ class Subscription extends Model
     protected $fillable = [
         'user_id',
         'subscription_type',
+        'teacher_plan_key',
         'plan_name',
         'price',
         'start_date',
@@ -20,6 +21,7 @@ class Subscription extends Model
         'auto_renew',
         'billing_cycle',
         'invoice_id',
+        'features',
     ];
 
     protected $casts = [
@@ -27,6 +29,7 @@ class Subscription extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'auto_renew' => 'boolean',
+        'features' => 'array',
     ];
 
     public static function typeLabels(): array
@@ -70,6 +73,36 @@ class Subscription extends Model
         return static::billingCycleLabels()[strtolower($cycle)] ?? $cycle;
     }
 
+    /**
+     * مدة الباقة بصيغة مقروءة (شهر واحد، 3 أشهر، سنة واحدة)
+     */
+    public static function durationLabels(): array
+    {
+        return [
+            'monthly' => 'شهر واحد',
+            'quarterly' => '3 أشهر',
+            'yearly' => 'سنة واحدة',
+            'biannual' => '6 أشهر',
+            'weekly' => 'أسبوع واحد',
+        ];
+    }
+
+    public static function getDurationLabel(?string $billingCycle): string
+    {
+        if (!$billingCycle) {
+            return 'غير محدد';
+        }
+        return static::durationLabels()[strtolower($billingCycle)] ?? static::billingCycleLabel($billingCycle);
+    }
+
+    /**
+     * مدة الباقة للاشتراك الحالي
+     */
+    public function getDurationLabelAttribute(): string
+    {
+        return static::getDurationLabel($this->billing_cycle);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -80,9 +113,19 @@ class Subscription extends Model
         return $this->belongsTo(Invoice::class);
     }
 
+    /**
+     * المدفوعات عبر الفاتورة (الاشتراك مرتبط بفاتورة واحدة عبر invoice_id)
+     */
     public function payments()
     {
-        return $this->hasManyThrough(Payment::class, Invoice::class);
+        return $this->hasManyThrough(
+            Payment::class,
+            Invoice::class,
+            'id',           // مفتاح على الفاتورة يطابق subscription.invoice_id
+            'invoice_id',   // مفتاح على Payment يربطها بالفاتورة
+            'invoice_id',   // مفتاح على Subscription للربط بالفاتورة
+            'id'            // مفتاح على الفاتورة
+        );
     }
 
     public function transactions()

@@ -36,17 +36,27 @@ class DatabaseSeeder extends Seeder
         $this->command->info('✅ تم إنشاء السنوات الأكاديمية والمواد');
         $this->command->newLine();
 
-        // 3. إنشاء المستخدمين
-        $this->command->info('👥 3. إنشاء المستخدمين...');
+        // 3. الوظائف الثابتة للموظفين (محاسب، اشراف عام، HR، مشرفه، سيلز)
+        if (\Illuminate\Support\Facades\Schema::hasTable('employee_jobs')) {
+            $this->command->info('💼 3. إنشاء الوظائف الثابتة للموظفين...');
+            $this->call([
+                EmployeeJobSeeder::class,
+            ]);
+            $this->command->info('✅ تم إنشاء الوظائف الثابتة');
+            $this->command->newLine();
+        }
+
+        // 4. إنشاء مستخدمي أكاديمية MuallimX
+        $this->command->info('👥 4. إنشاء مستخدمي أكاديمية MuallimX...');
         $this->call([
-            MindlyticsUserSeeder::class,
+            MuallimxAcademyUserSeeder::class,
         ]);
         $this->command->info('✅ تم إنشاء المستخدمين');
         $this->command->newLine();
 
-        // 4. إنشاء نظام المحاسبة (اختياري - يحتاج كورسات وطلاب)
+        // 5. إنشاء نظام المحاسبة (اختياري - يحتاج كورسات وطلاب)
         if (\Illuminate\Support\Facades\Schema::hasTable('wallets') && \Illuminate\Support\Facades\Schema::hasTable('orders')) {
-            $this->command->info('💰 4. إنشاء نظام المحاسبة...');
+            $this->command->info('💰 5. إنشاء نظام المحاسبة...');
             try {
                 $this->call([
                     AccountingSystemSeeder::class,
@@ -61,9 +71,9 @@ class DatabaseSeeder extends Seeder
             $this->command->newLine();
         }
 
-        // 5. إنشاء قوالب الرسائل
+        // 6. إنشاء قوالب الرسائل
         if (\Illuminate\Support\Facades\Schema::hasTable('message_templates')) {
-            $this->command->info('📧 5. إنشاء قوالب الرسائل...');
+            $this->command->info('📧 6. إنشاء قوالب الرسائل...');
             $this->call([
                 MessageTemplateSeeder::class,
             ]);
@@ -74,9 +84,9 @@ class DatabaseSeeder extends Seeder
             $this->command->newLine();
         }
 
-        // 6. إنشاء برامج الإحالة
+        // 7. إنشاء برامج الإحالة
         if (\Illuminate\Support\Facades\Schema::hasTable('referral_programs')) {
-            $this->command->info('🎁 6. إنشاء برامج الإحالة...');
+            $this->command->info('🎁 7. إنشاء برامج الإحالة...');
             $this->call([
                 ReferralProgramSeeder::class,
             ]);
@@ -87,9 +97,9 @@ class DatabaseSeeder extends Seeder
             $this->command->newLine();
         }
 
-        // 7. إنشاء كورسات تجريبية (اختياري)
+        // 8. إنشاء كورسات تجريبية (اختياري)
         if ($this->command->confirm('هل تريد إنشاء كورسات تجريبية؟', false)) {
-            $this->command->info('📖 7. إنشاء كورسات تجريبية...');
+            $this->command->info('📖 8. إنشاء كورسات تجريبية...');
             $this->call([
                 CoursesSeeder::class,
             ]);
@@ -101,10 +111,11 @@ class DatabaseSeeder extends Seeder
         $this->command->info('✨ تم إكمال عملية Seed بنجاح!');
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->command->newLine();
-        $this->command->info('📋 بيانات الدخول الافتراضية:');
-        $this->command->info('   👨‍💼 المدير: 0500000000 / password123');
-        $this->command->info('   👨‍🏫 المدرب: 0500000001 / password123');
-        $this->command->info('   👨‍🎓 الطالب: 0500000002 / password123');
+        $this->command->info('📋 بيانات الدخول الافتراضية (كلمة المرور: password123):');
+        $this->command->info('   👨‍💼 مدير المنصة: admin@mualimx.com أو 0500000000');
+        $this->command->info('   👩‍💼 مديرة أكاديمية: academy@mualimx.com أو 0500000001');
+        $this->command->info('   👨‍🏫 مدرب: instructor1@mualimx.com أو 0500000010');
+        $this->command->info('   👩‍🎓 طالب: student1@mualimx.com أو 0500000020');
         $this->command->newLine();
     }
 }

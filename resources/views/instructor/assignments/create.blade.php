@@ -26,23 +26,13 @@
             <div class="min-w-0 flex-1">
                 <h1 class="text-xl sm:text-2xl font-bold text-slate-800">{{ __('instructor.create_assignment') }}</h1>
                 <p class="text-sm text-slate-600 mt-0.5">{{ __('instructor.add_assignment_for_course') }}</p>
-                @if(request('group_id') && isset($courseGroups))
-                    @php
-                        $selectedGroup = collect($courseGroups)->flatten(1)->firstWhere('id', (int) request('group_id'));
-                    @endphp
-                    @if($selectedGroup)
-                        <span class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-100 text-sky-700">
-                            <i class="fas fa-users"></i> {{ __('instructor.assignment_for_group') }}: {{ $selectedGroup->name }}
-                        </span>
-                    @endif
-                @endif
             </div>
         </div>
     </div>
 
     <!-- بطاقة النموذج -->
     <div class="form-card shadow-sm p-6 sm:p-8">
-        @include('instructor.assignments.create-form', ['courses' => $courses, 'courseGroups' => $courseGroups ?? collect()])
+        @include('instructor.assignments.create-form', ['courses' => $courses])
     </div>
 </div>
 
@@ -54,24 +44,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const newCourseSelect = courseSelect.cloneNode(true);
     courseSelect.parentNode.replaceChild(newCourseSelect, courseSelect);
 
-    function updateGroupOptions(courseId) {
-        const groupSelect = document.getElementById('group_id');
-        if (!groupSelect) return;
-        const opts = groupSelect.querySelectorAll('.group-option');
-        opts.forEach(function(o) {
-            o.style.display = (o.getAttribute('data-course-id') === courseId) ? '' : 'none';
-            o.disabled = (o.getAttribute('data-course-id') !== courseId);
-        });
-        if (!courseId) groupSelect.value = '';
-        else {
-            const sel = groupSelect.querySelector('.group-option[value="' + groupSelect.value + '"]');
-            if (sel && sel.getAttribute('data-course-id') !== courseId) groupSelect.value = '';
-        }
-    }
-
     newCourseSelect.addEventListener('change', function() {
         const courseId = this.value;
-        updateGroupOptions(courseId);
         const lessonSelect = document.getElementById('lesson_id');
         if (!lessonSelect) return;
 

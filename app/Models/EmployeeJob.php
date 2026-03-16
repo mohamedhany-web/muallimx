@@ -38,4 +38,15 @@ class EmployeeJob extends Model
     {
         return $query->where('is_active', true);
     }
+
+    /** الوظائف الثابتة: محاسب، اشراف عام، HR، مشرفه، سيلز */
+    public const FIXED_CODES = ['accountant', 'general_supervision', 'hr', 'supervisor', 'sales'];
+
+    /**
+     * Scope للوظائف الثابتة فقط (لاختيارها عند إضافة/تعديل موظف)
+     */
+    public function scopeFixedJobs($query)
+    {
+        return $query->whereIn('code', self::FIXED_CODES);
+    }
 }

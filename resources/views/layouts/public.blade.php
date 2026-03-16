@@ -3,11 +3,24 @@
     $publicRtl = $publicLocale === 'ar';
 @endphp
 <!DOCTYPE html>
-<html lang="{{ $publicLocale }}" dir="{{ $publicRtl ? 'rtl' : 'ltr' }}">
+<html lang="{{ $publicLocale }}" dir="{{ $publicRtl ? 'rtl' : 'ltr' }}" class="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', config('app.name') . ' - ' . __('landing.nav.brand'))</title>
+    <script>
+        (function() {
+            var s = localStorage.getItem('theme');
+            var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (s === 'dark' || (!s && d)) {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+            }
+        })();
+    </script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -41,11 +54,10 @@
     @stack('styles')
 </head>
 
-<body class="bg-gray-50 text-gray-900"
+<body class="bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100 transition-colors"
       x-data="{ mobileMenu: false, searchQuery: '' }"
       :class="{ 'overflow-hidden': mobileMenu }">
     
-    <!-- Navigation Header - نفس الناف بار من الصفحة الرئيسية -->
     @include('components.unified-navbar')
 
     <!-- Main Content -->

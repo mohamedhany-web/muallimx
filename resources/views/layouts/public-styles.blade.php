@@ -4,37 +4,7 @@
     font-family: 'Tajawal', 'Cairo', 'Noto Sans Arabic', sans-serif;
 }
 
-/* Navbar - مطابق للصفحة الرئيسية */
-.navbar-gradient {
-    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 45%, #1d4ed8 100%);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    z-index: 1000;
-    transition: box-shadow 0.25s ease, background 0.25s ease;
-    backdrop-filter: blur(12px) saturate(140%);
-    -webkit-backdrop-filter: blur(12px) saturate(140%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    max-width: 100vw;
-    overflow-x: hidden;
-    transform: translateZ(0);
-}
-@media (max-width: 768px) {
-    .navbar-gradient {
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-    }
-}
-.navbar-gradient.scrolled {
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.06);
-    background: linear-gradient(135deg, rgba(30, 64, 175, 0.97) 0%, rgba(30, 58, 138, 0.98) 50%, rgba(29, 78, 216, 0.97) 100%);
-    backdrop-filter: blur(16px) saturate(150%);
-    -webkit-backdrop-filter: blur(16px) saturate(150%);
-    border-bottom-color: rgba(255, 255, 255, 0.1);
-}
+/* Navbar styles are now self-contained in unified-navbar.blade.php */
 
 .hero-gradient {
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.85) 25%, rgba(14, 165, 233, 0.7) 50%, rgba(14, 165, 233, 0.75) 75%, rgba(2, 132, 199, 0.8) 100%);
@@ -42,28 +12,7 @@
     overflow: hidden;
 }
 
-/* Navbar Scrolled State - شفافية مع نص واضح */
-#mainNavbar.navbar-scrolled {
-    background: linear-gradient(to bottom, rgba(240, 249, 255, 0.9), rgba(224, 242, 254, 0.85)) !important;
-    backdrop-filter: blur(20px) !important;
-    border-bottom: 1px solid rgba(59, 130, 246, 0.2) !important;
-}
-
-/* Text Shadow for readability when navbar is transparent */
-#mainNavbar.navbar-scrolled h1,
-#mainNavbar.navbar-scrolled p,
-#mainNavbar.navbar-scrolled a,
-#mainNavbar.navbar-scrolled .text-white {
-    color: #1e3a8a !important;
-    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.5),
-                 0 0 2px rgba(255, 255, 255, 0.3) !important;
-}
-
-/* Enhanced logo visibility when scrolled */
-#mainNavbar.navbar-scrolled .logo-animation {
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3),
-                0 0 8px rgba(59, 130, 246, 0.4) !important;
-}
+/* Legacy scrolled navbar styles removed — handled by unified-navbar component */
 
 .hero-gradient::before {
     content: '';

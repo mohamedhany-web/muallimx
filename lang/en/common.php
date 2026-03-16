@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'app_name' => 'Mindlytics',
+    'app_name' => 'Mualimx',
     'save' => 'Save',
     'cancel' => 'Cancel',
     'edit' => 'Edit',

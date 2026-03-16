@@ -40,14 +40,14 @@ class PageController extends Controller
     }
 
     /**
-     * أسئلة شائعة افتراضية مرتبطة بمنصة Mindlytics (تعليم، كورسات، تسجيل، دفع، شهادات)
+     * أسئلة شائعة افتراضية مرتبطة بالمنصّة (تعليم، كورسات، تسجيل، دفع، شهادات)
      */
     private function getDefaultFaqs(): array
     {
         return [
             [
-                'question' => 'ما هي منصة Mindlytics؟',
-                'answer' => 'Mindlytics منصة تعليمية عربية متخصصة في البرمجة وتطوير المهارات التقنية. نقدم كورسات ومسارات تعليمية منظمة مع شهادات معتمدة، ومتابعة للتحصيل، ودعم فني للطلاب.',
+                'question' => 'ما هي هذه المنصّة؟',
+                'answer' => 'منصّة تعليمية عربية متخصصة في تطوير المعلّمين وإدارة الأكاديميات، من خلال كورسات تدريبية منظمة، مناهج تفاعلية، تقييمات، تقارير، ودعم مستمر.',
                 'category' => 'المنصة',
             ],
             [
@@ -100,19 +100,23 @@ class PageController extends Controller
 
     public function pricing()
     {
-        // جلب الباقات النشطة من قاعدة البيانات
+        // باقات المعلمين من إعدادات "مزايا اشتراك المعلمين" (متزامنة مع /admin/teacher-features)
+        $featuresController = new \App\Http\Controllers\Admin\TeacherFeaturesController();
+        $teacherPlans = $featuresController->getSettings();
+
+        // جلب الباقات الأخرى (باقات الكورسات) من قاعدة البيانات
         $packages = \App\Models\Package::active()
-            ->with(['courses' => function($query) {
+            ->with(['courses' => function ($query) {
                 $query->where('is_active', true);
             }])
             ->withCount('courses')
-            ->orderBy('is_popular', 'desc') // الباقات الشائعة أولاً
-            ->orderBy('is_featured', 'desc') // ثم المميزة
+            ->orderBy('is_popular', 'desc')
+            ->orderBy('is_featured', 'desc')
             ->orderBy('order')
-            ->orderBy('price', 'asc') // ثم حسب السعر
+            ->orderBy('price', 'asc')
             ->get();
-        
-        return view('public.pricing', compact('packages'));
+
+        return view('public.pricing', compact('teacherPlans', 'packages'));
     }
 
     public function team()

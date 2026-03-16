@@ -12,21 +12,16 @@ use Illuminate\Support\Facades\DB;
 class ExamController extends Controller
 {
     /**
-     * عرض قائمة الامتحانات المتاحة للطالب (أونلاين + أوفلاين)
+     * عرض قائمة الامتحانات المتاحة للطالب (أونلاين)
      */
     public function index()
     {
         $user = Auth::user();
-        
         $onlineCourseIds = $user->activeCourses()->pluck('advanced_courses.id');
-        $offlineCourseIds = $user->offlineEnrollments()->where('status', 'active')->pluck('offline_course_id');
-        
-        $availableExams = Exam::where(function ($q) use ($onlineCourseIds, $offlineCourseIds) {
-                $q->whereIn('advanced_course_id', $onlineCourseIds)
-                  ->orWhereIn('offline_course_id', $offlineCourseIds);
-            })
+
+        $availableExams = Exam::whereIn('advanced_course_id', $onlineCourseIds)
             ->available()
-            ->with(['course.academicSubject', 'lesson', 'offlineCourse'])
+            ->with(['course.academicSubject', 'lesson'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -48,9 +43,8 @@ class ExamController extends Controller
     {
         $user = Auth::user();
 
-        // التحقق من إمكانية الوصول (أونلاين أو أوفلاين)
-        $canAccess = ($exam->advanced_course_id && $user->isEnrolledIn($exam->advanced_course_id))
-            || ($exam->offline_course_id && $user->isEnrolledInOfflineCourse($exam->offline_course_id));
+        // التحقق من إمكانية الوصول (أونلاين)
+        $canAccess = $exam->advanced_course_id && $user->isEnrolledIn($exam->advanced_course_id);
         if (!$canAccess) {
             return redirect()->route('my-courses.index')
                 ->with('error', 'غير مصرح لك بالوصول لهذا الامتحان');
@@ -75,7 +69,7 @@ class ExamController extends Controller
                 ->with('error', 'لقد استنفدت عدد المحاولات المسموحة');
         }
 
-        $exam->load(['course.academicSubject', 'lesson', 'offlineCourse']);
+        $exam->load(['course.academicSubject', 'lesson']);
         
         // معلومات المحاولات السابقة
         $previousAttempts = $exam->attempts()
@@ -107,8 +101,7 @@ class ExamController extends Controller
     {
         $user = Auth::user();
 
-        $canAccess = ($exam->advanced_course_id && $user->isEnrolledIn($exam->advanced_course_id))
-            || ($exam->offline_course_id && $user->isEnrolledInOfflineCourse($exam->offline_course_id));
+        $canAccess = $exam->advanced_course_id && $user->isEnrolledIn($exam->advanced_course_id);
         if (!$canAccess || !$exam->canAttempt($user->id)) {
             return redirect()->route('student.exams.index')
                 ->with('error', 'غير مصرح لك ببدء هذا الامتحان');

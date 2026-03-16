@@ -19,10 +19,7 @@ class ExamQuestionController extends Controller
     {
         $instructor = Auth::user();
         
-        // التحقق من أن الاختبار يخص هذا المدرب (أونلاين أو أوفلاين)
-        $owns = ($exam->advancedCourse && $exam->advancedCourse->instructor_id === $instructor->id)
-            || ($exam->offlineCourse && $exam->offlineCourse->instructor_id === $instructor->id);
-        if (!$owns) {
+        if (!$exam->advancedCourse || $exam->advancedCourse->instructor_id !== $instructor->id) {
             abort(403, 'غير مسموح لك بالوصول لهذا الاختبار');
         }
         
@@ -62,10 +59,7 @@ class ExamQuestionController extends Controller
     {
         $instructor = Auth::user();
         
-        // التحقق من أن الاختبار يخص هذا المدرب (أونلاين أو أوفلاين)
-        $owns = ($exam->advancedCourse && $exam->advancedCourse->instructor_id === $instructor->id)
-            || ($exam->offlineCourse && $exam->offlineCourse->instructor_id === $instructor->id);
-        if (!$owns) {
+        if (!$exam->advancedCourse || $exam->advancedCourse->instructor_id !== $instructor->id) {
             abort(403, 'غير مسموح لك بالوصول لهذا الاختبار');
         }
         
@@ -113,10 +107,7 @@ class ExamQuestionController extends Controller
     {
         $instructor = Auth::user();
         
-        // التحقق من أن الاختبار يخص هذا المدرب (أونلاين أو أوفلاين)
-        $owns = ($exam->advancedCourse && $exam->advancedCourse->instructor_id === $instructor->id)
-            || ($exam->offlineCourse && $exam->offlineCourse->instructor_id === $instructor->id);
-        if (!$owns) {
+        if (!$exam->advancedCourse || $exam->advancedCourse->instructor_id !== $instructor->id) {
             abort(403, 'غير مسموح لك بالوصول لهذا الاختبار');
         }
         
@@ -182,10 +173,7 @@ class ExamQuestionController extends Controller
     {
         $instructor = Auth::user();
         
-        // التحقق من أن الاختبار يخص هذا المدرب (أونلاين أو أوفلاين)
-        $owns = ($exam->advancedCourse && $exam->advancedCourse->instructor_id === $instructor->id)
-            || ($exam->offlineCourse && $exam->offlineCourse->instructor_id === $instructor->id);
-        if (!$owns) {
+        if (!$exam->advancedCourse || $exam->advancedCourse->instructor_id !== $instructor->id) {
             abort(403, 'غير مسموح لك بالوصول لهذا الاختبار');
         }
         
@@ -203,10 +191,7 @@ class ExamQuestionController extends Controller
     {
         $instructor = Auth::user();
         
-        // التحقق من أن الاختبار يخص هذا المدرب (أونلاين أو أوفلاين)
-        $owns = ($exam->advancedCourse && $exam->advancedCourse->instructor_id === $instructor->id)
-            || ($exam->offlineCourse && $exam->offlineCourse->instructor_id === $instructor->id);
-        if (!$owns) {
+        if (!$exam->advancedCourse || $exam->advancedCourse->instructor_id !== $instructor->id) {
             abort(403, 'غير مسموح لك بالوصول لهذا الاختبار');
         }
         

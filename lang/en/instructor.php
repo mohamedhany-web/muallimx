@@ -587,8 +587,6 @@ return [
     'all_items_added' => 'All items added to curriculum',
     'section_title' => 'Section title',
     'description_optional' => 'Description (optional)',
-    'learning_pattern_type' => 'Learning pattern',
-
     // Exam create
     'create_exam_new' => 'Create new exam',
     'my_exams' => 'My exams',

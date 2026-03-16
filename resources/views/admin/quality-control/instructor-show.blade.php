@@ -50,10 +50,6 @@
                 <p class="text-xs font-semibold text-violet-600">محاضرات</p>
                 <p class="text-2xl font-bold text-slate-900">{{ $lectures->count() }}</p>
             </div>
-            <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-4">
-                <p class="text-xs font-semibold text-amber-600">كورسات أوفلاين</p>
-                <p class="text-2xl font-bold text-slate-900">{{ $offlineCourses->count() }}</p>
-            </div>
             <div class="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
                 <p class="text-xs font-semibold text-emerald-600">تسجيلات الطلاب</p>
                 <p class="text-2xl font-bold text-slate-900">{{ $enrollmentsCount }}</p>
@@ -158,43 +154,6 @@
             </table>
             @else
             <p class="p-6 text-center text-slate-500">لا توجد محاضرات أونلاين.</p>
-            @endif
-        </div>
-    </section>
-
-    <!-- الكورسات الأوفلاين + محاضرات أوفلاين -->
-    <section class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-        <div class="px-5 py-4 border-b border-slate-200">
-            <h2 class="text-lg font-bold text-slate-900">الكورسات والمحاضرات الأوفلاين</h2>
-        </div>
-        <div class="p-5 sm:p-8 space-y-6">
-            @if($offlineCourses->count() > 0)
-            <div>
-                <h3 class="text-sm font-semibold text-slate-700 mb-3">الكورسات الأوفلاين</h3>
-                <ul class="space-y-2">
-                    @foreach($offlineCourses as $oc)
-                    <li><a href="{{ route('admin.offline-courses.show', $oc) }}" class="text-sky-600 hover:text-sky-700">{{ $oc->title ?? 'كورس #' . $oc->id }}</a> — {{ $oc->created_at->format('Y-m-d') }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
-            @if($offlineLectures->count() > 0)
-            <div>
-                <h3 class="text-sm font-semibold text-slate-700 mb-3">المحاضرات الأوفلاين</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-right text-sm">
-                        <thead class="bg-slate-50"><tr class="text-xs font-semibold uppercase text-slate-500"><th class="px-4 py-2">العنوان</th><th class="px-4 py-2">الكورس</th><th class="px-4 py-2">التاريخ</th></tr></thead>
-                        <tbody class="divide-y divide-slate-200">
-                            @foreach($offlineLectures as $ol)
-                            <tr><td class="px-4 py-2">{{ $ol->title ?? '—' }}</td><td class="px-4 py-2">{{ $ol->offlineCourse ? $ol->offlineCourse->title : '—' }}</td><td class="px-4 py-2">{{ $ol->scheduled_at ? $ol->scheduled_at->format('Y-m-d H:i') : '—' }}</td></tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            @endif
-            @if($offlineCourses->count() === 0 && $offlineLectures->count() === 0)
-            <p class="text-slate-500 text-center py-4">لا توجد كورسات أو محاضرات أوفلاين.</p>
             @endif
         </div>
     </section>

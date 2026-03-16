@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'تعديل الاشتراك')
 @section('header', 'تعديل الاشتراك')
@@ -33,11 +33,24 @@
                 </span>
             </div>
 
-            <form action="{{ route('admin.subscriptions.update', $subscription) }}" method="POST" class="space-y-8">
+            <form action="{{ route('admin.subscriptions.update', $subscription) }}" method="POST" class="space-y-8" x-data="editTeacherSubscriptionForm(@json($subscription->features ?? []), '{{ $subscription->teacher_plan_key ?? '' }}')">
                 @csrf
                 @method('PUT')
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2 md:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700">نمط اشتراك المعلم (اختياري)</label>
+                        <select name="teacher_plan_key" x-model="selectedPlan" @change="applyPlan" class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                            <option value="">بدون — إدخال يدوي</option>
+                            <option value="teacher_starter">باقة البداية — 200 ج.م شهريًا</option>
+                            <option value="teacher_pro">باقة المعلم المحترف — 600 ج.م / 3 شهور</option>
+                            <option value="teacher_premium">باقة المعلم المميز — 1500 ج.م سنويًا</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">
+                            اختيار باقة يحدّث نوع الاشتراك، اسم الخطة، السعر، ودورة الفوترة للمعلمين بالجنيه المصري.
+                        </p>
+                    </div>
+
                     <div class="space-y-2">
                         <label class="block text-sm font-semibold text-gray-700">المستخدم *</label>
                         <select name="user_id" required class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
@@ -50,7 +63,7 @@
                     </div>
                     <div class="space-y-2">
                         <label class="block text-sm font-semibold text-gray-700">نوع الاشتراك *</label>
-                        <select name="subscription_type" required class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                        <select name="subscription_type" x-model="form.subscription_type" required class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                             @foreach($typeOptions as $value => $label)
                                 <option value="{{ $value }}" {{ $subscription->subscription_type === $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
@@ -58,13 +71,13 @@
                     </div>
                     <div class="space-y-2">
                         <label class="block text-sm font-semibold text-gray-700">اسم الخطة *</label>
-                        <input type="text" name="plan_name" value="{{ old('plan_name', $subscription->plan_name) }}" required
+                        <input type="text" name="plan_name" x-model="form.plan_name" value="{{ old('plan_name', $subscription->plan_name) }}" required
                                class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                     </div>
                     <div class="space-y-2">
                         <label class="block text-sm font-semibold text-gray-700">السعر *</label>
                         <div class="relative">
-                            <input type="number" name="price" step="0.01" min="0" value="{{ old('price', $subscription->price) }}" required
+                            <input type="number" name="price" x-model.number="form.price" step="0.01" min="0" value="{{ old('price', $subscription->price) }}" required
                                    class="w-full pl-12 pr-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                             <span class="absolute inset-y-0 left-4 flex items-center text-sm font-semibold text-gray-500">ج.م</span>
                         </div>
@@ -81,7 +94,7 @@
                     </div>
                     <div class="space-y-2">
                         <label class="block text-sm font-semibold text-gray-700">دورة الفوترة *</label>
-                        <select name="billing_cycle" required class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                        <select name="billing_cycle" x-model="form.billing_cycle" required class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                             @foreach($cycleOptions as $value => $label)
                                 <option value="{{ $value }}" {{ $subscription->billing_cycle === $value ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
@@ -106,6 +119,70 @@
                         <input type="checkbox" name="auto_renew" value="1" class="sr-only peer" {{ old('auto_renew', $subscription->auto_renew) ? 'checked' : '' }}>
                         <div class="w-12 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-sky-500 rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
                     </label>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 space-y-3">
+                    <h2 class="text-sm font-semibold text-gray-900">مزايا الخطة للمعلم</h2>
+                    <p class="text-xs text-gray-500">
+                        تحكم في المزايا المفعّلة لهذا الاشتراك (مكتبة المناهج، أدوات AI، البروفايل، الظهور للأكاديميات، ...إلخ).
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[library_access]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>مكتبة المناهج التفاعلية الجاهزة</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[ai_tools]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>أدوات الذكاء الاصطناعي لإعداد الدروس</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[classroom_access]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>استخدام MuallimX Classroom للتدريس</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[zoom_access]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>عقد حصص عبر Zoom</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[support]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>دعم فني للمعلمين</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[teacher_profile]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>إنشاء بروفايل معلم احترافي</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[visible_to_academies]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>الظهور للأكاديميات داخل المنصة</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[can_apply_opportunities]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>التقديم على فرص التدريس</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[full_ai_suite]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>أدوات AI كاملة</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[teacher_evaluation]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>تقييم المعلم من فريق MuallimX</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[recommended_to_academies]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>ترشيح للأكاديميات المناسبة</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[priority_opportunities]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>أولوية في فرص التدريس</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="features[direct_support]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
+                            <span>دعم فني مباشر وسريع</span>
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">
+                        جميع المبالغ المالية في النظام تستخدم العملة الأساسية: الجنيه المصري (ج.م).
+                    </p>
                 </div>
 
                 <div class="flex flex-wrap gap-3">
@@ -160,5 +237,75 @@
         </div>
     </div>
 </div>
+<script>
+    function editTeacherSubscriptionForm(initialFeatures, initialPlanKey) {
+        const featureKeys = Object.keys(initialFeatures || {}).filter(k => initialFeatures[k]);
+
+        return {
+            selectedPlan: initialPlanKey || '',
+            form: {
+                subscription_type: '{{ $subscription->subscription_type }}',
+                plan_name: @json($subscription->plan_name),
+                price: @json((float) $subscription->price),
+                billing_cycle: '{{ $subscription->billing_cycle }}',
+                features: featureKeys,
+            },
+            applyPlan(event) {
+                const key = event.target.value;
+                if (!key) return;
+
+                if (key === 'teacher_starter') {
+                    this.form.subscription_type = 'monthly';
+                    this.form.plan_name = 'باقة البداية للمعلمين';
+                    this.form.price = 200;
+                    this.form.billing_cycle = 'monthly';
+                    this.form.features = [
+                        'library_access',
+                        'ai_tools',
+                        'classroom_access',
+                        'zoom_access',
+                        'support',
+                    ];
+                } else if (key === 'teacher_pro') {
+                    this.form.subscription_type = 'quarterly';
+                    this.form.plan_name = 'باقة المعلم المحترف';
+                    this.form.price = 600;
+                    this.form.billing_cycle = 'quarterly';
+                    this.form.features = [
+                        'library_access',
+                        'ai_tools',
+                        'classroom_access',
+                        'zoom_access',
+                        'support',
+                        'teacher_profile',
+                        'visible_to_academies',
+                        'can_apply_opportunities',
+                        'full_ai_suite',
+                    ];
+                } else if (key === 'teacher_premium') {
+                    this.form.subscription_type = 'yearly';
+                    this.form.plan_name = 'باقة المعلم المميز';
+                    this.form.price = 1500;
+                    this.form.billing_cycle = 'yearly';
+                    this.form.features = [
+                        'library_access',
+                        'ai_tools',
+                        'classroom_access',
+                        'zoom_access',
+                        'support',
+                        'teacher_profile',
+                        'visible_to_academies',
+                        'can_apply_opportunities',
+                        'full_ai_suite',
+                        'teacher_evaluation',
+                        'recommended_to_academies',
+                        'priority_opportunities',
+                        'direct_support',
+                    ];
+                }
+            },
+        };
+    }
+</script>
 @endsection
 

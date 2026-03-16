@@ -44,12 +44,12 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-500 mb-1">{{ __('instructor.course_label') }}</label>
-                                <div class="text-slate-800 font-semibold">{{ $exam->offlineCourse->title ?? $exam->advancedCourse->title ?? '—' }} @if($exam->offline_course_id)<span class="text-amber-600">({{ __('instructor.offline_badge') }})</span>@endif</div>
+                                <div class="text-slate-800 font-semibold">{{ $exam->advancedCourse->title ?? '—' }}</div>
                                 @if($exam->advancedCourse && $exam->advancedCourse->academicSubject)
                                     <div class="text-sm text-slate-500">{{ $exam->advancedCourse->academicSubject->name }}</div>
                                 @endif
                             </div>
-                            @if($exam->lesson && !$exam->offline_course_id)
+                            @if($exam->lesson)
                                 <div>
                                     <label class="block text-sm font-semibold text-slate-500 mb-1">{{ __('instructor.lesson_label') }}</label>
                                     <div class="text-slate-800 font-semibold">{{ $exam->lesson->title }}</div>

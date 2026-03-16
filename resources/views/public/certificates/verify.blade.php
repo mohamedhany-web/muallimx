@@ -53,7 +53,7 @@
                     <div class="p-8">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                             <div>
-                                <h3 class="text-lg font-bold text-gray-900 mb-4">معلومات الطالب</h3>
+                                <h3 class="text-lg font-bold text-gray-900 mb-4">معلومات المعلم</h3>
                                 <div class="space-y-2 text-sm">
                                     <div><span class="text-gray-600">الاسم:</span> <span class="font-semibold text-gray-900">{{ $certificate->user->name ?? 'غير معروف' }}</span></div>
                                     <div><span class="text-gray-600">البريد:</span> <span class="font-semibold text-gray-900">{{ $certificate->user->email ?? '-' }}</span></div>

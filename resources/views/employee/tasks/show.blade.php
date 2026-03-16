@@ -9,14 +9,9 @@
         <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
             <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-2 mb-2">
-                    <h1 class="text-2xl font-bold text-gray-900">{{ $task->title }}</h1>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold
-                        {{ $task->isVideoEditing() ? 'bg-violet-100 text-violet-800' : 'bg-slate-100 text-slate-700' }}">
-                        @if($task->isVideoEditing())
-                            <i class="fas fa-video"></i> مونتاج فيديو
-                        @else
-                            <i class="fas fa-tasks"></i> مهمة عامة
-                        @endif
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $task->title }}</h1>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                        <i class="fas fa-tasks"></i> مهمة
                     </span>
                 </div>
                 <p class="text-gray-600">عرض تفاصيل المهمة والتسليمات</p>
@@ -100,17 +95,11 @@
         <!-- زر التسليمات: عند النقر يفتح ويظهر كامل التسليمات -->
         <div class="border-t border-gray-200 pt-8 mt-8">
             <details class="group rounded-2xl border-2 border-slate-200 bg-white overflow-hidden" id="deliverables-section" {{ request()->has('open') ? 'open' : '' }}>
-                <summary class="flex items-center justify-between gap-4 w-full cursor-pointer list-none px-6 py-4 bg-gradient-to-l from-slate-50 to-white hover:from-blue-50/50 hover:to-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-2xl">
-                    <span class="flex items-center gap-3 font-bold text-gray-900 text-lg">
-                        @if($task->isVideoEditing())
-                            <span class="w-12 h-12 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
-                                <i class="fas fa-film text-xl"></i>
-                            </span>
-                        @else
-                            <span class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                                <i class="fas fa-inbox text-xl"></i>
-                            </span>
-                        @endif
+                <summary class="flex items-center justify-between gap-4 w-full cursor-pointer list-none px-6 py-4 bg-gradient-to-l from-slate-50 to-white dark:from-slate-800 dark:to-slate-800 hover:from-blue-50/50 hover:to-white dark:hover:from-slate-700 dark:hover:to-slate-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-2xl">
+                    <span class="flex items-center gap-3 font-bold text-gray-900 dark:text-gray-100 text-lg">
+                        <span class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                            <i class="fas fa-inbox text-xl"></i>
+                        </span>
                         <span>التسليمات</span>
                         @if($task->deliverables->count() > 0)
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">
@@ -123,53 +112,9 @@
                         <span class="text-sm font-medium">عرض الكل</span>
                     </span>
                 </summary>
-                <div class="px-6 pb-6 pt-2 bg-slate-50/50 border-t border-slate-100">
-            <!-- نموذج التسليم (فوق) -->
-            @if($task->isVideoEditing())
-                <div class="bg-violet-50/30 border-2 border-violet-200 rounded-xl p-6 mb-6">
-                    <h4 class="text-base font-semibold text-gray-900 mb-4">
-                        <i class="fas fa-plus-circle text-violet-600 mr-2"></i>تسليم مونتاج جديد
-                    </h4>
-                    <form action="{{ route('employee.tasks.submit-deliverable', $task) }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="task_type_context" value="video_editing">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">عنوان التسليم (اختياري)</label>
-                                <input type="text" name="title" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500" placeholder="مثال: فيديو الحلقة ١">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">رابط الفيديو من Bunny <span class="text-red-500">*</span></label>
-                                <input type="url" name="video_link_url" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500" placeholder="https://...bunny.net أو b-cdn.net أو mediadelivery.net">
-                                <p class="text-xs text-gray-500 mt-1">رابط من Bunny: bunny.net أو b-cdn.net أو mediadelivery.net — لا يتم رفع ملفات</p>
-                                @error('video_link_url')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">ممن استلمته <span class="text-red-500">*</span></label>
-                                <input type="text" name="received_from" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500" placeholder="اسم الشخص أو المصدر">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">مدة الفيديو قبل المونتاج</label>
-                                <input type="text" name="duration_before" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500" placeholder="مثال: 10:30 أو 45 دقيقة">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">مدة الفيديو بعد المونتاج</label>
-                                <input type="text" name="duration_after" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500" placeholder="مثال: 8:00 أو 35 دقيقة">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">ملاحظات (اختياري)</label>
-                                <textarea name="description" rows="2" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-violet-500" placeholder="أي تفاصيل إضافية..."></textarea>
-                            </div>
-                        </div>
-                        <button type="submit" class="mt-4 w-full md:w-auto px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-medium transition-colors">
-                            <i class="fas fa-upload mr-2"></i>تسليم المونتاج
-                        </button>
-                    </form>
-                </div>
-            @else
-                <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-6">
+                <div class="px-6 pb-6 pt-2 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-700">
+            <!-- نموذج التسليم -->
+                <div class="bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-600 rounded-xl p-6 mb-6">
                     <h4 class="text-base font-semibold text-gray-900 mb-4">إضافة تسليم جديد</h4>
                     <form action="{{ route('employee.tasks.submit-deliverable', $task) }}" method="POST" enctype="multipart/form-data" id="deliverableForm">
                         @csrf
@@ -230,9 +175,8 @@
                         });
                     </script>
                 </div>
-            @endif
 
-            <!-- جميع التسليمات (تحت) -->
+            <!-- جميع التسليمات -->
             <h4 class="text-base font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <i class="fas fa-list text-slate-500"></i>
                 جميع التسليمات
@@ -244,14 +188,14 @@
                             <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                                 <div class="flex-1 space-y-3">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <h4 class="font-semibold text-gray-900">
-                                            {{ $deliverable->title ?: ($task->isVideoEditing() ? 'فيديو ' . ($index + 1) : 'تسليم ' . ($index + 1)) }}
+                                        <h4 class="font-semibold text-gray-900 dark:text-gray-100">
+                                            {{ $deliverable->title ?: ('تسليم ' . ($index + 1)) }}
                                         </h4>
                                         <span class="px-2 py-1 text-xs font-semibold rounded-full
-                                            @if($deliverable->status === 'approved') bg-green-100 text-green-800
-                                            @elseif($deliverable->status === 'rejected') bg-red-100 text-red-800
-                                            @elseif($deliverable->status === 'submitted') bg-blue-100 text-blue-800
-                                            @else bg-gray-100 text-gray-800
+                                            @if($deliverable->status === 'approved') bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300
+                                            @elseif($deliverable->status === 'rejected') bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300
+                                            @elseif($deliverable->status === 'submitted') bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300
+                                            @else bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300
                                             @endif">
                                             @if($deliverable->status === 'approved') معتمد
                                             @elseif($deliverable->status === 'rejected') مرفوض
@@ -259,35 +203,7 @@
                                             @else معلق
                                             @endif
                                         </span>
-                                        @if($task->isVideoEditing() && ($deliverable->received_from || $deliverable->duration_before || $deliverable->duration_after))
-                                            <span class="px-2 py-1 text-xs font-medium rounded-full bg-violet-50 text-violet-700">
-                                                <i class="fas fa-video"></i> مونتاج
-                                            </span>
-                                        @endif
                                     </div>
-
-                                    @if($task->isVideoEditing() && ($deliverable->received_from || $deliverable->duration_before || $deliverable->duration_after))
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-                                            @if($deliverable->received_from)
-                                                <div class="bg-violet-50/50 rounded-lg p-3">
-                                                    <p class="text-xs font-medium text-violet-600 mb-0.5">ممن استلمته</p>
-                                                    <p class="text-gray-900 font-medium">{{ $deliverable->received_from }}</p>
-                                                </div>
-                                            @endif
-                                            @if($deliverable->duration_before)
-                                                <div class="bg-amber-50/50 rounded-lg p-3">
-                                                    <p class="text-xs font-medium text-amber-700 mb-0.5">مدة قبل المونتاج</p>
-                                                    <p class="text-gray-900 font-medium">{{ $deliverable->duration_before }}</p>
-                                                </div>
-                                            @endif
-                                            @if($deliverable->duration_after)
-                                                <div class="bg-emerald-50/50 rounded-lg p-3">
-                                                    <p class="text-xs font-medium text-emerald-700 mb-0.5">مدة بعد المونتاج</p>
-                                                    <p class="text-gray-900 font-medium">{{ $deliverable->duration_after }}</p>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endif
 
                                     @if($deliverable->description)
                                         <p class="text-sm text-gray-600">{{ $deliverable->description }}</p>
@@ -295,21 +211,16 @@
 
                                     @if($deliverable->delivery_type === 'link' && $deliverable->link_url)
                                         <div class="flex flex-wrap items-center gap-2 text-sm">
-                                            @if($task->isVideoEditing())
-                                                <i class="fas fa-video text-violet-500"></i>
-                                                <span class="text-gray-600">رابط الفيديو (Bunny):</span>
-                                            @else
-                                                <i class="fas fa-link text-gray-500"></i>
-                                            @endif
-                                            <a href="{{ $deliverable->link_url }}" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 font-medium break-all">
+                                            <i class="fas fa-link text-gray-500 dark:text-gray-400"></i>
+                                            <a href="{{ $deliverable->link_url }}" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium break-all">
                                                 {{ Str::limit($deliverable->link_url, 60) }}
                                                 <i class="fas fa-external-link-alt text-xs mr-1"></i>
                                             </a>
                                         </div>
                                     @elseif($deliverable->file_name)
-                                        <div class="flex items-center gap-2 text-sm">
-                                            <i class="fas fa-file-video text-violet-500"></i>
-                                            <span class="text-gray-700">{{ $deliverable->file_name }}</span>
+                                        <div class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                            <i class="fas fa-file text-gray-500 dark:text-gray-400"></i>
+                                            <span>{{ $deliverable->file_name }}</span>
                                             @if($deliverable->file_path)
                                                 <a href="{{ Storage::url($deliverable->file_path) }}" target="_blank" class="text-blue-600 hover:text-blue-800">
                                                     <i class="fas fa-download"></i> تحميل

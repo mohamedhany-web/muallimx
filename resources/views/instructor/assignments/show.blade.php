@@ -15,11 +15,6 @@
             <div>
                 <h1 class="text-xl font-bold text-slate-800">{{ $assignment->title }}</h1>
                 <p class="text-sm text-slate-600 mt-0.5">{{ $assignment->course->title ?? '—' }}</p>
-                @if($assignment->group)
-                    <span class="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-100 text-sky-700">
-                        <i class="fas fa-users"></i> {{ __('instructor.collective_assignment') }}: {{ $assignment->group->name }}
-                    </span>
-                @endif
             </div>
             <div class="flex items-center gap-2">
                 <a href="{{ route('instructor.assignments.edit', $assignment) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold">
@@ -46,7 +41,7 @@
                 <table class="min-w-full divide-y divide-slate-200">
                     <thead class="bg-slate-50">
                         <tr>
-                            <th class="px-4 py-3 text-right text-xs font-bold text-slate-700">{{ __('instructor.student_or_group') }}</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold text-slate-700">{{ __('instructor.student') }}</th>
                             <th class="px-4 py-3 text-right text-xs font-bold text-slate-700">{{ __('instructor.submission_date') }}</th>
                             <th class="px-4 py-3 text-right text-xs font-bold text-slate-700">{{ __('common.status') }}</th>
                         </tr>
@@ -54,14 +49,7 @@
                     <tbody class="divide-y divide-slate-200">
                         @foreach($submissions as $sub)
                             <tr>
-                                <td class="px-4 py-3 text-sm text-slate-800">
-                                    @if($sub->group_id)
-                                        <span class="text-sky-600">{{ $sub->group->name ?? __('instructor.group_fallback') }}</span>
-                                        <span class="text-slate-500">({{ $sub->student->name ?? '—' }})</span>
-                                    @else
-                                        {{ $sub->student->name ?? '—' }}
-                                    @endif
-                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-800">{{ $sub->student->name ?? '—' }}</td>
                                 <td class="px-4 py-3 text-sm text-slate-600">{{ $sub->submitted_at?->format('Y/m/d H:i') }}</td>
                                 <td class="px-4 py-3">
                                     <span class="text-xs font-semibold px-2 py-1 rounded {{ $sub->status === 'graded' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">{{ $sub->status }}</span>

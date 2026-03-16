@@ -78,7 +78,6 @@ class AssignInstructorPermissionsSeeder extends Seeder
             // صلاحيات المدرب المخصصة
             'instructor.view.courses',
             'instructor.manage.lectures',
-            'instructor.manage.groups',
             'instructor.manage.assignments',
             'instructor.manage.exams',
             'instructor.manage.attendance',

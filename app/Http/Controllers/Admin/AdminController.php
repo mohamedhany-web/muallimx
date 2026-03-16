@@ -235,19 +235,37 @@ class AdminController extends Controller
             'datasets_active' => \App\Models\CommunityDataset::active()->count(),
         ];
 
+        // قسم المبيعات (ما يقدمه السيلز)
+        $salesSection = [
+            'recent_orders' => \App\Models\Order::with(['user', 'course.academicSubject'])
+                ->latest()
+                ->take(5)
+                ->get(),
+            'orders_pending' => \App\Models\Order::where('status', \App\Models\Order::STATUS_PENDING)->count(),
+            'orders_approved_month' => \App\Models\Order::where('status', \App\Models\Order::STATUS_APPROVED)
+                ->whereBetween('approved_at', [$currentPeriodStart, $currentPeriodEnd])
+                ->count(),
+            'revenue_month' => \App\Models\Order::where('status', \App\Models\Order::STATUS_APPROVED)
+                ->whereBetween('approved_at', [$currentPeriodStart, $currentPeriodEnd])
+                ->sum('amount'),
+        ];
+
+        // قسم الموارد البشرية (ما يقوم به الـ HR)
+        $hrSection = [
+            'employees_total' => User::employees()->count(),
+            'employees_active' => User::employees()->where('is_active', true)->whereNull('termination_date')->count(),
+            'leaves_pending' => \App\Models\LeaveRequest::where('status', 'pending')->count(),
+            'leaves_approved_month' => \App\Models\LeaveRequest::where('status', 'approved')
+                ->whereBetween('reviewed_at', [$currentPeriodStart, $currentPeriodEnd])
+                ->count(),
+            'recent_leaves' => \App\Models\LeaveRequest::with(['employee.employeeJob'])
+                ->latest()
+                ->take(5)
+                ->get(),
+            'recent_employees' => User::employees()->with('employeeJob')->latest('hire_date')->take(5)->get(),
+        ];
+
         $quickActions = [
-            [
-                'title' => 'مجتمع الذكاء الاصطناعي',
-                'count' => (int) ($communityStats['competitions_active'] + $communityStats['datasets_active']),
-                'meta' => $communityStats['competitions_active'] . ' مسابقة، ' . $communityStats['datasets_active'] . ' مجموعة بيانات',
-                'icon' => 'fas fa-robot',
-                'background' => 'from-cyan-100 to-teal-50',
-                'icon_background' => 'from-cyan-500 to-teal-600',
-                'count_class' => 'text-cyan-700',
-                'meta_class' => 'text-cyan-600',
-                'cta' => 'لوحة المجتمع',
-                'route' => route('admin.community.dashboard'),
-            ],
             [
                 'title' => 'فواتير معلقة',
                 'count' => (int) ($pendingInvoicesSummary->count ?? 0),
@@ -323,7 +341,9 @@ class AdminController extends Controller
             'weeklyActivity',
             'monthlyActivity',
             'quickActions',
-            'communityStats'
+            'communityStats',
+            'salesSection',
+            'hrSection'
         ));
     }
 

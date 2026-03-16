@@ -110,85 +110,46 @@ class EmployeeTaskController extends Controller
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
         }
 
-        $isVideoEditing = $task->isVideoEditing()
-            || $request->input('task_type_context') === 'video_editing';
-
-        if ($isVideoEditing) {
-            $validated = $request->validate([
-                'title' => 'nullable|string|max:255',
-                'description' => 'nullable|string',
-                'video_link_url' => [
-                    'required',
-                    'url',
-                    function ($attribute, $value, $fail) {
-                        $host = parse_url($value, PHP_URL_HOST);
-                        $hostLower = $host ? strtolower($host) : '';
-                        $allowed = str_contains($hostLower, 'bunny')
-                            || str_contains($hostLower, 'b-cdn')
-                            || str_contains($hostLower, 'mediadelivery');
-                        if (!$host || !$allowed) {
-                            $fail('رابط الفيديو يجب أن يكون من Bunny (bunny.net أو b-cdn.net أو mediadelivery.net) فقط.');
-                        }
-                    },
-                ],
-                'received_from' => 'required|string|max:255',
-                'duration_before' => 'nullable|string|max:100',
-                'duration_after' => 'nullable|string|max:100',
-            ]);
-        } else {
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'delivery_type' => 'required|in:file,image,link',
-                'file' => 'nullable|file|max:10240|required_if:delivery_type,file,image',
-                'link_url' => 'nullable|url|required_if:delivery_type,link',
-            ]);
-        }
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'delivery_type' => 'required|in:file,image,link',
+            'file' => 'nullable|file|max:10240|required_if:delivery_type,file,image',
+            'link_url' => 'nullable|url|required_if:delivery_type,link',
+        ]);
 
         $filePath = null;
         $fileName = null;
         $fileType = null;
         $fileSize = null;
         $linkUrl = null;
-        $deliveryType = 'file';
-        $receivedFrom = null;
-        $durationBefore = null;
-        $durationAfter = null;
+        $deliveryType = $validated['delivery_type'];
 
-        if ($isVideoEditing) {
-            $linkUrl = $validated['video_link_url'];
-            $deliveryType = 'link';
-            $receivedFrom = $validated['received_from'] ?? null;
-            $durationBefore = $validated['duration_before'] ?? null;
-            $durationAfter = $validated['duration_after'] ?? null;
-        } else {
-            if (in_array($validated['delivery_type'], ['file', 'image']) && $request->hasFile('file')) {
-                $file = $request->file('file');
-                $fileName = $file->getClientOriginalName();
-                $fileType = $file->getClientMimeType();
-                $fileSize = $file->getSize();
-                $folder = $validated['delivery_type'] === 'image' ? 'employee-deliverables/images' : 'employee-deliverables/files';
-                $filePath = $file->store($folder, 'public');
-            }
-            $deliveryType = $validated['delivery_type'];
-            if ($deliveryType === 'link') {
-                $linkUrl = $validated['link_url'];
-            }
+        if (in_array($deliveryType, ['file', 'image']) && $request->hasFile('file')) {
+            $file = $request->file('file');
+            $fileName = $file->getClientOriginalName();
+            $fileType = $file->getClientMimeType();
+            $fileSize = $file->getSize();
+            $folder = $deliveryType === 'image' ? 'employee-deliverables/images' : 'employee-deliverables/files';
+            $filePath = $file->store($folder, 'public');
+        }
+        if ($deliveryType === 'link') {
+            $linkUrl = $validated['link_url'];
         }
 
         EmployeeTaskDeliverable::create([
             'task_id' => $task->id,
-            'title' => $validated['title'] ?? ('تسليم مونتاج ' . now()->format('Y-m-d H:i')),
+            'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'delivery_type' => $deliveryType,
-            'link_url' => $linkUrl ?? ($isVideoEditing ? $validated['video_link_url'] : null),
+            'link_url' => $linkUrl,
             'file_path' => $filePath,
             'file_name' => $fileName,
             'file_type' => $fileType,
             'file_size' => $fileSize,
-            'received_from' => $receivedFrom,
-            'duration_before' => $durationBefore,
-            'duration_after' => $durationAfter,
+            'received_from' => null,
+            'duration_before' => null,
+            'duration_after' => null,
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);
@@ -197,7 +158,7 @@ class EmployeeTaskController extends Controller
             $task->update(['status' => 'in_progress']);
         }
 
-        $message = $isVideoEditing ? 'تم تسليم المونتاج بنجاح' : 'تم تسليم المهمة بنجاح';
+        $message = 'تم تسليم المهمة بنجاح';
         return redirect()->to(route('employee.tasks.show', $task) . '?open=1')
             ->with('success', $message);
     }

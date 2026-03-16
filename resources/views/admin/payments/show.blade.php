@@ -129,7 +129,7 @@
                     <div class="flex justify-between gap-6">
                         <dt class="text-slate-500">الدور</dt>
                         <dd class="font-semibold text-slate-900">
-                            @if($payment->user->role == 'student') طالب
+                            @if($payment->user->role == 'student') {{ __('admin.student_role_label') }}
                             @elseif($payment->user->role == 'instructor') مدرب
                             @elseif($payment->user->role == 'admin') إداري
                             @else {{ $payment->user->role }}

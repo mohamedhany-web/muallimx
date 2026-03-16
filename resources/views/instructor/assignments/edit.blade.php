@@ -21,17 +21,6 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div class="md:col-span-2">
-                <label for="group_id" class="block text-sm font-semibold text-slate-700 mb-1">{{ __('instructor.for_group_optional') }}</label>
-                <select name="group_id" id="group_id" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 bg-white">
-                    <option value="">{{ __('instructor.for_all_students_option') }}</option>
-                    @foreach($courseGroups as $g)
-                        <option value="{{ $g->id }}" {{ old('group_id', $assignment->group_id) == $g->id ? 'selected' : '' }}>{{ $g->name }}</option>
-                    @endforeach
-                </select>
-                <p class="mt-1 text-xs text-slate-500">{{ __('instructor.group_assignment_hint') }}</p>
-                @error('group_id')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
-            </div>
-            <div class="md:col-span-2">
                 <label for="title" class="block text-sm font-semibold text-slate-700 mb-1">{{ __('instructor.assignment_title_required') }} <span class="text-red-500">*</span></label>
                 <input type="text" name="title" id="title" value="{{ old('title', $assignment->title) }}" required class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 bg-white">
                 @error('title')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror

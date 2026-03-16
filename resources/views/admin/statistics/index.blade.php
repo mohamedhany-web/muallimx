@@ -152,7 +152,7 @@
                                     <h4 class="text-sm font-bold text-slate-900">{{ htmlspecialchars($course->title, ENT_QUOTES, 'UTF-8') }}</h4>
                                     <span class="inline-flex items-center gap-1.5 rounded-lg bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 border border-blue-200">
                                         <i class="fas fa-user-friends"></i>
-                                        {{ number_format($course->enrollments_count) }} طالب
+                                        {{ number_format($course->enrollments_count) }} معلم
                                     </span>
                                 </div>
                                 <p class="text-xs text-slate-600">

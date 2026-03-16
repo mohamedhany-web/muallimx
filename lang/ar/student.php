@@ -3,7 +3,7 @@
 return [
     'dashboard' => 'لوحة التحكم',
     'overview' => 'نظرة عامة',
-    'learning_center' => 'مركز التعلم',
+    'learning_center' => 'مركز المعلم',
     'courses' => 'الكورسات',
     'progress' => 'التقدم',
     'browse_courses' => 'تصفح الكورسات',
@@ -21,7 +21,7 @@ return [
     'calendar' => 'التقويم',
     'exams' => 'الامتحانات',
     'portfolio' => 'البورتفوليو',
-    'learning_center' => 'مركز التعلم',
+    'learning_center' => 'مركز المعلم',
     'my_offline_courses' => 'كورساتي الأوفلاين',
     'offline_course' => 'كورس أوفلاين',
     'orders_tracking' => 'متابعة الطلبات',
@@ -38,12 +38,12 @@ return [
     'admin_panel' => 'لوحة الإدارة',
     'admin_role' => 'مدير',
     'instructor_role' => 'مدرب',
-    'student_role' => 'طالب',
+    'student_role' => 'المعلم',
     'group_count' => 'مجموعة',
     'learning_path' => 'المسار التعليمي',
 
     // Dashboard
-    'dashboard_title' => 'لوحة تحكم الطالب',
+    'dashboard_title' => 'لوحة تحكم المعلم',
     'your_dashboard' => 'لوحة تحكمك',
     'welcome_name' => 'مرحباً، :name',
     'dashboard_subtitle' => 'استمر في رحلتك التعليمية واجعل كل يوم خطوة نحو تحقيق أهدافك',
@@ -241,7 +241,7 @@ return [
 
     // Academic years / Learning paths
     'academic_paths_title' => 'مسارات التعلم',
-    'discover_paths' => 'اكتشف مسارات Mindlytics التعليمية',
+    'discover_paths' => 'اكتشف مساراتك التعليمية في المنصّة',
     'choose_path_subtitle' => 'اختر مسار التعلم الأنسب لك واستعد لبناء مشروعك التقني القادم',
     'total_paths' => 'إجمالي المسارات',
     'skill_groups' => 'مجموعات المهارات',
@@ -262,4 +262,37 @@ return [
     'notification_details' => 'تفاصيل الإشعار',
     'learning_path_info' => 'معلومات المسار التعليمي',
     'course_info' => 'معلومات الكورس',
+
+    // مزايا اشتراك باقات المعلمين (للعرض في صفحة طلب الاشتراك)
+    'subscription_feature' => [
+        'library_access' => 'مكتبة المناهج التفاعلية',
+        'ai_tools' => 'أدوات الذكاء الاصطناعي',
+        'classroom_access' => 'استخدام MuallimX Classroom',
+        'zoom_access' => 'عقد حصص عبر Zoom',
+        'support' => 'دعم فني للمعلمين',
+        'teacher_profile' => 'التسويق الشخصي',
+        'visible_to_academies' => 'الظهور للأكاديميات',
+        'can_apply_opportunities' => 'التقديم على فرص التدريس',
+        'full_ai_suite' => 'أدوات AI كاملة',
+        'teacher_evaluation' => 'تقييم المعلم من فريق MuallimX',
+        'recommended_to_academies' => 'ترشيحك للأكاديميات',
+        'priority_opportunities' => 'أولوية في فرص التدريس',
+        'direct_support' => 'دعم فني مباشر',
+    ],
+    // وصف مختصر لكل ميزة (لصفحة الميزة)
+    'subscription_feature_desc' => [
+        'library_access' => 'الوصول إلى مكتبة المناهج التفاعلية الجاهزة لاستخدامها في التحضير والتدريس.',
+        'ai_tools' => 'استخدام أدوات الذكاء الاصطناعي في إعداد الدروس وتحسين المحتوى.',
+        'classroom_access' => 'استخدام فصول MuallimX Classroom لإدارة الحصص والتفاعل مع الطلاب.',
+        'zoom_access' => 'إمكانية عقد الحصص المباشرة عبر Zoom ضمن المنصة.',
+        'support' => 'الدعم الفني للمعلمين عبر القنوات المخصصة.',
+        'teacher_profile' => 'إنشاء وعرض بروفايل معلم احترافي والتسويق الشخصي.',
+        'visible_to_academies' => 'ظهور ملفك للأكاديميات والجهات التي تبحث عن معلمين.',
+        'can_apply_opportunities' => 'التقديم على فرص التدريس المتاحة من الأكاديميات.',
+        'full_ai_suite' => 'الوصول الكامل لمجموعة أدوات الذكاء الاصطناعي المتقدمة.',
+        'teacher_evaluation' => 'تقييم ملفك وأدائك من فريق MuallimX لتحسين فرصك.',
+        'recommended_to_academies' => 'ترشيحك للأكاديميات كمعلم موصى به.',
+        'priority_opportunities' => 'أولوية في عرض فرص التدريس المناسبة لك.',
+        'direct_support' => 'دعم فني مباشر ومميز من فريق المنصة.',
+    ],
 ];

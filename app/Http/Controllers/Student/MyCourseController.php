@@ -70,10 +70,6 @@ class MyCourseController extends Controller
                         $query->with(['progress' => function($q) use ($user) {
                             $q->where('user_id', $user->id);
                         }]);
-                    } elseif ($query->getModel() instanceof \App\Models\LearningPattern) {
-                        $query->with(['attempts' => function($q) use ($user) {
-                            $q->where('user_id', $user->id)->latest();
-                        }]);
                     }
                 }
             ])
@@ -93,8 +89,6 @@ class MyCourseController extends Controller
                 $entity = $curriculumItem->item;
                 if ($entity instanceof \App\Models\CourseLesson) {
                     $entity->load(['progress' => function($q) use ($user) { $q->where('user_id', $user->id); }]);
-                } elseif ($entity instanceof \App\Models\LearningPattern) {
-                    $entity->load(['attempts' => function($q) use ($user) { $q->where('user_id', $user->id)->latest(); }]);
                 } elseif ($entity instanceof \App\Models\AdvancedExam) {
                     $entity->load(['attempts' => function($q) use ($user) { $q->where('user_id', $user->id)->whereNotNull('submitted_at'); }]);
                 } elseif ($entity instanceof \App\Models\Assignment) {
@@ -148,10 +142,6 @@ class MyCourseController extends Controller
                         $query->with(['progress' => function($q) use ($user) {
                             $q->where('user_id', $user->id);
                         }]);
-                    } elseif ($query->getModel() instanceof \App\Models\LearningPattern) {
-                        $query->with(['attempts' => function($q) use ($user) {
-                            $q->where('user_id', $user->id)->latest();
-                        }]);
                     }
                 }
             ])
@@ -202,10 +192,6 @@ class MyCourseController extends Controller
                 if ($curriculumItem->item instanceof \App\Models\CourseLesson) {
                     $curriculumItem->item->load(['progress' => function($q) use ($user) {
                         $q->where('user_id', $user->id);
-                    }]);
-                } elseif ($curriculumItem->item instanceof \App\Models\LearningPattern) {
-                    $curriculumItem->item->load(['attempts' => function($q) use ($user) {
-                        $q->where('user_id', $user->id)->latest();
                     }]);
                 } elseif ($curriculumItem->item instanceof \App\Models\AdvancedExam) {
                     $curriculumItem->item->load(['attempts' => function($q) use ($user) {
@@ -295,8 +281,6 @@ class MyCourseController extends Controller
                     $flat[] = ['type' => 'assignment', 'id' => $item->id];
                 } elseif ($item instanceof \App\Models\AdvancedExam || $item instanceof \App\Models\Exam) {
                     $flat[] = ['type' => 'exam', 'id' => $item->id];
-                } elseif ($item instanceof \App\Models\LearningPattern) {
-                    $flat[] = ['type' => 'pattern', 'id' => $item->id];
                 }
             }
             if ($section->children && $section->children->isNotEmpty()) {
@@ -583,8 +567,6 @@ class MyCourseController extends Controller
                 $entity = $curriculumItem->item;
                 if ($entity instanceof \App\Models\CourseLesson) {
                     $entity->load(['progress' => fn ($q) => $q->where('user_id', $user->id)]);
-                } elseif ($entity instanceof \App\Models\LearningPattern) {
-                    $entity->load(['attempts' => fn ($q) => $q->where('user_id', $user->id)->latest()]);
                 } elseif ($entity instanceof \App\Models\AdvancedExam) {
                     $entity->load(['attempts' => fn ($q) => $q->where('user_id', $user->id)->whereNotNull('submitted_at')]);
                 } elseif ($entity instanceof \App\Models\Assignment) {
@@ -632,9 +614,6 @@ class MyCourseController extends Controller
                     }
                 } elseif ($entity instanceof \App\Models\Assignment) {
                     if ($entity->submissions->where('student_id', $user->id)->isNotEmpty()) $completed++;
-                } elseif ($entity instanceof \App\Models\LearningPattern) {
-                    $best = $entity->getUserBestAttempt($user->id);
-                    if ($best && $best->status === 'completed') $completed++;
                 } elseif ($entity instanceof \App\Models\AdvancedExam) {
                     $passing = (float) ($entity->passing_marks ?? 0);
                     if ($entity->attempts->contains(fn ($a) => $a->score !== null && (float) $a->score >= $passing)) $completed++;
@@ -713,9 +692,6 @@ class MyCourseController extends Controller
                     }
                 } elseif ($entity instanceof \App\Models\Assignment) {
                     if ($entity->submissions->where('student_id', $user->id)->isNotEmpty()) $completedItems++;
-                } elseif ($entity instanceof \App\Models\LearningPattern) {
-                    $best = $entity->getUserBestAttempt($user->id);
-                    if ($best && $best->status === 'completed') $completedItems++;
                 } elseif ($entity instanceof \App\Models\AdvancedExam) {
                     $passing = (float) ($entity->passing_marks ?? 0);
                     $passed = $entity->attempts->contains(fn ($a) => $a->score !== null && (float) $a->score >= $passing);
@@ -742,8 +718,6 @@ class MyCourseController extends Controller
                 $entity = $curriculumItem->item;
                 if ($entity instanceof \App\Models\CourseLesson) {
                     $entity->load(['progress' => fn ($q) => $q->where('user_id', $userId)]);
-                } elseif ($entity instanceof \App\Models\LearningPattern) {
-                    $entity->load(['attempts' => fn ($q) => $q->where('user_id', $userId)->latest()]);
                 } elseif ($entity instanceof \App\Models\AdvancedExam) {
                     $entity->load(['attempts' => fn ($q) => $q->where('user_id', $userId)->whereNotNull('submitted_at')]);
                 } elseif ($entity instanceof \App\Models\Assignment) {

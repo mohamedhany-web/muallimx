@@ -12,7 +12,6 @@ class Assignment extends Model
     protected $fillable = [
         'course_id',
         'advanced_course_id',
-        'group_id',
         'lesson_id',
         'teacher_id',
         'title',
@@ -37,11 +36,6 @@ class Assignment extends Model
             return $this->belongsTo(AdvancedCourse::class, 'advanced_course_id');
         }
         return $this->belongsTo(AdvancedCourse::class, 'course_id');
-    }
-
-    public function group()
-    {
-        return $this->belongsTo(Group::class);
     }
 
     public function lesson()

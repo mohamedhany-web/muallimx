@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\AdvancedCourse;
-use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -89,13 +88,7 @@ class AssignmentController extends Controller
             ->orderBy('title')
             ->get();
         
-        $courseGroups = Group::where('status', 'active')
-            ->whereIn('course_id', $courses->pluck('id'))
-            ->orderBy('name')
-            ->get()
-            ->groupBy('course_id');
-        
-        return view('instructor.assignments.create', compact('courses', 'courseGroups'));
+        return view('instructor.assignments.create', compact('courses'));
     }
 
     /**
@@ -107,7 +100,6 @@ class AssignmentController extends Controller
         
         $validated = $request->validate([
             'advanced_course_id' => 'required|exists:advanced_courses,id',
-            'group_id' => 'nullable|exists:groups,id',
             'lesson_id' => 'nullable|exists:course_lessons,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -128,10 +120,6 @@ class AssignmentController extends Controller
         $course = AdvancedCourse::where('id', $validated['advanced_course_id'])
             ->where('instructor_id', $instructor->id)
             ->firstOrFail();
-        
-        if (!empty($validated['group_id'])) {
-            Group::where('id', $validated['group_id'])->where('course_id', $course->id)->firstOrFail();
-        }
         
         // التحقق من أن الدرس يخص الكورس إذا تم تحديده
         if (!empty($validated['lesson_id'])) {
@@ -166,7 +154,7 @@ class AssignmentController extends Controller
             abort(403, 'غير مسموح لك بالوصول لهذا الواجب');
         }
         
-        $assignment->load(['course', 'lesson', 'teacher', 'group', 'submissions.student']);
+        $assignment->load(['course', 'lesson', 'teacher', 'submissions.student']);
         
         // جلب الطلاب المسجلين في الكورس
         $enrollments = \App\Models\StudentCourseEnrollment::where('advanced_course_id', $courseId)
@@ -176,7 +164,7 @@ class AssignmentController extends Controller
         
         // جلب التسليمات
         $submissions = AssignmentSubmission::where('assignment_id', $assignment->id)
-            ->with(['student', 'grader', 'group'])
+            ->with(['student', 'grader'])
             ->orderBy('submitted_at', 'desc')
             ->paginate(20);
         
@@ -218,9 +206,7 @@ class AssignmentController extends Controller
             ->orderBy('order')
             ->get();
         
-        $courseGroups = Group::where('status', 'active')->where('course_id', $courseId)->orderBy('name')->get();
-        
-        return view('instructor.assignments.edit', compact('assignment', 'courses', 'lessons', 'courseGroups'));
+        return view('instructor.assignments.edit', compact('assignment', 'courses', 'lessons'));
     }
 
     /**
@@ -240,7 +226,6 @@ class AssignmentController extends Controller
         
         $validated = $request->validate([
             'advanced_course_id' => 'required|exists:advanced_courses,id',
-            'group_id' => 'nullable|exists:groups,id',
             'lesson_id' => 'nullable|exists:course_lessons,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -254,10 +239,6 @@ class AssignmentController extends Controller
         $course = AdvancedCourse::where('id', $validated['advanced_course_id'])
             ->where('instructor_id', $instructor->id)
             ->firstOrFail();
-        
-        if (!empty($validated['group_id'])) {
-            Group::where('id', $validated['group_id'])->where('course_id', $course->id)->firstOrFail();
-        }
         
         if (!empty($validated['lesson_id'])) {
             \App\Models\CourseLesson::where('id', $validated['lesson_id'])
@@ -310,7 +291,7 @@ class AssignmentController extends Controller
         }
         
         $submissions = AssignmentSubmission::where('assignment_id', $assignment->id)
-            ->with(['student', 'grader', 'group'])
+            ->with(['student', 'grader'])
             ->orderBy('submitted_at', 'desc')
             ->paginate(20);
         
