@@ -9,6 +9,23 @@ class LiveSetting extends Model
 {
     protected $fillable = ['key', 'value', 'type', 'group', 'label'];
 
+    /**
+     * نطاق Jitsi المستخدم في الميتينج: الإعداد المحفوظ (النطاق الافتراضي من سيرفرات البث) أولاً،
+     * ثم أول سيرفر نشط إن لم يكن هناك إعداد، وأخيراً meet.jit.si للاختبار فقط.
+     */
+    public static function getJitsiDomain(): string
+    {
+        $domain = trim((string) static::get('jitsi_domain', ''));
+        if ($domain !== '') {
+            return $domain;
+        }
+        $server = LiveServer::where('status', 'active')->first();
+        if ($server && trim($server->domain) !== '') {
+            return trim($server->domain);
+        }
+        return 'meet.jit.si';
+    }
+
     public static function get(string $key, $default = null)
     {
         $setting = Cache::remember("live_setting_{$key}", 3600, function () use ($key) {

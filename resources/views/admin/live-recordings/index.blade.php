@@ -3,9 +3,14 @@
 
 @section('content')
 <div class="space-y-6">
-    <div>
-        <h1 class="text-2xl font-bold text-slate-800 dark:text-white"><i class="fas fa-play-circle text-emerald-500 ml-2"></i>تسجيلات الجلسات</h1>
-        <p class="text-sm text-slate-500 mt-1">جميع تسجيلات جلسات البث المباشر</p>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 dark:text-white"><i class="fas fa-play-circle text-emerald-500 ml-2"></i>تسجيلات الجلسات</h1>
+            <p class="text-sm text-slate-500 mt-1">Jibri → R2 ثم تسجيل هنا (ويب هوك أو إضافة يدوية)</p>
+        </div>
+        <a href="{{ route('admin.live-recordings.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/25 transition-all">
+            <i class="fas fa-plus"></i> إضافة تسجيل (R2 / يدوي)
+        </a>
     </div>
 
     <form method="GET" class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 flex flex-wrap gap-3 items-end">
@@ -13,6 +18,17 @@
             <label class="text-xs text-slate-500 mb-1 block">بحث</label>
             <input type="text" name="search" value="{{ request('search') }}" placeholder="اسم التسجيل أو الجلسة..." class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
         </div>
+        @if(isset($sessions) && $sessions->isNotEmpty())
+        <div>
+            <label class="text-xs text-slate-500 mb-1 block">الجلسة</label>
+            <select name="session_id" class="rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
+                <option value="">الكل</option>
+                @foreach($sessions as $s)
+                    <option value="{{ $s->id }}" {{ request('session_id') == $s->id ? 'selected' : '' }}>{{ Str::limit($s->title, 35) }}</option>
+                @endforeach
+            </select>
+        </div>
+        @endif
         <div>
             <label class="text-xs text-slate-500 mb-1 block">الحالة</label>
             <select name="status" class="rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">

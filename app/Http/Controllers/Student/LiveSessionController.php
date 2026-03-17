@@ -54,7 +54,7 @@ class LiveSessionController extends Controller
             abort(403, 'ليس لديك صلاحية دخول هذه الجلسة');
         }
 
-        $liveSession->load(['course', 'instructor']);
+        $liveSession->load(['course', 'instructor', 'recordings' => fn ($q) => $q->where('status', 'ready')->where('is_published', true)]);
 
         return view('student.live-sessions.show', compact('liveSession'));
     }
@@ -86,7 +86,7 @@ class LiveSessionController extends Controller
             ]);
         }
 
-        $jitsiDomain = $liveSession->server?->domain ?? LiveSetting::get('jitsi_domain', 'meet.jit.si');
+        $jitsiDomain = $liveSession->server?->domain ?: LiveSetting::getJitsiDomain();
 
         return view('student.live-sessions.room', compact('liveSession', 'jitsiDomain', 'user'));
     }

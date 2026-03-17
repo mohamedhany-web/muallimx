@@ -570,56 +570,52 @@
                         خطط مرنة تناسب
                         <span class="text-gradient">كل معلّم</span>
                     </h2>
-                    <p class="text-lg text-slate-500 leading-relaxed">ابدأ مجاناً وتوسّع بحسب احتياجك. كل الخطط تشمل محتوى عربي عالي الجودة.</p>
+                    <p class="text-lg text-slate-500 leading-relaxed">جميع الأسعار بالجنيه المصري (ج.م). تحديث الأسعار والمزايا من لوحة الإدارة يؤثر هنا وفي صفحة الأسعار.</p>
                 </div>
-                <div class="grid md:grid-cols-3 gap-6 lg:gap-8 items-start">
-                    <?php
-                    $plans = [
-                        ['name'=>'المجانية','price'=>'مجاناً','period'=>'','desc'=>'استكشف المنصة وابدأ التعلّم الأساسي.','popular'=>false,
-                         'features'=>[
-                            ['t'=>'كورسات مجانية مختارة','ok'=>true],['t'=>'أداة AI أساسية (محدودة)','ok'=>true],['t'=>'بروفايل أساسي','ok'=>true],
-                            ['t'=>'مكتبة المناهج الكاملة','ok'=>false],['t'=>'جلسات حيّة','ok'=>false],['t'=>'دعم التوظيف','ok'=>false],
-                         ],'cta'=>'ابدأ مجاناً'],
-                        ['name'=>'الاحترافية','price'=>'99','period'=>'/ شهرياً','desc'=>'كل الأدوات والمحتوى للمعلّم الجاد.','popular'=>true,
-                         'features'=>[
-                            ['t'=>'جميع الدبلومات والكورسات','ok'=>true],['t'=>'أدوات AI كاملة بلا حدود','ok'=>true],['t'=>'مكتبة المناهج والأنشطة','ok'=>true],
-                            ['t'=>'بروفايل احترافي متقدم','ok'=>true],['t'=>'جلسات حيّة شهرية','ok'=>true],['t'=>'دعم التوظيف','ok'=>false],
-                         ],'cta'=>'اشترك الآن'],
-                        ['name'=>'الماستر','price'=>'249','period'=>'/ شهرياً','desc'=>'التجربة الكاملة مع توظيف وإرشاد.','popular'=>false,
-                         'features'=>[
-                            ['t'=>'كل مميزات الاحترافية','ok'=>true],['t'=>'تجهيز بروفايل كامل (CV+فيديو)','ok'=>true],['t'=>'تقييم HR + تقرير تطوير','ok'=>true],
-                            ['t'=>'ربط مباشر بالأكاديميات','ok'=>true],['t'=>'إرشاد مهني فردي','ok'=>true],['t'=>'أولوية في فرص العمل','ok'=>true],
-                         ],'cta'=>'اشترك الآن'],
+                <?php
+                    $planKeys = ['teacher_starter', 'teacher_pro', 'teacher_premium'];
+                    $planMeta = [
+                        'teacher_starter' => ['subtitle' => 'ابدأ التدريس أونلاين بسهولة', 'popular' => false, 'cta' => 'ابدأ الآن'],
+                        'teacher_pro'     => ['subtitle' => 'أفضل اختيار للمعلمين الذين يريدون العمل أونلاين', 'popular' => true, 'cta' => 'اشترك الآن'],
+                        'teacher_premium' => ['subtitle' => 'للمعلمين الجادين في بناء مسار مهني مستقر', 'popular' => false, 'cta' => 'اشترك الآن'],
                     ];
-                    ?>
-                    <?php $__currentLoopData = $plans; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $plan): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <div class="reveal stagger-<?php echo e($idx+1); ?> <?php echo e($plan['popular']?'md:-mt-4 md:mb-4':''); ?>">
-                        <div class="rounded-3xl <?php echo e($plan['popular']?'bg-navy-950 text-white popular-glow border-2 border-brand-500/30':'bg-white border border-slate-200 shadow-sm hover:shadow-lg'); ?> p-7 sm:p-8 relative transition-shadow duration-300 h-full flex flex-col">
-                            <?php if($plan['popular']): ?><span class="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full bg-gradient-to-l from-brand-400 to-brand-600 text-white text-sm font-bold shadow-lg shadow-brand-600/30">الأكثر طلباً</span><?php endif; ?>
-                            <div class="mb-6">
-                                <h3 class="font-heading text-xl font-bold <?php echo e($plan['popular']?'text-white':'text-navy-950'); ?> mb-2"><?php echo e($plan['name']); ?></h3>
-                                <p class="text-sm <?php echo e($plan['popular']?'text-slate-300':'text-slate-500'); ?>"><?php echo e($plan['desc']); ?></p>
+                    $billingPhrases = ['monthly' => 'ج.م / شهرياً', 'quarterly' => 'ج.م / 3 شهور', 'yearly' => 'ج.م / سنوياً'];
+                ?>
+                <div class="grid md:grid-cols-3 gap-6 lg:gap-8 items-start">
+                    <?php $__currentLoopData = $planKeys; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $planKey): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php
+                            $plan = $teacherPlans[$planKey] ?? null;
+                            if (!$plan) continue;
+                            $meta = $planMeta[$planKey] ?? [];
+                            $name = $plan['label'] ?? $planKey;
+                            $price = (float) ($plan['price'] ?? 0);
+                            $cycle = $plan['billing_cycle'] ?? 'monthly';
+                            $cyclePhrase = $billingPhrases[$cycle] ?? 'ج.م';
+                            $features = $plan['features'] ?? [];
+                            $popular = $meta['popular'] ?? false;
+                        ?>
+                        <div class="reveal stagger-<?php echo e($idx+1); ?> <?php echo e($popular ? 'md:-mt-4 md:mb-4' : ''); ?>">
+                            <div class="rounded-3xl <?php echo e($popular ? 'bg-navy-950 text-white popular-glow border-2 border-brand-500/30' : 'bg-white border border-slate-200 shadow-sm hover:shadow-lg'); ?> p-7 sm:p-8 relative transition-shadow duration-300 h-full flex flex-col">
+                                <?php if($popular): ?><span class="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full bg-gradient-to-l from-brand-400 to-brand-600 text-white text-sm font-bold shadow-lg shadow-brand-600/30">الأكثر طلباً</span><?php endif; ?>
+                                <div class="mb-6">
+                                    <h3 class="font-heading text-xl font-bold <?php echo e($popular ? 'text-white' : 'text-navy-950'); ?> mb-2"><?php echo e($name); ?></h3>
+                                    <p class="text-sm <?php echo e($popular ? 'text-slate-300' : 'text-slate-500'); ?>"><?php echo e($meta['subtitle'] ?? ''); ?></p>
+                                </div>
+                                <div class="mb-6">
+                                    <span class="font-heading text-4xl sm:text-5xl font-black <?php echo e($popular ? 'text-white' : 'text-navy-950'); ?>"><?php echo e(number_format($price, 0)); ?></span>
+                                    <span class="text-sm <?php echo e($popular ? 'text-slate-400' : 'text-slate-500'); ?>"> <?php echo e($cyclePhrase); ?></span>
+                                </div>
+                                <ul class="space-y-3 mb-8 flex-1">
+                                    <?php $__currentLoopData = $features; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $featureKey): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <li class="flex items-center gap-3 text-sm">
+                                        <span class="w-5 h-5 rounded-full <?php echo e($popular ? 'bg-brand-500/20 text-brand-300' : 'bg-emerald-50 text-emerald-500'); ?> flex items-center justify-center flex-shrink-0"><i class="fas fa-check text-[10px]"></i></span>
+                                        <span class="<?php echo e($popular ? 'text-slate-200' : 'text-slate-600'); ?>"><?php echo e(__("student.subscription_feature.{$featureKey}")); ?></span>
+                                    </li>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </ul>
+                                <a href="<?php echo e(route('public.subscription.checkout', $planKey)); ?>" class="block text-center font-bold text-base px-6 py-4 rounded-2xl transition-all duration-300 <?php echo e($popular ? 'btn-primary bg-gradient-to-l from-brand-400 to-brand-600 text-white shadow-lg shadow-brand-600/25' : 'btn-outline bg-navy-950 text-white hover:bg-navy-900'); ?>"><?php echo e($meta['cta'] ?? 'اشترك الآن'); ?></a>
                             </div>
-                            <div class="mb-6">
-                                <span class="font-heading text-4xl sm:text-5xl font-black <?php echo e($plan['popular']?'text-white':'text-navy-950'); ?>"><?php echo e($plan['price']); ?></span>
-                                <?php if($plan['period']): ?><span class="text-sm <?php echo e($plan['popular']?'text-slate-400':'text-slate-500'); ?>"> ر.س <?php echo e($plan['period']); ?></span><?php endif; ?>
-                            </div>
-                            <ul class="space-y-3 mb-8 flex-1">
-                                <?php $__currentLoopData = $plan['features']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $f): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                <li class="flex items-center gap-3 text-sm">
-                                    <?php if($f['ok']): ?>
-                                    <span class="w-5 h-5 rounded-full <?php echo e($plan['popular']?'bg-brand-500/20 text-brand-300':'bg-emerald-50 text-emerald-500'); ?> flex items-center justify-center flex-shrink-0"><i class="fas fa-check text-[10px]"></i></span>
-                                    <span class="<?php echo e($plan['popular']?'text-slate-200':'text-slate-600'); ?>"><?php echo e($f['t']); ?></span>
-                                    <?php else: ?>
-                                    <span class="w-5 h-5 rounded-full <?php echo e($plan['popular']?'bg-white/5 text-slate-600':'bg-slate-50 text-slate-300'); ?> flex items-center justify-center flex-shrink-0"><i class="fas fa-minus text-[10px]"></i></span>
-                                    <span class="<?php echo e($plan['popular']?'text-slate-500':'text-slate-400'); ?> line-through"><?php echo e($f['t']); ?></span>
-                                    <?php endif; ?>
-                                </li>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                            </ul>
-                            <a href="<?php echo e(route('register')); ?>" class="block text-center font-bold text-base px-6 py-4 rounded-2xl transition-all duration-300 <?php echo e($plan['popular']?'btn-primary bg-gradient-to-l from-brand-400 to-brand-600 text-white shadow-lg shadow-brand-600/25':'btn-outline bg-navy-950 text-white hover:bg-navy-900'); ?>"><?php echo e($plan['cta']); ?></a>
                         </div>
-                    </div>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>

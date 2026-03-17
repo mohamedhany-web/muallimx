@@ -43,7 +43,11 @@ class LiveSessionController extends Controller
         ];
 
         $courses = AdvancedCourse::select('id', 'title')->orderBy('title')->get();
-        $instructors = User::whereIn('role', ['instructor', 'teacher'])->select('id', 'name')->orderBy('name')->get();
+        // المعلم = المدرب: إما مدرب داخلي أو طالب مشترك لدينا (يشترون منا الخدمة)
+        $instructors = User::canHostLiveSession()
+            ->select('id', 'name', 'email', 'role')
+            ->orderBy('name')
+            ->get();
 
         return view('admin.live-sessions.index', compact('sessions', 'stats', 'courses', 'instructors'));
     }
@@ -51,7 +55,10 @@ class LiveSessionController extends Controller
     public function create()
     {
         $courses = AdvancedCourse::select('id', 'title')->orderBy('title')->get();
-        $instructors = User::whereIn('role', ['instructor', 'teacher'])->select('id', 'name')->orderBy('name')->get();
+        $instructors = User::canHostLiveSession()
+            ->select('id', 'name', 'email', 'role')
+            ->orderBy('name')
+            ->get();
         $servers = LiveServer::where('status', 'active')->get();
 
         return view('admin.live-sessions.create', compact('courses', 'instructors', 'servers'));
@@ -104,7 +111,10 @@ class LiveSessionController extends Controller
     public function edit(LiveSession $liveSession)
     {
         $courses = AdvancedCourse::select('id', 'title')->orderBy('title')->get();
-        $instructors = User::whereIn('role', ['instructor', 'teacher'])->select('id', 'name')->orderBy('name')->get();
+        $instructors = User::canHostLiveSession()
+            ->select('id', 'name', 'email', 'role')
+            ->orderBy('name')
+            ->get();
         $servers = LiveServer::where('status', 'active')->get();
 
         return view('admin.live-sessions.edit', compact('liveSession', 'courses', 'instructors', 'servers'));

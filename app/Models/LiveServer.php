@@ -38,4 +38,11 @@ class LiveServer extends Model
             ? (int) round(($this->current_load / $this->max_participants) * 100)
             : 0;
     }
+
+    /** رابط لوحة التحكم بالسيرفر (مخزن في config). */
+    public function getControlPanelUrlAttribute(): string
+    {
+        $config = $this->config ?? [];
+        return trim((string) ($config['control_panel_url'] ?? ''));
+    }
 }

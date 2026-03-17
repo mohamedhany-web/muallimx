@@ -3,15 +3,28 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\LiveSetting;
 use App\Models\LiveServer;
+use App\Services\ServerSshService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 
 class LiveServerController extends Controller
 {
     public function index()
     {
         $servers = LiveServer::withCount(['sessions', 'activeSessions'])->latest()->get();
-        return view('admin.live-servers.index', compact('servers'));
+        $defaultJitsiDomain = LiveSetting::get('jitsi_domain', '');
+        return view('admin.live-servers.index', compact('servers', 'defaultJitsiDomain'));
+    }
+
+    /** لوحة التحكم بالسيرفرات (ريال تايم) — عرض كل السيرفرات مع روابط لوحة التحكم والاختبار. */
+    public function control()
+    {
+        $servers = LiveServer::withCount(['sessions', 'activeSessions'])->latest()->get();
+        $defaultJitsiDomain = LiveSetting::getJitsiDomain();
+        return view('admin.live-servers.control', compact('servers', 'defaultJitsiDomain'));
     }
 
     public function create()
@@ -28,9 +41,16 @@ class LiveServerController extends Controller
             'ip_address'       => 'nullable|string|max:45',
             'max_participants' => 'required|integer|min:2|max:10000',
             'notes'            => 'nullable|string',
+            'control_panel_url'=> 'nullable|url|max:500',
+            'ssh_host'         => 'nullable|string|max:255',
+            'ssh_port'         => 'nullable|integer|min:1|max:65535',
+            'ssh_username'     => 'nullable|string|max:255',
+            'ssh_password'     => 'nullable|string|max:500',
         ]);
 
         $validated['status'] = 'active';
+        $config = $this->buildServerConfig($request, null);
+        $validated['config'] = $config;
         LiveServer::create($validated);
 
         return redirect()->route('admin.live-servers.index')
@@ -52,8 +72,15 @@ class LiveServerController extends Controller
             'ip_address'       => 'nullable|string|max:45',
             'max_participants' => 'required|integer|min:2|max:10000',
             'notes'            => 'nullable|string',
+            'control_panel_url'=> 'nullable|url|max:500',
+            'ssh_host'         => 'nullable|string|max:255',
+            'ssh_port'         => 'nullable|integer|min:1|max:65535',
+            'ssh_username'     => 'nullable|string|max:255',
+            'ssh_password'     => 'nullable|string|max:500',
         ]);
 
+        $config = $this->buildServerConfig($request, $liveServer);
+        $validated['config'] = $config;
         $liveServer->update($validated);
 
         return redirect()->route('admin.live-servers.index')
@@ -75,5 +102,134 @@ class LiveServerController extends Controller
         $newStatus = $liveServer->status === 'active' ? 'inactive' : 'active';
         $liveServer->update(['status' => $newStatus]);
         return back()->with('success', 'تم تغيير حالة السيرفر');
+    }
+
+    /**
+     * اختبار الاتصال الفعلي بالسيرفر (طلب HTTP لنطاق Jitsi).
+     */
+    public function testConnection(LiveServer $liveServer)
+    {
+        $domain = $liveServer->domain;
+        $domain = preg_replace('#^https?://#i', '', $domain);
+        $domain = rtrim($domain, '/');
+        if ($domain === '') {
+            return back()->with('error', 'نطاق السيرفر غير صالح');
+        }
+
+        $urls = [
+            "https://{$domain}/config.js",
+            "https://{$domain}/",
+        ];
+
+        foreach ($urls as $url) {
+            try {
+                $response = Http::timeout(10)
+                    ->connectTimeout(5)
+                    ->withOptions(['verify' => true])
+                    ->get($url);
+
+                if ($response->successful()) {
+                    return back()->with('success', "الاتصال بنجاح: السيرفر «{$liveServer->name}» يستجيب على {$url}");
+                }
+            } catch (\Illuminate\Http\Client\ConnectionException $e) {
+                continue;
+            } catch (\Exception $e) {
+                return back()->with('error', 'فشل الاتصال: ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('error', 'لا يمكن الوصول إلى السيرفر. تحقق من النطاق واتصال الشبكة و SSL، وأن Jitsi يعمل على هذا النطاق.');
+    }
+
+    /**
+     * تعيين هذا السيرفر كنطاق Jitsi الافتراضي (يُستخدم في Classroom والانضمام وجلسات البث عند عدم تحديد سيرفر).
+     */
+    public function setAsDefault(LiveServer $liveServer)
+    {
+        if ($liveServer->status !== 'active') {
+            return back()->with('error', 'يجب تفعيل السيرفر أولاً لاستخدامه كنطاق افتراضي.');
+        }
+        LiveSetting::set('jitsi_domain', $liveServer->domain);
+        return back()->with('success', "تم تعيين «{$liveServer->name}» كنطاق Jitsi الافتراضي. سيُستخدم في غرف Classroom والانضمام وجلسات البث.");
+    }
+
+    /** بناء مصفوفة config مع بيانات SSH (كلمة المرور مشفّرة). */
+    private function buildServerConfig(Request $request, ?LiveServer $server): array
+    {
+        $config = $server ? ($server->config ?? []) : [];
+        if ($request->filled('control_panel_url')) {
+            $config['control_panel_url'] = $request->control_panel_url;
+        } elseif ($server) {
+            $config['control_panel_url'] = $config['control_panel_url'] ?? '';
+        }
+        if ($request->filled('ssh_host')) {
+            $config['ssh_host'] = $request->ssh_host;
+        }
+        if ($request->has('ssh_port')) {
+            $config['ssh_port'] = (int) $request->ssh_port ?: 22;
+        }
+        if ($request->filled('ssh_username')) {
+            $config['ssh_username'] = $request->ssh_username;
+        }
+        if ($request->filled('ssh_password')) {
+            $config['ssh_password_encrypted'] = Crypt::encryptString($request->ssh_password);
+        }
+        return $config;
+    }
+
+    /** تصفح الملفات على السيرفر عبر SSH. */
+    public function sshBrowse(Request $request, LiveServer $liveServer)
+    {
+        $path = $request->get('path', '/');
+        $path = preg_replace('#/+#', '/', trim(str_replace('\\', '/', $path)));
+        if ($path === '') {
+            $path = '/';
+        }
+
+        $service = new ServerSshService();
+        if (!$service->connect($liveServer)) {
+            return redirect()->route('admin.live-servers.edit', $liveServer)
+                ->with('error', 'فشل الاتصال عبر SSH. تحقق من العنوان والمنفذ واسم المستخدم وكلمة المرور.');
+        }
+
+        $result = $service->listDirectory($path);
+        if ($result['error']) {
+            return back()->with('error', $result['error']);
+        }
+
+        return view('admin.live-servers.ssh-browse', [
+            'server' => $liveServer,
+            'path'   => $path,
+            'dirs'   => $result['dirs'],
+            'files'  => $result['files'],
+        ]);
+    }
+
+    /** عرض محتوى ملف نصي عبر SSH. */
+    public function sshFile(Request $request, LiveServer $liveServer)
+    {
+        $path = $request->get('path', '');
+        $path = preg_replace('#/+#', '/', trim(str_replace('\\', '/', $path)));
+        if ($path === '') {
+            return redirect()->route('admin.live-servers.ssh-browse', [$liveServer])->with('error', 'لم يُحدد مسار الملف.');
+        }
+
+        $service = new ServerSshService();
+        if (!$service->connect($liveServer)) {
+            return redirect()->route('admin.live-servers.edit', $liveServer)
+                ->with('error', 'فشل الاتصال عبر SSH.');
+        }
+
+        $result = $service->readFile($path);
+        if ($result['error']) {
+            return redirect()->route('admin.live-servers.ssh-browse', [$liveServer, 'path' => dirname($path)])
+                ->with('error', $result['error']);
+        }
+
+        return view('admin.live-servers.ssh-file', [
+            'server'  => $liveServer,
+            'path'    => $path,
+            'content' => $result['content'],
+        ]);
     }
 }

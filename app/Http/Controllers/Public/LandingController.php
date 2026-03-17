@@ -31,7 +31,11 @@ class LandingController extends Controller
         // نفس مسارات صفحة المسارات التعليمية بكل بياناتها (سعر المسار المستقل، عدد الكورسات، الصورة، إلخ)
         $landingPaths = $this->getPublicLearningPaths(12);
 
-        return view('welcome', compact('popupAd', 'landingPaths'));
+        // باقات المعلمين من إعدادات مزايا اشتراك المعلمين (نفس بيانات /admin/teacher-features وصفحة الأسعار)
+        $featuresController = new \App\Http\Controllers\Admin\TeacherFeaturesController();
+        $teacherPlans = $featuresController->getSettings();
+
+        return view('welcome', compact('popupAd', 'landingPaths', 'teacherPlans'));
     }
 
     /**

@@ -514,6 +514,80 @@
     </div>
     @endif
 
+    {{-- قسم العناصر المدفوعة: الاشتراكات والباقات --}}
+    @if(isset($subscriptionPackages))
+    <div class="section-card animate-fade-in">
+        <div class="section-card-header">
+            <h3 class="text-base font-heading font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-crown text-amber-500"></i> العناصر المدفوعة — الاشتراكات
+            </h3>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('admin.subscriptions.index') }}" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1.5 transition-colors">
+                    عرض كل الاشتراكات <i class="fas fa-arrow-left text-[10px]"></i>
+                </a>
+                <a href="{{ route('admin.subscriptions.create') }}" class="text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition-colors">
+                    إضافة اشتراك
+                </a>
+            </div>
+        </div>
+        <div class="p-5">
+            @if($subscriptionPackages->count() > 0)
+            <p class="text-xs text-slate-500 mb-4">الباقات المتاحة وجميع المشتركين في كل باقة. يمكنك الدخول على أي مشترك لإدارة اشتراكه ومراجعة بياناته بالكامل.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                @foreach($subscriptionPackages as $package)
+                <div class="rounded-2xl border border-slate-200 bg-slate-50/50 overflow-hidden">
+                    <div class="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
+                        <h4 class="text-sm font-bold text-slate-800">{{ $package['plan_name'] }}</h4>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
+                            <i class="fas fa-users text-[10px]"></i>
+                            {{ $package['count'] }} مشترك
+                        </span>
+                    </div>
+                    <div class="p-3 max-h-64 overflow-y-auto space-y-1.5">
+                        @forelse($package['subscriptions'] as $sub)
+                        <div class="flex items-center justify-between gap-2 rounded-xl border border-slate-100 bg-white px-3 py-2 hover:border-indigo-200 transition-colors">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-semibold text-slate-700 truncate">{{ $sub->user->name ?? '—' }}</p>
+                                <p class="text-[11px] text-slate-400">{{ $sub->user->phone ?? $sub->user->email ?? '—' }}</p>
+                            </div>
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                <a href="{{ route('admin.subscriptions.show', $sub) }}" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-600 hover:bg-sky-200 transition-colors text-xs" title="تفاصيل الاشتراك والتحكم">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                @if($sub->user)
+                                <a href="{{ route('admin.users.show', $sub->user->id) }}" class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors text-xs" title="بيانات المستخدم">
+                                    <i class="fas fa-user"></i>
+                                </a>
+                                @endif
+                            </div>
+                        </div>
+                        @empty
+                        <p class="text-xs text-slate-400 py-2 text-center">لا مشتركين في هذه الباقة</p>
+                        @endforelse
+                    </div>
+                    @if($package['count'] > $package['subscriptions']->count())
+                    <div class="px-4 py-2 border-t border-slate-100 bg-slate-50/80 text-center">
+                        <a href="{{ route('admin.subscriptions.index') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700">
+                            عرض كل الاشتراكات ({{ $package['count'] }} في هذه الباقة) <i class="fas fa-arrow-left text-[10px]"></i>
+                        </a>
+                    </div>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+            @else
+            <div class="py-10 text-center rounded-xl bg-slate-50 border border-slate-100">
+                <i class="fas fa-layer-group text-3xl text-slate-300 mb-2"></i>
+                <p class="text-sm text-slate-500">لا توجد اشتراكات أو باقات حالياً.</p>
+                <a href="{{ route('admin.subscriptions.create') }}" class="inline-flex items-center gap-2 mt-3 text-sm font-semibold text-indigo-600 hover:text-indigo-700">
+                    <i class="fas fa-plus"></i> إضافة اشتراك جديد
+                </a>
+            </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
     {{-- Quick Actions --}}
     <div class="section-card animate-fade-in">
         <div class="section-card-header">

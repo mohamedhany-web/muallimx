@@ -122,6 +122,55 @@ class SubscriptionController extends Controller
         return view('admin.subscriptions.show', compact('subscription'));
     }
 
+    /**
+     * رقابة استهلاك المشترك (المعلم/الطالب) — كل ما يستهلكه في النظام والخطة
+     */
+    public function consumption(Subscription $subscription)
+    {
+        $subscription->load(['user', 'invoice']);
+        $user = $subscription->user;
+        if (!$user) {
+            return redirect()->route('admin.subscriptions.show', $subscription)
+                ->with('error', 'لا يوجد مستخدم مرتبط بهذا الاشتراك.');
+        }
+
+        $enrollments = \App\Models\StudentCourseEnrollment::where('user_id', $user->id)
+            ->with(['course:id,title,academic_subject_id', 'course.academicSubject:id,name'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        $examAttempts = \App\Models\ExamAttempt::where('user_id', $user->id)
+            ->with(['exam:id,title'])
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get();
+
+        $orders = \App\Models\Order::where('user_id', $user->id)
+            ->with(['course:id,title'])
+            ->orderByDesc('created_at')
+            ->limit(30)
+            ->get();
+
+        $activityLogs = ActivityLog::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->limit(80)
+            ->get();
+
+        $featuresConfig = config('student_subscription_features', []);
+        $subscriptionFeatures = $subscription->features ?? [];
+
+        return view('admin.subscriptions.consumption', compact(
+            'subscription',
+            'user',
+            'enrollments',
+            'examAttempts',
+            'orders',
+            'activityLogs',
+            'featuresConfig',
+            'subscriptionFeatures'
+        ));
+    }
+
     public function create()
     {
         $users = User::where('role', 'student')->where('is_active', true)->get();
@@ -148,6 +197,12 @@ class SubscriptionController extends Controller
             'billing_cycle' => 'required|string',
             'features' => 'nullable|array',
         ]);
+
+        // تحويل شكل المزايا من [key => 1] إلى [key, key, ...] لتوافق hasSubscriptionFeature()
+        $featureKeys = [];
+        if (!empty($validated['features']) && is_array($validated['features'])) {
+            $featureKeys = array_keys(array_filter($validated['features'], fn ($v) => (bool) $v));
+        }
 
         try {
             DB::beginTransaction();
@@ -189,7 +244,7 @@ class SubscriptionController extends Controller
                 'auto_renew' => $validated['auto_renew'] ?? false,
                 'billing_cycle' => $validated['billing_cycle'],
                 'invoice_id' => $invoice->id,
-                'features' => $validated['features'] ?? null,
+                'features' => $featureKeys,
             ]);
 
             DB::commit();
@@ -219,7 +274,16 @@ class SubscriptionController extends Controller
             'features' => 'nullable|array',
         ]);
 
-        $subscription->update($validated);
+        // تحويل شكل المزايا من [key => 1] إلى [key, key, ...]
+        $featureKeys = [];
+        if (!empty($validated['features']) && is_array($validated['features'])) {
+            $featureKeys = array_keys(array_filter($validated['features'], fn ($v) => (bool) $v));
+        }
+
+        $data = $validated;
+        $data['features'] = $featureKeys;
+
+        $subscription->update($data);
 
         return redirect()->route('admin.subscriptions.index')
             ->with('success', 'تم تحديث الاشتراك بنجاح');

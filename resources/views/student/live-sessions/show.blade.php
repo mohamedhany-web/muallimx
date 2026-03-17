@@ -63,5 +63,22 @@
         <p class="text-sm text-blue-600/70 mt-1">عند بدء البث ستظهر لك زر الانضمام</p>
     </div>
     @endif
+
+    @if($liveSession->status === 'ended' && $liveSession->recordings && $liveSession->recordings->count() > 0)
+    <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-5">
+        <h3 class="font-bold text-emerald-800 dark:text-emerald-200 mb-3"><i class="fas fa-play-circle ml-1"></i> تسجيلات الجلسة</h3>
+        <ul class="space-y-2">
+            @foreach($liveSession->recordings as $rec)
+            <li>
+                <a href="{{ route('student.live-recordings.show', $rec) }}" class="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-slate-800 border border-emerald-100 dark:border-emerald-800 hover:border-emerald-300 transition-colors">
+                    <span class="font-medium text-slate-800 dark:text-white">{{ $rec->title ?? 'تسجيل #' . $rec->id }}</span>
+                    <span class="text-xs text-slate-500">{{ $rec->duration_for_humans }}</span>
+                </a>
+            </li>
+            @endforeach
+        </ul>
+        <a href="{{ route('student.live-recordings.index') }}" class="inline-block mt-3 text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">كل التسجيلات</a>
+    </div>
+    @endif
 </div>
 @endsection

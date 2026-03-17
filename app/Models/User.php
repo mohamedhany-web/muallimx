@@ -385,6 +385,26 @@ class User extends Authenticatable
     }
 
     /**
+     * المستخدمون الذين يمكن تعيينهم كمعلم/مقدم لجلسة بث مباشر:
+     * أدمن/مدرب داخلي، أو طالب مشترك لديه اشتراك نشط (المعلم = المشترك عندنا).
+     */
+    public function scopeCanHostLiveSession($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereIn('role', ['instructor', 'teacher'])
+                ->orWhere(function ($q2) {
+                    $q2->where('role', 'student')
+                        ->whereHas('subscriptions', function ($sub) {
+                            $sub->where('status', 'active')
+                                ->where(function ($d) {
+                                    $d->whereNull('end_date')->orWhere('end_date', '>=', now());
+                                });
+                        });
+                });
+        });
+    }
+
+    /**
      * scope للمستخدمين النشطين
      */
     public function scopeActive($query)

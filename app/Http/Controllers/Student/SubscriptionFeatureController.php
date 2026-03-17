@@ -25,6 +25,10 @@ class SubscriptionFeatureController extends Controller
             abort(403, 'هذه الميزة غير متاحة في باقتك الحالية. يمكنك ترقية اشتراكك من صفحة التسعير.');
         }
 
+        if ($feature === 'classroom_access') {
+            return redirect()->route('student.classroom.index');
+        }
+
         $featureConfig = $config[$feature];
         $label = __('student.subscription_feature.' . $feature);
         $description = __('student.subscription_feature_desc.' . $feature);

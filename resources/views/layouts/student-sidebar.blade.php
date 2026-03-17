@@ -93,6 +93,14 @@
             </a>
             @endif
 
+            @if(Route::has('student.live-recordings.index'))
+            <a href="{{ route('student.live-recordings.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+               class="ins-nav {{ request()->routeIs('student.live-recordings.*') ? 'active' : '' }}">
+                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"><i class="fas fa-play-circle"></i></span>
+                <span class="flex-1 truncate">تسجيلات البث</span>
+            </a>
+            @endif
+
             <div class="ins-nav-group mt-2">التعلم والإنجازات</div>
 
             @if($isStudent || $user->hasPermission('student.view.orders'))
@@ -192,6 +200,9 @@
             @endif
 
             @foreach($featureConfig as $featureKey => $cfg)
+                @if(in_array($featureKey, ['zoom_access', 'ai_tools']))
+                    @continue
+                @endif
                 @if(!$user->hasSubscriptionFeature($featureKey) && !($featureKey === 'teacher_profile' && $user->hasPermission('student.view.profile')))
                     @continue
                 @endif

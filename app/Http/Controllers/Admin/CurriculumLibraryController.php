@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CurriculumLibraryCategory;
 use App\Models\CurriculumLibraryItem;
+use App\Models\CurriculumLibraryItemFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class CurriculumLibraryController extends Controller
 {
@@ -101,18 +103,25 @@ class CurriculumLibraryController extends Controller
             'content' => 'nullable|string',
             'grade_level' => 'nullable|string|max:50',
             'subject' => 'nullable|string|max:100',
+            'language' => 'nullable|string|in:ar,en,fr',
+            'item_type' => 'nullable|string|in:presentation,assignment',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
+            'is_free_preview' => 'nullable|boolean',
         ]);
         $validated['slug'] = $validated['slug'] ?? Str::slug($validated['title']);
         $validated['is_active'] = $request->boolean('is_active');
+        $validated['is_free_preview'] = $request->boolean('is_free_preview');
         $validated['order'] = (int) ($validated['order'] ?? 0);
+        $validated['language'] = $validated['language'] ?? 'ar';
+        $validated['item_type'] = $validated['item_type'] ?? 'presentation';
         CurriculumLibraryItem::create($validated);
         return redirect()->route('admin.curriculum-library.index')->with('success', 'تم إضافة عنصر المنهج بنجاح.');
     }
 
     public function editItem(CurriculumLibraryItem $item)
     {
+        $item->load('files');
         $categories = CurriculumLibraryCategory::active()->ordered()->get();
         return view('admin.curriculum-library.items-form', ['item' => $item, 'categories' => $categories]);
     }
@@ -127,19 +136,77 @@ class CurriculumLibraryController extends Controller
             'content' => 'nullable|string',
             'grade_level' => 'nullable|string|max:50',
             'subject' => 'nullable|string|max:100',
+            'language' => 'nullable|string|in:ar,en,fr',
+            'item_type' => 'nullable|string|in:presentation,assignment',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
+            'is_free_preview' => 'nullable|boolean',
         ]);
         $validated['slug'] = $validated['slug'] ?? Str::slug($validated['title']);
         $validated['is_active'] = $request->boolean('is_active');
+        $validated['is_free_preview'] = $request->boolean('is_free_preview');
         $validated['order'] = (int) ($validated['order'] ?? 0);
+        $validated['language'] = $validated['language'] ?? 'ar';
+        $validated['item_type'] = $validated['item_type'] ?? 'presentation';
         $item->update($validated);
+
+        $this->storeItemFiles($request, $item);
+
         return redirect()->route('admin.curriculum-library.index')->with('success', 'تم تحديث عنصر المنهج بنجاح.');
     }
 
     public function destroyItem(CurriculumLibraryItem $item)
     {
+        foreach ($item->files as $file) {
+            if ($file->path && Storage::exists($file->path)) {
+                Storage::delete($file->path);
+            }
+        }
         $item->delete();
         return redirect()->route('admin.curriculum-library.index')->with('success', 'تم حذف عنصر المنهج.');
+    }
+
+    /**
+     * رفع ملفات جديدة لعنصر المنهج (بوربوينت / وجبات).
+     */
+    protected function storeItemFiles(Request $request, CurriculumLibraryItem $item): void
+    {
+        $newFiles = $request->file('new_files');
+        $types = $request->input('new_files_type', []);
+        $labels = $request->input('new_files_label', []);
+        if (!is_array($newFiles)) {
+            return;
+        }
+        $order = ($item->files()->max('order') ?? 0) + 1;
+        foreach ($newFiles as $i => $file) {
+            if (!$file || !$file->isValid()) {
+                continue;
+            }
+            $path = $file->store('curriculum-library/' . $item->id, 'public');
+            $type = $types[$i] ?? 'presentation';
+            if (!in_array($type, ['presentation', 'assignment'], true)) {
+                $type = 'presentation';
+            }
+            $label = $labels[$i] ?? null;
+            CurriculumLibraryItemFile::create([
+                'curriculum_library_item_id' => $item->id,
+                'path' => $path,
+                'label' => $label ?: null,
+                'file_type' => $type,
+                'order' => $order++,
+            ]);
+        }
+    }
+
+    public function destroyFile(CurriculumLibraryItem $item, CurriculumLibraryItemFile $file)
+    {
+        if ($file->curriculum_library_item_id !== $item->id) {
+            abort(404);
+        }
+        if ($file->path && Storage::exists($file->path)) {
+            Storage::delete($file->path);
+        }
+        $file->delete();
+        return redirect()->route('admin.curriculum-library.items.edit', $item)->with('success', 'تم حذف الملف.');
     }
 }

@@ -8,6 +8,17 @@
         <p class="text-sm text-slate-500 mt-1">تكوين إعدادات Jitsi والبث العامة</p>
     </div>
 
+    @php $currentJitsi = isset($settings['jitsi']) ? $settings['jitsi']->firstWhere('key', 'jitsi_domain') : null; @endphp
+    @if($currentJitsi && $currentJitsi->value && strpos($currentJitsi->value, 'meet.jit.si') !== false)
+    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
+        <i class="fas fa-exclamation-triangle text-amber-500 text-xl mt-0.5"></i>
+        <div>
+            <p class="font-bold text-amber-800 dark:text-amber-200">نطاق meet.jit.si للاختبار فقط</p>
+            <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">المكالمات المضمّنة (embed) عبر meet.jit.si تُقطع تلقائياً بعد 5 دقائق. للإنتاج: غيّر <strong>نطاق Jitsi Meet</strong> أدناه إلى سيرفر Jitsi خاص بك أو استخدم <strong>Jitsi as a Service</strong> من 8x8.</p>
+        </div>
+    </div>
+    @endif
+
     @if(session('success'))
     <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4 text-emerald-700 dark:text-emerald-400 text-sm">
         <i class="fas fa-check-circle ml-1"></i> {{ session('success') }}

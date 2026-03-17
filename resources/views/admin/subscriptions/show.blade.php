@@ -54,6 +54,16 @@
                     <i class="fas fa-edit"></i>
                     تعديل الاشتراك
                 </a>
+                @if($subscription->user)
+                <a href="{{ route('admin.subscriptions.consumption', $subscription) }}" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-amber-400 text-amber-900 font-semibold shadow-lg hover:bg-amber-300 transition-all">
+                    <i class="fas fa-chart-pie"></i>
+                    استهلاك المشترك (المعلم)
+                </a>
+                <a href="{{ route('admin.users.show', $subscription->user->id) }}" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/20 text-white font-semibold border border-white/30 hover:bg-white/30 transition-all">
+                    <i class="fas fa-user"></i>
+                    بيانات المستخدم
+                </a>
+                @endif
                 <a href="{{ route('admin.subscriptions.index') }}" class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/20 text-white font-semibold border border-white/30 hover:bg-white/30 transition-all">
                     <i class="fas fa-arrow-right"></i>
                     العودة للقائمة
@@ -177,6 +187,19 @@
                         </div>
                         <i class="fas fa-arrow-left text-xs"></i>
                     </a>
+
+                    @if($subscription->user)
+                    <a href="{{ route('admin.subscriptions.consumption', $subscription) }}" class="flex items-center justify-between px-4 py-3 rounded-2xl border border-amber-100 bg-amber-50/70 text-amber-700 hover:border-amber-200 transition-all">
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber-100 text-amber-700">
+                                <i class="fas fa-chart-pie"></i>
+                            </span>
+                            <span class="text-sm font-semibold">استهلاك المشترك (المعلم) — رقابة كاملة</span>
+                        </div>
+                        <i class="fas fa-arrow-left text-xs"></i>
+                    </a>
+                    @endif
+
                     <a href="{{ route('admin.subscriptions.index') }}" class="flex items-center justify-between px-4 py-3 rounded-2xl border border-gray-100 bg-gray-50/70 text-gray-600 hover:border-gray-200 transition-all">
                         <div class="flex items-center gap-3">
                             <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gray-100 text-gray-600">

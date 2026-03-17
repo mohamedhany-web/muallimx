@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class LiveRecording extends Model
 {
     protected $fillable = [
-        'session_id', 'title', 'file_path', 'external_url',
+        'session_id', 'title', 'file_path', 'external_url', 'storage_disk',
         'file_size', 'duration_seconds', 'status', 'is_published',
     ];
 
@@ -22,10 +23,28 @@ class LiveRecording extends Model
         return $this->belongsTo(LiveSession::class, 'session_id');
     }
 
+    /**
+     * رابط المشاهدة: إما external_url، أو ملف محلي (public)، أو R2 (رابط مؤقت).
+     * تسجيلات Jibri تُرفع إلى R2 ثم يُخزّن المفتاح في file_path و storage_disk = r2.
+     */
     public function getUrl(): ?string
     {
-        if ($this->external_url) return $this->external_url;
-        if ($this->file_path) return asset('storage/' . $this->file_path);
+        if ($this->external_url) {
+            return $this->external_url;
+        }
+        if ($this->storage_disk === 'r2' && $this->file_path) {
+            try {
+                return Storage::disk('live_recordings_r2')->temporaryUrl(
+                    $this->file_path,
+                    now()->addHours(2)
+                );
+            } catch (\Throwable $e) {
+                return null;
+            }
+        }
+        if ($this->file_path && $this->storage_disk !== 'r2') {
+            return asset('storage/' . $this->file_path);
+        }
         return null;
     }
 

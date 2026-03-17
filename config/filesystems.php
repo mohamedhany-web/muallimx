@@ -77,6 +77,22 @@ return [
             'report' => false,
         ],
 
+        /*
+         * تسجيلات جلسات البث المباشر (Jibri → R2).
+         * يمكن استخدام نفس R2 أو bucket منفصل عبر R2_LIVE_RECORDINGS_* في .env
+         */
+        'live_recordings_r2' => [
+            'driver' => 's3',
+            'key' => env('R2_LIVE_RECORDINGS_ACCESS_KEY_ID', env('AWS_ACCESS_KEY_ID')),
+            'secret' => env('R2_LIVE_RECORDINGS_SECRET_ACCESS_KEY', env('AWS_SECRET_ACCESS_KEY')),
+            'region' => env('R2_LIVE_RECORDINGS_REGION', 'auto'),
+            'bucket' => env('R2_LIVE_RECORDINGS_BUCKET', env('AWS_BUCKET')),
+            'endpoint' => env('R2_LIVE_RECORDINGS_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

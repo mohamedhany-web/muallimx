@@ -9,7 +9,7 @@
             <h1 class="text-2xl font-bold text-slate-800 dark:text-white">
                 <i class="fas fa-broadcast-tower text-red-500 ml-2"></i>جلسات البث المباشر
             </h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">إدارة جميع جلسات البث — الجدولة، المتابعة، والإحصائيات</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">إدارة جلسات البث والتحكم في المعلمين (المعلم = المشترك عندنا — طالب يشترون منا الخدمة)</p>
         </div>
         <a href="<?php echo e(route('admin.live-sessions.create')); ?>" class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold shadow-lg shadow-red-500/25 transition-all">
             <i class="fas fa-plus"></i> إنشاء جلسة جديدة
@@ -89,6 +89,15 @@
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </select>
         </div>
+        <div>
+            <label class="text-xs text-slate-500 mb-1 block">المعلم (المشترك)</label>
+            <select name="instructor_id" class="rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
+                <option value="">الكل</option>
+                <?php $__currentLoopData = $instructors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $inst): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <option value="<?php echo e($inst->id); ?>" <?php echo e(request('instructor_id') == $inst->id ? 'selected' : ''); ?>><?php echo e($inst->name); ?><?php echo e($inst->role === 'student' ? ' (مشترك)' : ''); ?></option>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </select>
+        </div>
         <button type="submit" class="px-4 py-2 bg-slate-800 dark:bg-slate-600 text-white rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors">
             <i class="fas fa-search ml-1"></i> بحث
         </button>
@@ -105,7 +114,7 @@
                     <tr>
                         <th class="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold">#</th>
                         <th class="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold">الجلسة</th>
-                        <th class="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold">المدرب</th>
+                        <th class="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold">المعلم (المشترك)</th>
                         <th class="px-4 py-3 text-right text-slate-600 dark:text-slate-300 font-semibold">الكورس</th>
                         <th class="px-4 py-3 text-center text-slate-600 dark:text-slate-300 font-semibold">الحالة</th>
                         <th class="px-4 py-3 text-center text-slate-600 dark:text-slate-300 font-semibold">الحضور</th>
@@ -121,7 +130,16 @@
                             <a href="<?php echo e(route('admin.live-sessions.show', $session)); ?>" class="font-semibold text-slate-800 dark:text-white hover:text-blue-600 transition-colors"><?php echo e(Str::limit($session->title, 40)); ?></a>
                             <p class="text-[11px] text-slate-400 mt-0.5 font-mono"><?php echo e($session->room_name); ?></p>
                         </td>
-                        <td class="px-4 py-3 text-slate-600 dark:text-slate-300"><?php echo e($session->instructor?->name ?? '—'); ?></td>
+                        <td class="px-4 py-3">
+                            <?php if($session->instructor): ?>
+                                <a href="<?php echo e(route('admin.users.show', $session->instructor->id)); ?>" class="font-medium text-slate-800 dark:text-white hover:text-blue-600 hover:underline"><?php echo e($session->instructor->name); ?></a>
+                                <?php if($session->instructor->role === 'student'): ?>
+                                    <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">(مشترك)</span>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <span class="text-slate-500">—</span>
+                            <?php endif; ?>
+                        </td>
                         <td class="px-4 py-3 text-slate-600 dark:text-slate-300"><?php echo e(Str::limit($session->course?->title ?? 'عامة', 25)); ?></td>
                         <td class="px-4 py-3 text-center">
                             <?php if($session->status === 'live'): ?>
@@ -152,6 +170,12 @@
                                     <a href="<?php echo e(route('admin.live-sessions.edit', $session)); ?>" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 hover:text-amber-600 transition-colors" title="تعديل">
                                         <i class="fas fa-edit text-xs"></i>
                                     </a>
+                                    <form method="POST" action="<?php echo e(route('admin.live-sessions.cancel', $session)); ?>" class="inline" onsubmit="return confirm('إلغاء هذه الجلسة؟')">
+                                        <?php echo csrf_field(); ?>
+                                        <button type="submit" class="p-1.5 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 text-slate-500 hover:text-amber-600 transition-colors" title="إلغاء الجلسة">
+                                            <i class="fas fa-ban text-xs"></i>
+                                        </button>
+                                    </form>
                                 <?php endif; ?>
                                 <?php if($session->status === 'live'): ?>
                                     <form method="POST" action="<?php echo e(route('admin.live-sessions.force-end', $session)); ?>" class="inline" onsubmit="return confirm('هل تريد إنهاء البث؟')">

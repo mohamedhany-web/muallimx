@@ -49,7 +49,17 @@
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
                 <h2 class="font-bold text-slate-800 dark:text-white mb-4"><i class="fas fa-info-circle text-blue-500 ml-2"></i>تفاصيل الجلسة</h2>
                 <div class="grid sm:grid-cols-2 gap-4 text-sm">
-                    <div><span class="text-slate-500">المدرب:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->instructor?->name ?? '—' }}</span></div>
+                    <div>
+                        <span class="text-slate-500">المعلم (المشترك):</span>
+                        @if($liveSession->instructor)
+                            <a href="{{ route('admin.users.show', $liveSession->instructor->id) }}" class="font-semibold text-slate-800 dark:text-white mr-2 hover:text-blue-600 hover:underline">{{ $liveSession->instructor->name }}</a>
+                            @if($liveSession->instructor->role === 'student')
+                                <span class="text-xs text-emerald-600 dark:text-emerald-400">(مشترك — طالب لدينا)</span>
+                            @endif
+                        @else
+                            <span class="font-semibold text-slate-800 dark:text-white mr-2">—</span>
+                        @endif
+                    </div>
                     <div><span class="text-slate-500">الكورس:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->course?->title ?? 'جلسة عامة' }}</span></div>
                     <div><span class="text-slate-500">الموعد:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->scheduled_at?->format('Y/m/d H:i') ?? '—' }}</span></div>
                     <div><span class="text-slate-500">المدة:</span> <span class="font-semibold text-slate-800 dark:text-white mr-2">{{ $liveSession->duration_for_humans }}</span></div>
@@ -110,6 +120,24 @@
 
         {{-- Sidebar --}}
         <div class="space-y-6">
+            {{-- التحكم في المعلم (المشترك عندنا) --}}
+            @if($liveSession->instructor)
+            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800 p-5">
+                <h3 class="font-bold text-slate-800 dark:text-white mb-2 text-sm"><i class="fas fa-user-cog text-amber-500 ml-1"></i> التحكم في المعلم</h3>
+                <p class="text-xs text-slate-600 dark:text-slate-400 mb-3">المعلم = المشترك (طالب لدينا يشترون منا الخدمة). يمكنك مراجعة بياناته واشتراكه من لوحة الإدارة.</p>
+                <div class="flex flex-col gap-2">
+                    <a href="{{ route('admin.users.show', $liveSession->instructor->id) }}" class="inline-flex items-center justify-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 border border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-400 rounded-lg text-sm font-semibold hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
+                        <i class="fas fa-user"></i> عرض بيانات المعلم
+                    </a>
+                    @if($liveSession->instructor->role === 'student')
+                    <a href="{{ route('admin.subscriptions.index') }}?user_id={{ $liveSession->instructor->id }}" class="inline-flex items-center justify-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-100 transition-colors">
+                        <i class="fas fa-crown"></i> اشتراكاته
+                    </a>
+                    @endif
+                </div>
+            </div>
+            @endif
+
             {{-- Quick Info --}}
             <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
                 <h3 class="font-bold text-slate-800 dark:text-white mb-3 text-sm">الحالة</h3>

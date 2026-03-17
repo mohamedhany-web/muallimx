@@ -37,6 +37,32 @@
                 <input type="number" name="max_participants" value="{{ old('max_participants', 100) }}" min="2" max="10000" required class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
             </div>
             <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">رابط لوحة التحكم بالسيرفر (اختياري)</label>
+                <input type="url" name="control_panel_url" value="{{ old('control_panel_url') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="https://panel.example.com أو cPanel / Plesk / Webmin">
+                <p class="text-xs text-slate-500 mt-1">رابط لوحة التحكم (cPanel، Plesk، Webmin، أو أي واجهة لإدارة الملفات والسيرفر) لفتحها من صفحة «لوحة التحكم بالسيرفرات».</p>
+            </div>
+            <div class="md:col-span-2 border-t border-slate-200 dark:border-slate-600 pt-5 mt-2">
+                <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3"><i class="fas fa-terminal text-emerald-500 ml-1"></i> الاتصال عبر SSH (لتصفح الملفات من المنصة)</h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">عنوان SSH (Host)</label>
+                        <input type="text" name="ssh_host" value="{{ old('ssh_host') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="IP أو النطاق">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">المنفذ (Port)</label>
+                        <input type="number" name="ssh_port" value="{{ old('ssh_port', 22) }}" min="1" max="65535" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">اسم المستخدم</label>
+                        <input type="text" name="ssh_username" value="{{ old('ssh_username') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="root أو ubuntu">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">كلمة المرور</label>
+                        <input type="password" name="ssh_password" value="" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" autocomplete="new-password">
+                    </div>
+                </div>
+            </div>
+            <div class="md:col-span-2">
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">ملاحظات</label>
                 <textarea name="notes" rows="3" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white" placeholder="ملاحظات إضافية حول السيرفر...">{{ old('notes') }}</textarea>
             </div>

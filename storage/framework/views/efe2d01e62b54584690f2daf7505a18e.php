@@ -297,7 +297,7 @@
                 <button @click="open = !open" class="sidebar-group-btn">
                     <span class="flex items-center gap-3">
                         <i class="fas fa-broadcast-tower w-5 text-center text-red-400"></i>
-                        <span>التحكم في البث المباشر</span>
+                        <span>جلسات البث المباشر والمعلمين</span>
                     </span>
                     <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
                 </button>
@@ -318,8 +318,15 @@
                     <?php endif; ?>
                     <?php if(Route::has('admin.live-servers.index')): ?>
                         <li>
-                            <a href="<?php echo e(route('admin.live-servers.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.live-servers.*') ? 'active' : ''); ?>">
+                            <a href="<?php echo e(route('admin.live-servers.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.live-servers.index') || request()->routeIs('admin.live-servers.create') || request()->routeIs('admin.live-servers.edit') ? 'active' : ''); ?>">
                                 <i class="fas fa-server"></i><span>سيرفرات البث (VPS)</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.live-servers.control')): ?>
+                        <li>
+                            <a href="<?php echo e(route('admin.live-servers.control')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.live-servers.control') ? 'active' : ''); ?>">
+                                <i class="fas fa-tachometer-alt"></i><span>لوحة التحكم بالسيرفرات</span>
                             </a>
                         </li>
                     <?php endif; ?>

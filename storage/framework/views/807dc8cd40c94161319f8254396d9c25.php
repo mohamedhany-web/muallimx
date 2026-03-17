@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'مزايا اشتراك المعلمين'); ?>
 <?php $__env->startSection('header', 'مزايا اشتراك المعلمين'); ?>
 

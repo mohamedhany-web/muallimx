@@ -560,7 +560,7 @@
         </section>
 
 
-        {{-- ══════════ PRICING ══════════ --}}
+        {{-- ══════════ PRICING (بيانات من /admin/teacher-features — بالجنيه المصري) ══════════ --}}
         <section id="pricing" class="py-20 md:py-28 bg-white">
             <div class="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12">
                 <div class="text-center max-w-3xl mx-auto mb-16 reveal">
@@ -569,56 +569,52 @@
                         خطط مرنة تناسب
                         <span class="text-gradient">كل معلّم</span>
                     </h2>
-                    <p class="text-lg text-slate-500 leading-relaxed">ابدأ مجاناً وتوسّع بحسب احتياجك. كل الخطط تشمل محتوى عربي عالي الجودة.</p>
+                    <p class="text-lg text-slate-500 leading-relaxed">جميع الأسعار بالجنيه المصري (ج.م). تحديث الأسعار والمزايا من لوحة الإدارة يؤثر هنا وفي صفحة الأسعار.</p>
                 </div>
-                <div class="grid md:grid-cols-3 gap-6 lg:gap-8 items-start">
-                    @php
-                    $plans = [
-                        ['name'=>'المجانية','price'=>'مجاناً','period'=>'','desc'=>'استكشف المنصة وابدأ التعلّم الأساسي.','popular'=>false,
-                         'features'=>[
-                            ['t'=>'كورسات مجانية مختارة','ok'=>true],['t'=>'أداة AI أساسية (محدودة)','ok'=>true],['t'=>'بروفايل أساسي','ok'=>true],
-                            ['t'=>'مكتبة المناهج الكاملة','ok'=>false],['t'=>'جلسات حيّة','ok'=>false],['t'=>'دعم التوظيف','ok'=>false],
-                         ],'cta'=>'ابدأ مجاناً'],
-                        ['name'=>'الاحترافية','price'=>'99','period'=>'/ شهرياً','desc'=>'كل الأدوات والمحتوى للمعلّم الجاد.','popular'=>true,
-                         'features'=>[
-                            ['t'=>'جميع الدبلومات والكورسات','ok'=>true],['t'=>'أدوات AI كاملة بلا حدود','ok'=>true],['t'=>'مكتبة المناهج والأنشطة','ok'=>true],
-                            ['t'=>'بروفايل احترافي متقدم','ok'=>true],['t'=>'جلسات حيّة شهرية','ok'=>true],['t'=>'دعم التوظيف','ok'=>false],
-                         ],'cta'=>'اشترك الآن'],
-                        ['name'=>'الماستر','price'=>'249','period'=>'/ شهرياً','desc'=>'التجربة الكاملة مع توظيف وإرشاد.','popular'=>false,
-                         'features'=>[
-                            ['t'=>'كل مميزات الاحترافية','ok'=>true],['t'=>'تجهيز بروفايل كامل (CV+فيديو)','ok'=>true],['t'=>'تقييم HR + تقرير تطوير','ok'=>true],
-                            ['t'=>'ربط مباشر بالأكاديميات','ok'=>true],['t'=>'إرشاد مهني فردي','ok'=>true],['t'=>'أولوية في فرص العمل','ok'=>true],
-                         ],'cta'=>'اشترك الآن'],
+                @php
+                    $planKeys = ['teacher_starter', 'teacher_pro', 'teacher_premium'];
+                    $planMeta = [
+                        'teacher_starter' => ['subtitle' => 'ابدأ التدريس أونلاين بسهولة', 'popular' => false, 'cta' => 'ابدأ الآن'],
+                        'teacher_pro'     => ['subtitle' => 'أفضل اختيار للمعلمين الذين يريدون العمل أونلاين', 'popular' => true, 'cta' => 'اشترك الآن'],
+                        'teacher_premium' => ['subtitle' => 'للمعلمين الجادين في بناء مسار مهني مستقر', 'popular' => false, 'cta' => 'اشترك الآن'],
                     ];
-                    @endphp
-                    @foreach($plans as $idx => $plan)
-                    <div class="reveal stagger-{{ $idx+1 }} {{ $plan['popular']?'md:-mt-4 md:mb-4':'' }}">
-                        <div class="rounded-3xl {{ $plan['popular']?'bg-navy-950 text-white popular-glow border-2 border-brand-500/30':'bg-white border border-slate-200 shadow-sm hover:shadow-lg' }} p-7 sm:p-8 relative transition-shadow duration-300 h-full flex flex-col">
-                            @if($plan['popular'])<span class="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full bg-gradient-to-l from-brand-400 to-brand-600 text-white text-sm font-bold shadow-lg shadow-brand-600/30">الأكثر طلباً</span>@endif
-                            <div class="mb-6">
-                                <h3 class="font-heading text-xl font-bold {{ $plan['popular']?'text-white':'text-navy-950' }} mb-2">{{ $plan['name'] }}</h3>
-                                <p class="text-sm {{ $plan['popular']?'text-slate-300':'text-slate-500' }}">{{ $plan['desc'] }}</p>
+                    $billingPhrases = ['monthly' => 'ج.م / شهرياً', 'quarterly' => 'ج.م / 3 شهور', 'yearly' => 'ج.م / سنوياً'];
+                @endphp
+                <div class="grid md:grid-cols-3 gap-6 lg:gap-8 items-start">
+                    @foreach($planKeys as $idx => $planKey)
+                        @php
+                            $plan = $teacherPlans[$planKey] ?? null;
+                            if (!$plan) continue;
+                            $meta = $planMeta[$planKey] ?? [];
+                            $name = $plan['label'] ?? $planKey;
+                            $price = (float) ($plan['price'] ?? 0);
+                            $cycle = $plan['billing_cycle'] ?? 'monthly';
+                            $cyclePhrase = $billingPhrases[$cycle] ?? 'ج.م';
+                            $features = $plan['features'] ?? [];
+                            $popular = $meta['popular'] ?? false;
+                        @endphp
+                        <div class="reveal stagger-{{ $idx+1 }} {{ $popular ? 'md:-mt-4 md:mb-4' : '' }}">
+                            <div class="rounded-3xl {{ $popular ? 'bg-navy-950 text-white popular-glow border-2 border-brand-500/30' : 'bg-white border border-slate-200 shadow-sm hover:shadow-lg' }} p-7 sm:p-8 relative transition-shadow duration-300 h-full flex flex-col">
+                                @if($popular)<span class="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 rounded-full bg-gradient-to-l from-brand-400 to-brand-600 text-white text-sm font-bold shadow-lg shadow-brand-600/30">الأكثر طلباً</span>@endif
+                                <div class="mb-6">
+                                    <h3 class="font-heading text-xl font-bold {{ $popular ? 'text-white' : 'text-navy-950' }} mb-2">{{ $name }}</h3>
+                                    <p class="text-sm {{ $popular ? 'text-slate-300' : 'text-slate-500' }}">{{ $meta['subtitle'] ?? '' }}</p>
+                                </div>
+                                <div class="mb-6">
+                                    <span class="font-heading text-4xl sm:text-5xl font-black {{ $popular ? 'text-white' : 'text-navy-950' }}">{{ number_format($price, 0) }}</span>
+                                    <span class="text-sm {{ $popular ? 'text-slate-400' : 'text-slate-500' }}"> {{ $cyclePhrase }}</span>
+                                </div>
+                                <ul class="space-y-3 mb-8 flex-1">
+                                    @foreach($features as $featureKey)
+                                    <li class="flex items-center gap-3 text-sm">
+                                        <span class="w-5 h-5 rounded-full {{ $popular ? 'bg-brand-500/20 text-brand-300' : 'bg-emerald-50 text-emerald-500' }} flex items-center justify-center flex-shrink-0"><i class="fas fa-check text-[10px]"></i></span>
+                                        <span class="{{ $popular ? 'text-slate-200' : 'text-slate-600' }}">{{ __("student.subscription_feature.{$featureKey}") }}</span>
+                                    </li>
+                                    @endforeach
+                                </ul>
+                                <a href="{{ route('public.subscription.checkout', $planKey) }}" class="block text-center font-bold text-base px-6 py-4 rounded-2xl transition-all duration-300 {{ $popular ? 'btn-primary bg-gradient-to-l from-brand-400 to-brand-600 text-white shadow-lg shadow-brand-600/25' : 'btn-outline bg-navy-950 text-white hover:bg-navy-900' }}">{{ $meta['cta'] ?? 'اشترك الآن' }}</a>
                             </div>
-                            <div class="mb-6">
-                                <span class="font-heading text-4xl sm:text-5xl font-black {{ $plan['popular']?'text-white':'text-navy-950' }}">{{ $plan['price'] }}</span>
-                                @if($plan['period'])<span class="text-sm {{ $plan['popular']?'text-slate-400':'text-slate-500' }}"> ر.س {{ $plan['period'] }}</span>@endif
-                            </div>
-                            <ul class="space-y-3 mb-8 flex-1">
-                                @foreach($plan['features'] as $f)
-                                <li class="flex items-center gap-3 text-sm">
-                                    @if($f['ok'])
-                                    <span class="w-5 h-5 rounded-full {{ $plan['popular']?'bg-brand-500/20 text-brand-300':'bg-emerald-50 text-emerald-500' }} flex items-center justify-center flex-shrink-0"><i class="fas fa-check text-[10px]"></i></span>
-                                    <span class="{{ $plan['popular']?'text-slate-200':'text-slate-600' }}">{{ $f['t'] }}</span>
-                                    @else
-                                    <span class="w-5 h-5 rounded-full {{ $plan['popular']?'bg-white/5 text-slate-600':'bg-slate-50 text-slate-300' }} flex items-center justify-center flex-shrink-0"><i class="fas fa-minus text-[10px]"></i></span>
-                                    <span class="{{ $plan['popular']?'text-slate-500':'text-slate-400' }} line-through">{{ $f['t'] }}</span>
-                                    @endif
-                                </li>
-                                @endforeach
-                            </ul>
-                            <a href="{{ route('register') }}" class="block text-center font-bold text-base px-6 py-4 rounded-2xl transition-all duration-300 {{ $plan['popular']?'btn-primary bg-gradient-to-l from-brand-400 to-brand-600 text-white shadow-lg shadow-brand-600/25':'btn-outline bg-navy-950 text-white hover:bg-navy-900' }}">{{ $plan['cta'] }}</a>
                         </div>
-                    </div>
                     @endforeach
                 </div>
             </div>

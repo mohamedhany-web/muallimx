@@ -11,6 +11,7 @@ use App\Models\QuestionBank;
 use App\Models\ActivityLog;
 use App\Models\VideoWatch;
 use App\Models\ExamAttempt;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -265,6 +266,21 @@ class AdminController extends Controller
             'recent_employees' => User::employees()->with('employeeJob')->latest('hire_date')->take(5)->get(),
         ];
 
+        // قسم العناصر المدفوعة: الباقات (الاشتراكات) والمشتركين فيها
+        $subscriptionPackages = Subscription::with('user')
+            ->orderBy('plan_name')
+            ->get()
+            ->groupBy('plan_name')
+            ->map(function ($subs, $planName) {
+                return [
+                    'plan_name' => $planName ?: 'غير محدد',
+                    'count' => $subs->count(),
+                    'subscriptions' => $subs->take(15),
+                ];
+            })
+            ->take(12)
+            ->values();
+
         $quickActions = [
             [
                 'title' => 'فواتير معلقة',
@@ -343,7 +359,8 @@ class AdminController extends Controller
             'quickActions',
             'communityStats',
             'salesSection',
-            'hrSection'
+            'hrSection',
+            'subscriptionPackages'
         ));
     }
 

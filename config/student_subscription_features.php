@@ -24,8 +24,8 @@ return [
         'icon' => 'fa-chalkboard-teacher',
         'icon_bg' => 'bg-blue-100 dark:bg-blue-900/40',
         'icon_text' => 'text-blue-600 dark:text-blue-400',
-        'route' => 'student.features.show',
-        'route_params' => ['feature' => 'classroom_access'],
+        'route' => 'student.classroom.index',
+        'route_params' => [],
     ],
     'zoom_access' => [
         'icon' => 'fa-video',

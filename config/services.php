@@ -81,4 +81,14 @@ return [
         'auto_send_exam_results' => env('AUTO_SEND_EXAM_RESULTS', true),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Live Recordings Webhook (Jibri → R2 → Laravel)
+    |--------------------------------------------------------------------------
+    | Token يُرسل في الهيدر X-Webhook-Token عند استدعاء POST /api/live-recordings/register
+    */
+    'live_recordings_webhook' => [
+        'token' => env('LIVE_RECORDINGS_WEBHOOK_TOKEN'),
+    ],
+
 ];

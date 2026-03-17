@@ -18,15 +18,19 @@ class CurriculumLibraryItem extends Model
         'content',
         'grade_level',
         'subject',
+        'language',
+        'item_type',
         'meta',
         'order',
         'is_active',
+        'is_free_preview',
     ];
 
     protected $casts = [
         'meta' => 'array',
         'is_active' => 'boolean',
         'order' => 'integer',
+        'is_free_preview' => 'boolean',
     ];
 
     protected static function boot()
@@ -42,6 +46,19 @@ class CurriculumLibraryItem extends Model
     public function category()
     {
         return $this->belongsTo(CurriculumLibraryCategory::class, 'category_id');
+    }
+
+    public function files()
+    {
+        return $this->hasMany(CurriculumLibraryItemFile::class, 'curriculum_library_item_id')->orderBy('order')->orderBy('id');
+    }
+
+    public function scopeByLanguage($query, ?string $lang)
+    {
+        if ($lang && in_array($lang, ['ar', 'en', 'fr'], true)) {
+            return $query->where('language', $lang);
+        }
+        return $query;
     }
 
     public function scopeActive($query)

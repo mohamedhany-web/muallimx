@@ -94,6 +94,14 @@
             </a>
             <?php endif; ?>
 
+            <?php if(Route::has('student.live-recordings.index')): ?>
+            <a href="<?php echo e(route('student.live-recordings.index')); ?>" @click="if(window.innerWidth<1024) sidebarOpen=false"
+               class="ins-nav <?php echo e(request()->routeIs('student.live-recordings.*') ? 'active' : ''); ?>">
+                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400"><i class="fas fa-play-circle"></i></span>
+                <span class="flex-1 truncate">تسجيلات البث</span>
+            </a>
+            <?php endif; ?>
+
             <div class="ins-nav-group mt-2">التعلم والإنجازات</div>
 
             <?php if($isStudent || $user->hasPermission('student.view.orders')): ?>
@@ -193,6 +201,9 @@
             <?php endif; ?>
 
             <?php $__currentLoopData = $featureConfig; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $featureKey => $cfg): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php if(in_array($featureKey, ['zoom_access', 'ai_tools'])): ?>
+                    <?php continue; ?>
+                <?php endif; ?>
                 <?php if(!$user->hasSubscriptionFeature($featureKey) && !($featureKey === 'teacher_profile' && $user->hasPermission('student.view.profile'))): ?>
                     <?php continue; ?>
                 <?php endif; ?>

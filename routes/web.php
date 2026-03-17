@@ -153,6 +153,9 @@ Route::get('/portfolio/{id}', [\App\Http\Controllers\Public\PortfolioController:
 
 // تم إيقاف مجتمع البيانات والذكاء الاصطناعي (مسابقات، داتاسيت، مجتمع) بالكامل، لذا أزيلت جميع مساراته.
 
+// MuallimX Classroom — دخول الضيوف برابط/كود (بدون تسجيل دخول)
+Route::get('/classroom/join/{code}', [\App\Http\Controllers\ClassroomJoinController::class, 'show'])->name('classroom.join')->where('code', '[A-Za-z0-9]+');
+
 // التواصل
 Route::get('/contact', [\App\Http\Controllers\Public\ContactController::class, 'index'])->name('public.contact');
 Route::post('/contact', [\App\Http\Controllers\Public\ContactController::class, 'store'])->name('public.contact.store');
@@ -385,6 +388,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
     
     // API لمعلومات الفيديو
     Route::post('/api/video/info', [\App\Http\Controllers\Api\VideoInfoController::class, 'getInfo'])->name('api.video.info');
+
+    // ويب هوك تسجيل جلسات البث (Jibri يرفع إلى R2 ثم يستدعي هذا الرابط مع X-Webhook-Token)
+    Route::post('/api/live-recordings/register', [\App\Http\Controllers\Api\LiveRecordingWebhookController::class, 'register'])->name('api.live-recordings.register');
     
     // API للدروس - محمية بالتأكد من التسجيل
     Route::get('/api/lessons/{lesson}', function(\App\Models\CourseLesson $lesson) {
@@ -509,13 +515,19 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         });
         // صفحة اشتراكي (عرض الباقة الحالية ومدة التفاعيل والانتهاء)
         Route::get('/my-subscription', [\App\Http\Controllers\Student\MySubscriptionController::class, 'show'])->name('student.my-subscription');
+        // MuallimX Classroom — بديل Zoom للمعلم (رابط/كود للضيوف بدون اشتراك)
+        Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
+        Route::post('/classroom/start', [\App\Http\Controllers\Student\ClassroomController::class, 'start'])->name('student.classroom.start');
+        Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
+        Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('student.classroom.end');
         // صفحات المزايا المرتبطة بالاشتراك (كل ميزة لها صفحة)
         Route::get('/features/{feature}', [\App\Http\Controllers\Student\SubscriptionFeatureController::class, 'show'])
             ->name('student.features.show')
             ->where('feature', 'library_access|ai_tools|classroom_access|zoom_access|support|visible_to_academies|can_apply_opportunities|full_ai_suite|teacher_evaluation|recommended_to_academies|priority_opportunities|direct_support');
-        // مكتبة المناهج التفاعلية (محمية بميزة library_access)
+        // مكتبة المناهج التفاعلية (مناهج أكس — معاينة ملف واحد مجاناً ثم اشتراك)
         Route::get('/curriculum-library', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
         Route::get('/curriculum-library/{item:slug}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'show'])->name('curriculum-library.show');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'download'])->name('curriculum-library.file.download');
     });
 
     // لوحة الموظفين
@@ -924,6 +936,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         
         Route::resource('subscriptions', \App\Http\Controllers\Admin\SubscriptionController::class)
             ->middleware('throttle:60,1');
+        Route::get('/subscriptions/{subscription}/consumption', [\App\Http\Controllers\Admin\SubscriptionController::class, 'consumption'])->name('subscriptions.consumption');
         Route::get('/teacher-features', [\App\Http\Controllers\Admin\TeacherFeaturesController::class, 'index'])
             ->name('teacher-features.index');
         Route::post('/teacher-features', [\App\Http\Controllers\Admin\TeacherFeaturesController::class, 'update'])
@@ -941,6 +954,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/curriculum-library/items/{item}/edit', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'editItem'])->name('curriculum-library.items.edit');
         Route::put('/curriculum-library/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'updateItem'])->name('curriculum-library.items.update');
         Route::delete('/curriculum-library/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'destroyItem'])->name('curriculum-library.items.destroy');
+        Route::delete('/curriculum-library/items/{item}/files/{file}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'destroyFile'])->name('curriculum-library.items.files.destroy');
         Route::post('/subscriptions/{subscription}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'update'])->middleware('throttle:20,5')->name('subscriptions.update');
         Route::delete('/subscriptions/{subscription}', [\App\Http\Controllers\Admin\SubscriptionController::class, 'destroy'])->middleware('throttle:10,1')->name('subscriptions.destroy');
         Route::post('/subscription-requests/{subscriptionRequest}/approve', [\App\Http\Controllers\Admin\SubscriptionController::class, 'approveRequest'])->name('subscription-requests.approve');
@@ -1120,16 +1134,23 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         Route::prefix('live-servers')->name('live-servers.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\LiveServerController::class, 'index'])->name('index');
+            Route::get('/control', [\App\Http\Controllers\Admin\LiveServerController::class, 'control'])->name('control');
             Route::get('/create', [\App\Http\Controllers\Admin\LiveServerController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\Admin\LiveServerController::class, 'store'])->name('store');
             Route::get('/{liveServer}/edit', [\App\Http\Controllers\Admin\LiveServerController::class, 'edit'])->name('edit');
+            Route::get('/{liveServer}/ssh-browse', [\App\Http\Controllers\Admin\LiveServerController::class, 'sshBrowse'])->name('ssh-browse');
+            Route::get('/{liveServer}/ssh-file', [\App\Http\Controllers\Admin\LiveServerController::class, 'sshFile'])->name('ssh-file');
             Route::put('/{liveServer}', [\App\Http\Controllers\Admin\LiveServerController::class, 'update'])->name('update');
             Route::delete('/{liveServer}', [\App\Http\Controllers\Admin\LiveServerController::class, 'destroy'])->name('destroy');
             Route::post('/{liveServer}/toggle-status', [\App\Http\Controllers\Admin\LiveServerController::class, 'toggleStatus'])->name('toggle-status');
+            Route::post('/{liveServer}/test-connection', [\App\Http\Controllers\Admin\LiveServerController::class, 'testConnection'])->name('test-connection');
+            Route::post('/{liveServer}/set-default', [\App\Http\Controllers\Admin\LiveServerController::class, 'setAsDefault'])->name('set-default');
         });
 
         Route::prefix('live-recordings')->name('live-recordings.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\LiveRecordingController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Admin\LiveRecordingController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Admin\LiveRecordingController::class, 'store'])->name('store');
             Route::get('/{liveRecording}', [\App\Http\Controllers\Admin\LiveRecordingController::class, 'show'])->name('show');
             Route::put('/{liveRecording}', [\App\Http\Controllers\Admin\LiveRecordingController::class, 'update'])->name('update');
             Route::post('/{liveRecording}/toggle-publish', [\App\Http\Controllers\Admin\LiveRecordingController::class, 'togglePublish'])->name('toggle-publish');
@@ -1165,6 +1186,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/{liveSession}/join', [\App\Http\Controllers\Student\LiveSessionController::class, 'join'])->name('join');
             Route::post('/{liveSession}/leave', [\App\Http\Controllers\Student\LiveSessionController::class, 'leave'])->name('leave');
         });
+        // تسجيلات الجلسات (R2 — عرض للمنشور فقط)
+        Route::get('/live-recordings', [\App\Http\Controllers\Student\LiveRecordingController::class, 'index'])->name('live-recordings.index');
+        Route::get('/live-recordings/{liveRecording}', [\App\Http\Controllers\Student\LiveRecordingController::class, 'show'])->name('live-recordings.show');
     });
 
     // مسارات المدرسين

@@ -148,7 +148,7 @@ class LiveSession extends Model
 
     public function getJitsiUrl(): string
     {
-        $domain = $this->server?->domain ?? LiveSetting::get('jitsi_domain', 'meet.jit.si');
+        $domain = $this->server?->domain ?: LiveSetting::getJitsiDomain();
         return "https://{$domain}/{$this->room_name}";
     }
 

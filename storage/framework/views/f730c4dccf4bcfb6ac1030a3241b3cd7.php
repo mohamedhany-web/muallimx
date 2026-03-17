@@ -11,21 +11,31 @@
                 <i class="fas fa-arrow-right"></i> العودة للمكتبة
             </a>
             <div class="flex flex-wrap items-start gap-3">
-                <span class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                    <i class="fas fa-book-open text-lg"></i>
+                <span class="w-12 h-12 rounded-xl <?php echo e($item->is_free_preview ? 'bg-emerald-50 text-emerald-600' : 'bg-indigo-100 text-indigo-600'); ?> flex items-center justify-center flex-shrink-0">
+                    <i class="fas <?php echo e($item->is_free_preview ? 'fa-star' : 'fa-book-open'); ?> text-lg"></i>
                 </span>
                 <div class="flex-1 min-w-0">
                     <h1 class="text-xl sm:text-2xl font-black text-slate-800"><?php echo e($item->title); ?></h1>
-                    <?php if($item->category || $item->subject || $item->grade_level): ?>
+                    <?php if($item->category || $item->subject || $item->grade_level || $item->is_free_preview): ?>
                         <div class="flex flex-wrap gap-2 mt-2">
                             <?php if($item->category): ?>
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-xs font-medium"><?php echo e($item->category->name); ?></span>
+                            <?php endif; ?>
+                            <?php if(isset($item->language) && $item->language): ?>
+                                <?php $langNames = ['ar' => 'العربية', 'en' => 'English', 'fr' => 'Français']; ?>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-sky-50 text-sky-700 text-xs font-medium"><?php echo e($langNames[$item->language] ?? $item->language); ?></span>
                             <?php endif; ?>
                             <?php if($item->subject): ?>
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-medium"><?php echo e($item->subject); ?></span>
                             <?php endif; ?>
                             <?php if($item->grade_level): ?>
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-700 text-xs font-medium"><?php echo e($item->grade_level); ?></span>
+                            <?php endif; ?>
+                            <?php if($item->is_free_preview): ?>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-semibold">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-1"></span>
+                                    هذا المحتوى متاح كتجربة مجانية من مناهج X
+                                </span>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
@@ -36,14 +46,37 @@
             </div>
         </div>
 
+        <?php if($item->files && $item->files->isNotEmpty()): ?>
+            <div class="p-6 border-b border-slate-100">
+                <h2 class="text-lg font-bold text-slate-800 mb-3"><i class="fas fa-download text-indigo-500 ml-2"></i> الملفات (بوربوينت تفاعلي / وجبات)</h2>
+                <p class="text-sm text-slate-600 mb-4">يمكنك تحميل الملفات وعرضها أو إرسال الوجبات للطالب.</p>
+                <ul class="space-y-2">
+                    <?php $__currentLoopData = $item->files; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $file): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                            <?php if($file->file_type === 'presentation'): ?>
+                                <span class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fas fa-file-powerpoint"></i></span>
+                                <span class="flex-1 font-medium text-slate-800"><?php echo e($file->label ?: 'عرض شرائح تفاعلي'); ?></span>
+                            <?php else: ?>
+                                <span class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center"><i class="fas fa-file-alt"></i></span>
+                                <span class="flex-1 font-medium text-slate-800"><?php echo e($file->label ?: 'وجبة تحميل وإرسال للطالب'); ?></span>
+                            <?php endif; ?>
+                            <a href="<?php echo e(route('curriculum-library.file.download', [$item, $file])); ?>" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">
+                                <i class="fas fa-download"></i> تحميل
+                            </a>
+                        </li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </ul>
+            </div>
+        <?php endif; ?>
+
         <?php if($item->content): ?>
             <div class="p-6 pt-4 prose prose-slate max-w-none curriculum-content">
                 <?php echo $item->content; ?>
 
             </div>
-        <?php else: ?>
+        <?php elseif(!($item->files && $item->files->isNotEmpty())): ?>
             <div class="p-6 pt-4">
-                <p class="text-slate-500 italic">لا يوجد محتوى تفصيلي لهذا العنصر حالياً.</p>
+                <p class="text-slate-500 italic">لا يوجد محتوى تفصيلي أو ملفات لهذا العنصر حالياً.</p>
             </div>
         <?php endif; ?>
     </div>
