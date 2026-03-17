@@ -149,7 +149,8 @@ class LiveServerController extends Controller
         if ($liveServer->status !== 'active') {
             return back()->with('error', 'يجب تفعيل السيرفر أولاً لاستخدامه كنطاق افتراضي.');
         }
-        LiveSetting::set('jitsi_domain', $liveServer->domain);
+        $domain = LiveSetting::normalizeJitsiDomain($liveServer->domain);
+        LiveSetting::set('jitsi_domain', $domain);
         return back()->with('success', "تم تعيين «{$liveServer->name}» كنطاق Jitsi الافتراضي. سيُستخدم في غرف Classroom والانضمام وجلسات البث.");
     }
 

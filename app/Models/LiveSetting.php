@@ -10,18 +10,31 @@ class LiveSetting extends Model
     protected $fillable = ['key', 'value', 'type', 'group', 'label'];
 
     /**
+     * تطبيع نطاق Jitsi: إزالة البروتوكول والشرطة الأخيرة لاستخدام النطاق فقط (مثل muallimx.com).
+     * ضروري لأن السكربت يُحمّل من https://النطاق/external_api.js
+     */
+    public static function normalizeJitsiDomain(string $domain): string
+    {
+        $domain = trim($domain);
+        $domain = preg_replace('#^https?://#i', '', $domain);
+        $domain = rtrim($domain, '/');
+        return $domain;
+    }
+
+    /**
      * نطاق Jitsi المستخدم في الميتينج: الإعداد المحفوظ (النطاق الافتراضي من سيرفرات البث) أولاً،
      * ثم أول سيرفر نشط إن لم يكن هناك إعداد، وأخيراً meet.jit.si للاختبار فقط.
+     * يُرجع النطاق مُطبّعاً (بدون https://) لاستخدامه في تحميل السكربت.
      */
     public static function getJitsiDomain(): string
     {
         $domain = trim((string) static::get('jitsi_domain', ''));
         if ($domain !== '') {
-            return $domain;
+            return static::normalizeJitsiDomain($domain);
         }
         $server = LiveServer::where('status', 'active')->first();
         if ($server && trim($server->domain) !== '') {
-            return trim($server->domain);
+            return static::normalizeJitsiDomain($server->domain);
         }
         return 'meet.jit.si';
     }
