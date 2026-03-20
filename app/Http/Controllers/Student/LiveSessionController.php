@@ -86,7 +86,7 @@ class LiveSessionController extends Controller
             ]);
         }
 
-        $jitsiDomain = $liveSession->server?->domain ?: LiveSetting::getJitsiDomain();
+        $jitsiDomain = $liveSession->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
 
         return view('student.live-sessions.room', compact('liveSession', 'jitsiDomain', 'user'));
     }

@@ -83,7 +83,12 @@
         <div id="jitsi-error" class="hidden flex-col items-center justify-center h-full p-6 text-center max-w-lg mx-auto" style="display: none;">
             <i class="fas fa-exclamation-triangle text-amber-500 text-4xl mb-3"></i>
             <p class="font-bold text-slate-200 mb-2">لا يمكن تحميل غرفة الاجتماع</p>
-            <p class="text-slate-400 text-sm mb-4">المتصفح لم يستطع الاتصال بنطاق السيرفر <strong class="text-slate-300">{{ $jitsiDomain }}</strong>. تحقق من أن السيرفر يعمل ومتاح من جهازك (حتى على اللوكل يجب أن يكون النطاق يُحمّل من المتصفح).</p>
+            <p class="text-slate-400 text-sm mb-3">المتصفح لم يستطع الاتصال بـ <strong class="text-slate-300">{{ $jitsiDomain }}</strong>.</p>
+            <ul class="text-right text-slate-400 text-sm mb-4 list-none space-y-1">
+                <li>• النطاق يجب أن يكون <strong class="text-slate-300">النطاق الذي يعمل عليه Jitsi Meet</strong> (مثلاً <code class="bg-slate-700 px-1 rounded">meet.muallimx.com</code> وليس بالضرورة الموقع الرئيسي).</li>
+                <li>• جرّب فتح <a href="https://{{ $jitsiDomain }}/external_api.js" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">هذا الرابط</a> في تاب جديد — إن لم يُحمّل، فـ Jitsi غير مُثبت على هذا النطاق أو النطاق غير متاح من جهازك.</li>
+                <li>• إن كان Jitsi على نطاق فرعي (مثل meet.muallimx.com)، غيّر النطاق من: <strong>لوحة الإدارة → سيرفرات البث</strong> ثم «استخدام كنطاق افتراضي» للسيرفر الصحيح.</li>
+            </ul>
             <a href="https://{{ $jitsiDomain }}/{{ $meeting->room_name }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition-colors">
                 <i class="fas fa-external-link-alt"></i> فتح الغرفة في نافذة جديدة
             </a>

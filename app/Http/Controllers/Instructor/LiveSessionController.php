@@ -131,7 +131,7 @@ class LiveSessionController extends Controller
                 ->with('info', 'الجلسة ليست في وضع البث');
         }
 
-        $jitsiDomain = $liveSession->server?->domain ?: LiveSetting::getJitsiDomain();
+        $jitsiDomain = $liveSession->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
         $user = auth()->user();
 
         return view('instructor.live-sessions.room', compact('liveSession', 'jitsiDomain', 'user'));

@@ -45,4 +45,16 @@ class LiveServer extends Model
         $config = $this->config ?? [];
         return trim((string) ($config['control_panel_url'] ?? ''));
     }
+
+    /** النطاق بعد إزالة البروتوكول والـ slash النهائية. */
+    public function getNormalizedDomainAttribute(): string
+    {
+        return LiveSetting::normalizeJitsiDomain((string) $this->domain);
+    }
+
+    /** تطبيع الدومين أثناء الحفظ لتفادي أي مشاكل embed. */
+    public function setDomainAttribute($value): void
+    {
+        $this->attributes['domain'] = LiveSetting::normalizeJitsiDomain((string) $value);
+    }
 }
