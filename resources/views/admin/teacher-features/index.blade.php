@@ -92,6 +92,77 @@
                                 </select>
                             </div>
 
+                            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+                                <p class="text-xs font-bold text-slate-700 mb-2">قيود الاستهلاك الدقيقة (Classroom)</p>
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">عدد الميتينج المسموح شهرياً</label>
+                                        <input type="number"
+                                               min="0"
+                                               name="plans[{{ $key }}][limits][classroom_meetings_per_month]"
+                                               value="{{ old('plans.' . $key . '.limits.classroom_meetings_per_month', $plan['limits']['classroom_meetings_per_month'] ?? 0) }}"
+                                               class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">الحد الأقصى للطلاب في الميتينج الواحد</label>
+                                        <input type="number"
+                                               min="1"
+                                               name="plans[{{ $key }}][limits][classroom_max_participants]"
+                                               value="{{ old('plans.' . $key . '.limits.classroom_max_participants', $plan['limits']['classroom_max_participants'] ?? 25) }}"
+                                               class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">المدة الافتراضية للاجتماع (بالدقائق)</label>
+                                        <input type="number"
+                                               min="15"
+                                               name="plans[{{ $key }}][limits][classroom_default_duration_minutes]"
+                                               value="{{ old('plans.' . $key . '.limits.classroom_default_duration_minutes', $plan['limits']['classroom_default_duration_minutes'] ?? 60) }}"
+                                               class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">الحد الأقصى لمدة الاجتماع (بالدقائق)</label>
+                                        <input type="number"
+                                               min="30"
+                                               name="plans[{{ $key }}][limits][classroom_max_duration_minutes]"
+                                               value="{{ old('plans.' . $key . '.limits.classroom_max_duration_minutes', $plan['limits']['classroom_max_duration_minutes'] ?? 120) }}"
+                                               class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+                                <p class="text-xs font-bold text-slate-700 mb-2">إعدادات التسويق الشخصي للمعلم</p>
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">عدد أقسام الملف التسويقي المفعلة</label>
+                                        <input type="number"
+                                               min="1"
+                                               max="20"
+                                               name="plans[{{ $key }}][limits][personal_marketing_profile_sections]"
+                                               value="{{ old('plans.' . $key . '.limits.personal_marketing_profile_sections', $plan['limits']['personal_marketing_profile_sections'] ?? 5) }}"
+                                               class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">درجة أولوية الظهور (0 - 100)</label>
+                                        <input type="number"
+                                               min="0"
+                                               max="100"
+                                               name="plans[{{ $key }}][limits][personal_marketing_priority_score]"
+                                               value="{{ old('plans.' . $key . '.limits.personal_marketing_priority_score', $plan['limits']['personal_marketing_priority_score'] ?? 0) }}"
+                                               class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">أيام إبراز الملف شهرياً</label>
+                                        <input type="number"
+                                               min="0"
+                                               max="31"
+                                               name="plans[{{ $key }}][limits][personal_marketing_monthly_featured_days]"
+                                               value="{{ old('plans.' . $key . '.limits.personal_marketing_monthly_featured_days', $plan['limits']['personal_marketing_monthly_featured_days'] ?? 0) }}"
+                                               class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="border-t border-slate-200 pt-3 mt-auto">
                                 <p class="text-xs font-semibold text-slate-700 mb-2">المزايا المرتبطة بهذه الخطة</p>
                                 @php $planFeatures = $plan['features'] ?? []; @endphp

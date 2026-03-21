@@ -28,6 +28,15 @@ class SubscriptionFeatureController extends Controller
         if ($feature === 'classroom_access') {
             return redirect()->route('student.classroom.index');
         }
+        if ($feature === 'support') {
+            return redirect()->route('student.support.index');
+        }
+        if ($feature === 'visible_to_academies') {
+            return redirect()->route('student.academies.visibility');
+        }
+        if ($feature === 'can_apply_opportunities') {
+            return redirect()->route('student.opportunities.index');
+        }
 
         $featureConfig = $config[$feature];
         $label = __('student.subscription_feature.' . $feature);

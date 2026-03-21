@@ -546,6 +546,136 @@ class AdminController extends Controller
     }
 
     /**
+     * إدارة الطلاب والحسابات (صفحة منفصلة عن إدارة المستخدمين العامة)
+     */
+    public function studentsAccounts(Request $request)
+    {
+        try {
+            $now = now();
+            $currentPeriodStart = $now->copy()->startOfMonth();
+            $currentPeriodEnd = $now;
+            $previousPeriodStart = $now->copy()->subMonth()->startOfMonth();
+            $previousPeriodEnd = $now->copy()->subMonth()->endOfMonth();
+
+            $studentsBase = User::query()->where('role', 'student');
+
+            $totalStudents = (clone $studentsBase)->count();
+            $activeStudents = (clone $studentsBase)->where('is_active', true)->count();
+            $newStudentsThisMonth = (clone $studentsBase)->whereBetween('created_at', [$currentPeriodStart, $currentPeriodEnd])->count();
+            $newStudentsLastMonth = (clone $studentsBase)->whereBetween('created_at', [$previousPeriodStart, $previousPeriodEnd])->count();
+            $studentsTrend = $this->calculateChange($newStudentsThisMonth, $newStudentsLastMonth);
+
+            $query = User::query()->where('role', 'student');
+
+            if ($request->has('status') && $request->status !== '') {
+                $query->where('is_active', $request->status);
+            }
+
+            if ($request->has('search') && $request->search) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%")
+                        ->orWhere('phone', 'LIKE', "%{$search}%");
+                });
+            }
+
+            $users = $query->latest()->paginate(20)->appends($request->only(['search', 'status']));
+
+            $stats = [
+                'total' => $totalStudents,
+                'active' => $activeStudents,
+                'teachers' => 0,
+                'students' => $totalStudents,
+                'new_this_month' => $newStudentsThisMonth,
+                'new_teachers_this_month' => 0,
+                'new_students_this_month' => $newStudentsThisMonth,
+            ];
+
+            $trends = [
+                'users' => $studentsTrend,
+                'teachers' => null,
+                'students' => $studentsTrend,
+            ];
+
+            $recentUsers = User::where('role', 'student')->latest()->take(10)->get();
+            $recentlyActiveUsers = User::where('role', 'student')
+                ->where('is_active', true)
+                ->where('updated_at', '>=', now()->subDays(7))
+                ->latest('updated_at')
+                ->take(10)
+                ->get();
+
+            $usersByRole = collect(['student' => $totalStudents]);
+
+            $driver = DB::getDriverName();
+            if ($driver === 'sqlite') {
+                $usersByMonth = User::where('role', 'student')
+                    ->select(
+                        DB::raw("CAST(strftime('%Y', created_at) AS INTEGER) as year"),
+                        DB::raw("CAST(strftime('%m', created_at) AS INTEGER) as month"),
+                        DB::raw('COUNT(*) as count')
+                    )
+                    ->where('created_at', '>=', now()->subMonths(6))
+                    ->groupBy('year', 'month')
+                    ->orderBy('year', 'desc')
+                    ->orderBy('month', 'desc')
+                    ->get();
+            } else {
+                $usersByMonth = User::where('role', 'student')
+                    ->select(
+                        DB::raw('YEAR(created_at) as year'),
+                        DB::raw('MONTH(created_at) as month'),
+                        DB::raw('COUNT(*) as count')
+                    )
+                    ->where('created_at', '>=', now()->subMonths(6))
+                    ->groupBy(DB::raw('YEAR(created_at)'), DB::raw('MONTH(created_at)'))
+                    ->orderBy('year', 'desc')
+                    ->orderBy('month', 'desc')
+                    ->get();
+            }
+
+            return view('admin.users.index', compact('users', 'stats', 'trends', 'recentUsers', 'recentlyActiveUsers', 'usersByRole', 'usersByMonth'))
+                ->with([
+                    'pageMode' => 'students',
+                    'pageTitle' => 'إدارة الطلاب والحسابات',
+                    'pageDescription' => 'صفحة مخصصة لمتابعة حسابات الطلاب ونشاطهم بشكل منفصل',
+                    'indexRoute' => 'admin.students-accounts.index',
+                ]);
+        } catch (\Throwable $e) {
+            Log::error('Error loading students accounts index: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            $users = User::where('role', 'student')->latest()->paginate(20);
+            $stats = [
+                'total' => (clone User::query()->where('role', 'student'))->count(),
+                'active' => User::where('role', 'student')->where('is_active', true)->count(),
+                'teachers' => 0,
+                'students' => User::where('role', 'student')->count(),
+                'new_this_month' => 0,
+                'new_teachers_this_month' => 0,
+                'new_students_this_month' => 0,
+            ];
+            $trends = ['users' => null, 'teachers' => null, 'students' => null];
+            $recentUsers = collect();
+            $recentlyActiveUsers = collect();
+            $usersByRole = collect(['student' => $stats['students']]);
+            $usersByMonth = collect();
+
+            return view('admin.users.index', compact('users', 'stats', 'trends', 'recentUsers', 'recentlyActiveUsers', 'usersByRole', 'usersByMonth'))
+                ->with([
+                    'pageMode' => 'students',
+                    'pageTitle' => 'إدارة الطلاب والحسابات',
+                    'pageDescription' => 'صفحة مخصصة لمتابعة حسابات الطلاب ونشاطهم بشكل منفصل',
+                    'indexRoute' => 'admin.students-accounts.index',
+                    'warning' => 'تم تحميل القائمة بشكل مبسط بسبب خطأ تقني.',
+                ]);
+        }
+    }
+
+    /**
      * إنشاء مستخدم جديد
      */
     public function createUser()

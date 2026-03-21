@@ -324,7 +324,7 @@ class User extends Authenticatable
      */
     public function isInstructor(): bool
     {
-        return $this->role === 'instructor';
+        return in_array((string) $this->role, ['instructor', 'teacher'], true);
     }
 
     /**
@@ -344,11 +344,11 @@ class User extends Authenticatable
     }
 
     /**
-     * التحقق من كون المستخدم مدرب (للتوافق مع الكود القديم)
+     * التحقق من كون المستخدم معلّم/مدرب (للتوافق مع الكود القديم + دور teacher)
      */
     public function isTeacher(): bool
     {
-        return $this->role === 'instructor';
+        return in_array((string) $this->role, ['instructor', 'teacher'], true);
     }
 
     /**
@@ -522,6 +522,20 @@ class User extends Authenticatable
         return $this->roles()->whereHas('permissions', function($query) use ($permissionName) {
             $query->where('name', $permissionName);
         })->exists();
+    }
+
+    /**
+     * التحقق من وجود أي صلاحية من القائمة (للـ Blade والـ sidebar)
+     */
+    public function hasAnyPermission(...$permissionNames): bool
+    {
+        foreach ($permissionNames as $name) {
+            if ($this->hasPermission($name)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

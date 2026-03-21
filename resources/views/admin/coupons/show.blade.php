@@ -1,113 +1,106 @@
 @extends('layouts.admin')
 
-@section('title', 'تفاصيل الكوبون')
-@section('header', 'تفاصيل الكوبون')
+@section('title', 'تفاصيل الكوبون: ' . $coupon->code)
+@section('header', '')
 
 @section('content')
 <div class="space-y-6">
-    <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-        <div class="flex justify-between items-start mb-6">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="flex items-start gap-3">
+            <a href="{{ route('admin.coupons.index') }}" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors"><i class="fas fa-arrow-right"></i></a>
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">كوبون: {{ $coupon->code }}</h1>
-                <p class="text-gray-600 mt-1">{{ $coupon->title }}</p>
-            </div>
-            <div>
-                <a href="{{ route('admin.coupons.edit', $coupon) }}" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg font-medium transition-colors mr-2">
-                    تعديل
-                </a>
-                <a href="{{ route('admin.coupons.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors">
-                    رجوع
-                </a>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <h3 class="text-lg font-bold text-gray-900 mb-4">معلومات الكوبون</h3>
-                <div class="space-y-3">
-                    <div>
-                        <span class="text-sm text-gray-600">الكود:</span>
-                        <span class="font-bold text-lg text-gray-900 mr-2">{{ $coupon->code }}</span>
-                    </div>
-                    <div>
-                        <span class="text-sm text-gray-600">نوع الخصم:</span>
-                        <span class="font-medium text-gray-900 mr-2">{{ $coupon->discount_type == 'percentage' ? 'نسبة مئوية' : 'مبلغ ثابت' }}</span>
-                    </div>
-                    <div>
-                        <span class="text-sm text-gray-600">قيمة الخصم:</span>
-                        <span class="font-medium text-gray-900 text-lg mr-2">
-                            {{ $coupon->discount_type == 'percentage' ? $coupon->discount_value . '%' : number_format($coupon->discount_value, 2) . ' ج.م' }}
-                        </span>
-                    </div>
-                    @if($coupon->minimum_amount)
-                    <div>
-                        <span class="text-sm text-gray-600">الحد الأدنى:</span>
-                        <span class="font-medium text-gray-900 mr-2">{{ number_format($coupon->minimum_amount, 2) }} ج.م</span>
-                    </div>
-                    @endif
-                </div>
-            </div>
-            <div>
-                <h3 class="text-lg font-bold text-gray-900 mb-4">الاستخدام</h3>
-                <div class="space-y-3">
-                    <div>
-                        <span class="text-sm text-gray-600">عدد الاستخدامات:</span>
-                        <span class="font-medium text-gray-900 mr-2">{{ $coupon->usages->count() ?? 0 }} / {{ $coupon->usage_limit ?? ($coupon->max_uses ?? '∞') }}</span>
-                    </div>
-                    <div>
-                        <span class="text-sm text-gray-600">الحالة:</span>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            {{ ($coupon->is_active && (!$coupon->expires_at || $coupon->expires_at >= now())) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }} mr-2">
-                            {{ ($coupon->is_active && (!$coupon->expires_at || $coupon->expires_at >= now())) ? 'نشط' : 'منتهي' }}
-                        </span>
-                    </div>
-                    @if($coupon->starts_at)
-                    <div>
-                        <span class="text-sm text-gray-600">من:</span>
-                        <span class="font-medium text-gray-900 mr-2">{{ $coupon->starts_at->format('Y-m-d') }}</span>
-                    </div>
-                    @endif
-                    @if($coupon->expires_at)
-                    <div>
-                        <span class="text-sm text-gray-600">إلى:</span>
-                        <span class="font-medium text-gray-900 mr-2">{{ $coupon->expires_at->format('Y-m-d') }}</span>
-                    </div>
+                <h1 class="text-2xl font-bold text-slate-800 dark:text-white font-heading">
+                    <i class="fas fa-ticket-alt text-violet-500 ml-2"></i>{{ $coupon->code }}
+                </h1>
+                <p class="text-slate-600 dark:text-slate-300 mt-1">{{ $coupon->title ?? $coupon->name }}</p>
+                <div class="flex flex-wrap gap-2 mt-3">
+                    @php
+                        $isActive = $coupon->is_active && (!$coupon->expires_at || $coupon->expires_at >= now());
+                    @endphp
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $isActive ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400' : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300' }}">
+                        {{ $isActive ? 'نشط' : 'منتهي أو غير نشط' }}
+                    </span>
+                    @if($coupon->is_public ?? true)
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">عام</span>
+                    @else
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300">خاص</span>
                     @endif
                 </div>
             </div>
         </div>
-
-        @if($coupon->description)
-        <div class="border-t border-gray-200 pt-6 mt-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-2">الوصف</h3>
-            <p class="text-gray-600">{{ $coupon->description }}</p>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('admin.coupons.edit', $coupon) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold transition-colors">
+                <i class="fas fa-edit"></i> تعديل
+            </a>
+            <form method="POST" action="{{ route('admin.coupons.destroy', $coupon) }}" class="inline" onsubmit="return confirm('حذف هذا الكوبون؟');">
+                @csrf @method('DELETE')
+                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20">حذف</button>
+            </form>
         </div>
-        @endif
-
-        @if($coupon->usages && $coupon->usages->count() > 0)
-        <div class="border-t border-gray-200 pt-6 mt-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">سجل الاستخدامات</h3>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">المستخدم</th>
-                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @foreach($coupon->usages as $usage)
-                        <tr>
-                            <td class="px-4 py-2 text-sm text-gray-900">{{ $usage->user->name ?? 'غير معروف' }}</td>
-                            <td class="px-4 py-2 text-sm text-gray-600">{{ $usage->used_at ? $usage->used_at->format('Y-m-d') : '—' }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        @endif
     </div>
+
+    <div class="grid md:grid-cols-2 gap-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+            <h2 class="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><i class="fas fa-percent text-violet-500"></i> تفاصيل الخصم</h2>
+            <dl class="space-y-3 text-sm">
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">نوع الخصم</dt><dd class="font-medium text-slate-800 dark:text-white">{{ $coupon->discount_type === 'percentage' ? 'نسبة مئوية' : 'مبلغ ثابت' }}</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">القيمة</dt><dd class="font-bold text-slate-800 dark:text-white">{{ $coupon->discount_type === 'percentage' ? $coupon->discount_value.'%' : number_format($coupon->discount_value, 2).' ج.م' }}</dd></div>
+                @if($coupon->minimum_amount)
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">الحد الأدنى للطلب</dt><dd><span class="font-mono">{{ number_format($coupon->minimum_amount, 2) }} ج.م</span></dd></div>
+                @endif
+                @if($coupon->maximum_discount)
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">الحد الأقصى للخصم</dt><dd><span class="font-mono">{{ number_format($coupon->maximum_discount, 2) }} ج.م</span></dd></div>
+                @endif
+            </dl>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+            <h2 class="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><i class="fas fa-chart-line text-cyan-500"></i> الاستخدام</h2>
+            <dl class="space-y-3 text-sm">
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">عدد الاستخدامات</dt><dd class="font-mono font-semibold">{{ $coupon->used_count ?? 0 }} @if($coupon->usage_limit) / {{ $coupon->usage_limit }} @else <span class="text-slate-400">/ ∞</span> @endif</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">الحد لكل مستخدم</dt><dd>{{ $coupon->usage_limit_per_user ?? 1 }}</dd></div>
+                @if($coupon->starts_at)
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">من</dt><dd>{{ $coupon->starts_at->format('Y-m-d') }}</dd></div>
+                @endif
+                @if($coupon->expires_at)
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">إلى</dt><dd>{{ $coupon->expires_at->format('Y-m-d') }}</dd></div>
+                @endif
+            </dl>
+        </div>
+    </div>
+
+    @if($coupon->description)
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+        <h2 class="font-bold text-slate-800 dark:text-white mb-2">الوصف</h2>
+        <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{{ $coupon->description }}</p>
+    </div>
+    @endif
+
+    @if($coupon->usages && $coupon->usages->count() > 0)
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 class="font-bold text-slate-800 dark:text-white">سجل الاستخدامات</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-600">
+                    <tr>
+                        <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">المستخدم</th>
+                        <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">مبلغ الخصم</th>
+                        <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    @foreach($coupon->usages as $usage)
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                        <td class="px-4 py-3 text-slate-800 dark:text-white">{{ $usage->user->name ?? '—' }}</td>
+                        <td class="px-4 py-3 font-mono">{{ number_format($usage->discount_amount ?? 0, 2) }} ج.م</td>
+                        <td class="px-4 py-3 text-slate-500">{{ $usage->created_at ? $usage->created_at->format('Y-m-d H:i') : '—' }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
 </div>
 @endsection
-

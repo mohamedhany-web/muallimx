@@ -42,17 +42,35 @@
         background: #f8fafc;
         border: 1px dashed #cbd5e1;
     }
+
+    .dark .course-card {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .dark .course-card:hover {
+        border-color: rgba(6, 182, 212, 0.35) !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    }
+    .dark .stats-card {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+    }
+    .dark .empty-state {
+        background: rgba(15, 23, 42, 0.6) !important;
+        border-color: #475569 !important;
+    }
 </style>
 @endpush
 
 @section('content')
 <div class="space-y-6">
     <!-- الهيدر -->
-    <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+    <div class="bg-white dark:bg-slate-800/95 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ __('student.my_courses_active_title') }}</h1>
-                <p class="text-sm text-gray-500">{{ __('student.my_courses_subtitle') }}</p>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1">{{ __('student.my_courses_active_title') }}</h1>
+                <p class="text-sm text-gray-500 dark:text-slate-400">{{ __('student.my_courses_subtitle') }}</p>
             </div>
             <a href="{{ route('academic-years') }}" class="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors">
                 <i class="fas fa-search"></i>

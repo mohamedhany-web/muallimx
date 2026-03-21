@@ -192,14 +192,15 @@ class CurriculumController extends Controller
         // التحقق من أن العنصر يخص نفس الكورس
         $courseId = null;
         if ($item instanceof Lecture) {
-            $courseId = $item->course_id;
+            // توافق مع أي بنية قديمة/جديدة لربط المحاضرة بالكورس
+            $courseId = $item->course_id ?? $item->advanced_course_id ?? null;
         } elseif ($item instanceof Assignment) {
             $courseId = $item->advanced_course_id ?? $item->course_id;
         } elseif ($item instanceof \App\Models\AdvancedExam) {
             $courseId = $item->advanced_course_id;
         }
         
-        if ($courseId !== $section->advanced_course_id) {
+        if ((int) $courseId !== (int) $section->advanced_course_id) {
             abort(403, 'العنصر لا يخص هذا الكورس');
         }
         

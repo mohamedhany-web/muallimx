@@ -13,11 +13,19 @@ class ClassroomMeeting extends Model
         'code',
         'room_name',
         'title',
+        'scheduled_for',
+        'planned_duration_minutes',
+        'max_participants',
+        'participants_peak',
         'started_at',
         'ended_at',
     ];
 
     protected $casts = [
+        'max_participants' => 'integer',
+        'participants_peak' => 'integer',
+        'scheduled_for' => 'datetime',
+        'planned_duration_minutes' => 'integer',
         'started_at' => 'datetime',
         'ended_at' => 'datetime',
     ];
@@ -25,6 +33,11 @@ class ClassroomMeeting extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function participants()
+    {
+        return $this->hasMany(ClassroomMeetingParticipant::class, 'classroom_meeting_id');
     }
 
     public function isLive(): bool

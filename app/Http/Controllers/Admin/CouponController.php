@@ -32,7 +32,8 @@ class CouponController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%");
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
@@ -65,24 +66,30 @@ class CouponController extends Controller
             'discount_type' => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
             'minimum_amount' => 'nullable|numeric|min:0',
+            'maximum_discount' => 'nullable|numeric|min:0',
             'max_uses' => 'nullable|integer|min:1',
+            'usage_limit_per_user' => 'nullable|integer|min:1',
             'valid_from' => 'nullable|date',
-            'valid_until' => 'nullable|date|after:valid_from',
+            'valid_until' => 'nullable|date|after_or_equal:valid_from',
             'is_active' => 'boolean',
+            'is_public' => 'boolean',
         ]);
 
         Coupon::create([
             'code' => strtoupper($validated['code']),
             'name' => $validated['title'],
-            'title' => $validated['title'], // إضافة title إذا كان موجوداً في الجدول
+            'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'discount_type' => $validated['discount_type'],
             'discount_value' => $validated['discount_value'],
             'minimum_amount' => $validated['minimum_amount'] ?? null,
+            'maximum_discount' => $validated['maximum_discount'] ?? null,
             'usage_limit' => $validated['max_uses'] ?? null,
+            'usage_limit_per_user' => $validated['usage_limit_per_user'] ?? 1,
             'starts_at' => $validated['valid_from'] ?? null,
             'expires_at' => $validated['valid_until'] ?? null,
-            'is_active' => $validated['is_active'] ?? true,
+            'is_active' => $request->boolean('is_active', true),
+            'is_public' => $request->boolean('is_public', true),
         ]);
 
         return redirect()->route('admin.coupons.index')
@@ -109,10 +116,13 @@ class CouponController extends Controller
             'discount_type' => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
             'minimum_amount' => 'nullable|numeric|min:0',
+            'maximum_discount' => 'nullable|numeric|min:0',
             'max_uses' => 'nullable|integer|min:1',
+            'usage_limit_per_user' => 'nullable|integer|min:1',
             'valid_from' => 'nullable|date',
-            'valid_until' => 'nullable|date|after:valid_from',
+            'valid_until' => 'nullable|date|after_or_equal:valid_from',
             'is_active' => 'boolean',
+            'is_public' => 'boolean',
         ]);
 
         $coupon->update([
@@ -123,10 +133,13 @@ class CouponController extends Controller
             'discount_type' => $validated['discount_type'],
             'discount_value' => $validated['discount_value'],
             'minimum_amount' => $validated['minimum_amount'] ?? null,
+            'maximum_discount' => $validated['maximum_discount'] ?? null,
             'usage_limit' => $validated['max_uses'] ?? null,
+            'usage_limit_per_user' => $validated['usage_limit_per_user'] ?? 1,
             'starts_at' => $validated['valid_from'] ?? null,
             'expires_at' => $validated['valid_until'] ?? null,
-            'is_active' => $validated['is_active'] ?? true,
+            'is_active' => $request->boolean('is_active', true),
+            'is_public' => $request->boolean('is_public', true),
         ]);
 
         return redirect()->route('admin.coupons.index')

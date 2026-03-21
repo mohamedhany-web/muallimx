@@ -155,6 +155,9 @@ Route::get('/portfolio/{id}', [\App\Http\Controllers\Public\PortfolioController:
 
 // MuallimX Classroom — دخول الضيوف برابط/كود (بدون تسجيل دخول)
 Route::get('/classroom/join/{code}', [\App\Http\Controllers\ClassroomJoinController::class, 'show'])->name('classroom.join')->where('code', '[A-Za-z0-9]+');
+Route::post('/classroom/join/{code}/enter', [\App\Http\Controllers\ClassroomJoinController::class, 'enter'])->name('classroom.join.enter')->where('code', '[A-Za-z0-9]+');
+Route::post('/classroom/join/{code}/heartbeat', [\App\Http\Controllers\ClassroomJoinController::class, 'heartbeat'])->name('classroom.join.heartbeat')->where('code', '[A-Za-z0-9]+');
+Route::post('/classroom/join/{code}/leave', [\App\Http\Controllers\ClassroomJoinController::class, 'leave'])->name('classroom.join.leave')->where('code', '[A-Za-z0-9]+');
 
 // التواصل
 Route::get('/contact', [\App\Http\Controllers\Public\ContactController::class, 'index'])->name('public.contact');
@@ -517,9 +520,27 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/my-subscription', [\App\Http\Controllers\Student\MySubscriptionController::class, 'show'])->name('student.my-subscription');
         // MuallimX Classroom — بديل Zoom للمعلم (رابط/كود للضيوف بدون اشتراك)
         Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
+        Route::get('/classroom/create', [\App\Http\Controllers\Student\ClassroomController::class, 'create'])->name('student.classroom.create');
+        Route::post('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'store'])->name('student.classroom.store');
+        Route::get('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'show'])->name('student.classroom.show');
+        Route::get('/classroom/{meeting}/edit', [\App\Http\Controllers\Student\ClassroomController::class, 'edit'])->name('student.classroom.edit');
+        Route::put('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'update'])->name('student.classroom.update');
+        Route::delete('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'destroy'])->name('student.classroom.destroy');
         Route::post('/classroom/start', [\App\Http\Controllers\Student\ClassroomController::class, 'start'])->name('student.classroom.start');
+        Route::post('/classroom/{meeting}/start', [\App\Http\Controllers\Student\ClassroomController::class, 'startMeeting'])->name('student.classroom.start-meeting');
         Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('student.classroom.end');
+        // الدعم الفني (ميزة من الباقة)
+        Route::get('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'index'])->name('student.support.index');
+        Route::post('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'store'])->name('student.support.store');
+        Route::get('/support/{ticket}', [\App\Http\Controllers\Student\SupportTicketController::class, 'show'])->name('student.support.show');
+        Route::post('/support/{ticket}/reply', [\App\Http\Controllers\Student\SupportTicketController::class, 'reply'])->name('student.support.reply');
+        // الظهور للأكاديميات والفرص
+        Route::get('/academies/visibility', [\App\Http\Controllers\Student\AcademiesVisibilityController::class, 'index'])->name('student.academies.visibility');
+        Route::post('/academies/opportunities/{opportunity}/apply', [\App\Http\Controllers\Student\AcademiesVisibilityController::class, 'apply'])->name('student.academies.opportunities.apply');
+        // التقديم على فرص التدريس (ميزة مستقلة)
+        Route::get('/teaching-opportunities', [\App\Http\Controllers\Student\TeachingOpportunityController::class, 'index'])->name('student.opportunities.index');
+        Route::post('/teaching-opportunities/{opportunity}/apply', [\App\Http\Controllers\Student\TeachingOpportunityController::class, 'apply'])->name('student.opportunities.apply');
         // صفحات المزايا المرتبطة بالاشتراك (كل ميزة لها صفحة)
         Route::get('/features/{feature}', [\App\Http\Controllers\Student\SubscriptionFeatureController::class, 'show'])
             ->name('student.features.show')
@@ -586,6 +607,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         // إدارة المستخدمين
         Route::get('/users', [\App\Http\Controllers\Admin\AdminController::class, 'users'])->name('users.index');
+        Route::get('/students-accounts', [\App\Http\Controllers\Admin\AdminController::class, 'studentsAccounts'])->name('students-accounts.index');
+        Route::get('/students-control/paid-features', [\App\Http\Controllers\Admin\StudentControlController::class, 'paidFeatures'])->name('students-control.paid-features');
+        Route::get('/students-control/paid-features/{featureKey}', [\App\Http\Controllers\Admin\StudentControlController::class, 'featureUsers'])->name('students-control.paid-features.show');
+        Route::get('/students-control/consumption', [\App\Http\Controllers\Admin\StudentControlController::class, 'consumption'])->name('students-control.consumption');
+        Route::get('/students-control/consumption/user/{user}', [\App\Http\Controllers\Admin\StudentControlController::class, 'userConsumption'])->name('students-control.consumption.user');
         Route::get('/users/create', [\App\Http\Controllers\Admin\AdminController::class, 'createUser'])->name('users.create');
         Route::post('/users', [\App\Http\Controllers\Admin\AdminController::class, 'storeUser'])
             ->middleware('throttle:20,1')
@@ -941,6 +967,15 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->name('teacher-features.index');
         Route::post('/teacher-features', [\App\Http\Controllers\Admin\TeacherFeaturesController::class, 'update'])
             ->name('teacher-features.update');
+        // نظام الدعم الفني
+        Route::get('/support-tickets', [\App\Http\Controllers\Admin\SupportTicketController::class, 'index'])->name('support-tickets.index');
+        Route::get('/support-tickets/{ticket}', [\App\Http\Controllers\Admin\SupportTicketController::class, 'show'])->name('support-tickets.show');
+        Route::post('/support-tickets/{ticket}/status', [\App\Http\Controllers\Admin\SupportTicketController::class, 'updateStatus'])->name('support-tickets.status');
+        Route::post('/support-tickets/{ticket}/reply', [\App\Http\Controllers\Admin\SupportTicketController::class, 'reply'])->name('support-tickets.reply');
+        // فرص الأكاديميات
+        Route::resource('academy-opportunities', \App\Http\Controllers\Admin\AcademyOpportunityController::class)->except(['show']);
+        Route::get('/academy-opportunities/{academy_opportunity}/applications', [\App\Http\Controllers\Admin\AcademyOpportunityController::class, 'applications'])->name('academy-opportunities.applications');
+        Route::post('/academy-opportunities/{academy_opportunity}/applications/{application}/status', [\App\Http\Controllers\Admin\AcademyOpportunityController::class, 'updateApplicationStatus'])->name('academy-opportunities.applications.status');
         // مكتبة المناهج التفاعلية (إدارة)
         Route::get('/curriculum-library', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
         Route::get('/curriculum-library/categories', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'categories'])->name('curriculum-library.categories');

@@ -27,14 +27,14 @@
     <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg">
         <div class="flex items-center gap-4">
             <a href="{{ route('instructor.live-sessions.index') }}" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                <span class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
+                <span class="w-10 h-10 rounded-xl bg-rose-500/20 dark:bg-rose-900/40 text-rose-400 flex items-center justify-center">
                     <i class="fas fa-broadcast-tower text-lg"></i>
                 </span>
                 <span class="font-bold text-white hidden sm:inline">MuallimX</span>
             </a>
             <span class="w-px h-6 bg-slate-600 hidden sm:block"></span>
             <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50"></span>
+                <span class="w-2.5 h-2.5 bg-red-600 dark:bg-red-700 rounded-full animate-pulse shadow-lg shadow-red-500/50"></span>
                 <span class="text-white font-semibold text-sm">{{ $liveSession->title }}</span>
                 <span class="text-slate-400 text-xs px-2 py-0.5 rounded-md bg-slate-700/80 font-mono hidden sm:inline">{{ $liveSession->room_name }}</span>
             </div>
@@ -47,7 +47,7 @@
             </button>
             <form method="POST" action="{{ route('instructor.live-sessions.end', $liveSession) }}" class="inline" onsubmit="return confirm('هل تريد إنهاء البث المباشر؟');">
                 @csrf
-                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-rose-500/20">
+                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold transition-colors shadow-lg shadow-rose-500/20">
                     <i class="fas fa-stop"></i> إنهاء البث
                 </button>
             </form>

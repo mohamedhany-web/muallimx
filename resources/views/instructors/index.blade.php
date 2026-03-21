@@ -103,7 +103,7 @@
                         تعرّف على
                         <span class="text-gradient">مدرّبينا</span>
                     </h2>
-                    <p class="text-lg text-slate-500 leading-relaxed">خبراء في مجالاتهم يشاركونك تجاربهم الحقيقية لمساعدتك على النجاح</p>
+                    <p class="text-lg text-slate-500 leading-relaxed">يتم ترتيب الظهور تلقائياً حسب مزايا الباقة التسويقية (الأولوية، الأيام المميزة، والمزايا المفعلة).</p>
                 </div>
 
                 @if($profiles->isNotEmpty())
@@ -139,6 +139,13 @@
                             <span class="absolute top-3 {{ $isRtl?'right':'left' }}-3 px-3 py-1.5 rounded-full bg-brand-500/90 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-lg backdrop-blur-sm">
                                 <i class="fas fa-book-open text-[9px]"></i>
                                 {{ $p->courses_count }} {{ $p->courses_count > 1 ? 'كورسات' : 'كورس' }}
+                            </span>
+                            @endif
+
+                            @if(!empty($p->marketing_featured_today))
+                            <span class="absolute top-3 {{ $isRtl?'left':'right' }}-3 px-3 py-1.5 rounded-full bg-amber-500/95 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-lg backdrop-blur-sm">
+                                <i class="fas fa-bolt text-[9px]"></i>
+                                Featured
                             </span>
                             @endif
 
@@ -205,6 +212,12 @@
                                 <div class="flex items-center gap-2 text-xs text-slate-400">
                                     <i class="fas fa-check-circle text-emerald-500"></i>
                                     <span class="font-medium">مدرّب معتمد</span>
+                                    @if(isset($p->marketing_priority_score))
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                                            <i class="fas fa-signal text-[10px]"></i>
+                                            {{ (int) $p->marketing_priority_score }}
+                                        </span>
+                                    @endif
                                 </div>
                                 <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-{{ $isRtl?'r':'l' }} from-brand-500 to-brand-600 text-white font-bold text-[12px] shadow-lg shadow-brand-600/20 group-hover:shadow-brand-600/40 group-hover:scale-105 transition-all duration-300">
                                     عرض الملف

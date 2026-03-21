@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\LiveRecording;
 use App\Models\LiveSession;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class LiveRecordingController extends Controller
 {
@@ -15,10 +17,24 @@ class LiveRecordingController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $enrolledCourseIds = \DB::table('online_enrollments')
-            ->where('user_id', $user->id)
-            ->where('is_active', true)
-            ->pluck('advanced_course_id');
+        $enrolledCourseIds = collect();
+        if (Schema::hasTable('student_course_enrollments')) {
+            $enrollQuery = DB::table('student_course_enrollments')
+                ->where('user_id', $user->id);
+
+            if (Schema::hasColumn('student_course_enrollments', 'status')) {
+                $enrollQuery->where('status', 'active');
+            }
+
+            $enrolledCourseIds = $enrollQuery->pluck('advanced_course_id');
+        } elseif (Schema::hasTable('online_enrollments')) {
+            $enrollQuery = DB::table('online_enrollments')
+                ->where('user_id', $user->id);
+            if (Schema::hasColumn('online_enrollments', 'is_active')) {
+                $enrollQuery->where('is_active', true);
+            }
+            $enrolledCourseIds = $enrollQuery->pluck('advanced_course_id');
+        }
 
         $sessionIds = LiveSession::where('status', 'ended')
             ->where(function ($q) use ($enrolledCourseIds) {

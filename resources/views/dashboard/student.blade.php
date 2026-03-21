@@ -84,6 +84,30 @@
         padding: 3px 10px; border-radius: 6px;
         font-size: 11px; font-weight: 600;
     }
+
+    /* وضع داكن — نفس منطق لوحة الإدارة / التخطيط العام (أنماط مخصصة كانت فاتحة فقط) */
+    .dark .course-row {
+        border-color: rgba(51, 65, 85, 0.5);
+    }
+    .dark .course-row:hover {
+        background: rgba(51, 65, 85, 0.45);
+        border-color: #475569;
+    }
+    .dark .mini-card {
+        background: rgba(30, 41, 59, 0.85) !important;
+        border-color: #475569 !important;
+        color: #e2e8f0;
+    }
+    .dark .mini-card:hover {
+        background: rgba(51, 65, 85, 0.55) !important;
+        border-color: #64748b !important;
+    }
+    .dark .progress-bar {
+        background: #334155;
+    }
+    .dark .progress-bar .fill {
+        background: linear-gradient(90deg, #06b6d4, #22d3ee);
+    }
 </style>
 @endpush
 
@@ -96,18 +120,18 @@
 
 <div class="space-y-6">
     {{-- ترحيب --}}
-    <div class="rounded-2xl bg-white border border-slate-200/80 overflow-hidden">
-        <div class="bg-gradient-to-l from-brand-50 via-white to-white p-5 sm:p-6">
+    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200/80 dark:border-slate-700 overflow-hidden">
+        <div class="bg-gradient-to-l from-brand-50 via-white to-white dark:from-slate-800/80 dark:via-slate-800/90 dark:to-slate-900/90 p-5 sm:p-6">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
                 <div class="flex-1 min-w-0">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-brand-50 text-brand-700 text-xs font-bold mb-3 border border-brand-100">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-xs font-bold mb-3 border border-brand-100 dark:border-brand-800/50">
                         <i class="fas fa-chart-line text-[10px]"></i>
                         {{ __('student.your_dashboard') }}
                     </span>
-                    <h1 class="font-heading text-2xl sm:text-3xl font-black text-slate-800 mb-1 leading-tight">
+                    <h1 class="font-heading text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 mb-1 leading-tight">
                         {{ __('student.welcome_name', ['name' => auth()->user()->name]) }}
                     </h1>
-                    <p class="text-slate-500 text-sm max-w-lg">{{ __('student.dashboard_subtitle') }}</p>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm max-w-lg">{{ __('student.dashboard_subtitle') }}</p>
                 </div>
                 <div class="flex items-center gap-4 flex-shrink-0">
                     <div class="relative flex items-center justify-center">
@@ -118,16 +142,16 @@
                                     <stop offset="100%" stop-color="#0891b2"/>
                                 </linearGradient>
                             </defs>
-                            <circle cx="48" cy="48" r="40" fill="none" stroke="#e2e8f0" stroke-width="5"/>
+                            <circle cx="48" cy="48" r="40" fill="none" class="stroke-slate-200 dark:stroke-slate-600" stroke-width="5"/>
                             <circle cx="48" cy="48" r="40" fill="none" stroke="url(#pg)" stroke-width="5" stroke-linecap="round"
                                 stroke-dasharray="{{ $circumference }}" stroke-dashoffset="{{ $strokeDashoffset }}"
                                 style="transition: stroke-dashoffset 0.8s ease"/>
                         </svg>
-                        <span class="absolute inset-0 flex items-center justify-center font-heading text-lg font-black text-brand-700">{{ $progress }}%</span>
+                        <span class="absolute inset-0 flex items-center justify-center font-heading text-lg font-black text-brand-700 dark:text-brand-300">{{ $progress }}%</span>
                     </div>
                     <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold text-slate-700">{{ __('student.total_progress') }}</p>
-                        <p class="text-[11px] text-slate-500 mt-0.5">{{ __('student.from_course_completion') }}</p>
+                        <p class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ __('student.total_progress') }}</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ __('student.from_course_completion') }}</p>
                     </div>
                 </div>
             </div>
@@ -193,15 +217,15 @@
 
     @if(isset($activeSubscription) && $activeSubscription)
     {{-- بطاقة الاشتراك الحالي --}}
-    <div class="rounded-2xl bg-white border border-slate-200/80 overflow-hidden">
-        <div class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-l from-sky-50/80 to-white border-b border-slate-100">
+    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200/80 dark:border-slate-700 overflow-hidden">
+        <div class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-l from-sky-50/80 to-white dark:from-slate-800/90 dark:to-slate-900/90 border-b border-slate-100 dark:border-slate-700">
             <div class="flex items-center gap-3">
-                <span class="w-10 h-10 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center">
+                <span class="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 flex items-center justify-center">
                     <i class="fas fa-layer-group"></i>
                 </span>
                 <div>
-                    <h2 class="font-bold text-slate-800">{{ $activeSubscription->plan_name }}</h2>
-                    <p class="text-xs text-slate-500">مدة الباقة: {{ \App\Models\Subscription::getDurationLabel($activeSubscription->billing_cycle) }} · ينتهي في {{ $activeSubscription->end_date?->format('Y-m-d') }}</p>
+                    <h2 class="font-bold text-slate-800 dark:text-slate-100">{{ $activeSubscription->plan_name }}</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">مدة الباقة: {{ \App\Models\Subscription::getDurationLabel($activeSubscription->billing_cycle) }} · ينتهي في {{ $activeSubscription->end_date?->format('Y-m-d') }}</p>
                 </div>
             </div>
             <a href="{{ route('student.my-subscription') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-semibold hover:bg-sky-700 transition-colors">
@@ -251,11 +275,11 @@
                         </a>
                     @empty
                         <div class="text-center py-12">
-                            <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-book-open text-2xl text-slate-300"></i>
+                            <div class="w-16 h-16 bg-slate-100 dark:bg-slate-700/80 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-book-open text-2xl text-slate-300 dark:text-slate-500"></i>
                             </div>
-                            <p class="font-heading font-bold text-slate-700 mb-1">{{ __('student.no_active_courses') }}</p>
-                            <p class="text-sm text-slate-500 mb-5">{{ __('student.start_journey_now') }}</p>
+                            <p class="font-heading font-bold text-slate-700 dark:text-slate-200 mb-1">{{ __('student.no_active_courses') }}</p>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">{{ __('student.start_journey_now') }}</p>
                             <a href="{{ route('academic-years') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-500/25 hover:shadow-xl transition-all">
                                 <i class="fas fa-search text-xs"></i>
                                 {{ __('student.explore_courses') }}

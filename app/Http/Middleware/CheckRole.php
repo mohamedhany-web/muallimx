@@ -54,7 +54,8 @@ class CheckRole
         // دعم الأدوار القديمة والجديدة
         $roleMapping = [
             'admin' => 'super_admin',
-            'teacher' => 'instructor',
+            // «معلم» في الواجهة = طالب — لا يُعاد توجيهه كمدرب
+            'teacher' => 'student',
         ];
 
         if (isset($roleMapping[$userRole])) {

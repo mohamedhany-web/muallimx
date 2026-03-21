@@ -31,6 +31,13 @@ class TeacherFeaturesController extends Controller
             'plans.*.billing_cycle' => 'nullable|string|in:monthly,quarterly,yearly',
             'plans.*.features' => 'nullable|array',
             'plans.*.features.*' => 'nullable|string|max:100',
+            'plans.*.limits.classroom_meetings_per_month' => 'nullable|integer|min:0|max:10000',
+            'plans.*.limits.classroom_max_participants' => 'nullable|integer|min:1|max:1000',
+            'plans.*.limits.classroom_default_duration_minutes' => 'nullable|integer|min:15|max:1440',
+            'plans.*.limits.classroom_max_duration_minutes' => 'nullable|integer|min:30|max:1440',
+            'plans.*.limits.personal_marketing_profile_sections' => 'nullable|integer|min:1|max:20',
+            'plans.*.limits.personal_marketing_priority_score' => 'nullable|integer|min:0|max:100',
+            'plans.*.limits.personal_marketing_monthly_featured_days' => 'nullable|integer|min:0|max:31',
         ]);
 
         $plans = $validated['plans'];
@@ -44,6 +51,20 @@ class TeacherFeaturesController extends Controller
             $plans[$key]['features'] = isset($plans[$key]['features']) && is_array($plans[$key]['features'])
                 ? array_values(array_filter($plans[$key]['features']))
                 : [];
+            $defaults = $this->defaultSettings()[$key]['limits'] ?? [];
+            $limits = $plans[$key]['limits'] ?? [];
+            $plans[$key]['limits'] = [
+                'classroom_meetings_per_month' => (int) ($limits['classroom_meetings_per_month'] ?? ($defaults['classroom_meetings_per_month'] ?? 0)),
+                'classroom_max_participants' => (int) ($limits['classroom_max_participants'] ?? ($defaults['classroom_max_participants'] ?? 25)),
+                'classroom_default_duration_minutes' => (int) ($limits['classroom_default_duration_minutes'] ?? ($defaults['classroom_default_duration_minutes'] ?? 60)),
+                'classroom_max_duration_minutes' => (int) ($limits['classroom_max_duration_minutes'] ?? ($defaults['classroom_max_duration_minutes'] ?? 120)),
+                'personal_marketing_profile_sections' => (int) ($limits['personal_marketing_profile_sections'] ?? ($defaults['personal_marketing_profile_sections'] ?? 5)),
+                'personal_marketing_priority_score' => (int) ($limits['personal_marketing_priority_score'] ?? ($defaults['personal_marketing_priority_score'] ?? 0)),
+                'personal_marketing_monthly_featured_days' => (int) ($limits['personal_marketing_monthly_featured_days'] ?? ($defaults['personal_marketing_monthly_featured_days'] ?? 0)),
+            ];
+            if ($plans[$key]['limits']['classroom_default_duration_minutes'] > $plans[$key]['limits']['classroom_max_duration_minutes']) {
+                $plans[$key]['limits']['classroom_default_duration_minutes'] = $plans[$key]['limits']['classroom_max_duration_minutes'];
+            }
         }
 
         $now = now();
@@ -63,6 +84,7 @@ class TeacherFeaturesController extends Controller
         }
 
         Cache::forget($this->cacheKey);
+        Cache::forget('teacher_features_settings_limits');
 
         return back()->with('success', 'تم تحديث مزايا باقات المعلمين بنجاح.');
     }
@@ -104,6 +126,15 @@ class TeacherFeaturesController extends Controller
                     'zoom_access',
                     'support',
                 ],
+                'limits' => [
+                    'classroom_meetings_per_month' => 8,
+                    'classroom_max_participants' => 25,
+                    'classroom_default_duration_minutes' => 60,
+                    'classroom_max_duration_minutes' => 120,
+                    'personal_marketing_profile_sections' => 5,
+                    'personal_marketing_priority_score' => 10,
+                    'personal_marketing_monthly_featured_days' => 0,
+                ],
             ],
             'teacher_pro' => [
                 'label' => 'باقة المعلم المحترف',
@@ -119,6 +150,15 @@ class TeacherFeaturesController extends Controller
                     'visible_to_academies',
                     'can_apply_opportunities',
                     'full_ai_suite',
+                ],
+                'limits' => [
+                    'classroom_meetings_per_month' => 30,
+                    'classroom_max_participants' => 60,
+                    'classroom_default_duration_minutes' => 90,
+                    'classroom_max_duration_minutes' => 240,
+                    'personal_marketing_profile_sections' => 8,
+                    'personal_marketing_priority_score' => 50,
+                    'personal_marketing_monthly_featured_days' => 4,
                 ],
             ],
             'teacher_premium' => [
@@ -139,6 +179,15 @@ class TeacherFeaturesController extends Controller
                     'recommended_to_academies',
                     'priority_opportunities',
                     'direct_support',
+                ],
+                'limits' => [
+                    'classroom_meetings_per_month' => 9999,
+                    'classroom_max_participants' => 150,
+                    'classroom_default_duration_minutes' => 120,
+                    'classroom_max_duration_minutes' => 480,
+                    'personal_marketing_profile_sections' => 12,
+                    'personal_marketing_priority_score' => 90,
+                    'personal_marketing_monthly_featured_days' => 12,
                 ],
             ],
         ];

@@ -1,0 +1,53 @@
+@extends('layouts.admin')
+
+@section('title', 'تذكرة دعم')
+@section('header', 'تذكرة دعم')
+
+@section('content')
+<div class="space-y-6">
+    @if(session('success'))
+        <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 text-sm font-medium">{{ session('success') }}</div>
+    @endif
+
+    <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+                <h1 class="text-xl font-bold text-slate-900">{{ $ticket->subject }}</h1>
+                <p class="text-xs text-slate-500 mt-1">العميل: {{ $ticket->user->name ?? '—' }} | الحالة: {{ $ticket->status }} | الأولوية: {{ $ticket->priority }}</p>
+            </div>
+            <form method="POST" action="{{ route('admin.support-tickets.status', $ticket) }}" class="flex items-center gap-2">
+                @csrf
+                <select name="status" class="px-3 py-2 rounded-lg border border-slate-200 text-sm">
+                    @foreach(['open','in_progress','resolved','closed'] as $s)
+                        <option value="{{ $s }}" {{ $ticket->status === $s ? 'selected' : '' }}>{{ $s }}</option>
+                    @endforeach
+                </select>
+                <button class="px-4 py-2 rounded-lg bg-slate-800 text-white text-sm font-semibold">حفظ الحالة</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-3">
+        @foreach($ticket->replies as $reply)
+            <div class="rounded-xl p-3 {{ $reply->sender_type === 'admin' ? 'bg-emerald-50 border border-emerald-200' : 'bg-slate-50 border border-slate-200' }}">
+                <div class="flex items-center justify-between mb-1">
+                    <p class="text-xs font-semibold text-slate-700">{{ $reply->sender_type === 'admin' ? 'الإدارة' : ($reply->user->name ?? 'العميل') }}</p>
+                    <p class="text-[11px] text-slate-500">{{ $reply->created_at->format('Y-m-d H:i') }}</p>
+                </div>
+                <p class="text-sm text-slate-700 whitespace-pre-line">{{ $reply->message }}</p>
+            </div>
+        @endforeach
+    </div>
+
+    <form method="POST" action="{{ route('admin.support-tickets.reply', $ticket) }}" class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-3">
+        @csrf
+        <label class="block text-sm font-semibold text-slate-700">رد فريق الدعم</label>
+        <textarea name="message" rows="4" class="w-full px-3 py-2 rounded-lg border border-slate-200">{{ old('message') }}</textarea>
+        @error('message')<p class="text-xs text-rose-600">{{ $message }}</p>@enderror
+        <div class="text-left">
+            <button class="px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-semibold">إرسال الرد</button>
+        </div>
+    </form>
+</div>
+@endsection
+

@@ -36,6 +36,119 @@
             <li class="sidebar-section-label">أقسام حسب الوظيفة</li>
 
             
+            <?php
+                $studentControlOpen = request()->routeIs('admin.students-accounts.*')
+                    || request()->routeIs('admin.users.*')
+                    || request()->routeIs('admin.students-control.*')
+                    || request()->routeIs('admin.online-enrollments.*')
+                    || request()->routeIs('admin.subscriptions.*')
+                    || request()->routeIs('admin.teacher-features.*')
+                    || request()->routeIs('admin.support-tickets.*')
+                    || request()->routeIs('admin.curriculum-library.*')
+                    || request()->routeIs('admin.quality-control.students')
+                    || request()->routeIs('admin.reports.users');
+            ?>
+            <li x-data="{ open: <?php echo e($studentControlOpen ? 'true' : 'false'); ?> }">
+                <button @click="open = !open" class="sidebar-group-btn">
+                    <span class="flex items-center gap-3">
+                        <i class="fas fa-user-shield w-5 text-center text-indigo-400"></i>
+                        <span>التحكم الشامل بالطلاب والخدمات المدفوعة</span>
+                    </span>
+                    <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+                <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
+                    <li>
+                        <a href="<?php echo e(route('admin.students-accounts.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.students-accounts.*') ? 'active' : ''); ?>">
+                            <i class="fas fa-users"></i><span>إدارة الطلاب والحسابات</span>
+                            <?php
+                                try {
+                                    $studentsCount = \App\Models\User::where('role', 'student')->count();
+                                } catch (\Exception $e) {
+                                    $studentsCount = 0;
+                                }
+                            ?>
+                            <?php if($studentsCount > 0): ?>
+                                <span class="sidebar-badge bg-indigo-500 text-white"><?php echo e($studentsCount); ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <?php if(Route::has('admin.online-enrollments.index')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.online-enrollments.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.online-enrollments.*') ? 'active' : ''); ?>">
+                            <i class="fas fa-user-graduate"></i><span>تسجيلات الطلاب</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.subscriptions.index')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.subscriptions.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.subscriptions.*') ? 'active' : ''); ?>">
+                            <i class="fas fa-calendar-check"></i><span>اشتراكات الخدمات المدفوعة</span>
+                            <?php
+                                try {
+                                    $activeSubsCount = \App\Models\Subscription::where('status', 'active')->count();
+                                } catch (\Exception $e) {
+                                    $activeSubsCount = 0;
+                                }
+                            ?>
+                            <?php if($activeSubsCount > 0): ?>
+                                <span class="sidebar-badge bg-emerald-500 text-white"><?php echo e($activeSubsCount); ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.teacher-features.index')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.teacher-features.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.teacher-features.*') ? 'active' : ''); ?>">
+                            <i class="fas fa-chalkboard-teacher"></i><span>مزايا اشتراك المعلمين</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.support-tickets.index')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.support-tickets.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.support-tickets.*') ? 'active' : ''); ?>">
+                            <i class="fas fa-headset"></i><span>الدعم الفني (التذاكر)</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.curriculum-library.index')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.curriculum-library.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.curriculum-library.*') ? 'active' : ''); ?>">
+                            <i class="fas fa-book-open"></i><span>مكتبة المناهج (المدفوع)</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.quality-control.students')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.quality-control.students')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.quality-control.students') ? 'active' : ''); ?>">
+                            <i class="fas fa-shield-alt"></i><span>مراقبة شاملة على الطلاب</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.reports.users')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.reports.users')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.reports.users') ? 'active' : ''); ?>">
+                            <i class="fas fa-chart-bar"></i><span>تقارير الطلاب والاشتراكات</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.students-control.paid-features')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.students-control.paid-features')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.students-control.paid-features*') ? 'active' : ''); ?>">
+                            <i class="fas fa-layer-group"></i><span>إدارة المزايا المدفوعة</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.students-control.consumption')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.students-control.consumption')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.students-control.consumption') ? 'active' : ''); ?>">
+                            <i class="fas fa-chart-pie"></i><span>استهلاك المستخدمين</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                </ul>
+            </li>
+
+            
             <?php $salesSectionOpen = request()->routeIs('admin.orders.*') || request()->routeIs('admin.coupons.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.referral-programs.*'); ?>
             <li x-data="{ open: <?php echo e($salesSectionOpen ? 'true' : 'false'); ?> }">
                 <button @click="open = !open" class="sidebar-group-btn">

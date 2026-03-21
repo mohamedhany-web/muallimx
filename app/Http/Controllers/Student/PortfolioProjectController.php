@@ -7,6 +7,7 @@ use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
 use App\Models\PortfolioProject;
 use App\Models\PortfolioProjectImage;
+use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -15,8 +16,46 @@ class PortfolioProjectController extends Controller
 {
     public function index()
     {
-        $projects = auth()->user()->portfolioProjects()->with(['academicYear', 'advancedCourse'])->latest()->paginate(10);
-        return view('student.portfolio.index', compact('projects'));
+        $user = auth()->user();
+        $projects = $user->portfolioProjects()->with(['academicYear', 'advancedCourse'])->latest()->paginate(10);
+        $subscription = $user->activeSubscription();
+        $limits = SubscriptionLimitService::limitsForUser($user);
+        $features = is_array($subscription?->features) ? $subscription->features : [];
+
+        $marketingCapabilities = [
+            [
+                'key' => 'teacher_profile',
+                'label' => 'ملف تعريفي احترافي للمعلم',
+                'active' => in_array('teacher_profile', $features, true),
+            ],
+            [
+                'key' => 'visible_to_academies',
+                'label' => 'الظهور للأكاديميات داخل المنصة',
+                'active' => in_array('visible_to_academies', $features, true),
+            ],
+            [
+                'key' => 'can_apply_opportunities',
+                'label' => 'التقديم على فرص التدريس',
+                'active' => in_array('can_apply_opportunities', $features, true),
+            ],
+            [
+                'key' => 'recommended_to_academies',
+                'label' => 'ترشيح للأكاديميات المناسبة',
+                'active' => in_array('recommended_to_academies', $features, true),
+            ],
+            [
+                'key' => 'priority_opportunities',
+                'label' => 'أولوية في فرص التدريس',
+                'active' => in_array('priority_opportunities', $features, true),
+            ],
+            [
+                'key' => 'direct_support',
+                'label' => 'دعم مباشر لملفك التسويقي',
+                'active' => in_array('direct_support', $features, true),
+            ],
+        ];
+
+        return view('student.portfolio.index', compact('projects', 'subscription', 'limits', 'marketingCapabilities'));
     }
 
     public function create()

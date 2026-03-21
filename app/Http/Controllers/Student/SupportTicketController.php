@@ -1,0 +1,92 @@
+<?php
+
+namespace App\Http\Controllers\Student;
+
+use App\Http\Controllers\Controller;
+use App\Models\SupportTicket;
+use App\Models\SupportTicketReply;
+use Illuminate\Http\Request;
+
+class SupportTicketController extends Controller
+{
+    public function index()
+    {
+        $user = auth()->user();
+        abort_unless($user->hasSubscriptionFeature('support'), 403, 'خدمة الدعم الفني غير متاحة في باقتك الحالية.');
+
+        $tickets = SupportTicket::query()
+            ->where('user_id', $user->id)
+            ->latest()
+            ->paginate(12);
+
+        return view('student.support.index', compact('tickets'));
+    }
+
+    public function store(Request $request)
+    {
+        $user = auth()->user();
+        abort_unless($user->hasSubscriptionFeature('support'), 403, 'خدمة الدعم الفني غير متاحة في باقتك الحالية.');
+
+        $data = $request->validate([
+            'subject' => ['required', 'string', 'max:180'],
+            'priority' => ['required', 'in:low,normal,high,urgent'],
+            'message' => ['required', 'string', 'min:10', 'max:5000'],
+        ]);
+
+        $ticket = SupportTicket::create([
+            'user_id' => $user->id,
+            'subject' => $data['subject'],
+            'priority' => $data['priority'],
+            'status' => 'open',
+            'message' => $data['message'],
+            'last_reply_at' => now(),
+        ]);
+
+        SupportTicketReply::create([
+            'support_ticket_id' => $ticket->id,
+            'user_id' => $user->id,
+            'sender_type' => 'student',
+            'message' => $data['message'],
+        ]);
+
+        return redirect()->route('student.support.show', $ticket)->with('success', 'تم إنشاء تذكرة الدعم بنجاح.');
+    }
+
+    public function show(SupportTicket $ticket)
+    {
+        $user = auth()->user();
+        abort_unless((int) $ticket->user_id === (int) $user->id, 403);
+        abort_unless($user->hasSubscriptionFeature('support'), 403, 'خدمة الدعم الفني غير متاحة في باقتك الحالية.');
+
+        $ticket->load(['replies.user']);
+
+        return view('student.support.show', compact('ticket'));
+    }
+
+    public function reply(Request $request, SupportTicket $ticket)
+    {
+        $user = auth()->user();
+        abort_unless((int) $ticket->user_id === (int) $user->id, 403);
+        abort_unless($user->hasSubscriptionFeature('support'), 403, 'خدمة الدعم الفني غير متاحة في باقتك الحالية.');
+        abort_if(in_array($ticket->status, ['resolved', 'closed'], true), 422, 'هذه التذكرة مغلقة ولا يمكن الرد عليها.');
+
+        $data = $request->validate([
+            'message' => ['required', 'string', 'min:2', 'max:5000'],
+        ]);
+
+        SupportTicketReply::create([
+            'support_ticket_id' => $ticket->id,
+            'user_id' => $user->id,
+            'sender_type' => 'student',
+            'message' => $data['message'],
+        ]);
+
+        $ticket->update([
+            'status' => 'open',
+            'last_reply_at' => now(),
+        ]);
+
+        return back()->with('success', 'تم إرسال ردك لفريق الدعم.');
+    }
+}
+

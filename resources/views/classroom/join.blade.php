@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>انضم إلى MuallimX Classroom — {{ $code }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,6 +33,7 @@
                 <p class="text-slate-300 text-sm mb-4 text-center">{{ $meeting->title }}</p>
             @endif
             <p class="text-slate-400 text-xs mb-4 text-center">كود الغرفة: <span class="font-mono font-bold text-cyan-400 text-lg">{{ $code }}</span></p>
+            <p class="text-slate-400 text-xs mb-4 text-center">الحد الأقصى للمشاركين: <span class="font-bold text-amber-300">{{ $maxParticipants }}</span></p>
             <div class="space-y-3">
                 <label class="block text-sm font-medium text-slate-300">اسمك (يظهر للمشاركين)</label>
                 <input type="text" id="guest-name" placeholder="أدخل اسمك" value="" class="w-full px-4 py-3 rounded-xl bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
@@ -73,10 +75,43 @@
     <script>
         const domain = '{{ $jitsiDomain }}';
         const roomName = '{{ $roomName }}';
+        const code = '{{ $code }}';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         let api = null;
+        let joinToken = null;
+        let heartbeatTimer = null;
 
-        document.getElementById('btn-join').addEventListener('click', function() {
+        document.getElementById('btn-join').addEventListener('click', async function() {
             const name = document.getElementById('guest-name').value.trim() || 'ضيف';
+            const btn = document.getElementById('btn-join');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري التحقق...';
+
+            try {
+                const enterResp = await fetch(`/classroom/join/${code}/enter`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ display_name: name })
+                });
+                const enterData = await enterResp.json();
+                if (!enterResp.ok || !enterData.ok) {
+                    alert(enterData.message || 'لا يمكن الانضمام الآن.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-video ml-2"></i> انضم الآن';
+                    return;
+                }
+                joinToken = enterData.token;
+            } catch (e) {
+                alert('تعذر الاتصال بالخادم. حاول مرة أخرى.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-video ml-2"></i> انضم الآن';
+                return;
+            }
+
             document.getElementById('join-screen').classList.add('hidden');
             document.getElementById('meeting-screen').classList.remove('hidden');
 
@@ -116,13 +151,51 @@
                 }
             };
             api = new JitsiMeetExternalAPI(domain, options);
+            heartbeatTimer = setInterval(async function() {
+                if (!joinToken) return;
+                try {
+                    await fetch(`/classroom/join/${code}/heartbeat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ token: joinToken })
+                    });
+                } catch (e) {}
+            }, 30000);
+
             api.addEventListener('readyToClose', function() {
-                window.location.reload();
+                leaveMeetingAndReload();
             });
 
             document.getElementById('btn-leave').onclick = function() {
                 if (api) api.executeCommand('hangup');
             };
+        });
+
+        async function leaveMeetingAndReload() {
+            if (heartbeatTimer) clearInterval(heartbeatTimer);
+            if (joinToken) {
+                try {
+                    await fetch(`/classroom/join/${code}/leave`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ token: joinToken, _token: csrfToken })
+                    });
+                } catch (e) {}
+            }
+            window.location.reload();
+        }
+
+        window.addEventListener('beforeunload', function() {
+            if (!joinToken) return;
+            navigator.sendBeacon(`/classroom/join/${code}/leave`, new Blob([JSON.stringify({ token: joinToken, _token: csrfToken })], { type: 'application/json' }));
         });
     </script>
 </body>

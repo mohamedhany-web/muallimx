@@ -3,22 +3,15 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\InstructorProfile;
 use App\Models\User;
+use App\Models\InstructorProfile;
+use App\Services\InstructorMarketingRankingService;
 
 class InstructorController extends Controller
 {
     public function index()
     {
-        $profiles = InstructorProfile::approved()
-            ->with('user')
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        $profiles->each(function ($profile) {
-            $profile->courses_count = \App\Models\AdvancedCourse::where('instructor_id', $profile->user_id)
-                ->where('is_active', true)->count();
-        });
+        $profiles = InstructorMarketingRankingService::rankApprovedProfiles();
 
         return view('instructors.index', compact('profiles'));
     }

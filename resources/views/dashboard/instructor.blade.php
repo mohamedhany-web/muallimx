@@ -156,7 +156,7 @@
                 {{ __('instructor.assignments') }}
                 @if($stats['pending_submissions'] > 0)
                     <span class="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-normal">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-600 animate-pulse"></span>
                         {{ $stats['pending_submissions'] }} {{ __('instructor.need_grading') }}
                     </span>
                 @endif

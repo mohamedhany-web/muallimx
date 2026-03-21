@@ -11,6 +11,11 @@
         border-radius: 12px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
+    .dark .info-card {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
 </style>
 @endpush
 
