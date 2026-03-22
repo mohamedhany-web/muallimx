@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\LiveSetting;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,18 +22,23 @@ class SecurityHeadersMiddleware
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('X-XSS-Protection', '1; mode=block');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+        // لا تضبط microphone=/camera=() — ذلك يمنع المتصفح من منح الإذن حتى داخل iframe جيتسي (يظهر خطأ Jitsi «Error obtaining microphone permission»).
+        $response->headers->set('Permissions-Policy', 'geolocation=()');
         
         // Content Security Policy - محسّن للواجهة الأمامية
         // تعطيل CSP مؤقتاً في بيئة التطوير لتجنب مشاكل الواجهة
         if (!config('app.debug') || !env('DISABLE_CSP', true)) {
+            $jitsiDomain = LiveSetting::getJitsiDomain();
+            $jitsiOrigin = $jitsiDomain !== '' ? ' https://' . $jitsiDomain : '';
+
             $csp = "default-src 'self'; " .
                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' " .
                    "https://cdn.tailwindcss.com " .
                    "https://cdn.jsdelivr.net " .
                    "https://cdnjs.cloudflare.com " .
                    "https://unpkg.com " .
-                   "https://fonts.googleapis.com; " .
+                   "https://fonts.googleapis.com" .
+                   $jitsiOrigin . "; " .
                    "style-src 'self' 'unsafe-inline' " .
                    "https://fonts.googleapis.com " .
                    "https://cdnjs.cloudflare.com " .
@@ -47,7 +53,8 @@ class SecurityHeadersMiddleware
                    "frame-src 'self' " .
                    "https://www.youtube.com " .
                    "https://player.vimeo.com " .
-                   "https://www.google.com; " .
+                   "https://www.google.com" .
+                   $jitsiOrigin . "; " .
                    "object-src 'none'; " .
                    "base-uri 'self'; " .
                    "form-action 'self'; " .
