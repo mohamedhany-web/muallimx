@@ -10,6 +10,7 @@ class ClassroomMeeting extends Model
 {
     protected $fillable = [
         'user_id',
+        'consultation_request_id',
         'code',
         'room_name',
         'title',
@@ -33,6 +34,11 @@ class ClassroomMeeting extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function consultationRequest(): BelongsTo
+    {
+        return $this->belongsTo(ConsultationRequest::class, 'consultation_request_id');
     }
 
     public function participants()

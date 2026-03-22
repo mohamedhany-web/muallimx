@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\InstructorProfile;
+use App\Models\ConsultationSetting;
 use App\Services\InstructorMarketingRankingService;
 
 class InstructorController extends Controller
@@ -12,8 +13,9 @@ class InstructorController extends Controller
     public function index()
     {
         $profiles = InstructorMarketingRankingService::rankApprovedProfiles();
+        $consultationSetting = ConsultationSetting::current();
 
-        return view('instructors.index', compact('profiles'));
+        return view('instructors.index', compact('profiles', 'consultationSetting'));
     }
 
     public function show(User $instructor)
@@ -27,6 +29,8 @@ class InstructorController extends Controller
             ->withCount('lessons')
             ->orderBy('is_featured', 'desc')
             ->get();
-        return view('instructors.show', compact('profile', 'courses'));
+        $consultationSetting = ConsultationSetting::current();
+
+        return view('instructors.show', compact('profile', 'courses', 'consultationSetting'));
     }
 }

@@ -138,6 +138,27 @@
                         </div>
 
                         {{-- Social links --}}
+                        @if(isset($consultationSetting) && $consultationSetting->is_active)
+                        <div class="flex flex-wrap items-center gap-3 mb-6">
+                            <span class="text-sm text-white/80">استشارة خاصة — <strong class="text-white">{{ number_format($profile->effectiveConsultationPriceEgp(), 2) }}</strong> ج.م</span>
+                            @auth
+                                @if(auth()->user()->isStudent())
+                                    <a href="{{ route('consultations.create', $profile->user) }}"
+                                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-bold shadow-lg shadow-emerald-500/30 transition-all">
+                                        <i class="fas fa-comments"></i>
+                                        طلب استشارة
+                                    </a>
+                                @endif
+                            @else
+                                <a href="{{ route('login', ['redirect' => route('consultations.create', $profile->user)]) }}"
+                                   class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-bold shadow-lg shadow-emerald-500/30 transition-all">
+                                    <i class="fas fa-comments"></i>
+                                    طلب استشارة
+                                </a>
+                            @endauth
+                        </div>
+                        @endif
+
                         @if($hasSocials)
                         <div class="flex flex-wrap gap-2.5">
                             @if(!empty($socials['linkedin']))

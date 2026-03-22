@@ -130,6 +130,39 @@
                                 </div>
                             </div>
 
+                            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+                                <p class="text-xs font-bold text-slate-700 mb-2">إعدادات التسويق الشخصي للمعلم</p>
+                                <div class="grid grid-cols-1 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">عدد أقسام الملف التسويقي المفعلة</label>
+                                        <input type="number"
+                                               min="1"
+                                               max="20"
+                                               name="plans[<?php echo e($key); ?>][limits][personal_marketing_profile_sections]"
+                                               value="<?php echo e(old('plans.' . $key . '.limits.personal_marketing_profile_sections', $plan['limits']['personal_marketing_profile_sections'] ?? 5)); ?>"
+                                               class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">درجة أولوية الظهور (0 - 100)</label>
+                                        <input type="number"
+                                               min="0"
+                                               max="100"
+                                               name="plans[<?php echo e($key); ?>][limits][personal_marketing_priority_score]"
+                                               value="<?php echo e(old('plans.' . $key . '.limits.personal_marketing_priority_score', $plan['limits']['personal_marketing_priority_score'] ?? 0)); ?>"
+                                               class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">أيام إبراز الملف شهرياً</label>
+                                        <input type="number"
+                                               min="0"
+                                               max="31"
+                                               name="plans[<?php echo e($key); ?>][limits][personal_marketing_monthly_featured_days]"
+                                               value="<?php echo e(old('plans.' . $key . '.limits.personal_marketing_monthly_featured_days', $plan['limits']['personal_marketing_monthly_featured_days'] ?? 0)); ?>"
+                                               class="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="border-t border-slate-200 pt-3 mt-auto">
                                 <p class="text-xs font-semibold text-slate-700 mb-2">المزايا المرتبطة بهذه الخطة</p>
                                 <?php $planFeatures = $plan['features'] ?? []; ?>

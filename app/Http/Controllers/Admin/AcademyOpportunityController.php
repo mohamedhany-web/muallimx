@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademyOpportunityApplication;
+use App\Models\HiringAcademy;
 use App\Models\Notification;
 use App\Models\AcademyOpportunity;
 use App\Models\InstructorProfile;
@@ -16,7 +17,8 @@ class AcademyOpportunityController extends Controller
     public function index()
     {
         $opportunities = AcademyOpportunity::query()
-            ->withCount('applications')
+            ->with(['hiringAcademy'])
+            ->withCount(['applications', 'teacherPresentations'])
             ->latest()
             ->paginate(20);
 
@@ -25,12 +27,15 @@ class AcademyOpportunityController extends Controller
 
     public function create()
     {
-        return view('admin.academy-opportunities.create');
+        $hiringAcademies = HiringAcademy::query()->where('status', '!=', HiringAcademy::STATUS_SUSPENDED)->orderBy('name')->get();
+
+        return view('admin.academy-opportunities.create', compact('hiringAcademies'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
+            'hiring_academy_id' => ['nullable', 'exists:hiring_academies,id'],
             'organization_name' => ['required', 'string', 'max:150'],
             'title' => ['required', 'string', 'max:180'],
             'specialization' => ['nullable', 'string', 'max:120'],
@@ -44,6 +49,8 @@ class AcademyOpportunityController extends Controller
 
         $data['is_featured'] = (bool) ($data['is_featured'] ?? false);
         $data['created_by'] = auth()->id();
+        $data['hiring_academy_id'] = $data['hiring_academy_id'] ?: null;
+        $this->syncOrganizationFromAcademy($data);
         AcademyOpportunity::create($data);
 
         return redirect()->route('admin.academy-opportunities.index')->with('success', 'تم إنشاء الفرصة بنجاح.');
@@ -51,12 +58,15 @@ class AcademyOpportunityController extends Controller
 
     public function edit(AcademyOpportunity $academy_opportunity)
     {
-        return view('admin.academy-opportunities.edit', ['opportunity' => $academy_opportunity]);
+        $hiringAcademies = HiringAcademy::query()->where('status', '!=', HiringAcademy::STATUS_SUSPENDED)->orderBy('name')->get();
+
+        return view('admin.academy-opportunities.edit', ['opportunity' => $academy_opportunity, 'hiringAcademies' => $hiringAcademies]);
     }
 
     public function update(Request $request, AcademyOpportunity $academy_opportunity)
     {
         $data = $request->validate([
+            'hiring_academy_id' => ['nullable', 'exists:hiring_academies,id'],
             'organization_name' => ['required', 'string', 'max:150'],
             'title' => ['required', 'string', 'max:180'],
             'specialization' => ['nullable', 'string', 'max:120'],
@@ -69,6 +79,8 @@ class AcademyOpportunityController extends Controller
         ]);
 
         $data['is_featured'] = (bool) ($data['is_featured'] ?? false);
+        $data['hiring_academy_id'] = $data['hiring_academy_id'] ?: null;
+        $this->syncOrganizationFromAcademy($data);
         $academy_opportunity->update($data);
 
         return redirect()->route('admin.academy-opportunities.index')->with('success', 'تم تحديث الفرصة بنجاح.');
@@ -174,6 +186,20 @@ class AcademyOpportunityController extends Controller
         ]);
 
         return back()->with('success', 'تم تحديث حالة الطلب وإرسال إشعار للمعلم.');
+    }
+
+    /**
+     * عند ربط فرصة بأكاديمية مسجلة، يمكن توحيد اسم الجهة الظاهر تلقائياً.
+     */
+    private function syncOrganizationFromAcademy(array &$data): void
+    {
+        if (empty($data['hiring_academy_id'])) {
+            return;
+        }
+        $academy = HiringAcademy::find($data['hiring_academy_id']);
+        if ($academy) {
+            $data['organization_name'] = $academy->name;
+        }
     }
 }
 

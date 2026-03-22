@@ -199,6 +199,16 @@
             </a>
             @endif
 
+            @if(Route::has('consultations.index') && $isStudent)
+            <a href="{{ route('consultations.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+               class="ins-nav {{ request()->routeIs('consultations.*') ? 'active' : '' }}">
+                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
+                    <i class="fas fa-comments-dollar text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">استشارات المدربين</span>
+            </a>
+            @endif
+
             @if($isStudent || $user->hasPermission('student.view.notifications'))
             <a href="{{ route('notifications') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
                class="ins-nav {{ request()->routeIs('notifications') ? 'active' : '' }}">

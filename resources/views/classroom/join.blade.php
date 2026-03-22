@@ -71,6 +71,7 @@
         </div>
     </div>
 
+    @include('partials.jitsi-iframe-media-allow')
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>
         const domain = '{{ $jitsiDomain }}';
@@ -115,9 +116,14 @@
             document.getElementById('join-screen').classList.add('hidden');
             document.getElementById('meeting-screen').classList.remove('hidden');
 
+            const jitsiRoot = document.querySelector('#jitsi-container');
+            if (typeof muallimxEnsureJitsiIframeMediaAllow === 'function') {
+                muallimxEnsureJitsiIframeMediaAllow(jitsiRoot);
+            }
+
             const options = {
                 roomName: roomName,
-                parentNode: document.querySelector('#jitsi-container'),
+                parentNode: jitsiRoot,
                 width: '100%',
                 height: '100%',
                 userInfo: { displayName: name },

@@ -84,6 +84,10 @@
                             <div class="legend-color bg-emerald-500"></div>
                             <span>{{ __('student.other_events') }}</span>
                         </div>
+                        <div class="legend-item">
+                            <div class="legend-color bg-emerald-600"></div>
+                            <span>استشارة مدفوعة</span>
+                        </div>
                     </div>
                 </div>
             </div>

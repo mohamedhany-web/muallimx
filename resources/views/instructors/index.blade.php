@@ -109,8 +109,8 @@
                 @if($profiles->isNotEmpty())
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                     @foreach($profiles as $idx => $p)
-                    <a href="{{ route('public.instructors.show', $p->user) }}"
-                       class="reveal stagger-{{ min($idx + 1, 4) }} card-hover group block rounded-3xl bg-white border border-slate-100 overflow-hidden shadow-sm">
+                    <div class="reveal stagger-{{ min($idx + 1, 4) }} card-hover group rounded-3xl bg-white border border-slate-100 overflow-hidden shadow-sm flex flex-col">
+                    <a href="{{ route('public.instructors.show', $p->user) }}" class="block flex-1 min-h-0">
 
                         {{-- Photo section --}}
                         <div class="relative aspect-[4/3] bg-gradient-to-br from-brand-500 via-blue-500 to-navy-700 overflow-hidden">
@@ -207,7 +207,7 @@
                             <p class="text-[13px] text-slate-500 leading-relaxed line-clamp-2 mb-4">{{ $p->bio }}</p>
                             @endif
 
-                            {{-- Footer --}}
+                            {{-- Footer (داخل الرابط) --}}
                             <div class="flex items-center justify-between pt-4 border-t border-slate-100">
                                 <div class="flex items-center gap-2 text-xs text-slate-400">
                                     <i class="fas fa-check-circle text-emerald-500"></i>
@@ -226,6 +226,31 @@
                             </div>
                         </div>
                     </a>
+                        @if(isset($consultationSetting) && $consultationSetting->is_active)
+                        <div class="px-5 sm:px-6 pb-5 pt-1 border-t border-slate-50">
+                            <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                <span class="text-[11px] text-slate-500 font-medium">استشارة — <strong class="text-navy-950">{{ number_format($p->effectiveConsultationPriceEgp(), 2) }}</strong> ج.م</span>
+                                @auth
+                                    @if(auth()->user()->isStudent())
+                                        <a href="{{ route('consultations.create', $p->user) }}"
+                                           class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all">
+                                            <i class="fas fa-comments text-[11px]"></i>
+                                            طلب استشارة
+                                        </a>
+                                    @else
+                                        <span class="text-[11px] text-slate-400">تسجيل الدخول كطالب لطلب استشارة</span>
+                                    @endif
+                                @else
+                                    <a href="{{ route('login', ['redirect' => route('consultations.create', $p->user)]) }}"
+                                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all">
+                                        <i class="fas fa-comments text-[11px]"></i>
+                                        طلب استشارة
+                                    </a>
+                                @endauth
+                            </div>
+                        </div>
+                        @endif
+                    </div>
                     @endforeach
                 </div>
                 @else

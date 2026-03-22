@@ -11,7 +11,7 @@
                 <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100"><?php echo e(__('instructor.assignments')); ?></h1>
                 <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5"><?php echo e(__('instructor.manage_assignments_submissions')); ?></p>
             </div>
-            <button onclick="openCreateModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-50 dark:bg-sky-900/300 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
+            <button onclick="openCreateModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
                 <i class="fas fa-plus"></i>
                 <span><?php echo e(__('instructor.create_assignment')); ?></span>
             </button>
@@ -82,7 +82,7 @@
                 <input type="text" name="search" id="search" value="<?php echo e(request('search')); ?>" placeholder="<?php echo e(__('instructor.search_placeholder')); ?>" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100">
             </div>
             <div class="flex items-end gap-2">
-                <button type="submit" class="px-4 py-2.5 bg-sky-50 dark:bg-sky-900/300 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
+                <button type="submit" class="px-4 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
                     <i class="fas fa-search ml-1"></i> <?php echo e(__('common.search')); ?>
 
                 </button>
@@ -130,11 +130,11 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
-                            <a href="<?php echo e(route('instructor.assignments.submissions', $assignment)); ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-violet-50 dark:bg-violet-900/300 hover:bg-violet-600 text-white rounded-xl font-semibold text-sm transition-colors">
+                            <a href="<?php echo e(route('instructor.assignments.submissions', $assignment)); ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 dark:bg-violet-700 hover:bg-violet-600 text-white rounded-xl font-semibold text-sm transition-colors">
                                 <i class="fas fa-list"></i> <?php echo e(__('instructor.submissions')); ?>
 
                             </a>
-                            <a href="<?php echo e(route('instructor.assignments.show', $assignment)); ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-sky-50 dark:bg-sky-900/300 hover:bg-sky-600 text-white rounded-xl font-semibold text-sm transition-colors">
+                            <a href="<?php echo e(route('instructor.assignments.show', $assignment)); ?>" class="inline-flex items-center gap-2 px-4 py-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold text-sm transition-colors">
                                 <i class="fas fa-eye"></i> <?php echo e(__('common.view')); ?>
 
                             </a>
@@ -147,13 +147,13 @@
             <div class="rounded-xl p-3 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm"><?php echo e($assignments->links()); ?></div>
         </div>
     <?php else: ?>
-        <div class="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40/50 py-12 text-center">
+        <div class="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 py-12 text-center">
             <div class="w-16 h-16 rounded-2xl bg-sky-100 flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-tasks text-2xl text-sky-500"></i>
             </div>
             <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2"><?php echo e(__('instructor.no_assignments')); ?></h3>
             <p class="text-sm text-slate-500 dark:text-slate-400 mb-4"><?php echo e(__('instructor.no_assignments_description')); ?></p>
-            <button onclick="openCreateModal()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-50 dark:bg-sky-900/300 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
+            <button onclick="openCreateModal()" class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
                 <i class="fas fa-plus"></i> <?php echo e(__('instructor.create_assignment')); ?>
 
             </button>

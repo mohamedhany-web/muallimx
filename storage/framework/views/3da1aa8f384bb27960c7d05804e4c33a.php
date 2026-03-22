@@ -200,6 +200,16 @@
             </a>
             <?php endif; ?>
 
+            <?php if(Route::has('consultations.index') && $isStudent): ?>
+            <a href="<?php echo e(route('consultations.index')); ?>" @click="if(window.innerWidth<1024) sidebarOpen=false"
+               class="ins-nav <?php echo e(request()->routeIs('consultations.*') ? 'active' : ''); ?>">
+                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
+                    <i class="fas fa-comments-dollar text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">استشارات المدربين</span>
+            </a>
+            <?php endif; ?>
+
             <?php if($isStudent || $user->hasPermission('student.view.notifications')): ?>
             <a href="<?php echo e(route('notifications')); ?>" @click="if(window.innerWidth<1024) sidebarOpen=false"
                class="ins-nav <?php echo e(request()->routeIs('notifications') ? 'active' : ''); ?>">

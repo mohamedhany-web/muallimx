@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
+use App\Models\ConsultationRequest;
 use App\Models\Lecture;
 use App\Models\Exam;
 use App\Models\Assignment;
@@ -31,6 +32,7 @@ class CalendarController extends Controller
             'exams' => $events->where('type', 'exam')->count(),
             'lectures' => $events->where('type', 'lecture')->count(),
             'assignments' => $events->where('type', 'assignment')->count(),
+            'consultations' => $events->where('type', 'consultation')->count(),
             'upcoming' => $events->where('start_date', '>=', now())->count(),
         ];
 
@@ -238,6 +240,16 @@ class CalendarController extends Controller
             ]);
         }
 
+        // 6. استشارات مدفوعة (مجدولة)
+        foreach (ConsultationRequest::calendarItemsForUser(
+            $user,
+            $startDate ?? now()->subMonths(1),
+            $endDate ?? now()->addMonths(3),
+            'student'
+        ) as $cEvent) {
+            $events->push($cEvent);
+        }
+
         // ترتيب الأحداث حسب التاريخ
         return $events->sortBy('start_date')->values();
     }
@@ -252,6 +264,7 @@ class CalendarController extends Controller
             'lecture' => '#3B82F6',
             'assignment' => '#F59E0B',
             'meeting' => '#8B5CF6',
+            'consultation' => '#059669',
             'deadline' => '#DC2626',
             'review' => '#10B981',
             'personal' => '#6366F1',

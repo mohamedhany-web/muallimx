@@ -139,7 +139,8 @@ class Wallet extends Model
 
         $balanceBefore = $this->balance;
         $this->decrement('balance', $amount);
-        
+        $this->refresh();
+
         return WalletTransaction::create([
             'wallet_id' => $this->id,
             'type' => 'withdrawal',

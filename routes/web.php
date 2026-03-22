@@ -512,6 +512,12 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/api/notifications/recent', [\App\Http\Controllers\Student\NotificationController::class, 'getRecent'])->name('notifications.recent');
         Route::get('/calendar', [\App\Http\Controllers\Student\CalendarController::class, 'index'])->name('calendar');
         Route::get('/api/calendar/events', [\App\Http\Controllers\Student\CalendarController::class, 'getEvents'])->name('calendar.events');
+
+        Route::get('/consultations', [\App\Http\Controllers\Student\ConsultationController::class, 'index'])->name('consultations.index');
+        Route::get('/consultations/request/{instructor}', [\App\Http\Controllers\Student\ConsultationController::class, 'create'])->name('consultations.create');
+        Route::post('/consultations/request/{instructor}', [\App\Http\Controllers\Student\ConsultationController::class, 'store'])->name('consultations.store');
+        Route::get('/consultations/{consultation}', [\App\Http\Controllers\Student\ConsultationController::class, 'show'])->name('consultations.show');
+        Route::post('/consultations/{consultation}/report-payment', [\App\Http\Controllers\Student\ConsultationController::class, 'reportPayment'])->name('consultations.report-payment');
         // التسويق الشخصي / البورتفوليو للمعلم (عرض فقط) — تم إلغاء صفحة /my-portfolio/create
         Route::prefix('my-portfolio')->name('student.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'index'])->name('portfolio.index');
@@ -972,10 +978,31 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/support-tickets/{ticket}', [\App\Http\Controllers\Admin\SupportTicketController::class, 'show'])->name('support-tickets.show');
         Route::post('/support-tickets/{ticket}/status', [\App\Http\Controllers\Admin\SupportTicketController::class, 'updateStatus'])->name('support-tickets.status');
         Route::post('/support-tickets/{ticket}/reply', [\App\Http\Controllers\Admin\SupportTicketController::class, 'reply'])->name('support-tickets.reply');
+
+        // استشارات المدربين (مدفوعة)
+        Route::get('/consultations', [\App\Http\Controllers\Admin\ConsultationController::class, 'index'])->name('consultations.index');
+        Route::post('/consultations/settings', [\App\Http\Controllers\Admin\ConsultationController::class, 'updateSettings'])->name('consultations.settings');
+        Route::get('/consultations/requests/{consultation}', [\App\Http\Controllers\Admin\ConsultationController::class, 'show'])->name('consultations.show');
+        Route::post('/consultations/requests/{consultation}/confirm-payment', [\App\Http\Controllers\Admin\ConsultationController::class, 'confirmPayment'])->name('consultations.confirm-payment');
+        Route::post('/consultations/requests/{consultation}/schedule', [\App\Http\Controllers\Admin\ConsultationController::class, 'schedule'])->name('consultations.schedule');
+        Route::post('/consultations/requests/{consultation}/notes', [\App\Http\Controllers\Admin\ConsultationController::class, 'updateNotes'])->name('consultations.notes');
+        Route::post('/consultations/requests/{consultation}/cancel', [\App\Http\Controllers\Admin\ConsultationController::class, 'cancel'])->name('consultations.cancel');
+        Route::post('/consultations/requests/{consultation}/complete', [\App\Http\Controllers\Admin\ConsultationController::class, 'markCompleted'])->name('consultations.complete');
+
+        // أكاديميات التوظيف (عملاء المنصة)
+        Route::resource('hiring-academies', \App\Http\Controllers\Admin\HiringAcademyController::class);
+
         // فرص الأكاديميات
         Route::resource('academy-opportunities', \App\Http\Controllers\Admin\AcademyOpportunityController::class)->except(['show']);
         Route::get('/academy-opportunities/{academy_opportunity}/applications', [\App\Http\Controllers\Admin\AcademyOpportunityController::class, 'applications'])->name('academy-opportunities.applications');
         Route::post('/academy-opportunities/{academy_opportunity}/applications/{application}/status', [\App\Http\Controllers\Admin\AcademyOpportunityController::class, 'updateApplicationStatus'])->name('academy-opportunities.applications.status');
+        // مكتب التوظيف: عروض المعلمين المعتمدة للأكاديميات
+        Route::get('/academy-opportunities/{academy_opportunity}/recruitment', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'show'])->name('academy-opportunities.recruitment');
+        Route::get('/academy-opportunities/{academy_opportunity}/recruitment/instructors/search', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'searchInstructors'])->name('academy-opportunities.recruitment.instructors.search');
+        Route::post('/academy-opportunities/{academy_opportunity}/recruitment/presentations', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'storePresentation'])->name('academy-opportunities.recruitment.presentations.store');
+        Route::put('/academy-opportunities/{academy_opportunity}/recruitment/presentations/{presentation}', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'updatePresentation'])->name('academy-opportunities.recruitment.presentations.update');
+        Route::delete('/academy-opportunities/{academy_opportunity}/recruitment/presentations/{presentation}', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'destroyPresentation'])->name('academy-opportunities.recruitment.presentations.destroy');
+        Route::get('/academy-opportunities/{academy_opportunity}/recruitment/presentations/{presentation}/print', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'printForAcademy'])->name('academy-opportunities.recruitment.presentations.print');
         // مكتبة المناهج التفاعلية (إدارة)
         Route::get('/curriculum-library', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
         Route::get('/curriculum-library/categories', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'categories'])->name('curriculum-library.categories');
@@ -1104,6 +1131,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/personal-branding/{personal_branding}/approve', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'approve'])->name('personal-branding.approve');
         Route::post('/personal-branding/{personal_branding}/reject', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'reject'])->name('personal-branding.reject');
         Route::post('/personal-branding/{personal_branding}/send-back', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'sendBackForReview'])->name('personal-branding.send-back');
+        Route::post('/personal-branding/{personal_branding}/consultation-pricing', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'updateConsultationPricing'])->name('personal-branding.consultation-pricing');
         Route::resource('coupons', \App\Http\Controllers\Admin\CouponController::class);
         // إدارة برامج الإحالات
         Route::resource('referral-programs', \App\Http\Controllers\Admin\ReferralProgramController::class);
@@ -1228,6 +1256,15 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
     // مسارات المدرسين
     Route::prefix('instructor')->name('instructor.')->middleware(['auth', 'role:instructor|teacher'])->group(function () {
+        Route::get('/calendar', [\App\Http\Controllers\Instructor\CalendarController::class, 'index'])->name('calendar');
+        Route::get('/api/calendar/events', [\App\Http\Controllers\Instructor\CalendarController::class, 'getEvents'])->name('calendar.events');
+        Route::get('/consultations', [\App\Http\Controllers\Instructor\ConsultationController::class, 'index'])->name('consultations.index');
+        Route::get('/consultations/{consultation}', [\App\Http\Controllers\Instructor\ConsultationController::class, 'show'])->name('consultations.show');
+        Route::get('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'show'])->name('classroom.show');
+        Route::post('/classroom/{meeting}/start', [\App\Http\Controllers\Student\ClassroomController::class, 'startMeeting'])->name('classroom.start-meeting');
+        Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('classroom.room');
+        Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('classroom.end');
+
         // بروفايل المدرب
         Route::get('/profile', [\App\Http\Controllers\Instructor\ProfileController::class, 'index'])->name('profile');
         Route::put('/profile', [\App\Http\Controllers\Instructor\ProfileController::class, 'update'])->name('profile.update');

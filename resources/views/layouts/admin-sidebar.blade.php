@@ -45,7 +45,9 @@
                     || request()->routeIs('admin.teacher-features.*')
                     || request()->routeIs('admin.support-tickets.*')
                     || request()->routeIs('admin.academy-opportunities.*')
+                    || request()->routeIs('admin.hiring-academies.*')
                     || request()->routeIs('admin.curriculum-library.*')
+                    || request()->routeIs('admin.consultations.*')
                     || request()->routeIs('admin.quality-control.students')
                     || request()->routeIs('admin.reports.users');
             @endphp
@@ -108,6 +110,20 @@
                     <li>
                         <a href="{{ route('admin.support-tickets.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.support-tickets.*') ? 'active' : '' }}">
                             <i class="fas fa-headset"></i><span>الدعم الفني (التذاكر)</span>
+                        </a>
+                    </li>
+                    @endif
+                    @if(Route::has('admin.consultations.index'))
+                    <li>
+                        <a href="{{ route('admin.consultations.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.consultations.*') ? 'active' : '' }}">
+                            <i class="fas fa-comments-dollar"></i><span>استشارات المدربين</span>
+                        </a>
+                    </li>
+                    @endif
+                    @if(Route::has('admin.hiring-academies.index'))
+                    <li>
+                        <a href="{{ route('admin.hiring-academies.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.hiring-academies.*') ? 'active' : '' }}">
+                            <i class="fas fa-school"></i><span>{{ __('admin.hiring_sidebar_academies') }}</span>
                         </a>
                     </li>
                     @endif

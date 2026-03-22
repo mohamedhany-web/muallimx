@@ -174,7 +174,7 @@ unset($__errorArgs, $__bag); ?>
             </a>
         <?php endif; ?>
         <button type="submit"
-                class="px-6 py-2.5 bg-sky-50 dark:bg-sky-900/300 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
+                class="px-6 py-2.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-xl font-semibold transition-colors">
             <i class="fas fa-save ml-2"></i> <?php echo e(__('instructor.create_assignment')); ?>
 
         </button>

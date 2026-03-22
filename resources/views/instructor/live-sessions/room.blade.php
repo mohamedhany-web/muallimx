@@ -59,12 +59,17 @@
         <main id="jitsi-container" role="application" aria-label="غرفة البث المباشر"></main>
     </div>
 
+    @include('partials.jitsi-iframe-media-allow')
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>
         const domain = '{{ $jitsiDomain }}';
+        const jitsiRoot = document.querySelector('#jitsi-container');
+        if (typeof muallimxEnsureJitsiIframeMediaAllow === 'function') {
+            muallimxEnsureJitsiIframeMediaAllow(jitsiRoot);
+        }
         const options = {
             roomName: '{{ $liveSession->room_name }}',
-            parentNode: document.querySelector('#jitsi-container'),
+            parentNode: jitsiRoot,
             width: '100%',
             height: '100%',
             userInfo: {

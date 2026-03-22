@@ -23,10 +23,16 @@
     </style>
 </head>
 <body class="bg-slate-950">
+@php
+    $rp = ($useInstructorRoutes ?? false) ? 'instructor.' : 'student.';
+    $roomExitUrl = ($useInstructorRoutes ?? false)
+        ? ($meeting->consultation_request_id ? route('instructor.consultations.show', $meeting->consultation_request_id) : route('instructor.consultations.index'))
+        : route('student.classroom.index');
+@endphp
     {{-- شريط MuallimX العلوي — تصميم المنصة فقط --}}
     <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg">
         <div class="flex items-center gap-4">
-            <a href="{{ route('student.classroom.index') }}" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+            <a href="{{ $roomExitUrl }}" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
                 <span class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
                     <i class="fas fa-video text-lg"></i>
                 </span>
@@ -53,7 +59,7 @@
             <button type="button" onclick="navigator.clipboard.writeText('{{ url('classroom/join/' . $meeting->code) }}'); this.innerHTML='<i class=\'fas fa-check ml-1\'></i> تم النسخ'; setTimeout(()=>{ this.innerHTML='<i class=\'fas fa-link ml-1\'></i> مشاركة الرابط'; }, 2000)" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors border border-slate-600">
                 <i class="fas fa-link ml-1"></i> مشاركة الرابط
             </button>
-            <form method="POST" action="{{ route('student.classroom.end', $meeting) }}" class="inline" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
+            <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" class="inline" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
                 @csrf
                 <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-rose-500/20">
                     <i class="fas fa-stop"></i> إنهاء الاجتماع
@@ -130,6 +136,7 @@
     </main>
     </div>
 
+    @include('partials.jitsi-iframe-media-allow')
     <script>
         (function() {
             var jitsiDomain = '{{ $jitsiDomain }}';
@@ -302,6 +309,9 @@
                 }
                 try {
                     container.innerHTML = '';
+                    if (typeof muallimxEnsureJitsiIframeMediaAllow === 'function') {
+                        muallimxEnsureJitsiIframeMediaAllow(container);
+                    }
                     var options = {
                         roomName: roomName,
                         parentNode: container,

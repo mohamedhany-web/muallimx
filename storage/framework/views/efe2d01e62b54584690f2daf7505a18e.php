@@ -44,7 +44,10 @@
                     || request()->routeIs('admin.subscriptions.*')
                     || request()->routeIs('admin.teacher-features.*')
                     || request()->routeIs('admin.support-tickets.*')
+                    || request()->routeIs('admin.academy-opportunities.*')
+                    || request()->routeIs('admin.hiring-academies.*')
                     || request()->routeIs('admin.curriculum-library.*')
+                    || request()->routeIs('admin.consultations.*')
                     || request()->routeIs('admin.quality-control.students')
                     || request()->routeIs('admin.reports.users');
             ?>
@@ -107,6 +110,27 @@
                     <li>
                         <a href="<?php echo e(route('admin.support-tickets.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.support-tickets.*') ? 'active' : ''); ?>">
                             <i class="fas fa-headset"></i><span>الدعم الفني (التذاكر)</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.consultations.index')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.consultations.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.consultations.*') ? 'active' : ''); ?>">
+                            <i class="fas fa-comments-dollar"></i><span>استشارات المدربين</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.hiring-academies.index')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.hiring-academies.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.hiring-academies.*') ? 'active' : ''); ?>">
+                            <i class="fas fa-school"></i><span><?php echo e(__('admin.hiring_sidebar_academies')); ?></span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.academy-opportunities.index')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.academy-opportunities.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.academy-opportunities.*') ? 'active' : ''); ?>">
+                            <i class="fas fa-building"></i><span>فرص الأكاديميات</span>
                         </a>
                     </li>
                     <?php endif; ?>

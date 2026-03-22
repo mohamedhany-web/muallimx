@@ -6,8 +6,20 @@
 <?php $__env->startSection('content'); ?>
 <div class="space-y-6">
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
-        <h1 class="text-2xl font-bold text-slate-900">رقابة الاستهلاك الشاملة</h1>
-        <p class="text-sm text-slate-600 mt-1">مؤشرات قوية عن استهلاك المشتركين للخدمات المدفوعة.</p>
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">رقابة الاستهلاك الشاملة</h1>
+                <p class="text-sm text-slate-600 mt-1">مؤشرات قوية عن استهلاك المشتركين للخدمات المدفوعة.</p>
+            </div>
+            <form method="GET" action="<?php echo e(route('admin.students-control.consumption')); ?>" class="inline-flex items-center gap-2">
+                <span class="text-xs text-slate-500">النطاق الزمني:</span>
+                <select name="days" class="px-3 py-2 rounded-lg border border-slate-200 text-sm" onchange="this.form.submit()">
+                    <option value="7" <?php echo e((int)$windowDays === 7 ? 'selected' : ''); ?>>آخر 7 أيام</option>
+                    <option value="30" <?php echo e((int)$windowDays === 30 ? 'selected' : ''); ?>>آخر 30 يوم</option>
+                    <option value="90" <?php echo e((int)$windowDays === 90 ? 'selected' : ''); ?>>آخر 90 يوم</option>
+                </select>
+            </form>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -75,6 +87,7 @@
                                         <?php if($row['subscription']): ?>
                                             <a href="<?php echo e(route('admin.subscriptions.consumption', $row['subscription'])); ?>" class="text-emerald-600 hover:underline">تفصيلي</a>
                                         <?php endif; ?>
+                                        <a href="<?php echo e(route('admin.students-control.consumption.user', ['user' => $row['user']->id, 'days' => $windowDays])); ?>" class="text-violet-600 hover:underline">Drill-down</a>
                                     </div>
                                 </td>
                             </tr>

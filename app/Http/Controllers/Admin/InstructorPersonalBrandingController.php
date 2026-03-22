@@ -85,4 +85,25 @@ class InstructorPersonalBrandingController extends Controller
         ]);
         return back()->with('success', 'تم إعادة الملف التعريفي إلى قيد المراجعة.');
     }
+
+    /**
+     * سعر ومدة الاستشارة بالجنيه المصري (للمدرب؛ إن تُرك السعر فارغاً يُستخدم الافتراضي من إعدادات الاستشارات).
+     */
+    public function updateConsultationPricing(Request $request, InstructorProfile $personal_branding)
+    {
+        $data = $request->validate([
+            'consultation_price_egp' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
+            'consultation_duration_minutes' => ['nullable', 'integer', 'min:15', 'max:480'],
+        ]);
+
+        $price = $request->input('consultation_price_egp');
+        $duration = $request->input('consultation_duration_minutes');
+
+        $personal_branding->update([
+            'consultation_price_egp' => $price === null || $price === '' ? null : $price,
+            'consultation_duration_minutes' => $duration === null || $duration === '' ? null : (int) $duration,
+        ]);
+
+        return back()->with('success', 'تم حفظ سعر ومدة الاستشارة لهذا المدرب (بالجنيه المصري).');
+    }
 }

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class AcademyOpportunity extends Model
 {
     protected $fillable = [
+        'hiring_academy_id',
         'organization_name',
         'title',
         'specialization',
@@ -31,9 +32,19 @@ class AcademyOpportunity extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function hiringAcademy(): BelongsTo
+    {
+        return $this->belongsTo(HiringAcademy::class, 'hiring_academy_id');
+    }
+
     public function applications(): HasMany
     {
         return $this->hasMany(AcademyOpportunityApplication::class);
+    }
+
+    public function teacherPresentations(): HasMany
+    {
+        return $this->hasMany(RecruitmentTeacherPresentation::class, 'academy_opportunity_id');
     }
 }
 

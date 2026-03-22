@@ -159,6 +159,25 @@
             </a>
             <?php endif; ?>
 
+            <?php if(Route::has('instructor.consultations.index')): ?>
+            <a href="<?php echo e(route('instructor.consultations.index')); ?>" @click="if(window.innerWidth<1024) sidebarOpen=false"
+               class="ins-nav <?php echo e(request()->routeIs('instructor.consultations.*') ? 'active' : ''); ?>">
+                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
+                    <i class="fas fa-comments-dollar text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">استشارات الطلاب</span>
+            </a>
+            <?php endif; ?>
+            <?php if(Route::has('instructor.calendar')): ?>
+            <a href="<?php echo e(route('instructor.calendar')); ?>" @click="if(window.innerWidth<1024) sidebarOpen=false"
+               class="ins-nav <?php echo e(request()->routeIs('instructor.calendar') || request()->routeIs('instructor.calendar.events') ? 'active' : ''); ?>">
+                <span class="ins-icon bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400">
+                    <i class="fas fa-calendar-check text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">تقويم الاستشارات</span>
+            </a>
+            <?php endif; ?>
+
             
             <div class="ins-nav-group mt-3">
                 <span class="inline-flex items-center gap-1.5">

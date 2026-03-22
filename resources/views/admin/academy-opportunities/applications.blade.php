@@ -10,6 +10,12 @@
     @endif
 
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
+        <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+            <a href="{{ route('admin.academy-opportunities.recruitment', $opportunity) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700">
+                <i class="fas fa-briefcase"></i> مكتب التوظيف (عروض معتمدة للأكاديمية)
+            </a>
+            <a href="{{ route('admin.academy-opportunities.index') }}" class="text-sm text-sky-600 font-semibold hover:underline">← فرص الأكاديميات</a>
+        </div>
         <h1 class="text-xl font-bold text-slate-900">{{ $opportunity->title }}</h1>
         <p class="text-sm text-slate-600 mt-1">{{ $opportunity->organization_name }}</p>
         <form method="GET" class="mt-3">

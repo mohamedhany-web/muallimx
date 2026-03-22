@@ -3,6 +3,9 @@
 @section('title', 'تفاصيل الاجتماع')
 @section('header', 'تفاصيل الاجتماع')
 
+@php
+    $rp = ($useInstructorRoutes ?? false) ? 'instructor.' : 'student.';
+@endphp
 @section('content')
 <div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
     @if(session('success'))
@@ -19,12 +22,14 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">الكود: <span class="font-mono font-bold">{{ $meeting->code }}</span></p>
             </div>
             <div class="flex items-center gap-2">
+                @if(!$meeting->consultation_request_id && !($useInstructorRoutes ?? false))
                 <a href="{{ route('student.classroom.edit', $meeting) }}" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold">تعديل</a>
+                @endif
                 @if(!$meeting->started_at && !$meeting->ended_at)
-                    <form action="{{ route('student.classroom.start-meeting', $meeting) }}" method="POST">@csrf<button class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">بدء الآن</button></form>
+                    <form action="{{ route($rp.'classroom.start-meeting', $meeting) }}" method="POST">@csrf<button class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">بدء الآن</button></form>
                 @elseif($meeting->isLive())
-                    <a href="{{ route('student.classroom.room', $meeting) }}" class="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold">دخول الغرفة</a>
-                    <form method="POST" action="{{ route('student.classroom.end', $meeting) }}" onsubmit="return confirm('إنهاء الاجتماع؟');">@csrf<button class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold">إنهاء</button></form>
+                    <a href="{{ route($rp.'classroom.room', $meeting) }}" class="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold">دخول الغرفة</a>
+                    <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" onsubmit="return confirm('إنهاء الاجتماع؟');">@csrf<button class="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-sm font-semibold">إنهاء</button></form>
                 @endif
             </div>
         </div>
@@ -67,12 +72,20 @@
         </div>
 
         <div class="flex items-center justify-between">
-            <a href="{{ route('student.classroom.index') }}" class="text-sm text-sky-600 hover:underline">العودة لقائمة الاجتماعات</a>
+            @if($meeting->consultation_request_id && ($useInstructorRoutes ?? false))
+                <a href="{{ route('instructor.consultations.show', $meeting->consultation_request_id) }}" class="text-sm text-sky-600 hover:underline">العودة لتفاصيل الاستشارة</a>
+            @elseif($useInstructorRoutes ?? false)
+                <a href="{{ route('instructor.consultations.index') }}" class="text-sm text-sky-600 hover:underline">العودة لطلبات الاستشارة</a>
+            @else
+                <a href="{{ route('student.classroom.index') }}" class="text-sm text-sky-600 hover:underline">العودة لقائمة الاجتماعات</a>
+            @endif
+            @if(!($useInstructorRoutes ?? false) && !$meeting->consultation_request_id)
             <form action="{{ route('student.classroom.destroy', $meeting) }}" method="POST" onsubmit="return confirm('حذف الاجتماع نهائياً؟');">
                 @csrf
                 @method('DELETE')
                 <button class="text-sm text-rose-600 hover:underline">حذف الاجتماع</button>
             </form>
+            @endif
         </div>
     </div>
 </div>
