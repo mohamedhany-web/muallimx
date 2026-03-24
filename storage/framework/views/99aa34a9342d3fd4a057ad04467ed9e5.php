@@ -108,6 +108,8 @@
                                         <form action="<?php echo e(route('student.classroom.start-meeting', $m)); ?>" method="POST" class="inline"><?php echo csrf_field(); ?><button class="text-emerald-600 hover:underline">بدء</button></form>
                                     <?php elseif($m->isLive()): ?>
                                         <a href="<?php echo e(route('student.classroom.room', $m)); ?>" class="text-rose-600 hover:underline">دخول</a>
+                                    <?php elseif($m->ended_at && $m->recording_download_url): ?>
+                                        <a href="<?php echo e($m->recording_download_url); ?>" target="_blank" class="text-indigo-600 hover:underline">تحميل التسجيل</a>
                                     <?php endif; ?>
                                 </div>
                             </td>

@@ -104,6 +104,8 @@
                                         <form action="{{ route('student.classroom.start-meeting', $m) }}" method="POST" class="inline">@csrf<button class="text-emerald-600 hover:underline">بدء</button></form>
                                     @elseif($m->isLive())
                                         <a href="{{ route('student.classroom.room', $m) }}" class="text-rose-600 hover:underline">دخول</a>
+                                    @elseif($m->ended_at && $m->recording_download_url)
+                                        <a href="{{ $m->recording_download_url }}" target="_blank" class="text-indigo-600 hover:underline">تحميل التسجيل</a>
                                     @endif
                                 </div>
                             </td>

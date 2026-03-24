@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('title', 'تفاصيل الاجتماع'); ?>
 <?php $__env->startSection('header', 'تفاصيل الاجتماع'); ?>
 
@@ -71,6 +69,35 @@
                 <button type="button" onclick="navigator.clipboard.writeText('<?php echo e($joinUrl); ?>')" class="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold">نسخ</button>
             </div>
         </div>
+
+        <?php if($meeting->ended_at): ?>
+            <div class="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-900/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100">تسجيل المحاضرة</p>
+                    <?php if($meeting->recording_path): ?>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                            تم حفظ التسجيل على Cloudflare.
+                            <?php if($meeting->recording_uploaded_at): ?>
+                                وقت الرفع: <?php echo e($meeting->recording_uploaded_at->format('Y-m-d H:i')); ?>
+
+                            <?php endif; ?>
+                        </p>
+                    <?php else: ?>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">لا يوجد تسجيل مرفوع لهذا الاجتماع.</p>
+                    <?php endif; ?>
+                </div>
+                <div>
+                    <?php if($meeting->recording_download_url): ?>
+                        <a href="<?php echo e($meeting->recording_download_url); ?>" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold">
+                            <i class="fas fa-download"></i>
+                            تحميل تسجيل المحاضرة
+                        </a>
+                    <?php elseif($meeting->recording_path): ?>
+                        <span class="text-xs text-amber-700 dark:text-amber-300">التسجيل موجود ولكن رابط التحميل غير متاح حالياً.</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <div class="flex items-center justify-between">
             <?php if($meeting->consultation_request_id && ($useInstructorRoutes ?? false)): ?>

@@ -260,7 +260,7 @@
                     <li>
                         <a href="{{ route('admin.orders.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
                             <i class="fas fa-shopping-cart"></i><span>{{ __('admin.orders') }}</span>
-                            @php $pendingOrders = \App\Models\Order::where('status', 'pending')->count(); @endphp
+                            @php try { $pendingOrders = \App\Models\Order::where('status', 'pending')->count(); } catch (\Exception $e) { $pendingOrders = 0; } @endphp
                             @if($pendingOrders > 0)<span class="sidebar-badge bg-indigo-500 text-white">{{ $pendingOrders }}</span>@endif
                         </a>
                     </li>
@@ -427,6 +427,7 @@
             @php
                 $liveOpen = request()->routeIs('admin.live-sessions.*')
                     || request()->routeIs('admin.live-recordings.*')
+                    || request()->routeIs('admin.classroom-recordings.*')
                     || request()->routeIs('admin.live-servers.*')
                     || request()->routeIs('admin.live-settings.*');
             @endphp
@@ -450,6 +451,13 @@
                         <li>
                             <a href="{{ route('admin.live-recordings.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.live-recordings.*') ? 'active' : '' }}">
                                 <i class="fas fa-play-circle"></i><span>تسجيلات الجلسات</span>
+                            </a>
+                        </li>
+                    @endif
+                    @if(Route::has('admin.classroom-recordings.index'))
+                        <li>
+                            <a href="{{ route('admin.classroom-recordings.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.classroom-recordings.*') ? 'active' : '' }}">
+                                <i class="fas fa-chalkboard"></i><span>تسجيلات Classroom</span>
                             </a>
                         </li>
                     @endif
@@ -549,7 +557,7 @@
                     <li>
                         <a href="{{ route('admin.certificates.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.certificates.index') ? 'active' : '' }}">
                             <i class="fas fa-list"></i><span>{{ __('admin.certificates_list') }}</span>
-                            @php $totalCertificates = \App\Models\Certificate::count(); @endphp
+                            @php try { $totalCertificates = \App\Models\Certificate::count(); } catch (\Exception $e) { $totalCertificates = 0; } @endphp
                             @if($totalCertificates > 0)<span class="sidebar-badge bg-indigo-400 text-white">{{ $totalCertificates }}</span>@endif
                         </a>
                     </li>
@@ -610,7 +618,7 @@
                     <li>
                         <a href="{{ route('admin.contact-messages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}">
                             <i class="fas fa-envelope"></i><span>{{ __('admin.contact_messages') }}</span>
-                            @php $unreadCount = \App\Models\ContactMessage::whereNull('read_at')->count(); @endphp
+                            @php try { $unreadCount = \App\Models\ContactMessage::whereNull('read_at')->count(); } catch (\Exception $e) { $unreadCount = 0; } @endphp
                             @if($unreadCount > 0)<span class="sidebar-badge bg-amber-400 text-amber-900">{{ $unreadCount }}</span>@endif
                         </a>
                     </li>

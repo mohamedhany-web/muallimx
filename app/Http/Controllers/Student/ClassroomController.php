@@ -8,6 +8,7 @@ use App\Models\LiveSetting;
 use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ClassroomController extends Controller
@@ -248,6 +249,54 @@ class ClassroomController extends Controller
         }
 
         return redirect()->route('student.classroom.show', $meeting)->with('success', 'تم إنهاء الاجتماع.');
+    }
+
+    public function uploadRecording(Request $request, ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if (!$meeting->started_at) {
+            return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
+        }
+
+        $validated = $request->validate([
+            'recording' => ['required', 'file', 'mimetypes:video/webm,video/mp4,audio/webm,audio/ogg', 'max:1048576'],
+            'duration_seconds' => ['nullable', 'integer', 'min:1', 'max:43200'],
+        ]);
+
+        $file = $validated['recording'];
+        $disk = Storage::disk('live_recordings_r2');
+        $directory = 'classroom-recordings/' . now()->format('Y/m');
+        $fileName = sprintf('meeting-%d-%s.webm', $meeting->id, now()->format('Ymd-His'));
+        $newPath = $directory . '/' . $fileName;
+
+        $oldPath = ($meeting->recording_disk === 'live_recordings_r2') ? $meeting->recording_path : null;
+
+        $disk->putFileAs($directory, $file, $fileName);
+
+        if ($oldPath && $oldPath !== $newPath) {
+            try {
+                $disk->delete($oldPath);
+            } catch (\Throwable $e) {
+                // تجاهل فشل حذف التسجيل القديم حتى لا يتعطل حفظ الجديد.
+            }
+        }
+
+        $meeting->update([
+            'recording_disk' => 'live_recordings_r2',
+            'recording_path' => $newPath,
+            'recording_mime_type' => $file->getMimeType(),
+            'recording_size' => $file->getSize(),
+            'recording_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
+            'recording_uploaded_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'تم رفع تسجيل المحاضرة إلى Cloudflare بنجاح.',
+            'download_url' => $meeting->fresh()->recording_download_url,
+        ]);
     }
 
     public function destroy(ClassroomMeeting $meeting)

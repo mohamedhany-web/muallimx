@@ -260,7 +260,7 @@
                     <li>
                         <a href="<?php echo e(route('admin.orders.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.orders.*') ? 'active' : ''); ?>">
                             <i class="fas fa-shopping-cart"></i><span><?php echo e(__('admin.orders')); ?></span>
-                            <?php $pendingOrders = \App\Models\Order::where('status', 'pending')->count(); ?>
+                            <?php try { $pendingOrders = \App\Models\Order::where('status', 'pending')->count(); } catch (\Exception $e) { $pendingOrders = 0; } ?>
                             <?php if($pendingOrders > 0): ?><span class="sidebar-badge bg-indigo-500 text-white"><?php echo e($pendingOrders); ?></span><?php endif; ?>
                         </a>
                     </li>
@@ -549,7 +549,7 @@
                     <li>
                         <a href="<?php echo e(route('admin.certificates.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.certificates.index') ? 'active' : ''); ?>">
                             <i class="fas fa-list"></i><span><?php echo e(__('admin.certificates_list')); ?></span>
-                            <?php $totalCertificates = \App\Models\Certificate::count(); ?>
+                            <?php try { $totalCertificates = \App\Models\Certificate::count(); } catch (\Exception $e) { $totalCertificates = 0; } ?>
                             <?php if($totalCertificates > 0): ?><span class="sidebar-badge bg-indigo-400 text-white"><?php echo e($totalCertificates); ?></span><?php endif; ?>
                         </a>
                     </li>
@@ -610,7 +610,7 @@
                     <li>
                         <a href="<?php echo e(route('admin.contact-messages.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.contact-messages.*') ? 'active' : ''); ?>">
                             <i class="fas fa-envelope"></i><span><?php echo e(__('admin.contact_messages')); ?></span>
-                            <?php $unreadCount = \App\Models\ContactMessage::whereNull('read_at')->count(); ?>
+                            <?php try { $unreadCount = \App\Models\ContactMessage::whereNull('read_at')->count(); } catch (\Exception $e) { $unreadCount = 0; } ?>
                             <?php if($unreadCount > 0): ?><span class="sidebar-badge bg-amber-400 text-amber-900"><?php echo e($unreadCount); ?></span><?php endif; ?>
                         </a>
                     </li>

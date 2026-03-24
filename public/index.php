@@ -17,4 +17,28 @@ require __DIR__.'/../vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
+register_shutdown_function(static function () use ($app): void {
+    $lastError = error_get_last();
+    if (!$lastError) {
+        return;
+    }
+
+    $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+    if (!in_array($lastError['type'] ?? null, $fatalTypes, true)) {
+        return;
+    }
+
+    try {
+        $app->make(\Psr\Log\LoggerInterface::class)->error('Fatal shutdown error', [
+            'message' => $lastError['message'] ?? null,
+            'file' => $lastError['file'] ?? null,
+            'line' => $lastError['line'] ?? null,
+            'url' => $_SERVER['REQUEST_URI'] ?? null,
+            'method' => $_SERVER['REQUEST_METHOD'] ?? null,
+        ]);
+    } catch (\Throwable $e) {
+        // Avoid any secondary failures at shutdown.
+    }
+});
+
 $app->handleRequest(Request::capture());

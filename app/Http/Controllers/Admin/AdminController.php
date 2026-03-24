@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\ViewErrorBag;
 use Carbon\Carbon;
 
 class AdminController extends Controller
@@ -680,13 +681,29 @@ class AdminController extends Controller
      */
     public function createUser()
     {
-        $phoneCountries = config('phone_countries.countries', []);
-        $defaultCountry = collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'));
-        // ضمان وجود قيمة افتراضية آمنة إذا لم يُحمّل الإعداد أو كانت القائمة فارغة
-        if (!$defaultCountry || !is_array($defaultCountry)) {
-            $defaultCountry = ['code' => 'SA', 'dial_code' => '+966', 'name_ar' => 'السعودية', 'name_en' => 'Saudi Arabia'];
+        try {
+            $phoneCountries = config('phone_countries.countries', []);
+            $defaultCountry = collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'));
+            // ضمان وجود قيمة افتراضية آمنة إذا لم يُحمّل الإعداد أو كانت القائمة فارغة
+            if (!$defaultCountry || !is_array($defaultCountry)) {
+                $defaultCountry = ['code' => 'SA', 'dial_code' => '+966', 'name_ar' => 'السعودية', 'name_en' => 'Saudi Arabia'];
+            }
+
+            // إجبار الرندر داخل try لالتقاط أي خطأ في الـ Blade/Layout
+            $view = view('admin.users.create', compact('phoneCountries', 'defaultCountry'))
+                ->with('errors', session('errors', new ViewErrorBag()));
+            $rendered = $view->render();
+
+            return response($rendered);
+        } catch (\Throwable $e) {
+            Log::error('createUser failed during render', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
-        return view('admin.users.create', compact('phoneCountries', 'defaultCountry'));
     }
 
     /**
@@ -792,6 +809,7 @@ class AdminController extends Controller
             return back()->withErrors(['phone' => 'رقم الهاتف مستخدم مسبقاً'])->withInput()->with(compact('phoneCountries', 'defaultCountry'));
         }
 
+        $committed = false;
         try {
             // استخدام Transaction لحماية من SQL Injection والتناسق
             DB::beginTransaction();
@@ -820,34 +838,22 @@ class AdminController extends Controller
             Log::info('User created successfully', ['user_id' => $user->id]);
 
             DB::commit();
+            $committed = true;
 
-            // أي خطأ بعد الـ commit لا يلغي الحفظ — نوجّه دائماً للقائمة مع رسالة نجاح
-            try {
-                $userData = [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'role' => $user->role,
-                    'is_active' => $user->is_active,
-                ];
-                ActivityLog::create([
-                    'user_id' => Auth::id(),
-                    'action' => 'user_created',
-                    'model_type' => 'User',
-                    'model_id' => $user->id,
-                    'new_values' => $userData,
-                    'ip_address' => $request->ip(),
-                    'user_agent' => substr((string) $request->userAgent(), 0, 255),
-                ]);
-            } catch (\Throwable $logException) {
-                Log::warning('Failed to log user creation activity: ' . $logException->getMessage(), ['user_id' => $user->id]);
-            }
+            // تعطيل ActivityLog هنا لتفادي تعليق/تعطل الاستجابة بعد الحفظ.
 
             // استخدام query param بدل session لتجنب 500 إن فشل حفظ الجلسة
-            return redirect()->route('admin.users.index', ['created' => 1]);
+            return redirect()->route('admin.users.index', ['created' => 1], 303);
         } catch (\Throwable $e) {
-            DB::rollBack();
+            if (DB::transactionLevel() > 0) {
+                try {
+                    DB::rollBack();
+                } catch (\Throwable $rollbackException) {
+                    Log::warning('Rollback failed after storeUser exception', [
+                        'error' => $rollbackException->getMessage(),
+                    ]);
+                }
+            }
             
             Log::error('Error creating user: ' . $e->getMessage(), [
                 'user_id' => Auth::id(),
@@ -855,7 +861,14 @@ class AdminController extends Controller
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
+                'committed' => $committed,
             ]);
+
+            // إذا تم الحفظ فعلياً ثم حدث خطأ لاحق (post-commit) لا نعرض 500
+            if ($committed) {
+                return redirect()->route('admin.users.index', ['created' => 1], 303)
+                    ->with('warning', 'تم إنشاء المستخدم، لكن حدث خطأ بعد الحفظ أثناء تجهيز الاستجابة.');
+            }
 
             $errorMessage = config('app.debug')
                 ? 'حدث خطأ أثناء إنشاء المستخدم: ' . $e->getMessage()
@@ -886,7 +899,13 @@ class AdminController extends Controller
         try {
             $user = User::findOrFail($id);
             Log::info('editUser: user loaded', ['user_id' => $user->id]);
-            return view('admin.users.edit', compact('user'));
+
+            // إجبار الرندر داخل try لالتقاط أي خطأ في الـ Blade/Layout
+            $view = view('admin.users.edit', compact('user'))
+                ->with('errors', session('errors', new ViewErrorBag()));
+            $rendered = $view->render();
+
+            return response($rendered);
         } catch (\Throwable $e) {
             Log::error('editUser failed', ['id' => $id, 'error' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine(), 'trace' => $e->getTraceAsString()]);
             throw $e;
@@ -898,6 +917,14 @@ class AdminController extends Controller
      */
     public function updateUser(Request $request, $id)
     {
+        Log::info('updateUser: start', [
+            'id' => $id,
+            'method' => $request->method(),
+            'has_method_override' => $request->has('_method'),
+            'override_value' => $request->input('_method'),
+            'content_type' => $request->header('Content-Type'),
+        ]);
+
         $isAjax = $request->wantsJson() || $request->ajax()
             || str_contains($request->header('Accept', ''), 'application/json');
 
@@ -912,149 +939,85 @@ class AdminController extends Controller
                 'is_employee' => $user->is_employee,
                 'bio' => $user->bio,
             ];
-        } catch (\Throwable $e) {
-            if ($isAjax) {
-                return response()->json(['success' => false, 'message' => 'المستخدم غير موجود.'], 404);
+
+            $input = [
+                'name' => trim((string) $request->input('name', '')),
+                'email' => $request->filled('email') ? trim((string) $request->input('email')) : null,
+                'phone' => $request->filled('phone') ? trim((string) $request->input('phone')) : null,
+                'role' => (string) $request->input('role', 'student'),
+                'is_active' => in_array($request->input('is_active'), [true, '1', 1, 'true', 'on'], true),
+                'bio' => $request->input('bio'),
+                'password' => $request->input('password'),
+            ];
+
+            $validator = Validator::make($input, [
+                'name' => 'required|string|max:255',
+                'email' => 'nullable|email|unique:users,email,' . $id,
+                'phone' => 'nullable|string|max:50|unique:users,phone,' . $id,
+                'role' => 'required|in:super_admin,admin,instructor,teacher,student,parent,employee',
+                'is_active' => 'required|boolean',
+                'bio' => 'nullable|string|max:1000',
+                'password' => 'nullable|string|min:8|max:255',
+            ]);
+
+            if ($validator->fails()) {
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $validator->errors()->first() ?: 'بيانات غير صالحة.',
+                        'errors' => $validator->errors()->toArray(),
+                    ], 422);
+                }
+                return back()->withErrors($validator)->withInput();
             }
-            throw $e;
-        }
 
-        // قراءة البيانات من الطلب — POST (application/x-www-form-urlencoded) يملأ $request->all()
-        $raw = $request->all();
-        if (empty($raw) && $request->getContent()) {
-            $decoded = json_decode($request->getContent(), true);
-            if (is_array($decoded)) {
-                $raw = $decoded;
+            $updateData = [
+                'name' => $input['name'],
+                'email' => $input['email'],
+                'phone' => $input['phone'],
+                'role' => $input['role'],
+                'is_active' => (bool) $input['is_active'],
+                'bio' => $input['bio'] ?: null,
+            ];
+
+            if (!empty($input['password'])) {
+                $updateData['password'] = Hash::make((string) $input['password']);
             }
-        }
-        if ($isAjax && empty($raw)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'لم تصل بيانات النموذج. حدّث الصفحة (F5) وحاول مرة أخرى.',
-            ], 400);
-        }
 
-        $name = trim((string) ($raw['name'] ?? $request->input('name') ?? ''));
-        $email = $request->filled('email') ? trim((string) $request->input('email')) : (trim((string) ($raw['email'] ?? '')) ?: null);
-        $phone = $request->filled('phone') ? trim((string) $request->input('phone')) : (trim((string) ($raw['phone'] ?? '')) ?: null);
-        $role = (string) ($raw['role'] ?? $request->input('role') ?? 'student');
-        $isActiveRaw = $raw['is_active'] ?? $request->input('is_active');
-        $is_active = in_array($isActiveRaw, [true, '1', 1, 'true', 'on'], true);
-
-        $input = [
-            'name' => $name,
-            'email' => $email ?: null,
-            'phone' => $phone ?: null,
-            'role' => $role,
-            'is_active' => $is_active,
-        ];
-
-        $validator = Validator::make($input, [
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:users,email,' . $id,
-            'phone' => 'nullable|string|max:50|unique:users,phone,' . $id,
-            'role' => 'required|in:super_admin,admin,instructor,teacher,student,parent,employee',
-            'is_active' => 'required|boolean',
-        ], [
-            'name.required' => 'الاسم مطلوب.',
-            'name.max' => 'الاسم يجب ألا يتجاوز 255 حرفاً.',
-            'email.email' => 'البريد الإلكتروني غير صالح.',
-            'email.unique' => 'البريد الإلكتروني مستخدم من قبل مستخدم آخر.',
-            'phone.unique' => 'رقم الهاتف مستخدم من قبل مستخدم آخر.',
-            'role.required' => 'الدور مطلوب.',
-            'role.in' => 'الدور المحدد غير صالح.',
-            'is_active.required' => 'حالة الحساب مطلوبة.',
-            'is_active.boolean' => 'حالة الحساب غير صالحة.',
-        ]);
-
-        if ($validator->fails()) {
-            $allMessages = $validator->errors()->all();
-            $firstError = !empty($allMessages) ? $allMessages[0] : 'يرجى تعبئة جميع الحقول المطلوبة (الاسم، الدور، حالة الحساب).';
-            if ($isAjax) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $firstError,
-                    'errors' => $validator->errors()->toArray(),
-                ], 422);
+            if ($input['role'] === 'employee') {
+                $updateData['is_employee'] = true;
+                $updateData['role'] = 'student';
+            } else {
+                $updateData['is_employee'] = false;
             }
-            return back()->withErrors($validator)->withInput();
-        }
 
-        $request->merge($input);
-
-        $updateData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'role' => $request->role,
-            'is_active' => (bool) $request->is_active,
-        ];
-        if ($request->filled('bio')) {
-            $updateData['bio'] = $request->bio;
-        }
-
-        if ($request->password) {
-            $updateData['password'] = Hash::make($request->password);
-        }
-
-        // معالجة حالة الموظف
-        if ($request->role === 'employee') {
-            $updateData['is_employee'] = true;
-            $updateData['role'] = 'student'; // استخدام student كقيمة افتراضية
-        } else {
-            $updateData['is_employee'] = false;
-        }
-
-        $updateDone = false;
-        try {
             $user->update($updateData);
-            $updateDone = true;
+
+            // تعطيل ActivityLog هنا لتفادي تعليق/تعطل الاستجابة بعد الحفظ.
+
+            Log::info('updateUser: success', ['id' => $id]);
+            if ($isAjax) {
+                return response()->json(['success' => true, 'message' => 'تم تحديث بيانات المستخدم بنجاح']);
+            }
+            return redirect()->route('admin.users.index', ['updated' => '1'], 303);
         } catch (\Throwable $e) {
-            Log::error('User update failed', ['user_id' => $id, 'error' => $e->getMessage()]);
+            Log::error('updateUser fatal fallback', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             if ($isAjax) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'حدث خطأ أثناء حفظ التعديلات: ' . (config('app.debug') ? $e->getMessage() : 'يرجى المحاولة مرة أخرى.'),
+                    'message' => 'حدث خطأ أثناء التحديث، ولكن تم منع تعطل الصفحة.',
                 ], 500);
             }
-            throw $e;
+            return redirect()->route('admin.users.edit', $id, 303)
+                ->with('warning', 'حدث خطأ تقني أثناء التحديث. حاول مرة أخرى.')
+                ->withInput();
         }
-
-        if ($isAjax) {
-            return response()->json([
-                'success' => true,
-                'message' => 'تم تحديث بيانات المستخدم بنجاح',
-            ]);
-        }
-
-        try {
-            $updated = $user->fresh();
-            if ($updated) {
-                $newValues = [
-                    'name' => $updated->name ?? '',
-                    'email' => $updated->email ?? null,
-                    'phone' => $updated->phone ?? null,
-                    'role' => $updated->role ?? 'student',
-                    'is_active' => (bool) ($updated->is_active ?? false),
-                    'is_employee' => (bool) ($updated->is_employee ?? false),
-                    'bio' => $updated->bio ?? null,
-                ];
-                ActivityLog::create([
-                    'user_id' => Auth::id(),
-                    'action' => 'user_updated',
-                    'model_type' => 'User',
-                    'model_id' => $user->id,
-                    'old_values' => $oldValues,
-                    'new_values' => $newValues,
-                    'ip_address' => $request->ip(),
-                    'user_agent' => substr((string) ($request->userAgent() ?? ''), 0, 255),
-                ]);
-            }
-        } catch (\Throwable $e) {
-            Log::warning('ActivityLog failed after user update', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-        }
-
-        return redirect()->route('admin.users.index', ['updated' => '1']);
     }
 
     /**

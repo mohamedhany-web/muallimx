@@ -10,13 +10,50 @@ use App\Models\Notification;
 use App\Models\WalletTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class ConsultationController extends Controller
 {
     public function index(Request $request)
     {
+        if (! Schema::hasTable('consultation_requests')) {
+            Log::warning('Consultations index requested but table is missing.', [
+                'url' => $request->fullUrl(),
+                'user_id' => auth()->id(),
+            ]);
+
+            $requests = new LengthAwarePaginator(
+                collect(),
+                0,
+                25,
+                1,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
+            $settings = (object) [
+                'default_price' => 0,
+                'default_duration_minutes' => 60,
+                'payment_instructions' => null,
+                'is_active' => false,
+            ];
+
+            $stats = [
+                'pending' => 0,
+                'payment_reported' => 0,
+                'awaiting_verification' => 0,
+                'paid' => 0,
+                'scheduled' => 0,
+            ];
+
+            $status = (string) $request->get('status', 'all');
+            return view('admin.consultations.index', compact('requests', 'settings', 'stats', 'status'))
+                ->with('error', 'ميزة الاستشارات غير مفعلة حالياً لأن جدول البيانات غير موجود. يرجى تشغيل الترحيلات (migrations).');
+        }
+
         $status = (string) $request->get('status', 'all');
         $query = ConsultationRequest::query()
             ->with(['instructor', 'student', 'classroomMeeting'])

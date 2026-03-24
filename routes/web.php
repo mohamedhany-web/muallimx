@@ -536,6 +536,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/start', [\App\Http\Controllers\Student\ClassroomController::class, 'startMeeting'])->name('student.classroom.start-meeting');
         Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('student.classroom.end');
+        Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('student.classroom.recording.upload');
         // الدعم الفني (ميزة من الباقة)
         Route::get('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'index'])->name('student.support.index');
         Route::post('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'store'])->name('student.support.store');
@@ -624,6 +625,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->name('users.store');
         Route::get('/users/{id}', [\App\Http\Controllers\Admin\AdminController::class, 'showUser'])->name('users.show')->where('id', '[0-9]+');
         Route::get('/users/{id}/edit', [\App\Http\Controllers\Admin\AdminController::class, 'editUser'])->name('users.edit')->where('id', '[0-9]+');
+        // دعم fallback لـ POST في حالة فشل method spoof (_method=PUT) على بعض البيئات/المتصفحات
+        Route::post('/users/{id}', [\App\Http\Controllers\Admin\AdminController::class, 'updateUser'])->where('id', '[0-9]+');
         Route::put('/users/{id}', [\App\Http\Controllers\Admin\AdminController::class, 'updateUser'])->name('users.update')->where('id', '[0-9]+');
         Route::delete('/users/{id}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteUser'])->name('users.delete')->where('id', '[0-9]+');
         
@@ -1220,6 +1223,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::delete('/{liveRecording}', [\App\Http\Controllers\Admin\LiveRecordingController::class, 'destroy'])->name('destroy');
         });
 
+        Route::prefix('classroom-recordings')->name('classroom-recordings.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\ClassroomRecordingController::class, 'index'])->name('index');
+        });
+
         Route::prefix('live-settings')->name('live-settings.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\LiveSettingController::class, 'index'])->name('index');
             Route::post('/', [\App\Http\Controllers\Admin\LiveSettingController::class, 'update'])->name('update');
@@ -1264,6 +1271,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/start', [\App\Http\Controllers\Student\ClassroomController::class, 'startMeeting'])->name('classroom.start-meeting');
         Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('classroom.room');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('classroom.end');
+        Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('classroom.recording.upload');
 
         // بروفايل المدرب
         Route::get('/profile', [\App\Http\Controllers\Instructor\ProfileController::class, 'index'])->name('profile');

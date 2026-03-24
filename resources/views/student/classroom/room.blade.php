@@ -52,6 +52,7 @@
             <span class="text-amber-200 text-xs px-2 py-1 rounded-md bg-amber-500/20 border border-amber-500/30" id="meeting-timer-chip">
                 مدة الاجتماع: {{ (int) $effectiveDurationMinutes }} دقيقة (حد الباقة {{ (int) $maxDurationMinutes }})
             </span>
+            <span class="hidden text-sky-200 text-xs px-2 py-1 rounded-md bg-sky-500/20 border border-sky-500/30" id="record-status-chip"></span>
             <button type="button" id="btn-record" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors border border-slate-600" title="تسجيل المحاضرة">
                 <i class="fas fa-circle-dot text-rose-400" id="record-icon"></i>
                 <span id="record-label">تسجيل المحاضرة</span>
@@ -151,6 +152,9 @@
             var recordBtn = document.getElementById('btn-record');
             var recordIcon = document.getElementById('record-icon');
             var recordLabel = document.getElementById('record-label');
+            var recordStatusChip = document.getElementById('record-status-chip');
+            var uploadRecordingUrl = '{{ route($rp . 'classroom.recording.upload', $meeting) }}';
+            var csrfToken = '{{ csrf_token() }}';
             var permissionGate = document.getElementById('permission-gate');
             var permissionHelp = document.getElementById('permission-help');
             var requestMediaBtn = document.getElementById('btn-request-media');
@@ -158,7 +162,11 @@
             var api = null;
             var hasJoinedConference = false;
             var isRecording = false;
-            var recordActionTimeout = null;
+            var mediaRecorder = null;
+            var recordedChunks = [];
+            var recordingStartedAt = null;
+            var activeRecordingStream = null;
+            var micStream = null;
 
             function showError() {
                 if (loadingEl) loadingEl.classList.add('hidden');
@@ -187,16 +195,78 @@
                 recordBtn.classList.toggle('cursor-not-allowed', isBusy);
             }
 
-            function clearRecordActionTimeout() {
-                if (recordActionTimeout) {
-                    clearTimeout(recordActionTimeout);
-                    recordActionTimeout = null;
+            function setRecordStatus(message, isError) {
+                if (!recordStatusChip) return;
+                if (!message) {
+                    recordStatusChip.classList.add('hidden');
+                    recordStatusChip.textContent = '';
+                    return;
+                }
+                recordStatusChip.classList.remove('hidden');
+                recordStatusChip.textContent = message;
+                recordStatusChip.classList.remove('bg-sky-500/20', 'border-sky-500/30', 'text-sky-200', 'bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
+                if (isError) {
+                    recordStatusChip.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
+                } else {
+                    recordStatusChip.classList.add('bg-sky-500/20', 'border-sky-500/30', 'text-sky-200');
                 }
             }
 
-            function handleRecordButtonClick() {
-                if (!api) {
-                    alert('جاري تهيئة غرفة الاجتماع... حاول بعد ثوانٍ.');
+            function stopCaptureTracks(stream) {
+                if (!stream) return;
+                try {
+                    stream.getTracks().forEach(function(track) { track.stop(); });
+                } catch (err) {
+                    console.warn('Track stop warning:', err);
+                }
+            }
+
+            async function buildRecordingStream() {
+                var displayStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true,
+                    audio: true
+                });
+
+                var tracks = [];
+                displayStream.getVideoTracks().forEach(function(track) { tracks.push(track); });
+                displayStream.getAudioTracks().forEach(function(track) { tracks.push(track); });
+
+                // نضيف الميكروفون أيضاً لأن بعض المتصفحات لا تُرجع صوت النظام/التبويب دائماً.
+                try {
+                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    micStream.getAudioTracks().forEach(function(track) { tracks.push(track); });
+                } catch (micErr) {
+                    console.warn('Microphone stream unavailable:', micErr);
+                }
+
+                return new MediaStream(tracks);
+            }
+
+            function uploadRecordedBlob(blob, durationSeconds) {
+                var formData = new FormData();
+                formData.append('recording', blob, 'meeting-recording.webm');
+                formData.append('duration_seconds', String(durationSeconds || 0));
+
+                return fetch(uploadRecordingUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: formData
+                }).then(function(response) {
+                    return response.json().then(function(data) {
+                        return { ok: response.ok, data: data };
+                    }).catch(function() {
+                        return { ok: response.ok, data: {} };
+                    });
+                });
+            }
+
+            async function startBrowserRecording() {
+                if (!navigator.mediaDevices || typeof navigator.mediaDevices.getDisplayMedia !== 'function') {
+                    alert('هذا المتصفح لا يدعم تسجيل الشاشة من المتصفح.');
                     return;
                 }
                 if (!hasJoinedConference) {
@@ -206,26 +276,99 @@
 
                 setRecordButtonBusy(true);
 
-                // في بعض إعدادات Jitsi قد لا يتوفر التسجيل (Jibri/JaaS)؛
-                // نُظهر رسالة واضحة بدل أن يبدو الزر "لا يعمل".
-                clearRecordActionTimeout();
-                recordActionTimeout = setTimeout(function() {
+                try {
+                    activeRecordingStream = await buildRecordingStream();
+                } catch (err) {
                     setRecordButtonBusy(false);
-                    alert('تعذر بدء/إيقاف التسجيل من السيرفر الحالي. تأكد من تفعيل خدمة التسجيل (Jibri) على خادم Jitsi.');
-                }, 4000);
+                    alert('تم إلغاء مشاركة الشاشة أو لم يتم منح الصلاحية.');
+                    return;
+                }
 
                 try {
-                    if (isRecording) {
-                        api.executeCommand('stopRecording', { mode: 'file' });
-                    } else {
-                        api.executeCommand('startRecording', { mode: 'file' });
-                    }
+                    mediaRecorder = new MediaRecorder(activeRecordingStream, { mimeType: 'video/webm' });
                 } catch (err) {
-                    clearRecordActionTimeout();
+                    stopCaptureTracks(activeRecordingStream);
+                    activeRecordingStream = null;
                     setRecordButtonBusy(false);
-                    console.error('Recording command error:', err);
-                    alert('حدث خطأ أثناء تنفيذ أمر التسجيل.');
+                    alert('تعذر بدء التسجيل. جرّب متصفح Chrome أو Edge بإصدار حديث.');
+                    return;
                 }
+
+                recordedChunks = [];
+                recordingStartedAt = Date.now();
+
+                mediaRecorder.addEventListener('dataavailable', function(event) {
+                    if (event.data && event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                });
+
+                mediaRecorder.addEventListener('stop', async function() {
+                    var durationSeconds = recordingStartedAt ? Math.max(1, Math.round((Date.now() - recordingStartedAt) / 1000)) : 0;
+                    var blob = new Blob(recordedChunks, { type: 'video/webm' });
+
+                    if (!blob.size) {
+                        setRecordButtonBusy(false);
+                        setRecordStatus('لا يوجد محتوى في التسجيل.', true);
+                        alert('لا يوجد محتوى في التسجيل. حاول مرة أخرى.');
+                        return;
+                    }
+
+                    try {
+                        setRecordStatus('جاري رفع التسجيل... لا تغلق الصفحة.', false);
+                        var result = await uploadRecordedBlob(blob, durationSeconds);
+                        if (!result.ok) {
+                            throw new Error((result.data && result.data.message) ? result.data.message : 'فشل رفع التسجيل إلى الخادم.');
+                        }
+                        setRecordStatus('تم رفع التسجيل بنجاح.', false);
+                        alert('تم رفع التسجيل إلى Cloudflare بنجاح. سيظهر رابط التحميل في صفحة الاجتماع بعد إنهائه.');
+                    } catch (uploadError) {
+                        console.error('Upload recording error:', uploadError);
+                        setRecordStatus('فشل رفع التسجيل. أعد المحاولة.', true);
+                        alert(uploadError && uploadError.message ? uploadError.message : 'فشل رفع التسجيل.');
+                    } finally {
+                        recordedChunks = [];
+                        setRecordButtonBusy(false);
+                    }
+                });
+
+                activeRecordingStream.getVideoTracks().forEach(function(track) {
+                    track.addEventListener('ended', function() {
+                        if (mediaRecorder && mediaRecorder.state === 'recording') {
+                            mediaRecorder.stop();
+                        }
+                    });
+                });
+
+                mediaRecorder.start(1000);
+                isRecording = true;
+                setRecordButtonState(true);
+                setRecordStatus('جاري التسجيل الآن...', false);
+                setRecordButtonBusy(false);
+            }
+
+            function stopBrowserRecording() {
+                if (!mediaRecorder || mediaRecorder.state !== 'recording') {
+                    return;
+                }
+                setRecordButtonBusy(true);
+                mediaRecorder.stop();
+                stopCaptureTracks(activeRecordingStream);
+                activeRecordingStream = null;
+                stopCaptureTracks(micStream);
+                micStream = null;
+                isRecording = false;
+                setRecordButtonState(false);
+                setRecordStatus('تم إيقاف التسجيل. تجهيز الرفع...', false);
+            }
+
+            async function handleRecordButtonClick() {
+                if (isRecording) {
+                    stopBrowserRecording();
+                    return;
+                }
+
+                await startBrowserRecording();
             }
 
             if (recordBtn) {
@@ -361,19 +504,9 @@
                         hasJoinedConference = true;
                     });
 
-                    api.addEventListener('recordingStatusChanged', function(data) {
-                        clearRecordActionTimeout();
-                        setRecordButtonBusy(false);
-                        isRecording = data && (data.on === true || data.status === 'on');
-                        setRecordButtonState(isRecording);
-                    });
-
-                    api.addEventListener('errorOccurred', function(event) {
-                        var name = event && event.name ? String(event.name) : '';
-                        if (name.toLowerCase().includes('record')) {
-                            clearRecordActionTimeout();
-                            setRecordButtonBusy(false);
-                            alert('فشل التسجيل: تأكد أن حسابك لديه صلاحية التسجيل وأن خدمة التسجيل مفعلة على الخادم.');
+                    api.addEventListener('readyToClose', function() {
+                        if (isRecording) {
+                            stopBrowserRecording();
                         }
                     });
                 } catch (e) {

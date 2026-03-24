@@ -31,6 +31,13 @@ class PreventConcurrentSessions
         
         // المفتاح في الكاش لتخزين معرف الجلسة النشطة
         $cacheKey = "user_session_{$user->id}";
+
+        // تعطيل المنع الصارم افتراضياً لأنه قد يسبب طرداً غير متوقع أثناء الحفظ/التعديل.
+        // يمكن تفعيله عبر SESSION_ENFORCE_SINGLE=true في .env عند الحاجة.
+        if (!((bool) env('SESSION_ENFORCE_SINGLE', false))) {
+            Cache::put($cacheKey, $sessionId, now()->addDays(7));
+            return $next($request);
+        }
         
         // الحصول على معرف الجلسة المخزن
         $storedSessionId = Cache::get($cacheKey);
@@ -42,13 +49,14 @@ class PreventConcurrentSessions
             return $next($request);
         }
         
-        // إذا كانت هناك جلسة نشطة أخرى، تسجيل الخروج من الجلسة الحالية
-        \Log::info('جلسة متزامنة مكتشفة للمستخدم: ' . $user->id . ' - الجلسة الحالية: ' . $sessionId . ' - الجلسة المخزنة: ' . $storedSessionId);
-        
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        
-        return redirect('/login')->with('error', 'تم تسجيل الدخول من جهاز آخر. تم تسجيل الخروج تلقائياً.');
+        // عند اختلاف الجلسة لا نكسر الطلبات الحساسة (مثل حفظ المستخدمين)؛ نحدّث الجلسة النشطة ونكمل.
+        \Log::warning('Concurrent session detected; refreshing active session instead of forced logout', [
+            'user_id' => $user->id,
+            'current_session' => $sessionId,
+            'stored_session' => $storedSessionId,
+            'url' => $request->fullUrl(),
+        ]);
+        Cache::put($cacheKey, $sessionId, now()->addDays(7));
+        return $next($request);
     }
 }

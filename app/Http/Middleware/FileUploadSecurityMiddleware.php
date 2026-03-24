@@ -78,6 +78,11 @@ class FileUploadSecurityMiddleware
             ],
             'image' => ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
             'video' => ['video/mp4', 'video/webm', 'video/ogg'],
+            // تسجيل شاشة المتصفح غالباً يخرج WebM وأحياناً MIME غير قياسي حسب المتصفح.
+            'recording' => [
+                'video/webm', 'video/mp4', 'video/ogg', 'audio/webm', 'audio/ogg', 'application/octet-stream',
+                'webm', 'mp4', 'ogg',
+            ],
             'document' => [
                 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -108,6 +113,7 @@ class FileUploadSecurityMiddleware
     {
         $sizeMap = [
             'video' => 524288000,   // 500 MB
+            'recording' => 1073741824, // 1 GB
             'image' => 10485760,   // 10 MB
             'document' => 52428800, // 50 MB
             'file' => 52428800,    // 50 MB (ملفات الموارد)

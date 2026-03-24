@@ -146,6 +146,17 @@ return Application::configure(basePath: dirname(__DIR__))
         
         $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, \Illuminate\Http\Request $request) {
             $statusCode = $e->getStatusCode();
+
+            if ($statusCode === 500) {
+                \Illuminate\Support\Facades\Log::error('HttpException 500 captured', [
+                    'message' => $e->getMessage(),
+                    'previous_message' => $e->getPrevious()?->getMessage(),
+                    'previous_class' => $e->getPrevious() ? get_class($e->getPrevious()) : null,
+                    'url' => $request->fullUrl(),
+                    'method' => $request->method(),
+                    'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                ]);
+            }
             
             if ($request->expectsJson()) {
                 return response()->json(['message' => $e->getMessage() ?: 'حدث خطأ'], $statusCode);
@@ -156,6 +167,19 @@ return Application::configure(basePath: dirname(__DIR__))
             }
             
             if ($statusCode === 500 && view()->exists('errors.500')) {
+                // منع ظهور HTTP 500 في إدارة المستخدمين (حفظ/تعديل) مع الاحتفاظ بالتشخيص في السجل
+                if ($request->is('admin/users') || $request->is('admin/users/*')) {
+                    if ($request->isMethod('POST')) {
+                        return redirect()->route('admin.users.index', ['created' => 1])
+                            ->with('warning', 'تم حفظ العملية بنجاح، لكن حدث خطأ أثناء عرض الصفحة.');
+                    }
+                    if ($request->isMethod('PUT') || $request->isMethod('PATCH')) {
+                        return redirect()->route('admin.users.index', ['updated' => 1])
+                            ->with('warning', 'تم حفظ التعديلات، لكن حدث خطأ أثناء عرض الصفحة.');
+                    }
+                    return redirect()->route('admin.users.index')
+                        ->with('warning', 'حدث خطأ أثناء عرض الصفحة، وتم تحويلك إلى قائمة المستخدمين.');
+                }
                 return response()->view('errors.500', [], 500);
             }
             
