@@ -322,19 +322,37 @@ class SubscriptionController extends Controller
         try {
             DB::beginTransaction();
 
+            // إنهاء أي اشتراك نشط سابق للمستخدم قبل تفعيل الجديد (خصوصاً في حالة الترقية)
+            $activeOld = Subscription::where('user_id', $subscriptionRequest->user_id)
+                ->where('status', 'active')
+                ->where(function ($q) {
+                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+                })
+                ->orderByDesc('end_date')
+                ->first();
+
+            if ($activeOld) {
+                $activeOld->update([
+                    'status' => 'expired',
+                    'end_date' => now()->toDateString(),
+                ]);
+            }
+
             $invoiceNumber = 'INV-' . str_pad(Invoice::count() + 1, 8, '0', STR_PAD_LEFT);
             $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
                 'user_id' => $subscriptionRequest->user_id,
                 'type' => 'subscription',
-                'description' => 'فاتورة اشتراك: ' . $subscriptionRequest->plan_name,
+                'description' => ($subscriptionRequest->request_type ?? null) === 'upgrade'
+                    ? 'فاتورة ترقية اشتراك: ' . $subscriptionRequest->plan_name
+                    : 'فاتورة اشتراك: ' . $subscriptionRequest->plan_name,
                 'subtotal' => $subscriptionRequest->price,
                 'tax_amount' => 0,
                 'discount_amount' => 0,
                 'total_amount' => $subscriptionRequest->price,
                 'status' => 'pending',
                 'due_date' => $startDate,
-                'notes' => 'اشتراك من طلب الطالب - ' . $subscriptionRequest->plan_name,
+                'notes' => (($subscriptionRequest->request_type ?? null) === 'upgrade' ? 'ترقية' : 'اشتراك') . ' من طلب المستخدم - ' . $subscriptionRequest->plan_name,
                 'items' => [
                     [
                         'description' => 'اشتراك: ' . $subscriptionRequest->plan_name,

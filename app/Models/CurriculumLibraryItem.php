@@ -48,9 +48,29 @@ class CurriculumLibraryItem extends Model
         return $this->belongsTo(CurriculumLibraryCategory::class, 'category_id');
     }
 
+    /** هل يحق للطالب الوصول لهذا العنصر بحسب تصنيف «قسم خاص»؟ */
+    public function isAccessibleByStudent(?User $user): bool
+    {
+        if (!$this->category_id) {
+            return true;
+        }
+
+        $category = $this->relationLoaded('category') ? $this->category : $this->category()->first();
+        if (!$category || !$category->is_restricted) {
+            return true;
+        }
+
+        return $user && $category->restrictedUsers()->where('users.id', $user->id)->exists();
+    }
+
     public function files()
     {
         return $this->hasMany(CurriculumLibraryItemFile::class, 'curriculum_library_item_id')->orderBy('order')->orderBy('id');
+    }
+
+    public function sections()
+    {
+        return $this->hasMany(CurriculumLibrarySection::class, 'curriculum_library_item_id')->orderBy('order')->orderBy('id');
     }
 
     public function scopeByLanguage($query, ?string $lang)

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CurriculumLibraryCategory;
 use App\Models\CurriculumLibraryItem;
 use App\Models\CurriculumLibraryItemFile;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -35,13 +36,15 @@ class CurriculumLibraryController extends Controller
 
     public function categories()
     {
-        $categories = CurriculumLibraryCategory::withCount('items')->ordered()->get();
+        $categories = CurriculumLibraryCategory::withCount(['items', 'restrictedUsers'])->ordered()->get();
         return view('admin.curriculum-library.categories', compact('categories'));
     }
 
     public function createCategory()
     {
-        return view('admin.curriculum-library.categories-form', ['category' => null]);
+        $users = User::where('role', 'student')->where('is_active', true)->orderBy('name')->get(['id', 'name', 'email']);
+
+        return view('admin.curriculum-library.categories-form', ['category' => null, 'users' => $users]);
     }
 
     public function storeCategory(Request $request)
@@ -52,17 +55,32 @@ class CurriculumLibraryController extends Controller
             'description' => 'nullable|string',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
+            'is_restricted' => 'nullable|boolean',
+            'restricted_user_ids' => 'nullable|array',
+            'restricted_user_ids.*' => 'exists:users,id',
         ]);
         $validated['slug'] = $validated['slug'] ?? Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active');
+        $validated['is_restricted'] = $request->boolean('is_restricted');
         $validated['order'] = (int) ($validated['order'] ?? 0);
-        CurriculumLibraryCategory::create($validated);
+
+        $restrictIds = array_values(array_unique(array_filter(array_map('intval', $request->input('restricted_user_ids', []) ?? []))));
+
+        $category = CurriculumLibraryCategory::create($validated);
+
+        if ($validated['is_restricted']) {
+            $category->restrictedUsers()->sync($restrictIds);
+        }
+
         return redirect()->route('admin.curriculum-library.categories')->with('success', 'تم إنشاء التصنيف بنجاح.');
     }
 
     public function editCategory(CurriculumLibraryCategory $category)
     {
-        return view('admin.curriculum-library.categories-form', ['category' => $category]);
+        $category->load('restrictedUsers');
+        $users = User::where('role', 'student')->where('is_active', true)->orderBy('name')->get(['id', 'name', 'email']);
+
+        return view('admin.curriculum-library.categories-form', ['category' => $category, 'users' => $users]);
     }
 
     public function updateCategory(Request $request, CurriculumLibraryCategory $category)
@@ -73,16 +91,31 @@ class CurriculumLibraryController extends Controller
             'description' => 'nullable|string',
             'order' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
+            'is_restricted' => 'nullable|boolean',
+            'restricted_user_ids' => 'nullable|array',
+            'restricted_user_ids.*' => 'exists:users,id',
         ]);
         $validated['slug'] = $validated['slug'] ?? Str::slug($validated['name']);
         $validated['is_active'] = $request->boolean('is_active');
+        $validated['is_restricted'] = $request->boolean('is_restricted');
         $validated['order'] = (int) ($validated['order'] ?? 0);
+
+        $restrictIds = array_values(array_unique(array_filter(array_map('intval', $request->input('restricted_user_ids', []) ?? []))));
+
         $category->update($validated);
+
+        if ($validated['is_restricted']) {
+            $category->restrictedUsers()->sync($restrictIds);
+        } else {
+            $category->restrictedUsers()->detach();
+        }
+
         return redirect()->route('admin.curriculum-library.categories')->with('success', 'تم تحديث التصنيف بنجاح.');
     }
 
     public function destroyCategory(CurriculumLibraryCategory $category)
     {
+        $category->restrictedUsers()->detach();
         $category->items()->update(['category_id' => null]);
         $category->delete();
         return redirect()->route('admin.curriculum-library.categories')->with('success', 'تم حذف التصنيف.');
@@ -118,10 +151,8 @@ class CurriculumLibraryController extends Controller
         $validated['item_type'] = $validated['item_type'] ?? 'presentation';
         $item = CurriculumLibraryItem::create($validated);
 
-        // دعم رفع الملفات أثناء الإنشاء مباشرةً (ومنها HTML على R2).
-        $this->storeItemFiles($request, $item);
-
-        return redirect()->route('admin.curriculum-library.index')->with('success', 'تم إضافة عنصر المنهج بنجاح.');
+        return redirect()->route('admin.curriculum-library.items.structure', $item)
+            ->with('success', 'تم إضافة المنهج. أضف الأقسام والمواد أدناه (التخزين على Cloudflare R2).');
     }
 
     public function editItem(CurriculumLibraryItem $item)
@@ -166,68 +197,22 @@ class CurriculumLibraryController extends Controller
         $validated['item_type'] = $validated['item_type'] ?? 'presentation';
         $item->update($validated);
 
-        $this->storeItemFiles($request, $item);
-
-        return redirect()->route('admin.curriculum-library.index')->with('success', 'تم تحديث عنصر المنهج بنجاح.');
+        return redirect()->route('admin.curriculum-library.index')->with('success', 'تم تحديث بيانات المنهج.');
     }
 
     public function destroyItem(CurriculumLibraryItem $item)
     {
+        foreach ($item->sections()->whereNull('parent_id')->get() as $root) {
+            $root->deleteWithStorage();
+        }
         foreach ($item->files as $file) {
-            if ($file->path && Storage::exists($file->path)) {
-                Storage::delete($file->path);
+            $diskName = $file->storage_disk ?: 'public';
+            if ($file->path && Storage::disk($diskName)->exists($file->path)) {
+                Storage::disk($diskName)->delete($file->path);
             }
         }
         $item->delete();
         return redirect()->route('admin.curriculum-library.index')->with('success', 'تم حذف عنصر المنهج.');
-    }
-
-    /**
-     * رفع ملفات جديدة لعنصر المنهج (بوربوينت / وجبات).
-     */
-    protected function storeItemFiles(Request $request, CurriculumLibraryItem $item): void
-    {
-        $newFiles = $request->file('new_files');
-        $types = $request->input('new_files_type', []);
-        $labels = $request->input('new_files_label', []);
-        if (!is_array($newFiles)) {
-            return;
-        }
-        $order = ($item->files()->max('order') ?? 0) + 1;
-        foreach ($newFiles as $i => $file) {
-            if (!$file || !$file->isValid()) {
-                continue;
-            }
-            $type = $types[$i] ?? 'presentation';
-            if (!in_array($type, ['presentation', 'assignment', 'html'], true)) {
-                $type = 'presentation';
-            }
-            $label = $labels[$i] ?? null;
-
-            // لو الملف امتداده HTML اجبر النوع HTML حتى لو لم يُغيّر الأدمن القائمة.
-            $ext = strtolower((string) $file->getClientOriginalExtension());
-            if (in_array($ext, ['html', 'htm'], true)) {
-                $type = 'html';
-            }
-
-            // ملفات HTML تُرفع إلى Cloudflare R2 وتُعرض داخل الموقع.
-            if ($type === 'html') {
-                $storageDisk = 'r2';
-                $path = $file->store('curriculum-library/' . $item->id, $storageDisk);
-            } else {
-                $storageDisk = 'public';
-                $path = $file->store('curriculum-library/' . $item->id, $storageDisk);
-            }
-
-            CurriculumLibraryItemFile::create([
-                'curriculum_library_item_id' => $item->id,
-                'path' => $path,
-                'storage_disk' => $storageDisk,
-                'label' => $label ?: null,
-                'file_type' => $type,
-                'order' => $order++,
-            ]);
-        }
     }
 
     public function destroyFile(CurriculumLibraryItem $item, CurriculumLibraryItemFile $file)
@@ -235,8 +220,9 @@ class CurriculumLibraryController extends Controller
         if ($file->curriculum_library_item_id !== $item->id) {
             abort(404);
         }
-        if ($file->path && Storage::exists($file->path)) {
-            Storage::delete($file->path);
+        $diskName = $file->storage_disk ?: 'public';
+        if ($file->path && Storage::disk($diskName)->exists($file->path)) {
+            Storage::disk($diskName)->delete($file->path);
         }
         $file->delete();
         return redirect()->route('admin.curriculum-library.items.edit', $item)->with('success', 'تم حذف الملف.');

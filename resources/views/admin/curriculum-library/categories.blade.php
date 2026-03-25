@@ -31,6 +31,11 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium {{ $cat->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">{{ $cat->is_active ? 'نشط' : 'معطل' }}</span>
+                        @if(!empty($cat->is_restricted))
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800" title="يظهر فقط للمستخدمين المحددين">
+                                <i class="fas fa-user-lock text-[10px]"></i> خاص ({{ $cat->restricted_users_count }})
+                            </span>
+                        @endif
                         <a href="{{ route('admin.curriculum-library.categories.edit', $cat) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-semibold">تعديل</a>
                         <form action="{{ route('admin.curriculum-library.categories.destroy', $cat) }}" method="POST" class="inline" onsubmit="return confirm('حذف التصنيف؟ العناصر لن تُحذف لكن ستُفقد التصنيف.');">
                             @csrf

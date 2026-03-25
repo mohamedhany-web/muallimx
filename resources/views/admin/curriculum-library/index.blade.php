@@ -62,6 +62,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3">
+                                <a href="{{ route('admin.curriculum-library.items.structure', $item) }}" class="text-sky-600 hover:text-sky-800 text-sm font-semibold mr-2">هيكل</a>
                                 <a href="{{ route('admin.curriculum-library.items.edit', $item) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-semibold">تعديل</a>
                                 <form action="{{ route('admin.curriculum-library.items.destroy', $item) }}" method="POST" class="inline-block mr-2" onsubmit="return confirm('حذف هذا العنصر؟');">
                                     @csrf

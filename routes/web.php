@@ -555,8 +555,14 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // مكتبة المناهج التفاعلية (مناهج أكس — معاينة ملف واحد مجاناً ثم اشتراك)
         Route::get('/curriculum-library', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
         Route::get('/curriculum-library/{item:slug}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'show'])->name('curriculum-library.show');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'downloadMaterial'])->name('curriculum-library.material.download');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/html', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialHtml'])->name('curriculum-library.material.html');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPdf'])->name('curriculum-library.material.pdf');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPresentation'])->name('curriculum-library.material.presentation');
         Route::get('/curriculum-library/{item:slug}/file/{file}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'download'])->name('curriculum-library.file.download');
         Route::get('/curriculum-library/{item:slug}/file/{file}/view', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewHtml'])->name('curriculum-library.file.view');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPdf'])->name('curriculum-library.file.pdf');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPresentation'])->name('curriculum-library.file.presentation');
     });
 
     // لوحة الموظفين
@@ -1020,6 +1026,13 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::delete('/curriculum-library/categories/{category}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'destroyCategory'])->name('curriculum-library.categories.destroy');
         Route::get('/curriculum-library/items/create', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'createItem'])->name('curriculum-library.items.create');
         Route::post('/curriculum-library/items', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'storeItem'])->name('curriculum-library.items.store');
+        Route::get('/curriculum-library/items/{item}/structure', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'show'])->name('curriculum-library.items.structure');
+        Route::post('/curriculum-library/items/{item}/sections', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'storeSection'])->name('curriculum-library.items.sections.store');
+        Route::put('/curriculum-library/items/{item}/sections/{section}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'updateSection'])->name('curriculum-library.items.sections.update');
+        Route::delete('/curriculum-library/items/{item}/sections/{section}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'destroySection'])->name('curriculum-library.items.sections.destroy');
+        Route::post('/curriculum-library/items/{item}/sections/{section}/materials', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'storeMaterial'])->name('curriculum-library.items.materials.store');
+        Route::put('/curriculum-library/items/{item}/materials/{material}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'updateMaterial'])->name('curriculum-library.items.materials.update');
+        Route::delete('/curriculum-library/items/{item}/materials/{material}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'destroyMaterial'])->name('curriculum-library.items.materials.destroy');
         Route::get('/curriculum-library/items/{item}/edit', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'editItem'])->name('curriculum-library.items.edit');
         // دعم fallback لـ POST في حالة فشل method spoof (_method=PUT) على بعض البيئات
         Route::post('/curriculum-library/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'updateItem']);

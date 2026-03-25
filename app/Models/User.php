@@ -212,6 +212,17 @@ class User extends Authenticatable
             ->first();
     }
 
+    /** أقسام مكتبة المناهج «الخاصة» المسموح لهذا المستخدم */
+    public function curriculumLibraryRestrictedCategories()
+    {
+        return $this->belongsToMany(
+            CurriculumLibraryCategory::class,
+            'curriculum_library_category_user',
+            'user_id',
+            'category_id'
+        )->withTimestamps();
+    }
+
     /**
      * هل لدى المستخدم ميزة معينة من اشتراكه النشط (مثل teacher_profile, library_access)
      */

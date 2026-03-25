@@ -5,14 +5,22 @@
 
 @section('content')
 <div class="w-full max-w-none space-y-4">
+    @if($item)
+        <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm text-indigo-900 font-semibold">الأقسام والمواد والتحكم بالعرض/التحميل تُدار من صفحة هيكل المنهج (رفع إلى R2).</p>
+            <a href="{{ route('admin.curriculum-library.items.structure', $item) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700">
+                <i class="fas fa-sitemap"></i> هيكل المنهج
+            </a>
+        </div>
+    @endif
     @if($item && $item->files && $item->files->isNotEmpty())
         <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-            <h3 class="text-sm font-bold text-slate-800 mb-3">الملفات الحالية</h3>
+            <h3 class="text-sm font-bold text-slate-800 mb-3">ملفات قديمة (قبل الهيكل الهرمي)</h3>
             <ul class="space-y-2">
                 @foreach($item->files as $f)
                     <li class="flex items-center justify-between py-2 px-3 rounded-lg bg-slate-50 border border-slate-100">
                         <span class="text-sm text-slate-700">
-                            {{ $f->label ?: ($f->file_type === 'presentation' ? 'عرض شرائح' : ($f->file_type === 'assignment' ? 'وجبة' : 'HTML')) }}
+                            {{ $f->label ?: ($f->file_type === 'presentation' ? 'عرض شرائح' : ($f->file_type === 'pdf' ? 'PDF' : ($f->file_type === 'assignment' ? 'وجبة' : 'HTML'))) }}
                         </span>
                         <form action="{{ route('admin.curriculum-library.items.files.destroy', [$item, $f]) }}" method="POST" class="inline" onsubmit="return confirm('حذف هذا الملف؟');">
                             @csrf
@@ -26,7 +34,7 @@
     @endif
 
     <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
-        <form action="{{ $item ? route('admin.curriculum-library.items.update', $item) : route('admin.curriculum-library.items.store') }}" method="POST" class="space-y-4" enctype="multipart/form-data">
+        <form action="{{ $item ? route('admin.curriculum-library.items.update', $item) : route('admin.curriculum-library.items.store') }}" method="POST" class="space-y-4">
             @csrf
             {{-- ملاحظة: بعض البيئات تفشل في method spoof (PUT)، لذلك التحديث يعتمد POST fallback route --}}
 
@@ -57,9 +65,10 @@
                            class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">المرحلة الدراسية</label>
-                    <input type="text" name="grade_level" value="{{ old('grade_level', $item?->grade_level) }}" placeholder="مثال: ابتدائي، أول ثانوي"
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">المستوى / المرحلة داخل القسم</label>
+                    <input type="text" name="grade_level" value="{{ old('grade_level', $item?->grade_level) }}" placeholder="مثال: المستوى المبتدئ، المستوى الأول، الثاني، الثالث…"
                            class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500">
+                    <p class="text-xs text-slate-500 mt-1">نص حر تضبطه أنت لكل قسم (عربي، إسلاميات، قرآن…).</p>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1">اللغة (مناهج أكس)</label>
@@ -93,23 +102,6 @@
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1">وصف مختصر</label>
                 <textarea name="description" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500" placeholder="ملخص يظهر في قائمة المكتبة">{{ old('description', $item?->description) }}</textarea>
-            </div>
-
-            <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
-                <h3 class="text-sm font-bold text-slate-800 mb-2">إضافة ملف جديد (بوربوينت / وجبات / HTML)</h3>
-                <div class="flex flex-wrap gap-3 items-end">
-                    <div class="flex-1 min-w-[200px]">
-                        <input type="file" name="new_files[]" class="block w-full text-sm text-slate-600 file:mr-2 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700" accept=".ppt,.pptx,.pdf,.zip,.doc,.docx,.html,.htm">
-                        <select name="new_files_type[]" class="mt-1 w-full px-2 py-1 rounded border border-slate-200 text-sm">
-                            <option value="presentation">بوربوينت</option>
-                            <option value="assignment">وجبة</option>
-                            <option value="html">HTML (عرض داخل الموقع)</option>
-                        </select>
-                    </div>
-                    <div class="min-w-[180px]">
-                        <input type="text" name="new_files_label[]" class="w-full px-2 py-1.5 rounded border border-slate-200 text-sm" placeholder="اسم الملف (اختياري)">
-                    </div>
-                </div>
             </div>
 
             <div>

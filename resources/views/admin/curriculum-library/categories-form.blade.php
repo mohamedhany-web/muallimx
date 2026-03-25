@@ -36,6 +36,29 @@
                     <label for="is_active" class="text-sm font-semibold text-slate-700">نشط</label>
                 </div>
             </div>
+
+            <div class="rounded-xl border border-amber-100 bg-amber-50/60 p-4 space-y-3">
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="is_restricted" id="is_restricted" value="1" {{ old('is_restricted', $category?->is_restricted ?? false) ? 'checked' : '' }} class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
+                    <label for="is_restricted" class="text-sm font-bold text-slate-800">قسم خاص (يظهر فقط للمستخدمين المحددين)</label>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">أنسب لقسم «العميل يرفع ملف وتتحوله تفاعلي» أو أي محتوى لا يظهر للجميع. أنشئ التصنيف ثم اختر الحسابات المسموح لها.</p>
+                @php
+                    $selectedRestrict = old('restricted_user_ids', isset($category) ? $category->restrictedUsers->pluck('id')->all() : []);
+                @endphp
+                <div>
+                    <label for="restricted_user_ids" class="block text-sm font-semibold text-slate-700 mb-1">الطلاب المسموح لهم (Ctrl/Cmd + نقر لاختيار أكثر من واحد)</label>
+                    <select name="restricted_user_ids[]" id="restricted_user_ids" multiple size="8" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-amber-500 text-sm">
+                        @foreach($users ?? [] as $u)
+                            <option value="{{ $u->id }}" {{ in_array($u->id, $selectedRestrict, true) ? 'selected' : '' }}>
+                                {{ $u->name }} — {{ $u->email }} ({{ $u->id }})
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('restricted_user_ids') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
             <div class="flex gap-2 pt-4">
                 <button type="submit" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700">{{ $category ? 'حفظ التعديلات' : 'إضافة' }}</button>
                 <a href="{{ route('admin.curriculum-library.categories') }}" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50">إلغاء</a>

@@ -13,6 +13,7 @@ use Illuminate\Validation\Rule;
 class SubscriptionCheckoutController extends Controller
 {
     protected const VALID_PLANS = ['teacher_starter', 'teacher_pro', 'teacher_premium'];
+    protected const PLAN_RANK = ['teacher_starter' => 1, 'teacher_pro' => 2, 'teacher_premium' => 3];
 
     /**
      * عرض صفحة دفع اشتراك الباقة (تحويل المبلغ + رفع إيصال الدفع)
@@ -64,6 +65,8 @@ class SubscriptionCheckoutController extends Controller
             'plan' => $planConfig,
             'billingLabel' => $billingLabel,
             'wallets' => $wallets,
+            'upgrade' => (bool) request()->boolean('upgrade'),
+            'fromSubscriptionId' => request()->input('from'),
         ]);
     }
 
@@ -81,6 +84,9 @@ class SubscriptionCheckoutController extends Controller
             return redirect()->route('public.pricing')->with('error', 'الباقة غير صحيحة.');
         }
 
+        $upgrade = (bool) $request->boolean('upgrade');
+        $fromSubscriptionId = $request->input('from');
+
         $validated = $request->validate([
             'payment_method' => 'required|in:bank_transfer,wallet',
             'wallet_id' => [
@@ -90,6 +96,8 @@ class SubscriptionCheckoutController extends Controller
             ],
             'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'notes' => 'nullable|string|max:1000',
+            'upgrade' => 'nullable|boolean',
+            'from' => 'nullable',
         ], [
             'payment_method.required' => 'طريقة الدفع مطلوبة',
             'payment_proof.required' => 'صورة إيصال الدفع مطلوبة بعد تحويل المبلغ',
@@ -107,6 +115,29 @@ class SubscriptionCheckoutController extends Controller
         $price = (float) ($planConfig['price'] ?? 0);
         $billingCycle = $planConfig['billing_cycle'] ?? 'monthly';
 
+        // ترقية: تحقق من الاشتراك الحالي + منع الداونجريد
+        $fromSubscription = null;
+        if ($upgrade) {
+            $fromSubscription = Auth::user()->activeSubscription();
+            if (!$fromSubscription) {
+                return redirect()->route('public.pricing')->with('error', 'لا يوجد اشتراك نشط للترقية منه.');
+            }
+
+            if (!empty($fromSubscriptionId) && (int) $fromSubscriptionId !== (int) $fromSubscription->id) {
+                return redirect()->route('student.my-subscription')->with('error', 'بيانات الترقية غير صحيحة. حاول مرة أخرى.');
+            }
+
+            $fromKey = (string) ($fromSubscription->teacher_plan_key ?? '');
+            $fromRank = self::PLAN_RANK[$fromKey] ?? 0;
+            $toRank = self::PLAN_RANK[$plan] ?? 0;
+            if ($fromRank <= 0 || $toRank <= 0) {
+                return redirect()->route('student.my-subscription')->with('error', 'لا يمكن ترقية هذه الباقة حالياً.');
+            }
+            if ($toRank <= $fromRank) {
+                return redirect()->route('student.my-subscription')->with('error', 'يسمح بالترقية إلى باقة أعلى فقط.');
+            }
+        }
+
         $existing = SubscriptionRequest::where('user_id', Auth::id())
             ->where('teacher_plan_key', $plan)
             ->where('status', SubscriptionRequest::STATUS_PENDING)
@@ -122,14 +153,17 @@ class SubscriptionCheckoutController extends Controller
         SubscriptionRequest::create([
             'user_id' => Auth::id(),
             'teacher_plan_key' => $plan,
+            'from_teacher_plan_key' => $upgrade ? ($fromSubscription?->teacher_plan_key) : null,
             'plan_name' => $planName,
             'price' => $price,
             'billing_cycle' => $billingCycle,
+            'request_type' => $upgrade ? 'upgrade' : 'new',
             'payment_method' => $validated['payment_method'],
             'payment_proof' => $paymentProofPath,
             'wallet_id' => $validated['wallet_id'] ?? null,
             'notes' => $validated['notes'] ?? null,
             'status' => SubscriptionRequest::STATUS_PENDING,
+            'from_subscription_id' => $upgrade ? ($fromSubscription?->id) : null,
         ]);
 
         return redirect()->route('dashboard')
