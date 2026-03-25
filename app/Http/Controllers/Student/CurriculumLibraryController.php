@@ -456,10 +456,7 @@ class CurriculumLibraryController extends Controller
         $scheme = strtolower((string) ($parts['scheme'] ?? ''));
         $host = strtolower((string) ($parts['host'] ?? ''));
 
-        if ($scheme !== 'https') {
-            return false;
-        }
-
+        // Microsoft Office Viewer عادة لا يستطيع جلب روابط localhost/127.0.0.1.
         if ($host === '' || $host === 'localhost' || $host === '127.0.0.1' || $host === '::1') {
             return false;
         }
@@ -468,6 +465,9 @@ class CurriculumLibraryController extends Controller
             return false;
         }
 
-        return true;
+        // نسمح بـ http أو https طالما أن الرابط عام (ليس localhost).
+        // إذا كان الملف فعلاً غير متاح للعارض سيظهر خطأ من جانب العارض،
+        // لكننا لن نخفي السبب برسالة localhost على المواقع الرئيسية.
+        return in_array($scheme, ['http', 'https'], true);
     }
 }

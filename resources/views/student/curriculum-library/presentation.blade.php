@@ -39,8 +39,7 @@
                 <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-amber-900">
                     <p class="text-sm font-bold mb-1">لا يمكن فتح العرض التفاعلي في البيئة الحالية</p>
                     <p class="text-xs leading-relaxed">
-                        عارض Microsoft يحتاج رابط <strong>HTTPS عام</strong> ويمكن الوصول إليه من الإنترنت. على
-                        <strong>localhost / 127.0.0.1</strong> سيظهر خطأ "An error occurred".
+                        قد يكون السبب أن رابط مصدر الملف غير قابل للفتح من عارض Microsoft من هذه البيئة (مثلاً: رابط غير عام أو بروتوكول/دومين غير مدعوم).
                     </p>
                     @if(!empty($publicUrl))
                         <a href="{{ $publicUrl }}" target="_blank" rel="noopener"
