@@ -447,13 +447,18 @@ class CurriculumLibraryController extends Controller
             return $rel;
         }
 
-        return url($rel);
+        // لو APP_URL فاضي أو disk.url رجّع مسار نسبي، نحوله لرابط مطلق حسب host الحالي.
+        $host = request()->getSchemeAndHttpHost();
+        if (str_starts_with($rel, '/')) {
+            return rtrim($host, '/') . $rel;
+        }
+
+        return rtrim($host, '/') . '/' . ltrim($rel, '/');
     }
 
     protected function isOfficeViewerSupportedUrl(string $url): bool
     {
         $parts = parse_url($url);
-        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
         $host = strtolower((string) ($parts['host'] ?? ''));
 
         // Microsoft Office Viewer عادة لا يستطيع جلب روابط localhost/127.0.0.1.
@@ -465,9 +470,8 @@ class CurriculumLibraryController extends Controller
             return false;
         }
 
-        // نسمح بـ http أو https طالما أن الرابط عام (ليس localhost).
-        // إذا كان الملف فعلاً غير متاح للعارض سيظهر خطأ من جانب العارض،
-        // لكننا لن نخفي السبب برسالة localhost على المواقع الرئيسية.
-        return in_array($scheme, ['http', 'https'], true);
+        // إذا كان الرابط ليس داخل localhost/شبكات خاصة، نسمح بمحاولة العرض.
+        // (إذا كان الرابط غير قابل للفتح سيظهر خطأ من العارض نفسه).
+        return true;
     }
 }
