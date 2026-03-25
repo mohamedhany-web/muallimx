@@ -234,11 +234,14 @@ class CurriculumLibraryController extends Controller
         $publicUrl = $this->absoluteStorageUrl($diskName, $file->path);
         $embedUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' . rawurlencode($publicUrl);
         $presentationTitle = $file->label ?: 'عرض تفاعلي (PowerPoint)';
+        $canUseOfficeViewer = $this->isOfficeViewerSupportedUrl($publicUrl);
 
         return view('student.curriculum-library.presentation', [
             'item' => $item,
             'presentationTitle' => $presentationTitle,
             'embedUrl' => $embedUrl,
+            'publicUrl' => $publicUrl,
+            'canUseOfficeViewer' => $canUseOfficeViewer,
         ]);
     }
 
@@ -397,11 +400,14 @@ class CurriculumLibraryController extends Controller
 
         $publicUrl = $this->absoluteStorageUrl($diskName, $material->path);
         $embedUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' . rawurlencode($publicUrl);
+        $canUseOfficeViewer = $this->isOfficeViewerSupportedUrl($publicUrl);
 
         return view('student.curriculum-library.presentation', [
             'item' => $item,
             'presentationTitle' => $material->displayTitle(),
             'embedUrl' => $embedUrl,
+            'publicUrl' => $publicUrl,
+            'canUseOfficeViewer' => $canUseOfficeViewer,
         ]);
     }
 
@@ -442,5 +448,26 @@ class CurriculumLibraryController extends Controller
         }
 
         return url($rel);
+    }
+
+    protected function isOfficeViewerSupportedUrl(string $url): bool
+    {
+        $parts = parse_url($url);
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = strtolower((string) ($parts['host'] ?? ''));
+
+        if ($scheme !== 'https') {
+            return false;
+        }
+
+        if ($host === '' || $host === 'localhost' || $host === '127.0.0.1' || $host === '::1') {
+            return false;
+        }
+
+        if (str_ends_with($host, '.local') || str_ends_with($host, '.test')) {
+            return false;
+        }
+
+        return true;
     }
 }
