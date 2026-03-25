@@ -74,7 +74,7 @@ class CourseLessonController extends Controller
         // التحقق من صحة رابط الفيديو
         if ($data['type'] === 'video' && !empty($data['video_url'])) {
             if (!\App\Helpers\VideoHelper::isValidVideoUrl($data['video_url'])) {
-                return back()->withErrors(['video_url' => 'رابط الفيديو غير صحيح أو غير مدعوم'])->withInput();
+                return back()->withErrors(['video_url' => 'يسمح فقط بروابط Bunny Stream (mediadelivery.net).'])->withInput();
             }
         }
 
@@ -141,7 +141,7 @@ class CourseLessonController extends Controller
         // التحقق من صحة رابط الفيديو
         if ($data['type'] === 'video' && !empty($data['video_url'])) {
             if (!\App\Helpers\VideoHelper::isValidVideoUrl($data['video_url'])) {
-                return back()->withErrors(['video_url' => 'رابط الفيديو غير صحيح أو غير مدعوم'])->withInput();
+                return back()->withErrors(['video_url' => 'يسمح فقط بروابط Bunny Stream (mediadelivery.net).'])->withInput();
             }
         }
 

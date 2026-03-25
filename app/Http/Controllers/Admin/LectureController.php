@@ -57,6 +57,7 @@ class LectureController extends Controller
             'teams_registration_link' => 'nullable|url',
             'teams_meeting_link' => 'nullable|url',
             'recording_url' => 'nullable|url',
+            'video_platform' => 'nullable|in:bunny',
             'scheduled_at' => 'required|date',
             'duration_minutes' => 'required|integer|min:1',
             'notes' => 'nullable|string',
@@ -64,6 +65,15 @@ class LectureController extends Controller
             'has_assignment' => 'boolean',
             'has_evaluation' => 'boolean',
         ]);
+
+        if (!empty($validated['recording_url'])) {
+            $validated['video_platform'] = 'bunny';
+            if (!\App\Helpers\VideoHelper::isValidVideoUrl($validated['recording_url'])) {
+                return back()->withErrors(['recording_url' => 'يسمح فقط بروابط Bunny Stream (mediadelivery.net).'])->withInput();
+            }
+        } else {
+            $validated['video_platform'] = null;
+        }
 
         $lecture = Lecture::create($validated);
 
@@ -99,7 +109,7 @@ class LectureController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'recording_url' => 'nullable|url',
-            'video_platform' => 'nullable|string|max:50',
+            'video_platform' => 'nullable|in:bunny',
             'scheduled_at' => 'required|date',
             'duration_minutes' => 'required|integer|min:1',
             'status' => 'required|in:scheduled,in_progress,completed,cancelled',
@@ -108,6 +118,15 @@ class LectureController extends Controller
             'has_assignment' => 'boolean',
             'has_evaluation' => 'boolean',
         ]);
+
+        if (!empty($validated['recording_url'])) {
+            $validated['video_platform'] = 'bunny';
+            if (!\App\Helpers\VideoHelper::isValidVideoUrl($validated['recording_url'])) {
+                return back()->withErrors(['recording_url' => 'يسمح فقط بروابط Bunny Stream (mediadelivery.net).'])->withInput();
+            }
+        } else {
+            $validated['video_platform'] = null;
+        }
 
         $validated['course_lesson_id'] = $validated['course_lesson_id'] ?? null;
         $lecture->update($validated);

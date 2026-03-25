@@ -72,9 +72,9 @@ class FileUploadSecurityMiddleware
                 'application/pdf',
                 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'text/csv', 'text/plain',
+                'text/csv', 'text/plain', 'text/html', 'application/xhtml+xml',
                 'application/zip', 'application/vnd.rar',
-                'xlsx', 'xls', 'csv', 'doc', 'docx', 'pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'rar',
+                'xlsx', 'xls', 'csv', 'doc', 'docx', 'pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'rar', 'html', 'htm',
             ],
             'image' => ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
             'video' => ['video/mp4', 'video/webm', 'video/ogg'],
@@ -88,6 +88,8 @@ class FileUploadSecurityMiddleware
                 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'text/csv',
             ],
+            // ملفات HTML التعليمية (مناهج)
+            'html' => ['text/html', 'application/xhtml+xml', 'html', 'htm'],
             'avatar' => ['image/jpeg', 'image/png', 'image/gif'],
             'thumbnail' => ['image/jpeg', 'image/png', 'image/gif'],
         ];
@@ -102,7 +104,7 @@ class FileUploadSecurityMiddleware
         return [
             'image/jpeg', 'image/png', 'image/gif', 'application/pdf',
             'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'text/csv',
+            'text/csv', 'text/html',
         ];
     }
 

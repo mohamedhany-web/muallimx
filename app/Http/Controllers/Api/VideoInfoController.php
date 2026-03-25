@@ -16,7 +16,7 @@ class VideoInfoController extends Controller
     {
         $request->validate([
             'url' => 'required|url',
-            'platform' => 'required|in:youtube,vimeo,google_drive,direct,bunny'
+            'platform' => 'required|in:bunny'
         ]);
 
         $url = $request->input('url');
@@ -31,18 +31,6 @@ class VideoInfoController extends Controller
 
         try {
             switch ($platform) {
-                case 'youtube':
-                    $info = $this->getYouTubeInfo($url);
-                    break;
-                case 'vimeo':
-                    $info = $this->getVimeoInfo($url);
-                    break;
-                case 'google_drive':
-                    $info = $this->getGoogleDriveInfo($url);
-                    break;
-                case 'direct':
-                    $info = $this->getDirectVideoInfo($url);
-                    break;
                 case 'bunny':
                     $info = $this->getBunnyInfo($url);
                     break;

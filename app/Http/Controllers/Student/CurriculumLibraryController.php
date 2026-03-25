@@ -8,6 +8,7 @@ use App\Models\CurriculumLibraryItemFile;
 use App\Models\CurriculumLibraryPreviewOpen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class CurriculumLibraryController extends Controller
 {
@@ -77,6 +78,10 @@ class CurriculumLibraryController extends Controller
         if (!$item->is_active) {
             abort(404);
         }
+        // ملفات HTML تُعرض داخل الموقع فقط ولا يُسمح بتحميلها.
+        if ($file->file_type === 'html') {
+            return back()->with('error', 'هذا النوع من المناهج (HTML) متاح للعرض داخل الموقع فقط ولا يمكن تحميله.');
+        }
 
         $user = Auth::user();
         $hasFullAccess = $user && $user->hasSubscriptionFeature('library_access');
@@ -88,12 +93,47 @@ class CurriculumLibraryController extends Controller
             }
         }
 
+        $diskName = $file->storage_disk ?: 'public';
+        $disk = Storage::disk($diskName);
         $path = $file->path;
-        if (!$path || !\Illuminate\Support\Facades\Storage::exists($path)) {
+        if (!$path || !$disk->exists($path)) {
             abort(404);
         }
 
         $filename = $file->label ?: basename($path);
-        return \Illuminate\Support\Facades\Storage::download($path, $filename);
+        return $disk->download($path, $filename);
+    }
+
+    /**
+     * عرض ملف HTML داخل الموقع (Sandbox + CSP) — يُقرأ من R2.
+     */
+    public function viewHtml(CurriculumLibraryItem $item, CurriculumLibraryItemFile $file)
+    {
+        if ($file->curriculum_library_item_id !== $item->id) abort(404);
+        if (!$item->is_active) abort(404);
+        if ($file->file_type !== 'html') abort(404);
+
+        $user = Auth::user();
+        $hasFullAccess = $user && $user->hasSubscriptionFeature('library_access');
+        if (!$hasFullAccess) {
+            $used = $user ? CurriculumLibraryPreviewOpen::where('user_id', $user->id)->first() : null;
+            if (!$used || $used->curriculum_library_item_id != $item->id) {
+                return redirect()->route('student.features.show', ['feature' => 'library_access'])
+                    ->with('error', 'عرض ملفات HTML يتطلب اشتراك مناهج X.');
+            }
+        }
+
+        $diskName = $file->storage_disk ?: 'r2';
+        $disk = Storage::disk($diskName);
+        if (!$file->path || !$disk->exists($file->path)) abort(404);
+
+        $html = $disk->get($file->path);
+
+        return response($html, 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+            // عرض آمن: يمنع الخروج من الإطار ويمنع تحميل مصادر خارجية بشكل افتراضي
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Content-Security-Policy' => "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; media-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'self';",
+        ]);
     }
 }

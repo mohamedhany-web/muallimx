@@ -6,9 +6,32 @@
 @section('content')
 <div class="space-y-6">
     <!-- الهيدر -->
-    <div class="rounded-2xl p-5 sm:p-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 mb-1">{{ __('instructor.lectures') }}</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400">{{ __('instructor.manage_lectures_curriculum') }}</p>
+    <div class="rounded-2xl p-6 text-white shadow-lg border border-white/10 bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="min-w-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
+                        <i class="fas fa-chalkboard-teacher text-lg"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h1 class="text-xl sm:text-2xl font-black leading-tight truncate">{{ __('instructor.lectures') }}</h1>
+                        <p class="text-sm text-white/90 mt-0.5">{{ __('instructor.manage_lectures_curriculum') }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('instructor.courses.index') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 border border-white/20 text-white font-semibold transition-colors">
+                    <i class="fas fa-book"></i>
+                    <span>{{ __('instructor.courses') }}</span>
+                </a>
+                <a href="{{ route('instructor.lectures.create') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-indigo-700 hover:bg-white/90 border border-white/20 font-extrabold transition-colors">
+                    <i class="fas fa-plus"></i>
+                    <span>{{ __('instructor.add_new_lecture') }}</span>
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- الإحصائيات -->

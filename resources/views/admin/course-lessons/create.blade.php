@@ -189,12 +189,12 @@
                        id="video_url" 
                        value="{{ old('video_url') }}"
                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                       placeholder="YouTube / Vimeo / Google Drive / رابط .mp4"
+                       placeholder="Bunny Stream (https://iframe.mediadelivery.net/embed/{libraryId}/{videoId})"
                        onblur="previewVideo()">
                 <div class="mt-3 text-sm text-gray-500">
                     <p class="mb-1 font-medium text-gray-600">المصادر المدعومة:</p>
                     <ul class="list-disc list-inside space-y-0.5 text-gray-500">
-                        <li>YouTube · Vimeo · Google Drive · ملفات .mp4, .avi, .mov</li>
+                        <li>Bunny Stream فقط (mediadelivery.net)</li>
                     </ul>
                 </div>
                 <div id="video_preview" class="mt-3 rounded-xl overflow-hidden border border-gray-200" style="display: none;">
@@ -287,30 +287,12 @@ function previewVideo() {
 }
 
 function generateVideoEmbed(url) {
-    // YouTube
-    const youtubeMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-    if (youtubeMatch) {
-        const videoId = youtubeMatch[1];
-        return `<iframe src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&showinfo=0" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="w-full h-full"></iframe>`;
-    }
-    
-    // Vimeo
-    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-    if (vimeoMatch) {
-        const videoId = vimeoMatch[1];
-        return `<iframe src="https://player.vimeo.com/video/${videoId}?title=0&byline=0&portrait=0" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen class="w-full h-full"></iframe>`;
-    }
-    
-    // Google Drive
-    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (driveMatch) {
-        const fileId = driveMatch[1];
-        return `<iframe src="https://drive.google.com/file/d/${fileId}/preview" width="100%" height="100%" frameborder="0" allow="autoplay" class="w-full h-full"></iframe>`;
-    }
-    
-    // ملف فيديو مباشر
-    if (url.match(/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i)) {
-        return `<video controls width="100%" height="100%" class="w-full h-full"><source src="${url}" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>`;
+    // Bunny Stream
+    const bunnyMatch = url.match(/(?:iframe|player)\.mediadelivery\.net\/(embed|play)\/(\d+)\/([a-zA-Z0-9_-]+)/);
+    if (bunnyMatch && bunnyMatch[2] && bunnyMatch[3]) {
+        const embedUrl = url.split('?')[0];
+        const src = embedUrl.startsWith('http') ? embedUrl : ('https://' + embedUrl.replace(/^\/+/, ''));
+        return `<iframe src="${src.replace(/"/g, '&quot;')}" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen class="w-full h-full"></iframe>`;
     }
     
     // مصدر غير مدعوم

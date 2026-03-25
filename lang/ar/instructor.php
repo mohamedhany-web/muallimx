@@ -676,7 +676,7 @@ return [
     'vimeo_invalid' => 'رابط Vimeo غير صحيح',
     'drive_note' => 'ملاحظة: قد لا تعمل معاينة Google Drive بشكل صحيح. تأكد من أن الملف قابل للمشاركة.',
     'direct_invalid' => 'الرابط المباشر يجب أن ينتهي بامتداد فيديو (.mp4, .webm, .ogg, .avi, .mov)',
-    'bunny_invalid' => 'رابط Bunny.net غير صحيح. استخدم رابط التضمين: https://iframe.mediadelivery.net/embed/libraryId/videoId أو https://player.mediadelivery.net/embed/libraryId/videoId',
+    'bunny_invalid' => 'رابط Bunny.net غير صحيح. استخدم رابط Bunny Stream بصيغة: https://iframe.mediadelivery.net/embed/libraryId/videoId أو https://player.mediadelivery.net/embed/libraryId/videoId أو play: https://player.mediadelivery.net/play/libraryId/videoId',
     'preview_error' => 'حدث خطأ في عرض المعاينة',
     'paste_youtube' => 'الصق رابط YouTube هنا...',
     'paste_vimeo' => 'الصق رابط Vimeo هنا...',

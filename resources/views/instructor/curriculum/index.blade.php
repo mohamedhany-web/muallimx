@@ -14,8 +14,8 @@
     .sortable-chosen { background: #f0f9ff !important; border-color: #0ea5e9 !important; }
     .items-container.sortable-dragging { min-height: 52px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 0.75rem; }
     body.curriculum-dragging .curriculum-drag-hint { opacity: 1 !important; }
-    .section-block .section-header { touch-action: none; }
-    .item-card .fa-grip-vertical { pointer-events: none; }
+    .section-block .section-header { touch-action: manipulation; }
+    .item-card .drag-handle { cursor: grab; }
 </style>
 @endpush
 
@@ -228,37 +228,17 @@
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"><i class="fas fa-video text-sky-500 ml-1"></i> رابط تسجيل المحاضرة (اختياري)</label>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">اختر المشغل</label>
-                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
-                            <button type="button" onclick="selectVideoPlatform('youtube', this)"
-                                    class="platform-btn p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center hover:border-sky-400 transition-colors" data-platform="youtube">
-                                <i class="fab fa-youtube text-red-600 text-xl mb-1 block"></i>
-                                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">YouTube</span>
-                            </button>
-                            <button type="button" onclick="selectVideoPlatform('vimeo', this)"
-                                    class="platform-btn p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center hover:border-sky-400 transition-colors" data-platform="vimeo">
-                                <i class="fab fa-vimeo text-blue-500 text-xl mb-1 block"></i>
-                                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Vimeo</span>
-                            </button>
-                            <button type="button" onclick="selectVideoPlatform('google_drive', this)"
-                                    class="platform-btn p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center hover:border-sky-400 transition-colors" data-platform="google_drive">
-                                <i class="fab fa-google-drive text-green-600 text-xl mb-1 block"></i>
-                                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Drive</span>
-                            </button>
-                            <button type="button" onclick="selectVideoPlatform('direct', this)"
-                                    class="platform-btn p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center hover:border-sky-400 transition-colors" data-platform="direct">
-                                <i class="fas fa-file-video text-purple-600 text-xl mb-1 block"></i>
-                                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">مباشر</span>
-                            </button>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
                             <button type="button" onclick="selectVideoPlatform('bunny', this)"
                                     class="platform-btn p-3 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-center hover:border-sky-400 transition-colors" data-platform="bunny">
                                 <i class="fas fa-cloud text-orange-600 text-xl mb-1 block"></i>
-                                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Bunny.net</span>
+                                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Bunny</span>
                             </button>
                         </div>
                         <input type="hidden" name="video_platform" id="lectureVideoPlatform" value="">
                     </div>
                     <div>
-                        <input type="url" name="recording_url" id="lectureRecordingUrl" placeholder="ضع رابط الفيديو هنا..." oninput="previewLectureVideo()"
+                        <input type="url" name="recording_url" id="lectureRecordingUrl" placeholder="الصق رابط Bunny هنا..." oninput="previewLectureVideo()"
                                class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100">
                         <p class="mt-1 text-xs text-slate-500 dark:text-slate-400" id="lectureVideoPlaceholder"></p>
                     </div>
@@ -277,14 +257,6 @@
                     <label class="flex items-center gap-3 p-3 bg-sky-50 dark:bg-sky-900/30 rounded-xl cursor-pointer border border-sky-100">
                         <input type="checkbox" name="has_attendance_tracking" value="1" checked class="w-4 h-4 text-sky-500 border-slate-300 rounded">
                         <span class="font-semibold text-slate-800 dark:text-slate-100">تتبع الحضور</span>
-                    </label>
-                    <label class="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl cursor-pointer border border-emerald-100">
-                        <input type="checkbox" name="has_assignment" value="1" class="w-4 h-4 text-sky-500 border-slate-300 rounded">
-                        <span class="font-semibold text-slate-800 dark:text-slate-100">يوجد واجب</span>
-                    </label>
-                    <label class="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl cursor-pointer border border-amber-100">
-                        <input type="checkbox" name="has_evaluation" value="1" class="w-4 h-4 text-sky-500 border-slate-300 rounded">
-                        <span class="font-semibold text-slate-800 dark:text-slate-100">يوجد تقييم</span>
                     </label>
                 </div>
                 <!-- مواد المحاضرة -->
@@ -597,6 +569,7 @@
 let currentSectionId = null;
 let currentItemType = null;
 let currentItemId = null;
+let selectedVideoPlatform = '';
 
 function toggleSection(sectionId) {
     const block = document.querySelector('.section-block[data-section-id="' + sectionId + '"]');
@@ -897,39 +870,66 @@ function removeItem(id) {
 }
 
 function showAddLectureModal(sectionId) {
-    currentSectionId = sectionId;
-    document.getElementById('lectureSectionId').value = sectionId;
-    document.getElementById('lectureEditId').value = '';
-    // مسح الحقول
-    document.getElementById('lectureForm').reset();
-    document.getElementById('lectureForm').querySelector('input[name="course_id"]').value = {{ $course->id }};
-    const statusEl = document.getElementById('lectureStatus');
-    if (statusEl) statusEl.value = 'scheduled';
-    const hasAttendance = document.getElementById('lectureForm').querySelector('input[name="has_attendance_tracking"]');
-    if (hasAttendance) hasAttendance.checked = true;
-    // تعيين التاريخ الحالي كقيمة افتراضية
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('lectureScheduledAt').value = now.toISOString().slice(0, 16);
-    document.getElementById('lectureDuration').value = 60;
-    var minWatchEl = document.getElementById('lectureMinWatchPercent');
-    if (minWatchEl) minWatchEl.value = '';
-    
-    // تحديث العنوان والنص
-    document.querySelector('#lectureModal h3').textContent = 'إضافة محاضرة جديدة';
-    document.getElementById('lectureSubmitText').textContent = 'حفظ وإضافة للمنهج';
-    
-    // إعادة تعيين المشغل
-    selectedVideoPlatform = '';
-    document.getElementById('lectureVideoPlatform').value = '';
-    document.getElementById('lectureVideoPreview').classList.add('hidden');
-    document.querySelectorAll('.platform-btn').forEach(btn => {
-        btn.classList.remove('border-sky-500', 'bg-sky-50 dark:bg-sky-900/30');
-        btn.classList.add('border-slate-200 dark:border-slate-700');
-    });
-    
-    document.getElementById('lectureModal').classList.remove('hidden');
-    document.getElementById('lectureModal').classList.add('flex');
+    // Important: this function must never throw, otherwise the modal won't open.
+    try {
+        currentSectionId = sectionId;
+        const sectionInput = document.getElementById('lectureSectionId');
+        if (sectionInput) sectionInput.value = sectionId;
+
+        const editIdInput = document.getElementById('lectureEditId');
+        if (editIdInput) editIdInput.value = '';
+
+        const form = document.getElementById('lectureForm');
+        if (form && form.reset) form.reset();
+
+        const courseIdInput = form ? form.querySelector('input[name="course_id"]') : null;
+        if (courseIdInput) courseIdInput.value = {{ $course->id }};
+
+        const statusEl = document.getElementById('lectureStatus');
+        if (statusEl) statusEl.value = 'scheduled';
+
+        const hasAttendance = form ? form.querySelector('input[name="has_attendance_tracking"]') : null;
+        if (hasAttendance) hasAttendance.checked = true;
+
+        const scheduledAt = document.getElementById('lectureScheduledAt');
+        if (scheduledAt) {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            scheduledAt.value = now.toISOString().slice(0, 16);
+        }
+
+        const durationEl = document.getElementById('lectureDuration');
+        if (durationEl) durationEl.value = 60;
+
+        var minWatchEl = document.getElementById('lectureMinWatchPercent');
+        if (minWatchEl) minWatchEl.value = '';
+
+        const titleEl = document.querySelector('#lectureModal h3');
+        if (titleEl) titleEl.textContent = 'إضافة محاضرة جديدة';
+        const submitTextEl = document.getElementById('lectureSubmitText');
+        if (submitTextEl) submitTextEl.textContent = 'حفظ وإضافة للمنهج';
+
+        // Reset platform state (if present)
+        selectedVideoPlatform = '';
+        const platformEl = document.getElementById('lectureVideoPlatform');
+        if (platformEl) platformEl.value = '';
+        const previewEl = document.getElementById('lectureVideoPreview');
+        if (previewEl) previewEl.classList.add('hidden');
+        document.querySelectorAll('.platform-btn').forEach(btn => {
+            btn.classList.remove('border-sky-500', 'bg-sky-50 dark:bg-sky-900/30');
+            btn.classList.add('border-slate-200', 'dark:border-slate-700');
+        });
+    } catch (e) {
+        console.error('showAddLectureModal failed:', e);
+    } finally {
+        const modal = document.getElementById('lectureModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        } else {
+            alert('تعذر فتح نافذة المحاضرة: lectureModal غير موجود.');
+        }
+    }
 }
 
 // تعديل المحاضرة من باني الدورات
@@ -1515,7 +1515,6 @@ function addLectureToSection(lectureId, sectionId) {
 }
 
 // اختيار المشغل للفيديو
-let selectedVideoPlatform = '';
 function selectVideoPlatform(platform, button) {
     selectedVideoPlatform = platform;
     const platformInput = document.getElementById('lectureVideoPlatform');
@@ -1544,30 +1543,12 @@ function selectVideoPlatform(platform, button) {
         // حفظ القيمة الحالية قبل التحديث
         const currentValue = input.value;
         
-        switch(platform) {
-            case 'youtube':
-                placeholder.textContent = 'مثال: https://www.youtube.com/watch?v=VIDEO_ID أو https://youtu.be/VIDEO_ID';
-                input.placeholder = 'الصق رابط YouTube هنا...';
-                break;
-            case 'vimeo':
-                placeholder.textContent = 'مثال: https://vimeo.com/VIDEO_ID';
-                input.placeholder = 'الصق رابط Vimeo هنا...';
-                break;
-            case 'google_drive':
-                placeholder.textContent = 'مثال: https://drive.google.com/file/d/FILE_ID/view';
-                input.placeholder = 'الصق رابط Google Drive هنا...';
-                break;
-            case 'direct':
-                placeholder.textContent = 'مثال: https://example.com/video.mp4';
-                input.placeholder = 'الصق رابط الفيديو المباشر هنا...';
-                break;
-            case 'bunny':
-                placeholder.textContent = 'مثال: https://iframe.mediadelivery.net/embed/LIBRARY_ID/VIDEO_ID أو player.mediadelivery.net/embed/...';
-                input.placeholder = 'الصق رابط Bunny.net (embed) هنا...';
-                break;
-            default:
-                placeholder.textContent = '';
-                input.placeholder = 'ضع رابط الفيديو هنا...';
+        if (platform === 'bunny') {
+            placeholder.textContent = 'مثال: https://player.mediadelivery.net/play/LIBRARY_ID/VIDEO_ID أو https://iframe.mediadelivery.net/embed/LIBRARY_ID/VIDEO_ID';
+            input.placeholder = 'الصق رابط Bunny هنا...';
+        } else {
+            placeholder.textContent = '';
+            input.placeholder = 'الصق رابط Bunny هنا...';
         }
         
         // استعادة القيمة إذا كانت موجودة (للتعديل)
@@ -1584,59 +1565,23 @@ function selectVideoPlatform(platform, button) {
 // معاينة الفيديو
 function previewLectureVideo() {
     const url = document.getElementById('lectureRecordingUrl').value.trim();
-    let platform = selectedVideoPlatform || document.getElementById('lectureVideoPlatform').value;
-    
-    // إذا لم يكن platform محدداً، حاول اكتشافه تلقائياً
-    if (!platform && url) {
-        if (url.includes('youtube.com') || url.includes('youtu.be')) {
-            platform = 'youtube';
-            selectedVideoPlatform = 'youtube';
-            document.getElementById('lectureVideoPlatform').value = 'youtube';
-            // تحديث زر YouTube
-            const youtubeBtn = document.querySelector('[data-platform="youtube"]');
-            if (youtubeBtn) {
-                selectVideoPlatform('youtube', youtubeBtn);
-            }
-        } else if (url.includes('vimeo.com')) {
-            platform = 'vimeo';
-            selectedVideoPlatform = 'vimeo';
-            document.getElementById('lectureVideoPlatform').value = 'vimeo';
-            const vimeoBtn = document.querySelector('[data-platform="vimeo"]');
-            if (vimeoBtn) {
-                selectVideoPlatform('vimeo', vimeoBtn);
-            }
-        } else if (url.includes('drive.google.com')) {
-            platform = 'google_drive';
-            selectedVideoPlatform = 'google_drive';
-            document.getElementById('lectureVideoPlatform').value = 'google_drive';
-            const driveBtn = document.querySelector('[data-platform="google_drive"]');
-            if (driveBtn) {
-                selectVideoPlatform('google_drive', driveBtn);
-            }
-        } else if (url.includes('mediadelivery.net')) {
-            platform = 'bunny';
-            selectedVideoPlatform = 'bunny';
-            document.getElementById('lectureVideoPlatform').value = 'bunny';
-            const bunnyBtn = document.querySelector('[data-platform="bunny"]');
-            if (bunnyBtn) {
-                selectVideoPlatform('bunny', bunnyBtn);
-            }
-        } else if (url.match(/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i)) {
-            platform = 'direct';
-            selectedVideoPlatform = 'direct';
-            document.getElementById('lectureVideoPlatform').value = 'direct';
-            const directBtn = document.querySelector('[data-platform="direct"]');
-            if (directBtn) {
-                selectVideoPlatform('direct', directBtn);
-            }
-        }
-    }
+    let platform = 'bunny';
+    selectedVideoPlatform = 'bunny';
+    const platformInput = document.getElementById('lectureVideoPlatform');
+    if (platformInput) platformInput.value = 'bunny';
+    const bunnyBtn = document.querySelector('[data-platform="bunny"]');
+    if (bunnyBtn) selectVideoPlatform('bunny', bunnyBtn);
     
     const previewDiv = document.getElementById('lectureVideoPreview');
     const previewContent = document.getElementById('lectureVideoPreviewContent');
     
     if (!url || !platform) {
         previewDiv.classList.add('hidden');
+        return;
+    }
+    if (!url.includes('mediadelivery.net')) {
+        previewDiv.classList.remove('hidden');
+        previewContent.innerHTML = '<div class="text-center p-4"><i class="fas fa-exclamation-triangle text-yellow-400 text-2xl mb-2"></i><p class="text-sm">مسموح فقط بروابط Bunny Stream (mediadelivery.net)</p></div>';
         return;
     }
     
@@ -1647,98 +1592,18 @@ function previewLectureVideo() {
     let isValid = false;
     
     try {
-        // YouTube
-        if (platform === 'youtube') {
-            let videoId = null;
-            
-            // نمط 1: youtube.com/watch?v=VIDEO_ID أو youtube.com/watch?v=VIDEO_ID&si=...
-            const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-            if (watchMatch && watchMatch[1]) {
-                videoId = watchMatch[1];
-            }
-            
-            // نمط 2: youtu.be/VIDEO_ID أو youtu.be/VIDEO_ID?si=...
-            if (!videoId) {
-                const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-                if (shortMatch && shortMatch[1]) {
-                    videoId = shortMatch[1];
-                }
-            }
-            
-            // نمط 3: youtube.com/embed/VIDEO_ID
-            if (!videoId) {
-                const embedMatch = url.match(/embed\/([a-zA-Z0-9_-]{11})/);
-                if (embedMatch && embedMatch[1]) {
-                    videoId = embedMatch[1];
-                }
-            }
-            
-            // نمط 4: youtube.com/v/VIDEO_ID
-            if (!videoId) {
-                const vMatch = url.match(/\/v\/([a-zA-Z0-9_-]{11})/);
-                if (vMatch && vMatch[1]) {
-                    videoId = vMatch[1];
-                }
-            }
-            
-            // نمط 5: أي رابط يحتوي على 11 حرف/رقم متتالي (video ID) في رابط YouTube
-            if (!videoId) {
-                const genericMatch = url.match(/([a-zA-Z0-9_-]{11})/);
-                if (genericMatch && genericMatch[1] && (url.includes('youtube') || url.includes('youtu.be'))) {
-                    videoId = genericMatch[1];
-                }
-            }
-            
-            if (videoId && videoId.length === 11) {
-                isValid = true;
-                const origin = encodeURIComponent(window.location.origin);
-                html = '<iframe src="https://www.youtube.com/embed/' + videoId + '?rel=0&modestbranding=1&showinfo=0&controls=1&enablejsapi=1&origin=' + origin + '&autoplay=0" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
-            } else {
-                console.error('Could not extract YouTube video ID from:', url);
-            }
-        }
-        // Vimeo
-        else if (platform === 'vimeo') {
-            const pattern = /vimeo\.com\/(?:.*\/)?(\d+)/;
-            const match = url.match(pattern);
-            if (match && match[1]) {
-                isValid = true;
-                html = '<iframe src="https://player.vimeo.com/video/' + match[1] + '?title=0&byline=0&portrait=0&controls=1" width="100%" height="100%" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
-            }
-        }
-        // Google Drive
-        else if (platform === 'google_drive') {
-            const pattern = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
-            const match = url.match(pattern);
-            if (match && match[1]) {
-                isValid = true;
-                html = '<iframe src="https://drive.google.com/file/d/' + match[1] + '/preview" width="100%" height="100%" frameborder="0" allow="autoplay" style="border-radius: 0.75rem;"></iframe>';
-            }
-        }
-        // Direct Video
-        else if (platform === 'direct') {
-            const pattern = /\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i;
-            if (pattern.test(url)) {
-                isValid = true;
-                const escapedUrl = url.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-                html = '<video controls width="100%" height="100%" style="max-height: 100%; border-radius: 0.75rem;" class="w-full h-full"><source src="' + escapedUrl + '" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>';
-            }
-        }
-        // Bunny.net (Bunny Stream) - أي نطاق mediadelivery.net مع مسار embed
-        else if (platform === 'bunny') {
-            const bunnyMatch = url.match(/mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
-            if (bunnyMatch && bunnyMatch[1] && bunnyMatch[2]) {
-                isValid = true;
-                const embedUrl = url.split('?')[0];
-                const src = embedUrl.startsWith('http') ? embedUrl : ('https://' + embedUrl.replace(/^\/+/, ''));
-                html = '<iframe src="' + src.replace(/"/g, '&quot;') + '" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
-            }
+        // Bunny Stream (embed or play)
+        const bunnyMatch = url.match(/(?:iframe|player)\.mediadelivery\.net\/(embed|play)\/(\d+)\/([a-zA-Z0-9_-]+)/);
+        if (bunnyMatch && bunnyMatch[2] && bunnyMatch[3]) {
+            isValid = true;
+            const clean = url.split('?')[0];
+            html = '<iframe src="' + clean.replace(/"/g, '&quot;') + '" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
         }
         
         if (isValid && html) {
             previewContent.innerHTML = html;
         } else {
-            previewContent.innerHTML = '<div class="text-center p-4"><i class="fas fa-exclamation-triangle text-yellow-400 text-2xl mb-2"></i><p class="text-sm">الرابط غير صحيح أو غير مدعوم</p></div>';
+            previewContent.innerHTML = '<div class="text-center p-4"><i class="fas fa-exclamation-triangle text-yellow-400 text-2xl mb-2"></i><p class="text-sm">رابط Bunny غير صحيح. استخدم play أو embed من mediadelivery.net</p></div>';
         }
     } catch (error) {
         console.error('Error generating preview:', error);
@@ -1860,6 +1725,9 @@ function closeLectureModal() {
         chosenClass: 'sortable-chosen',
         dragClass: 'sortable-drag',
         draggable: '.item-card',
+        handle: '.drag-handle',
+        filter: 'button, a, input, textarea, select, label',
+        preventOnFilter: true,
         onStart: function() { document.body.classList.add('curriculum-dragging'); },
         onEnd: function(evt) {
             document.body.classList.remove('curriculum-dragging');
@@ -1897,6 +1765,63 @@ function closeLectureModal() {
             Sortable.create(el, itemOpts);
         });
     });
+})();
+</script>
+
+<script>
+// Safety net: ensure lecture modal can open even if earlier script fails.
+(function () {
+    function qs(id) { return document.getElementById(id); }
+
+    window.showAddLectureModal = window.showAddLectureModal || function (sectionId) {
+        try {
+            window.currentSectionId = sectionId;
+
+            var modal = qs('lectureModal');
+            var form = qs('lectureForm');
+            var sectionInput = qs('lectureSectionId');
+            var editId = qs('lectureEditId');
+            var scheduledAt = qs('lectureScheduledAt');
+            var duration = qs('lectureDuration');
+            var statusEl = qs('lectureStatus');
+            var platform = qs('lectureVideoPlatform');
+            var preview = qs('lectureVideoPreview');
+
+            if (!modal || !form || !sectionInput) {
+                alert('تعذر فتح نافذة المحاضرة: عناصر الصفحة غير مكتملة. جرّب تحديث الصفحة (Ctrl+F5).');
+                return;
+            }
+
+            sectionInput.value = sectionId || '';
+            if (editId) editId.value = '';
+
+            if (form && form.reset) form.reset();
+
+            if (statusEl) statusEl.value = 'scheduled';
+            if (duration) duration.value = 60;
+
+            if (scheduledAt) {
+                var now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                scheduledAt.value = now.toISOString().slice(0, 16);
+            }
+
+            window.selectedVideoPlatform = '';
+            if (platform) platform.value = '';
+            if (preview) preview.classList.add('hidden');
+
+            var titleEl = modal.querySelector('h3');
+            if (titleEl) titleEl.textContent = 'إضافة محاضرة جديدة';
+            var submitText = qs('lectureSubmitText');
+            if (submitText) submitText.textContent = 'حفظ وإضافة للمنهج';
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        } catch (e) {
+            console.error(e);
+            alert('حدث خطأ عند فتح نافذة المحاضرة. افتح Console لمعرفة التفاصيل.');
+        }
+    };
 })();
 </script>
 @endpush

@@ -36,7 +36,7 @@
                 <i class="fas fa-folder-plus"></i>
                 <span>قسم فرعي</span>
             </button>
-            <button onclick="event.stopPropagation(); showAddLectureModal({{ $section->id }})"
+            <button type="button" onclick="event.stopPropagation(); showAddLectureModal({{ $section->id }})"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-lg text-xs font-semibold transition-colors">
                 <i class="fas fa-chalkboard-teacher"></i>
                 <span>محاضرة</span>
@@ -56,18 +56,23 @@
         <div class="items-container" data-section-id="{{ $section->id }}">
             @php $sectionItems = $section->items->filter(fn($i) => !($i->item instanceof \App\Models\CourseLesson)); @endphp
             @forelse($sectionItems as $item)
-                <div class="item-card rounded-lg p-3 mb-2 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 hover:border-sky-300 hover:shadow-sm transition-all cursor-move" data-item-id="{{ $item->id }}">
+                <div class="item-card rounded-lg p-3 mb-2 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 hover:border-sky-300 hover:shadow-sm transition-all cursor-move"
+                     data-item-id="{{ $item->id }}"
+                     @if($item->item instanceof \App\Models\Lecture)
+                     onclick="if (event.target.closest('button') || event.target.closest('a') || event.target.closest('.fa-grip-vertical')) return; editLectureFromCurriculum({{ $item->item->id }}, {{ $section->id }});"
+                     @endif
+                >
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-3 flex-1 min-w-0">
-                            <i class="fas fa-grip-vertical text-slate-400 cursor-move shrink-0"></i>
+                            <i class="fas fa-grip-vertical text-slate-400 drag-handle shrink-0" title="سحب لإعادة الترتيب"></i>
                             @if($item->item instanceof \App\Models\Lecture)
                                 <i class="fas fa-chalkboard-teacher text-sky-500 shrink-0"></i>
                                 <span class="font-semibold text-slate-800 dark:text-slate-100 truncate">{{ $item->item->title }}</span>
                                 <span class="text-xs text-slate-500 dark:text-slate-400 shrink-0">(محاضرة)</span>
                                 <div class="flex items-center gap-1 shrink-0">
-                                    <button type="button" onclick="openVideoQuestionsModal({{ $item->item->id }}, '{{ addslashes($item->item->title) }}')" class="p-1.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs" title="أسئلة الفيديو"><i class="fas fa-question-circle"></i></button>
-                                    <button onclick="editLectureFromCurriculum({{ $item->item->id }}, {{ $section->id }})" class="p-1.5 rounded bg-sky-100 hover:bg-sky-200 text-sky-600 text-xs" title="تعديل المحاضرة"><i class="fas fa-edit"></i></button>
-                                    <button onclick="deleteLectureFromCurriculum({{ $item->item->id }}, {{ $item->id }})" class="p-1.5 rounded bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 text-xs" title="حذف المحاضرة"><i class="fas fa-trash"></i></button>
+                                    <button type="button" onclick="event.stopPropagation(); openVideoQuestionsModal({{ $item->item->id }}, '{{ addslashes($item->item->title) }}')" class="p-1.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs" title="أسئلة الفيديو"><i class="fas fa-question-circle"></i></button>
+                                    <button type="button" onclick="event.stopPropagation(); editLectureFromCurriculum({{ $item->item->id }}, {{ $section->id }})" class="p-1.5 rounded bg-sky-100 hover:bg-sky-200 text-sky-600 text-xs" title="تعديل المحاضرة"><i class="fas fa-edit"></i></button>
+                                    <button type="button" onclick="event.stopPropagation(); deleteLectureFromCurriculum({{ $item->item->id }}, {{ $item->id }})" class="p-1.5 rounded bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 text-xs" title="حذف المحاضرة"><i class="fas fa-trash"></i></button>
                                 </div>
                             @elseif($item->item instanceof \App\Models\Assignment)
                                 <i class="fas fa-tasks text-emerald-500 shrink-0"></i>
@@ -75,7 +80,7 @@
                                 <span class="text-xs text-slate-500 dark:text-slate-400 shrink-0">(واجب)</span>
                                 <div class="flex items-center gap-1 shrink-0">
                                     <a href="{{ route('instructor.assignments.edit', $item->item) }}" class="p-1.5 rounded bg-emerald-100 dark:bg-emerald-900/40 hover:bg-emerald-200 text-emerald-600 text-xs" title="تعديل الواجب"><i class="fas fa-edit"></i></a>
-                                    <button onclick="removeItem({{ $item->id }})" class="p-1.5 rounded bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 text-xs" title="إزالة من المنهج"><i class="fas fa-times"></i></button>
+                                    <button type="button" onclick="event.stopPropagation(); removeItem({{ $item->id }})" class="p-1.5 rounded bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 text-xs" title="إزالة من المنهج"><i class="fas fa-times"></i></button>
                                 </div>
                             @elseif($item->item instanceof \App\Models\AdvancedExam || $item->item instanceof \App\Models\Exam)
                                 <i class="fas fa-clipboard-check text-violet-500 shrink-0"></i>
@@ -85,7 +90,7 @@
                                     @if($item->item instanceof \App\Models\AdvancedExam)
                                         <a href="{{ route('instructor.exams.edit', $item->item) }}" class="p-1.5 rounded bg-violet-100 hover:bg-violet-200 text-violet-600 text-xs" title="تعديل الامتحان"><i class="fas fa-edit"></i></a>
                                     @endif
-                                    <button onclick="removeItem({{ $item->id }})" class="p-1.5 rounded bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 text-xs" title="إزالة من المنهج"><i class="fas fa-times"></i></button>
+                                    <button type="button" onclick="event.stopPropagation(); removeItem({{ $item->id }})" class="p-1.5 rounded bg-red-50 dark:bg-red-900/30 hover:bg-red-100 text-red-600 text-xs" title="إزالة من المنهج"><i class="fas fa-times"></i></button>
                                 </div>
                             @endif
                         </div>

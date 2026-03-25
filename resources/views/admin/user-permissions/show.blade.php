@@ -79,6 +79,58 @@
         </div>
     </div>
 
+    <!-- إدارة الأدوار -->
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">إدارة الأدوار</h3>
+            <p class="text-sm text-gray-500 mt-1">حدد الأدوار المخصصة للمستخدم. صلاحيات الأدوار تُضاف تلقائياً.</p>
+        </div>
+
+        <form action="{{ route('admin.user-permissions.update-roles', $user) }}" method="POST">
+            @csrf
+            @method('PUT')
+
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach($allRoles as $role)
+                        <label class="flex items-start p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                            <input type="checkbox"
+                                   name="roles[]"
+                                   value="{{ $role->id }}"
+                                   {{ $user->roles->contains('id', $role->id) ? 'checked' : '' }}
+                                   class="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <div class="mr-3 flex-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium text-gray-900">{{ $role->display_name }}</span>
+                                    @if($role->is_system)
+                                        <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800" title="دور نظامي">نظام</span>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">{{ $role->name }}</p>
+                                @if($role->description)
+                                    <p class="text-xs text-gray-600 mt-1">{{ $role->description }}</p>
+                                @endif
+                            </div>
+                        </label>
+                    @endforeach
+                </div>
+
+                @error('roles.*')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="p-6 border-t border-gray-200 bg-gray-50">
+                <div class="flex items-center justify-end">
+                    <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-colors">
+                        <i class="fas fa-save ml-2"></i>
+                        حفظ الأدوار
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <!-- إدارة الصلاحيات المباشرة -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-200">
         <div class="p-6 border-b border-gray-200">

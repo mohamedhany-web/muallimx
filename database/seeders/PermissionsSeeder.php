@@ -13,6 +13,9 @@ class PermissionsSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
+            // الوصول إلى لوحة الأدمن
+            ['name' => 'admin.access', 'display_name' => 'الدخول إلى لوحة الأدمن', 'description' => 'إمكانية فتح لوحة تحكم الأدمن', 'group' => 'إدارة النظام'],
+
             // إدارة النظام
             ['name' => 'view.dashboard', 'display_name' => 'عرض لوحة التحكم', 'description' => 'إمكانية الوصول إلى لوحة التحكم', 'group' => 'إدارة النظام'],
             ['name' => 'manage.users', 'display_name' => 'إدارة المستخدمين', 'description' => 'إدارة المستخدمين (عرض، إضافة، تعديل، حذف)', 'group' => 'إدارة النظام'],

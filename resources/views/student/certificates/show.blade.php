@@ -274,6 +274,34 @@
 
 @section('content')
 <div class="space-y-6">
+    @if(!empty($certificate->pdf_path))
+        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200 no-print">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div class="min-w-0">
+                    <h2 class="text-lg font-bold text-gray-900 truncate">ملف الشهادة</h2>
+                    <p class="text-sm text-gray-500">يمكنك معاينة الملف أو تحميله</p>
+                </div>
+                <a href="{{ route('student.certificates.file', $certificate) }}"
+                   class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-5 py-2.5 rounded-xl font-semibold transition-colors shadow-lg shadow-emerald-500/20"
+                   target="_blank" rel="noopener">
+                    <i class="fas fa-file-download"></i>
+                    <span>فتح / تحميل</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div class="relative" style="height: min(80vh, 900px);">
+                <iframe
+                    src="{{ route('student.certificates.file', $certificate) }}"
+                    class="w-full h-full"
+                    style="border:0"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                ></iframe>
+            </div>
+        </div>
+    @else
     <!-- Template Selector -->
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200 no-print">
         <h3 class="text-lg font-bold text-gray-900 mb-4">اختر قالب الشهادة</h3>
@@ -327,32 +355,33 @@
     </div>
 </div>
 
-@push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script>
-    function downloadCertificate() {
-        const element = document.getElementById('certificate-template');
-        const opt = {
-            margin: 0,
-            filename: 'certificate-{{ $certificate->certificate_number }}.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-        };
-        html2pdf().set(opt).from(element).save();
-    }
+    @push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        function downloadCertificate() {
+            const element = document.getElementById('certificate-template');
+            const opt = {
+                margin: 0,
+                filename: 'certificate-{{ $certificate->certificate_number }}.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
 
-    // Initialize Alpine.js for template selector
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('templateSelector', () => ({
-            selectedTemplate: 'classic',
-            selectTemplate(template) {
-                this.selectedTemplate = template;
-                const certElement = document.getElementById('certificate-template');
-                certElement.className = `certificate-template template-${template}`;
-            }
-        }));
-    });
-</script>
-@endpush
+        // Initialize Alpine.js for template selector
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('templateSelector', () => ({
+                selectedTemplate: 'classic',
+                selectTemplate(template) {
+                    this.selectedTemplate = template;
+                    const certElement = document.getElementById('certificate-template');
+                    certElement.className = `certificate-template template-${template}`;
+                }
+            }));
+        });
+    </script>
+    @endpush
+    @endif
 @endsection

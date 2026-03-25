@@ -56,13 +56,24 @@
                             @if($file->file_type === 'presentation')
                                 <span class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fas fa-file-powerpoint"></i></span>
                                 <span class="flex-1 font-medium text-slate-800">{{ $file->label ?: 'عرض شرائح تفاعلي' }}</span>
-                            @else
+                            @elseif($file->file_type === 'assignment')
                                 <span class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center"><i class="fas fa-file-alt"></i></span>
                                 <span class="flex-1 font-medium text-slate-800">{{ $file->label ?: 'وجبة تحميل وإرسال للطالب' }}</span>
+                            @else
+                                <span class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="fas fa-code"></i></span>
+                                <span class="flex-1 font-medium text-slate-800">{{ $file->label ?: 'محتوى HTML تفاعلي' }}</span>
                             @endif
-                            <a href="{{ route('curriculum-library.file.download', [$item, $file]) }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">
-                                <i class="fas fa-download"></i> تحميل
-                            </a>
+                            <div class="flex items-center gap-2">
+                                @if($file->file_type === 'html')
+                                    <a href="{{ route('curriculum-library.file.view', [$item, $file]) }}" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700">
+                                        <i class="fas fa-eye"></i> عرض
+                                    </a>
+                                @else
+                                    <a href="{{ route('curriculum-library.file.download', [$item, $file]) }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700">
+                                        <i class="fas fa-download"></i> تحميل
+                                    </a>
+                                @endif
+                            </div>
                         </li>
                     @endforeach
                 </ul>

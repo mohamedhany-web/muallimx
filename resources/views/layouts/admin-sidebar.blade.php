@@ -578,22 +578,19 @@
                 </ul>
             </li>
 
-            {{-- الإنجازات والشارات --}}
-            @php $achievementsOpen = request()->routeIs('admin.achievements.*') || request()->routeIs('admin.badges.*') || request()->routeIs('admin.reviews.*'); @endphp
-            <li x-data="{ open: {{ $achievementsOpen ? 'true' : 'false' }} }">
-                <button @click="open = !open" class="sidebar-group-btn">
-                    <span class="flex items-center gap-3"><i class="fas fa-trophy w-5 text-center text-orange-400"></i><span>{{ __('admin.achievements_badges') }}</span></span>
-                    <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
-                </button>
-                <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
-                    <li><a href="{{ route('admin.achievements.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.achievements.*') ? 'active' : '' }}"><i class="fas fa-medal"></i><span>{{ __('admin.achievements') }}</span></a></li>
-                    <li><a href="{{ route('admin.badges.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.badges.*') ? 'active' : '' }}"><i class="fas fa-award"></i><span>{{ __('admin.badges') }}</span></a></li>
-                    <li><a href="{{ route('admin.reviews.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}"><i class="fas fa-star-half-alt"></i><span>{{ __('admin.reviews_ratings') }}</span></a></li>
-                </ul>
-            </li>
+            {{-- تم إخفاء قسم الإنجازات والشارات بناءً على طلب العميل --}}
 
             {{-- إدارة الصلاحيات والأدوار --}}
             @php $permissionsOpen = request()->routeIs('admin.roles.*') || request()->routeIs('admin.permissions.*') || request()->routeIs('admin.user-permissions.*'); @endphp
+            @php
+                $canManagePermissions = auth()->check() && (
+                    auth()->user()->hasPermission('users.permissions')
+                    || auth()->user()->hasPermission('manage.roles')
+                    || auth()->user()->hasPermission('manage.permissions')
+                    || auth()->user()->hasPermission('manage.user-permissions')
+                );
+            @endphp
+            @if($canManagePermissions)
             <li x-data="{ open: {{ $permissionsOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-shield-alt w-5 text-center"></i><span>{{ __('admin.permissions_roles') }}</span></span>
@@ -605,46 +602,25 @@
                     <li><a href="{{ route('admin.user-permissions.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.user-permissions.*') ? 'active' : '' }}"><i class="fas fa-user-shield"></i><span>{{ __('admin.user_permissions') }}</span></a></li>
                 </ul>
             </li>
-
-            {{-- إدارة الصفحات الخارجية --}}
-            @php $externalOpen = request()->routeIs('admin.contact-messages.*'); @endphp
-            <li x-data="{ open: {{ $externalOpen ? 'true' : 'false' }} }">
-                <button @click="open = !open" class="sidebar-group-btn">
-                    <span class="flex items-center gap-3"><i class="fas fa-globe w-5 text-center text-blue-400"></i><span>{{ __('admin.external_pages') }}</span></span>
-                    <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
-                </button>
-                <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
-                    <li><a href="{{ route('admin.portfolio.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.portfolio.*') ? 'active' : '' }}"><i class="fas fa-briefcase"></i><span>{{ __('admin.portfolio') }}</span></a></li>
-                    <li>
-                        <a href="{{ route('admin.contact-messages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.contact-messages.*') ? 'active' : '' }}">
-                            <i class="fas fa-envelope"></i><span>{{ __('admin.contact_messages') }}</span>
-                            @php try { $unreadCount = \App\Models\ContactMessage::whereNull('read_at')->count(); } catch (\Exception $e) { $unreadCount = 0; } @endphp
-                            @if($unreadCount > 0)<span class="sidebar-badge bg-amber-400 text-amber-900">{{ $unreadCount }}</span>@endif
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
-            {{-- الإدارة العليا (من نحن) --}}
-            @php $topManagementOpen = request()->routeIs('admin.about.*'); @endphp
-            <li x-data="{ open: {{ $topManagementOpen ? 'true' : 'false' }} }">
-                <button @click="open = !open" class="sidebar-group-btn">
-                    <span class="flex items-center gap-3"><i class="fas fa-building w-5 text-center text-amber-400"></i><span>{{ __('admin.top_management') }}</span></span>
-                    <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
-                </button>
-                <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
-                    <li><a href="{{ route('admin.about.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.about.*') ? 'active' : '' }}"><i class="fas fa-info-circle"></i><span>{{ __('admin.about_page') }}</span></a></li>
-                </ul>
-            </li>
+            @endif
+            {{-- تم إخفاء: الصفحات الخارجية + الإدارة العليا بناءً على طلب العميل --}}
 
             {{-- إدارة المهام --}}
             @php $tasksActive = request()->routeIs('admin.tasks.*'); @endphp
+            @php
+                $canTasks = auth()->check() && (
+                    auth()->user()->hasPermission('tasks.view')
+                    || auth()->user()->hasPermission('manage.tasks')
+                );
+            @endphp
+            @if($canTasks)
             <li>
                 <a href="{{ route('admin.tasks.index') }}" class="sidebar-link {{ $tasksActive ? 'active' : '' }}">
                     <i class="fas fa-list-check"></i>
                     <span>{{ __('admin.tasks') }}</span>
                 </a>
             </li>
+            @endif
 
             {{-- الرسائل --}}
             @php $messagesActive = request()->routeIs('admin.messages.*'); @endphp

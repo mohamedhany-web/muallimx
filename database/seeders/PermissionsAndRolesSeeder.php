@@ -22,6 +22,9 @@ class PermissionsAndRolesSeeder extends Seeder
 
         // إنشاء الصلاحيات الأساسية
         $permissions = [
+            // الوصول إلى لوحة الأدمن
+            ['name' => 'admin.access', 'display_name' => 'الدخول إلى لوحة الأدمن', 'group' => 'system'],
+
             // إدارة المستخدمين
             ['name' => 'users.view', 'display_name' => 'عرض المستخدمين', 'group' => 'users'],
             ['name' => 'users.create', 'display_name' => 'إنشاء مستخدمين', 'group' => 'users'],

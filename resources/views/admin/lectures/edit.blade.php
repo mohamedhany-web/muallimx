@@ -10,10 +10,6 @@
         $scheduledAtValue = $lecture->scheduled_at->format('Y-m-d\TH:i');
     }
     $platforms = [
-        'youtube' => 'YouTube',
-        'vimeo' => 'Vimeo',
-        'google_drive' => 'Google Drive',
-        'direct' => 'رابط مباشر',
         'bunny' => 'Bunny.net',
     ];
 @endphp

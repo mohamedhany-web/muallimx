@@ -556,6 +556,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/curriculum-library', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
         Route::get('/curriculum-library/{item:slug}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'show'])->name('curriculum-library.show');
         Route::get('/curriculum-library/{item:slug}/file/{file}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'download'])->name('curriculum-library.file.download');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/view', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewHtml'])->name('curriculum-library.file.view');
     });
 
     // لوحة الموظفين
@@ -604,8 +605,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/api/notifications/{notification}/mark-read', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'markAsRead'])->name('notifications.api.mark-read');
     });
 
-    // مسارات الإدارة - محمية بالـ role middleware للإداريين فقط
-    Route::prefix('admin')->name('admin.')->middleware(['role:admin|super_admin'])->group(function () {
+    // مسارات الإدارة - محمية بصلاحية admin.access (مع تجاوز super_admin داخل EnsurePermission)
+    Route::prefix('admin')->name('admin.')->middleware(['auth', 'permission:admin.access'])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('dashboard');
 
         // بروفايل الأدمن
@@ -764,16 +765,19 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->name('orders.reject');
 
         // إدارة الصلاحيات والأدوار
-        Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
-        Route::resource('permissions', \App\Http\Controllers\Admin\PermissionController::class);
-        Route::post('/roles/{role}/permissions', [\App\Http\Controllers\Admin\RoleController::class, 'updatePermissions'])->name('roles.update-permissions');
-        
-        // إدارة صلاحيات المستخدمين
-        Route::get('/user-permissions', [\App\Http\Controllers\Admin\UserPermissionController::class, 'index'])->name('user-permissions.index');
-        Route::get('/user-permissions/{user}', [\App\Http\Controllers\Admin\UserPermissionController::class, 'show'])->name('user-permissions.show');
-        Route::put('/user-permissions/{user}', [\App\Http\Controllers\Admin\UserPermissionController::class, 'update'])->name('user-permissions.update');
-        Route::post('/user-permissions/{user}/attach', [\App\Http\Controllers\Admin\UserPermissionController::class, 'attachPermission'])->name('user-permissions.attach');
-        Route::post('/user-permissions/{user}/detach', [\App\Http\Controllers\Admin\UserPermissionController::class, 'detachPermission'])->name('user-permissions.detach');
+        Route::middleware('permission:users.permissions')->group(function () {
+            Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class);
+            Route::resource('permissions', \App\Http\Controllers\Admin\PermissionController::class);
+            Route::post('/roles/{role}/permissions', [\App\Http\Controllers\Admin\RoleController::class, 'updatePermissions'])->name('roles.update-permissions');
+
+            // إدارة صلاحيات المستخدمين
+            Route::get('/user-permissions', [\App\Http\Controllers\Admin\UserPermissionController::class, 'index'])->name('user-permissions.index');
+            Route::get('/user-permissions/{user}', [\App\Http\Controllers\Admin\UserPermissionController::class, 'show'])->name('user-permissions.show');
+            Route::put('/user-permissions/{user}', [\App\Http\Controllers\Admin\UserPermissionController::class, 'update'])->name('user-permissions.update');
+            Route::put('/user-permissions/{user}/roles', [\App\Http\Controllers\Admin\UserPermissionController::class, 'updateRoles'])->name('user-permissions.update-roles');
+            Route::post('/user-permissions/{user}/attach', [\App\Http\Controllers\Admin\UserPermissionController::class, 'attachPermission'])->name('user-permissions.attach');
+            Route::post('/user-permissions/{user}/detach', [\App\Http\Controllers\Admin\UserPermissionController::class, 'detachPermission'])->name('user-permissions.detach');
+        });
 
         // إدارة المحافظ الذكية
         Route::resource('wallets', \App\Http\Controllers\Admin\WalletController::class);
@@ -1017,6 +1021,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/curriculum-library/items/create', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'createItem'])->name('curriculum-library.items.create');
         Route::post('/curriculum-library/items', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'storeItem'])->name('curriculum-library.items.store');
         Route::get('/curriculum-library/items/{item}/edit', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'editItem'])->name('curriculum-library.items.edit');
+        // دعم fallback لـ POST في حالة فشل method spoof (_method=PUT) على بعض البيئات
+        Route::post('/curriculum-library/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'updateItem']);
         Route::put('/curriculum-library/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'updateItem'])->name('curriculum-library.items.update');
         Route::delete('/curriculum-library/items/{item}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'destroyItem'])->name('curriculum-library.items.destroy');
         Route::delete('/curriculum-library/items/{item}/files/{file}', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'destroyFile'])->name('curriculum-library.items.files.destroy');
@@ -1153,6 +1159,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         // إدارة الشهادات والإنجازات
         Route::resource('certificates', \App\Http\Controllers\Admin\CertificateController::class);
+        Route::get('certificates/user/{user}/courses', [\App\Http\Controllers\Admin\CertificateController::class, 'userCourses'])
+            ->name('certificates.user-courses');
         Route::resource('achievements', \App\Http\Controllers\Admin\AchievementController::class);
         Route::resource('badges', \App\Http\Controllers\Admin\BadgeController::class);
         Route::resource('reviews', \App\Http\Controllers\Admin\ReviewController::class);
@@ -1242,6 +1250,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::resource('invoices', \App\Http\Controllers\Student\InvoiceController::class)->only(['index', 'show']);
         Route::resource('wallet', \App\Http\Controllers\Student\WalletController::class)->only(['index', 'show']);
         Route::resource('certificates', \App\Http\Controllers\Student\CertificateController::class)->only(['index', 'show']);
+        Route::get('certificates/{certificate}/file', [\App\Http\Controllers\Student\CertificateController::class, 'file'])
+            ->name('certificates.file');
         Route::resource('achievements', \App\Http\Controllers\Student\AchievementController::class)->only(['index', 'show']);
         Route::resource('assignments', \App\Http\Controllers\Student\AssignmentController::class)->only(['index', 'show']);
         Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Student\AssignmentController::class, 'submit'])

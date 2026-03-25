@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Http\Request;
 
 class UserPermissionController extends Controller
@@ -44,8 +45,29 @@ class UserPermissionController extends Controller
             ->orderBy('display_name')
             ->get()
             ->groupBy('group');
+
+        $allRoles = Role::orderBy('is_system', 'desc')
+            ->orderBy('display_name')
+            ->get();
         
-        return view('admin.user-permissions.show', compact('user', 'allUserPermissions', 'allPermissions', 'rolePermissions', 'directPermissions'));
+        return view('admin.user-permissions.show', compact('user', 'allUserPermissions', 'allPermissions', 'rolePermissions', 'directPermissions', 'allRoles'));
+    }
+
+    /**
+     * تحديث أدوار مستخدم
+     */
+    public function updateRoles(Request $request, User $user)
+    {
+        $request->validate([
+            'roles' => 'nullable|array',
+            'roles.*' => 'integer|exists:roles,id',
+        ]);
+
+        $user->roles()->sync($request->roles ?? []);
+
+        return redirect()
+            ->route('admin.user-permissions.show', $user)
+            ->with('success', 'تم تحديث أدوار المستخدم بنجاح');
     }
 
     /**

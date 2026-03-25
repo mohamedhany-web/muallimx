@@ -13,41 +13,19 @@ class VideoHelper
             return null;
         }
 
-        // YouTube
-        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $url, $matches)) {
-            $videoId = $matches[1];
-            return "https://www.youtube-nocookie.com/embed/{$videoId}?autoplay=0&controls=0&disablekb=1&enablejsapi=1&fs=0&iv_load_policy=3&modestbranding=1&playsinline=1&rel=0&showinfo=0&origin=" . request()->getSchemeAndHttpHost();
-        }
-
-        // Vimeo
-        if (preg_match('/vimeo\.com\/(\d+)/', $url, $matches)) {
-            $videoId = $matches[1];
-            return "https://player.vimeo.com/video/{$videoId}?title=0&byline=0&portrait=0&controls=0&pip=0&dnt=1&transparent=0";
-        }
-
-        // Google Drive
-        if (preg_match('/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
-            $fileId = $matches[1];
-            return "https://drive.google.com/file/d/{$fileId}/preview";
-        }
-
         // Bunny.net (Bunny Stream) - iframe أو player.mediadelivery.net
-        if (preg_match('/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
-            $libraryId = $matches[1];
-            $videoId = $matches[2];
-            $base = "https://iframe.mediadelivery.net/embed/{$libraryId}/{$videoId}";
+        if (preg_match('/(?:iframe|player)\.mediadelivery\.net\/(embed|play)\/(\d+)\/([a-zA-Z0-9_-]+)/', $url, $matches)) {
+            $mode = $matches[1];
+            $libraryId = $matches[2];
+            $videoId = $matches[3];
+            // NOTE: Prefer iframe host for embedding, preserve play/embed mode.
+            $base = "https://iframe.mediadelivery.net/{$mode}/{$libraryId}/{$videoId}";
             $parsed = parse_url($url);
             $query = isset($parsed['query']) ? '?' . $parsed['query'] : '';
             return $base . $query;
         }
 
-        // إذا كان رابط مباشر للفيديو
-        if (preg_match('/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i', $url)) {
-            return $url;
-        }
-
-        // إرجاع الرابط كما هو إذا لم يتطابق مع أي نمط
-        return $url;
+        return null;
     }
 
     /**
@@ -59,24 +37,8 @@ class VideoHelper
             return 'unknown';
         }
 
-        if (strpos($url, 'youtube.com') !== false || strpos($url, 'youtu.be') !== false) {
-            return 'youtube';
-        }
-
-        if (strpos($url, 'vimeo.com') !== false) {
-            return 'vimeo';
-        }
-
-        if (strpos($url, 'drive.google.com') !== false) {
-            return 'google_drive';
-        }
-
         if (strpos($url, 'iframe.mediadelivery.net') !== false || strpos($url, 'mediadelivery.net') !== false) {
             return 'bunny';
-        }
-
-        if (preg_match('/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i', $url)) {
-            return 'direct';
         }
 
         return 'other';
@@ -115,22 +77,7 @@ class VideoHelper
             return false;
         }
 
-        // التحقق من الأنماط المدعومة
-        $patterns = [
-            '/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', // YouTube
-            '/vimeo\.com\/(\d+)/', // Vimeo
-            '/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/', // Google Drive
-            '/(?:iframe|player)\.mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/', // Bunny.net (Bunny Stream)
-            '/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i' // Direct video files
-        ];
-
-        foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $url)) {
-                return true;
-            }
-        }
-
-        return false;
+        return (bool) preg_match('/(?:iframe|player)\.mediadelivery\.net\/(embed|play)\/(\d+)\/([a-zA-Z0-9_-]+)/', $url);
     }
 
     /**

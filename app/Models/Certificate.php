@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Certificate extends Model
 {
@@ -76,12 +77,18 @@ class Certificate extends Model
      */
     public static function generateSerialNumber()
     {
+        // Some installations may not have the column (migration not applied yet).
+        // In that case, just generate a serial without DB uniqueness checks.
+        $hasSerialColumn = Schema::hasColumn('certificates', 'serial_number');
+
         $maxAttempts = 100;
         $attempt = 0;
         
         do {
             $serial = 'MIND-' . date('Y') . '-' . strtoupper(substr(uniqid(), -8)) . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-            $exists = self::whereNotNull('serial_number')->where('serial_number', $serial)->exists();
+            $exists = $hasSerialColumn
+                ? self::whereNotNull('serial_number')->where('serial_number', $serial)->exists()
+                : false;
             $attempt++;
             
             if ($attempt >= $maxAttempts) {

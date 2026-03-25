@@ -154,7 +154,7 @@
                 <label for="video_url" class="block text-sm font-semibold text-gray-700 mb-2">رابط الفيديو</label>
                 <input type="url" name="video_url" id="video_url" value="{{ old('video_url', $lesson->video_url) }}"
                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                       placeholder="https://www.youtube.com/watch?v=... أو رابط فيديو آخر">
+                       placeholder="Bunny Stream (https://iframe.mediadelivery.net/embed/{libraryId}/{videoId})">
                 
                 @if($lesson->video_url)
                     <div class="mt-3 p-4 bg-white rounded-xl border border-gray-200">
@@ -164,16 +164,11 @@
                                 $videoSource = \App\Helpers\VideoHelper::getVideoSource($lesson->video_url);
                             @endphp
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
-                                @if($videoSource == 'youtube') bg-red-100 text-red-800
-                                @elseif($videoSource == 'vimeo') bg-blue-100 text-blue-800
-                                @elseif($videoSource == 'google_drive') bg-yellow-100 text-yellow-800
+                                @if($videoSource == 'bunny') bg-orange-100 text-orange-800
                                 @else bg-gray-100 text-gray-800
                                 @endif">
-                                @if($videoSource == 'youtube') YouTube
-                                @elseif($videoSource == 'vimeo') Vimeo
-                                @elseif($videoSource == 'google_drive') Google Drive
-                                @elseif($videoSource == 'direct') ملف مباشر
-                                @else مصدر آخر
+                                @if($videoSource == 'bunny') Bunny
+                                @else غير مدعوم
                                 @endif
                             </span>
                         </div>
@@ -186,10 +181,7 @@
                 <div class="mt-2 text-sm text-gray-500">
                     <p class="mb-1"><strong>المصادر المدعومة:</strong></p>
                     <ul class="list-disc list-inside space-y-1">
-                        <li>YouTube: https://www.youtube.com/watch?v=VIDEO_ID</li>
-                        <li>Vimeo: https://vimeo.com/VIDEO_ID</li>
-                        <li>Google Drive: رابط مشاركة الفيديو</li>
-                        <li>ملفات فيديو مباشرة: .mp4, .avi, .mov</li>
+                        <li>Bunny Stream فقط (mediadelivery.net)</li>
                     </ul>
                 </div>
                 @error('video_url')

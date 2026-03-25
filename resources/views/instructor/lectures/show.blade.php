@@ -89,62 +89,60 @@ function updateStatus(status) {
 @endpush
 
 @section('content')
-<div class="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6" style="background: #f8fafc; min-height: 100vh;">
+<div class="space-y-6">
     <!-- الهيدر -->
-    <div class="dashboard-card-lecture rounded-2xl p-5 sm:p-6 border-2 border-slate-200 dark:border-slate-700/60 shadow-lg">
+    <div class="rounded-2xl p-6 text-white shadow-lg border border-white/10 bg-gradient-to-l from-indigo-600 via-blue-600 to-cyan-500">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div class="flex-1">
-                <nav class="text-sm text-slate-600 dark:text-slate-400 font-medium mb-3">
-                    <a href="{{ route('instructor.lectures.index') }}" class="hover:text-sky-600 transition-colors">المحاضرات</a>
+            <div class="min-w-0">
+                <nav class="text-sm text-white/80 mb-2">
+                    <a href="{{ route('instructor.lectures.index') }}" class="hover:text-white transition-colors">{{ __('instructor.lectures') }}</a>
                     <span class="mx-2">/</span>
-                    <span class="text-slate-800 dark:text-slate-100 font-bold">{{ $lecture->title }}</span>
+                    <span class="text-white font-semibold">{{ Str::limit($lecture->title, 60) }}</span>
                 </nav>
-                <h1 class="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 mb-2">{{ $lecture->title }}</h1>
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-md
-                        @if($lecture->status == 'scheduled') bg-gradient-to-r from-sky-500 to-blue-600 text-white
-                        @elseif($lecture->status == 'in_progress') bg-gradient-to-r from-amber-400 to-amber-500 text-white
-                        @elseif($lecture->status == 'completed') bg-gradient-to-r from-emerald-500 to-green-600 text-white
-                        @else bg-gradient-to-r from-red-500 to-rose-600 text-white
-                        @endif">
-                        @if($lecture->status == 'scheduled')
-                            <i class="fas fa-calendar-alt"></i>
-                            مجدولة
-                        @elseif($lecture->status == 'in_progress')
-                            <i class="fas fa-clock"></i>
-                            قيد التنفيذ
-                        @elseif($lecture->status == 'completed')
-                            <i class="fas fa-check-circle"></i>
-                            مكتملة
-                        @else
-                            <i class="fas fa-times-circle"></i>
-                            ملغاة
-                        @endif
-                    </span>
-                    @if($lecture->course)
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-50 dark:bg-sky-900/30 text-sky-700 border border-sky-200">
-                            <i class="fas fa-book"></i>
-                            {{ $lecture->course->title }}
-                        </span>
-                    @endif
-                    @if($lecture->lesson)
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-violet-50 dark:bg-violet-900/30 text-violet-700 border border-violet-200">
-                            <i class="fas fa-play-circle"></i>
-                            {{ $lecture->lesson->title }}
-                        </span>
-                    @endif
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
+                        <i class="fas fa-chalkboard-teacher text-lg"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h1 class="text-xl sm:text-2xl font-black leading-tight truncate">{{ $lecture->title }}</h1>
+                        <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white/15 border border-white/20">
+                                @if($lecture->status == 'scheduled')
+                                    <i class="fas fa-calendar-alt"></i> مجدولة
+                                @elseif($lecture->status == 'in_progress')
+                                    <i class="fas fa-clock"></i> قيد التنفيذ
+                                @elseif($lecture->status == 'completed')
+                                    <i class="fas fa-check-circle"></i> مكتملة
+                                @else
+                                    <i class="fas fa-times-circle"></i> ملغاة
+                                @endif
+                            </span>
+                            @if($lecture->course)
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white/10 border border-white/15">
+                                    <i class="fas fa-book"></i>
+                                    {{ Str::limit($lecture->course->title, 40) }}
+                                </span>
+                            @endif
+                            @if($lecture->scheduled_at)
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white/10 border border-white/15">
+                                    <i class="fas fa-calendar"></i>
+                                    {{ $lecture->scheduled_at->format('Y/m/d H:i') }}
+                                </span>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
                 <a href="{{ route('instructor.lectures.edit', $lecture) }}"
-                   class="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-5 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl">
+                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-indigo-700 hover:bg-white/90 border border-white/20 font-extrabold transition-colors">
                     <i class="fas fa-edit"></i>
-                    <span>تعديل</span>
+                    <span>{{ __('common.edit') ?? 'تعديل' }}</span>
                 </a>
                 <a href="{{ route('instructor.lectures.index') }}"
-                   class="inline-flex items-center gap-2 bg-slate-500 dark:bg-slate-600 hover:bg-slate-600 text-white px-5 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg">
+                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/20 border border-white/20 text-white font-semibold transition-colors">
                     <i class="fas fa-arrow-right"></i>
-                    <span>العودة</span>
+                    <span>{{ __('common.back') ?? 'العودة' }}</span>
                 </a>
             </div>
         </div>

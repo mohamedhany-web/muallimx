@@ -10,6 +10,7 @@ class CurriculumLibraryItemFile extends Model
     protected $fillable = [
         'curriculum_library_item_id',
         'path',
+        'storage_disk',
         'label',
         'file_type',
         'order',
@@ -26,7 +27,17 @@ class CurriculumLibraryItemFile extends Model
 
     public function getUrlAttribute(): ?string
     {
-        return $this->path ? Storage::url($this->path) : null;
+        if (!$this->path) return null;
+        $disk = $this->storage_disk ?: config('filesystems.default');
+
+        try {
+            if ($disk === 'r2') {
+                return Storage::disk('r2')->temporaryUrl($this->path, now()->addHours(2));
+            }
+            return Storage::disk($disk)->url($this->path);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     public function scopePresentations($query)

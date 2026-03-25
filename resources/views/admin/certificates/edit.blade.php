@@ -8,7 +8,7 @@
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
         <h1 class="text-2xl font-bold text-gray-900 mb-6">تعديل الشهادة</h1>
         
-        <form action="{{ route('admin.certificates.update', $certificate) }}" method="POST" class="space-y-6">
+        <form action="{{ route('admin.certificates.update', $certificate) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
             @method('PUT')
             
@@ -23,9 +23,9 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">الكورس (اختياري)</label>
-                    <select name="course_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                        <option value="">بدون كورس</option>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">الكورس *</label>
+                    <select name="course_id" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                        <option value="">اختر الكورس</option>
                         @foreach($courses as $course)
                         <option value="{{ $course->id }}" {{ $certificate->course_id == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
                         @endforeach
@@ -60,6 +60,24 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">الوصف</label>
                 <textarea name="description" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">{{ old('description', $certificate->description) }}</textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">ملف الشهادة (PDF أو صورة)</label>
+                @if(!empty($certificate->pdf_path))
+                    <div class="mb-3 text-sm">
+                        <span class="text-gray-500">ملف حالي:</span>
+                        <a class="text-sky-600 hover:underline font-semibold"
+                           href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($certificate->pdf_path) }}"
+                           target="_blank" rel="noopener">عرض الملف</a>
+                    </div>
+                @endif
+                <input type="file" name="certificate_file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white">
+                @error('certificate_file')
+                    <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
+                @enderror
+                <p class="text-xs text-gray-500 mt-2">اتركه فارغًا إذا لا تريد تغيير الملف. الحد الأقصى 50MB.</p>
             </div>
 
             <div class="flex gap-4">

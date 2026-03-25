@@ -20,7 +20,7 @@ class VideoProviderController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:video_providers,slug',
-            'platform' => 'required|string|max:50',
+            'platform' => 'required|in:bunny',
             'is_active' => 'nullable|boolean',
             'library_id' => 'nullable|string|max:255',
             'cdn_hostname' => 'nullable|string|max:255',
@@ -41,7 +41,7 @@ class VideoProviderController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:video_providers,slug,' . $videoProvider->id,
-            'platform' => 'required|string|max:50',
+            'platform' => 'required|in:bunny',
             'is_active' => 'nullable|boolean',
             'library_id' => 'nullable|string|max:255',
             'cdn_hostname' => 'nullable|string|max:255',

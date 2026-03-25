@@ -114,7 +114,7 @@ class LectureController extends Controller
             'teams_registration_link' => 'nullable|url',
             'teams_meeting_link' => 'nullable|url',
             'recording_url' => 'nullable|url',
-            'video_platform' => 'nullable|in:youtube,vimeo,google_drive,direct,bunny',
+            'video_platform' => 'nullable|in:bunny',
             'notes' => 'nullable|string',
             'has_attendance_tracking' => 'boolean',
             'has_assignment' => 'boolean',
@@ -161,19 +161,11 @@ class LectureController extends Controller
         }
         
         // إذا كان recording_url موجوداً و video_platform غير موجود، حاول اكتشافه
-        if (isset($validated['recording_url']) && $validated['recording_url'] && !isset($validated['video_platform'])) {
-            $recordingUrl = $validated['recording_url'];
-            if (strpos($recordingUrl, 'youtube.com') !== false || strpos($recordingUrl, 'youtu.be') !== false) {
-                $validated['video_platform'] = 'youtube';
-            } elseif (strpos($recordingUrl, 'vimeo.com') !== false) {
-                $validated['video_platform'] = 'vimeo';
-            } elseif (strpos($recordingUrl, 'drive.google.com') !== false) {
-                $validated['video_platform'] = 'google_drive';
-            } elseif (strpos($recordingUrl, 'mediadelivery.net') !== false) {
-                $validated['video_platform'] = 'bunny';
-            } elseif (preg_match('/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i', $recordingUrl)) {
-                $validated['video_platform'] = 'direct';
+        if (isset($validated['recording_url']) && $validated['recording_url']) {
+            if (strpos($validated['recording_url'], 'mediadelivery.net') === false) {
+                return back()->withErrors(['recording_url' => 'يسمح فقط بروابط Bunny Stream (mediadelivery.net).'])->withInput();
             }
+            $validated['video_platform'] = 'bunny';
         }
         
         // التأكد من حفظ video_platform إذا كان موجوداً في الطلب
@@ -358,7 +350,7 @@ class LectureController extends Controller
             'teams_registration_link' => 'nullable|url',
             'teams_meeting_link' => 'nullable|url',
             'recording_url' => 'nullable|string|max:2000',
-            'video_platform' => 'nullable|in:youtube,vimeo,google_drive,direct,bunny',
+            'video_platform' => 'nullable|in:bunny',
             'notes' => 'nullable|string',
             'status' => 'nullable|in:scheduled,in_progress,completed,cancelled',
             'has_attendance_tracking' => 'boolean',
@@ -403,19 +395,13 @@ class LectureController extends Controller
         }
         
         // إذا تم تغيير recording_url دون video_platform، اكتشاف المنصة تلقائياً
-        if (!empty($validated['recording_url']) && empty($validated['video_platform'])) {
-            $recordingUrl = $validated['recording_url'];
-            if (strpos($recordingUrl, 'youtube.com') !== false || strpos($recordingUrl, 'youtu.be') !== false) {
-                $validated['video_platform'] = 'youtube';
-            } elseif (strpos($recordingUrl, 'vimeo.com') !== false) {
-                $validated['video_platform'] = 'vimeo';
-            } elseif (strpos($recordingUrl, 'drive.google.com') !== false) {
-                $validated['video_platform'] = 'google_drive';
-            } elseif (strpos($recordingUrl, 'mediadelivery.net') !== false) {
-                $validated['video_platform'] = 'bunny';
-            } elseif (preg_match('/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i', $recordingUrl)) {
-                $validated['video_platform'] = 'direct';
+        if (!empty($validated['recording_url'])) {
+            if (strpos($validated['recording_url'], 'mediadelivery.net') === false) {
+                return back()->withErrors(['recording_url' => 'يسمح فقط بروابط Bunny Stream (mediadelivery.net).'])->withInput();
             }
+            $validated['video_platform'] = 'bunny';
+        } else {
+            $validated['video_platform'] = null;
         }
         
         $lecture->update($validated);

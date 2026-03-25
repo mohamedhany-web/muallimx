@@ -78,10 +78,6 @@
 @section('content')
 @php
     $placeholders = [
-        'youtube' => __('instructor.paste_youtube'),
-        'vimeo' => __('instructor.paste_vimeo'),
-        'google_drive' => __('instructor.paste_drive'),
-        'direct' => __('instructor.paste_direct'),
         'bunny' => __('instructor.paste_bunny'),
         'default' => __('instructor.paste_video'),
     ];
@@ -169,22 +165,6 @@
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">{{ __('instructor.video_source_question') }} <span class="text-red-500">*</span></label>
                     <div class="platform-selector">
-                        <div class="platform-option" :class="{ 'active': selectedPlatform === 'youtube' }" @click="selectPlatform('youtube')">
-                            <i class="fab fa-youtube text-red-600"></i>
-                            <div class="font-bold text-slate-800 dark:text-slate-100 text-sm mt-1">YouTube</div>
-                        </div>
-                        <div class="platform-option" :class="{ 'active': selectedPlatform === 'vimeo' }" @click="selectPlatform('vimeo')">
-                            <i class="fab fa-vimeo text-blue-500"></i>
-                            <div class="font-bold text-slate-800 dark:text-slate-100 text-sm mt-1">Vimeo</div>
-                        </div>
-                        <div class="platform-option" :class="{ 'active': selectedPlatform === 'google_drive' }" @click="selectPlatform('google_drive')">
-                            <i class="fab fa-google-drive text-green-600"></i>
-                            <div class="font-bold text-slate-800 dark:text-slate-100 text-sm mt-1">Google Drive</div>
-                        </div>
-                        <div class="platform-option" :class="{ 'active': selectedPlatform === 'direct' }" @click="selectPlatform('direct')">
-                            <i class="fas fa-file-video text-purple-600"></i>
-                            <div class="font-bold text-slate-800 dark:text-slate-100 text-sm mt-1">{{ __('instructor.direct_link') }}</div>
-                        </div>
                         <div class="platform-option" :class="{ 'active': selectedPlatform === 'bunny' }" @click="selectPlatform('bunny')">
                             <i class="fas fa-cloud text-orange-600"></i>
                             <div class="font-bold text-slate-800 dark:text-slate-100 text-sm mt-1">Bunny.net</div>
@@ -334,22 +314,6 @@
                             <div class="text-sm text-slate-600 dark:text-slate-400">{{ __('instructor.attendance_tracking_desc') }}</div>
                         </div>
                     </label>
-                    <label class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl cursor-pointer hover:bg-sky-50 dark:bg-sky-900/40 border border-slate-200 dark:border-slate-700 hover:border-sky-200 transition-colors">
-                        <input type="checkbox" name="has_assignment" value="1" {{ old('has_assignment') ? 'checked' : '' }}
-                               class="w-5 h-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
-                        <div>
-                            <div class="font-bold text-slate-800 dark:text-slate-100">{{ __('instructor.has_assignment') }}</div>
-                            <div class="text-sm text-slate-600 dark:text-slate-400">{{ __('instructor.has_assignment_desc') }}</div>
-                        </div>
-                    </label>
-                    <label class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl cursor-pointer hover:bg-sky-50 dark:bg-sky-900/40 border border-slate-200 dark:border-slate-700 hover:border-sky-200 transition-colors">
-                        <input type="checkbox" name="has_evaluation" value="1" {{ old('has_evaluation') ? 'checked' : '' }}
-                               class="w-5 h-5 text-sky-600 border-slate-300 rounded focus:ring-sky-500">
-                        <div>
-                            <div class="font-bold text-slate-800 dark:text-slate-100">{{ __('instructor.has_evaluation') }}</div>
-                            <div class="text-sm text-slate-600 dark:text-slate-400">{{ __('instructor.has_evaluation_desc') }}</div>
-                        </div>
-                    </label>
                 </div>
             </div>
         </div>
@@ -372,7 +336,7 @@ window.__lecturePlaceholders = @json($placeholders);
 
 function videoPreviewData() {
     return {
-        selectedPlatform: '{{ old('video_platform', '') }}',
+        selectedPlatform: '{{ old('video_platform', 'bunny') }}',
         videoUrl: '{{ old('recording_url', '') }}',
         videoInfo: null,
         isLoading: false,
@@ -386,10 +350,6 @@ function videoPreviewData() {
         },
         getPlaceholder() {
             const p = window.__lecturePlaceholders || {};
-            if (this.selectedPlatform === 'youtube') return p.youtube || '';
-            if (this.selectedPlatform === 'vimeo') return p.vimeo || '';
-            if (this.selectedPlatform === 'google_drive') return p.google_drive || '';
-            if (this.selectedPlatform === 'direct') return p.direct || '';
             if (this.selectedPlatform === 'bunny') return p.bunny || '';
             return p.default || '';
         },
@@ -413,41 +373,9 @@ function videoPreviewData() {
                 const bunnyInvalid = '{{ addslashes(__('instructor.bunny_invalid')) }}';
                 const previewError = '{{ addslashes(__('instructor.preview_error')) }}';
 
-                if (this.selectedPlatform === 'youtube') {
-                    let videoId = (url.match(/[?&]v=([a-zA-Z0-9_-]{11})/) || [])[1]
-                        || (url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/) || [])[1]
-                        || (url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/) || [])[1]
-                        || (url.match(/youtube\.com\/v\/([a-zA-Z0-9_-]{11})/) || [])[1];
-                    if (videoId && videoId.length === 11) {
-                        isValid = true;
-                        const origin = encodeURIComponent(window.location.origin);
-                        html = '<iframe src="https://www.youtube.com/embed/' + videoId + '?rel=0&modestbranding=1&showinfo=0&controls=1&enablejsapi=1&origin=' + origin + '" width="100%" height="400" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
-                    }
-                    if (!isValid) html = '<div class="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 rounded-lg text-red-700 text-sm"><i class="fas fa-exclamation-circle ml-1"></i> ' + youtubeInvalid + '</div>';
-                } else if (this.selectedPlatform === 'vimeo') {
-                    const m = url.match(/vimeo\.com\/(?:.*\/)?(\d+)/);
-                    if (m && m[1]) {
-                        isValid = true;
-                        html = '<iframe src="https://player.vimeo.com/video/' + m[1] + '?title=0&byline=0&portrait=0" width="100%" height="400" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="border-radius: 0.75rem;"></iframe>';
-                    }
-                    if (!isValid) html = '<div class="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 rounded-lg text-red-700 text-sm"><i class="fas fa-exclamation-circle ml-1"></i> ' + vimeoInvalid + '</div>';
-                } else if (this.selectedPlatform === 'google_drive') {
-                    const m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-                    if (m && m[1]) {
-                        isValid = true;
-                        html = '<iframe src="https://drive.google.com/file/d/' + m[1] + '/preview" width="100%" height="400" frameborder="0" allow="autoplay" style="border-radius: 0.75rem;"></iframe>';
-                    }
-                    if (!isValid) html = '<div class="p-4 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 rounded-lg text-amber-800 text-sm"><i class="fas fa-info-circle ml-1"></i> ' + driveNote + '</div>';
-                } else if (this.selectedPlatform === 'direct') {
-                    if (/\.(mp4|webm|ogg|avi|mov)(\?.*)?$/i.test(url)) {
-                        isValid = true;
-                        const esc = url.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-                        html = '<video controls width="100%" height="400" style="max-height: 400px; border-radius: 0.75rem;" class="w-full"><source src="' + esc + '" type="video/mp4">Your browser does not support video.</video>';
-                    }
-                    if (!isValid) html = '<div class="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 rounded-lg text-red-700 text-sm"><i class="fas fa-exclamation-circle ml-1"></i> ' + directInvalid + '</div>';
-                } else if (this.selectedPlatform === 'bunny') {
-                    const bunnyMatch = url.match(/mediadelivery\.net\/embed\/(\d+)\/([a-zA-Z0-9_-]+)/);
-                    if (bunnyMatch && bunnyMatch[1] && bunnyMatch[2]) {
+                if (this.selectedPlatform === 'bunny') {
+                    const bunnyMatch = url.match(/mediadelivery\.net\/(embed|play)\/(\d+)\/([a-zA-Z0-9_-]+)/);
+                    if (bunnyMatch && bunnyMatch[2] && bunnyMatch[3]) {
                         isValid = true;
                         const embedUrl = url.split('?')[0];
                         const src = embedUrl.startsWith('http') ? embedUrl : ('https://' + embedUrl.replace(/^\/+/, ''));

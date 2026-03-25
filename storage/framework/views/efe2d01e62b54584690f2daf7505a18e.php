@@ -427,6 +427,7 @@
             <?php
                 $liveOpen = request()->routeIs('admin.live-sessions.*')
                     || request()->routeIs('admin.live-recordings.*')
+                    || request()->routeIs('admin.classroom-recordings.*')
                     || request()->routeIs('admin.live-servers.*')
                     || request()->routeIs('admin.live-settings.*');
             ?>
@@ -450,6 +451,13 @@
                         <li>
                             <a href="<?php echo e(route('admin.live-recordings.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.live-recordings.*') ? 'active' : ''); ?>">
                                 <i class="fas fa-play-circle"></i><span>تسجيلات الجلسات</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                    <?php if(Route::has('admin.classroom-recordings.index')): ?>
+                        <li>
+                            <a href="<?php echo e(route('admin.classroom-recordings.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.classroom-recordings.*') ? 'active' : ''); ?>">
+                                <i class="fas fa-chalkboard"></i><span>تسجيلات Classroom</span>
                             </a>
                         </li>
                     <?php endif; ?>
@@ -571,21 +579,18 @@
             </li>
 
             
-            <?php $achievementsOpen = request()->routeIs('admin.achievements.*') || request()->routeIs('admin.badges.*') || request()->routeIs('admin.reviews.*'); ?>
-            <li x-data="{ open: <?php echo e($achievementsOpen ? 'true' : 'false'); ?> }">
-                <button @click="open = !open" class="sidebar-group-btn">
-                    <span class="flex items-center gap-3"><i class="fas fa-trophy w-5 text-center text-orange-400"></i><span><?php echo e(__('admin.achievements_badges')); ?></span></span>
-                    <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
-                </button>
-                <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
-                    <li><a href="<?php echo e(route('admin.achievements.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.achievements.*') ? 'active' : ''); ?>"><i class="fas fa-medal"></i><span><?php echo e(__('admin.achievements')); ?></span></a></li>
-                    <li><a href="<?php echo e(route('admin.badges.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.badges.*') ? 'active' : ''); ?>"><i class="fas fa-award"></i><span><?php echo e(__('admin.badges')); ?></span></a></li>
-                    <li><a href="<?php echo e(route('admin.reviews.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.reviews.*') ? 'active' : ''); ?>"><i class="fas fa-star-half-alt"></i><span><?php echo e(__('admin.reviews_ratings')); ?></span></a></li>
-                </ul>
-            </li>
 
             
             <?php $permissionsOpen = request()->routeIs('admin.roles.*') || request()->routeIs('admin.permissions.*') || request()->routeIs('admin.user-permissions.*'); ?>
+            <?php
+                $canManagePermissions = auth()->check() && (
+                    auth()->user()->hasPermission('users.permissions')
+                    || auth()->user()->hasPermission('manage.roles')
+                    || auth()->user()->hasPermission('manage.permissions')
+                    || auth()->user()->hasPermission('manage.user-permissions')
+                );
+            ?>
+            <?php if($canManagePermissions): ?>
             <li x-data="{ open: <?php echo e($permissionsOpen ? 'true' : 'false'); ?> }">
                 <button @click="open = !open" class="sidebar-group-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-shield-alt w-5 text-center"></i><span><?php echo e(__('admin.permissions_roles')); ?></span></span>
@@ -597,46 +602,25 @@
                     <li><a href="<?php echo e(route('admin.user-permissions.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.user-permissions.*') ? 'active' : ''); ?>"><i class="fas fa-user-shield"></i><span><?php echo e(__('admin.user_permissions')); ?></span></a></li>
                 </ul>
             </li>
-
+            <?php endif; ?>
             
-            <?php $externalOpen = request()->routeIs('admin.contact-messages.*'); ?>
-            <li x-data="{ open: <?php echo e($externalOpen ? 'true' : 'false'); ?> }">
-                <button @click="open = !open" class="sidebar-group-btn">
-                    <span class="flex items-center gap-3"><i class="fas fa-globe w-5 text-center text-blue-400"></i><span><?php echo e(__('admin.external_pages')); ?></span></span>
-                    <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
-                </button>
-                <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
-                    <li><a href="<?php echo e(route('admin.portfolio.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.portfolio.*') ? 'active' : ''); ?>"><i class="fas fa-briefcase"></i><span><?php echo e(__('admin.portfolio')); ?></span></a></li>
-                    <li>
-                        <a href="<?php echo e(route('admin.contact-messages.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.contact-messages.*') ? 'active' : ''); ?>">
-                            <i class="fas fa-envelope"></i><span><?php echo e(__('admin.contact_messages')); ?></span>
-                            <?php try { $unreadCount = \App\Models\ContactMessage::whereNull('read_at')->count(); } catch (\Exception $e) { $unreadCount = 0; } ?>
-                            <?php if($unreadCount > 0): ?><span class="sidebar-badge bg-amber-400 text-amber-900"><?php echo e($unreadCount); ?></span><?php endif; ?>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-
-            
-            <?php $topManagementOpen = request()->routeIs('admin.about.*'); ?>
-            <li x-data="{ open: <?php echo e($topManagementOpen ? 'true' : 'false'); ?> }">
-                <button @click="open = !open" class="sidebar-group-btn">
-                    <span class="flex items-center gap-3"><i class="fas fa-building w-5 text-center text-amber-400"></i><span><?php echo e(__('admin.top_management')); ?></span></span>
-                    <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
-                </button>
-                <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
-                    <li><a href="<?php echo e(route('admin.about.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.about.*') ? 'active' : ''); ?>"><i class="fas fa-info-circle"></i><span><?php echo e(__('admin.about_page')); ?></span></a></li>
-                </ul>
-            </li>
 
             
             <?php $tasksActive = request()->routeIs('admin.tasks.*'); ?>
+            <?php
+                $canTasks = auth()->check() && (
+                    auth()->user()->hasPermission('tasks.view')
+                    || auth()->user()->hasPermission('manage.tasks')
+                );
+            ?>
+            <?php if($canTasks): ?>
             <li>
                 <a href="<?php echo e(route('admin.tasks.index')); ?>" class="sidebar-link <?php echo e($tasksActive ? 'active' : ''); ?>">
                     <i class="fas fa-list-check"></i>
                     <span><?php echo e(__('admin.tasks')); ?></span>
                 </a>
             </li>
+            <?php endif; ?>
 
             
             <?php $messagesActive = request()->routeIs('admin.messages.*'); ?>

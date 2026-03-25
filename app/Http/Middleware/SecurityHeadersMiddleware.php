@@ -52,9 +52,8 @@ class SecurityHeadersMiddleware
                     "img-src 'self' data: https: blob:; " .
                     "connect-src 'self' https: ws: wss:; " .
                     "frame-src 'self' " .
-                    "https://www.youtube.com " .
-                    "https://player.vimeo.com " .
-                    "https://www.google.com" .
+                    "https://iframe.mediadelivery.net " .
+                    "https://player.mediadelivery.net " .
                     $jitsiOrigin . "; " .
                     "object-src 'none'; " .
                     "base-uri 'self'; " .

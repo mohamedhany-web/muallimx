@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             $this->command->info('📋 1. إنشاء الأدوار والصلاحيات...');
             $this->call([
                 PermissionsAndRolesSeeder::class,
+                // Seeder إضافي يحتوي على صلاحيات كثيرة بأسماء مختلفة مستخدمة في أجزاء من النظام
+                PermissionsSeeder::class,
             ]);
             $this->command->info('✅ تم إنشاء الأدوار والصلاحيات');
             $this->command->newLine();

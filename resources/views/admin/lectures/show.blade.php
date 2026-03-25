@@ -13,13 +13,9 @@
     ];
     $status = $statusMap[$lecture->status ?? 'scheduled'] ?? $statusMap['scheduled'];
     $platformLabels = [
-        'youtube' => 'YouTube',
-        'vimeo' => 'Vimeo',
-        'google_drive' => 'Google Drive',
-        'direct' => 'رابط مباشر',
         'bunny' => 'Bunny.net',
     ];
-    $platformLabel = $platformLabels[strtolower($lecture->video_platform ?? '')] ?? $lecture->video_platform ?? '—';
+    $platformLabel = $platformLabels[strtolower($lecture->video_platform ?? '')] ?? 'غير مدعوم';
 @endphp
 <div class="w-full max-w-full px-4 py-6 space-y-6">
     <!-- الهيدر -->

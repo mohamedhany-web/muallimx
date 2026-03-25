@@ -9,6 +9,7 @@ use App\Models\CurriculumLibraryItemFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class CurriculumLibraryController extends Controller
 {
@@ -115,7 +116,11 @@ class CurriculumLibraryController extends Controller
         $validated['order'] = (int) ($validated['order'] ?? 0);
         $validated['language'] = $validated['language'] ?? 'ar';
         $validated['item_type'] = $validated['item_type'] ?? 'presentation';
-        CurriculumLibraryItem::create($validated);
+        $item = CurriculumLibraryItem::create($validated);
+
+        // دعم رفع الملفات أثناء الإنشاء مباشرةً (ومنها HTML على R2).
+        $this->storeItemFiles($request, $item);
+
         return redirect()->route('admin.curriculum-library.index')->with('success', 'تم إضافة عنصر المنهج بنجاح.');
     }
 
@@ -128,6 +133,17 @@ class CurriculumLibraryController extends Controller
 
     public function updateItem(Request $request, CurriculumLibraryItem $item)
     {
+        Log::info('curriculum_library.updateItem: start', [
+            'item_id' => $item->id,
+            'item_slug' => $item->slug,
+            'method' => $request->method(),
+            'has_method_override' => $request->has('_method'),
+            'override_value' => $request->input('_method'),
+            'content_type' => $request->header('Content-Type'),
+            'has_files' => $request->files->count() > 0,
+            'user_id' => auth()->id(),
+        ]);
+
         $validated = $request->validate([
             'category_id' => 'nullable|exists:curriculum_library_categories,id',
             'title' => 'required|string|max:255',
@@ -182,15 +198,31 @@ class CurriculumLibraryController extends Controller
             if (!$file || !$file->isValid()) {
                 continue;
             }
-            $path = $file->store('curriculum-library/' . $item->id, 'public');
             $type = $types[$i] ?? 'presentation';
-            if (!in_array($type, ['presentation', 'assignment'], true)) {
+            if (!in_array($type, ['presentation', 'assignment', 'html'], true)) {
                 $type = 'presentation';
             }
             $label = $labels[$i] ?? null;
+
+            // لو الملف امتداده HTML اجبر النوع HTML حتى لو لم يُغيّر الأدمن القائمة.
+            $ext = strtolower((string) $file->getClientOriginalExtension());
+            if (in_array($ext, ['html', 'htm'], true)) {
+                $type = 'html';
+            }
+
+            // ملفات HTML تُرفع إلى Cloudflare R2 وتُعرض داخل الموقع.
+            if ($type === 'html') {
+                $storageDisk = 'r2';
+                $path = $file->store('curriculum-library/' . $item->id, $storageDisk);
+            } else {
+                $storageDisk = 'public';
+                $path = $file->store('curriculum-library/' . $item->id, $storageDisk);
+            }
+
             CurriculumLibraryItemFile::create([
                 'curriculum_library_item_id' => $item->id,
                 'path' => $path,
+                'storage_disk' => $storageDisk,
                 'label' => $label ?: null,
                 'file_type' => $type,
                 'order' => $order++,

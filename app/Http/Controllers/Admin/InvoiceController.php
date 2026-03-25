@@ -112,9 +112,21 @@ class InvoiceController extends Controller
             ]);
 
             // Additional sanitization
-            $validated['description'] = $validated['description'] ? strip_tags(trim($validated['description'])) : null;
             $validated['type'] = strip_tags(trim($validated['type']));
-            $validated['notes'] = $validated['notes'] ? strip_tags(trim($validated['notes'])) : null;
+            $validated['description'] = isset($validated['description'])
+                ? strip_tags(trim((string) $validated['description']))
+                : '';
+            $validated['notes'] = ($validated['notes'] ?? null) ? strip_tags(trim((string) $validated['notes'])) : null;
+
+            // DB constraint: invoices.description is NOT NULL in this project.
+            // Provide a safe default when the admin leaves it empty.
+            if ($validated['description'] === '') {
+                $validated['description'] = match ($validated['type']) {
+                    'course' => 'فاتورة كورس',
+                    'subscription' => 'فاتورة اشتراك',
+                    default => 'فاتورة',
+                };
+            }
 
             $total = $validated['subtotal'] 
                 + ($validated['tax_amount'] ?? 0) 
@@ -222,10 +234,20 @@ class InvoiceController extends Controller
             ]);
 
             // Additional sanitization
-            $validated['description'] = $validated['description'] ? strip_tags(trim($validated['description'])) : null;
             $validated['type'] = strip_tags(trim($validated['type']));
+            $validated['description'] = isset($validated['description'])
+                ? strip_tags(trim((string) $validated['description']))
+                : '';
             $validated['status'] = strip_tags(trim($validated['status']));
-            $validated['notes'] = $validated['notes'] ? strip_tags(trim($validated['notes'])) : null;
+            $validated['notes'] = ($validated['notes'] ?? null) ? strip_tags(trim((string) $validated['notes'])) : null;
+
+            if ($validated['description'] === '') {
+                $validated['description'] = match ($validated['type']) {
+                    'course' => 'فاتورة كورس',
+                    'subscription' => 'فاتورة اشتراك',
+                    default => 'فاتورة',
+                };
+            }
 
             $total = $validated['subtotal'] 
                 + ($validated['tax_amount'] ?? 0) 
