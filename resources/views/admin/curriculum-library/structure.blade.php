@@ -9,6 +9,16 @@
     $countMaterials = $flatSections->sum('materials_count');
 @endphp
 <div class="w-full max-w-none font-body space-y-6">
+    @if($errors->any())
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-rose-800">
+            <p class="font-black text-sm mb-2">تعذر تنفيذ العملية، راجع الأخطاء:</p>
+            <ul class="list-disc pr-5 text-xs space-y-1">
+                @foreach($errors->all() as $err)
+                    <li>{{ is_array($err) ? implode('، ', $err) : $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
     {{-- شريط علوي بعرض الصفحة --}}
     <div class="relative overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-700 bg-gradient-to-l from-indigo-50/90 via-white to-slate-50/90 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800/95 shadow-sm">
         <div class="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-indigo-500 via-violet-500 to-cyan-500 opacity-90"></div>

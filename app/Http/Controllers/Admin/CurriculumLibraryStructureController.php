@@ -7,6 +7,7 @@ use App\Models\CurriculumLibraryItem;
 use App\Models\CurriculumLibraryMaterial;
 use App\Models\CurriculumLibrarySection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class CurriculumLibraryStructureController extends Controller
@@ -106,39 +107,51 @@ class CurriculumLibraryStructureController extends Controller
             'allow_download' => 'nullable|boolean',
         ]);
 
-        $upload = $request->file('file');
-        $ext = strtolower((string) $upload->getClientOriginalExtension());
-        $fileKind = CurriculumLibraryMaterial::fileKindFromExtension($ext);
+        try {
+            $upload = $request->file('file');
+            $ext = strtolower((string) $upload->getClientOriginalExtension());
+            $fileKind = CurriculumLibraryMaterial::fileKindFromExtension($ext);
 
-        $viewIn = $request->boolean('view_in_platform');
-        $allowDl = $request->boolean('allow_download');
+            $viewIn = $request->boolean('view_in_platform');
+            $allowDl = $request->boolean('allow_download');
 
-        if ($fileKind === 'html') {
-            $viewIn = true;
-            $allowDl = false;
+            if ($fileKind === 'html') {
+                $viewIn = true;
+                $allowDl = false;
+            }
+            if ($fileKind === 'pptx') {
+                $allowDl = false;
+            }
+            if ($fileKind === 'other') {
+                $viewIn = false;
+            }
+
+            $path = $upload->store('curriculum-library/materials/'.$section->id, 'r2');
+            $order = ((int) ($section->materials()->max('order') ?? 0)) + 1;
+
+            CurriculumLibraryMaterial::create([
+                'curriculum_library_section_id' => $section->id,
+                'title' => $request->input('title') ?: null,
+                'path' => $path,
+                'storage_disk' => 'r2',
+                'original_name' => $upload->getClientOriginalName(),
+                'file_kind' => $fileKind,
+                'view_in_platform' => $viewIn,
+                'allow_download' => $allowDl,
+                'order' => $order,
+                'is_active' => true,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Curriculum material upload failed', [
+                'item_id' => $item->id,
+                'section_id' => $section->id,
+                'user_id' => auth()->id(),
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('admin.curriculum-library.items.structure', $item)
+                ->with('error', 'فشل رفع الملف. تحقق من إعدادات Cloudflare R2 أو نوع الملف ثم أعد المحاولة.');
         }
-        if ($fileKind === 'pptx') {
-            $allowDl = false;
-        }
-        if ($fileKind === 'other') {
-            $viewIn = false;
-        }
-
-        $path = $upload->store('curriculum-library/materials/'.$section->id, 'r2');
-        $order = ((int) ($section->materials()->max('order') ?? 0)) + 1;
-
-        CurriculumLibraryMaterial::create([
-            'curriculum_library_section_id' => $section->id,
-            'title' => $request->input('title') ?: null,
-            'path' => $path,
-            'storage_disk' => 'r2',
-            'original_name' => $upload->getClientOriginalName(),
-            'file_kind' => $fileKind,
-            'view_in_platform' => $viewIn,
-            'allow_download' => $allowDl,
-            'order' => $order,
-            'is_active' => true,
-        ]);
 
         return redirect()->route('admin.curriculum-library.items.structure', $item)
             ->with('success', 'تم رفع المادة إلى Cloudflare R2.');

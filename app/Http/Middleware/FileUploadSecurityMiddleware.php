@@ -74,6 +74,7 @@ class FileUploadSecurityMiddleware
                 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'application/vnd.ms-powerpoint',
                 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'application/octet-stream',
                 'text/csv', 'text/plain', 'text/html', 'application/xhtml+xml',
                 'application/zip', 'application/vnd.rar',
                 'xlsx', 'xls', 'csv', 'doc', 'docx', 'pdf', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'rar', 'html', 'htm',
@@ -88,6 +89,8 @@ class FileUploadSecurityMiddleware
             'document' => [
                 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'application/octet-stream',
                 'text/csv',
             ],
             // ملفات HTML التعليمية (مناهج)
@@ -106,7 +109,9 @@ class FileUploadSecurityMiddleware
         return [
             'image/jpeg', 'image/png', 'image/gif', 'application/pdf',
             'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'text/csv', 'text/html',
+            'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/octet-stream',
+            'text/csv', 'text/html', 'ppt', 'pptx',
         ];
     }
 
