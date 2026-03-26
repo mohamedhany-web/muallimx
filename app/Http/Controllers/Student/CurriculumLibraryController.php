@@ -231,16 +231,18 @@ class CurriculumLibraryController extends Controller
             abort(404);
         }
 
-        $publicUrl = $this->absoluteStorageUrl($diskName, $file->path);
-        $embedUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' . rawurlencode($publicUrl);
         $presentationTitle = $file->label ?: 'عرض تفاعلي (PowerPoint)';
+        $publicUrl = $this->absoluteStorageUrl($diskName, $file->path);
         $canUseOfficeViewer = $this->isOfficeViewerSupportedUrl($publicUrl);
+        $embedUrl = $canUseOfficeViewer
+            ? 'https://view.officeapps.live.com/op/embed.aspx?src=' . rawurlencode($publicUrl)
+            : null;
 
         return view('student.curriculum-library.presentation', [
             'item' => $item,
             'presentationTitle' => $presentationTitle,
-            'embedUrl' => $embedUrl,
             'publicUrl' => $publicUrl,
+            'embedUrl' => $embedUrl,
             'canUseOfficeViewer' => $canUseOfficeViewer,
         ]);
     }
@@ -399,14 +401,16 @@ class CurriculumLibraryController extends Controller
         }
 
         $publicUrl = $this->absoluteStorageUrl($diskName, $material->path);
-        $embedUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' . rawurlencode($publicUrl);
         $canUseOfficeViewer = $this->isOfficeViewerSupportedUrl($publicUrl);
+        $embedUrl = $canUseOfficeViewer
+            ? 'https://view.officeapps.live.com/op/embed.aspx?src=' . rawurlencode($publicUrl)
+            : null;
 
         return view('student.curriculum-library.presentation', [
             'item' => $item,
             'presentationTitle' => $material->displayTitle(),
-            'embedUrl' => $embedUrl,
             'publicUrl' => $publicUrl,
+            'embedUrl' => $embedUrl,
             'canUseOfficeViewer' => $canUseOfficeViewer,
         ]);
     }
@@ -460,6 +464,7 @@ class CurriculumLibraryController extends Controller
     {
         $parts = parse_url($url);
         $host = strtolower((string) ($parts['host'] ?? ''));
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
 
         // Microsoft Office Viewer عادة لا يستطيع جلب روابط localhost/127.0.0.1.
         if ($host === '' || $host === 'localhost' || $host === '127.0.0.1' || $host === '::1') {
@@ -470,8 +475,7 @@ class CurriculumLibraryController extends Controller
             return false;
         }
 
-        // إذا كان الرابط ليس داخل localhost/شبكات خاصة، نسمح بمحاولة العرض.
-        // (إذا كان الرابط غير قابل للفتح سيظهر خطأ من العارض نفسه).
-        return true;
+        // الأفضل أن يكون HTTPS. على HTTP غالباً يفشل العارض أو تُمنع الموارد المختلطة.
+        return $scheme === 'https';
     }
 }

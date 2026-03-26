@@ -88,7 +88,7 @@
     </div>
 
     
-    <div class="px-4 sm:px-5 py-5 bg-gradient-to-l from-indigo-50/80 via-white to-violet-50/50 dark:from-indigo-950/20 dark:via-slate-800/40 dark:to-violet-950/20 border-b border-slate-100 dark:border-slate-700">
+    <div x-data="{ fileName: '' }" class="px-4 sm:px-5 py-5 bg-gradient-to-l from-indigo-50/80 via-white to-violet-50/50 dark:from-indigo-950/20 dark:via-slate-800/40 dark:to-violet-950/20 border-b border-slate-100 dark:border-slate-700">
         <p class="text-sm font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2">
             <i class="fas fa-cloud-upload-alt text-indigo-600 dark:text-indigo-400"></i>
             رفع مادة إلى Cloudflare R2
@@ -102,8 +102,15 @@
                         <i class="fas fa-file-import text-2xl text-indigo-400 mb-2"></i>
                         <span class="text-xs font-semibold text-slate-600 dark:text-slate-400 text-center">اضغط لاختيار ملف</span>
                         <span class="text-[10px] text-slate-400 mt-1">PPTX · PDF · HTML · أخرى</span>
+                        <template x-if="fileName">
+                            <span class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-slate-800 border border-indigo-100 dark:border-slate-700 text-[11px] font-bold text-indigo-800 dark:text-slate-200 max-w-full">
+                                <i class="fas fa-check-circle text-emerald-600"></i>
+                                <span class="truncate" x-text="fileName"></span>
+                            </span>
+                        </template>
                     </label>
-                    <input id="<?php echo e($fileInputId); ?>" type="file" name="file" required class="sr-only">
+                    <input id="<?php echo e($fileInputId); ?>" type="file" name="file" required class="sr-only"
+                           @change="fileName = ($event.target.files && $event.target.files[0]) ? $event.target.files[0].name : ''">
                 </div>
                 <div class="lg:col-span-7 space-y-4">
                     <div>

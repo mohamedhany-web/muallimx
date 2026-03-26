@@ -43,7 +43,8 @@ class CurriculumLibraryStructureController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'تم إنشاء القسم.');
+        return redirect()->route('admin.curriculum-library.items.structure', $item)
+            ->with('success', 'تم إنشاء القسم.');
     }
 
     public function updateSection(Request $request, CurriculumLibraryItem $item, CurriculumLibrarySection $section)
@@ -81,7 +82,8 @@ class CurriculumLibraryStructureController extends Controller
             'is_active' => $request->boolean('is_active'),
         ]);
 
-        return back()->with('success', 'تم تحديث القسم.');
+        return redirect()->route('admin.curriculum-library.items.structure', $item)
+            ->with('success', 'تم تحديث القسم.');
     }
 
     public function destroySection(CurriculumLibraryItem $item, CurriculumLibrarySection $section)
@@ -89,7 +91,8 @@ class CurriculumLibraryStructureController extends Controller
         $this->assertSectionBelongs($item, $section);
         $section->deleteWithStorage();
 
-        return back()->with('success', 'تم حذف القسم وما بداخله.');
+        return redirect()->route('admin.curriculum-library.items.structure', $item)
+            ->with('success', 'تم حذف القسم وما بداخله.');
     }
 
     public function storeMaterial(Request $request, CurriculumLibraryItem $item, CurriculumLibrarySection $section)
@@ -137,7 +140,8 @@ class CurriculumLibraryStructureController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'تم رفع المادة إلى Cloudflare R2.');
+        return redirect()->route('admin.curriculum-library.items.structure', $item)
+            ->with('success', 'تم رفع المادة إلى Cloudflare R2.');
     }
 
     public function updateMaterial(Request $request, CurriculumLibraryItem $item, CurriculumLibraryMaterial $material)
@@ -176,7 +180,8 @@ class CurriculumLibraryStructureController extends Controller
             'is_active' => $request->boolean('is_active'),
         ]);
 
-        return back()->with('success', 'تم تحديث المادة.');
+        return redirect()->route('admin.curriculum-library.items.structure', $item)
+            ->with('success', 'تم تحديث المادة.');
     }
 
     public function destroyMaterial(CurriculumLibraryItem $item, CurriculumLibraryMaterial $material)
@@ -189,7 +194,8 @@ class CurriculumLibraryStructureController extends Controller
         }
         $material->delete();
 
-        return back()->with('success', 'تم حذف المادة.');
+        return redirect()->route('admin.curriculum-library.items.structure', $item)
+            ->with('success', 'تم حذف المادة.');
     }
 
     protected function assertSectionBelongs(CurriculumLibraryItem $item, CurriculumLibrarySection $section): void
