@@ -69,6 +69,8 @@
                                     {{ __('instructor.course_price_full') }}
                                 @elseif($agreement->type == 'hourly_rate')
                                     {{ __('instructor.hourly_rate_recorded') }}
+                                @elseif($agreement->type == 'consultation_session')
+                                    استشارات
                                 @else
                                     {{ __('instructor.monthly_salary') }}
                                 @endif
@@ -237,6 +239,7 @@
                                                 'lecture_hour' => __('instructor.hourly_rate_recorded'),
                                                 'hourly_rate' => __('instructor.hourly_rate'),
                                                 'monthly_salary' => __('instructor.monthly_salary'),
+                                                'consultation_session' => 'استشارات',
                                                 'bonus' => __('instructor.bonus'),
                                                 'other' => __('instructor.other'),
                                                 'course_activation' => 'نسبة من تفعيل الطالب',

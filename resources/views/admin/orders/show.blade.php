@@ -230,6 +230,57 @@
                         @endif
                     </div>
 
+                    @if($order->wallet)
+                    <div class="mt-4 p-4 rounded-lg border border-emerald-200 bg-emerald-50/80">
+                        <label class="block text-xs font-semibold text-emerald-800 mb-2 flex items-center gap-2">
+                            <i class="fas fa-wallet text-emerald-600 text-sm"></i>
+                            حساب الاستلام على المنصة
+                        </label>
+                        <div class="text-sm font-bold text-slate-900">
+                            {{ $order->wallet->name ?? \App\Models\Wallet::typeLabel($order->wallet->type) }}
+                            @if($order->wallet->account_number)
+                                <span class="text-slate-600 font-mono font-semibold"> — {{ $order->wallet->account_number }}</span>
+                            @endif
+                        </div>
+                    </div>
+                    @elseif(in_array($order->payment_method, ['bank_transfer', 'wallet'], true))
+                    <div class="mt-4 p-4 rounded-lg border border-amber-200 bg-amber-50">
+                        <p class="text-sm text-amber-900 flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            لم يُحدَّد حساب استلام على المنصة لهذا الطلب؛ ولن يُسجَّل رصيد على المحفظة عند الموافقة حتى يتم التحديد.
+                        </p>
+                    </div>
+                    @endif
+
+                    @if($order->status === \App\Models\Order::STATUS_PENDING && in_array($order->payment_method, ['bank_transfer', 'wallet'], true) && isset($platformWallets) && $platformWallets->count() > 0)
+                    <div class="mt-4 p-5 rounded-xl border border-slate-200 bg-slate-50">
+                        <h3 class="text-sm font-black text-slate-900 mb-3 flex items-center gap-2">
+                            <i class="fas fa-piggy-bank text-blue-600"></i>
+                            حساب التحويل على المنصة (للإيداع عند الموافقة)
+                        </h3>
+                        <p class="text-xs text-slate-600 mb-4">اختر المحفظة التي استلمتم عليها التحويل. عند الموافقة يُضاف المبلغ تلقائياً لرصيدها مع قيد في معاملات المحفظة.</p>
+                        <form action="{{ route('admin.orders.receiving-wallet', $order) }}" method="post" class="flex flex-col sm:flex-row gap-3 sm:items-end">
+                            @csrf
+                            @method('PATCH')
+                            <div class="flex-1">
+                                <label for="receiving_wallet_id" class="block text-xs font-semibold text-slate-700 mb-1">الحساب</label>
+                                <select name="wallet_id" id="receiving_wallet_id" required class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">— اختر —</option>
+                                    @foreach($platformWallets as $w)
+                                        <option value="{{ $w->id }}" @selected((string) old('wallet_id', $order->wallet_id) === (string) $w->id)>
+                                            {{ $w->name ?? \App\Models\Wallet::typeLabel($w->type) }}@if($w->account_number) — {{ $w->account_number }}@endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit" class="inline-flex justify-center items-center gap-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 text-sm font-bold transition-colors">
+                                <i class="fas fa-save"></i>
+                                حفظ
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+
                     @if($order->notes)
                         <div class="mt-4 p-4 rounded-lg border border-slate-200 bg-slate-50">
                             <label class="block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2">

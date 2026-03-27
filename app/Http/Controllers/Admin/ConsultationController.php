@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ClassroomMeeting;
 use App\Models\ConsultationRequest;
 use App\Models\ConsultationSetting;
+use App\Models\AgreementPayment;
+use App\Models\InstructorAgreement;
 use App\Models\Notification;
 use App\Models\WalletTransaction;
 use Carbon\Carbon;
@@ -257,7 +259,55 @@ class ConsultationController extends Controller
         if ($consultation->status !== ConsultationRequest::STATUS_SCHEDULED) {
             return back()->with('error', 'يمكن الإكمال للطلبات المجدولة فقط.');
         }
-        $consultation->update(['status' => ConsultationRequest::STATUS_COMPLETED]);
+
+        DB::transaction(function () use ($consultation) {
+            $consultation->update(['status' => ConsultationRequest::STATUS_COMPLETED]);
+
+            $agreement = InstructorAgreement::query()
+                ->where('instructor_id', $consultation->instructor_id)
+                ->where('status', InstructorAgreement::STATUS_ACTIVE)
+                ->where(function ($q) use ($consultation) {
+                    $q->whereNull('start_date')
+                        ->orWhereDate('start_date', '<=', $consultation->scheduled_at ?? now());
+                })
+                ->where(function ($q) use ($consultation) {
+                    $q->whereNull('end_date')
+                        ->orWhereDate('end_date', '>=', $consultation->scheduled_at ?? now());
+                })
+                ->where(function ($q) {
+                    $q->where('type', 'consultation_session')
+                        ->orWhere('billing_type', InstructorAgreement::BILLING_CONSULTATION);
+                })
+                ->latest('start_date')
+                ->latest('id')
+                ->first();
+
+            if (! $agreement || (float) $agreement->rate <= 0) {
+                return;
+            }
+
+            $existing = AgreementPayment::query()
+                ->where('agreement_id', $agreement->id)
+                ->where('instructor_id', $consultation->instructor_id)
+                ->where('type', AgreementPayment::TYPE_CONSULTATION_SESSION)
+                ->where('description', 'like', '%#'.$consultation->id.'%')
+                ->exists();
+
+            if ($existing) {
+                return;
+            }
+
+            AgreementPayment::create([
+                'agreement_id' => $agreement->id,
+                'instructor_id' => $consultation->instructor_id,
+                'type' => AgreementPayment::TYPE_CONSULTATION_SESSION,
+                'amount' => (float) $agreement->rate,
+                'status' => AgreementPayment::STATUS_APPROVED,
+                'description' => 'مستحق استشارة مكتملة #'.$consultation->id.' — الطالب: '.($consultation->student->name ?? '—'),
+                'payment_date' => now(),
+                'created_by' => auth()->id(),
+            ]);
+        });
 
         return back()->with('success', 'تم تسجيل الاستشارة كمكتملة.');
     }

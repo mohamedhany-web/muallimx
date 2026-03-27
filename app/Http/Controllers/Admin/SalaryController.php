@@ -94,6 +94,7 @@ class SalaryController extends Controller
             'course_price' => AgreementPayment::TYPE_COURSE_COMPLETION,
             'hourly_rate' => AgreementPayment::TYPE_HOURLY_TEACHING,
             'monthly_salary' => AgreementPayment::TYPE_MONTHLY_SALARY,
+            'consultation_session' => AgreementPayment::TYPE_CONSULTATION_SESSION,
             default => AgreementPayment::TYPE_MONTHLY_SALARY,
         };
 

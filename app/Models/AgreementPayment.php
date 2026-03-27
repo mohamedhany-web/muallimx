@@ -44,6 +44,8 @@ class AgreementPayment extends Model
     public const TYPE_OTHER = 'other';
     /** نسبة من تفعيل الطالب للكورس (اتفاقية نسبة من الكورس) */
     public const TYPE_COURSE_ACTIVATION = 'course_activation';
+    /** جلسة استشارة مكتملة */
+    public const TYPE_CONSULTATION_SESSION = 'consultation_session';
 
     public const STATUS_PENDING = 'pending';
     public const STATUS_APPROVED = 'approved';
@@ -107,6 +109,7 @@ class AgreementPayment extends Model
             self::TYPE_BONUS => 'مكافأة',
             self::TYPE_OTHER => 'أخرى',
             self::TYPE_COURSE_ACTIVATION => 'نسبة من تفعيل الطالب',
+            self::TYPE_CONSULTATION_SESSION => 'جلسة استشارة',
             default => 'غير محدد',
         };
     }

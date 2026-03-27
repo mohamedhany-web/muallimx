@@ -63,24 +63,20 @@ Route::get('/storage/{path}', function ($path) {
 
 // Sitemap Route
 Route::get('/sitemap.xml', function() {
-    $sitemap = '<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">';
-    
-    // Home Page
-    $sitemap .= '
-    <url>
-        <loc>' . url('/') . '</loc>
-        <lastmod>' . date('Y-m-d') . '</lastmod>
-        <changefreq>daily</changefreq>
-        <priority>1.0</priority>
-    </url>';
-    
-    // Public Pages
+    $xmlEscape = static fn (?string $value): string => htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    $urls = [];
+
+    $urls[] = [
+        'loc' => url('/'),
+        'lastmod' => now()->toDateString(),
+        'changefreq' => 'daily',
+        'priority' => '1.0',
+    ];
+
     $publicPages = [
         ['url' => '/courses', 'priority' => '0.9', 'changefreq' => 'daily'],
+        ['url' => '/instructors', 'priority' => '0.8', 'changefreq' => 'weekly'],
+        ['url' => '/portfolio', 'priority' => '0.7', 'changefreq' => 'weekly'],
         ['url' => '/about', 'priority' => '0.8', 'changefreq' => 'monthly'],
         ['url' => '/contact', 'priority' => '0.7', 'changefreq' => 'monthly'],
         ['url' => '/pricing', 'priority' => '0.8', 'changefreq' => 'weekly'],
@@ -88,40 +84,66 @@ Route::get('/sitemap.xml', function() {
         ['url' => '/terms', 'priority' => '0.5', 'changefreq' => 'yearly'],
         ['url' => '/privacy', 'priority' => '0.5', 'changefreq' => 'yearly'],
     ];
-    
+
     foreach ($publicPages as $page) {
-        $sitemap .= '
-    <url>
-        <loc>' . url($page['url']) . '</loc>
-        <lastmod>' . date('Y-m-d') . '</lastmod>
-        <changefreq>' . $page['changefreq'] . '</changefreq>
-        <priority>' . $page['priority'] . '</priority>
-    </url>';
+        $urls[] = [
+            'loc' => url($page['url']),
+            'lastmod' => now()->toDateString(),
+            'changefreq' => $page['changefreq'],
+            'priority' => $page['priority'],
+        ];
     }
-    
-    // Active Courses
+
     try {
         $courses = \App\Models\AdvancedCourse::where('is_active', true)
             ->select('id', 'updated_at')
             ->orderBy('updated_at', 'desc')
             ->get();
-        
+
         foreach ($courses as $course) {
-            $sitemap .= '
-    <url>
-        <loc>' . url('/course/' . $course->id) . '</loc>
-        <lastmod>' . $course->updated_at->format('Y-m-d') . '</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>';
+            $urls[] = [
+                'loc' => url('/course/' . $course->id),
+                'lastmod' => optional($course->updated_at)->format('Y-m-d') ?: now()->toDateString(),
+                'changefreq' => 'weekly',
+                'priority' => '0.8',
+            ];
         }
     } catch (\Exception $e) {
-        // Skip if courses table doesn't exist
+        // Skip if table is unavailable during setup.
     }
-    
-    $sitemap .= '
-</urlset>';
-    
+
+    try {
+        $instructors = \App\Models\User::whereIn('role', ['instructor', 'teacher'])
+            ->where('is_active', true)
+            ->select('id', 'updated_at')
+            ->orderBy('updated_at', 'desc')
+            ->limit(1000)
+            ->get();
+
+        foreach ($instructors as $instructor) {
+            $urls[] = [
+                'loc' => route('public.instructors.show', $instructor),
+                'lastmod' => optional($instructor->updated_at)->format('Y-m-d') ?: now()->toDateString(),
+                'changefreq' => 'weekly',
+                'priority' => '0.7',
+            ];
+        }
+    } catch (\Exception $e) {
+        // Skip if users table is unavailable during setup.
+    }
+
+    $sitemap = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
+    $sitemap .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . PHP_EOL;
+    foreach ($urls as $entry) {
+        $sitemap .= '  <url>' . PHP_EOL;
+        $sitemap .= '    <loc>' . $xmlEscape($entry['loc']) . '</loc>' . PHP_EOL;
+        $sitemap .= '    <lastmod>' . $xmlEscape($entry['lastmod']) . '</lastmod>' . PHP_EOL;
+        $sitemap .= '    <changefreq>' . $xmlEscape($entry['changefreq']) . '</changefreq>' . PHP_EOL;
+        $sitemap .= '    <priority>' . $xmlEscape($entry['priority']) . '</priority>' . PHP_EOL;
+        $sitemap .= '  </url>' . PHP_EOL;
+    }
+    $sitemap .= '</urlset>';
+
     return response($sitemap, 200)
         ->header('Content-Type', 'application/xml');
 })->name('sitemap');
@@ -763,6 +785,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // إدارة الطلبات
         Route::get('/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [\App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
+        Route::patch('/orders/{order}/receiving-wallet', [\App\Http\Controllers\Admin\OrderController::class, 'updateReceivingWallet'])->name('orders.receiving-wallet');
         Route::post('/orders/{order}/approve', [\App\Http\Controllers\Admin\OrderController::class, 'approve'])
             ->middleware('throttle:10,1')
             ->name('orders.approve');
@@ -952,7 +975,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::resource('invoices', \App\Http\Controllers\Admin\InvoiceController::class)
             ->middleware('throttle:60,1')
             ->except(['update', 'destroy']);
-        Route::post('/invoices/{invoice}', [\App\Http\Controllers\Admin\InvoiceController::class, 'update'])->middleware('throttle:20,5')->name('invoices.update');
+        Route::match(['post', 'put', 'patch'], '/invoices/{invoice}', [\App\Http\Controllers\Admin\InvoiceController::class, 'update'])->middleware('throttle:20,5')->name('invoices.update');
         Route::delete('/invoices/{invoice}', [\App\Http\Controllers\Admin\InvoiceController::class, 'destroy'])->middleware('throttle:10,1')->name('invoices.destroy');
         
         Route::resource('payments', \App\Http\Controllers\Admin\PaymentController::class)

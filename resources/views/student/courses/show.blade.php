@@ -425,7 +425,7 @@
                                         <i class="fas fa-wallet text-sky-600 ml-2"></i>
                                         المحفظة الإلكترونية
                                     </label>
-                                    <select name="wallet_id" id="wallet_id" 
+                                    <select name="wallet_id" id="wallet_id"
                                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
                                         <option value="">اختر المحفظة الإلكترونية</option>
                                         @foreach($availableWallets as $wallet)
@@ -547,17 +547,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const walletId = document.getElementById('wallet_id');
     const walletDetails = document.getElementById('wallet_details');
 
-    if (paymentMethod && walletSelection) {
-        paymentMethod.addEventListener('change', function() {
-            // إظهار اختيار المحفظة إذا كانت طريقة الدفع تحويل بنكي أو أخرى
-            if (this.value === 'bank_transfer' || this.value === 'other') {
-                walletSelection.classList.remove('hidden');
-            } else {
-                walletSelection.classList.add('hidden');
-                walletDetails.classList.add('hidden');
-                walletId.value = '';
+        if (paymentMethod && walletSelection) {
+            function syncWalletForPaymentMethod() {
+                if (paymentMethod.value === 'bank_transfer') {
+                    walletSelection.classList.remove('hidden');
+                    if (walletId) {
+                        walletId.required = true;
+                    }
+                } else {
+                    walletSelection.classList.add('hidden');
+                    walletDetails.classList.add('hidden');
+                    if (walletId) {
+                        walletId.required = false;
+                        walletId.value = '';
+                    }
+                }
             }
-        });
+            paymentMethod.addEventListener('change', syncWalletForPaymentMethod);
+            syncWalletForPaymentMethod();
 
         // عرض تفاصيل المحفظة المختارة
         if (walletId && walletDetails) {

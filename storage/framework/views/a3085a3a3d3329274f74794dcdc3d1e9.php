@@ -1,28 +1,28 @@
-@extends('layouts.admin')
 
-@section('title', 'تفاصيل الموظف')
-@section('header', 'تفاصيل الموظف')
 
-@section('content')
+<?php $__env->startSection('title', 'تفاصيل الموظف'); ?>
+<?php $__env->startSection('header', 'تفاصيل الموظف'); ?>
+
+<?php $__env->startSection('content'); ?>
 <div class="space-y-6">
     <!-- الهيدر -->
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
         <div class="flex justify-between items-center">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ $employee->name }}</h1>
+                <h1 class="text-2xl font-bold text-gray-900"><?php echo e($employee->name); ?></h1>
                 <p class="text-gray-600 mt-1">عرض تفاصيل الموظف</p>
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('admin.employees.index') }}" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors">
+                <a href="<?php echo e(route('admin.employees.index')); ?>" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors">
                     <i class="fas fa-arrow-right mr-2"></i>العودة
                 </a>
-                <a href="{{ route('admin.employees.edit', $employee) }}" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors">
+                <a href="<?php echo e(route('admin.employees.edit', $employee)); ?>" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors">
                     <i class="fas fa-edit mr-2"></i>تعديل
                 </a>
-                <form action="{{ route('admin.employees.destroy', $employee) }}" method="POST" class="inline"
-                      onsubmit="return confirm('هل أنت متأكد من حذف الموظف {{ $employee->name }}؟ لا يمكن التراجع عن هذا الإجراء.');">
-                    @csrf
-                    @method('DELETE')
+                <form action="<?php echo e(route('admin.employees.destroy', $employee)); ?>" method="POST" class="inline"
+                      onsubmit="return confirm('هل أنت متأكد من حذف الموظف <?php echo e($employee->name); ?>؟ لا يمكن التراجع عن هذا الإجراء.');">
+                    <?php echo csrf_field(); ?>
+                    <?php echo method_field('DELETE'); ?>
                     <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
                         <i class="fas fa-trash-alt mr-2"></i>حذف
                     </button>
@@ -38,7 +38,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <p class="text-sm font-semibold text-gray-600 mb-1">إجمالي المهام</p>
-                        <p class="text-3xl font-black text-gray-900">{{ $stats['total_tasks'] }}</p>
+                        <p class="text-3xl font-black text-gray-900"><?php echo e($stats['total_tasks']); ?></p>
                     </div>
                     <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
                         <i class="fas fa-tasks text-2xl"></i>
@@ -52,7 +52,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <p class="text-sm font-semibold text-gray-600 mb-1">معلقة</p>
-                        <p class="text-3xl font-black text-yellow-700">{{ $stats['pending_tasks'] }}</p>
+                        <p class="text-3xl font-black text-yellow-700"><?php echo e($stats['pending_tasks']); ?></p>
                     </div>
                     <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
                         <i class="fas fa-clock text-2xl"></i>
@@ -66,7 +66,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <p class="text-sm font-semibold text-gray-600 mb-1">قيد التنفيذ</p>
-                        <p class="text-3xl font-black text-blue-700">{{ $stats['in_progress_tasks'] }}</p>
+                        <p class="text-3xl font-black text-blue-700"><?php echo e($stats['in_progress_tasks']); ?></p>
                     </div>
                     <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
                         <i class="fas fa-spinner text-2xl"></i>
@@ -80,7 +80,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <p class="text-sm font-semibold text-gray-600 mb-1">مكتملة</p>
-                        <p class="text-3xl font-black text-green-700">{{ $stats['completed_tasks'] }}</p>
+                        <p class="text-3xl font-black text-green-700"><?php echo e($stats['completed_tasks']); ?></p>
                     </div>
                     <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
                         <i class="fas fa-check-circle text-2xl"></i>
@@ -94,7 +94,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <p class="text-sm font-semibold text-gray-600 mb-1">متأخرة</p>
-                        <p class="text-3xl font-black text-red-700">{{ $stats['overdue_tasks'] }}</p>
+                        <p class="text-3xl font-black text-red-700"><?php echo e($stats['overdue_tasks']); ?></p>
                     </div>
                     <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
                         <i class="fas fa-exclamation-triangle text-2xl"></i>
@@ -110,51 +110,51 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <p class="text-sm text-gray-600 mb-1">الاسم</p>
-                <p class="font-semibold text-gray-900 text-lg">{{ $employee->name }}</p>
+                <p class="font-semibold text-gray-900 text-lg"><?php echo e($employee->name); ?></p>
             </div>
-            @if($employee->employee_code)
+            <?php if($employee->employee_code): ?>
             <div>
                 <p class="text-sm text-gray-600 mb-1">رمز الموظف</p>
-                <p class="font-semibold text-gray-900 text-lg">{{ $employee->employee_code }}</p>
+                <p class="font-semibold text-gray-900 text-lg"><?php echo e($employee->employee_code); ?></p>
             </div>
-            @endif
-            @if($employee->employeeJob)
+            <?php endif; ?>
+            <?php if($employee->employeeJob): ?>
             <div>
                 <p class="text-sm text-gray-600 mb-1">الوظيفة</p>
-                <p class="font-semibold text-gray-900 text-lg">{{ $employee->employeeJob->name }}</p>
+                <p class="font-semibold text-gray-900 text-lg"><?php echo e($employee->employeeJob->name); ?></p>
             </div>
-            @endif
-            @if($employee->email)
+            <?php endif; ?>
+            <?php if($employee->email): ?>
             <div>
                 <p class="text-sm text-gray-600 mb-1">البريد الإلكتروني</p>
-                <p class="font-semibold text-gray-900 text-lg">{{ $employee->email }}</p>
+                <p class="font-semibold text-gray-900 text-lg"><?php echo e($employee->email); ?></p>
             </div>
-            @endif
-            @if($employee->phone)
+            <?php endif; ?>
+            <?php if($employee->phone): ?>
             <div>
                 <p class="text-sm text-gray-600 mb-1">رقم الهاتف</p>
-                <p class="font-semibold text-gray-900 text-lg">{{ $employee->phone }}</p>
+                <p class="font-semibold text-gray-900 text-lg"><?php echo e($employee->phone); ?></p>
             </div>
-            @endif
-            @if($employee->hire_date)
+            <?php endif; ?>
+            <?php if($employee->hire_date): ?>
             <div>
                 <p class="text-sm text-gray-600 mb-1">تاريخ التوظيف</p>
-                <p class="font-semibold text-gray-900 text-lg">{{ $employee->hire_date->format('Y-m-d') }}</p>
+                <p class="font-semibold text-gray-900 text-lg"><?php echo e($employee->hire_date->format('Y-m-d')); ?></p>
             </div>
-            @endif
-            @if($employee->salary)
+            <?php endif; ?>
+            <?php if($employee->salary): ?>
             <div>
                 <p class="text-sm text-gray-600 mb-1">الراتب</p>
-                <p class="font-semibold text-gray-900 text-lg">{{ number_format($employee->salary, 2) }} ج.م</p>
+                <p class="font-semibold text-gray-900 text-lg"><?php echo e(number_format($employee->salary, 2)); ?> ج.م</p>
             </div>
-            @endif
+            <?php endif; ?>
             <div>
                 <p class="text-sm text-gray-600 mb-1">الحالة</p>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold {{ $employee->is_active && !$employee->termination_date ? 'bg-green-100 text-green-800' : ($employee->termination_date ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800') }}">
-                    @if($employee->termination_date) منتهي الخدمة
-                    @elseif($employee->is_active) نشط
-                    @else غير نشط
-                    @endif
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold <?php echo e($employee->is_active && !$employee->termination_date ? 'bg-green-100 text-green-800' : ($employee->termination_date ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800')); ?>">
+                    <?php if($employee->termination_date): ?> منتهي الخدمة
+                    <?php elseif($employee->is_active): ?> نشط
+                    <?php else: ?> غير نشط
+                    <?php endif; ?>
                 </span>
             </div>
         </div>
@@ -163,69 +163,72 @@
     <!-- البيانات البنكية لاستلام الراتب -->
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
         <h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-university text-indigo-600 mr-2"></i>البيانات البنكية لاستلام الراتب</h2>
-        @if($employee->bank_name || $employee->bank_account_number || $employee->bank_account_holder_name)
+        <?php if($employee->bank_name || $employee->bank_account_number || $employee->bank_account_holder_name): ?>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                @if($employee->bank_name)
-                    <div><p class="text-sm text-gray-600 mb-1">البنك</p><p class="font-semibold text-gray-900">{{ $employee->bank_name }}</p></div>
-                @endif
-                @if($employee->bank_branch)
-                    <div><p class="text-sm text-gray-600 mb-1">الفرع</p><p class="font-semibold text-gray-900">{{ $employee->bank_branch }}</p></div>
-                @endif
-                @if($employee->bank_account_number)
-                    <div><p class="text-sm text-gray-600 mb-1">رقم الحساب</p><p class="font-semibold text-gray-900 font-mono">{{ $employee->bank_account_number }}</p></div>
-                @endif
-                @if($employee->bank_account_holder_name)
-                    <div><p class="text-sm text-gray-600 mb-1">اسم صاحب الحساب</p><p class="font-semibold text-gray-900">{{ $employee->bank_account_holder_name }}</p></div>
-                @endif
-                @if($employee->bank_iban)
-                    <div class="md:col-span-2"><p class="text-sm text-gray-600 mb-1">الآيبان</p><p class="font-semibold text-gray-900 font-mono">{{ $employee->bank_iban }}</p></div>
-                @endif
+                <?php if($employee->bank_name): ?>
+                    <div><p class="text-sm text-gray-600 mb-1">البنك</p><p class="font-semibold text-gray-900"><?php echo e($employee->bank_name); ?></p></div>
+                <?php endif; ?>
+                <?php if($employee->bank_branch): ?>
+                    <div><p class="text-sm text-gray-600 mb-1">الفرع</p><p class="font-semibold text-gray-900"><?php echo e($employee->bank_branch); ?></p></div>
+                <?php endif; ?>
+                <?php if($employee->bank_account_number): ?>
+                    <div><p class="text-sm text-gray-600 mb-1">رقم الحساب</p><p class="font-semibold text-gray-900 font-mono"><?php echo e($employee->bank_account_number); ?></p></div>
+                <?php endif; ?>
+                <?php if($employee->bank_account_holder_name): ?>
+                    <div><p class="text-sm text-gray-600 mb-1">اسم صاحب الحساب</p><p class="font-semibold text-gray-900"><?php echo e($employee->bank_account_holder_name); ?></p></div>
+                <?php endif; ?>
+                <?php if($employee->bank_iban): ?>
+                    <div class="md:col-span-2"><p class="text-sm text-gray-600 mb-1">الآيبان</p><p class="font-semibold text-gray-900 font-mono"><?php echo e($employee->bank_iban); ?></p></div>
+                <?php endif; ?>
             </div>
             <p class="text-sm text-gray-500 mt-3">يمكن تعديل البيانات من صفحة تعديل الموظف، أو أن يضيفها الموظف من قسم المحاسبة.</p>
-        @else
-            <p class="text-gray-600">لم يتم إضافة بيانات بنكية بعد. يمكن للموظف إضافتها من <strong>قسم المحاسبة والراتب</strong> أو يمكنك إضافتها من <a href="{{ route('admin.employees.edit', $employee) }}" class="text-blue-600 hover:underline">تعديل الموظف</a>.</p>
-        @endif
+        <?php else: ?>
+            <p class="text-gray-600">لم يتم إضافة بيانات بنكية بعد. يمكن للموظف إضافتها من <strong>قسم المحاسبة والراتب</strong> أو يمكنك إضافتها من <a href="<?php echo e(route('admin.employees.edit', $employee)); ?>" class="text-blue-600 hover:underline">تعديل الموظف</a>.</p>
+        <?php endif; ?>
     </div>
 
     <!-- المهام الأخيرة -->
-    @if($employee->employeeTasks->count() > 0)
+    <?php if($employee->employeeTasks->count() > 0): ?>
     <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-bold text-gray-900">المهام</h2>
-            <a href="{{ route('admin.employee-tasks.index', ['employee_id' => $employee->id]) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+            <a href="<?php echo e(route('admin.employee-tasks.index', ['employee_id' => $employee->id])); ?>" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                 عرض الكل <i class="fas fa-arrow-left mr-1"></i>
             </a>
         </div>
         <div class="space-y-3">
-            @foreach($employee->employeeTasks->take(5) as $task)
+            <?php $__currentLoopData = $employee->employeeTasks->take(5); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $task): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
-                            <h3 class="font-semibold text-gray-900 mb-1">{{ $task->title }}</h3>
+                            <h3 class="font-semibold text-gray-900 mb-1"><?php echo e($task->title); ?></h3>
                             <div class="flex items-center gap-4 text-sm text-gray-600">
-                                <span><i class="fas fa-user mr-1"></i>{{ $task->assigner->name }}</span>
-                                @if($task->deadline)
-                                    <span><i class="fas fa-calendar mr-1"></i>{{ $task->deadline->format('Y-m-d') }}</span>
-                                @endif
+                                <span><i class="fas fa-user mr-1"></i><?php echo e($task->assigner->name); ?></span>
+                                <?php if($task->deadline): ?>
+                                    <span><i class="fas fa-calendar mr-1"></i><?php echo e($task->deadline->format('Y-m-d')); ?></span>
+                                <?php endif; ?>
                             </div>
                         </div>
                         <span class="px-2 py-1 text-xs font-semibold rounded-full
-                            @if($task->status === 'completed') bg-green-100 text-green-800
-                            @elseif($task->status === 'in_progress') bg-blue-100 text-blue-800
-                            @elseif($task->status === 'pending') bg-yellow-100 text-yellow-800
-                            @else bg-gray-100 text-gray-800
-                            @endif">
-                            @if($task->status === 'completed') مكتملة
-                            @elseif($task->status === 'in_progress') قيد التنفيذ
-                            @elseif($task->status === 'pending') معلقة
-                            @else {{ $task->status }}
-                            @endif
+                            <?php if($task->status === 'completed'): ?> bg-green-100 text-green-800
+                            <?php elseif($task->status === 'in_progress'): ?> bg-blue-100 text-blue-800
+                            <?php elseif($task->status === 'pending'): ?> bg-yellow-100 text-yellow-800
+                            <?php else: ?> bg-gray-100 text-gray-800
+                            <?php endif; ?>">
+                            <?php if($task->status === 'completed'): ?> مكتملة
+                            <?php elseif($task->status === 'in_progress'): ?> قيد التنفيذ
+                            <?php elseif($task->status === 'pending'): ?> معلقة
+                            <?php else: ?> <?php echo e($task->status); ?>
+
+                            <?php endif; ?>
                         </span>
                     </div>
                 </div>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
     </div>
-    @endif
+    <?php endif; ?>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/admin/employees/show.blade.php ENDPATH**/ ?>

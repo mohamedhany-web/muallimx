@@ -8,9 +8,20 @@ use App\Models\EmployeeJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class EmployeeController extends Controller
 {
+    /**
+     * تأكيد أن المستخدم موظف فعلياً.
+     */
+    private function ensureEmployee(User $employee): void
+    {
+        if (! $employee->is_employee) {
+            throw new NotFoundHttpException();
+        }
+    }
+
     /**
      * عرض قائمة الموظفين
      */
@@ -124,6 +135,7 @@ class EmployeeController extends Controller
      */
     public function show(User $employee)
     {
+        $this->ensureEmployee($employee);
         $employee->load(['employeeJob', 'employeeTasks.assigner', 'employeeTasks.deliverables']);
         
         $stats = [
@@ -145,6 +157,7 @@ class EmployeeController extends Controller
      */
     public function edit(User $employee)
     {
+        $this->ensureEmployee($employee);
         $jobs = EmployeeJob::active()->fixedJobs()->orderBy('name')->get();
         return view('admin.employees.edit', compact('employee', 'jobs'));
     }
@@ -154,6 +167,7 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, User $employee)
     {
+        $this->ensureEmployee($employee);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $employee->id,
@@ -192,6 +206,13 @@ class EmployeeController extends Controller
      */
     public function destroy(User $employee)
     {
+        $this->ensureEmployee($employee);
+
+        if (auth()->id() === $employee->id) {
+            return redirect()->route('admin.employees.index')
+                            ->with('error', 'لا يمكن حذف حسابك الحالي');
+        }
+
         $employee->delete();
         return redirect()->route('admin.employees.index')
                         ->with('success', 'تم حذف الموظف بنجاح');

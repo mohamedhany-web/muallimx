@@ -160,38 +160,62 @@
                                 </div>
                             @endif
 
-                            <div class="mb-6 p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                                <p class="text-sm font-bold text-navy-950 mb-4">يمكنك الدفع بإحدى الطرق التالية:</p>
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100">
-                                        <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center"><i class="fas fa-credit-card text-xl text-brand-600"></i></div>
-                                        <div><p class="font-bold text-navy-950 text-sm">البطاقات</p><p class="text-xs text-slate-500">فيزا، ماستركارد، ميزة</p></div>
-                                    </div>
-                                    <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100">
-                                        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center"><i class="fas fa-wallet text-xl text-emerald-600"></i></div>
-                                        <div><p class="font-bold text-navy-950 text-sm">المحفظة</p><p class="text-xs text-slate-500">فودافون كاش وغيرها</p></div>
-                                    </div>
-                                    <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100">
-                                        <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center"><i class="fas fa-calendar-alt text-xl text-amber-600"></i></div>
-                                        <div><p class="font-bold text-navy-950 text-sm">التقسيط</p><p class="text-xs text-slate-500">تقسيط عبر البنوك</p></div>
-                                    </div>
-                                </div>
-                                <p class="mt-4 text-xs text-slate-500 flex items-center gap-1.5">
-                                    <i class="fas fa-info-circle text-brand-500"></i>
-                                    عند الضغط على «متابعة للدفع» ستُنقل لصفحة دفع آمنة.
+                            <div class="mb-6 p-5 bg-amber-50 rounded-2xl border border-amber-200">
+                                <p class="text-sm font-bold text-amber-900 mb-2 flex items-center gap-2">
+                                    <i class="fas fa-circle-info"></i>
+                                    الدفع اليدوي فقط
+                                </p>
+                                <p class="text-sm text-amber-800">
+                                    تم إيقاف بوابة الدفع أونلاين حالياً. ارفع إيصال التحويل وسيظهر الطلب في صفحة الطلبات حتى تتم مراجعته والموافقة عليه.
                                 </p>
                             </div>
 
-                            <form action="{{ isset($course) ? route('public.course.checkout.kashier', $course->id) : (isset($learningPath) ? route('public.learning-path.checkout.kashier', Str::slug($learningPath->name)) : '#') }}" method="POST" @submit="isSubmitting = true">
+                            <form action="{{ isset($course) ? route('public.course.checkout.complete', $course->id) : (isset($learningPath) ? route('public.learning-path.checkout.complete', Str::slug($learningPath->name)) : '#') }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true" x-data="{paymentMethod:'bank_transfer'}">
                                 @csrf
+                                <div class="space-y-4 mb-6">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">طريقة الدفع</label>
+                                        <select name="payment_method" x-model="paymentMethod" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-brand-400 focus:border-brand-400" required>
+                                            <option value="bank_transfer">تحويل بنكي / محفظة</option>
+                                            <option value="cash">دفع نقدي</option>
+                                            <option value="other">طريقة أخرى</option>
+                                        </select>
+                                    </div>
+
+                                    <div x-show="paymentMethod === 'bank_transfer'" x-cloak>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">اختر حساب التحويل</label>
+                                        <select name="wallet_id" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                                                :required="paymentMethod === 'bank_transfer'">
+                                            <option value="">اختر الحساب</option>
+                                            @foreach(($wallets ?? []) as $wallet)
+                                                <option value="{{ $wallet->id }}">
+                                                    {{ $wallet->name ?? 'حساب منصة' }} — {{ $wallet->account_number ?? $wallet->phone ?? 'بدون رقم' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">إيصال الدفع</label>
+                                        <input type="file" name="payment_proof" accept="image/*" required
+                                               class="w-full rounded-xl border border-slate-300 px-4 py-3 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-brand-700 hover:file:bg-brand-100">
+                                        <p class="mt-1 text-xs text-slate-500">الصيغ المسموحة: JPG, PNG - الحد الأقصى 2MB.</p>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">ملاحظات (اختياري)</label>
+                                        <textarea name="notes" rows="3" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-brand-400 focus:border-brand-400" placeholder="أي تفاصيل إضافية عن التحويل"></textarea>
+                                    </div>
+                                </div>
+
                                 <div class="flex flex-col sm:flex-row gap-4">
                                     <button type="submit" :disabled="isSubmitting"
                                             class="btn-primary flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-6 py-4 rounded-2xl font-bold shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
-                                        <i class="fas fa-lock" x-show="!isSubmitting"></i>
+                                        <i class="fas fa-file-upload" x-show="!isSubmitting"></i>
                                         <i class="fas fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
-                                        <span x-text="isSubmitting ? 'جاري التوجيه...' : 'متابعة للدفع'"></span>
+                                        <span x-text="isSubmitting ? 'جاري إرسال الطلب...' : 'إرسال الطلب ورفع الإيصال'"></span>
                                     </button>
-                                    <a href="{{ isset($course) ? route('public.course.show', $course->id) : (isset($learningPath) ? route('public.learning-path.show', Str::slug($learningPath->name)) : url('/courses')) }}"
+                                    <a href="{{ route('orders.index') }}"
                                        :class="{ 'pointer-events-none opacity-50': isSubmitting }"
                                        class="inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-navy-950 px-6 py-4 rounded-2xl font-bold hover:border-slate-300 hover:bg-slate-50 transition-all">
                                         <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}"></i>
@@ -200,7 +224,7 @@
                                 </div>
                                 <p class="mt-4 text-xs text-slate-500 text-center flex items-center justify-center gap-1.5">
                                     <i class="fas fa-shield-alt text-brand-500"></i>
-                                    تفعيل فوري بعد إتمام الدفع
+                                    يظهر الطلب في صفحة الطلبات ويتم التفعيل بعد الموافقة
                                 </p>
                             </form>
                         </div>

@@ -55,6 +55,7 @@
                         <option value="course_price" {{ old('type') == 'course_price' ? 'selected' : '' }}>سعر للكورس كاملاً</option>
                         <option value="hourly_rate" {{ old('type') == 'hourly_rate' ? 'selected' : '' }}>سعر للساعة المسجلة</option>
                         <option value="monthly_salary" {{ old('type') == 'monthly_salary' ? 'selected' : '' }}>راتب شهري</option>
+                        <option value="consultation_session" {{ old('type') == 'consultation_session' ? 'selected' : '' }}>استشارات</option>
                         <option value="course_percentage" {{ old('type') == 'course_percentage' ? 'selected' : '' }}>نسبة من الكورس</option>
                     </select>
                     <p class="mt-1 text-xs text-slate-500">نسبة من الكورس: يُحتسب للمدرب نسبة من مبلغ كل تفعيل للطالب في الكورس الأونلاين.</p>

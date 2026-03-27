@@ -79,84 +79,8 @@ class CheckoutController extends Controller
      */
     public function redirectToKashier($courseId)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
-        }
-
-        $course = AdvancedCourse::where('id', $courseId)
-            ->where('is_active', true)
-            ->firstOrFail();
-
-        $isEnrolled = StudentCourseEnrollment::where('user_id', Auth::id())
-            ->where('advanced_course_id', $course->id)
-            ->where('status', 'active')
-            ->exists();
-        if ($isEnrolled) {
-            return redirect()->route('public.course.show', $course->id)
-                ->with('info', 'أنت مسجل بالفعل في هذا الكورس');
-        }
-
-        $existingOrder = Order::where('user_id', Auth::id())
-            ->where('advanced_course_id', $course->id)
-            ->where('status', Order::STATUS_PENDING)
-            ->first();
-        if ($existingOrder) {
-            return redirect()->route('public.course.show', $course->id)
-                ->with('info', 'لديك طلب قيد الانتظار لهذا الكورس');
-        }
-
-        $amount = (float) ($course->price ?? 0);
-        if ($amount <= 0) {
-            return redirect()->route('public.course.show', $course->id)
-                ->with('info', 'هذا الكورس مجاني يمكنك التسجيل مباشرة.');
-        }
-
-        DB::beginTransaction();
-        try {
-            $order = Order::create([
-                'user_id' => Auth::id(),
-                'advanced_course_id' => $course->id,
-                'original_amount' => $amount,
-                'discount_amount' => 0,
-                'amount' => $amount,
-                'payment_method' => 'online',
-                'payment_proof' => null,
-                'wallet_id' => null,
-                'notes' => 'دفع عبر بوابة كاشير',
-                'status' => Order::STATUS_PENDING,
-            ]);
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Kashier redirect: order create failed', ['course_id' => $courseId, 'message' => $e->getMessage()]);
-            return redirect()->route('public.course.show', $course->id)
-                ->with('error', 'حدث خطأ أثناء إنشاء الطلب. يرجى المحاولة مرة أخرى.');
-        }
-
-        $kashier = app(KashierService::class);
-        $callbackUrl = $this->getKashierCallbackUrl();
-        try {
-            $hppUrl = $kashier->getHppUrl(
-                (string) $order->id,
-                $amount,
-                $callbackUrl,
-                null,
-                Auth::user()->email,
-                (string) Auth::id(),
-                'Course order #' . $order->id
-            );
-        } catch (\RuntimeException $e) {
-            $order->delete();
-            return redirect()->route('public.course.checkout', $course->id)
-                ->with('error', $e->getMessage());
-        } catch (\Exception $e) {
-            Log::error('Kashier getHppUrl failed', ['course_id' => $courseId, 'message' => $e->getMessage()]);
-            $order->delete();
-            return redirect()->route('public.course.checkout', $course->id)
-                ->with('error', 'حدث خطأ أثناء التوجيه للدفع. يرجى المحاولة مرة أخرى.');
-        }
-
-        return redirect()->away($hppUrl);
+        return redirect()->route('orders.index')
+            ->with('info', 'تم تعطيل بوابة الدفع أونلاين حالياً. يرجى إكمال الطلب بالطريقة اليدوية ورفع إيصال الدفع.');
     }
 
     /**
@@ -164,87 +88,8 @@ class CheckoutController extends Controller
      */
     public function redirectToKashierLearningPath($slug)
     {
-        if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
-        }
-
-        $learningPath = AcademicYear::active()
-            ->get()
-            ->first(fn ($year) => Str::slug($year->name) === $slug);
-        if (!$learningPath) {
-            abort(404, 'المسار التعليمي غير موجود');
-        }
-
-        $isEnrolled = LearningPathEnrollment::where('user_id', Auth::id())
-            ->where('academic_year_id', $learningPath->id)
-            ->where('status', 'active')
-            ->exists();
-        if ($isEnrolled) {
-            return redirect()->route('public.learning-path.show', $slug)
-                ->with('info', 'أنت مسجل بالفعل في هذا المسار');
-        }
-
-        $existingOrder = Order::where('user_id', Auth::id())
-            ->where('academic_year_id', $learningPath->id)
-            ->where('status', Order::STATUS_PENDING)
-            ->first();
-        if ($existingOrder) {
-            return redirect()->route('public.learning-path.show', $slug)
-                ->with('info', 'لديك طلب قيد الانتظار لهذا المسار');
-        }
-
-        $amount = (float) ($learningPath->price ?? 0);
-        if ($amount <= 0) {
-            return redirect()->route('public.learning-path.show', $slug)
-                ->with('info', 'هذا المسار مجاني يمكنك التسجيل مباشرة.');
-        }
-
-        DB::beginTransaction();
-        try {
-            $order = Order::create([
-                'user_id' => Auth::id(),
-                'academic_year_id' => $learningPath->id,
-                'original_amount' => $amount,
-                'discount_amount' => 0,
-                'amount' => $amount,
-                'payment_method' => 'online',
-                'payment_proof' => null,
-                'wallet_id' => null,
-                'notes' => 'دفع عبر بوابة كاشير',
-                'status' => Order::STATUS_PENDING,
-            ]);
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Kashier redirect: order create failed (path)', ['slug' => $slug, 'message' => $e->getMessage()]);
-            return redirect()->route('public.learning-path.show', $slug)
-                ->with('error', 'حدث خطأ أثناء إنشاء الطلب. يرجى المحاولة مرة أخرى.');
-        }
-
-        $kashier = app(KashierService::class);
-        $callbackUrl = $this->getKashierCallbackUrl();
-        try {
-            $hppUrl = $kashier->getHppUrl(
-                (string) $order->id,
-                $amount,
-                $callbackUrl,
-                null,
-                Auth::user()->email,
-                (string) Auth::id(),
-                'Learning path order #' . $order->id
-            );
-        } catch (\RuntimeException $e) {
-            $order->delete();
-            return redirect()->route('public.learning-path.checkout', $slug)
-                ->with('error', $e->getMessage());
-        } catch (\Exception $e) {
-            Log::error('Kashier getHppUrl failed (path)', ['slug' => $slug, 'message' => $e->getMessage()]);
-            $order->delete();
-            return redirect()->route('public.learning-path.checkout', $slug)
-                ->with('error', 'حدث خطأ أثناء التوجيه للدفع. يرجى المحاولة مرة أخرى.');
-        }
-
-        return redirect()->away($hppUrl);
+        return redirect()->route('orders.index')
+            ->with('info', 'تم تعطيل بوابة الدفع أونلاين حالياً. يرجى إكمال الطلب بالطريقة اليدوية ورفع إيصال الدفع.');
     }
 
     /**
@@ -264,6 +109,9 @@ class CheckoutController extends Controller
      */
     public function kashierCallback(Request $request)
     {
+        return redirect()->route('orders.index')
+            ->with('info', 'تم تعطيل بوابة الدفع أونلاين. يمكنك متابعة حالة طلباتك من هذه الصفحة.');
+
         $kashier = app(KashierService::class);
         $query = $request->query();
 
@@ -545,11 +393,12 @@ class CheckoutController extends Controller
                 ->with('info', 'لديك طلب قيد الانتظار لهذا الكورس. يرجى انتظار المراجعة.');
         }
 
-        // التحقق من صحة البيانات (wallet_id: فقط محافظ نشطة ومعروضة في الصفحة)
+        // التحقق من صحة البيانات (حساب الاستلام على المنصة إلزامي للتحويل حتى يُسجَّل الإيداع عند الموافقة)
         $validated = $request->validate([
-            'payment_method' => 'required|in:bank_transfer,wallet,online',
+            'payment_method' => 'required|in:bank_transfer,wallet,cash,other',
             'wallet_id' => [
                 'nullable',
+                'required_if:payment_method,bank_transfer',
                 'required_if:payment_method,wallet',
                 Rule::exists('wallets', 'id')->where('is_active', true)->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer']),
             ],
@@ -558,7 +407,7 @@ class CheckoutController extends Controller
         ], [
             'payment_method.required' => 'طريقة الدفع مطلوبة',
             'payment_method.in' => 'طريقة الدفع غير صحيحة',
-            'wallet_id.required_if' => 'يجب اختيار محفظة للدفع',
+            'wallet_id.required_if' => 'يجب اختيار حساب التحويل على المنصة حتى يُسجَّل المبلغ على المحفظة الصحيحة عند الموافقة.',
             'wallet_id.exists' => 'المحفظة المختارة غير صالحة أو غير متاحة. يرجى اختيار محفظة من القائمة.',
             'payment_proof.required' => 'صورة إيصال الدفع مطلوبة',
             'payment_proof.image' => 'يجب أن يكون الملف صورة',
@@ -586,7 +435,9 @@ class CheckoutController extends Controller
                 'amount' => $finalAmount,
                 'payment_method' => $request->payment_method === 'wallet' ? 'bank_transfer' : $request->payment_method,
                 'payment_proof' => $paymentProofPath,
-                'wallet_id' => in_array($request->payment_method, ['wallet', 'bank_transfer']) ? ($request->wallet_id ?: null) : null,
+                'wallet_id' => $request->payment_method === 'bank_transfer' || $request->payment_method === 'wallet'
+                    ? ($request->wallet_id ?: null)
+                    : null,
                 'notes' => $request->notes ?? '',
                 'status' => Order::STATUS_PENDING,
             ]);
@@ -769,11 +620,12 @@ class CheckoutController extends Controller
                 ->with('info', 'أنت مسجل بالفعل في هذا المسار التعليمي');
         }
 
-        // التحقق من صحة البيانات (wallet_id: عند المحفظة مطلوب، عند التحويل البنكي اختياري)
+        // التحقق من صحة البيانات (حساب الاستلام إلزامي للتحويل)
         $validated = $request->validate([
-            'payment_method' => 'required|in:bank_transfer,wallet,online',
+            'payment_method' => 'required|in:bank_transfer,wallet,cash,other',
             'wallet_id' => [
                 'nullable',
+                'required_if:payment_method,bank_transfer',
                 'required_if:payment_method,wallet',
                 Rule::exists('wallets', 'id')->where('is_active', true)->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer']),
             ],
@@ -782,7 +634,7 @@ class CheckoutController extends Controller
         ], [
             'payment_method.required' => 'طريقة الدفع مطلوبة',
             'payment_method.in' => 'طريقة الدفع غير صحيحة',
-            'wallet_id.required_if' => 'يجب اختيار محفظة للدفع',
+            'wallet_id.required_if' => 'يجب اختيار حساب التحويل على المنصة حتى يُسجَّل المبلغ على المحفظة الصحيحة عند الموافقة.',
             'wallet_id.exists' => 'المحفظة المختارة غير صالحة أو غير متاحة. يرجى اختيار محفظة من القائمة.',
             'payment_proof.required' => 'صورة إيصال الدفع مطلوبة',
             'payment_proof.image' => 'يجب أن يكون الملف صورة',
@@ -825,7 +677,9 @@ class CheckoutController extends Controller
                 'amount' => $finalAmount,
                 'payment_method' => $request->payment_method === 'wallet' ? 'bank_transfer' : $request->payment_method,
                 'payment_proof' => $paymentProofPath,
-                'wallet_id' => in_array($request->payment_method, ['wallet', 'bank_transfer']) ? ($request->wallet_id ?? null) : null,
+                'wallet_id' => $request->payment_method === 'bank_transfer' || $request->payment_method === 'wallet'
+                    ? ($request->wallet_id ?? null)
+                    : null,
                 'notes' => $request->notes ?? '',
                 'status' => Order::STATUS_PENDING,
             ]);

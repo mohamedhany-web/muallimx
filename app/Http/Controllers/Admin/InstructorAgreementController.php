@@ -46,7 +46,7 @@ class InstructorAgreementController extends Controller
                 $query->where('status', $status);
             }
 
-            if ($type && in_array($type, ['course_price', 'hourly_rate', 'monthly_salary'])) {
+            if ($type && in_array($type, ['course_price', 'hourly_rate', 'monthly_salary', 'consultation_session'])) {
                 $query->where('type', $type);
             }
 
@@ -112,7 +112,7 @@ class InstructorAgreementController extends Controller
     {
         $rules = [
             'instructor_id' => 'required|exists:users,id',
-            'type' => 'required|in:course_price,hourly_rate,monthly_salary,course_percentage',
+            'type' => 'required|in:course_price,hourly_rate,monthly_salary,course_percentage,consultation_session',
             'rate' => 'nullable|numeric|min:0',
             'advanced_course_id' => 'required_if:type,course_percentage|nullable|exists:advanced_courses,id',
             'course_percentage' => 'required_if:type,course_percentage|nullable|numeric|min:0|max:100',
@@ -127,11 +127,14 @@ class InstructorAgreementController extends Controller
         $request->validate($rules);
 
         $isCoursePercentage = $request->type === 'course_percentage';
+        $isConsultation = $request->type === 'consultation_session';
         $agreement = InstructorAgreement::create([
             'instructor_id' => $request->instructor_id,
-            'type' => $isCoursePercentage ? 'course_price' : $request->type,
+            'type' => $isCoursePercentage ? 'course_price' : ($isConsultation ? 'consultation_session' : $request->type),
             'rate' => $isCoursePercentage ? 0 : (float) $request->rate,
-            'billing_type' => $isCoursePercentage ? InstructorAgreement::BILLING_COURSE_PERCENTAGE : null,
+            'billing_type' => $isCoursePercentage
+                ? InstructorAgreement::BILLING_COURSE_PERCENTAGE
+                : ($isConsultation ? InstructorAgreement::BILLING_CONSULTATION : null),
             'advanced_course_id' => $isCoursePercentage ? $request->advanced_course_id : null,
             'course_percentage' => $isCoursePercentage ? (float) $request->course_percentage : null,
             'agreement_number' => InstructorAgreement::generateAgreementNumber(),
@@ -195,7 +198,7 @@ class InstructorAgreementController extends Controller
     {
         $rules = [
             'instructor_id' => 'required|exists:users,id',
-            'type' => 'required|in:course_price,hourly_rate,monthly_salary,course_percentage',
+            'type' => 'required|in:course_price,hourly_rate,monthly_salary,course_percentage,consultation_session',
             'rate' => 'nullable|numeric|min:0',
             'advanced_course_id' => 'required_if:type,course_percentage|nullable|exists:advanced_courses,id',
             'course_percentage' => 'required_if:type,course_percentage|nullable|numeric|min:0|max:100',
@@ -210,11 +213,14 @@ class InstructorAgreementController extends Controller
         $request->validate($rules);
 
         $isCoursePercentage = $request->type === 'course_percentage';
+        $isConsultation = $request->type === 'consultation_session';
         $agreement->update([
             'instructor_id' => $request->instructor_id,
-            'type' => $isCoursePercentage ? 'course_price' : $request->type,
+            'type' => $isCoursePercentage ? 'course_price' : ($isConsultation ? 'consultation_session' : $request->type),
             'rate' => $isCoursePercentage ? 0 : (float) $request->rate,
-            'billing_type' => $isCoursePercentage ? InstructorAgreement::BILLING_COURSE_PERCENTAGE : null,
+            'billing_type' => $isCoursePercentage
+                ? InstructorAgreement::BILLING_COURSE_PERCENTAGE
+                : ($isConsultation ? InstructorAgreement::BILLING_CONSULTATION : null),
             'advanced_course_id' => $isCoursePercentage ? $request->advanced_course_id : null,
             'course_percentage' => $isCoursePercentage ? (float) $request->course_percentage : null,
             'title' => $request->title,

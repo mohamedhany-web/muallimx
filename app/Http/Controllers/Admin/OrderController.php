@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
+use App\Models\Wallet;
 
 class OrderController extends Controller
 {
@@ -90,9 +92,47 @@ class OrderController extends Controller
             abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
         }
 
-        $order->load(['user', 'course.academicSubject', 'course.academicYear', 'learningPath', 'approver']);
-        
-        return view('admin.orders.show', compact('order'));
+        $order->load(['user', 'course.academicSubject', 'course.academicYear', 'learningPath', 'approver', 'wallet']);
+
+        $platformWallets = Wallet::where('is_active', true)
+            ->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer'])
+            ->orderBy('type')
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.orders.show', compact('order', 'platformWallets'));
+    }
+
+    /**
+     * تحديث محفظة الاستلام على المنصة (لطلبات التحويل المعلقة) حتى يُسجَّل الإيداع عند الموافقة
+     */
+    public function updateReceivingWallet(Request $request, Order $order)
+    {
+        if (!Auth::check() || !(Auth::user()->isSuperAdmin() || Auth::user()->can('manage.orders'))) {
+            abort(403, 'غير مصرح لك بتعديل هذا الطلب');
+        }
+
+        if ($order->status !== Order::STATUS_PENDING) {
+            return back()->with('error', 'يمكن تعديل حساب الاستلام للطلبات قيد الانتظار فقط.');
+        }
+
+        if (!in_array($order->payment_method, ['bank_transfer', 'wallet'], true)) {
+            return back()->with('error', 'تعديل المحفظة متاح فقط لطلبات التحويل البنكي أو المحفظة الإلكترونية.');
+        }
+
+        $validated = $request->validate([
+            'wallet_id' => [
+                'required',
+                Rule::exists('wallets', 'id')->where('is_active', true)->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer']),
+            ],
+        ], [
+            'wallet_id.required' => 'اختر حساب الاستلام على المنصة.',
+            'wallet_id.exists' => 'الحساب غير صالح أو غير مفعّل.',
+        ]);
+
+        $order->update(['wallet_id' => $validated['wallet_id']]);
+
+        return back()->with('success', 'تم حفظ حساب الاستلام. عند الموافقة سيُسجَّل المبلغ على هذه المحفظة وفي سجل المعاملات.');
     }
 
     /**
@@ -177,6 +217,17 @@ class OrderController extends Controller
                 Log::warning('Order approve: order user not found', ['order_id' => $order->id, 'user_id' => $order->user_id]);
                 if ($request->wantsJson() || $request->ajax()) {
                     return response()->json(['success' => false, 'error' => $msg], 400);
+                }
+                return back()->with('error', $msg);
+            }
+
+            $requiresReceivingWallet = in_array($order->payment_method, ['bank_transfer', 'wallet'], true);
+            if ($requiresReceivingWallet && !$order->wallet_id) {
+                DB::rollBack();
+                RateLimiter::clear($key);
+                $msg = 'لا يمكن الموافقة قبل تحديد حساب الاستلام على المنصة. استخدم نموذج «حساب التحويل على المنصة» في صفحة الطلب ثم أعد الموافقة.';
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'error' => $msg], 422);
                 }
                 return back()->with('error', $msg);
             }
@@ -271,22 +322,27 @@ class OrderController extends Controller
                 // إضافة المبلغ للمحفظة (إيداع)
                 $wallet = \App\Models\Wallet::find($order->wallet_id);
                 if ($wallet) {
+                    $description = 'إيداع من طلب رقم: ' . $order->id . ' - فاتورة: ' . $invoice->invoice_number;
+                    if ($isLearningPath) {
+                        $description .= ' - المسار: ' . ($order->learningPath?->name ?? 'مسار تعليمي');
+                    } else {
+                        $description .= ' - الكورس: ' . ($order->course?->title ?? 'كورس');
+                    }
                     try {
-                        $description = 'إيداع من طلب رقم: ' . $order->id . ' - فاتورة: ' . $invoice->invoice_number;
-                        if ($isLearningPath) {
-                            $description .= ' - المسار: ' . ($order->learningPath?->name ?? 'مسار تعليمي');
-                        } else {
-                            $description .= ' - الكورس: ' . ($order->course?->title ?? 'كورس');
-                        }
                         $wallet->deposit(
                             $order->amount,
                             $payment->id,
-                            null, // transaction_id سيتم ربطه لاحقاً
+                            null,
                             $description
                         );
                     } catch (\Throwable $e) {
-                        \Log::warning('Wallet deposit skipped during order approval: ' . $e->getMessage(), ['order_id' => $order->id, 'wallet_id' => $order->wallet_id]);
-                        // لا نوقف الموافقة في حالة فشل الإيداع (مثلاً عمود notes غير موجود في جدول wallet_transactions)
+                        Log::error('Wallet deposit failed during order approval', [
+                            'order_id' => $order->id,
+                            'wallet_id' => $order->wallet_id,
+                            'message' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                        throw $e;
                     }
                 }
             }

@@ -19,6 +19,7 @@ class InstructorAgreement extends Model
     public const BILLING_MONTHLY = 'monthly';
     public const BILLING_FULL_COURSE = 'full_course';
     public const BILLING_COURSE_PERCENTAGE = 'course_percentage';
+    public const BILLING_CONSULTATION = 'consultation_session';
 
     protected $fillable = [
         'instructor_id',
@@ -122,6 +123,7 @@ class InstructorAgreement extends Model
             self::BILLING_MONTHLY => 'راتب شهري',
             self::BILLING_FULL_COURSE => 'باكورس كامل',
             self::BILLING_COURSE_PERCENTAGE => 'نسبة من الكورس',
+            self::BILLING_CONSULTATION => 'استشارات',
         ];
     }
 
@@ -136,10 +138,14 @@ class InstructorAgreement extends Model
         if (($this->billing_type ?? '') === self::BILLING_COURSE_PERCENTAGE) {
             return 'نسبة من الكورس';
         }
+        if (($this->billing_type ?? '') === self::BILLING_CONSULTATION) {
+            return 'استشارات';
+        }
         $labels = [
             'course_price' => 'سعر للكورس كاملاً',
             'hourly_rate' => 'سعر للساعة المسجلة',
             'monthly_salary' => 'راتب شهري',
+            'consultation_session' => 'استشارات',
         ];
         return $labels[$this->type] ?? $this->type;
     }

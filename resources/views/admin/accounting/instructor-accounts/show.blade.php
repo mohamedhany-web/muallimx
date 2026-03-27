@@ -24,7 +24,7 @@
     </div>
 
     {{-- ملخص الأرقام --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-2xl shadow p-6 border-2 border-amber-200">
             <p class="text-sm font-semibold text-slate-600 mb-1">مطلوب الدفع</p>
             <p class="text-2xl font-black text-amber-700">{{ number_format($totals['pending'], 2) }} ج.م</p>
@@ -36,6 +36,10 @@
         <div class="bg-white rounded-2xl shadow p-6 border-2 border-blue-200">
             <p class="text-sm font-semibold text-slate-600 mb-1">من تفعيلات الطلاب (نسبة الكورس)</p>
             <p class="text-2xl font-black text-blue-700">{{ number_format($totals['from_activations'], 2) }} ج.م</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow p-6 border-2 border-purple-200">
+            <p class="text-sm font-semibold text-slate-600 mb-1">من الاستشارات</p>
+            <p class="text-2xl font-black text-purple-700">{{ number_format($totals['from_consultations'], 2) }} ج.م</p>
         </div>
     </div>
 

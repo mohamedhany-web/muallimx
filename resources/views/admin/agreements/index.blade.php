@@ -127,6 +127,7 @@
                         <option value="course_price" {{ request('type') == 'course_price' ? 'selected' : '' }}>سعر للكورس</option>
                         <option value="hourly_rate" {{ request('type') == 'hourly_rate' ? 'selected' : '' }}>سعر للساعة</option>
                         <option value="monthly_salary" {{ request('type') == 'monthly_salary' ? 'selected' : '' }}>راتب شهري</option>
+                        <option value="consultation_session" {{ request('type') == 'consultation_session' ? 'selected' : '' }}>استشارات</option>
                     </select>
                 </div>
                 <div>
@@ -206,6 +207,7 @@
                                         'course_price' => ['label' => 'سعر للكورس', 'classes' => 'bg-blue-100 text-blue-700 border-blue-200'],
                                         'hourly_rate' => ['label' => 'سعر للساعة', 'classes' => 'bg-purple-100 text-purple-700 border-purple-200'],
                                         'monthly_salary' => ['label' => 'راتب شهري', 'classes' => 'bg-indigo-100 text-indigo-700 border-indigo-200'],
+                                        'consultation_session' => ['label' => 'استشارات', 'classes' => 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200'],
                                     ];
                                     $type = $typeBadges[$agreement->type] ?? ['label' => $agreement->type, 'classes' => 'bg-slate-100 text-slate-700 border-slate-200'];
                                 @endphp

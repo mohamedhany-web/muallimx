@@ -33,6 +33,7 @@
                         <option value="course_price" {{ $effectiveType == 'course_price' ? 'selected' : '' }}>سعر للكورس كاملاً</option>
                         <option value="hourly_rate" {{ $effectiveType == 'hourly_rate' ? 'selected' : '' }}>سعر للساعة المسجلة</option>
                         <option value="monthly_salary" {{ $effectiveType == 'monthly_salary' ? 'selected' : '' }}>راتب شهري</option>
+                        <option value="consultation_session" {{ $effectiveType == 'consultation_session' ? 'selected' : '' }}>استشارات</option>
                         <option value="course_percentage" {{ $effectiveType == 'course_percentage' ? 'selected' : '' }}>نسبة من الكورس</option>
                     </select>
                     @error('type')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror

@@ -7,7 +7,27 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', config('app.name') . ' - ' . __('landing.nav.brand'))</title>
+    @php
+        $seoTitle = trim($__env->yieldContent('title')) ?: (config('app.name') . ' - ' . __('landing.nav.brand'));
+        $seoDescription = trim($__env->yieldContent('meta_description')) ?: 'منصة عربية لتأهيل وتطوير المعلمين للعمل أونلاين باحتراف.';
+        $seoKeywords = trim($__env->yieldContent('meta_keywords')) ?: 'تأهيل المعلمين, تدريب المعلمين أونلاين, MuallimX';
+        $seoImage = trim($__env->yieldContent('meta_image')) ?: asset('images/og-image.jpg');
+        $seoType = trim($__env->yieldContent('meta_type')) ?: 'website';
+        $seoCanonical = trim($__env->yieldContent('canonical_url')) ?: url()->current();
+        $seoAltBase = url()->current();
+    @endphp
+    @include('components.seo-meta', [
+        'title' => $seoTitle,
+        'description' => $seoDescription,
+        'keywords' => $seoKeywords,
+        'image' => $seoImage,
+        'type' => $seoType,
+        'url' => $seoCanonical,
+    ])
+    <link rel="alternate" hreflang="ar" href="{{ $seoAltBase }}?lang=ar">
+    <link rel="alternate" hreflang="en" href="{{ $seoAltBase }}?lang=en">
+    <link rel="alternate" hreflang="x-default" href="{{ $seoAltBase }}">
+    <meta name="theme-color" content="#0F172A">
     <script>
         (function() {
             var s = localStorage.getItem('theme');

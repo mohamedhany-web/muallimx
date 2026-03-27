@@ -9,6 +9,7 @@ use App\Models\Coupon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Services\ReferralService;
+use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
@@ -32,12 +33,17 @@ class OrderController extends Controller
     {
         $request->validate([
             'payment_method' => 'required|in:bank_transfer,cash,other',
-            'wallet_id' => 'nullable|exists:wallets,id',
+            'wallet_id' => [
+                'nullable',
+                'required_if:payment_method,bank_transfer',
+                Rule::exists('wallets', 'id')->where('is_active', true)->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer']),
+            ],
             'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'notes' => 'nullable|string|max:500',
         ], [
             'payment_method.required' => 'طريقة الدفع مطلوبة',
-            'wallet_id.exists' => 'المحفظة المختارة غير صحيحة',
+            'wallet_id.required_if' => 'يجب اختيار حساب التحويل على المنصة حتى يُسجَّل المبلغ على المحفظة عند الموافقة.',
+            'wallet_id.exists' => 'المحفظة المختارة غير صالحة أو غير متاحة.',
             'payment_proof.required' => 'صورة الإيصال مطلوبة',
             'payment_proof.image' => 'يجب أن يكون الملف صورة',
             'payment_proof.mimes' => 'يجب أن تكون الصورة بصيغة jpeg, png أو jpg',
@@ -154,10 +160,7 @@ class OrderController extends Controller
             $orderData['notes'] .= (!empty($orderData['notes']) ? "\n" : '') . implode("\n", $discountNotes);
         }
 
-        // إضافة wallet_id إذا كان موجوداً
-        if ($request->filled('wallet_id')) {
-            $orderData['wallet_id'] = $request->wallet_id;
-        }
+        $orderData['wallet_id'] = $request->payment_method === 'bank_transfer' ? $request->wallet_id : null;
 
         Order::create($orderData);
 
