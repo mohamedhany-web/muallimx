@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\SupportInquiryCategory;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketReply;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SupportTicketController extends Controller
 {
@@ -16,10 +18,13 @@ class SupportTicketController extends Controller
 
         $tickets = SupportTicket::query()
             ->where('user_id', $user->id)
+            ->with('inquiryCategory')
             ->latest()
             ->paginate(12);
 
-        return view('student.support.index', compact('tickets'));
+        $inquiryCategories = SupportInquiryCategory::query()->active()->ordered()->get();
+
+        return view('student.support.index', compact('tickets', 'inquiryCategories'));
     }
 
     public function store(Request $request)
@@ -28,6 +33,11 @@ class SupportTicketController extends Controller
         abort_unless($user->hasSubscriptionFeature('support'), 403, 'خدمة الدعم الفني غير متاحة في باقتك الحالية.');
 
         $data = $request->validate([
+            'support_inquiry_category_id' => [
+                'required',
+                'integer',
+                Rule::exists('support_inquiry_categories', 'id')->where(fn ($q) => $q->where('is_active', true)),
+            ],
             'subject' => ['required', 'string', 'max:180'],
             'priority' => ['required', 'in:low,normal,high,urgent'],
             'message' => ['required', 'string', 'min:10', 'max:5000'],
@@ -35,6 +45,7 @@ class SupportTicketController extends Controller
 
         $ticket = SupportTicket::create([
             'user_id' => $user->id,
+            'support_inquiry_category_id' => $data['support_inquiry_category_id'],
             'subject' => $data['subject'],
             'priority' => $data['priority'],
             'status' => 'open',
@@ -58,7 +69,7 @@ class SupportTicketController extends Controller
         abort_unless((int) $ticket->user_id === (int) $user->id, 403);
         abort_unless($user->hasSubscriptionFeature('support'), 403, 'خدمة الدعم الفني غير متاحة في باقتك الحالية.');
 
-        $ticket->load(['replies.user']);
+        $ticket->load(['replies.user', 'inquiryCategory']);
 
         return view('student.support.show', compact('ticket'));
     }

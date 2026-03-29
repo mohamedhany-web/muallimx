@@ -8,6 +8,11 @@
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-6">
         <h1 class="text-2xl font-bold text-slate-900">قسم الدعم الفني</h1>
         <p class="text-sm text-slate-600 mt-1">إدارة تذاكر العملاء ومتابعة الحلول على مدار اليوم.</p>
+        @if(Route::has('admin.support-inquiry-categories.index'))
+            <a href="{{ route('admin.support-inquiry-categories.index') }}" class="inline-flex items-center gap-2 mt-3 text-sm font-semibold text-indigo-600 hover:text-indigo-800">
+                <i class="fas fa-tags"></i> إدارة تصنيفات الاستفسار
+            </a>
+        @endif
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -19,6 +24,12 @@
     <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-5 py-4 bg-slate-50 border-b border-slate-200">
             <form method="GET" class="flex flex-wrap items-center gap-2">
+                <select name="category_id" class="px-3 py-2 rounded-lg border border-slate-200 text-sm">
+                    <option value="all" {{ ($categoryId ?? 'all') === 'all' || ($categoryId ?? '') === '' ? 'selected' : '' }}>كل التصنيفات</option>
+                    @foreach($inquiryCategories as $ic)
+                        <option value="{{ $ic->id }}" {{ (string) ($categoryId ?? '') === (string) $ic->id ? 'selected' : '' }}>{{ $ic->name }}</option>
+                    @endforeach
+                </select>
                 <select name="status" class="px-3 py-2 rounded-lg border border-slate-200 text-sm">
                     <option value="all" {{ $status === 'all' ? 'selected' : '' }}>كل الحالات</option>
                     <option value="open" {{ $status === 'open' ? 'selected' : '' }}>open</option>
@@ -41,6 +52,7 @@
                 <thead class="bg-slate-50">
                     <tr class="text-xs text-slate-600 uppercase">
                         <th class="px-4 py-3 text-right">العميل</th>
+                        <th class="px-4 py-3 text-right">التصنيف</th>
                         <th class="px-4 py-3 text-right">الموضوع</th>
                         <th class="px-4 py-3 text-right">الحالة</th>
                         <th class="px-4 py-3 text-right">الأولوية</th>
@@ -52,6 +64,7 @@
                     @forelse($tickets as $ticket)
                         <tr>
                             <td class="px-4 py-3 text-sm text-slate-800">{{ $ticket->user->name ?? '—' }}</td>
+                            <td class="px-4 py-3 text-xs text-slate-600">{{ $ticket->inquiryCategory->name ?? '—' }}</td>
                             <td class="px-4 py-3 text-sm font-semibold text-slate-900">{{ $ticket->subject }}</td>
                             <td class="px-4 py-3 text-xs">{{ $ticket->status }}</td>
                             <td class="px-4 py-3 text-xs">{{ $ticket->priority }}</td>
@@ -59,7 +72,7 @@
                             <td class="px-4 py-3 text-sm"><a class="text-sky-600 hover:underline" href="{{ route('admin.support-tickets.show', $ticket) }}">فتح</a></td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-4 py-8 text-center text-sm text-slate-500">لا توجد تذاكر دعم حالياً.</td></tr>
+                        <tr><td colspan="7" class="px-4 py-8 text-center text-sm text-slate-500">لا توجد تذاكر دعم حالياً.</td></tr>
                     @endforelse
                 </tbody>
             </table>

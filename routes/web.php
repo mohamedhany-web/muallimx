@@ -587,50 +587,84 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/curriculum-library/{item:slug}/file/{file}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPresentation'])->name('curriculum-library.file.presentation');
     });
 
-    // لوحة الموظفين
+    // لوحة الموظفين — عناصر القائمة تُحدَّد بصلاحيات الوظيفة (employee_jobs.permissions)
     Route::prefix('employee')->name('employee.')->middleware(['auth'])->group(function () {
-        Route::get('/dashboard', [\App\Http\Controllers\Employee\EmployeeController::class, 'dashboard'])->name('dashboard');
-        Route::get('/tasks', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'index'])->name('tasks.index');
-        Route::get('/tasks/{task}', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'show'])->name('tasks.show');
-        Route::put('/tasks/{task}/status', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'updateStatus'])->name('tasks.update-status');
-        Route::post('/tasks/{task}/deliverables', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'submitDeliverable'])->name('tasks.submit-deliverable');
-        
-        // طلبات الإجازة
-        Route::resource('leaves', \App\Http\Controllers\Employee\EmployeeLeaveController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
-        
-        // المحاسبة والراتب
-        Route::get('/accounting', [\App\Http\Controllers\Employee\AccountingController::class, 'index'])->name('accounting.index');
-        Route::post('/accounting/bank-account', [\App\Http\Controllers\Employee\AccountingController::class, 'updateBankAccount'])->name('accounting.update-bank');
-        
-        // اتفاقيات الموظف
-        Route::get('/agreements', [\App\Http\Controllers\Employee\AgreementController::class, 'index'])->name('agreements.index');
-        Route::get('/agreements/{agreement}', [\App\Http\Controllers\Employee\AgreementController::class, 'show'])->name('agreements.show');
-        
-        // الملف الشخصي
-        Route::get('/profile', [\App\Http\Controllers\Employee\EmployeeProfileController::class, 'index'])->name('profile');
-        Route::put('/profile', [\App\Http\Controllers\Employee\EmployeeProfileController::class, 'update'])->name('profile.update');
-        
-        // الإشعارات
-        Route::get('/notifications', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'index'])->name('notifications');
-        Route::get('/notifications/{notification}/go', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'go'])->name('notifications.go');
-        Route::get('/notifications/{notification}', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'show'])->name('notifications.show');
-        Route::post('/notifications/{notification}/mark-read', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-        Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-        
-        // التقويم
-        Route::get('/calendar', [\App\Http\Controllers\Employee\EmployeeCalendarController::class, 'index'])->name('calendar');
-        Route::get('/api/calendar/events', [\App\Http\Controllers\Employee\EmployeeCalendarController::class, 'getEvents'])->name('calendar.events');
-        
-        // التقارير والإحصائيات
-        Route::get('/reports', [\App\Http\Controllers\Employee\EmployeeReportController::class, 'index'])->name('reports');
-        
-        // الإعدادات
-        Route::get('/settings', [\App\Http\Controllers\Employee\EmployeeSettingsController::class, 'index'])->name('settings');
-        Route::put('/settings', [\App\Http\Controllers\Employee\EmployeeSettingsController::class, 'update'])->name('settings.update');
-        
-        // API للإشعارات
-        Route::get('/api/notifications/unread', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'getUnread'])->name('notifications.unread');
-        Route::post('/api/notifications/{notification}/mark-read', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'markAsRead'])->name('notifications.api.mark-read');
+        Route::get('/dashboard', [\App\Http\Controllers\Employee\EmployeeController::class, 'dashboard'])->middleware('employee.can:dashboard')->name('dashboard');
+
+        Route::get('/desk/accountant', [\App\Http\Controllers\Employee\EmployeeAccountantDeskController::class, 'index'])->middleware('employee.can:desk_accountant')->name('accountant-desk.index');
+        Route::prefix('sales')->name('sales.')->middleware('employee.can:sales_desk')->group(function () {
+            Route::get('/desk', [\App\Http\Controllers\Employee\EmployeeSalesWorkspaceController::class, 'desk'])->name('desk');
+            Route::get('/orders', [\App\Http\Controllers\Employee\EmployeeSalesWorkspaceController::class, 'ordersIndex'])->name('orders.index');
+            Route::get('/orders/{order}', [\App\Http\Controllers\Employee\EmployeeSalesWorkspaceController::class, 'orderShow'])->name('orders.show');
+            Route::post('/orders/{order}/notes', [\App\Http\Controllers\Employee\EmployeeSalesWorkspaceController::class, 'storeNote'])->name('orders.notes.store');
+            Route::post('/orders/{order}/claim', [\App\Http\Controllers\Employee\EmployeeSalesWorkspaceController::class, 'claim'])->name('orders.claim');
+
+            Route::get('/leads', [\App\Http\Controllers\Employee\EmployeeSalesLeadController::class, 'index'])->name('leads.index');
+            Route::get('/leads/create', [\App\Http\Controllers\Employee\EmployeeSalesLeadController::class, 'create'])->name('leads.create');
+            Route::post('/leads', [\App\Http\Controllers\Employee\EmployeeSalesLeadController::class, 'store'])->name('leads.store');
+            Route::get('/leads/{salesLead}', [\App\Http\Controllers\Employee\EmployeeSalesLeadController::class, 'show'])->name('leads.show');
+            Route::get('/leads/{salesLead}/edit', [\App\Http\Controllers\Employee\EmployeeSalesLeadController::class, 'edit'])->name('leads.edit');
+            Route::put('/leads/{salesLead}', [\App\Http\Controllers\Employee\EmployeeSalesLeadController::class, 'update'])->name('leads.update');
+            Route::post('/leads/{salesLead}/assign-me', [\App\Http\Controllers\Employee\EmployeeSalesLeadController::class, 'assignToMe'])->name('leads.assign-me');
+            Route::post('/leads/{salesLead}/convert', [\App\Http\Controllers\Employee\EmployeeSalesLeadController::class, 'convert'])->name('leads.convert');
+            Route::post('/leads/{salesLead}/lost', [\App\Http\Controllers\Employee\EmployeeSalesLeadController::class, 'markLost'])->name('leads.lost');
+        });
+        Route::get('/desk/hr', [\App\Http\Controllers\Employee\EmployeeHrDeskController::class, 'index'])->middleware('employee.can:hr_desk')->name('hr-desk.index');
+        Route::prefix('hr')->name('hr.')->middleware('employee.can:hr_desk')->group(function () {
+            Route::get('/leaves', [\App\Http\Controllers\Employee\EmployeeHrLeaveController::class, 'index'])->name('leaves.index');
+            Route::get('/leaves/{leave}', [\App\Http\Controllers\Employee\EmployeeHrLeaveController::class, 'show'])->name('leaves.show');
+            Route::post('/leaves/{leave}/approve', [\App\Http\Controllers\Employee\EmployeeHrLeaveController::class, 'approve'])->name('leaves.approve');
+            Route::post('/leaves/{leave}/reject', [\App\Http\Controllers\Employee\EmployeeHrLeaveController::class, 'reject'])->name('leaves.reject');
+            Route::get('/employees', [\App\Http\Controllers\Employee\EmployeeHrDirectoryController::class, 'index'])->name('employees.index');
+            Route::get('/employees/{employee}', [\App\Http\Controllers\Employee\EmployeeHrDirectoryController::class, 'show'])->name('employees.show');
+            Route::post('/employees/{employee}/hr-events', [\App\Http\Controllers\Employee\EmployeeHrDirectoryController::class, 'storeEvent'])->name('employees.hr-events.store');
+
+            Route::prefix('recruitment')->name('recruitment.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Employee\EmployeeHrRecruitmentController::class, 'index'])->name('index');
+                Route::resource('openings', \App\Http\Controllers\Employee\EmployeeHrJobOpeningController::class);
+                Route::resource('candidates', \App\Http\Controllers\Employee\EmployeeHrCandidateController::class);
+                Route::get('/applications/{hr_job_application}', [\App\Http\Controllers\Employee\EmployeeHrJobApplicationController::class, 'show'])->name('applications.show');
+                Route::patch('/applications/{hr_job_application}', [\App\Http\Controllers\Employee\EmployeeHrJobApplicationController::class, 'update'])->name('applications.update');
+                Route::post('/applications', [\App\Http\Controllers\Employee\EmployeeHrJobApplicationController::class, 'store'])->name('applications.store');
+                Route::post('/applications/{hr_job_application}/interviews', [\App\Http\Controllers\Employee\EmployeeHrInterviewController::class, 'store'])->name('applications.interviews.store');
+                Route::put('/applications/{hr_job_application}/interviews/{hr_interview}', [\App\Http\Controllers\Employee\EmployeeHrInterviewController::class, 'update'])->name('applications.interviews.update');
+                Route::delete('/applications/{hr_job_application}/interviews/{hr_interview}', [\App\Http\Controllers\Employee\EmployeeHrInterviewController::class, 'destroy'])->name('applications.interviews.destroy');
+            });
+        });
+        Route::get('/desk/supervision', [\App\Http\Controllers\Employee\EmployeeSupervisionDeskController::class, 'index'])->middleware('employee.can:supervision_desk')->name('supervision-desk.index');
+
+        Route::get('/tasks', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'index'])->middleware('employee.can:tasks')->name('tasks.index');
+        Route::get('/tasks/{task}', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'show'])->middleware('employee.can:tasks')->name('tasks.show');
+        Route::put('/tasks/{task}/status', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'updateStatus'])->middleware('employee.can:tasks')->name('tasks.update-status');
+        Route::post('/tasks/{task}/deliverables', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'submitDeliverable'])->middleware('employee.can:tasks')->name('tasks.submit-deliverable');
+
+        Route::resource('leaves', \App\Http\Controllers\Employee\EmployeeLeaveController::class)->only(['index', 'create', 'store', 'show', 'destroy'])->middleware('employee.can:leaves');
+
+        Route::get('/accounting', [\App\Http\Controllers\Employee\AccountingController::class, 'index'])->middleware('employee.can:accounting')->name('accounting.index');
+        Route::post('/accounting/bank-account', [\App\Http\Controllers\Employee\AccountingController::class, 'updateBankAccount'])->middleware('employee.can:accounting')->name('accounting.update-bank');
+
+        Route::get('/agreements', [\App\Http\Controllers\Employee\AgreementController::class, 'index'])->middleware('employee.can:agreements')->name('agreements.index');
+        Route::get('/agreements/{agreement}', [\App\Http\Controllers\Employee\AgreementController::class, 'show'])->middleware('employee.can:agreements')->name('agreements.show');
+
+        Route::get('/profile', [\App\Http\Controllers\Employee\EmployeeProfileController::class, 'index'])->middleware('employee.can:profile')->name('profile');
+        Route::put('/profile', [\App\Http\Controllers\Employee\EmployeeProfileController::class, 'update'])->middleware('employee.can:profile')->name('profile.update');
+
+        Route::get('/notifications', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'index'])->middleware('employee.can:notifications')->name('notifications');
+        Route::get('/notifications/{notification}/go', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'go'])->middleware('employee.can:notifications')->name('notifications.go');
+        Route::get('/notifications/{notification}', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'show'])->middleware('employee.can:notifications')->name('notifications.show');
+        Route::post('/notifications/{notification}/mark-read', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'markAsRead'])->middleware('employee.can:notifications')->name('notifications.mark-read');
+        Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'markAllAsRead'])->middleware('employee.can:notifications')->name('notifications.mark-all-read');
+
+        Route::get('/calendar', [\App\Http\Controllers\Employee\EmployeeCalendarController::class, 'index'])->middleware('employee.can:calendar')->name('calendar');
+        Route::get('/api/calendar/events', [\App\Http\Controllers\Employee\EmployeeCalendarController::class, 'getEvents'])->middleware('employee.can:calendar')->name('calendar.events');
+
+        Route::get('/reports', [\App\Http\Controllers\Employee\EmployeeReportController::class, 'index'])->middleware('employee.can:reports')->name('reports');
+
+        Route::get('/settings', [\App\Http\Controllers\Employee\EmployeeSettingsController::class, 'index'])->middleware('employee.can:settings')->name('settings');
+        Route::put('/settings', [\App\Http\Controllers\Employee\EmployeeSettingsController::class, 'update'])->middleware('employee.can:settings')->name('settings.update');
+
+        Route::get('/api/notifications/unread', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'getUnread'])->middleware('employee.can:notifications')->name('notifications.unread');
+        Route::post('/api/notifications/{notification}/mark-read', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'markAsRead'])->middleware('employee.can:notifications')->name('notifications.api.mark-read');
     });
 
     // مسارات الإدارة - محمية بصلاحية admin.access (مع تجاوز super_admin داخل EnsurePermission)
@@ -782,9 +816,16 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/statistics/users', [\App\Http\Controllers\Admin\StatisticsController::class, 'users'])->name('statistics.users');
         Route::get('/statistics/courses', [\App\Http\Controllers\Admin\StatisticsController::class, 'courses'])->name('statistics.courses');
 
+        // العملاء المحتملون ثم تحليلات المبيعات (مسارات تحت /sales)
+        Route::get('/sales/leads', [\App\Http\Controllers\Admin\SalesLeadController::class, 'index'])->name('sales.leads.index');
+        Route::get('/sales/leads/{salesLead}', [\App\Http\Controllers\Admin\SalesLeadController::class, 'show'])->name('sales.leads.show');
+        Route::get('/sales', [\App\Http\Controllers\Admin\SalesAnalyticsController::class, 'index'])->name('sales.index');
+
         // إدارة الطلبات
         Route::get('/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [\App\Http\Controllers\Admin\OrderController::class, 'show'])->name('orders.show');
+        Route::patch('/orders/{order}/sales-assign', [\App\Http\Controllers\Admin\OrderController::class, 'assignSalesOwner'])->name('orders.sales-assign');
+        Route::post('/orders/{order}/sales-notes', [\App\Http\Controllers\Admin\OrderController::class, 'storeSalesNote'])->name('orders.sales-notes.store');
         Route::patch('/orders/{order}/receiving-wallet', [\App\Http\Controllers\Admin\OrderController::class, 'updateReceivingWallet'])->name('orders.receiving-wallet');
         Route::post('/orders/{order}/approve', [\App\Http\Controllers\Admin\OrderController::class, 'approve'])
             ->middleware('throttle:10,1')
@@ -1014,6 +1055,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/support-tickets/{ticket}', [\App\Http\Controllers\Admin\SupportTicketController::class, 'show'])->name('support-tickets.show');
         Route::post('/support-tickets/{ticket}/status', [\App\Http\Controllers\Admin\SupportTicketController::class, 'updateStatus'])->name('support-tickets.status');
         Route::post('/support-tickets/{ticket}/reply', [\App\Http\Controllers\Admin\SupportTicketController::class, 'reply'])->name('support-tickets.reply');
+        Route::get('/support-inquiry-categories', [\App\Http\Controllers\Admin\SupportInquiryCategoryController::class, 'index'])->name('support-inquiry-categories.index');
+        Route::post('/support-inquiry-categories', [\App\Http\Controllers\Admin\SupportInquiryCategoryController::class, 'store'])->name('support-inquiry-categories.store');
+        Route::put('/support-inquiry-categories/{support_inquiry_category}', [\App\Http\Controllers\Admin\SupportInquiryCategoryController::class, 'update'])->name('support-inquiry-categories.update');
+        Route::delete('/support-inquiry-categories/{support_inquiry_category}', [\App\Http\Controllers\Admin\SupportInquiryCategoryController::class, 'destroy'])->name('support-inquiry-categories.destroy');
 
         // استشارات المدربين (مدفوعة)
         Route::get('/consultations', [\App\Http\Controllers\Admin\ConsultationController::class, 'index'])->name('consultations.index');

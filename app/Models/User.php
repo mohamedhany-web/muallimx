@@ -669,6 +669,22 @@ class User extends Authenticatable
     }
 
     /**
+     * سجل أحداث الموارد البشرية المرتبطة بهذا الموظف
+     */
+    public function hrEmployeeEvents()
+    {
+        return $this->hasMany(HrEmployeeEvent::class, 'employee_id')->latest('event_date')->latest('id');
+    }
+
+    /**
+     * طلبات الكورسات المسندة للموظف كمندوب مبيعات
+     */
+    public function salesOwnedOrders()
+    {
+        return $this->hasMany(Order::class, 'sales_owner_id');
+    }
+
+    /**
      * التحقق من كون المستخدم موظف
      */
     public function isEmployee(): bool

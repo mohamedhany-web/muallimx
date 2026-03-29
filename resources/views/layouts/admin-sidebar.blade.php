@@ -44,6 +44,7 @@
                     || request()->routeIs('admin.subscriptions.*')
                     || request()->routeIs('admin.teacher-features.*')
                     || request()->routeIs('admin.support-tickets.*')
+                    || request()->routeIs('admin.support-inquiry-categories.*')
                     || request()->routeIs('admin.academy-opportunities.*')
                     || request()->routeIs('admin.hiring-academies.*')
                     || request()->routeIs('admin.curriculum-library.*')
@@ -113,6 +114,13 @@
                         </a>
                     </li>
                     @endif
+                    @if(Route::has('admin.support-inquiry-categories.index'))
+                    <li>
+                        <a href="{{ route('admin.support-inquiry-categories.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.support-inquiry-categories.*') ? 'active' : '' }}">
+                            <i class="fas fa-tags"></i><span>تصنيفات دعم الطلاب</span>
+                        </a>
+                    </li>
+                    @endif
                     @if(Route::has('admin.consultations.index'))
                     <li>
                         <a href="{{ route('admin.consultations.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.consultations.*') ? 'active' : '' }}">
@@ -173,13 +181,23 @@
             </li>
 
             {{-- قسم المبيعات (ما يقدمه السيلز) --}}
-            @php $salesSectionOpen = request()->routeIs('admin.orders.*') || request()->routeIs('admin.coupons.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.referral-programs.*'); @endphp
+            @php $salesSectionOpen = request()->routeIs('admin.orders.*') || request()->routeIs('admin.sales.index') || request()->routeIs('admin.sales.leads.*') || request()->routeIs('admin.coupons.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.referral-programs.*'); @endphp
             <li x-data="{ open: {{ $salesSectionOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-shopping-cart w-5 text-center text-emerald-400"></i><span>قسم المبيعات</span></span>
                     <i class="fas fa-chevron-down chevron" :class="open ? 'rotate-180' : ''"></i>
                 </button>
                 <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
+                    <li>
+                        <a href="{{ route('admin.sales.leads.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.sales.leads.*') ? 'active' : '' }}">
+                            <i class="fas fa-user-plus"></i><span>العملاء المحتملون (Leads)</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.sales.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.sales.index') ? 'active' : '' }}">
+                            <i class="fas fa-chart-line"></i><span>لوحة تحليلات المبيعات</span>
+                        </a>
+                    </li>
                     <li>
                         <a href="{{ route('admin.orders.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
                             <i class="fas fa-shopping-bag"></i><span>الطلبات</span>

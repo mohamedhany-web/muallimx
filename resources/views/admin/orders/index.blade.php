@@ -133,12 +133,25 @@
                         <option value="other" {{ request('payment_method') == 'other' ? 'selected' : '' }}>أخرى</option>
                     </select>
                 </div>
+                <div class="w-full sm:w-auto min-w-[200px]">
+                    <label class="block text-xs font-semibold text-slate-700 mb-2">
+                        <i class="fas fa-user-tie text-emerald-600 ml-1"></i>
+                        مندوب المبيعات
+                    </label>
+                    <select name="sales_owner_id" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-blue-500 transition-all">
+                        <option value="">الكل</option>
+                        <option value="unassigned" {{ request('sales_owner_id') === 'unassigned' ? 'selected' : '' }}>بدون مندوب</option>
+                        @foreach($salesEmployees ?? [] as $se)
+                            <option value="{{ $se->id }}" {{ (string) request('sales_owner_id') === (string) $se->id ? 'selected' : '' }}>{{ $se->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="flex items-center gap-2 flex-shrink-0">
                     <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
                         <i class="fas fa-filter"></i>
                         تطبيق
                     </button>
-                    @if(request()->anyFilled(['search', 'status', 'payment_method']))
+                    @if(request()->anyFilled(['search', 'status', 'payment_method', 'sales_owner_id']))
                     <a href="{{ route('admin.orders.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors" title="مسح الفلتر">
                         <i class="fas fa-times"></i>
                     </a>
@@ -187,6 +200,11 @@
                                         @endif
                                     </div>
                                     <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-600">
+                                        @if($order->salesOwner)
+                                            <span class="text-emerald-700 font-semibold"><i class="fas fa-headset ml-0.5"></i> {{ $order->salesOwner->name }}</span>
+                                        @elseif($order->status === 'pending')
+                                            <span class="text-amber-600">بدون مندوب مبيعات</span>
+                                        @endif
                                         @if($order->academic_year_id && $order->learningPath)
                                             <span class="font-semibold text-slate-800">{{ htmlspecialchars($order->learningPath->name ?? 'مسار تعليمي') }}</span>
                                             <span class="text-blue-600"><i class="fas fa-route ml-0.5"></i> مسار تعليمي</span>

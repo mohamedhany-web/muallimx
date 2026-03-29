@@ -101,7 +101,7 @@ class CurriculumLibraryStructureController extends Controller
         $this->assertSectionBelongs($item, $section);
 
         $request->validate([
-            'file' => 'required|file|max:51200',
+            'file' => 'required|file',
             'title' => 'nullable|string|max:255',
             'view_in_platform' => 'nullable|boolean',
             'allow_download' => 'nullable|boolean',

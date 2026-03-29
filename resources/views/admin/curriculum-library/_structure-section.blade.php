@@ -127,7 +127,7 @@
                             السماح بالتحميل
                         </label>
                     </div>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">يُستنتج نوع الملف من الامتداد. HTML وعروض PowerPoint لا تُحمَّل مهما علّمت «تحميل».</p>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">يُستنتج نوع الملف من الامتداد. HTML وعروض PowerPoint لا تُحمَّل مهما علّمت «تحميل». الحد الأقصى للحجم يحدد من إعدادات الخادم (مثل <span class="font-mono">upload_max_filesize</span> و <span class="font-mono">post_max_size</span>) وليس من المنصة.</p>
                     <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-lg shadow-indigo-500/25 transition-colors">
                         <i class="fas fa-upload text-xs"></i> رفع إلى R2
                     </button>

@@ -1,61 +1,69 @@
 @php
     $user = auth()->user();
+    $user->loadMissing('employeeJob');
+    $sidebarSections = \App\Support\EmployeeSidebar::sectionsFor($user);
+    $firstSidebarLink = \Illuminate\Support\Arr::get($sidebarSections, '0.links.0');
+    $employeeHomeUrl = $user->employeeCan('dashboard')
+        ? route('employee.dashboard')
+        : (! empty($firstSidebarLink['route'] ?? null)
+            ? route($firstSidebarLink['route'])
+            : url('/'));
 @endphp
 <div class="flex flex-col h-full bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-    <!-- Logo/Brand -->
-    <div class="flex items-center justify-center h-16 px-4 border-b border-slate-700/50 dark:border-slate-600/50">
-        <a href="{{ route('employee.dashboard') }}" class="flex items-center gap-2">
+    <div class="flex items-center justify-center min-h-16 px-4 py-3 border-b border-slate-700/50 dark:border-slate-600/50">
+        <a href="{{ $employeeHomeUrl }}" class="flex items-center gap-2">
             <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
                 <i class="fas fa-briefcase text-white text-lg"></i>
             </div>
-            <span class="text-lg font-bold text-white">MuallimX</span>
+            <div class="text-right min-w-0">
+                <span class="text-lg font-bold text-white block leading-tight">MuallimX</span>
+                @if($user->employeeJob)
+                    <span class="text-[11px] text-slate-400 font-semibold truncate block max-w-[9rem]">{{ $user->employeeJob->name }}</span>
+                @endif
+            </div>
         </a>
     </div>
 
-    <!-- التنقل: الموظف يستقبل مهام فقط -->
-    <nav class="flex-1 overflow-y-auto overflow-x-hidden px-4 py-6 space-y-2 employee-sidebar-nav">
-        <a href="{{ route('employee.dashboard') }}"
-           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ request()->routeIs('employee.dashboard') ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white dark:text-slate-400 dark:hover:bg-slate-700/50' }}"
-           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }">
-            <i class="fas fa-home text-base"></i>
-            <span>لوحة التحكم</span>
-        </a>
-
-        <a href="{{ route('employee.tasks.index') }}"
-           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ request()->routeIs('employee.tasks.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white dark:text-slate-400 dark:hover:bg-slate-700/50' }}"
-           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }">
-            <i class="fas fa-tasks text-base"></i>
-            <span>مهامي</span>
-        </a>
-
-        <div class="border-t border-slate-700/50 dark:border-slate-600/50 my-4"></div>
-
-        <a href="{{ route('employee.profile') }}"
-           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ request()->routeIs('employee.profile*') ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white dark:text-slate-400 dark:hover:bg-slate-700/50' }}"
-           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }">
-            <i class="fas fa-user text-base"></i>
-            <span>الملف الشخصي</span>
-        </a>
-
-        <a href="{{ route('employee.notifications') }}"
-           class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 {{ request()->routeIs('employee.notifications*') ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white dark:text-slate-400 dark:hover:bg-slate-700/50' }}"
-           @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }">
-            <i class="fas fa-bell text-base"></i>
-            <span>الإشعارات</span>
-            @php
-                try {
-                    $unreadCount = $user->notifications()->whereNull('read_at')->count();
-                } catch (\Exception $e) {
-                    $unreadCount = 0;
-                }
-            @endphp
-            @if($unreadCount > 0)
-                <span class="mr-auto bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[20px] text-center">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
-            @endif
-        </a>
+    <nav class="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-5 employee-sidebar-nav">
+        @forelse($sidebarSections as $section)
+            <div class="space-y-1">
+                @if(!empty($section['title']))
+                    <p class="px-4 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">{{ $section['title'] }}</p>
+                @endif
+                @foreach($section['links'] as $link)
+                    @php
+                        $isActive = \App\Support\EmployeeSidebar::linkIsActive($link);
+                        $baseNav = 'flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 w-full';
+                        $inactiveNav = 'text-slate-300 hover:bg-slate-700/50 hover:text-white dark:text-slate-400';
+                        $activeClass = $link['active_class'] ?? 'bg-blue-600 shadow-lg';
+                    @endphp
+                    <a href="{{ route($link['route']) }}"
+                       class="{{ $baseNav }} {{ $isActive ? $activeClass.' text-white' : $inactiveNav }}"
+                       @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }">
+                        <i class="{{ $link['icon'] }} text-base w-5 text-center shrink-0"></i>
+                        <span class="truncate">{{ $link['label'] }}</span>
+                        @if(($link['key'] ?? '') === 'notifications')
+                            @php
+                                try {
+                                    $unreadCount = $user->notifications()->whereNull('read_at')->count();
+                                } catch (\Exception $e) {
+                                    $unreadCount = 0;
+                                }
+                            @endphp
+                            @if($unreadCount > 0)
+                                <span class="mr-auto bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5 min-w-[20px] text-center shrink-0">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
+                            @endif
+                        @endif
+                    </a>
+                @endforeach
+            </div>
+        @empty
+            <div class="px-4 py-6 text-center text-slate-400 text-sm">
+                لا توجد عناصر قائمة مفعّلة لوظيفتك. راجع الإدارة.
+            </div>
+        @endforelse
     </nav>
 
-    <!-- User Info -->
     <div class="border-t border-slate-700/50 dark:border-slate-600/50 p-4">
         <div class="flex items-center gap-3 mb-3">
             @php $profileImage = $user->profile_image_url ?? null; @endphp

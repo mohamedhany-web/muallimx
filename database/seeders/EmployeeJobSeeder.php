@@ -17,31 +17,52 @@ class EmployeeJobSeeder extends Seeder
                 'name' => 'محاسب',
                 'code' => 'accountant',
                 'description' => 'مسؤول عن الحسابات والرواتب والاتفاقيات',
-                'permissions' => ['dashboard', 'tasks', 'leaves', 'accounting', 'agreements', 'reports', 'calendar', 'profile', 'notifications', 'settings'],
+                'permissions' => [
+                    'dashboard', 'tasks', 'leaves', 'accounting', 'agreements', 'reports', 'calendar',
+                    'profile', 'notifications', 'settings',
+                    'desk_accountant',
+                ],
             ],
             [
                 'name' => 'اشراف عام',
                 'code' => 'general_supervision',
-                'description' => 'متابعة عامة وتقارير وإحصائيات',
-                'permissions' => ['dashboard', 'tasks', 'leaves', 'reports', 'calendar', 'profile', 'notifications', 'settings'],
+                'description' => 'متابعة عامة وتقارير وإحصائيات وجودة التنفيذ',
+                'permissions' => [
+                    'dashboard', 'tasks', 'leaves', 'reports', 'calendar',
+                    'profile', 'notifications', 'settings',
+                    'supervision_desk',
+                ],
             ],
             [
                 'name' => 'HR',
                 'code' => 'hr',
                 'description' => 'الموارد البشرية ومتابعة الموظفين والإجازات',
-                'permissions' => ['dashboard', 'tasks', 'leaves', 'reports', 'calendar', 'profile', 'notifications', 'settings'],
+                'permissions' => [
+                    'dashboard', 'tasks', 'leaves', 'reports', 'calendar',
+                    'profile', 'notifications', 'settings',
+                    'hr_desk',
+                ],
             ],
             [
                 'name' => 'مشرفه',
                 'code' => 'supervisor',
                 'description' => 'مشرف/ة ومتابعة المهام والتقارير',
-                'permissions' => ['dashboard', 'tasks', 'leaves', 'reports', 'calendar', 'profile', 'notifications', 'settings'],
+                'permissions' => [
+                    'dashboard', 'tasks', 'leaves', 'reports', 'calendar',
+                    'profile', 'notifications', 'settings',
+                    'supervision_desk',
+                ],
             ],
             [
                 'name' => 'سيلز',
                 'code' => 'sales',
                 'description' => 'المبيعات ومتابعة الطلبات والعملاء',
-                'permissions' => ['dashboard', 'tasks', 'leaves', 'profile', 'notifications', 'settings'],
+                'permissions' => [
+                    'dashboard', 'tasks', 'leaves', 'reports', 'calendar',
+                    'profile', 'notifications', 'settings',
+                    'sales_desk',
+                    'public_catalog',
+                ],
             ],
         ];
 

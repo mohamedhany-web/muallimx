@@ -10,6 +10,7 @@ class SupportTicket extends Model
 {
     protected $fillable = [
         'user_id',
+        'support_inquiry_category_id',
         'subject',
         'priority',
         'status',
@@ -23,6 +24,11 @@ class SupportTicket extends Model
         'last_reply_at' => 'datetime',
         'resolved_at' => 'datetime',
     ];
+
+    public function inquiryCategory(): BelongsTo
+    {
+        return $this->belongsTo(SupportInquiryCategory::class, 'support_inquiry_category_id');
+    }
 
     public function user(): BelongsTo
     {

@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use App\Models\Wallet;
+use App\Models\User;
+use App\Models\SalesOrderNote;
 
 class OrderController extends Controller
 {
@@ -31,7 +33,17 @@ class OrderController extends Controller
             abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
         }
 
-        $query = Order::with(['user', 'course.academicSubject', 'course.academicYear', 'learningPath']);
+        $query = Order::with(['user', 'course.academicSubject', 'course.academicYear', 'learningPath', 'salesOwner']);
+
+        // فلترة حسب مندوب المبيعات
+        if ($request->filled('sales_owner_id')) {
+            $so = $request->input('sales_owner_id');
+            if ($so === 'unassigned') {
+                $query->whereNull('sales_owner_id');
+            } elseif (ctype_digit((string) $so)) {
+                $query->where('sales_owner_id', (int) $so);
+            }
+        }
 
         // فلترة حسب الحالة - حماية من SQL Injection
         if ($request->filled('status')) {
@@ -78,7 +90,14 @@ class OrderController extends Controller
             'rejected' => Order::rejected()->count(),
         ];
 
-        return view('admin.orders.index', compact('orders', 'stats'));
+        $salesEmployees = User::query()
+            ->where('is_employee', true)
+            ->whereHas('employeeJob', fn ($q) => $q->where('code', 'sales'))
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('admin.orders.index', compact('orders', 'stats', 'salesEmployees'));
     }
 
     /**
@@ -92,7 +111,16 @@ class OrderController extends Controller
             abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
         }
 
-        $order->load(['user', 'course.academicSubject', 'course.academicYear', 'learningPath', 'approver', 'wallet']);
+        $order->load([
+            'user',
+            'course.academicSubject',
+            'course.academicYear',
+            'learningPath',
+            'approver',
+            'wallet',
+            'salesOwner',
+            'salesNotes.user',
+        ]);
 
         $platformWallets = Wallet::where('is_active', true)
             ->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer'])
@@ -100,7 +128,14 @@ class OrderController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.orders.show', compact('order', 'platformWallets'));
+        $salesEmployees = User::query()
+            ->where('is_employee', true)
+            ->whereHas('employeeJob', fn ($q) => $q->where('code', 'sales'))
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+
+        return view('admin.orders.show', compact('order', 'platformWallets', 'salesEmployees'));
     }
 
     /**
@@ -827,5 +862,48 @@ class OrderController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
         }
+    }
+
+    public function assignSalesOwner(Request $request, Order $order)
+    {
+        if (! Auth::check() || ! (Auth::user()->isSuperAdmin() || Auth::user()->can('manage.orders'))) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'sales_owner_id' => 'nullable|exists:users,id',
+        ]);
+
+        if (! empty($validated['sales_owner_id'])) {
+            $salesUser = User::find($validated['sales_owner_id']);
+            if (! $salesUser || ! $salesUser->is_employee) {
+                return back()->with('error', 'يجب اختيار موظف نشط.');
+            }
+        }
+
+        $order->update(['sales_owner_id' => $validated['sales_owner_id'] ?? null]);
+
+        return back()->with('success', 'تم تحديث مندوب المبيعات على الطلب.');
+    }
+
+    public function storeSalesNote(Request $request, Order $order)
+    {
+        if (! Auth::check() || ! (Auth::user()->isSuperAdmin() || Auth::user()->can('manage.orders'))) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'body' => 'required|string|max:5000',
+        ]);
+
+        SalesOrderNote::create([
+            'order_id' => $order->id,
+            'user_id' => Auth::id(),
+            'body' => $validated['body'],
+        ]);
+
+        $order->update(['sales_contacted_at' => now()]);
+
+        return back()->with('success', 'تمت إضافة ملاحظة المبيعات.');
     }
 }

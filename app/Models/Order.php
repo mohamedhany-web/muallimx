@@ -26,6 +26,8 @@ class Order extends Model
         'notes',
         'approved_at',
         'approved_by',
+        'sales_owner_id',
+        'sales_contacted_at',
     ];
 
     protected $casts = [
@@ -77,6 +79,19 @@ class Order extends Model
     public function coupon()
     {
         return $this->belongsTo(Coupon::class);
+    }
+
+    public function salesOwner()
+    {
+        return $this->belongsTo(User::class, 'sales_owner_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\SalesOrderNote, self>
+     */
+    public function salesNotes()
+    {
+        return $this->hasMany(SalesOrderNote::class, 'order_id')->latest();
     }
 
     public function scopePending($query)

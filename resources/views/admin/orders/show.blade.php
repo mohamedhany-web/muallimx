@@ -78,6 +78,62 @@
                 </div>
             </div>
 
+            <!-- مبيعات ومتابعة المندوب -->
+            <div class="rounded-xl bg-white border border-emerald-200 shadow-lg overflow-hidden">
+                <div class="px-6 py-5 border-b border-emerald-100 bg-emerald-50/80">
+                    <h2 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
+                            <i class="fas fa-headset text-lg"></i>
+                        </div>
+                        المبيعات والمتابعة
+                    </h2>
+                    <p class="text-xs text-slate-600 mt-2">تعيين مندوب مبيعات وملاحظات الفريق (تظهر لموظف السيلز أيضاً).</p>
+                </div>
+                <div class="p-6 space-y-6">
+                    @if(session('success'))
+                        <div class="rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-3 text-sm">{{ session('success') }}</div>
+                    @endif
+                    @if(session('error'))
+                        <div class="rounded-lg bg-rose-50 border border-rose-200 text-rose-900 px-4 py-3 text-sm">{{ session('error') }}</div>
+                    @endif
+                    <form action="{{ route('admin.orders.sales-assign', $order) }}" method="POST" class="flex flex-col sm:flex-row sm:items-end gap-3">
+                        @csrf
+                        @method('PATCH')
+                        <div class="flex-1">
+                            <label class="block text-xs font-semibold text-slate-700 mb-2">مندوب المبيعات</label>
+                            <select name="sales_owner_id" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm">
+                                <option value="">— بدون مندوب —</option>
+                                @foreach($salesEmployees ?? [] as $se)
+                                    <option value="{{ $se->id }}" {{ (int) old('sales_owner_id', $order->sales_owner_id) === (int) $se->id ? 'selected' : '' }}>{{ $se->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button type="submit" class="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 text-sm font-bold">حفظ</button>
+                    </form>
+                    @if($order->sales_contacted_at)
+                        <p class="text-xs text-slate-500">آخر نشاط مبيعات: {{ $order->sales_contacted_at->format('d/m/Y H:i') }}</p>
+                    @endif
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 mb-3">سجل الملاحظات</h3>
+                        <div class="space-y-3 max-h-56 overflow-y-auto mb-4">
+                            @forelse($order->salesNotes ?? [] as $note)
+                                <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
+                                    <p class="text-slate-800 whitespace-pre-wrap">{{ $note->body }}</p>
+                                    <p class="text-xs text-slate-500 mt-2">{{ $note->user?->name }} — {{ $note->created_at->format('Y-m-d H:i') }}</p>
+                                </div>
+                            @empty
+                                <p class="text-xs text-slate-500">لا توجد ملاحظات بعد.</p>
+                            @endforelse
+                        </div>
+                        <form action="{{ route('admin.orders.sales-notes.store', $order) }}" method="POST" class="space-y-2">
+                            @csrf
+                            <textarea name="body" rows="2" required maxlength="5000" class="w-full rounded-xl border border-slate-300 px-4 py-2 text-sm" placeholder="ملاحظة للفريق…"></textarea>
+                            <button type="submit" class="rounded-lg bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 text-xs font-bold">إضافة ملاحظة</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             <!-- معلومات الكورس أو المسار التعليمي -->
             <div class="rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden">
                 <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">

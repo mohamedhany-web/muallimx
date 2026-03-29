@@ -36,7 +36,10 @@
                         <label for="employee_id" class="block text-sm font-semibold text-gray-700 mb-2">الموظف <span class="text-red-500">*</span></label>
                         <select name="employee_id" id="employee_id" required class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition">
                             @foreach($employees as $employee)
-                                <option value="{{ $employee->id }}" data-job-name="{{ $employee->employeeJob?->name ?? '' }}" {{ old('employee_id', $employeeTask->employee_id) == $employee->id ? 'selected' : '' }}>
+                                <option value="{{ $employee->id }}"
+                                        data-job-name="{{ $employee->employeeJob?->name ?? '' }}"
+                                        data-job-code="{{ $employee->employeeJob?->code ?? '' }}"
+                                        {{ old('employee_id', $employeeTask->employee_id) == $employee->id ? 'selected' : '' }}>
                                     {{ $employee->name }}
                                     @if($employee->employee_code)({{ $employee->employee_code }})@endif
                                     @if($employee->employeeJob) - {{ $employee->employeeJob->name }}@endif
@@ -49,8 +52,15 @@
                     <div class="md:col-span-2">
                         <label for="task_type" class="block text-sm font-semibold text-gray-700 mb-2">نوع المهمة <span class="text-red-500">*</span></label>
                         <select name="task_type" id="task_type" required class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition">
-                            <option value="general" {{ old('task_type', $employeeTask->task_type ?? 'general') == 'general' ? 'selected' : '' }}>مهمة عامة</option>
-                            <option value="video_editing" {{ old('task_type', $employeeTask->task_type ?? '') == 'video_editing' ? 'selected' : '' }}>مونتاج فيديو</option>
+                            @foreach($taskTypeDefinitions as $code => $meta)
+                                <option value="{{ $code }}"
+                                        @if(($meta['job_codes'] ?? null) === null) data-all-jobs="1"
+                                        @else data-job-codes="{{ e(json_encode($meta['job_codes'])) }}"
+                                        @endif
+                                        {{ old('task_type', $employeeTask->task_type ?? 'general') === $code ? 'selected' : '' }}>
+                                    {{ $meta['label'] ?? $code }}
+                                </option>
+                            @endforeach
                         </select>
                         @error('task_type')<p class="mt-1 text-xs text-rose-500">{{ $message }}</p>@enderror
                     </div>
@@ -123,4 +133,46 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var employeeSelect = document.getElementById('employee_id');
+    var taskTypeSelect = document.getElementById('task_type');
+    if (!employeeSelect || !taskTypeSelect) return;
+
+    function jobCodeFromEmployee() {
+        var opt = employeeSelect.options[employeeSelect.selectedIndex];
+        return opt ? (opt.getAttribute('data-job-code') || '') : '';
+    }
+
+    function filterTaskTypes() {
+        var code = jobCodeFromEmployee();
+        var noEmployee = !employeeSelect.value;
+        var options = taskTypeSelect.querySelectorAll('option');
+        var firstVisible = null;
+        options.forEach(function(o) {
+            var all = o.getAttribute('data-all-jobs') === '1';
+            var raw = o.getAttribute('data-job-codes');
+            var allowed = all;
+            if (!allowed && raw) {
+                try {
+                    var arr = JSON.parse(raw);
+                    allowed = !noEmployee && code && arr.indexOf(code) !== -1;
+                } catch (e) { allowed = false; }
+            }
+            if (noEmployee && !all) allowed = false;
+            o.hidden = !allowed;
+            o.disabled = !allowed;
+            if (allowed && !firstVisible) firstVisible = o;
+        });
+        var sel = taskTypeSelect.selectedOptions[0];
+        if (sel && sel.disabled && firstVisible) taskTypeSelect.value = firstVisible.value;
+    }
+
+    employeeSelect.addEventListener('change', filterTaskTypes);
+    filterTaskTypes();
+});
+</script>
+@endpush
 @endsection

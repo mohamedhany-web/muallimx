@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'تفاصيل الفاتورة')
 @section('header', 'تفاصيل الفاتورة')
@@ -32,9 +32,8 @@
             <div class="flex flex-col gap-6 rounded-2xl border border-slate-200 bg-white/85 p-6 print-card">
                 <div class="flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Mindlytics</p>
-                        <h1 class="mt-2 text-2xl font-bold text-slate-900">أكاديمية البرمجة</h1>
-                        <p class="text-sm text-slate-500">support@mindlytics.academy · 0500 000 000</p>
+                        <h1 class="text-2xl font-bold text-slate-900">{{ config('app.name') }}</h1>
+                        <p class="text-sm text-slate-500 mt-2">{{ config('services.platform.support_email') }} · {{ config('services.platform.support_phone') }}</p>
                     </div>
                     <div class="text-sm text-slate-500 text-left md:text-right">
                         <p><span class="text-slate-400">رقم الفاتورة:</span> <span class="font-semibold text-slate-900">#{{ $invoice->invoice_number }}</span></p>
@@ -150,9 +149,8 @@
             <div class="invoice-print-container">
                 <header class="invoice-print-header">
                     <div>
-                        <p class="brand-label">Mindlytics</p>
-                        <h1>أكاديمية البرمجة</h1>
-                        <p class="brand-meta">support@mindlytics.academy · 0500 000 000</p>
+                        <h1>{{ config('app.name') }}</h1>
+                        <p class="brand-meta">{{ config('services.platform.support_email') }} · {{ config('services.platform.support_phone') }}</p>
                     </div>
                     <div class="invoice-meta">
                         <p><span>رقم الفاتورة:</span> #${'{{ $invoice->invoice_number }}'}</p>

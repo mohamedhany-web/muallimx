@@ -137,8 +137,9 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4">
                                 <div class="text-sm font-medium text-gray-900">{{ $task->title }}</div>
+                                <span class="inline-block mt-1 text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">{{ $task->taskTypeLabel() }}</span>
                                 @if($task->description)
-                                    <div class="text-sm text-gray-500">{{ Str::limit($task->description, 50) }}</div>
+                                    <div class="text-sm text-gray-500 mt-1">{{ Str::limit($task->description, 50) }}</div>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">

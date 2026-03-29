@@ -133,8 +133,14 @@
                     </h1>
                     <p class="text-slate-500 dark:text-slate-400 text-sm max-w-lg">{{ __('student.dashboard_subtitle') }}</p>
                 </div>
-                <div class="flex items-center gap-4 flex-shrink-0">
-                    <div class="relative flex items-center justify-center">
+                <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 flex-shrink-0">
+                    @hasPermission('student.view.courses')
+                    <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-md shadow-indigo-500/20 transition-colors order-2 sm:order-1">
+                        <i class="fas fa-th-large text-xs"></i>
+                        {{ __('student.courses') }}
+                    </a>
+                    @endhasPermission
+                    <div class="relative flex items-center justify-center order-1 sm:order-2">
                         <svg class="w-[88px] h-[88px]" viewBox="0 0 96 96" style="transform:rotate(-90deg)">
                             <defs>
                                 <linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -149,7 +155,7 @@
                         </svg>
                         <span class="absolute inset-0 flex items-center justify-center font-heading text-lg font-black text-brand-700 dark:text-brand-300">{{ $progress }}%</span>
                     </div>
-                    <div class="text-right hidden sm:block">
+                    <div class="text-right hidden sm:block order-3">
                         <p class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ __('student.total_progress') }}</p>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{{ __('student.from_course_completion') }}</p>
                     </div>
@@ -247,9 +253,17 @@
                         </span>
                         <h2 class="font-heading text-lg font-bold text-slate-800">{{ __('student.my_active_courses') }}</h2>
                     </div>
-                    <a href="{{ route('my-courses.index') }}" class="text-brand-600 hover:text-brand-700 text-sm font-semibold flex items-center gap-1 transition-colors">
-                        {{ __('student.view_all') }} <i class="fas fa-arrow-left text-[10px]"></i>
-                    </a>
+                    <div class="flex items-center gap-3 flex-wrap justify-end">
+                        @hasPermission('student.view.courses')
+                        <a href="{{ route('public.courses') }}" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-semibold flex items-center gap-1 transition-colors">
+                            <i class="fas fa-th-large text-[10px]"></i>
+                            {{ __('student.courses') }}
+                        </a>
+                        @endhasPermission
+                        <a href="{{ route('my-courses.index') }}" class="text-brand-600 hover:text-brand-700 text-sm font-semibold flex items-center gap-1 transition-colors">
+                            {{ __('student.view_all') }} <i class="fas fa-arrow-left text-[10px]"></i>
+                        </a>
+                    </div>
                 </div>
                 <div class="p-5 space-y-1">
                     @forelse($activeCourses->take(5) as $course)
@@ -280,7 +294,7 @@
                             </div>
                             <p class="font-heading font-bold text-slate-700 dark:text-slate-200 mb-1">{{ __('student.no_active_courses') }}</p>
                             <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">{{ __('student.start_journey_now') }}</p>
-                            <a href="{{ route('academic-years') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-500/25 hover:shadow-xl transition-all">
+                            <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-500/25 hover:shadow-xl transition-all">
                                 <i class="fas fa-search text-xs"></i>
                                 {{ __('student.explore_courses') }}
                             </a>

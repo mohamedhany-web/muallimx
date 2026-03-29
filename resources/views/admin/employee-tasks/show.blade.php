@@ -20,9 +20,12 @@
                         <i class="fas fa-tasks"></i>
                         تفاصيل المهمة
                     </span>
-                    @if($employeeTask->task_type === 'video_editing')
+                    <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 text-slate-800 text-sm font-semibold">
+                        <i class="fas fa-tag"></i> {{ $employeeTask->taskTypeLabel() }}
+                    </span>
+                    @if($employeeTask->isVideoEditing())
                         <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-100 text-violet-700 text-sm font-semibold mr-2">
-                            <i class="fas fa-video"></i> مونتاج فيديو
+                            <i class="fas fa-video"></i> حقول تسليم فيديو
                         </span>
                     @endif
                     <h1 class="text-3xl font-black text-gray-900 leading-tight">{{ $employeeTask->title }}</h1>
@@ -51,6 +54,24 @@
             </div>
         </div>
     </div>
+
+    @php $ttDef = $employeeTask->taskTypeDefinition(); @endphp
+    @if(!empty($ttDef))
+    <div class="dashboard-card rounded-2xl border-2 border-indigo-200/60 bg-gradient-to-br from-indigo-50/90 to-white shadow-sm overflow-hidden">
+        <div class="p-6 sm:p-8 space-y-4">
+            <h2 class="text-xl font-bold text-indigo-900 flex items-center gap-2">
+                <i class="fas fa-info-circle"></i>
+                دليل نوع المهمة (يظهر للإدارة بالكامل)
+            </h2>
+            <p class="text-sm text-gray-700 leading-relaxed">{{ $ttDef['admin_description'] ?? '' }}</p>
+            <div class="rounded-xl bg-white border border-indigo-100 p-4">
+                <p class="text-xs font-bold text-indigo-800 mb-1">ما يُتوقع في التسليمات من الموظف</p>
+                <p class="text-sm text-gray-800">{{ $ttDef['deliverable_expectation'] ?? '' }}</p>
+            </div>
+            <p class="text-xs text-gray-500">كل التسليمات والملفات والروابط أدناه مرئية للإدارة في هذه الصفحة.</p>
+        </div>
+    </div>
+    @endif
 
     <!-- معلومات المهمة -->
     <div class="dashboard-card rounded-2xl card-hover-effect border-2 border-gray-200/50 hover:border-blue-300/70 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);">

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EmployeeTaskTypes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -83,7 +84,18 @@ class EmployeeTask extends Model
      */
     public function isVideoEditing(): bool
     {
-        return $this->task_type === 'video_editing';
+        return EmployeeTaskTypes::usesVideoDeliverableFields($this->task_type ?? 'general');
+    }
+
+    public function taskTypeLabel(): string
+    {
+        return EmployeeTaskTypes::label($this->task_type ?? 'general');
+    }
+
+    /** @return array<string, mixed> */
+    public function taskTypeDefinition(): array
+    {
+        return EmployeeTaskTypes::definition($this->task_type ?? 'general') ?? [];
     }
 
     /**

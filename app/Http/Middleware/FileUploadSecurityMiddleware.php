@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use App\Services\SecurityService;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -33,7 +34,7 @@ class FileUploadSecurityMiddleware
                     if ($uploadedFile && $uploadedFile->isValid()) {
                         // التحقق من نوع الملف المسموح
                         $allowedMimes = $this->getAllowedMimes($key);
-                        $maxSize = $this->getMaxSize($key);
+                        $maxSize = $this->getMaxSize($request, $key);
                         
                         $validation = $this->securityService->validateUploadedFile(
                             $uploadedFile,
@@ -116,10 +117,24 @@ class FileUploadSecurityMiddleware
     }
 
     /**
+     * الحد الأعلى المسموح به في PHP (upload_max_filesize / post_max_size) — بدون سقف إضافي من التطبيق.
+     */
+    private function phpIniUploadMaxBytes(): int
+    {
+        $max = (int) UploadedFile::getMaxFilesize();
+
+        return $max > 0 ? $max : 1073741824;
+    }
+
+    /**
      * الحصول على الحد الأقصى لحجم الملف
      */
-    private function getMaxSize(string $fieldName): int
+    private function getMaxSize(Request $request, string $fieldName): int
     {
+        if ($request->routeIs('admin.curriculum-library.items.materials.store')) {
+            return $this->phpIniUploadMaxBytes();
+        }
+
         $sizeMap = [
             'video' => 524288000,   // 500 MB
             'recording' => 1073741824, // 1 GB

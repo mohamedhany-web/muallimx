@@ -21,7 +21,8 @@
 
         <!-- الفلاتر -->
         <div class="mt-6 pt-6 border-t border-gray-200">
-            <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <form method="GET" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                     <label for="search" class="block text-sm font-medium text-gray-700 mb-1">البحث</label>
                     <input type="text" name="search" id="search" value="{{ request('search') }}" 
@@ -40,6 +41,26 @@
                 </div>
 
                 <div>
+                    <label for="employee_job_id" class="block text-sm font-medium text-gray-700 mb-1">وظيفة الموظف</label>
+                    <select name="employee_job_id" id="employee_job_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">كل الوظائف</option>
+                        @foreach($employeeJobs ?? [] as $job)
+                            <option value="{{ $job->id }}" {{ request('employee_job_id') == $job->id ? 'selected' : '' }}>{{ $job->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label for="task_type" class="block text-sm font-medium text-gray-700 mb-1">نوع المهمة</label>
+                    <select name="task_type" id="task_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">كل الأنواع</option>
+                        @foreach($taskTypeDefinitions ?? [] as $code => $meta)
+                            <option value="{{ $code }}" {{ request('task_type') === $code ? 'selected' : '' }}>{{ $meta['label'] ?? $code }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
                     <label for="status" class="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
                     <select name="status" id="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">جميع الحالات</option>
@@ -47,18 +68,20 @@
                         <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>قيد التنفيذ</option>
                         <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>مكتملة</option>
                         <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ملغاة</option>
+                        <option value="on_hold" {{ request('status') == 'on_hold' ? 'selected' : '' }}>معلقة مؤقتاً</option>
                     </select>
                 </div>
 
-                <div class="flex items-end gap-2">
+                <div class="flex items-end gap-2 lg:col-span-2">
                     <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                         <i class="fas fa-search mr-2"></i>بحث
                     </button>
-                    @if(request()->hasAny(['search', 'employee_id', 'status', 'priority']))
+                    @if(request()->hasAny(['search', 'employee_id', 'employee_job_id', 'task_type', 'status', 'priority']))
                         <a href="{{ route('admin.employee-tasks.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                             <i class="fas fa-times"></i>
                         </a>
                     @endif
+                </div>
                 </div>
             </form>
         </div>
@@ -145,6 +168,7 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المهمة</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع المهمة</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموظف</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الأولوية</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموعد</th>
@@ -159,7 +183,13 @@
                                 <div class="text-sm font-medium text-gray-900">{{ $task->title }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-xs font-semibold text-indigo-800 bg-indigo-50 px-2 py-1 rounded-lg">{{ $task->taskTypeLabel() }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">{{ $task->employee->name }}</div>
+                                @if($task->employee->employeeJob)
+                                    <div class="text-xs text-gray-500">{{ $task->employee->employeeJob->name }}</div>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="px-2 py-1 text-xs font-semibold rounded-full

@@ -110,13 +110,19 @@ class EmployeeTaskController extends Controller
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
         }
 
-        $validated = $request->validate([
+        $rules = [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'delivery_type' => 'required|in:file,image,link',
             'file' => 'nullable|file|max:10240|required_if:delivery_type,file,image',
             'link_url' => 'nullable|url|required_if:delivery_type,link',
-        ]);
+        ];
+        if ($task->isVideoEditing()) {
+            $rules['received_from'] = 'nullable|string|max:255';
+            $rules['duration_before'] = 'nullable|string|max:64';
+            $rules['duration_after'] = 'nullable|string|max:64';
+        }
+        $validated = $request->validate($rules);
 
         $filePath = null;
         $fileName = null;
@@ -147,9 +153,9 @@ class EmployeeTaskController extends Controller
             'file_name' => $fileName,
             'file_type' => $fileType,
             'file_size' => $fileSize,
-            'received_from' => null,
-            'duration_before' => null,
-            'duration_after' => null,
+            'received_from' => $task->isVideoEditing() ? ($validated['received_from'] ?? null) : null,
+            'duration_before' => $task->isVideoEditing() ? ($validated['duration_before'] ?? null) : null,
+            'duration_after' => $task->isVideoEditing() ? ($validated['duration_after'] ?? null) : null,
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);

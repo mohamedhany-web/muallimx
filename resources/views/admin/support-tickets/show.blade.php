@@ -13,7 +13,15 @@
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
                 <h1 class="text-xl font-bold text-slate-900">{{ $ticket->subject }}</h1>
-                <p class="text-xs text-slate-500 mt-1">العميل: {{ $ticket->user->name ?? '—' }} | الحالة: {{ $ticket->status }} | الأولوية: {{ $ticket->priority }}</p>
+                <p class="text-xs text-slate-500 mt-1">
+                    العميل: {{ $ticket->user->name ?? '—' }}
+                    <span class="mx-1">|</span>
+                    التصنيف: {{ $ticket->inquiryCategory->name ?? '—' }}
+                    <span class="mx-1">|</span>
+                    الحالة: {{ $ticket->status }}
+                    <span class="mx-1">|</span>
+                    الأولوية: {{ $ticket->priority }}
+                </p>
             </div>
             <form method="POST" action="{{ route('admin.support-tickets.status', $ticket) }}" class="flex items-center gap-2">
                 @csrf

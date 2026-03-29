@@ -13,7 +13,13 @@
         <div class="flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-xl font-black text-slate-900 dark:text-white">{{ $ticket->subject }}</h1>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">الحالة: {{ $ticket->status }} | الأولوية: {{ $ticket->priority }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    التصنيف: {{ $ticket->inquiryCategory->name ?? '—' }}
+                    <span class="mx-1">|</span>
+                    الحالة: {{ $ticket->status }}
+                    <span class="mx-1">|</span>
+                    الأولوية: {{ $ticket->priority }}
+                </p>
             </div>
             <a href="{{ route('student.support.index') }}" class="text-sm text-sky-600 hover:underline">العودة للتذاكر</a>
         </div>

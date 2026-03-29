@@ -10,8 +10,8 @@
             <div class="flex-1 min-w-0">
                 <div class="flex flex-wrap items-center gap-2 mb-2">
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $task->title }}</h1>
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
-                        <i class="fas fa-tasks"></i> مهمة
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-200">
+                        <i class="fas fa-tag"></i> {{ $task->taskTypeLabel() }}
                     </span>
                 </div>
                 <p class="text-gray-600">عرض تفاصيل المهمة والتسليمات</p>
@@ -64,6 +64,15 @@
         <div class="mb-6 pt-6 border-t border-gray-200">
             <p class="text-sm font-medium text-gray-600 mb-2">الوصف</p>
             <p class="text-gray-900 leading-relaxed whitespace-pre-wrap">{{ $task->description }}</p>
+        </div>
+        @endif
+
+        @php $ttDef = $task->taskTypeDefinition(); @endphp
+        @if(!empty($ttDef['employee_hint'] ?? null))
+        <div class="mb-6 rounded-xl border border-blue-200 bg-blue-50/80 p-4">
+            <p class="text-xs font-bold text-blue-900 mb-1">توجيه حسب نوع المهمة</p>
+            <p class="text-sm text-blue-950 leading-relaxed">{{ $ttDef['employee_hint'] }}</p>
+            <p class="text-xs text-blue-800/80 mt-2">كل ما ترفعه هنا يظهر لإدارة المنصة في صفحة المهمة.</p>
         </div>
         @endif
 
@@ -127,6 +136,22 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">الوصف</label>
                                 <textarea name="description" rows="3" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                             </div>
+                            @if($task->isVideoEditing())
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-violet-50 border border-violet-200">
+                                <div>
+                                    <label class="block text-sm font-medium text-violet-900 mb-2">ممن استُلم المصدر (فيديو)</label>
+                                    <input type="text" name="received_from" class="w-full px-4 py-2.5 border border-violet-200 rounded-lg focus:ring-2 focus:ring-violet-500" placeholder="اسم أو جهة">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-violet-900 mb-2">المدة قبل المونتاج</label>
+                                    <input type="text" name="duration_before" class="w-full px-4 py-2.5 border border-violet-200 rounded-lg focus:ring-2 focus:ring-violet-500" placeholder="مثال: 12:30">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-violet-900 mb-2">المدة بعد المونتاج</label>
+                                    <input type="text" name="duration_after" class="w-full px-4 py-2.5 border border-violet-200 rounded-lg focus:ring-2 focus:ring-violet-500" placeholder="مثال: 10:00">
+                                </div>
+                            </div>
+                            @endif
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">نوع التسليم *</label>
                                 <select name="delivery_type" id="delivery_type" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
@@ -207,6 +232,14 @@
 
                                     @if($deliverable->description)
                                         <p class="text-sm text-gray-600">{{ $deliverable->description }}</p>
+                                    @endif
+
+                                    @if($deliverable->received_from || $deliverable->duration_before || $deliverable->duration_after)
+                                        <div class="text-sm text-violet-900 space-y-1 bg-violet-50/80 rounded-lg p-3 border border-violet-100">
+                                            @if($deliverable->received_from)<p><span class="font-semibold">المصدر:</span> {{ $deliverable->received_from }}</p>@endif
+                                            @if($deliverable->duration_before)<p><span class="font-semibold">مدة قبل:</span> {{ $deliverable->duration_before }}</p>@endif
+                                            @if($deliverable->duration_after)<p><span class="font-semibold">مدة بعد:</span> {{ $deliverable->duration_after }}</p>@endif
+                                        </div>
                                     @endif
 
                                     @if($deliverable->delivery_type === 'link' && $deliverable->link_url)

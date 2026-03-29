@@ -67,14 +67,15 @@
 <div class="space-y-6">
     <!-- الهيدر -->
     <div class="bg-white dark:bg-slate-800/95 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            <div class="min-w-0">
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1">{{ __('student.my_courses_active_title') }}</h1>
                 <p class="text-sm text-gray-500 dark:text-slate-400">{{ __('student.my_courses_subtitle') }}</p>
             </div>
-            <a href="{{ route('academic-years') }}" class="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors">
-                <i class="fas fa-search"></i>
-                {{ __('student.browse_new_courses') }}
+            {{-- يظهر لكل طالب يصل لهذه الصفحة (لا يعتمد على صلاحية student.view.courses) --}}
+            <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-5 py-3 rounded-xl text-sm font-bold transition-colors shadow-md shrink-0 w-full sm:w-auto">
+                <i class="fas fa-th-large"></i>
+                {{ __('student.browse_courses') }}
             </a>
         </div>
     </div>
@@ -193,7 +194,7 @@
             </div>
             <h3 class="text-lg font-bold text-gray-900 mb-2">{{ __('student.no_active_courses_my') }}</h3>
             <p class="text-sm text-gray-500 mb-6 max-w-sm mx-auto">{{ __('student.no_active_courses_desc') }}</p>
-            <a href="{{ route('academic-years') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold rounded-lg transition-colors">
+            <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold rounded-lg transition-colors">
                 <i class="fas fa-search"></i>
                 {{ __('student.browse_courses_btn') }}
             </a>

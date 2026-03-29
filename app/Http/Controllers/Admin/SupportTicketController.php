@@ -14,7 +14,8 @@ class SupportTicketController extends Controller
         $status = (string) $request->get('status', 'all');
         $priority = (string) $request->get('priority', 'all');
 
-        $query = SupportTicket::query()->with(['user', 'assignedAdmin'])->latest('last_reply_at')->latest();
+        $categoryId = $request->get('category_id');
+        $query = SupportTicket::query()->with(['user', 'assignedAdmin', 'inquiryCategory'])->latest('last_reply_at')->latest();
 
         if (in_array($status, ['open', 'in_progress', 'resolved', 'closed'], true)) {
             $query->where('status', $status);
@@ -22,8 +23,12 @@ class SupportTicketController extends Controller
         if (in_array($priority, ['low', 'normal', 'high', 'urgent'], true)) {
             $query->where('priority', $priority);
         }
+        if ($categoryId !== null && $categoryId !== '' && $categoryId !== 'all') {
+            $query->where('support_inquiry_category_id', (int) $categoryId);
+        }
 
         $tickets = $query->paginate(20)->withQueryString();
+        $inquiryCategories = \App\Models\SupportInquiryCategory::query()->ordered()->get();
 
         $stats = [
             'open' => SupportTicket::where('status', 'open')->count(),
@@ -31,12 +36,12 @@ class SupportTicketController extends Controller
             'resolved' => SupportTicket::where('status', 'resolved')->count(),
         ];
 
-        return view('admin.support-tickets.index', compact('tickets', 'stats', 'status', 'priority'));
+        return view('admin.support-tickets.index', compact('tickets', 'stats', 'status', 'priority', 'inquiryCategories', 'categoryId'));
     }
 
     public function show(SupportTicket $ticket)
     {
-        $ticket->load(['user', 'assignedAdmin', 'replies.user']);
+        $ticket->load(['user', 'assignedAdmin', 'inquiryCategory', 'replies.user']);
 
         return view('admin.support-tickets.show', compact('ticket'));
     }

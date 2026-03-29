@@ -27,6 +27,10 @@
             <div class="label">عنوان المهمة</div>
             <div class="value">{{ $task->title }}</div>
         </div>
+        <p>
+            <span class="label">نوع المهمة:</span>
+            <span class="value">{{ $task->taskTypeLabel() }}</span>
+        </p>
         @if($task->description)
             <div class="card">
                 <div class="label">الوصف</div>

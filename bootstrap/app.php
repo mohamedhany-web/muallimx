@@ -84,6 +84,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'prevent-concurrent' => \App\Http\Middleware\PreventConcurrentSessions::class,
             'landing.locale' => \App\Http\Middleware\SetLandingLocale::class,
             'community.contributor' => \App\Http\Middleware\EnsureCommunityContributor::class,
+            'employee.can' => \App\Http\Middleware\EnsureEmployeeCan::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

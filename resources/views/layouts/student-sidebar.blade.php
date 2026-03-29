@@ -19,10 +19,14 @@
         $coursesCount = auth()->user()->activeCourses()->count();
         $enrollments = auth()->user()->courseEnrollments()->whereIn('status', ['active', 'completed'])->get();
         $totalProgress = $enrollments->isEmpty() ? 0 : round($enrollments->avg('progress') ?? 0, 0);
+        /** صفحة الكورسات العامة (الواجهة الخارجية) */
+        $publicCoursesUrl = url('/courses');
     @endphp
     <div class="px-3 py-3 flex-shrink-0">
         <div class="grid grid-cols-2 gap-2.5">
-            <a href="{{ route('my-courses.index') }}" class="ins-stat-card bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 block group">
+            <a href="{{ $publicCoursesUrl }}"
+               title="{{ __('student.browse_courses') }}"
+               class="ins-stat-card bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 block group cursor-pointer no-underline text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 rounded-xl">
                 <div class="flex items-center gap-2 mb-1.5">
                     <span class="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <i class="fas fa-book-open text-sm"></i>
@@ -68,8 +72,8 @@
             </a>
 
             @hasPermission('student.view.courses')
-            @php $catalogActive = request()->routeIs('academic-years*') || request()->routeIs('subjects.*') || request()->routeIs('courses.*'); @endphp
-            <a href="{{ route('academic-years') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            @php $catalogActive = request()->routeIs('public.courses', 'public.course.*') || request()->routeIs('academic-years*') || request()->routeIs('subjects.*') || request()->routeIs('courses.show'); @endphp
+            <a href="{{ route('public.courses') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
                class="ins-nav {{ $catalogActive ? 'active' : '' }}">
                 <span class="ins-icon bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
                     <i class="fas fa-search text-sm"></i>
