@@ -32,6 +32,11 @@ class User extends Authenticatable
         'birth_date',
         'address',
         'bio',
+        'portfolio_headline',
+        'portfolio_about',
+        'portfolio_skills',
+        'portfolio_social_links',
+        'portfolio_intro_video_url',
         'academic_year_id',
         'last_login_at',
         'referral_code',
@@ -88,6 +93,7 @@ class User extends Authenticatable
             'is_employee' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
             'two_factor_recovery_codes' => 'array',
+            'portfolio_social_links' => 'array',
         ];
     }
 

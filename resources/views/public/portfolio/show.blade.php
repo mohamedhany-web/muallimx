@@ -109,11 +109,25 @@
             <div class="max-w-5xl mx-auto px-5 sm:px-8 lg:px-12">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
                     <div class="lg:col-span-2 space-y-8">
-                        {{-- Image --}}
-                        @if($project->image_path)
-                        <div class="reveal rounded-3xl overflow-hidden border border-slate-100 shadow-lg">
-                            <img src="{{ asset($project->image_path) }}" alt="{{ $project->title }}" class="w-full object-cover" loading="lazy">
-                        </div>
+                        {{-- Media --}}
+                        @if($project->content_type === \App\Models\PortfolioProject::CONTENT_VIDEO && $project->video_url)
+                            @php $embed = $project->videoEmbedUrl(); @endphp
+                            <div class="reveal rounded-3xl overflow-hidden border border-slate-100 shadow-lg bg-black aspect-video">
+                                @if($embed)
+                                    <iframe src="{{ $embed }}" class="w-full h-full" allowfullscreen></iframe>
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center">
+                                        <a href="{{ $project->video_url }}" target="_blank" rel="noopener noreferrer" class="btn-primary inline-flex items-center gap-2.5 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-7 py-3.5 rounded-2xl font-bold shadow-xl shadow-brand-600/25">
+                                            <i class="fas fa-play"></i>
+                                            فتح الفيديو
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        @elseif($project->image_path)
+                            <div class="reveal rounded-3xl overflow-hidden border border-slate-100 shadow-lg">
+                                <img src="{{ asset($project->image_path) }}" alt="{{ $project->title }}" class="w-full object-cover" loading="lazy">
+                            </div>
                         @endif
 
                         {{-- Description --}}
@@ -125,6 +139,17 @@
                             </div>
                             <div class="text-slate-600 leading-relaxed text-base whitespace-pre-line">{{ $project->description }}</div>
                         </div>
+                        @endif
+
+                        {{-- Text content --}}
+                        @if($project->content_type === \App\Models\PortfolioProject::CONTENT_TEXT && $project->content_text)
+                            <div class="reveal stagger-2 card-hover rounded-3xl bg-white border border-slate-100 p-6 sm:p-8 shadow-sm hover:shadow-xl hover:border-brand-200/50">
+                                <div class="flex items-center gap-3 mb-5">
+                                    <div class="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center"><i class="fas fa-align-right text-purple-500 text-xl"></i></div>
+                                    <h2 class="font-heading text-2xl font-black text-navy-950">المحتوى</h2>
+                                </div>
+                                <div class="text-slate-600 leading-relaxed text-base whitespace-pre-line">{{ $project->content_text }}</div>
+                            </div>
                         @endif
                     </div>
 

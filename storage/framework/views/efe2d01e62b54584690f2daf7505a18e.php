@@ -263,7 +263,15 @@
 
             
             <?php
-                $systemManagementOpen = request()->routeIs('admin.users.*') || request()->routeIs('admin.orders.*') || request()->routeIs('admin.notifications.*') || request()->routeIs('admin.employee-notifications.*') || request()->routeIs('admin.activity-log*') || request()->routeIs('admin.two-factor-logs.*') || request()->routeIs('admin.statistics.*') || request()->routeIs('admin.performance.*');
+                $systemManagementOpen = request()->routeIs('admin.users.*')
+                    || request()->routeIs('admin.orders.*')
+                    || request()->routeIs('admin.notifications.*')
+                    || request()->routeIs('admin.employee-notifications.*')
+                    || request()->routeIs('admin.email-broadcasts.*')
+                    || request()->routeIs('admin.activity-log*')
+                    || request()->routeIs('admin.two-factor-logs.*')
+                    || request()->routeIs('admin.statistics.*')
+                    || request()->routeIs('admin.performance.*');
             ?>
             <li x-data="{ open: <?php echo e($systemManagementOpen ? 'true' : 'false'); ?> }">
                 <button @click="open = !open" class="sidebar-group-btn">
@@ -284,6 +292,7 @@
                     </li>
                     <li><a href="<?php echo e(route('admin.notifications.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.notifications.*') ? 'active' : ''); ?>"><i class="fas fa-bell"></i><span><?php echo e(__('admin.notifications')); ?></span></a></li>
                     <li><a href="<?php echo e(route('admin.employee-notifications.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.employee-notifications.*') ? 'active' : ''); ?>"><i class="fas fa-user-tie"></i><span><?php echo e(__('admin.employee_notifications')); ?></span></a></li>
+                    <li><a href="<?php echo e(route('admin.email-broadcasts.index', 'all_users')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.email-broadcasts.*') ? 'active' : ''); ?>"><i class="fas fa-envelope"></i><span>إشعارات البريد (Gmail)</span></a></li>
                     <li><a href="<?php echo e(route('admin.activity-log')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.activity-log*') ? 'active' : ''); ?>"><i class="fas fa-history"></i><span><?php echo e(__('admin.activity_log')); ?></span></a></li>
                     <li><a href="<?php echo e(route('admin.two-factor-logs.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.two-factor-logs.*') ? 'active' : ''); ?>"><i class="fas fa-shield-alt"></i><span><?php echo e(__('admin.two_factor_logs')); ?></span></a></li>
                     <li><a href="<?php echo e(route('admin.statistics.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.statistics*') ? 'active' : ''); ?>"><i class="fas fa-chart-bar"></i><span><?php echo e(__('admin.statistics')); ?></span></a></li>

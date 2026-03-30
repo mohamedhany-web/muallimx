@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>500 - <?php echo e(__('errors.500_title')); ?> | Mindlytics</title>
+    <title>404 - <?php echo e(__('errors.404_title')); ?> | Mindlytics</title>
     
     <!-- خط عربي أصيل -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,7 +31,7 @@
         }
 
         .hero-section {
-            background: linear-gradient(to bottom, #fff7ed, #ffedd5, #ffffff);
+            background: linear-gradient(to bottom, #f0f9ff, #e0f2fe, #ffffff);
             position: relative;
             overflow: hidden;
             min-h-screen;
@@ -59,7 +59,7 @@
         .floating-circle.circle-1 {
             width: 300px;
             height: 300px;
-            background: linear-gradient(135deg, rgba(249, 115, 22, 0.3), rgba(251, 146, 60, 0.2));
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(14, 165, 233, 0.2));
             top: 10%;
             right: 10%;
             animation-delay: 0s;
@@ -68,7 +68,7 @@
         .floating-circle.circle-2 {
             width: 200px;
             height: 200px;
-            background: linear-gradient(135deg, rgba(251, 146, 60, 0.3), rgba(253, 186, 116, 0.2));
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(59, 130, 246, 0.2));
             bottom: 20%;
             left: 15%;
             animation-delay: 5s;
@@ -77,7 +77,7 @@
         .floating-circle.circle-3 {
             width: 250px;
             height: 250px;
-            background: linear-gradient(135deg, rgba(253, 186, 116, 0.3), rgba(249, 115, 22, 0.2));
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.3), rgba(34, 197, 94, 0.2));
             top: 50%;
             right: 50%;
             animation-delay: 10s;
@@ -145,52 +145,52 @@
         
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full py-16 lg:py-20">
             <div class="text-center">
-                <div class="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full shadow-lg mb-6 fade-in-up">
-                    <i class="fas fa-exclamation-triangle text-white text-sm"></i>
-                    <span class="text-white font-bold text-sm"><?php echo e(__('errors.500_badge')); ?></span>
+                <div class="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-green-500 rounded-full shadow-lg mb-6 fade-in-up">
+                    <i class="fas fa-search text-white text-sm"></i>
+                    <span class="text-white font-bold text-sm"><?php echo e(__('errors.page_not_found_badge')); ?></span>
                 </div>
 
                 <h1 class="text-8xl md:text-9xl font-black mb-6 leading-tight text-gray-900 fade-in-up" style="animation-delay: 0.1s;">
-                    500
+                    404
                 </h1>
                 
                 <h2 class="text-3xl md:text-4xl lg:text-5xl font-black mb-4 text-gray-900 fade-in-up" style="animation-delay: 0.2s;">
-                    <?php echo e(__('errors.500_title')); ?>
+                    <?php echo e(__('errors.404_title')); ?>
 
                 </h2>
                 
                 <p class="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed fade-in-up max-w-2xl mx-auto" style="animation-delay: 0.3s;">
-                    <?php echo e(__('errors.500_message')); ?>
+                    <?php echo e(__('errors.404_message_full')); ?>
 
                 </p>
 
                 <div class="bg-white rounded-2xl p-6 md:p-8 mb-8 border border-gray-200 shadow-xl fade-in-up max-w-2xl mx-auto" style="animation-delay: 0.4s;">
                     <div class="flex items-center justify-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600">
+                        <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
                             <i class="fas fa-info-circle text-lg"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900">ماذا يمكنك أن تفعل؟</h3>
+                        <h3 class="text-xl font-bold text-gray-900"><?php echo e(__('errors.suggestions')); ?></h3>
                     </div>
                     <div class="text-gray-700 text-right space-y-3">
-                        <div class="flex items-start justify-center gap-3 bg-orange-50 rounded-xl p-4">
-                            <i class="fas fa-redo text-orange-600 mt-0.5"></i>
-                            <span class="text-sm">حاول تحديث الصفحة بعد قليل</span>
+                        <div class="flex items-start justify-center gap-3 bg-blue-50 rounded-xl p-4">
+                            <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
+                            <span class="text-sm"><?php echo e(__('errors.suggestion_check_url')); ?></span>
                         </div>
-                        <div class="flex items-start justify-center gap-3 bg-orange-50 rounded-xl p-4">
-                            <i class="fas fa-home text-orange-600 mt-0.5"></i>
-                            <span class="text-sm">ارجع للصفحة الرئيسية وجرب مرة أخرى</span>
+                        <div class="flex items-start justify-center gap-3 bg-blue-50 rounded-xl p-4">
+                            <i class="fas fa-check-circle text-blue-600 mt-0.5"></i>
+                            <span class="text-sm"><?php echo e(__('errors.suggestion_use_menus')); ?></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center fade-in-up" style="animation-delay: 0.5s;">
-                    <button onclick="window.location.reload()" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-orange-600 to-yellow-500 text-white px-8 py-4 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                        <i class="fas fa-redo"></i>
-                        <span>إعادة المحاولة</span>
-                    </button>
-                    <a href="<?php echo e(route('admin.dashboard')); ?>" class="inline-flex items-center justify-center gap-2 bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-base border-2 border-orange-600 hover:bg-orange-50 transition-all duration-300">
+                    <a href="<?php echo e(route('admin.dashboard')); ?>" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-green-500 text-white px-8 py-4 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                         <i class="fas fa-home"></i>
                         <span><?php echo e(__('errors.back_dashboard')); ?></span>
+                    </a>
+                    <a href="javascript:history.back()" class="inline-flex items-center justify-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-full font-bold text-base border-2 border-blue-600 hover:bg-blue-50 transition-all duration-300">
+                        <i class="fas fa-arrow-right"></i>
+                        <span><?php echo e(__('errors.back_previous')); ?></span>
                     </a>
                 </div>
             </div>
@@ -199,4 +199,4 @@
 </body>
 </html>
 
-<?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/errors/500.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/errors/404.blade.php ENDPATH**/ ?>

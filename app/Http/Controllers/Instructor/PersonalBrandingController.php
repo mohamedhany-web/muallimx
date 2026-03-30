@@ -39,11 +39,21 @@ class PersonalBrandingController extends Controller
             'experience' => 'nullable|string|max:50000',
             'skills' => 'nullable|string|max:5000',
             'linkedin' => 'nullable|string|max:500|url',
+            'twitter' => 'nullable|string|max:500|url',
+            'youtube' => 'nullable|string|max:500|url',
+            'facebook' => 'nullable|string|max:500|url',
+            'website' => 'nullable|string|max:500|url',
+            'consultation_price_egp' => 'nullable|numeric|min:0|max:999999.99',
+            'consultation_duration_minutes' => 'nullable|integer|min:15|max:480',
             'photo' => 'nullable|image|max:2048',
         ], [
             'experience.max' => 'الخبرات في المجال يجب ألا تتجاوز 50 ألف حرف. إن احتجت مساحة أكبر تواصل مع الإدارة.',
             'skills.max' => 'المهارات يجب ألا تتجاوز 5 آلاف حرف.',
             'linkedin.url' => 'رابط LinkedIn يجب أن يكون رابطاً صالحاً (مثال: https://www.linkedin.com/in/اسم-المستخدم)',
+            'twitter.url' => 'رابط X/Twitter يجب أن يكون رابطاً صالحاً.',
+            'youtube.url' => 'رابط YouTube يجب أن يكون رابطاً صالحاً.',
+            'facebook.url' => 'رابط Facebook يجب أن يكون رابطاً صالحاً.',
+            'website.url' => 'رابط الموقع يجب أن يكون رابطاً صالحاً (https://...).',
             'photo.image' => 'الملف الذي تم رفعه يجب أن يكون صورة',
             'photo.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
         ]);
@@ -56,10 +66,24 @@ class PersonalBrandingController extends Controller
         }
 
         unset($data['photo']);
-        $socialLinks = $profile->social_links ?? [];
-        $socialLinks['linkedin'] = !empty($data['linkedin']) ? trim($data['linkedin']) : null;
+        $socialLinks = is_array($profile->social_links) ? $profile->social_links : [];
+        foreach (['linkedin', 'twitter', 'youtube', 'facebook', 'website'] as $k) {
+            $v = trim((string) ($data[$k] ?? ''));
+            $socialLinks[$k] = $v !== '' ? $v : null;
+            unset($data[$k]);
+        }
         $data['social_links'] = $socialLinks;
-        unset($data['linkedin']);
+
+        // normalize numeric fields (empty string -> null)
+        foreach (['consultation_price_egp', 'consultation_duration_minutes'] as $k) {
+            if (!array_key_exists($k, $data)) {
+                continue;
+            }
+            if ($data[$k] === '' || $data[$k] === null) {
+                $data[$k] = null;
+            }
+        }
+
         $profile->update($data);
 
         return back()->with('success', 'تم حفظ الملف التعريفي.');
@@ -75,6 +99,12 @@ class PersonalBrandingController extends Controller
         if ($profile->status !== InstructorProfile::STATUS_DRAFT && $profile->status !== InstructorProfile::STATUS_REJECTED) {
             return back()->with('error', 'الملف مقدم مسبقاً أو معتمد.');
         }
+
+        // حد أدنى للجودة قبل الإرسال للمراجعة (تسويق شخصي للطلاب)
+        if (!$profile->headline || !$profile->bio || count($profile->skills_list) < 3) {
+            return back()->with('error', 'أكمل الملف قبل الإرسال: عنوان تعريفي + نبذة + 3 مهارات على الأقل.');
+        }
+
         $profile->update([
             'status' => InstructorProfile::STATUS_PENDING_REVIEW,
             'submitted_at' => now(),

@@ -14,9 +14,12 @@ class PortfolioProject extends Model
         'advanced_course_id',
         'title',
         'project_type',
+        'content_type',
         'description',
+        'content_text',
         'project_url',
         'github_url',
+        'video_url',
         'image_path',
         'status',
         'instructor_notes',
@@ -33,6 +36,21 @@ class PortfolioProject extends Model
         'published_at' => 'datetime',
         'is_visible' => 'boolean',
     ];
+
+    public const CONTENT_GALLERY = 'gallery';
+    public const CONTENT_VIDEO = 'video';
+    public const CONTENT_TEXT = 'text';
+    public const CONTENT_LINK = 'link';
+
+    public static function contentTypeLabels(): array
+    {
+        return [
+            self::CONTENT_GALLERY => 'صور (معرض)',
+            self::CONTENT_VIDEO => 'فيديو',
+            self::CONTENT_TEXT => 'نص/مقال',
+            self::CONTENT_LINK => 'روابط/عرض',
+        ];
+    }
 
     public const STATUS_PENDING_REVIEW = 'pending_review';
     public const STATUS_APPROVED = 'approved';
@@ -79,5 +97,23 @@ class PortfolioProject extends Model
     public function scopeVisible($query)
     {
         return $query->where('is_visible', true);
+    }
+
+    public function videoEmbedUrl(): ?string
+    {
+        $url = trim((string) ($this->video_url ?? ''));
+        if ($url === '') {
+            return null;
+        }
+
+        // YouTube watch?v= or youtu.be
+        if (preg_match('~(?:youtube\.com/watch\?v=|youtu\.be/)([A-Za-z0-9_-]{6,})~', $url, $m)) {
+            return 'https://www.youtube.com/embed/' . $m[1];
+        }
+        // Vimeo
+        if (preg_match('~vimeo\.com/(\d+)~', $url, $m)) {
+            return 'https://player.vimeo.com/video/' . $m[1];
+        }
+        return null;
     }
 }

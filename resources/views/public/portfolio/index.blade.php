@@ -112,11 +112,29 @@
                     <a href="{{ route('public.portfolio.show', $project->id) }}"
                        class="reveal stagger-{{ min($idx + 1, 4) }} card-hover group block rounded-3xl bg-white border border-slate-100 overflow-hidden shadow-sm">
 
-                        {{-- Image --}}
+                        {{-- Media preview --}}
                         <div class="relative aspect-video overflow-hidden bg-gradient-to-br from-purple-500 via-blue-500 to-brand-600">
                             @if($project->image_path)
                                 <img src="{{ asset($project->image_path) }}" alt="{{ $project->title }}"
                                      class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" loading="lazy">
+                            @elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_VIDEO)
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                                        <i class="fas fa-video text-white/80 text-2xl"></i>
+                                    </div>
+                                </div>
+                            @elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_TEXT)
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                                        <i class="fas fa-align-right text-white/80 text-2xl"></i>
+                                    </div>
+                                </div>
+                            @elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_LINK)
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                                        <i class="fas fa-link text-white/80 text-2xl"></i>
+                                    </div>
+                                </div>
                             @else
                                 <div class="absolute inset-0 flex items-center justify-center">
                                     <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
@@ -133,8 +151,14 @@
                             </span>
                             @endif
 
-                            {{-- Links --}}
+                            {{-- Content badge + links --}}
                             <div class="absolute bottom-3 {{ $isRtl?'right':'left' }}-3 flex gap-2">
+                                @if($project->content_type)
+                                    <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur text-navy-800 text-[11px] font-bold shadow-sm">
+                                        <i class="fas fa-layer-group text-brand-500 text-[9px]"></i>
+                                        {{ \App\Models\PortfolioProject::contentTypeLabels()[$project->content_type] ?? $project->content_type }}
+                                    </span>
+                                @endif
                                 @if($project->project_url)
                                 <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur text-navy-800 text-[11px] font-bold shadow-sm">
                                     <i class="fas fa-external-link-alt text-brand-500 text-[9px]"></i> رابط حي

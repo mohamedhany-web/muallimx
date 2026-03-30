@@ -540,9 +540,23 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/consultations/request/{instructor}', [\App\Http\Controllers\Student\ConsultationController::class, 'store'])->name('consultations.store');
         Route::get('/consultations/{consultation}', [\App\Http\Controllers\Student\ConsultationController::class, 'show'])->name('consultations.show');
         Route::post('/consultations/{consultation}/report-payment', [\App\Http\Controllers\Student\ConsultationController::class, 'reportPayment'])->name('consultations.report-payment');
-        // التسويق الشخصي / البورتفوليو للمعلم (عرض فقط) — تم إلغاء صفحة /my-portfolio/create
+        // التسويق الشخصي / البورتفوليو للطالب (إدارة المشاريع)
         Route::prefix('my-portfolio')->name('student.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'index'])->name('portfolio.index');
+            Route::get('/profile', [\App\Http\Controllers\Student\PortfolioProfileController::class, 'edit'])->name('portfolio.profile.edit');
+            Route::put('/profile', [\App\Http\Controllers\Student\PortfolioProfileController::class, 'update'])->name('portfolio.profile.update');
+            Route::get('/create', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'create'])->name('portfolio.create');
+            Route::post('/', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'store'])->name('portfolio.store');
+            Route::get('/{project}', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'show'])
+                ->name('portfolio.show');
+            Route::get('/{project}/edit', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'edit'])
+                ->name('portfolio.edit');
+            Route::put('/{project}', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'update'])
+                ->name('portfolio.update');
+            Route::delete('/{project}', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'destroy'])
+                ->name('portfolio.destroy');
+            Route::delete('/{project}/images/{image}', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'destroyImage'])
+                ->name('portfolio.images.destroy');
         });
         // صفحة اشتراكي (عرض الباقة الحالية ومدة التفاعيل والانتهاء)
         Route::get('/my-subscription', [\App\Http\Controllers\Student\MySubscriptionController::class, 'show'])->name('student.my-subscription');
@@ -927,6 +941,14 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 ->middleware('throttle:10,1')
                 ->name('store');
             Route::get('/{notification}', [\App\Http\Controllers\Admin\EmployeeNotificationController::class, 'show'])->name('show');
+        });
+
+        // إشعارات البريد (Gmail) — حملات بريدية
+        Route::prefix('email-notifications')->name('email-broadcasts.')->group(function () {
+            Route::get('/{audience}', [\App\Http\Controllers\Admin\EmailBroadcastController::class, 'index'])->name('index');
+            Route::get('/{audience}/create', [\App\Http\Controllers\Admin\EmailBroadcastController::class, 'create'])->name('create');
+            Route::post('/{audience}', [\App\Http\Controllers\Admin\EmailBroadcastController::class, 'store'])->name('store');
+            Route::get('/{audience}/{email_broadcast}', [\App\Http\Controllers\Admin\EmailBroadcastController::class, 'show'])->name('show');
         });
 
         // إدارة تسجيل الطلاب في الكورسات الأونلاين

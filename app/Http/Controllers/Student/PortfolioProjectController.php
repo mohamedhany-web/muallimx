@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use App\Models\AcademicYear;
-use App\Models\AdvancedCourse;
 use App\Models\PortfolioProject;
 use App\Models\PortfolioProjectImage;
 use App\Services\SubscriptionLimitService;
@@ -17,56 +15,17 @@ class PortfolioProjectController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $projects = $user->portfolioProjects()->with(['academicYear', 'advancedCourse'])->latest()->paginate(10);
+        $projects = $user->portfolioProjects()->with(['academicYear', 'advancedCourse', 'images'])->latest()->paginate(10);
         $subscription = $user->activeSubscription();
         $limits = SubscriptionLimitService::limitsForUser($user);
-        $features = is_array($subscription?->features) ? $subscription->features : [];
 
-        $marketingCapabilities = [
-            [
-                'key' => 'teacher_profile',
-                'label' => 'ملف تعريفي احترافي للمعلم',
-                'active' => in_array('teacher_profile', $features, true),
-            ],
-            [
-                'key' => 'visible_to_academies',
-                'label' => 'الظهور للأكاديميات داخل المنصة',
-                'active' => in_array('visible_to_academies', $features, true),
-            ],
-            [
-                'key' => 'can_apply_opportunities',
-                'label' => 'التقديم على فرص التدريس',
-                'active' => in_array('can_apply_opportunities', $features, true),
-            ],
-            [
-                'key' => 'recommended_to_academies',
-                'label' => 'ترشيح للأكاديميات المناسبة',
-                'active' => in_array('recommended_to_academies', $features, true),
-            ],
-            [
-                'key' => 'priority_opportunities',
-                'label' => 'أولوية في فرص التدريس',
-                'active' => in_array('priority_opportunities', $features, true),
-            ],
-            [
-                'key' => 'direct_support',
-                'label' => 'دعم مباشر لملفك التسويقي',
-                'active' => in_array('direct_support', $features, true),
-            ],
-        ];
-
-        return view('student.portfolio.index', compact('projects', 'subscription', 'limits', 'marketingCapabilities'));
+        return view('student.portfolio.index', compact('projects', 'subscription', 'limits'));
     }
 
     public function create()
     {
-        $user = auth()->user();
-        // المسارات التعليمية التي التحق بها الطالب فقط
-        $pathIds = $user->learningPathEnrollments()->where('status', 'active')->pluck('academic_year_id')->unique()->filter();
-        $learningPaths = AcademicYear::where('is_active', true)->whereIn('id', $pathIds)->ordered()->get(['id', 'name']);
-        // الكورسات التي اشتراها/سجّل فيها الطالب فقط (تحديد الجدول لتجنب ambiguous id)
-        $courses = $user->activeCourses()->select('advanced_courses.id', 'advanced_courses.title')->get();
-        return view('student.portfolio.create', compact('learningPaths', 'courses'));
+        $contentTypeLabels = PortfolioProject::contentTypeLabels();
+        return view('student.portfolio.create', compact('contentTypeLabels'));
     }
 
     public function store(Request $request)
@@ -74,9 +33,12 @@ class PortfolioProjectController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'project_type' => 'nullable|string|in:web_app,mobile_app,api,library,script,design,game,desktop,cli,other',
+            'content_type' => 'required|string|in:gallery,video,text,link',
             'description' => 'nullable|string|max:2000',
+            'content_text' => 'nullable|string|max:20000',
             'project_url' => 'nullable|url|max:500',
             'github_url' => 'nullable|url|max:500',
+            'video_url' => 'nullable|url|max:500',
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'advanced_course_id' => 'nullable|exists:advanced_courses,id',
             'images' => 'nullable|array|max:5',
@@ -85,6 +47,7 @@ class PortfolioProjectController extends Controller
             'title.required' => 'عنوان المشروع مطلوب',
             'project_url.url' => 'رابط المشروع يجب أن يكون رابطاً صحيحاً',
             'github_url.url' => 'رابط GitHub يجب أن يكون رابطاً صحيحاً',
+            'video_url.url' => 'رابط الفيديو يجب أن يكون رابطاً صحيحاً',
             'images.max' => 'حد أقصى 5 صور للمشروع',
             'images.*.image' => 'يجب أن يكون الملف صورة',
             'images.*.max' => 'كل صورة حد أقصى 2 ميجابايت',
@@ -94,9 +57,12 @@ class PortfolioProjectController extends Controller
             'user_id' => auth()->id(),
             'title' => $request->title,
             'project_type' => $request->project_type ?: null,
+            'content_type' => $request->content_type ?: PortfolioProject::CONTENT_GALLERY,
             'description' => $request->description,
+            'content_text' => $request->content_text,
             'project_url' => $request->project_url,
             'github_url' => $request->github_url,
+            'video_url' => $request->video_url,
             'academic_year_id' => $request->academic_year_id ?: null,
             'advanced_course_id' => $request->advanced_course_id ?: null,
             'status' => PortfolioProject::STATUS_PENDING_REVIEW,
@@ -109,7 +75,7 @@ class PortfolioProjectController extends Controller
             File::makeDirectory($dir, 0755, true);
         }
 
-        if ($request->hasFile('images')) {
+        if ($request->content_type === PortfolioProject::CONTENT_GALLERY && $request->hasFile('images')) {
             $sortOrder = 0;
             foreach ($request->file('images') as $file) {
                 if ($file && $file->isValid()) {
@@ -129,5 +95,158 @@ class PortfolioProjectController extends Controller
         }
 
         return redirect()->route('student.portfolio.index')->with('success', 'تم رفع المشروع بنجاح. سيتم مراجعته من المدرب ثم النشر في البورتفوليو.');
+    }
+
+    public function show(PortfolioProject $project)
+    {
+        $user = auth()->user();
+        abort_unless((int) $project->user_id === (int) $user->id, 403);
+
+        $project->load(['academicYear', 'advancedCourse', 'images', 'reviewer:id,name']);
+
+        return view('student.portfolio.show', compact('project'));
+    }
+
+    public function edit(PortfolioProject $project)
+    {
+        $user = auth()->user();
+        abort_unless((int) $project->user_id === (int) $user->id, 403);
+
+        if (in_array($project->status, [PortfolioProject::STATUS_APPROVED, PortfolioProject::STATUS_PUBLISHED], true)) {
+            return redirect()->route('student.portfolio.show', $project)->with('error', 'لا يمكن تعديل مشروع معتمد/منشور. يمكنك رفع مشروع جديد.');
+        }
+
+        $project->load(['images']);
+        $contentTypeLabels = PortfolioProject::contentTypeLabels();
+
+        return view('student.portfolio.edit', compact('project', 'contentTypeLabels'));
+    }
+
+    public function update(Request $request, PortfolioProject $project)
+    {
+        $user = auth()->user();
+        abort_unless((int) $project->user_id === (int) $user->id, 403);
+
+        if (in_array($project->status, [PortfolioProject::STATUS_APPROVED, PortfolioProject::STATUS_PUBLISHED], true)) {
+            return redirect()->route('student.portfolio.show', $project)->with('error', 'لا يمكن تعديل مشروع معتمد/منشور.');
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'project_type' => 'nullable|string|in:web_app,mobile_app,api,library,script,design,game,desktop,cli,other',
+            'content_type' => 'required|string|in:gallery,video,text,link',
+            'description' => 'nullable|string|max:2000',
+            'content_text' => 'nullable|string|max:20000',
+            'project_url' => 'nullable|url|max:500',
+            'github_url' => 'nullable|url|max:500',
+            'video_url' => 'nullable|url|max:500',
+            'academic_year_id' => 'nullable|exists:academic_years,id',
+            'advanced_course_id' => 'nullable|exists:advanced_courses,id',
+            'images' => 'nullable|array|max:5',
+            'images.*' => 'image|max:2048',
+        ]);
+
+        $project->update([
+            'title' => $request->title,
+            'project_type' => $request->project_type ?: null,
+            'content_type' => $request->content_type ?: PortfolioProject::CONTENT_GALLERY,
+            'description' => $request->description,
+            'content_text' => $request->content_text,
+            'project_url' => $request->project_url,
+            'github_url' => $request->github_url,
+            'video_url' => $request->video_url,
+            'academic_year_id' => $request->academic_year_id ?: null,
+            'advanced_course_id' => $request->advanced_course_id ?: null,
+        ]);
+
+        // إذا كان مرفوضاً، إعادة إرسال للمراجعة
+        if ($project->status === PortfolioProject::STATUS_REJECTED) {
+            $project->update([
+                'status' => PortfolioProject::STATUS_PENDING_REVIEW,
+                'reviewed_by' => null,
+                'reviewed_at' => null,
+                'rejected_reason' => null,
+            ]);
+        }
+
+        $dir = public_path('portfolio-images');
+        if (!File::isDirectory($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
+
+        if ($request->content_type === PortfolioProject::CONTENT_GALLERY && $request->hasFile('images')) {
+            $currentCount = (int) $project->images()->count();
+            $remaining = max(0, 5 - $currentCount);
+            $files = array_slice($request->file('images') ?? [], 0, $remaining);
+            $sortOrder = (int) ($project->images()->max('sort_order') ?? -1) + 1;
+            foreach ($files as $file) {
+                if ($file && $file->isValid()) {
+                    $name = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                    $file->move($dir, $name);
+                    $path = 'portfolio-images/' . $name;
+                    PortfolioProjectImage::create([
+                        'portfolio_project_id' => $project->id,
+                        'image_path' => $path,
+                        'sort_order' => $sortOrder++,
+                    ]);
+                    if (!$project->image_path) {
+                        $project->update(['image_path' => $path]);
+                    }
+                }
+            }
+        }
+
+        return redirect()->route('student.portfolio.show', $project)->with('success', 'تم حفظ التعديلات.');
+    }
+
+    public function destroy(PortfolioProject $project)
+    {
+        $user = auth()->user();
+        abort_unless((int) $project->user_id === (int) $user->id, 403);
+
+        if ($project->status === PortfolioProject::STATUS_PUBLISHED) {
+            return back()->with('error', 'لا يمكن حذف مشروع منشور.');
+        }
+
+        // delete images from disk
+        foreach ($project->images as $img) {
+            $path = public_path($img->image_path);
+            if (File::isFile($path)) {
+                @unlink($path);
+            }
+        }
+        if ($project->image_path) {
+            $path = public_path($project->image_path);
+            if (File::isFile($path)) {
+                @unlink($path);
+            }
+        }
+
+        $project->delete();
+
+        return redirect()->route('student.portfolio.index')->with('success', 'تم حذف المشروع.');
+    }
+
+    public function destroyImage(PortfolioProject $project, PortfolioProjectImage $image)
+    {
+        $user = auth()->user();
+        abort_unless((int) $project->user_id === (int) $user->id, 403);
+        abort_unless((int) $image->portfolio_project_id === (int) $project->id, 404);
+
+        if (in_array($project->status, [PortfolioProject::STATUS_APPROVED, PortfolioProject::STATUS_PUBLISHED], true)) {
+            return back()->with('error', 'لا يمكن تعديل الصور لمشروع معتمد/منشور.');
+        }
+
+        $path = public_path($image->image_path);
+        if (File::isFile($path)) {
+            @unlink($path);
+        }
+        $image->delete();
+
+        // ensure preview image
+        $newPreview = $project->fresh()->preview_image_path;
+        $project->update(['image_path' => $newPreview]);
+
+        return back()->with('success', 'تم حذف الصورة.');
     }
 }

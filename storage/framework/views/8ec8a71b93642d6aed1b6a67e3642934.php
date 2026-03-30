@@ -1,9 +1,9 @@
-@extends('layouts.app')
 
-@section('title', 'إضافة للمعرض الشخصي')
-@section('header', 'إضافة للمعرض الشخصي')
 
-@section('content')
+<?php $__env->startSection('title', 'إضافة للمعرض الشخصي'); ?>
+<?php $__env->startSection('header', 'إضافة للمعرض الشخصي'); ?>
+
+<?php $__env->startSection('content'); ?>
 <div class="w-full">
     <section class="relative overflow-hidden rounded-3xl mx-4 sm:mx-6 lg:mx-8 mt-6 bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm">
         <div class="absolute inset-0 bg-gradient-to-br from-white via-brand-50/40 to-slate-50/60 dark:from-slate-900/20 dark:via-slate-900/10 dark:to-slate-900/20"></div>
@@ -21,7 +21,7 @@
                         ارفع صور، أو أضف فيديو، أو اكتب نص، أو ضع رابط خارجي—كل شيء لعرض أعمالك بشكل احترافي.
                     </p>
                 </div>
-                <a href="{{ route('student.portfolio.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-900/20 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-black hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                <a href="<?php echo e(route('student.portfolio.index')); ?>" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white dark:bg-slate-900/20 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-black hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                     <i class="fas fa-arrow-right"></i>
                     رجوع
                 </a>
@@ -30,21 +30,21 @@
     </section>
 
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 pb-10">
-        @if($errors->any())
+        <?php if($errors->any()): ?>
             <div class="rounded-2xl bg-red-50 dark:bg-red-900/25 border border-red-200 dark:border-red-800/60 px-6 py-4 mb-6">
                 <ul class="list-disc list-inside text-red-800 dark:text-red-200 text-sm font-semibold">
-                    @foreach($errors->all() as $e)
-                        <li>{{ $e }}</li>
-                    @endforeach
+                    <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $e): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <li><?php echo e($e); ?></li>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </ul>
             </div>
-        @endif
+        <?php endif; ?>
 
-        <form action="{{ route('student.portfolio.store') }}" method="POST" enctype="multipart/form-data"
+        <form action="<?php echo e(route('student.portfolio.store')); ?>" method="POST" enctype="multipart/form-data"
               class="bg-white dark:bg-slate-800/95 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-            @csrf
+            <?php echo csrf_field(); ?>
 
-            <div x-data="{ type: {{ json_encode(old('content_type', 'gallery')) }} }">
+            <div x-data="{ type: <?php echo e(json_encode(old('content_type', 'gallery'))); ?> }">
                 <div class="p-6 sm:p-8 border-b border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-800/60">
                     <h2 class="font-heading text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
                         <i class="fas fa-plus-circle text-brand-600"></i>
@@ -57,25 +57,26 @@
                     <div>
                         <label class="block text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">نوع المحتوى <span class="text-red-500">*</span></label>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            @foreach($contentTypeLabels as $k => $label)
+                            <?php $__currentLoopData = $contentTypeLabels; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $k => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <label class="relative block cursor-pointer select-none">
-                                    <input type="radio" name="content_type" value="{{ $k }}" x-model="type"
+                                    <input type="radio" name="content_type" value="<?php echo e($k); ?>" x-model="type"
                                            class="peer absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                     <span class="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border transition-all border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 pointer-events-none peer-checked:border-brand-500 peer-checked:bg-white dark:peer-checked:bg-slate-900/30 peer-checked:ring-2 peer-checked:ring-brand-200/30 text-sm font-black text-slate-800 dark:text-slate-100">
-                                        @if($k === 'gallery') <i class="fas fa-images text-brand-600"></i> @endif
-                                        @if($k === 'video') <i class="fas fa-video text-brand-600"></i> @endif
-                                        @if($k === 'text') <i class="fas fa-align-right text-brand-600"></i> @endif
-                                        @if($k === 'link') <i class="fas fa-link text-brand-600"></i> @endif
-                                        {{ $label }}
+                                        <?php if($k === 'gallery'): ?> <i class="fas fa-images text-brand-600"></i> <?php endif; ?>
+                                        <?php if($k === 'video'): ?> <i class="fas fa-video text-brand-600"></i> <?php endif; ?>
+                                        <?php if($k === 'text'): ?> <i class="fas fa-align-right text-brand-600"></i> <?php endif; ?>
+                                        <?php if($k === 'link'): ?> <i class="fas fa-link text-brand-600"></i> <?php endif; ?>
+                                        <?php echo e($label); ?>
+
                                     </span>
                                 </label>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">العنوان <span class="text-red-500">*</span></label>
-                        <input type="text" name="title" value="{{ old('title') }}" required
+                        <input type="text" name="title" value="<?php echo e(old('title')); ?>" required
                                placeholder="مثال: عرض أعمال / فيديو تعريفي / مقال / روابط"
                                class="w-full rounded-2xl border border-slate-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-900/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/30">
                     </div>
@@ -83,25 +84,25 @@
                     <div>
                         <label class="block text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">وصف مختصر (اختياري)</label>
                         <textarea name="description" rows="3" placeholder="اكتب وصفاً مختصراً للمحتوى..."
-                                  class="w-full rounded-2xl border border-slate-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-900/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/30">{{ old('description') }}</textarea>
+                                  class="w-full rounded-2xl border border-slate-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-900/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/30"><?php echo e(old('description')); ?></textarea>
                     </div>
 
                     <div x-show="type === 'text'" x-cloak>
                         <label class="block text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">النص / المحتوى</label>
                         <textarea name="content_text" rows="10" placeholder="اكتب محتوى واضح ومنظم..."
-                                  class="w-full rounded-2xl border border-slate-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-900/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/30">{{ old('content_text') }}</textarea>
+                                  class="w-full rounded-2xl border border-slate-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-900/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/30"><?php echo e(old('content_text')); ?></textarea>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div x-show="type === 'link'" x-cloak>
                             <label class="block text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">رابط خارجي (اختياري)</label>
-                            <input type="url" name="project_url" value="{{ old('project_url') }}"
+                            <input type="url" name="project_url" value="<?php echo e(old('project_url')); ?>"
                                    placeholder="https://example.com"
                                    class="w-full rounded-2xl border border-slate-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-900/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/30">
                         </div>
                         <div x-show="type === 'video'" x-cloak>
                             <label class="block text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">رابط الفيديو</label>
-                            <input type="url" name="video_url" value="{{ old('video_url') }}"
+                            <input type="url" name="video_url" value="<?php echo e(old('video_url')); ?>"
                                    placeholder="YouTube / Vimeo"
                                    class="w-full rounded-2xl border border-slate-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-900/30 focus:border-brand-500 focus:ring-2 focus:ring-brand-200/30">
                         </div>
@@ -127,7 +128,7 @@
                 </div>
 
                 <div class="px-6 sm:px-8 py-5 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/60 flex flex-col sm:flex-row gap-3 justify-end">
-                    <a href="{{ route('student.portfolio.index') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-black hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                    <a href="<?php echo e(route('student.portfolio.index')); ?>" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-black hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                         <i class="fas fa-arrow-right"></i>
                         إلغاء
                     </a>
@@ -141,7 +142,7 @@
     </section>
 </div>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var input = document.getElementById('portfolio-images');
@@ -163,5 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endpush
-@endsection
+<?php $__env->stopPush(); ?>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/student/portfolio/create.blade.php ENDPATH**/ ?>
