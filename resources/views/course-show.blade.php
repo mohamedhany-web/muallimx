@@ -22,26 +22,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>{{ $course->title ?? __('public.course_detail_title') }} - {{ __('public.site_suffix') }}</title>
     <meta name="description" content="{{ Str::limit(strip_tags($course->description ?? ''), 160) }}">
-    <meta name="theme-color" content="#0F172A">
+    <meta name="theme-color" content="#283593">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-    tailwind.config={theme:{extend:{colors:{navy:{50:'#f0f4ff',100:'#dbe4ff',200:'#bac8ff',300:'#91a7ff',400:'#748ffc',500:'#5c7cfa',600:'#4c6ef5',700:'#4263eb',800:'#3b5bdb',900:'#364fc7',950:'#0F172A'},brand:{50:'#ecfeff',100:'#cffafe',200:'#a5f3fc',300:'#67e8f9',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',700:'#0e7490',800:'#155e75',900:'#164e63'}},fontFamily:{heading:['Tajawal','IBM Plex Sans Arabic','sans-serif'],body:['IBM Plex Sans Arabic','Tajawal','sans-serif']}}}}
+    tailwind.config={theme:{extend:{colors:{navy:{50:'#f0f4ff',100:'#dbe4ff',200:'#bac8ff',300:'#91a7ff',400:'#748ffc',500:'#5c7cfa',600:'#4c6ef5',700:'#4263eb',800:'#3b5bdb',900:'#364fc7',950:'#283593'},brand:{50:'#FFF3E0',100:'#FFE0B2',200:'#FFCC80',300:'#FFB74D',400:'#FFA726',500:'#FB5607',600:'#E04D00',700:'#BF360C',800:'#8D2600',900:'#5D1A00'},mx:{navy:'#283593',indigo:'#1F2A7A',orange:'#FB5607',rose:'#FFE5F7',gold:'#FFE569'}},fontFamily:{heading:['Cairo','Tajawal','IBM Plex Sans Arabic','sans-serif'],body:['Cairo','IBM Plex Sans Arabic','Tajawal','sans-serif']}}}}
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         [x-cloak]{display:none!important}
-        *{font-family:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
-        h1,h2,h3,h4,h5,h6,.font-heading{font-family:'Tajawal','IBM Plex Sans Arabic',sans-serif}
+        *{font-family:'Cairo','IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
+        h1,h2,h3,h4,h5,h6,.font-heading{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',sans-serif}
         html{scroll-behavior:smooth;overflow-x:hidden!important}
         body{overflow-x:hidden!important;background:#fff;min-height:100vh;display:flex;flex-direction:column}
         body>*{flex-shrink:0}
 
+        .container-1200{max-width:1200px;margin-inline:auto;padding-inline:24px}
+        @media (max-width:768px){.container-1200{padding-inline:16px}}
         .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
         .reveal.revealed{opacity:1;transform:translateY(0)}
         .stagger-1{transition-delay:.05s}.stagger-2{transition-delay:.1s}.stagger-3{transition-delay:.15s}.stagger-4{transition-delay:.2s}
@@ -49,27 +51,27 @@
         .glass{background:rgba(255,255,255,.75);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(255,255,255,.5)}
         .glass-dark{background:rgba(15,23,42,.55);backdrop-filter:blur(20px) saturate(200%);-webkit-backdrop-filter:blur(20px) saturate(200%);border:1px solid rgba(255,255,255,.08)}
 
-        .text-gradient{background:linear-gradient(135deg,#06b6d4 0%,#3b82f6 50%,#8b5cf6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .text-gradient{background:linear-gradient(135deg,#FB5607 0%,#283593 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
         .btn-primary{position:relative;overflow:hidden;transition:all .4s cubic-bezier(.16,1,.3,1)}
         .btn-primary::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .6s}
         .btn-primary:hover::before{left:100%}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 20px 40px -12px rgba(6,182,212,.4)}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 20px 40px -12px rgba(251,86,7,.35)}
         .btn-outline{transition:all .3s cubic-bezier(.16,1,.3,1)}
         .btn-outline:hover{transform:translateY(-2px);box-shadow:0 10px 30px -10px rgba(15,23,42,.2)}
         .card-hover{transition:all .4s cubic-bezier(.16,1,.3,1)}
         .card-hover:hover{transform:translateY(-8px);box-shadow:0 25px 60px -15px rgba(0,0,0,.12)}
         .noise::after{content:'';position:absolute;inset:0;opacity:.02;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none}
-        #scroll-progress{position:fixed;top:0;left:0;width:0%;height:3px;background:linear-gradient(90deg,#06b6d4,#3b82f6,#8b5cf6);z-index:9999;transition:width .1s linear}
+        #scroll-progress{position:fixed;top:0;left:0;width:0%;height:3px;background:linear-gradient(90deg,#FB5607,#FFE569);z-index:9999;transition:width .1s linear}
         .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
         .line-clamp-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+        #navbar,#navbar.nav-transparent,#navbar.nav-solid{background:rgba(31,42,122,.92)!important;backdrop-filter:blur(12px)!important;-webkit-backdrop-filter:blur(12px)!important;border-bottom:1px solid rgba(255,255,255,.08)!important}
         @media(max-width:768px){.reveal{transition-duration:.5s}.stagger-1,.stagger-2,.stagger-3,.stagger-4{transition-delay:0s}}
     </style>
 </head>
-<body class="bg-white text-navy-950 antialiased font-body">
+<body class="bg-white text-slate-800 antialiased font-body">
     <div id="scroll-progress"></div>
     @include('components.unified-navbar')
-    <style>.navbar-spacer{display:none}</style>
-    <script>(function(){var n=document.getElementById('navbar');if(n){n.classList.add('nav-transparent');n.classList.remove('nav-solid');}})();</script>
+    <style>.navbar-spacer{display:block}</style>
 
     <main class="flex-1">
         {{-- Flash messages --}}
@@ -86,20 +88,17 @@
         @endforeach
 
         {{-- ══════ HERO ══════ --}}
-        <section class="relative overflow-hidden bg-navy-950 noise pt-24 pb-16 md:pb-24">
-            <div class="absolute inset-0 bg-gradient-to-br from-navy-950 via-[#0c1833] to-navy-950"></div>
-            <div class="absolute top-[-15%] {{ $isRtl?'left-[-8%]':'right-[-8%]' }} w-[500px] h-[500px] rounded-full bg-brand-500/10 blur-[120px]"></div>
-            <div class="absolute bottom-[-10%] {{ $isRtl?'right-[-5%]':'left-[-5%]' }} w-[400px] h-[400px] rounded-full bg-blue-600/8 blur-[100px]"></div>
-            <div class="absolute inset-0 opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.3) 1px,transparent 0);background-size:40px 40px"></div>
+        <section class="pt-10 sm:pt-14 lg:pt-16 pb-10 sm:pb-12 overflow-hidden relative" style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.65),transparent 28%),radial-gradient(circle at 88% 20%,rgba(40,53,147,.10),transparent 30%),linear-gradient(180deg,#f4f6ff 0%,#fbfbff 55%,#ffffff 100%)">
+            <div class="absolute inset-0 pointer-events-none opacity-40" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.08) 1px,transparent 0);background-size:30px 30px"></div>
 
-            <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 w-full">
+            <div class="container-1200 relative z-10">
                 {{-- Breadcrumb --}}
-                <nav class="reveal text-sm text-slate-400/80 mb-8 flex items-center gap-2 flex-wrap">
-                    <a href="{{ url('/') }}" class="hover:text-white transition-colors">{{ __('public.home') }}</a>
-                    <i class="fas fa-chevron-{{ $isRtl?'left':'right' }} text-[8px] text-slate-600"></i>
-                    <a href="{{ route('public.courses') }}" class="hover:text-white transition-colors">{{ __('public.courses') }}</a>
-                    <i class="fas fa-chevron-{{ $isRtl?'left':'right' }} text-[8px] text-slate-600"></i>
-                    <span class="text-white/90 font-medium">{{ Str::limit($course->title ?? '', 40) }}</span>
+                <nav class="reveal text-sm text-slate-500 mb-8 flex items-center gap-2 flex-wrap">
+                    <a href="{{ url('/') }}" class="hover:text-mx-indigo transition-colors">{{ __('public.home') }}</a>
+                    <i class="fas fa-chevron-{{ $isRtl?'left':'right' }} text-[8px] text-slate-400"></i>
+                    <a href="{{ route('public.courses') }}" class="hover:text-mx-indigo transition-colors">{{ __('public.courses') }}</a>
+                    <i class="fas fa-chevron-{{ $isRtl?'left':'right' }} text-[8px] text-slate-400"></i>
+                    <span class="text-mx-indigo font-semibold">{{ Str::limit($course->title ?? '', 40) }}</span>
                 </nav>
 
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
@@ -112,11 +111,11 @@
                             </span>
                         @endif
 
-                        <h1 class="font-heading text-3xl sm:text-4xl lg:text-[2.75rem] font-black text-white leading-[1.15] mb-5">
+                        <h1 class="font-heading text-3xl sm:text-4xl lg:text-[2.75rem] font-black text-mx-indigo leading-[1.15] mb-5">
                             {{ $course->title ?? __('public.course_title_fallback') }}
                         </h1>
 
-                        <p class="text-slate-300/90 text-base sm:text-lg leading-relaxed line-clamp-3 mb-8 max-w-2xl">
+                        <p class="text-slate-600 text-base sm:text-lg leading-relaxed line-clamp-3 mb-8 max-w-2xl">
                             {{ $course->description ?? __('public.course_desc_fallback') }}
                         </p>
 
@@ -130,7 +129,7 @@
                             ];
                             @endphp
                             @foreach($heroBadges as $badge)
-                            <div class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/90 text-sm font-medium">
+                            <div class="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-mx-indigo text-sm font-semibold shadow-sm">
                                 <i class="fas {{ $badge['icon'] }} text-{{ $badge['color'] }}-400"></i>
                                 <span>{{ $badge['label'] }}</span>
                             </div>
@@ -139,15 +138,15 @@
 
                         @if($course->instructor)
                             <div class="flex items-center gap-3 mb-8">
-                                <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                                    <i class="fas fa-chalkboard-teacher text-brand-400"></i>
+                                <div class="w-10 h-10 rounded-xl bg-[#FFE5F7] flex items-center justify-center">
+                                    <i class="fas fa-chalkboard-teacher text-[#FB5607]"></i>
                                 </div>
                                 <div>
                                     <p class="text-xs text-slate-500 font-medium">{{ __('public.instructor_label') }}</p>
                                     @if(\App\Models\InstructorProfile::where('user_id', $course->instructor->id)->where('status', 'approved')->exists())
-                                        <a href="{{ route('public.instructors.show', $course->instructor) }}" class="text-white font-bold hover:text-brand-300 transition-colors">{{ $course->instructor->name }}</a>
+                                        <a href="{{ route('public.instructors.show', $course->instructor) }}" class="text-mx-indigo font-bold hover:text-[#FB5607] transition-colors">{{ $course->instructor->name }}</a>
                                     @else
-                                        <span class="text-white font-bold">{{ $course->instructor->name }}</span>
+                                        <span class="text-mx-indigo font-bold">{{ $course->instructor->name }}</span>
                                     @endif
                                 </div>
                             </div>
@@ -184,7 +183,7 @@
                                     </a>
                                 @endif
                             @endguest
-                            <a href="{{ route('public.courses') }}" class="btn-outline inline-flex items-center gap-2 bg-white/[0.06] border-2 border-white/[0.15] text-white hover:bg-white/[0.12] px-6 py-3.5 rounded-2xl font-bold text-base backdrop-blur-sm">
+                            <a href="{{ route('public.courses') }}" class="btn-outline inline-flex items-center gap-2 bg-white border-2 border-slate-200 text-mx-indigo hover:bg-slate-50 px-6 py-3.5 rounded-2xl font-bold text-base">
                                 <i class="fas fa-arrow-{{ $isRtl?'right':'left' }} text-sm"></i>
                                 {{ __('public.all_courses') }}
                             </a>
@@ -194,32 +193,32 @@
                     {{-- Right: Price card + Video (2 cols) --}}
                     <div class="lg:col-span-2 reveal stagger-2 space-y-5">
                         {{-- Price card --}}
-                        <div class="glass-dark rounded-3xl p-6 sm:p-7 shadow-2xl">
+                        <div class="card-hover rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200 bg-white">
                             <div class="text-center mb-5">
                                 @if(($course->price ?? 0) > 0)
-                                    <div class="text-4xl sm:text-5xl font-black text-white mb-1">{{ number_format($course->price, 0) }}</div>
-                                    <div class="text-slate-400 text-sm font-medium">{{ __('public.currency_egp') }}</div>
+                                    <div class="text-4xl sm:text-5xl font-black text-mx-indigo mb-1">{{ number_format($course->price, 0) }}</div>
+                                    <div class="text-slate-500 text-sm font-medium">{{ __('public.currency_egp') }}</div>
                                 @else
-                                    <div class="text-3xl font-black text-emerald-400 flex items-center justify-center gap-2">
+                                    <div class="text-3xl font-black text-emerald-600 flex items-center justify-center gap-2">
                                         <i class="fas fa-gift text-2xl"></i>
                                         {{ __('public.free_price') }}
                                     </div>
                                 @endif
                             </div>
                             <div class="space-y-3 mb-6">
-                                <div class="flex items-center gap-3 text-white/80 text-sm">
+                                <div class="flex items-center gap-3 text-slate-700 text-sm">
                                     <i class="fas fa-check-circle text-brand-400 flex-shrink-0"></i>
                                     <span>وصول كامل مدى الحياة</span>
                                 </div>
-                                <div class="flex items-center gap-3 text-white/80 text-sm">
+                                <div class="flex items-center gap-3 text-slate-700 text-sm">
                                     <i class="fas fa-check-circle text-brand-400 flex-shrink-0"></i>
                                     <span>{{ $course->lessons_count ?? 0 }} {{ __('public.lesson_single') }} تفاعلي</span>
                                 </div>
-                                <div class="flex items-center gap-3 text-white/80 text-sm">
+                                <div class="flex items-center gap-3 text-slate-700 text-sm">
                                     <i class="fas fa-check-circle text-brand-400 flex-shrink-0"></i>
                                     <span>شهادة إتمام</span>
                                 </div>
-                                <div class="flex items-center gap-3 text-white/80 text-sm">
+                                <div class="flex items-center gap-3 text-slate-700 text-sm">
                                     <i class="fas fa-check-circle text-brand-400 flex-shrink-0"></i>
                                     <span>دعم فني مباشر</span>
                                 </div>
@@ -257,23 +256,22 @@
 
                         {{-- Video / Thumbnail --}}
                         @if($introEmbedUrl)
-                        <div class="rounded-2xl overflow-hidden border border-white/10 shadow-xl aspect-video bg-navy-900">
+                        <div class="rounded-2xl overflow-hidden border border-slate-200 shadow-xl aspect-video bg-white">
                             <iframe src="{{ $introEmbedUrl }}" class="w-full h-full" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>
                         </div>
                         @elseif($thumbUrl)
-                        <div class="rounded-2xl overflow-hidden border border-white/10 shadow-xl aspect-video bg-navy-800">
+                        <div class="rounded-2xl overflow-hidden border border-slate-200 shadow-xl aspect-video bg-white">
                             <img src="{{ $thumbUrl }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
                         </div>
                         @endif
                     </div>
                 </div>
             </div>
-            <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
         </section>
 
         {{-- ══════ COURSE DETAILS ══════ --}}
         <section class="py-20 md:py-28 bg-white">
-            <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+            <div class="container-1200">
 
                 {{-- Quick info strip --}}
                 <div class="reveal grid grid-cols-2 sm:grid-cols-4 gap-4 mb-16">
@@ -449,12 +447,12 @@
 
         {{-- ══════ CTA ══════ --}}
         <section class="py-20 md:py-28 bg-slate-50/50">
-            <div class="max-w-4xl mx-auto px-5 sm:px-8 text-center reveal">
+            <div class="container-1200 text-center reveal">
                 <h2 class="font-heading text-3xl sm:text-4xl md:text-5xl font-black text-navy-950 mb-5 leading-tight">
-                    {{ __('public.cta_programming_title') ?? 'جاهز لبدء التعلم؟' }}
+                    جاهز للانطلاق في هذا الكورس؟
                 </h2>
                 <p class="text-lg text-slate-500 leading-relaxed mb-10 font-medium">
-                    {{ __('public.cta_programming_desc') ?? 'انضم الآن وابدأ رحلتك' }}
+                    سجّل الآن وابدأ التعلم بخطوات واضحة وتجربة احترافية متكاملة.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     @auth
@@ -475,7 +473,41 @@
         </section>
     </main>
 
-    @include('components.unified-footer')
+    <footer style="background:#283593" class="text-white">
+        <div class="container-1200 pt-12 pb-8">
+            <div class="grid md:grid-cols-4 gap-8 pb-8 border-b border-white/15">
+                <div class="md:col-span-2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="w-11 h-11 rounded-xl bg-mx-orange text-white font-black flex items-center justify-center">M</span>
+                        <div>
+                            <p class="font-heading text-xl font-black">MuallimX</p>
+                            <p class="text-xs text-white/70">منصة تطوير المعلم العربي</p>
+                        </div>
+                    </div>
+                    <p class="text-sm text-white/85 leading-7 max-w-md">تجربة تعليمية عربية تركز على التمكين المهني للمعلم عبر التدريب العملي وأدوات التدريس الحديثة.</p>
+                </div>
+                <div>
+                    <h3 class="font-heading font-bold mb-3 text-white">روابط سريعة</h3>
+                    <ul class="space-y-2 text-sm text-white/85">
+                        <li><a class="hover:text-mx-gold transition-colors" href="{{ route('home') }}">الرئيسية</a></li>
+                        <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.courses') }}">الكورسات</a></li>
+                        <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.instructors.index') }}">المدربون</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-heading font-bold mb-3 text-white">تواصل معنا</h3>
+                    <ul class="space-y-2 text-sm text-white/85">
+                        <li><a class="hover:text-mx-gold transition-colors" href="mailto:info@mualimx.com">info@mualimx.com</a></li>
+                        <li><a class="hover:text-mx-gold transition-colors" href="https://wa.me/201044610507" target="_blank">واتساب: 01044610507</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="pt-5 flex flex-col sm:flex-row gap-2 justify-between text-xs text-white/75">
+                <p>&copy; {{ date('Y') }} MuallimX — جميع الحقوق محفوظة</p>
+                <p>تعليم عربي احترافي يركز على النتائج</p>
+            </div>
+        </div>
+    </footer>
     <script>
     (function(){
         function p(){var s=window.pageYOffset||document.documentElement.scrollTop,h=document.documentElement.scrollHeight-window.innerHeight,b=document.getElementById('scroll-progress');if(b)b.style.width=(h>0?(s/h)*100:0)+'%';}

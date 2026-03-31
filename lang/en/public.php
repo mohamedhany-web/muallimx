@@ -50,6 +50,8 @@ return [
     'instructors_subtitle' => 'Meet our team of instructors and experts.',
     'instructor_fallback' => 'Instructor',
     'no_instructors' => 'No instructors are currently listed.',
+    'view_instructor_profile' => 'View profile',
+    'all_instructors_link' => 'View all instructors',
     'experience' => 'Experience',
     'skills' => 'Skills',
     'instructor_courses' => 'Instructor courses',
@@ -186,6 +188,8 @@ return [
     'no_results' => 'No results',
     'no_results_hint' => 'Try different keywords or filters',
     'coming_soon_courses' => 'We are adding more training programs and courses to serve you better.',
+    'no_courses_landing' => 'No published courses yet. Check the courses page again soon.',
+    'no_rating_yet' => 'No rating yet',
     'have_account' => 'I already have an account',
 
     // Course show

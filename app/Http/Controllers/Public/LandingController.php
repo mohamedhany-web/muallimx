@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicSubject;
 use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
 use App\Models\PopupAd;
+use App\Services\InstructorMarketingRankingService;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -35,7 +37,41 @@ class LandingController extends Controller
         $featuresController = new \App\Http\Controllers\Admin\TeacherFeaturesController();
         $teacherPlans = $featuresController->getSettings();
 
-        return view('welcome', compact('popupAd', 'landingPaths', 'teacherPlans'));
+        $featuredCourses = AdvancedCourse::query()
+            ->where('is_active', true)
+            ->with(['instructor:id,name'])
+            ->withCount('lessons')
+            ->orderByDesc('is_featured')
+            ->orderByDesc('created_at')
+            ->limit(8)
+            ->get();
+
+        $fallbackIcons = ['fa-chalkboard', 'fa-robot', 'fa-camera', 'fa-list-check', 'fa-comments', 'fa-book'];
+        $homeCategories = AcademicSubject::query()
+            ->active()
+            ->withCount(['courses' => function ($q) {
+                $q->where('is_active', true);
+            }])
+            ->having('courses_count', '>', 0)
+            ->orderByDesc('courses_count')
+            ->orderBy('order')
+            ->limit(6)
+            ->get(['id', 'name', 'icon'])
+            ->values()
+            ->map(function ($subject, $index) use ($fallbackIcons) {
+                $icon = is_string($subject->icon) && str_contains($subject->icon, 'fa-')
+                    ? $subject->icon
+                    : $fallbackIcons[$index % count($fallbackIcons)];
+
+                return [
+                    'name' => $subject->name,
+                    'icon' => $icon,
+                ];
+            });
+
+        $homeInstructors = InstructorMarketingRankingService::rankApprovedProfiles();
+
+        return view('welcome', compact('popupAd', 'landingPaths', 'teacherPlans', 'featuredCourses', 'homeCategories', 'homeInstructors'));
     }
 
     /**

@@ -6,11 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>تسجيل الدخول — MuallimX</title>
+    <meta name="theme-color" content="#283593">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -19,7 +20,13 @@
             extend: {
                 colors: {
                     navy: { 950:'#0F172A' },
-                    brand: { 400:'#22d3ee', 500:'#06b6d4', 600:'#0891b2' }
+                    brand: { 400:'#22d3ee', 500:'#06b6d4', 600:'#0891b2' },
+                    mx: {
+                        navy: '#283593',
+                        indigo: '#1F2A7A',
+                        orange: '#FB5607',
+                        rose: '#FFE5F7'
+                    }
                 }
             }
         }
@@ -30,8 +37,8 @@
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
 
     <style>
-        *{font-family:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif;margin:0;padding:0;box-sizing:border-box}
-        h1,h2,h3,h4,.font-heading{font-family:'Tajawal','IBM Plex Sans Arabic',sans-serif}
+        *{font-family:'Cairo','IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif;margin:0;padding:0;box-sizing:border-box}
+        h1,h2,h3,h4,.font-heading{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',sans-serif}
         html,body{height:100%;overflow:hidden}
         @media(max-width:1023px){html,body{overflow:auto;height:auto}}
 
@@ -40,17 +47,17 @@
         .float-slow{animation:float-slow 8s ease-in-out infinite}
         .float-delayed{animation:float-delayed 10s ease-in-out infinite 2s}
 
-        .text-gradient{background:linear-gradient(135deg,#06b6d4 0%,#3b82f6 50%,#8b5cf6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .text-gradient{background:linear-gradient(135deg,#FB5607 0%,#283593 70%,#1F2A7A 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
         .input-field{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:14px;padding:14px 16px;font-size:15px;font-weight:500;color:#0f172a;transition:all .25s ease;width:100%}
         .input-field:hover{border-color:#cbd5e1;background:#f1f5f9}
-        .input-field:focus{outline:none;border-color:#06b6d4;box-shadow:0 0 0 3px rgba(6,182,212,.12);background:#fff}
+        .input-field:focus{outline:none;border-color:#283593;box-shadow:0 0 0 3px rgba(40,53,147,.12);background:#fff}
         .input-field::placeholder{color:#94a3b8}
         .input-field.has-error{border-color:#ef4444}
         .input-field.has-error:focus{box-shadow:0 0 0 3px rgba(239,68,68,.12)}
 
-        .btn-login{position:relative;overflow:hidden;background:linear-gradient(135deg,#06b6d4,#0891b2);color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;transition:all .3s ease;width:100%}
-        .btn-login:hover{transform:translateY(-1px);box-shadow:0 12px 32px -8px rgba(6,182,212,.4)}
+        .btn-login{position:relative;overflow:hidden;background:#FB5607;color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;transition:all .3s ease;width:100%}
+        .btn-login:hover{transform:translateY(-1px);box-shadow:0 12px 32px -8px rgba(251,86,7,.4)}
         .btn-login::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transition:left .5s}
         .btn-login:hover::before{left:100%}
     </style>
@@ -59,53 +66,52 @@
     <div class="flex min-h-screen lg:h-screen">
 
         {{-- ═══ Visual Panel (Desktop) ═══ --}}
-        <div class="hidden lg:flex lg:w-[55%] relative items-center justify-center overflow-hidden bg-navy-950">
-            <div class="absolute inset-0 bg-gradient-to-br from-navy-950 via-[#0c1833] to-navy-950"></div>
-            <div class="absolute top-[-15%] {{ $isRtl?'left-[-8%]':'right-[-8%]' }} w-[500px] h-[500px] rounded-full bg-brand-500/10 blur-[100px] float-slow"></div>
-            <div class="absolute bottom-[-10%] {{ $isRtl?'right-[-5%]':'left-[-5%]' }} w-[400px] h-[400px] rounded-full bg-blue-600/8 blur-[80px] float-delayed"></div>
-            <div class="absolute inset-0 opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.3) 1px,transparent 0);background-size:40px 40px"></div>
+        <div class="hidden lg:flex lg:w-[55%] relative items-center justify-center overflow-hidden" style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.45),transparent 32%),radial-gradient(circle at 88% 20%,rgba(40,53,147,.12),transparent 34%),linear-gradient(180deg,#f4f6ff 0%,#fbfbff 60%,#ffffff 100%)">
+            <div class="absolute inset-0 opacity-40" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.08) 1px,transparent 0);background-size:30px 30px"></div>
+            <div class="absolute top-[-15%] {{ $isRtl?'left-[-8%]':'right-[-8%]' }} w-[500px] h-[500px] rounded-full bg-[#283593]/10 blur-[100px] float-slow"></div>
+            <div class="absolute bottom-[-10%] {{ $isRtl?'right-[-5%]':'left-[-5%]' }} w-[400px] h-[400px] rounded-full bg-[#FB5607]/10 blur-[80px] float-delayed"></div>
 
             <div class="relative z-10 max-w-md px-10 text-center">
                 <a href="{{ route('home') }}" class="inline-flex items-center gap-3 mb-10 group">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/25 group-hover:shadow-cyan-500/40 transition-shadow">
+                    <div class="w-12 h-12 rounded-xl bg-[#FB5607] flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-shadow">
                         <span class="text-white font-black text-xl">M</span>
                     </div>
-                    <span class="text-white font-extrabold text-2xl" style="font-family:Tajawal,sans-serif">MuallimX</span>
+                    <span class="text-mx-indigo font-extrabold text-2xl">MuallimX</span>
                 </a>
 
-                <h1 class="font-heading text-3xl xl:text-4xl font-black text-white leading-tight mb-5">
+                <h1 class="font-heading text-3xl xl:text-4xl font-black text-mx-indigo leading-tight mb-5">
                     مرحبًا بعودتك
                     <br><span class="text-gradient">لعالم التعليم الأونلاين</span>
                 </h1>
-                <p class="text-slate-400 text-base leading-relaxed mb-10">
+                <p class="text-slate-600 text-base leading-relaxed mb-10">
                     سجّل دخولك واستمر في تطوير مهاراتك، الوصول لأدوات AI، واكتشاف فرص عمل جديدة.
                 </p>
 
                 <div class="space-y-4">
-                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] backdrop-blur-sm">
-                        <span class="w-10 h-10 rounded-xl bg-brand-500/15 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-wand-magic-sparkles text-brand-400"></i>
+                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                        <span class="w-10 h-10 rounded-xl bg-[#FFE5F7] flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-wand-magic-sparkles text-[#FB5607]"></i>
                         </span>
                         <div class="text-{{ $isRtl?'right':'left' }}">
-                            <p class="text-white font-bold text-sm">مساعد AI للتحضير</p>
+                            <p class="text-mx-indigo font-bold text-sm">مساعد AI للتحضير</p>
                             <p class="text-slate-500 text-xs">وفّر +5 ساعات أسبوعياً</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] backdrop-blur-sm">
-                        <span class="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-briefcase text-emerald-400"></i>
+                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                        <span class="w-10 h-10 rounded-xl bg-[#EFF2FF] flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-briefcase text-[#283593]"></i>
                         </span>
                         <div class="text-{{ $isRtl?'right':'left' }}">
-                            <p class="text-white font-bold text-sm">فرص عمل حقيقية</p>
+                            <p class="text-mx-indigo font-bold text-sm">فرص عمل حقيقية</p>
                             <p class="text-slate-500 text-xs">+500 معلم وجد عمل من خلالنا</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.04] border border-white/[0.06] backdrop-blur-sm">
-                        <span class="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-graduation-cap text-purple-400"></i>
+                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+                        <span class="w-10 h-10 rounded-xl bg-[#FFF7ED] flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-graduation-cap text-[#FB5607]"></i>
                         </span>
                         <div class="text-{{ $isRtl?'right':'left' }}">
-                            <p class="text-white font-bold text-sm">120+ برنامج تدريبي</p>
+                            <p class="text-mx-indigo font-bold text-sm">120+ برنامج تدريبي</p>
                             <p class="text-slate-500 text-xs">دبلومات وكورسات عملية</p>
                         </div>
                     </div>
@@ -128,7 +134,7 @@
 
             <div class="w-full max-w-md">
                 <div class="text-center lg:text-{{ $isRtl?'right':'left' }} mb-8">
-                    <h2 class="font-heading text-2xl sm:text-3xl font-black text-navy-950 mb-2">
+                    <h2 class="font-heading text-2xl sm:text-3xl font-black text-mx-indigo mb-2">
                         تسجيل الدخول
                     </h2>
                     <p class="text-slate-500 text-sm sm:text-base">أدخل بياناتك للوصول لحسابك</p>
@@ -184,7 +190,7 @@
                             <input type="checkbox" name="remember" class="w-4 h-4 rounded-md border-slate-300 text-brand-500 focus:ring-brand-500/20 transition-colors">
                             <span class="text-sm text-slate-500 group-hover:text-slate-700 transition-colors">تذكّرني</span>
                         </label>
-                        <a href="{{ route('password.request') }}" class="text-sm font-semibold text-brand-500 hover:text-brand-600 transition-colors">
+                        <a href="{{ route('password.request') }}" class="text-sm font-semibold text-[#283593] hover:text-[#1F2A7A] transition-colors">
                             نسيت كلمة المرور؟
                         </a>
                     </div>
@@ -200,7 +206,7 @@
                 <div class="mt-8 pt-6 border-t border-slate-100 text-center">
                     <p class="text-sm text-slate-500">
                         ليس لديك حساب؟
-                        <a href="{{ route('register') }}" class="font-bold text-brand-500 hover:text-brand-600 transition-colors">أنشئ حسابك مجاناً</a>
+                        <a href="{{ route('register') }}" class="font-bold text-[#283593] hover:text-[#1F2A7A] transition-colors">أنشئ حسابك مجاناً</a>
                     </p>
                 </div>
 

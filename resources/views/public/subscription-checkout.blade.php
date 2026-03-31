@@ -7,8 +7,10 @@
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>دفع اشتراك الباقة - {{ $plan['label'] ?? 'الباقة' }} - {{ config('app.name') }}</title>
+    <meta name="theme-color" content="#283593">
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -17,11 +19,12 @@
             extend: {
                 colors: {
                     navy: { 950:'#020617' },
-                    brand: { 50:'#ecfeff',100:'#cffafe',200:'#a5f3fc',300:'#67e8f9',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',700:'#0e7490',800:'#155e75',900:'#164e63' }
+                    brand: { 50:'#FFF3E0',100:'#FFE0B2',200:'#FFCC80',300:'#FFB74D',400:'#FFA726',500:'#FB5607',600:'#E04D00',700:'#BF360C',800:'#8D2600',900:'#5D1A00' },
+                    mx: { navy:'#283593', indigo:'#1F2A7A', orange:'#FB5607', rose:'#FFE5F7', gold:'#FFE569', soft:'#F7F8FF' }
                 },
                 fontFamily: {
-                    heading: ['Tajawal','IBM Plex Sans Arabic','sans-serif'],
-                    body: ['IBM Plex Sans Arabic','Tajawal','sans-serif'],
+                    heading: ['Cairo','Tajawal','IBM Plex Sans Arabic','sans-serif'],
+                    body: ['Cairo','IBM Plex Sans Arabic','Tajawal','sans-serif'],
                 }
             }
         }
@@ -29,71 +32,74 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
-        *{font-family:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
-        h1,h2,h3,h4,h5,h6,.font-heading{font-family:'Tajawal','IBM Plex Sans Arabic',sans-serif}
+        *{font-family:'Cairo','IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
+        h1,h2,h3,h4,h5,h6,.font-heading{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',sans-serif}
         html{scroll-behavior:smooth;overflow-x:hidden}
         body{background:#fff;overflow-x:hidden}
+        .container-1200{max-width:1200px;margin-inline:auto;padding-inline:24px}
+        @media (max-width:768px){.container-1200{padding-inline:16px}}
         .card-hover{transition:all .4s cubic-bezier(.16,1,.3,1)}
         .card-hover:hover{transform:translateY(-6px);box-shadow:0 20px 40px -18px rgba(15,23,42,.35)}
         .btn-primary{position:relative;overflow:hidden;transition:all .3s cubic-bezier(.16,1,.3,1)}
         .btn-primary::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);transition:left .5s}
         .btn-primary:hover::before{left:100%}
         .btn-primary:hover{transform:translateY(-1px)}
+        #navbar,#navbar.nav-transparent,#navbar.nav-solid{
+            background:rgba(31,42,122,.92)!important;
+            backdrop-filter:blur(12px)!important;
+            -webkit-backdrop-filter:blur(12px)!important;
+            border-bottom:1px solid rgba(255,255,255,.08)!important;
+        }
     </style>
 </head>
 <body class="bg-white text-slate-900 antialiased">
     @include('components.unified-navbar')
-    <style>.navbar-spacer{display:none}</style>
-    <script>(function(){var n=document.getElementById('navbar');if(n){n.classList.add('nav-transparent');n.classList.remove('nav-solid');}})();</script>
+    <style>.navbar-spacer{display:block}</style>
 
     <main class="flex-1">
         {{-- Hero --}}
-        <section class="relative min-h-[50vh] flex items-center overflow-hidden bg-navy-950"
-                 style="background: radial-gradient(circle at top, rgba(34,211,238,0.12), transparent 60%), linear-gradient(135deg,#020617 0%,#020617 40%,#0f172a 100%);">
-            <div class="absolute inset-0 opacity-[0.03]"
-                 style="background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.4) 1px,transparent 0);background-size:32px 32px"></div>
-            <div class="absolute top-[-20%] {{ $isRtl ? 'left-[-10%]' : 'right-[-10%]' }} w-[480px] h-[480px] rounded-full bg-cyan-500/15 blur-[110px]"></div>
-            <div class="absolute bottom-[-15%] {{ $isRtl ? 'right-[-10%]' : 'left-[-10%]' }} w-[520px] h-[520px] rounded-full bg-blue-600/10 blur-[120px]"></div>
+        <section class="pt-10 sm:pt-14 lg:pt-16 pb-10 sm:pb-12 overflow-hidden relative"
+                 style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.65),transparent 28%),radial-gradient(circle at 88% 20%,rgba(40,53,147,.10),transparent 30%),linear-gradient(180deg,#f4f6ff 0%,#fbfbff 55%,#ffffff 100%)">
+            <div class="absolute inset-0 pointer-events-none opacity-40" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.08) 1px,transparent 0);background-size:30px 30px"></div>
 
-            <div class="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 lg:px-12 pt-28 pb-16 w-full text-center">
-                <nav class="text-sm text-slate-400 mb-6 flex items-center justify-center gap-2 flex-wrap">
-                    <a href="{{ url('/') }}" class="hover:text-white transition-colors">الرئيسية</a>
+            <div class="container-1200 relative z-10 text-center">
+                <nav class="text-sm text-slate-500 mb-6 flex items-center justify-center gap-2 flex-wrap">
+                    <a href="{{ url('/') }}" class="hover:text-mx-indigo transition-colors">الرئيسية</a>
                     <span>/</span>
-                    <a href="{{ route('public.pricing') }}" class="hover:text-white transition-colors">الأسعار والباقات</a>
+                    <a href="{{ route('public.pricing') }}" class="hover:text-mx-indigo transition-colors">الأسعار والباقات</a>
                     <span>/</span>
-                    <span class="text-white font-medium">دفع الاشتراك</span>
+                    <span class="text-mx-indigo font-semibold">دفع الاشتراك</span>
                 </nav>
-                <div class="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white/[0.06] border border-white/[0.12] text-brand-300 text-sm font-medium backdrop-blur-sm mb-6">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <div class="inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-sm font-medium mb-6" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
+                    <span class="w-2 h-2 rounded-full bg-[#FB5607] animate-pulse"></span>
                     تحويل مبلغ الاشتراك ثم رفع إيصال الدفع
                 </div>
-                <h1 class="font-heading text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-white mb-4">
+                <h1 class="font-heading text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-mx-indigo mb-4">
                     دفع اشتراك الباقة
                     <br>
-                    <span class="bg-clip-text text-transparent"
-                          style="background-image:linear-gradient(135deg,#22d3ee 0%,#3b82f6 40%,#8b5cf6 100%);">
+                    <span style="color:#FB5607">
                         {{ $plan['label'] ?? 'باقة المعلم' }}
                     </span>
                 </h1>
-                <p class="text-lg text-slate-200/90 max-w-2xl mx-auto">
-                    قم بتحويل <strong class="text-white">{{ number_format($plan['price'] ?? 0, 0) }} ج.م</strong> إلى أحد الحسابات أدناه، ثم ارفع صورة إيصال الدفع ليتم مراجعته وتفعيل اشتراكك.
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+                    قم بتحويل <strong class="text-mx-indigo">{{ number_format($plan['price'] ?? 0, 0) }} ج.م</strong> إلى أحد الحسابات أدناه، ثم ارفع صورة إيصال الدفع ليتم مراجعته وتفعيل اشتراكك.
                 </p>
             </div>
         </section>
 
         {{-- محتوى الدفع --}}
         <section class="py-16 md:py-20 bg-white">
-            <div class="max-w-6xl mx-auto px-5 sm:px-8 lg:px-12">
+            <div class="container-1200">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {{-- ملخص المبلغ والباقة --}}
                     <div class="lg:col-span-1">
                         <div class="bg-white rounded-3xl shadow-lg border border-slate-100 p-6 sticky top-24 card-hover">
                             <h3 class="font-heading text-xl font-black text-slate-900 mb-4 flex items-center gap-2">
-                                <i class="fas fa-receipt text-sky-500"></i>
+                                <i class="fas fa-receipt text-[#FB5607]"></i>
                                 ملخص الدفع
                             </h3>
                             <div class="rounded-2xl bg-amber-50 border border-amber-200 p-4 mb-4">
@@ -133,7 +139,7 @@
                                     @foreach($wallets as $w)
                                         <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
                                             <div class="flex items-center gap-3 mb-2">
-                                                <span class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-sky-100 text-sky-600">
+                                                <span class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[#FFE5F7] text-[#283593]">
                                                     <i class="fas fa-{{ $w->type === 'bank_transfer' ? 'university' : 'wallet' }}"></i>
                                                 </span>
                                                 <span class="font-bold text-slate-900">{{ $w->name ?? \App\Models\Wallet::typeLabel($w->type) }}</span>
@@ -161,8 +167,8 @@
                         {{-- نموذج رفع إيصال الدفع --}}
                         <div class="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden card-hover">
                             <div class="px-6 py-4 bg-slate-50 border-b border-slate-100">
-                                <h3 class="font-heading text-lg font-black text-slate-900 flex items-center gap-2">
-                                    <i class="fas fa-file-invoice text-sky-500"></i>
+                                    <h3 class="font-heading text-lg font-black text-slate-900 flex items-center gap-2">
+                                        <i class="fas fa-file-invoice text-[#FB5607]"></i>
                                     بعد التحويل ارفع إيصال الدفع
                                 </h3>
                                 <p class="text-xs text-slate-600 mt-1">سيظهر طلبك في لوحة الإدارة لمراجعة الدفع وتفعيل الاشتراك.</p>
@@ -187,7 +193,7 @@
 
                                     <div>
                                         <label class="block text-sm font-bold text-slate-700 mb-2">طريقة الدفع <span class="text-rose-500">*</span></label>
-                                        <select name="payment_method" id="payment_method" required class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                        <select name="payment_method" id="payment_method" required class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-[#283593] focus:border-[#283593]">
                                             <option value="bank_transfer" {{ old('payment_method', $wallets->count() > 0 ? '' : 'bank_transfer') === 'bank_transfer' ? 'selected' : '' }}>تحويل بنكي</option>
                                             @if($wallets->count() > 0)
                                             <option value="wallet" {{ old('payment_method') === 'wallet' ? 'selected' : '' }}>محفظة إلكترونية</option>
@@ -198,7 +204,7 @@
                                     @if($wallets->count() > 0)
                                         <div id="wallet_id_wrap" class="{{ old('payment_method') === 'wallet' ? '' : 'hidden' }}">
                                             <label class="block text-sm font-bold text-slate-700 mb-2">المحفظة / الحساب الذي تم التحويل إليه <span class="text-rose-500">*</span></label>
-                                            <select name="wallet_id" id="wallet_id" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                            <select name="wallet_id" id="wallet_id" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-[#283593] focus:border-[#283593]">
                                                 <option value="">اختر المحفظة أو الحساب</option>
                                                 @foreach($wallets as $w)
                                                     <option value="{{ $w->id }}" {{ (string)old('wallet_id') === (string)$w->id ? 'selected' : '' }}>
@@ -213,16 +219,16 @@
                                     <div>
                                         <label class="block text-sm font-bold text-slate-700 mb-2">صورة إيصال الدفع <span class="text-rose-500">*</span></label>
                                         <input type="file" name="payment_proof" accept="image/jpeg,image/png,image/jpg" required
-                                               class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-sky-50 file:text-sky-700 file:font-semibold">
+                                               class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-[#283593] focus:border-[#283593] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#FFE5F7] file:text-[#283593] file:font-semibold">
                                         <p class="text-xs text-slate-500 mt-1">صيغ مقبولة: jpeg, png, jpg — حجم أقصى 2 ميجابايت</p>
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-bold text-slate-700 mb-2">ملاحظات (اختياري)</label>
-                                        <textarea name="notes" rows="2" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="أي ملاحظات إضافية...">{{ old('notes') }}</textarea>
+                                        <textarea name="notes" rows="2" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-[#283593] focus:border-[#283593]" placeholder="أي ملاحظات إضافية...">{{ old('notes') }}</textarea>
                                     </div>
 
-                                    <button type="submit" class="btn-primary w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-base shadow-lg">
+                                    <button type="submit" class="btn-primary w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-[#FB5607] hover:bg-[#e84d00] text-white font-bold text-base shadow-lg">
                                         <i class="fas fa-paper-plane"></i>
                                         إرسال إيصال الدفع
                                     </button>
@@ -235,7 +241,7 @@
                     </div>
                 </div>
 
-                <a href="{{ route('public.pricing') }}" class="mt-8 inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-semibold transition-colors">
+                <a href="{{ route('public.pricing') }}" class="mt-8 inline-flex items-center gap-2 text-[#283593] hover:text-[#1f2a7a] font-semibold transition-colors">
                     <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}"></i>
                     العودة إلى الأسعار والباقات
                 </a>

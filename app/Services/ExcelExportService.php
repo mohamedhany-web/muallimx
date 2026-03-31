@@ -332,10 +332,6 @@ class ExcelExportService
         for ($col = 'A'; $col <= $highestColumn; $col++) {
             $this->sheet->getColumnDimension($col)->setAutoSize(true);
         }
-
-        // حماية الورقة
-        $this->sheet->getProtection()->setSheet(true);
-        $this->sheet->getProtection()->setPassword('teacher_assist_platform');
         
         // إعداد Writer
         $writer = new Xlsx($this->spreadsheet);

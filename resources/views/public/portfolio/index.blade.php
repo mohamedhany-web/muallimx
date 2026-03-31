@@ -9,303 +9,267 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>{{ __('public.portfolio_page_title') }} - {{ __('public.site_suffix') }}</title>
     <meta name="description" content="{{ __('public.portfolio_subtitle') }}">
-    <meta name="theme-color" content="#0F172A">
+    <meta name="theme-color" content="#283593">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-    tailwind.config={theme:{extend:{colors:{navy:{50:'#f0f4ff',100:'#dbe4ff',200:'#bac8ff',300:'#91a7ff',400:'#748ffc',500:'#5c7cfa',600:'#4c6ef5',700:'#4263eb',800:'#3b5bdb',900:'#364fc7',950:'#0F172A'},brand:{50:'#ecfeff',100:'#cffafe',200:'#a5f3fc',300:'#67e8f9',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',700:'#0e7490',800:'#155e75',900:'#164e63'}},fontFamily:{heading:['Tajawal','IBM Plex Sans Arabic','sans-serif'],body:['IBM Plex Sans Arabic','Tajawal','sans-serif']}}}}
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    mx: {
+                        navy: '#283593',
+                        indigo: '#1F2A7A',
+                        orange: '#FB5607',
+                        cream: '#FFF7ED',
+                        rose: '#FFE5F7',
+                        gold: '#FFE569',
+                        soft: '#F7F8FF'
+                    }
+                },
+                fontFamily: {
+                    heading: ['Cairo','Tajawal','IBM Plex Sans Arabic','sans-serif'],
+                    body: ['Cairo','IBM Plex Sans Arabic','Tajawal','sans-serif'],
+                }
+            }
+        }
+    };
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
     <style>
-        [x-cloak]{display:none!important}
-        *{font-family:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
-        h1,h2,h3,h4,h5,h6,.font-heading{font-family:'Tajawal','IBM Plex Sans Arabic',sans-serif}
-        html{scroll-behavior:smooth;overflow-x:hidden!important}
-        body{overflow-x:hidden!important;background:#fff;min-height:100vh;display:flex;flex-direction:column}
-        body>*{flex-shrink:0}
-        .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+        [x-cloak]{display:none !important}
+        *{font-family:'Cairo','IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
+        h1,h2,h3,h4,h5,h6,.font-heading{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',sans-serif}
+        html{scroll-behavior:smooth;overflow-x:hidden}
+        body{overflow-x:hidden;background:#fff;min-height:100vh;display:flex;flex-direction:column}
+        .container-1200{max-width:1200px;margin-inline:auto;padding-inline:24px}
+        @media (max-width: 768px){.container-1200{padding-inline:16px}}
+        .reveal{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s ease}
         .reveal.revealed{opacity:1;transform:translateY(0)}
-        .stagger-1{transition-delay:.05s}.stagger-2{transition-delay:.1s}.stagger-3{transition-delay:.15s}.stagger-4{transition-delay:.2s}
-        .text-gradient{background:linear-gradient(135deg,#06b6d4 0%,#3b82f6 50%,#8b5cf6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-        .btn-primary{position:relative;overflow:hidden;transition:all .4s cubic-bezier(.16,1,.3,1)}
-        .btn-primary::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transition:left .6s}
-        .btn-primary:hover::before{left:100%}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 20px 40px -12px rgba(6,182,212,.4)}
-        .btn-outline{transition:all .3s cubic-bezier(.16,1,.3,1)}
-        .btn-outline:hover{transform:translateY(-2px);box-shadow:0 10px 30px -10px rgba(15,23,42,.2)}
-        .card-hover{transition:all .4s cubic-bezier(.16,1,.3,1)}
-        .card-hover:hover{transform:translateY(-8px);box-shadow:0 25px 60px -15px rgba(0,0,0,.15)}
-        .noise::after{content:'';position:absolute;inset:0;opacity:.02;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none}
-        #scroll-progress{position:fixed;top:0;left:0;width:0%;height:3px;background:linear-gradient(90deg,#06b6d4,#3b82f6,#8b5cf6);z-index:9999;transition:width .1s linear}
+        .s1{transition-delay:.06s}.s2{transition-delay:.12s}.s3{transition-delay:.18s}.s4{transition-delay:.24s}
+        .btn-primary{padding:12px 24px;border-radius:16px;font-weight:700;color:#fff;background:#FB5607;transition:transform .2s ease,box-shadow .2s ease}
+        .btn-primary:hover{transform:scale(1.02);box-shadow:0 12px 28px -10px rgba(251,86,7,.45)}
+        .btn-secondary{padding:12px 24px;border-radius:16px;border:1px solid #d6daea;color:#1F2A7A;background:#fff;transition:background .2s ease}
+        .btn-secondary:hover{background:#f8f9ff}
+        .card-base{border-radius:18px;padding:20px;box-shadow:0 8px 24px -18px rgba(31,42,122,.25);border:1px solid #eceef8;background:#fff}
+        .hover-lift{transition:transform .25s ease,box-shadow .25s ease}
+        .hover-lift:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 20px 35px -20px rgba(31,42,122,.35)}
         .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-        @media(max-width:768px){.reveal{transition-duration:.5s}.stagger-1,.stagger-2,.stagger-3,.stagger-4{transition-delay:0s}}
+        #scroll-progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,#FB5607,#FFE569);z-index:9999}
+        .arrow-link::after{content:'\f177';font-family:'Font Awesome 6 Free';font-weight:900;margin-inline-start:8px}
+        [dir='ltr'] .arrow-link::after{content:'\f178'}
+        .navbar-spacer{display:block!important}
+        #navbar,#navbar.nav-transparent,#navbar.nav-solid{
+            background:rgba(31,42,122,.92)!important;
+            backdrop-filter:blur(12px)!important;
+            -webkit-backdrop-filter:blur(12px)!important;
+            border-bottom:1px solid rgba(255,255,255,.08)!important;
+        }
     </style>
 </head>
-<body class="bg-white text-navy-950 antialiased font-body">
-    <div id="scroll-progress"></div>
-    @include('components.unified-navbar')
-    <style>.navbar-spacer{display:none}</style>
-    <script>(function(){var n=document.getElementById('navbar');if(n){n.classList.add('nav-transparent');n.classList.remove('nav-solid');}})();</script>
+<body class="font-body text-slate-800">
+<div id="scroll-progress"></div>
+@include('components.unified-navbar')
 
-    <main class="flex-1">
-        {{-- ══════ HERO ══════ --}}
-        <section class="relative min-h-[60vh] flex items-center overflow-hidden bg-navy-950 noise">
-            <div class="absolute inset-0 bg-gradient-to-br from-navy-950 via-[#0c1833] to-navy-950"></div>
-            <div class="absolute top-[-20%] {{ $isRtl?'left-[-10%]':'right-[-10%]' }} w-[600px] h-[600px] rounded-full bg-purple-500/10 blur-[120px]"></div>
-            <div class="absolute bottom-[-10%] {{ $isRtl?'right-[-5%]':'left-[-5%]' }} w-[500px] h-[500px] rounded-full bg-brand-600/8 blur-[100px]"></div>
-            <div class="absolute inset-0 opacity-[0.03]" style="background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.3) 1px,transparent 0);background-size:40px 40px"></div>
+<main class="flex-1">
+    <section class="pt-10 sm:pt-14 lg:pt-16 pb-10 sm:pb-12 overflow-hidden relative" style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.65),transparent 28%),radial-gradient(circle at 88% 20%,rgba(40,53,147,.10),transparent 30%),linear-gradient(180deg,#f4f6ff 0%,#fbfbff 55%,#ffffff 100%)">
+        <div class="absolute inset-0 pointer-events-none opacity-40" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.08) 1px,transparent 0);background-size:30px 30px"></div>
+        <div class="container-1200 relative z-10">
+            <div class="max-w-4xl mx-auto text-center reveal">
+                <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-6" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
+                    <i class="fas fa-code"></i> {{ __('public.portfolio_page_title') }}
+                </span>
+                <h1 class="font-heading text-[2rem] sm:text-[2.8rem] lg:text-[3.35rem] leading-[1.22] font-black text-mx-indigo mb-5">{{ __('public.portfolio_heading') }}</h1>
+                <p class="text-slate-600 text-base sm:text-lg leading-8 mb-7 max-w-3xl mx-auto">{{ __('public.portfolio_subtitle') }}</p>
+            </div>
 
-            <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 pt-28 pb-16 md:pt-36 md:pb-20 w-full">
-                <div class="text-center max-w-4xl mx-auto">
-                    <div class="reveal">
-                        <span class="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white/[0.06] border border-white/[0.1] text-brand-300 text-sm font-medium backdrop-blur-sm">
-                            <i class="fas fa-code text-brand-400"></i>
-                            {{ __('public.portfolio_page_title') }}
+            @if($learningPaths->count() > 0)
+            <div class="flex flex-wrap justify-center gap-2 sm:gap-3 reveal s2">
+                <a href="{{ route('public.portfolio.index') }}" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition {{ !$categoryId ? 'bg-[#283593] text-white border-[#283593]' : 'bg-white text-[#1F2A7A] border-slate-200 hover:bg-slate-50' }}">
+                    <i class="fas fa-th-large {{ $isRtl ? 'ml-1.5' : 'mr-1.5' }} text-[11px]"></i>{{ __('public.all') }}
+                </a>
+                @foreach($learningPaths as $path)
+                <a href="{{ route('public.portfolio.index', ['path' => $path->id]) }}" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition {{ (string)$categoryId === (string)$path->id ? 'bg-[#283593] text-white border-[#283593]' : 'bg-white text-[#1F2A7A] border-slate-200 hover:bg-slate-50' }}">{{ $path->name }}</a>
+                @endforeach
+            </div>
+            @endif
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-8 reveal s3">
+                <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
+                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo">{{ $projects->total() }}</p>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-1">مشروع منشور</p>
+                </article>
+                <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#FFE5F7] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
+                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo">{{ $learningPaths->count() }}</p>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-1">مسار تعليمي</p>
+                </article>
+                <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#fffbea] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
+                    <p class="text-3xl sm:text-4xl font-black text-[#FB5607]">{{ $projects->count() }}</p>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-1">نتائج هذه الصفحة</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-14 sm:py-16 bg-white">
+        <div class="container-1200">
+            @if($projects->count() > 0)
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                @foreach($projects as $idx => $project)
+                <a href="{{ route('public.portfolio.show', $project->id) }}" class="card-base hover-lift reveal s{{ ($idx % 4) + 1 }} p-0 overflow-hidden block group">
+                    <div class="relative aspect-video overflow-hidden" style="background:linear-gradient(135deg,#e9edff,#f8f9ff)">
+                        @if($project->image_path)
+                        <img src="{{ asset($project->image_path) }}" alt="{{ $project->title }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                        @else
+                        <div class="absolute inset-0 flex items-center justify-center text-[#283593]/65">
+                            @if($project->content_type === \App\Models\PortfolioProject::CONTENT_VIDEO)
+                            <i class="fas fa-video text-4xl"></i>
+                            @elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_TEXT)
+                            <i class="fas fa-align-right text-4xl"></i>
+                            @elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_LINK)
+                            <i class="fas fa-link text-4xl"></i>
+                            @else
+                            <i class="fas fa-code text-4xl"></i>
+                            @endif
+                        </div>
+                        @endif
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+                        @if($project->project_type)
+                        <span class="absolute top-3 {{ $isRtl ? 'right' : 'left' }}-3 px-3 py-1 rounded-full text-[11px] font-bold bg-[#283593] text-white">{{ $project->project_type }}</span>
+                        @endif
+                    </div>
+
+                    <div class="p-5">
+                        @if($project->advancedCourse)
+                        <span class="inline-flex items-center gap-1.5 text-[11px] text-[#FB5607] bg-[#FFF7ED] px-3 py-1 rounded-full font-semibold mb-3">
+                            <i class="fas fa-graduation-cap text-[9px]"></i>{{ $project->advancedCourse->title }}
                         </span>
-                    </div>
-                    <h1 class="reveal stagger-1 font-heading text-4xl sm:text-5xl md:text-6xl font-black leading-[1.15] text-white mt-6">
-                        {{ __('public.portfolio_heading') }}
-                    </h1>
-                    <p class="reveal stagger-2 text-lg sm:text-xl text-slate-300/90 max-w-2xl mx-auto leading-relaxed font-light mt-5">
-                        {{ __('public.portfolio_subtitle') }}
-                    </p>
+                        @elseif($project->academicYear)
+                        <span class="inline-flex items-center gap-1.5 text-[11px] text-[#283593] bg-[#EFF2FF] px-3 py-1 rounded-full font-semibold mb-3">
+                            <i class="fas fa-bookmark text-[9px]"></i>{{ $project->academicYear->name }}
+                        </span>
+                        @endif
 
-                    {{-- Category filter pills --}}
-                    @if($learningPaths->count() > 0)
-                    <div class="reveal stagger-3 mt-10 flex flex-wrap justify-center gap-2.5">
-                        <a href="{{ route('public.portfolio.index') }}"
-                           class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 {{ !$categoryId ? 'bg-gradient-to-l from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-600/25' : 'bg-white/[0.06] border border-white/[0.1] text-white/80 hover:bg-white/[0.12] backdrop-blur-sm' }}">
-                            <i class="fas fa-th-large {{ $isRtl?'ml-1.5':'mr-1.5' }} text-xs"></i>{{ __('public.all') }}
-                        </a>
-                        @foreach($learningPaths as $path)
-                        <a href="{{ route('public.portfolio.index', ['path' => $path->id]) }}"
-                           class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 {{ $categoryId == $path->id ? 'bg-gradient-to-l from-brand-500 to-brand-600 text-white shadow-lg shadow-brand-600/25' : 'bg-white/[0.06] border border-white/[0.1] text-white/80 hover:bg-white/[0.12] backdrop-blur-sm' }}">
-                            {{ $path->name }}
-                        </a>
-                        @endforeach
+                        <h3 class="font-heading text-lg font-extrabold text-mx-indigo leading-snug mb-2 line-clamp-2">{{ $project->title }}</h3>
+                        <p class="text-sm text-slate-500 leading-7 line-clamp-2 mb-4">{{ Str::limit(strip_tags($project->description ?? ''), 110) }}</p>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                            <div class="flex items-center gap-2 min-w-0">
+                                @if($project->user->profile_image ?? null)
+                                <img src="{{ $project->user->profile_image_url }}" alt="" class="w-8 h-8 rounded-lg object-cover flex-shrink-0">
+                                @else
+                                <div class="w-8 h-8 rounded-lg bg-[#283593] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">{{ mb_substr($project->user->name ?? 'ط', 0, 1) }}</div>
+                                @endif
+                                <span class="text-sm font-semibold text-slate-700 truncate">{{ $project->user->name ?? __('public.student_fallback') }}</span>
+                            </div>
+                            <span class="text-[#FB5607] text-xs font-bold arrow-link">عرض التفاصيل</span>
+                        </div>
                     </div>
+                </a>
+                @endforeach
+            </div>
+
+            @if($projects->hasPages())
+            <div class="mt-10 flex justify-center">
+                <nav class="flex items-center gap-2">
+                    @if($projects->onFirstPage())
+                    <span class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-sm cursor-not-allowed"><i class="fas fa-chevron-{{ $isRtl ? 'right' : 'left' }}"></i></span>
+                    @else
+                    <a href="{{ $projects->previousPageUrl() }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-[#1F2A7A] hover:bg-slate-50 flex items-center justify-center text-sm"><i class="fas fa-chevron-{{ $isRtl ? 'right' : 'left' }}"></i></a>
                     @endif
 
-                    {{-- Stats --}}
-                    <div class="reveal stagger-4 flex flex-wrap justify-center gap-6 mt-8">
-                        <div class="flex items-center gap-2 text-white/70 text-sm">
-                            <span class="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center"><i class="fas fa-project-diagram text-purple-400 text-xs"></i></span>
-                            <span><span class="font-bold text-white">{{ $projects->total() }}</span> مشروع</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
-        </section>
-
-        {{-- ══════ PROJECTS GRID ══════ --}}
-        <section class="py-20 md:py-28 bg-white">
-            <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
-                @if($projects->count() > 0)
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                    @foreach($projects as $idx => $project)
-                    <a href="{{ route('public.portfolio.show', $project->id) }}"
-                       class="reveal stagger-{{ min($idx + 1, 4) }} card-hover group block rounded-3xl bg-white border border-slate-100 overflow-hidden shadow-sm">
-
-                        {{-- Media preview --}}
-                        <div class="relative aspect-video overflow-hidden bg-gradient-to-br from-purple-500 via-blue-500 to-brand-600">
-                            @if($project->image_path)
-                                <img src="{{ asset($project->image_path) }}" alt="{{ $project->title }}"
-                                     class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" loading="lazy">
-                            @elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_VIDEO)
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
-                                        <i class="fas fa-video text-white/80 text-2xl"></i>
-                                    </div>
-                                </div>
-                            @elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_TEXT)
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
-                                        <i class="fas fa-align-right text-white/80 text-2xl"></i>
-                                    </div>
-                                </div>
-                            @elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_LINK)
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
-                                        <i class="fas fa-link text-white/80 text-2xl"></i>
-                                    </div>
-                                </div>
-                            @else
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
-                                        <i class="fas fa-code text-white/70 text-2xl"></i>
-                                    </div>
-                                </div>
-                            @endif
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
-
-                            {{-- Project type badge --}}
-                            @if($project->project_type)
-                            <span class="absolute top-3 {{ $isRtl?'right':'left' }}-3 px-3 py-1.5 rounded-lg bg-purple-500/90 text-white text-[11px] font-bold shadow-lg backdrop-blur-sm">
-                                {{ $project->project_type }}
-                            </span>
-                            @endif
-
-                            {{-- Content badge + links --}}
-                            <div class="absolute bottom-3 {{ $isRtl?'right':'left' }}-3 flex gap-2">
-                                @if($project->content_type)
-                                    <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur text-navy-800 text-[11px] font-bold shadow-sm">
-                                        <i class="fas fa-layer-group text-brand-500 text-[9px]"></i>
-                                        {{ \App\Models\PortfolioProject::contentTypeLabels()[$project->content_type] ?? $project->content_type }}
-                                    </span>
-                                @endif
-                                @if($project->project_url)
-                                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur text-navy-800 text-[11px] font-bold shadow-sm">
-                                    <i class="fas fa-external-link-alt text-brand-500 text-[9px]"></i> رابط حي
-                                </span>
-                                @endif
-                                @if($project->github_url)
-                                <span class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur text-navy-800 text-[11px] font-bold shadow-sm">
-                                    <i class="fab fa-github text-[10px]"></i> GitHub
-                                </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- Body --}}
-                        <div class="p-5 sm:p-6">
-                            {{-- Course tag --}}
-                            @if($project->advancedCourse)
-                            <div class="mb-3">
-                                <span class="inline-flex items-center gap-1.5 text-[11px] text-brand-700 bg-brand-50 px-3 py-1 rounded-full font-semibold">
-                                    <i class="fas fa-graduation-cap text-[9px] text-brand-500"></i>
-                                    {{ $project->advancedCourse->title }}
-                                </span>
-                            </div>
-                            @elseif($project->academicYear)
-                            <div class="mb-3">
-                                <span class="inline-flex items-center gap-1.5 text-[11px] text-purple-700 bg-purple-50 px-3 py-1 rounded-full font-semibold">
-                                    <i class="fas fa-bookmark text-[9px] text-purple-500"></i>
-                                    {{ $project->academicYear->name }}
-                                </span>
-                            </div>
-                            @endif
-
-                            <h3 class="font-heading text-lg font-bold text-navy-950 mb-2 line-clamp-2 leading-snug group-hover:text-brand-600 transition-colors duration-300">
-                                {{ $project->title }}
-                            </h3>
-                            <p class="text-[13px] text-slate-500 leading-relaxed line-clamp-2 mb-5">
-                                {{ Str::limit(strip_tags($project->description ?? ''), 100) }}
-                            </p>
-
-                            {{-- Author + CTA --}}
-                            <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-                                <div class="flex items-center gap-2.5 min-w-0">
-                                    @if($project->user->profile_image ?? null)
-                                        <img src="{{ $project->user->profile_image_url }}" alt="" class="w-8 h-8 rounded-lg object-cover flex-shrink-0">
-                                    @else
-                                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center flex-shrink-0">
-                                            <span class="text-white text-xs font-bold">{{ mb_substr($project->user->name ?? 'ط', 0, 1) }}</span>
-                                        </div>
-                                    @endif
-                                    <span class="text-sm font-medium text-navy-950 truncate">{{ $project->user->name ?? __('public.student_fallback') }}</span>
-                                </div>
-                                <span class="w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-brand-50 flex items-center justify-center transition-colors flex-shrink-0">
-                                    <i class="fas fa-arrow-{{ $isRtl?'left':'right' }} text-[10px] text-slate-400 group-hover:text-brand-500 transition-colors"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </a>
+                    @foreach($projects->getUrlRange(max(1, $projects->currentPage() - 2), min($projects->lastPage(), $projects->currentPage() + 2)) as $page => $url)
+                        @if($page == $projects->currentPage())
+                        <span class="w-10 h-10 rounded-xl bg-[#283593] text-white flex items-center justify-center text-sm font-bold">{{ $page }}</span>
+                        @else
+                        <a href="{{ $url }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-[#1F2A7A] flex items-center justify-center text-sm">{{ $page }}</a>
+                        @endif
                     @endforeach
+
+                    @if($projects->hasMorePages())
+                    <a href="{{ $projects->nextPageUrl() }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-[#1F2A7A] hover:bg-slate-50 flex items-center justify-center text-sm"><i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}"></i></a>
+                    @else
+                    <span class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-sm cursor-not-allowed"><i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}"></i></span>
+                    @endif
+                </nav>
+            </div>
+            @endif
+            @else
+            <div class="text-center py-20 reveal">
+                <div class="max-w-md mx-auto card-base">
+                    <div class="w-20 h-20 mx-auto rounded-2xl bg-[#FFE5F7] flex items-center justify-center text-[#283593] mb-5"><i class="fas fa-folder-open text-3xl"></i></div>
+                    <h3 class="font-heading text-2xl font-black text-mx-indigo mb-3">{{ __('public.no_projects_yet') }}</h3>
+                    <p class="text-slate-600 leading-8 mb-6">{{ __('public.no_projects_desc') }}</p>
+                    <a href="{{ route('public.courses') }}" class="btn-primary inline-flex items-center justify-center gap-2">{{ __('public.browse_courses') }} <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }} text-xs"></i></a>
                 </div>
+            </div>
+            @endif
+        </div>
+    </section>
 
-                {{-- Pagination --}}
-                @if($projects->hasPages())
-                <div class="mt-12 flex justify-center">
-                    <nav class="flex items-center gap-2">
-                        @if($projects->onFirstPage())
-                            <span class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-sm cursor-not-allowed">
-                                <i class="fas fa-chevron-{{ $isRtl?'right':'left' }}"></i>
-                            </span>
-                        @else
-                            <a href="{{ $projects->previousPageUrl() }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-brand-300 text-navy-950 flex items-center justify-center text-sm transition-colors">
-                                <i class="fas fa-chevron-{{ $isRtl?'right':'left' }}"></i>
-                            </a>
-                        @endif
-
-                        @foreach($projects->getUrlRange(max(1, $projects->currentPage()-2), min($projects->lastPage(), $projects->currentPage()+2)) as $page => $url)
-                            @if($page == $projects->currentPage())
-                                <span class="w-10 h-10 rounded-xl bg-gradient-to-l from-brand-500 to-brand-600 text-white flex items-center justify-center text-sm font-bold shadow-lg shadow-brand-600/20">{{ $page }}</span>
-                            @else
-                                <a href="{{ $url }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-brand-300 text-navy-950 flex items-center justify-center text-sm font-medium transition-colors">{{ $page }}</a>
-                            @endif
-                        @endforeach
-
-                        @if($projects->hasMorePages())
-                            <a href="{{ $projects->nextPageUrl() }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:border-brand-300 text-navy-950 flex items-center justify-center text-sm transition-colors">
-                                <i class="fas fa-chevron-{{ $isRtl?'left':'right' }}"></i>
-                            </a>
-                        @else
-                            <span class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-sm cursor-not-allowed">
-                                <i class="fas fa-chevron-{{ $isRtl?'left':'right' }}"></i>
-                            </span>
-                        @endif
-                    </nav>
+    <section class="pt-14 sm:pt-18 pb-10 sm:pb-12" style="background:linear-gradient(180deg,#f4f7ff 0%,#ffffff 100%)">
+        <div class="container-1200">
+            <div class="reveal rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_44px_-26px_rgba(31,42,122,.28)] px-6 sm:px-10 py-10 sm:py-12 text-center">
+                <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-5" style="background:#FFE5F7;color:#283593"><i class="fas fa-rocket"></i> لديك مشروع مميز؟</span>
+                <h2 class="font-heading text-3xl sm:text-5xl font-black text-mx-indigo mb-4">شاركه الآن داخل معرض MuallimX</h2>
+                <p class="text-slate-600 text-base sm:text-lg max-w-3xl mx-auto leading-8 mb-7">ابدأ التعلم، أنشئ مشروعك، ثم اعرضه بشكل احترافي ليراه الجميع.</p>
+                <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                    <a href="{{ route('register') }}" class="btn-primary inline-flex items-center justify-center gap-2">إنشاء حساب مجاني <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }} text-xs"></i></a>
+                    <a href="{{ route('public.courses') }}" class="btn-secondary inline-flex items-center justify-center gap-2 !bg-[#283593] !text-white !border-[#283593] hover:!bg-[#1f2a7a]">استكشف البرامج</a>
                 </div>
-                @endif
+            </div>
+        </div>
+    </section>
+</main>
 
-                @else
-                {{-- Empty state --}}
-                <div class="text-center py-20 reveal">
-                    <div class="max-w-md mx-auto">
-                        <div class="w-24 h-24 bg-gradient-to-br from-purple-50 to-brand-50 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-                            <i class="fas fa-folder-open text-purple-400 text-4xl"></i>
-                        </div>
-                        <h3 class="font-heading text-2xl font-bold text-navy-950 mb-3">{{ __('public.no_projects_yet') }}</h3>
-                        <p class="text-slate-500 mb-8 leading-relaxed">{{ __('public.no_projects_desc') }}</p>
-                        <a href="{{ route('public.courses') }}" class="btn-primary inline-flex items-center gap-2.5 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-7 py-3.5 rounded-2xl font-bold shadow-xl shadow-brand-600/25">
-                            <i class="fas fa-book-open"></i>
-                            {{ __('public.browse_courses') }}
-                        </a>
+<footer style="background:#283593" class="text-white">
+    <div class="container-1200 pt-12 pb-8">
+        <div class="grid md:grid-cols-4 gap-8 pb-8 border-b border-white/15">
+            <div class="md:col-span-2">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-11 h-11 rounded-xl bg-mx-orange text-white font-black flex items-center justify-center">M</span>
+                    <div>
+                        <p class="font-heading text-xl font-black">MuallimX</p>
+                        <p class="text-xs text-white/70">منصة تطوير المعلم العربي</p>
                     </div>
                 </div>
-                @endif
+                <p class="text-sm text-white/85 leading-7 max-w-md">تجربة تعليمية عربية تركز على التمكين المهني للمعلم عبر التدريب العملي وأدوات التدريس الحديثة.</p>
             </div>
-        </section>
-
-        {{-- ══════ CTA ══════ --}}
-        <section class="py-20 md:py-28 bg-slate-50/50">
-            <div class="max-w-4xl mx-auto px-5 sm:px-8 text-center reveal">
-                <span class="inline-block px-4 py-1.5 rounded-full bg-purple-50 text-purple-600 text-sm font-semibold mb-5">أظهر إبداعك</span>
-                <h2 class="font-heading text-3xl sm:text-4xl md:text-5xl font-black text-navy-950 mb-5 leading-tight">
-                    لديك مشروع؟
-                    <span class="text-gradient">شاركه مع العالم</span>
-                </h2>
-                <p class="text-lg text-slate-500 mb-10 font-medium leading-relaxed max-w-2xl mx-auto">
-                    سجّل في كورساتنا وأضف مشاريعك لمعرض الأعمال ليراها الجميع
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="{{ route('public.courses') }}" class="btn-primary inline-flex items-center justify-center gap-3 bg-gradient-to-l from-brand-500 to-brand-600 text-white font-bold text-base sm:text-lg px-8 py-4 rounded-2xl shadow-xl shadow-brand-600/25">
-                        تصفّح الكورسات
-                        <i class="fas fa-arrow-{{ $isRtl?'left':'right' }} text-sm"></i>
-                    </a>
-                    <a href="{{ route('register') }}" class="btn-outline inline-flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-brand-300 text-navy-950 font-semibold text-base sm:text-lg px-8 py-4 rounded-2xl">
-                        سجّل مجاناً
-                        <i class="fas fa-arrow-{{ $isRtl?'left':'right' }} text-sm"></i>
-                    </a>
-                </div>
+            <div>
+                <h3 class="font-heading font-bold mb-3 text-white">روابط سريعة</h3>
+                <ul class="space-y-2 text-sm text-white/85">
+                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('home') }}">الرئيسية</a></li>
+                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.courses') }}">الكورسات</a></li>
+                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.instructors.index') }}">المدربون</a></li>
+                </ul>
             </div>
-        </section>
-    </main>
+            <div>
+                <h3 class="font-heading font-bold mb-3 text-white">تواصل معنا</h3>
+                <ul class="space-y-2 text-sm text-white/85">
+                    <li><a class="hover:text-mx-gold transition-colors" href="mailto:info@mualimx.com">info@mualimx.com</a></li>
+                    <li><a class="hover:text-mx-gold transition-colors" href="https://wa.me/201044610507" target="_blank">واتساب: 01044610507</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="pt-5 flex flex-col sm:flex-row gap-2 justify-between text-xs text-white/75">
+            <p>&copy; {{ date('Y') }} MuallimX — جميع الحقوق محفوظة</p>
+            <p>تعليم عربي احترافي يركز على النتائج</p>
+        </div>
+    </div>
+</footer>
 
-    @include('components.unified-footer')
-    <script>
-    (function(){
-        function p(){var s=window.pageYOffset||document.documentElement.scrollTop,h=document.documentElement.scrollHeight-window.innerHeight,b=document.getElementById('scroll-progress');if(b)b.style.width=(h>0?(s/h)*100:0)+'%';}
-        window.addEventListener('scroll',p,{passive:true});
-        function r(){var t=document.querySelectorAll('.reveal');if(!t.length)return;var o=new IntersectionObserver(function(e){e.forEach(function(n){if(n.isIntersecting){n.target.classList.add('revealed');o.unobserve(n.target);}});},{threshold:.08,rootMargin:'0px 0px -40px 0px'});t.forEach(function(el){o.observe(el);});}
-        if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',r);else r();
-    })();
-    </script>
+<script>
+(function(){
+    function progress(){var s=window.pageYOffset||document.documentElement.scrollTop,h=document.documentElement.scrollHeight-window.innerHeight,p=h>0?(s/h)*100:0,b=document.getElementById('scroll-progress');if(b)b.style.width=p+'%';}
+    window.addEventListener('scroll',progress,{passive:true});
+    function reveal(){var els=document.querySelectorAll('.reveal');if(!els.length)return;var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('revealed');io.unobserve(e.target);}});},{threshold:.12,rootMargin:'0px 0px -50px 0px'});els.forEach(function(el){io.observe(el)});}
+    if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',reveal);}else{reveal();}
+})();
+</script>
 </body>
 </html>

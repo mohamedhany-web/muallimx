@@ -588,6 +588,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/features/{feature}', [\App\Http\Controllers\Student\SubscriptionFeatureController::class, 'show'])
             ->name('student.features.show')
             ->where('feature', 'library_access|ai_tools|classroom_access|zoom_access|support|visible_to_academies|can_apply_opportunities|full_ai_suite|teacher_evaluation|recommended_to_academies|priority_opportunities|direct_support');
+        Route::post('/features/full-ai-suite/preview', [\App\Http\Controllers\Student\SubscriptionFeatureController::class, 'previewFullAiSuite'])
+            ->name('student.features.full-ai-suite.preview');
         // مكتبة المناهج التفاعلية (مناهج أكس — معاينة ملف واحد مجاناً ثم اشتراك)
         Route::get('/curriculum-library', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
         Route::get('/curriculum-library/{item:slug}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'show'])->name('curriculum-library.show');

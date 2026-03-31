@@ -2,19 +2,19 @@
 <nav id="navbar"
      class="fixed top-0 inset-x-0 z-[999] transition-all duration-500"
      :class="navSolid ? 'nav-solid' : 'nav-transparent'"
-     style="font-family: 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;">
+     style="font-family: 'Cairo', 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;">
 
     <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-10">
         <div class="flex items-center justify-between h-[68px] lg:h-[76px]">
 
             {{-- Logo --}}
             <a href="{{ route('home') }}" class="flex items-center gap-3 group flex-shrink-0">
-                <div class="relative w-10 h-10 lg:w-11 lg:h-11 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/40 transition-shadow duration-300">
+                <div class="relative w-10 h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center shadow-lg transition-shadow duration-300" style="background:#FB5607;box-shadow:0 4px 16px -4px rgba(251,86,7,.3)">
                     <span class="text-white font-black text-lg lg:text-xl select-none">M</span>
                 </div>
                 <div class="flex flex-col leading-none">
-                    <span class="text-[17px] lg:text-lg font-extrabold text-white tracking-tight">Mualimx</span>
-                    <span class="text-[10px] lg:text-[11px] text-white/50 font-medium mt-0.5">{{ __('landing.nav.brand') }}</span>
+                    <span class="text-[18px] lg:text-[20px] font-black text-white tracking-tight">MuallimX</span>
+                    <span class="text-[11px] lg:text-[12px] text-white/60 font-semibold mt-0.5">{{ __('landing.nav.brand') }}</span>
                 </div>
             </a>
 
@@ -31,7 +31,7 @@
 
                 @foreach($navLinks as $link)
                 <a href="{{ route($link['route']) }}"
-                   class="nav-link relative px-4 py-2 rounded-xl text-[15px] font-semibold text-white/75 hover:text-white transition-all duration-200 flex items-center gap-2">
+                   class="nav-link relative px-4 py-2 rounded-xl text-[16px] font-bold text-white/80 hover:text-white transition-all duration-200 flex items-center gap-2">
                     <i class="fas {{ $link['icon'] }} text-[13px] opacity-60"></i>
                     <span>{{ $link['label'] }}</span>
                 </a>
@@ -42,18 +42,18 @@
             <div class="hidden lg:flex items-center gap-3 flex-shrink-0">
                 @auth
                     <a href="{{ url('/dashboard') }}"
-                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white font-semibold text-sm transition-all duration-200 backdrop-blur-sm">
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.14] border border-white/[0.1] text-white font-bold text-[15px] transition-all duration-200 backdrop-blur-sm">
                         <i class="fas fa-th-large text-xs opacity-70"></i>
                         {{ __('landing.nav.dashboard') }}
                     </a>
                 @endauth
                 @guest
                     <a href="{{ route('login') }}"
-                       class="px-4 py-2.5 rounded-xl text-white/80 hover:text-white font-semibold text-sm transition-all duration-200 hover:bg-white/[0.06]">
+                       class="px-4 py-2.5 rounded-xl text-white/85 hover:text-white font-bold text-[15px] transition-all duration-200 hover:bg-white/[0.06]">
                         {{ __('landing.nav.login') }}
                     </a>
                     <a href="{{ route('register') }}"
-                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-l from-cyan-400 to-cyan-600 hover:from-cyan-300 hover:to-cyan-500 text-navy-950 font-bold text-sm shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 transition-all duration-300">
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white shadow-lg transition-all duration-300" style="background:#FB5607;box-shadow:0 4px 16px -4px rgba(251,86,7,.3)">
                         {{ __('landing.nav.register') }}
                         <i class="fas fa-arrow-left text-[11px]"></i>
                     </a>
@@ -86,7 +86,7 @@
      class="lg:hidden fixed top-0 {{ $isRtl ? 'right-0' : 'left-0' }} h-full w-[min(320px,85vw)] z-[10000] overflow-y-auto overscroll-contain"
      style="display:none; transform: translate3d({{ $isRtl ? '100%' : '-100%' }}, 0, 0); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); -webkit-overflow-scrolling: touch; will-change: transform;">
 
-    <div class="min-h-full flex flex-col" style="background: linear-gradient(180deg, #0F172A 0%, #0c1833 100%); font-family: 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;">
+    <div class="min-h-full flex flex-col" style="background: linear-gradient(180deg, #283593 0%, #1A237E 100%); font-family: 'Tajawal', 'IBM Plex Sans Arabic', sans-serif;">
 
         {{-- Sidebar decorative blurs --}}
         <div class="absolute top-0 {{ $isRtl ? 'left-0' : 'right-0' }} w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -95,12 +95,12 @@
         {{-- Sidebar Header --}}
         <div class="relative flex items-center justify-between px-5 py-5 border-b border-white/[0.06]" style="padding-top: max(1.25rem, env(safe-area-inset-top));">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background:#FB5607">
                     <span class="text-white font-black text-lg">M</span>
                 </div>
                 <div>
-                    <p class="text-white font-extrabold text-base">Mualimx</p>
-                    <p class="text-white/40 text-xs font-medium">{{ __('landing.nav.brand') }}</p>
+                    <p class="text-white font-black text-[17px]">MuallimX</p>
+                    <p class="text-white/50 text-[12px] font-semibold">{{ __('landing.nav.brand') }}</p>
                 </div>
             </div>
             <button type="button" id="mobile-menu-close"
@@ -128,7 +128,7 @@
                 <span class="w-10 h-10 rounded-xl bg-{{ $mLink['color'] }}-500/10 border border-{{ $mLink['color'] }}-500/15 flex items-center justify-center flex-shrink-0">
                     <i class="fas {{ $mLink['icon'] }} text-{{ $mLink['color'] }}-400 text-base"></i>
                 </span>
-                <span class="flex-1 font-bold text-[15px]">{{ $mLink['label'] }}</span>
+                <span class="flex-1 font-extrabold text-[16px]">{{ $mLink['label'] }}</span>
                 <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-white/20 text-xs"></i>
             </a>
             @endforeach
@@ -138,8 +138,8 @@
             {{-- Auth Buttons --}}
             @auth
                 <a href="{{ url('/dashboard') }}"
-                   class="flex items-center justify-center gap-2 mx-1 px-5 py-4 rounded-2xl bg-gradient-to-l from-cyan-400 to-cyan-600 text-navy-950 font-bold text-[15px] shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-transform"
-                   style="-webkit-tap-highlight-color: transparent;">
+                   class="flex items-center justify-center gap-2 mx-1 px-5 py-4 rounded-2xl text-white font-bold text-[15px] shadow-lg active:scale-[0.98] transition-transform"
+                   style="background:#FB5607;-webkit-tap-highlight-color: transparent;">
                     <i class="fas fa-th-large text-sm"></i>
                     {{ __('landing.nav.dashboard') }}
                 </a>
@@ -151,11 +151,11 @@
                     <span class="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center flex-shrink-0">
                         <i class="fas fa-sign-in-alt text-white/60 text-base"></i>
                     </span>
-                    <span class="flex-1 font-bold text-[15px]">{{ __('landing.nav.login') }}</span>
+                    <span class="flex-1 font-extrabold text-[16px]">{{ __('landing.nav.login') }}</span>
                 </a>
                 <a href="{{ route('register') }}"
-                   class="flex items-center justify-center gap-2 mx-1 px-5 py-4 rounded-2xl bg-gradient-to-l from-cyan-400 to-cyan-600 text-navy-950 font-bold text-[15px] shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition-transform"
-                   style="-webkit-tap-highlight-color: transparent;">
+                   class="flex items-center justify-center gap-2 mx-1 px-5 py-4 rounded-2xl text-white font-bold text-[15px] shadow-lg active:scale-[0.98] transition-transform"
+                   style="background:#FB5607;-webkit-tap-highlight-color: transparent;">
                     <i class="fas fa-user-plus text-sm"></i>
                     {{ __('landing.nav.register') }}
                 </a>
@@ -166,7 +166,7 @@
         @auth
         <div class="relative px-5 py-5 border-t border-white/[0.06]" style="padding-bottom: max(1.25rem, env(safe-area-inset-bottom));">
             <div class="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.04]">
-                <div class="w-11 h-11 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                <div class="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0" style="background:#FB5607">
                     {{ mb_substr(auth()->user()->name, 0, 1) }}
                 </div>
                 <div class="flex-1 min-w-0">
@@ -182,24 +182,24 @@
 <style>
 /* Navbar states — defaults to solid so inner pages work correctly */
 #navbar {
-    background: rgba(15, 23, 42, 0.95);
+    background: rgba(40, 53, 147, 0.95);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 #navbar.nav-transparent {
-    background: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    border-bottom-color: transparent !important;
-    box-shadow: none !important;
-}
-#navbar.nav-solid {
-    background: rgba(15, 23, 42, 0.85) !important;
+    background: rgba(40, 53, 147, 0.92) !important;
     backdrop-filter: blur(20px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    box-shadow: 0 4px 30px rgba(26, 35, 126, 0.26) !important;
+}
+#navbar.nav-solid {
+    background: rgba(40, 53, 147, 0.92) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    box-shadow: 0 4px 30px rgba(26, 35, 126, 0.3) !important;
 }
 
 /* Nav link hover effect */
@@ -212,7 +212,7 @@
     width: 20px;
     height: 2px;
     border-radius: 1px;
-    background: linear-gradient(90deg, #22d3ee, #3b82f6);
+    background: #FB5607;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .nav-link:hover::after {
@@ -235,7 +235,6 @@
 
     /* ─── Scroll-based navbar background ─── */
     var navbar = document.getElementById('navbar');
-    var lastScroll = 0;
     var solid = false;
 
     function checkScroll() {

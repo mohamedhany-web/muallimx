@@ -5,7 +5,7 @@
                 class="lg:hidden absolute top-3 left-3 w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 flex items-center justify-center transition-colors z-10">
             <i class="fas fa-times text-xs"></i>
         </button>
-        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/20">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#283593] to-[#FB5607] text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#283593]/25">
             <i class="fas fa-user-graduate text-lg"></i>
         </div>
         <div class="flex-1 min-w-0 relative z-10">
@@ -26,12 +26,12 @@
         <div class="grid grid-cols-2 gap-2.5">
             <a href="{{ $publicCoursesUrl }}"
                title="{{ __('student.browse_courses') }}"
-               class="ins-stat-card bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 block group cursor-pointer no-underline text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 rounded-xl">
+               class="ins-stat-card bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 block group cursor-pointer no-underline text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[#283593] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 rounded-xl">
                 <div class="flex items-center gap-2 mb-1.5">
-                    <span class="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <span class="w-8 h-8 rounded-lg bg-[#FFE5F7] dark:bg-violet-900/40 text-[#283593] dark:text-violet-400 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <i class="fas fa-book-open text-sm"></i>
                     </span>
-                    <span class="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">{{ __('student.courses') }}</span>
+                    <span class="text-[10px] font-bold text-[#283593] dark:text-violet-400 uppercase tracking-wider">{{ __('student.courses') }}</span>
                 </div>
                 <div class="text-xl font-black text-gray-900 dark:text-gray-100 leading-none tabular-nums">{{ $coursesCount }}</div>
             </a>
@@ -75,7 +75,7 @@
             @php $catalogActive = request()->routeIs('public.courses', 'public.course.*') || request()->routeIs('academic-years*') || request()->routeIs('subjects.*') || request()->routeIs('courses.show'); @endphp
             <a href="{{ route('public.courses') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
                class="ins-nav {{ $catalogActive ? 'active' : '' }}">
-                <span class="ins-icon bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+                <span class="ins-icon bg-[#FFE5F7] dark:bg-indigo-900/40 text-[#283593] dark:text-indigo-400">
                     <i class="fas fa-search text-sm"></i>
                 </span>
                 <span class="flex-1 truncate">{{ __('student.browse_courses') }}</span>
@@ -85,12 +85,12 @@
             @if($isStudent || $user->hasPermission('student.view.my-courses'))
             <a href="{{ route('my-courses.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
                class="ins-nav {{ request()->routeIs('my-courses.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400">
+                <span class="ins-icon bg-[#eef2ff] dark:bg-violet-900/40 text-[#283593] dark:text-violet-400">
                     <i class="fas fa-book-open text-sm"></i>
                 </span>
                 <span class="flex-1 truncate">{{ __('student.my_courses') }}</span>
                 @if($coursesCount > 0)
-                    <span class="ins-nav-badge bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300">{{ $coursesCount }}</span>
+                    <span class="ins-nav-badge bg-[#eef2ff] dark:bg-violet-900/50 text-[#283593] dark:text-violet-300">{{ $coursesCount }}</span>
                 @endif
             </a>
             @endif
@@ -241,7 +241,7 @@
             @if(Route::has('student.my-subscription'))
             <a href="{{ route('student.my-subscription') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
                class="ins-nav {{ request()->routeIs('student.my-subscription') ? 'active' : '' }}">
-                <span class="ins-icon bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400">
+                <span class="ins-icon bg-[#FFE5F7] dark:bg-sky-900/40 text-[#283593] dark:text-sky-400">
                     <i class="fas fa-gem text-sm"></i>
                 </span>
                 <span class="flex-1 truncate">اشتراكي</span>
@@ -328,7 +328,7 @@
             @if(auth()->user()->isInstructor())
                 <a href="{{ route('dashboard') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
                    class="ins-nav">
-                    <span class="ins-icon bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400">
+                <span class="ins-icon bg-[#FFE5F7] dark:bg-sky-900/40 text-[#283593] dark:text-sky-400">
                         <i class="fas fa-chalkboard-teacher text-sm"></i>
                     </span>
                     <span class="flex-1 truncate">لوحة المعلم</span>

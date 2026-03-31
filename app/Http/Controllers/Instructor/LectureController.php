@@ -7,6 +7,8 @@ use App\Models\Lecture;
 use App\Models\LectureMaterial;
 use App\Models\AdvancedCourse;
 use App\Models\AttendanceRecord;
+use App\Models\TeamsAttendanceFile;
+use App\Services\TeamsAttendanceImportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -553,5 +555,52 @@ class LectureController extends Controller
             'message' => 'تم تحديث حالة المحاضرة بنجاح',
             'lecture' => $lecture,
         ]);
+    }
+
+    public function syncTeamsAttendance(Request $request, Lecture $lecture)
+    {
+        $instructor = Auth::user();
+        if ($lecture->instructor_id !== $instructor->id) {
+            abort(403, 'غير مسموح لك بمزامنة حضور هذه المحاضرة');
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:csv,xlsx,xls|max:10240',
+        ]);
+
+        $file = $request->file('file');
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $filePath = $file->storeAs('attendance/teams', $fileName, 'public');
+
+        $teamsFile = TeamsAttendanceFile::create([
+            'lecture_id' => $lecture->id,
+            'file_name' => $file->getClientOriginalName(),
+            'file_path' => $filePath,
+            'file_type' => $file->getClientOriginalExtension(),
+            'status' => 'processing',
+            'uploaded_by' => $instructor->id,
+        ]);
+
+        try {
+            $result = app(TeamsAttendanceImportService::class)->importFromFile($lecture, public_path('storage/' . $filePath));
+            $teamsFile->update([
+                'status' => 'completed',
+                'total_records' => (int) ($result['total'] ?? 0),
+                'processed_records' => (int) ($result['processed'] ?? 0),
+                'error_message' => !empty($result['errors']) ? implode(' | ', array_slice($result['errors'], 0, 5)) : null,
+            ]);
+            return back()->with('success', "تمت مزامنة الحضور. مطابق: {$result['matched']} | غير مطابق: {$result['unmatched']}");
+        } catch (\Throwable $e) {
+            \Log::error('Instructor Teams attendance sync failed', [
+                'lecture_id' => $lecture->id,
+                'file' => $filePath,
+                'error' => $e->getMessage(),
+            ]);
+            $teamsFile->update([
+                'status' => 'failed',
+                'error_message' => $e->getMessage(),
+            ]);
+            return back()->with('error', 'تعذرت مزامنة ملف الحضور.');
+        }
     }
 }

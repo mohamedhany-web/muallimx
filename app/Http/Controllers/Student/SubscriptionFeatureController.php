@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Student\FullAiSuitePreviewRequest;
+use App\Services\FullAiSuiteContextService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -42,11 +44,45 @@ class SubscriptionFeatureController extends Controller
         $label = __('student.subscription_feature.' . $feature);
         $description = __('student.subscription_feature_desc.' . $feature);
 
+        if ($feature === 'full_ai_suite') {
+            $courses = $user->activeCourses()
+                ->select('advanced_courses.id', 'advanced_courses.title', 'advanced_courses.category')
+                ->get();
+
+            return view('student.features.full-ai-suite', [
+                'feature' => $feature,
+                'label' => $label,
+                'description' => $description,
+                'featureConfig' => $featureConfig,
+                'courses' => $courses,
+            ]);
+        }
+
         return view('student.features.show', [
             'feature' => $feature,
             'label' => $label,
             'description' => $description,
             'featureConfig' => $featureConfig,
         ]);
+    }
+
+    /**
+     * طبقة Laravel: التحقق من البيانات وبناء السياق — بدون استدعاء Gemini.
+     */
+    public function previewFullAiSuite(FullAiSuitePreviewRequest $request, FullAiSuiteContextService $service)
+    {
+        $ctx = $service->buildContext(
+            $request->user(),
+            (int) $request->validated('advanced_course_id'),
+            $request->validated('question_type'),
+            $request->validated('question')
+        );
+
+        return back()
+            ->withInput($request->only(['advanced_course_id', 'question_type', 'question']))
+            ->with('full_ai_preview', [
+                'context' => $ctx,
+                'prompt' => $service->buildPromptPreview($ctx),
+            ]);
     }
 }

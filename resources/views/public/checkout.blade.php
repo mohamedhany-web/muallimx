@@ -9,12 +9,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>إتمام الطلب - {{ $itemTitle }} - {{ config('app.name') }}</title>
-    <meta name="theme-color" content="#0F172A">
+    <meta name="theme-color" content="#283593">
 
     <link rel="icon" href="{{ asset('favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -23,11 +23,12 @@
             extend: {
                 colors: {
                     navy: { 50:'#f0f4ff',100:'#dbe4ff',200:'#bac8ff',300:'#91a7ff',400:'#748ffc',500:'#5c7cfa',600:'#4c6ef5',700:'#4263eb',800:'#3b5bdb',900:'#364fc7',950:'#0F172A' },
-                    brand: { 50:'#ecfeff',100:'#cffafe',200:'#a5f3fc',300:'#67e8f9',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',700:'#0e7490',800:'#155e75',900:'#164e63' }
+                    brand: { 50:'#FFF3E0',100:'#FFE0B2',200:'#FFCC80',300:'#FFB74D',400:'#FFA726',500:'#FB5607',600:'#E04D00',700:'#BF360C',800:'#8D2600',900:'#5D1A00' },
+                    mx: { navy:'#283593', indigo:'#1F2A7A', orange:'#FB5607', rose:'#FFE5F7', gold:'#FFE569', soft:'#F7F8FF' }
                 },
                 fontFamily: {
-                    heading: ['Tajawal','IBM Plex Sans Arabic','sans-serif'],
-                    body: ['IBM Plex Sans Arabic','Tajawal','sans-serif'],
+                    heading: ['Cairo','Tajawal','IBM Plex Sans Arabic','sans-serif'],
+                    body: ['Cairo','IBM Plex Sans Arabic','Tajawal','sans-serif'],
                 }
             }
         }
@@ -38,63 +39,71 @@
 
     <style>
         [x-cloak]{display:none !important}
-        *{font-family:'IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
-        h1,h2,h3,.font-heading{font-family:'Tajawal','IBM Plex Sans Arabic',sans-serif}
+        *{font-family:'Cairo','IBM Plex Sans Arabic','Tajawal',system-ui,sans-serif}
+        h1,h2,h3,.font-heading{font-family:'Cairo','Tajawal','IBM Plex Sans Arabic',sans-serif}
         html{scroll-behavior:smooth}
         body{min-height:100vh;display:flex;flex-direction:column;background:#fff}
         body>*{flex-shrink:0}
+        .container-1200{max-width:1200px;margin-inline:auto;padding-inline:24px}
+        @media (max-width:768px){.container-1200{padding-inline:16px}}
         .reveal{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease}
         .reveal.revealed{opacity:1;transform:translateY(0)}
         .btn-primary{transition:all .3s ease}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px -8px rgba(6,182,212,.4)}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px -8px rgba(251,86,7,.35)}
         .card-hover{transition:all .3s ease}
         .card-hover:hover{box-shadow:0 20px 40px -15px rgba(0,0,0,.08)}
         .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        #navbar,#navbar.nav-transparent,#navbar.nav-solid{
+            background:rgba(31,42,122,.92)!important;
+            backdrop-filter:blur(12px)!important;
+            -webkit-backdrop-filter:blur(12px)!important;
+            border-bottom:1px solid rgba(255,255,255,.08)!important;
+        }
     </style>
 </head>
-<body class="bg-white text-navy-950 antialiased font-body" x-data="{ isSubmitting: false }">
+<body class="bg-white text-slate-800 antialiased font-body" x-data="{ isSubmitting: false }">
     @include('components.unified-navbar')
-    <style>.navbar-spacer{display:none}</style>
-    <script>(function(){var n=document.getElementById('navbar');if(n){n.classList.add('nav-transparent');n.classList.remove('nav-solid');}})();</script>
+    <style>.navbar-spacer{display:block}</style>
 
     <main class="flex-1 pt-20">
         {{-- Hero --}}
-        <section class="relative py-12 lg:py-16 overflow-hidden bg-navy-950">
-            <div class="absolute inset-0 bg-gradient-to-br from-navy-950 via-[#0c1833] to-navy-950"></div>
-            <div class="absolute top-0 {{ $isRtl?'left-0':'right-0' }} w-96 h-96 rounded-full bg-brand-500/10 blur-[100px]"></div>
-            <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
-                <nav class="text-sm text-slate-400 mb-6 flex items-center gap-2">
-                    <a href="{{ url('/') }}" class="hover:text-white transition-colors">الرئيسية</a>
+        <section class="pt-10 sm:pt-14 lg:pt-16 pb-10 sm:pb-12 overflow-hidden relative" style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.65),transparent 28%),radial-gradient(circle at 88% 20%,rgba(40,53,147,.10),transparent 30%),linear-gradient(180deg,#f4f6ff 0%,#fbfbff 55%,#ffffff 100%)">
+            <div class="absolute inset-0 pointer-events-none opacity-40" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.08) 1px,transparent 0);background-size:30px 30px"></div>
+            <div class="container-1200 relative z-10">
+                <nav class="text-sm text-slate-500 mb-6 flex items-center gap-2 flex-wrap">
+                    <a href="{{ url('/') }}" class="hover:text-mx-indigo transition-colors">الرئيسية</a>
                     <span>/</span>
-                    <a href="{{ route('public.courses') }}" class="hover:text-white transition-colors">الكورسات</a>
+                    <a href="{{ route('public.courses') }}" class="hover:text-mx-indigo transition-colors">الكورسات</a>
                     <span>/</span>
                     @if(isset($course))
-                        <a href="{{ route('public.course.show', $course->id) }}" class="hover:text-white transition-colors">{{ Str::limit($course->title ?? 'الكورس', 30) }}</a>
+                        <a href="{{ route('public.course.show', $course->id) }}" class="hover:text-mx-indigo transition-colors">{{ Str::limit($course->title ?? 'الكورس', 30) }}</a>
                     @endif
                     <span>/</span>
-                    <span class="text-white font-medium">إتمام الطلب</span>
+                    <span class="text-mx-indigo font-semibold">إتمام الطلب</span>
                 </nav>
                 <div class="text-center max-w-2xl mx-auto">
-                    <h1 class="font-heading text-3xl sm:text-4xl font-black text-white mb-3 reveal">إتمام الطلب</h1>
-                    <p class="text-slate-300 text-lg reveal">خطوة أخيرة للحصول على {{ isset($course) ? 'الكورس' : 'المسار التعليمي' }}</p>
+                    <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-4 reveal" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
+                        <i class="fas fa-credit-card"></i> صفحة الدفع
+                    </span>
+                    <h1 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-3 reveal">إتمام الطلب</h1>
+                    <p class="text-slate-600 text-lg reveal">خطوة أخيرة للحصول على {{ isset($course) ? 'الكورس' : 'المسار التعليمي' }}</p>
                 </div>
             </div>
-            <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent"></div>
         </section>
 
         {{-- Checkout content --}}
         <section class="py-12 lg:py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+            <div class="container-1200">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
                     {{-- ملخص الطلب --}}
                     <div class="lg:col-span-1 order-2 lg:order-1">
                         <div class="reveal card-hover sticky top-24 rounded-3xl bg-white border border-slate-100 p-6 shadow-lg">
                             <h3 class="font-heading text-xl font-black text-navy-950 mb-6 flex items-center gap-2">
-                                <i class="fas fa-shopping-bag text-brand-500"></i>
+                                <i class="fas fa-shopping-bag text-[#FB5607]"></i>
                                 ملخص الطلب
                             </h3>
                             <div class="flex items-start gap-4 mb-6 pb-6 border-b border-slate-100">
-                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-navy-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FB5607] to-[#283593] flex items-center justify-center flex-shrink-0 shadow-lg">
                                     @if(isset($course))
                                         <i class="fas fa-graduation-cap text-white text-xl"></i>
                                     @else
@@ -113,14 +122,14 @@
                             <div class="space-y-3 mb-6">
                                 <div class="flex justify-between items-center">
                                     <span class="text-slate-600">السعر</span>
-                                    <span class="font-bold text-brand-600 text-lg">
+                                    <span class="font-bold text-[#FB5607] text-lg">
                                         {{ number_format(isset($course) ? $course->price : (isset($learningPath) ? ($learningPath->price ?? 0) : 0), 0) }}
                                         <span class="text-slate-500 text-sm font-medium">ج.م</span>
                                     </span>
                                 </div>
                                 <div class="flex justify-between items-center pt-4 border-t-2 border-slate-100">
                                     <span class="font-bold text-navy-950">الإجمالي</span>
-                                    <span class="text-2xl font-black text-brand-600">
+                                    <span class="text-2xl font-black text-[#FB5607]">
                                         {{ number_format(isset($course) ? $course->price : (isset($learningPath) ? ($learningPath->price ?? 0) : 0), 0) }}
                                         <span class="text-slate-500 text-base font-medium">ج.م</span>
                                     </span>
@@ -138,7 +147,7 @@
                     <div class="lg:col-span-2 order-1 lg:order-2">
                         <div class="reveal card-hover rounded-3xl bg-white border border-slate-100 p-6 sm:p-8 shadow-lg">
                             <h2 class="font-heading text-2xl font-black text-navy-950 mb-6 flex items-center gap-3">
-                                <i class="fas fa-credit-card text-brand-500"></i>
+                                <i class="fas fa-credit-card text-[#FB5607]"></i>
                                 طرق الدفع المتاحة
                             </h2>
 
@@ -175,7 +184,7 @@
                                 <div class="space-y-4 mb-6">
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">طريقة الدفع</label>
-                                        <select name="payment_method" x-model="paymentMethod" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-brand-400 focus:border-brand-400" required>
+                                        <select name="payment_method" x-model="paymentMethod" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-[#283593] focus:border-[#283593]" required>
                                             <option value="bank_transfer">تحويل بنكي / محفظة</option>
                                             <option value="cash">دفع نقدي</option>
                                             <option value="other">طريقة أخرى</option>
@@ -184,7 +193,7 @@
 
                                     <div x-show="paymentMethod === 'bank_transfer'" x-cloak>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">اختر حساب التحويل</label>
-                                        <select name="wallet_id" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-brand-400 focus:border-brand-400"
+                                        <select name="wallet_id" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-[#283593] focus:border-[#283593]"
                                                 :required="paymentMethod === 'bank_transfer'">
                                             <option value="">اختر الحساب</option>
                                             @foreach(($wallets ?? []) as $wallet)
@@ -198,19 +207,19 @@
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">إيصال الدفع</label>
                                         <input type="file" name="payment_proof" accept="image/*" required
-                                               class="w-full rounded-xl border border-slate-300 px-4 py-3 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-brand-700 hover:file:bg-brand-100">
+                                               class="w-full rounded-xl border border-slate-300 px-4 py-3 file:mr-3 file:rounded-lg file:border-0 file:bg-[#FFE5F7] file:px-3 file:py-2 file:text-[#283593] hover:file:bg-[#f8dff1]">
                                         <p class="mt-1 text-xs text-slate-500">الصيغ المسموحة: JPG, PNG - الحد الأقصى 2MB.</p>
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">ملاحظات (اختياري)</label>
-                                        <textarea name="notes" rows="3" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-brand-400 focus:border-brand-400" placeholder="أي تفاصيل إضافية عن التحويل"></textarea>
+                                        <textarea name="notes" rows="3" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-[#283593] focus:border-[#283593]" placeholder="أي تفاصيل إضافية عن التحويل"></textarea>
                                     </div>
                                 </div>
 
                                 <div class="flex flex-col sm:flex-row gap-4">
                                     <button type="submit" :disabled="isSubmitting"
-                                            class="btn-primary flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-6 py-4 rounded-2xl font-bold shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+                                            class="btn-primary flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-l from-[#FB5607] to-[#e84d00] text-white px-6 py-4 rounded-2xl font-bold shadow-lg disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
                                         <i class="fas fa-file-upload" x-show="!isSubmitting"></i>
                                         <i class="fas fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
                                         <span x-text="isSubmitting ? 'جاري إرسال الطلب...' : 'إرسال الطلب ورفع الإيصال'"></span>
@@ -223,7 +232,7 @@
                                     </a>
                                 </div>
                                 <p class="mt-4 text-xs text-slate-500 text-center flex items-center justify-center gap-1.5">
-                                    <i class="fas fa-shield-alt text-brand-500"></i>
+                                    <i class="fas fa-shield-alt text-[#283593]"></i>
                                     يظهر الطلب في صفحة الطلبات ويتم التفعيل بعد الموافقة
                                 </p>
                             </form>

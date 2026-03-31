@@ -14,13 +14,13 @@
     }
     .stat-card::after {
         content: ''; position: absolute; inset: 0;
-        background: linear-gradient(135deg, transparent 60%, rgba(6, 182, 212, 0.02) 100%);
+        background: linear-gradient(135deg, transparent 60%, rgba(40, 53, 147, 0.03) 100%);
         pointer-events: none; border-radius: 16px;
     }
     .stat-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 16px 40px -12px rgba(15, 23, 42, 0.08);
-        border-color: rgba(6, 182, 212, 0.15);
+        border-color: rgba(40, 53, 147, 0.18);
     }
     .stat-icon {
         width: 46px; height: 46px; border-radius: 12px;
@@ -46,7 +46,7 @@
     }
     .progress-bar .fill {
         height: 100%; border-radius: 3px;
-        background: linear-gradient(90deg, #06b6d4, #0891b2);
+        background: linear-gradient(90deg, #283593, #FB5607);
         position: relative;
     }
     .progress-bar .fill::after {
@@ -105,8 +105,8 @@
     .dark .progress-bar {
         background: #334155;
     }
-    .dark .progress-bar .fill {
-        background: linear-gradient(90deg, #06b6d4, #22d3ee);
+        .dark .progress-bar .fill {
+        background: linear-gradient(90deg, #818cf8, #fb7185);
     }
 </style>
 @endpush
@@ -121,10 +121,10 @@
 <div class="space-y-6">
     {{-- ترحيب --}}
     <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200/80 dark:border-slate-700 overflow-hidden">
-        <div class="bg-gradient-to-l from-brand-50 via-white to-white dark:from-slate-800/80 dark:via-slate-800/90 dark:to-slate-900/90 p-5 sm:p-6">
+        <div class="bg-gradient-to-l from-[#FFE5F7]/70 via-white to-white dark:from-slate-800/80 dark:via-slate-800/90 dark:to-slate-900/90 p-5 sm:p-6">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
                 <div class="flex-1 min-w-0">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-xs font-bold mb-3 border border-brand-100 dark:border-brand-800/50">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#FFE5F7] dark:bg-brand-900/30 text-[#283593] dark:text-brand-300 text-xs font-bold mb-3 border border-[#f5c7e8] dark:border-brand-800/50">
                         <i class="fas fa-chart-line text-[10px]"></i>
                         {{ __('student.your_dashboard') }}
                     </span>
@@ -135,7 +135,7 @@
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 flex-shrink-0">
                     @hasPermission('student.view.courses')
-                    <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold shadow-md shadow-indigo-500/20 transition-colors order-2 sm:order-1">
+                    <a href="{{ route('public.courses') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#283593] hover:bg-[#1f2a7a] text-white text-sm font-bold shadow-md shadow-[#283593]/25 transition-colors order-2 sm:order-1">
                         <i class="fas fa-th-large text-xs"></i>
                         {{ __('student.courses') }}
                     </a>
@@ -153,7 +153,7 @@
                                 stroke-dasharray="{{ $circumference }}" stroke-dashoffset="{{ $strokeDashoffset }}"
                                 style="transition: stroke-dashoffset 0.8s ease"/>
                         </svg>
-                        <span class="absolute inset-0 flex items-center justify-center font-heading text-lg font-black text-brand-700 dark:text-brand-300">{{ $progress }}%</span>
+                        <span class="absolute inset-0 flex items-center justify-center font-heading text-lg font-black text-[#283593] dark:text-brand-300">{{ $progress }}%</span>
                     </div>
                     <div class="text-right hidden sm:block order-3">
                         <p class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ __('student.total_progress') }}</p>
@@ -172,7 +172,7 @@
                     <p class="text-xs font-medium text-slate-500 mb-1">{{ __('student.my_active_courses') }}</p>
                     <p class="text-3xl font-heading font-black text-slate-800">{{ $stats['active_courses'] }}</p>
                 </div>
-                <div class="stat-icon bg-gradient-to-br from-brand-500 to-brand-600 shadow-lg shadow-brand-500/20">
+                <div class="stat-icon bg-gradient-to-br from-[#283593] to-[#1F2A7A] shadow-lg shadow-[#283593]/25">
                     <i class="fas fa-book-open"></i>
                 </div>
             </div>
@@ -198,7 +198,7 @@
                     <p class="text-xs font-medium text-slate-500 mb-1">{{ __('student.total_progress') }}</p>
                     <p class="text-3xl font-heading font-black text-slate-800">{{ $stats['total_progress'] }}%</p>
                 </div>
-                <div class="stat-icon bg-gradient-to-br from-violet-500 to-violet-600 shadow-lg shadow-violet-500/20">
+                <div class="stat-icon bg-gradient-to-br from-[#FB5607] to-[#e84d00] shadow-lg shadow-[#FB5607]/25">
                     <i class="fas fa-chart-line"></i>
                 </div>
             </div>
@@ -224,9 +224,9 @@
     @if(isset($activeSubscription) && $activeSubscription)
     {{-- بطاقة الاشتراك الحالي --}}
     <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200/80 dark:border-slate-700 overflow-hidden">
-        <div class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-l from-sky-50/80 to-white dark:from-slate-800/90 dark:to-slate-900/90 border-b border-slate-100 dark:border-slate-700">
+        <div class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 bg-gradient-to-l from-[#FFE5F7]/80 to-white dark:from-slate-800/90 dark:to-slate-900/90 border-b border-slate-100 dark:border-slate-700">
             <div class="flex items-center gap-3">
-                <span class="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                <span class="w-10 h-10 rounded-xl bg-[#FFE5F7] dark:bg-indigo-900/40 text-[#283593] dark:text-indigo-300 flex items-center justify-center">
                     <i class="fas fa-layer-group"></i>
                 </span>
                 <div>
@@ -234,7 +234,7 @@
                     <p class="text-xs text-slate-500 dark:text-slate-400">مدة الباقة: {{ \App\Models\Subscription::getDurationLabel($activeSubscription->billing_cycle) }} · ينتهي في {{ $activeSubscription->end_date?->format('Y-m-d') }}</p>
                 </div>
             </div>
-            <a href="{{ route('student.my-subscription') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 text-white text-sm font-semibold hover:bg-sky-700 transition-colors">
+            <a href="{{ route('student.my-subscription') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#283593] text-white text-sm font-semibold hover:bg-[#1f2a7a] transition-colors">
                 <i class="fas fa-info-circle"></i>
                 تفاصيل اشتراكي
             </a>
@@ -248,19 +248,19 @@
             <div class="section-card">
                 <div class="flex items-center justify-between p-5 pb-0">
                     <div class="flex items-center gap-3">
-                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-brand-600 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                        <span class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#283593] to-[#FB5607] flex items-center justify-center text-white shadow-md shadow-[#283593]/25">
                             <i class="fas fa-book-open text-sm"></i>
                         </span>
                         <h2 class="font-heading text-lg font-bold text-slate-800">{{ __('student.my_active_courses') }}</h2>
                     </div>
                     <div class="flex items-center gap-3 flex-wrap justify-end">
                         @hasPermission('student.view.courses')
-                        <a href="{{ route('public.courses') }}" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm font-semibold flex items-center gap-1 transition-colors">
+                        <a href="{{ route('public.courses') }}" class="text-[#283593] dark:text-indigo-400 hover:text-[#1f2a7a] dark:hover:text-indigo-300 text-sm font-semibold flex items-center gap-1 transition-colors">
                             <i class="fas fa-th-large text-[10px]"></i>
                             {{ __('student.courses') }}
                         </a>
                         @endhasPermission
-                        <a href="{{ route('my-courses.index') }}" class="text-brand-600 hover:text-brand-700 text-sm font-semibold flex items-center gap-1 transition-colors">
+                        <a href="{{ route('my-courses.index') }}" class="text-[#FB5607] hover:text-[#e84d00] text-sm font-semibold flex items-center gap-1 transition-colors">
                             {{ __('student.view_all') }} <i class="fas fa-arrow-left text-[10px]"></i>
                         </a>
                     </div>
@@ -269,7 +269,7 @@
                     @forelse($activeCourses->take(5) as $course)
                         @php $prog = (float) ($course->pivot->progress ?? optional($course->enrollment ?? null)->progress ?? 0); @endphp
                         <a href="{{ route('my-courses.show', $course->id) }}" class="course-row flex items-center gap-4 block">
-                            <div class="w-11 h-11 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 flex-shrink-0">
+                            <div class="w-11 h-11 rounded-xl bg-[#FFE5F7] border border-[#f5c7e8] flex items-center justify-center text-[#283593] flex-shrink-0">
                                 <i class="fas fa-book text-sm"></i>
                             </div>
                             <div class="flex-1 min-w-0">
@@ -294,7 +294,7 @@
                             </div>
                             <p class="font-heading font-bold text-slate-700 dark:text-slate-200 mb-1">{{ __('student.no_active_courses') }}</p>
                             <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">{{ __('student.start_journey_now') }}</p>
-                            <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-brand-500/25 hover:shadow-xl transition-all">
+                            <a href="{{ route('public.courses') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#283593] to-[#1F2A7A] text-white rounded-xl text-sm font-bold shadow-lg shadow-[#283593]/25 hover:shadow-xl transition-all">
                                 <i class="fas fa-search text-xs"></i>
                                 {{ __('student.explore_courses') }}
                             </a>
@@ -332,7 +332,7 @@
                                 <div class="text-[11px] text-slate-500 mb-2 truncate">{{ $course->title }}</div>
                             @endif
                             @if($dueDate)
-                                <span class="badge {{ $isOverdue ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-brand-50 text-brand-700 border border-brand-200' }}">
+                                <span class="badge {{ $isOverdue ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-[#FFE5F7] text-[#283593] border border-[#f5c7e8]' }}">
                                     <i class="fas fa-calendar text-[9px]"></i>
                                     {{ $dueDate->translatedFormat('d M') }}
                                 </span>
@@ -351,13 +351,13 @@
             <div class="section-card">
                 <div class="flex items-center justify-between p-4 pb-0">
                     <div class="flex items-center gap-2.5">
-                        <span class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center text-white shadow-md shadow-cyan-500/20">
+                        <span class="w-9 h-9 rounded-lg bg-gradient-to-br from-[#283593] to-[#FB5607] flex items-center justify-center text-white shadow-md shadow-[#283593]/25">
                             <i class="fas fa-clipboard-check text-xs"></i>
                         </span>
                         <h3 class="font-heading font-bold text-slate-800 text-sm">{{ __('student.exams') }}</h3>
                     </div>
                     @if($upcomingExams->count() > 0)
-                        <span class="badge bg-cyan-50 text-cyan-700 border border-cyan-200">{{ $upcomingExams->count() }}</span>
+                        <span class="badge bg-[#FFE5F7] text-[#283593] border border-[#f5c7e8]">{{ $upcomingExams->count() }}</span>
                     @endif
                 </div>
                 <div class="p-4 space-y-2">
@@ -367,7 +367,7 @@
                             $startAt = $exam->start_time ?? ($exam->start_date ? $exam->start_date->copy()->startOfDay() : null);
                             $isAvailableNow = $startAt ? $startAt->isPast() : true;
                         @endphp
-                        <a href="{{ route('student.exams.show', $exam) }}" class="mini-card block hover:border-cyan-200">
+                        <a href="{{ route('student.exams.show', $exam) }}" class="mini-card block hover:border-indigo-200">
                             <div class="font-bold text-slate-800 text-xs mb-1 truncate">{{ $exam->title }}</div>
                             @if($course)
                                 <div class="text-[11px] text-slate-500 mb-2 truncate">{{ $course->title }}</div>
@@ -446,7 +446,7 @@
                                 {{ $certificate->title ?? $certificate->course_name ?? __('student.certificate_untitled') }}
                             </div>
                             @if($certificate->certificate_number)
-                                <span class="badge bg-brand-50 text-brand-700 border border-brand-200 mt-1">
+                                <span class="badge bg-[#FFE5F7] text-[#283593] border border-[#f5c7e8] mt-1">
                                     {{ $certificate->certificate_number }}
                                 </span>
                             @endif

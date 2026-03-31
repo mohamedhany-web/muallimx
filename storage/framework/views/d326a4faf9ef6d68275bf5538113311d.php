@@ -17,7 +17,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -27,7 +27,8 @@
                 extend: {
                     colors: {
                         navy: { 50:'#f0f4ff',100:'#dbe4ff',200:'#bac8ff',300:'#91a7ff',400:'#748ffc',500:'#5c7cfa',600:'#4c6ef5',700:'#4263eb',800:'#3b5bdb',900:'#364fc7',950:'#0c1222' },
-                        brand: { 50:'#ecfeff',100:'#cffafe',200:'#a5f3fc',300:'#67e8f9',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',700:'#0e7490',800:'#155e75',900:'#164e63' },
+                        brand: { 50:'#FFF3E0',100:'#FFE0B2',200:'#FFCC80',300:'#FFB74D',400:'#FFA726',500:'#FB5607',600:'#E04D00',700:'#BF360C',800:'#8D2600',900:'#5D1A00' },
+                        mx: { navy:'#283593', indigo:'#1F2A7A', orange:'#FB5607', rose:'#FFE5F7', gold:'#FFE569', soft:'#F7F8FF' },
                         surface: { 50:'#fafbfc', 100:'#f4f5f7', 200:'#e8eaed', 300:'#dadce0' }
                     }
                 }
@@ -62,19 +63,20 @@
     </script>
 
     <style>
-        * { font-family: 'IBM Plex Sans Arabic', system-ui, -apple-system, sans-serif; }
+        * { font-family: 'Cairo', 'IBM Plex Sans Arabic', 'Tajawal', system-ui, -apple-system, sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-heading { font-family: 'Cairo', 'Tajawal', 'IBM Plex Sans Arabic', sans-serif; }
         [x-cloak] { display: none !important; }
         html { scroll-behavior: smooth; }
         html.light { color-scheme: light; }
         html.dark { color-scheme: dark; }
-        body { background: #f8f9fb; overflow-x: hidden; }
+        body { background: #f7f8ff; overflow-x: hidden; }
         .dark body { background: #0c1222; }
 
         /* ── Sidebar ── */
         .app-sidebar {
             width: 260px;
             background: #fff;
-            border-left: 1px solid #e5e7eb;
+            border-left: 1px solid #e8eaf6;
         }
         .dark .app-sidebar {
             background: #111827;
@@ -100,7 +102,7 @@
             border: 1px solid transparent;
         }
         .s-nav:hover { background: #f3f4f6; color: #111827; }
-        .s-nav.active { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+        .s-nav.active { background: #f2f4ff; color: #1F2A7A; border-color: #d6dcff; }
         .dark .s-nav { color: #9ca3af; }
         .dark .s-nav:hover { background: #1f2937; color: #e5e7eb; }
         .dark .s-nav.active { background: #172554; color: #60a5fa; border-color: #1e3a5f; }
@@ -114,7 +116,8 @@
         /* ── Header ── */
         .app-header {
             height: 56px; background: #fff;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e8eaf6;
+            backdrop-filter: blur(10px);
         }
         .dark .app-header {
             background: #111827; border-bottom-color: #1f2937;
@@ -137,7 +140,7 @@
             border-radius: 8px; padding: 7px 12px;
             transition: all .2s;
         }
-        .search-box:focus-within { background: #fff; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+        .search-box:focus-within { background: #fff; border-color: #283593; box-shadow: 0 0 0 3px rgba(40,53,147,.1); }
         .dark .search-box { background: #1f2937; }
         .dark .search-box:focus-within { background: #111827; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
         .dark .search-box input { color: #e5e7eb; }
@@ -156,7 +159,7 @@
         /* User avatar */
         .u-avatar {
             width: 32px; height: 32px; border-radius: 8px;
-            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            background: linear-gradient(135deg, #283593, #FB5607);
             display: flex; align-items: center; justify-content: center;
             color: #fff; font-weight: 600; font-size: 13px;
         }
@@ -241,16 +244,16 @@
         .ins-nav::before {
             content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%);
             width: 3px; height: 0; border-radius: 3px 0 0 3px;
-            background: linear-gradient(180deg, #0ea5e9, #6366f1);
+            background: linear-gradient(180deg, #283593, #FB5607);
             transition: height .2s ease;
         }
         .ins-nav:hover { background: #f8fafc; color: #0f172a; }
-        .ins-nav.active { background: #f0f9ff; color: #0284c7; border-color: #bae6fd; font-weight: 600; }
+        .ins-nav.active { background: #f2f4ff; color: #1F2A7A; border-color: #d6dcff; font-weight: 600; }
         .ins-nav.active::before { height: 22px; }
         .dark .ins-nav { color: #9ca3af; }
         .dark .ins-nav:hover { background: #1f2937; color: #f1f5f9; }
-        .dark .ins-nav.active { background: #0c4a6e; color: #7dd3fc; border-color: #164e63; font-weight: 600; }
-        .dark .ins-nav.active::before { background: linear-gradient(180deg, #38bdf8, #818cf8); }
+        .dark .ins-nav.active { background: #1e2b5a; color: #c7d2fe; border-color: #33407a; font-weight: 600; }
+        .dark .ins-nav.active::before { background: linear-gradient(180deg, #818cf8, #fb7185); }
         .ins-nav .ins-icon {
             width: 34px; height: 34px; border-radius: 9px;
             display: flex; align-items: center; justify-content: center;
@@ -258,7 +261,7 @@
             transition: transform .2s, box-shadow .2s;
         }
         .ins-nav:hover .ins-icon { transform: scale(1.08); }
-        .ins-nav.active .ins-icon { box-shadow: 0 2px 8px -2px rgba(14, 165, 233, 0.25); }
+        .ins-nav.active .ins-icon { box-shadow: 0 2px 8px -2px rgba(40, 53, 147, 0.3); }
         .ins-nav-badge {
             min-width: 20px; height: 20px; padding: 0 6px;
             border-radius: 10px; font-size: 11px; font-weight: 700;

@@ -50,6 +50,8 @@ return [
     'instructors_subtitle' => 'تعرف على فريق المدربين والخبراء.',
     'instructor_fallback' => 'مدرب',
     'no_instructors' => 'لا يوجد مدربون معروضون حالياً.',
+    'view_instructor_profile' => 'عرض الملف الشخصي',
+    'all_instructors_link' => 'عرض كل المدربين',
     'experience' => 'الخبرات',
     'skills' => 'المهارات',
     'instructor_courses' => 'كورسات المدرب',
@@ -186,6 +188,8 @@ return [
     'no_results' => 'لا توجد نتائج',
     'no_results_hint' => 'جرب البحث بكلمات مختلفة أو تصفية مختلف',
     'coming_soon_courses' => 'نعمل على إضافة المزيد من البرامج والدورات التدريبية لخدمتكم.',
+    'no_courses_landing' => 'لا توجد كورسات منشورة حالياً. تصفّح صفحة الكورسات لاحقاً.',
+    'no_rating_yet' => 'لا تقييم بعد',
     'have_account' => 'لدي حساب بالفعل',
 
     // Course show

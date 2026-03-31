@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\Lecture;
 use App\Models\TeamsAttendanceFile;
+use App\Services\TeamsAttendanceImportService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class AttendanceController extends Controller
 {
@@ -48,10 +49,33 @@ class AttendanceController extends Controller
             'uploaded_by' => auth()->id(),
         ]);
 
-        // TODO: معالجة الملف وتحديث سجلات الحضور
+        try {
+            $teamsFile->update(['status' => 'processing']);
+            $importer = new TeamsAttendanceImportService();
+            $result = $importer->importFromFile($lecture, public_path('storage/' . $filePath));
+            $teamsFile->update([
+                'status' => 'completed',
+                'total_records' => (int) ($result['total'] ?? 0),
+                'processed_records' => (int) ($result['processed'] ?? 0),
+                'error_message' => !empty($result['errors'])
+                    ? implode(' | ', array_slice($result['errors'], 0, 5))
+                    : null,
+            ]);
 
-        return redirect()->back()
-            ->with('success', 'تم رفع الملف بنجاح. جاري معالجته...');
+            $summary = "تمت معالجة الملف. الإجمالي: {$result['total']} | مطابق: {$result['matched']} | غير مطابق: {$result['unmatched']}";
+            return redirect()->back()->with('success', $summary);
+        } catch (\Throwable $e) {
+            Log::error('Attendance import failed', [
+                'lecture_id' => $lecture->id,
+                'teams_file_id' => $teamsFile->id,
+                'error' => $e->getMessage(),
+            ]);
+            $teamsFile->update([
+                'status' => 'failed',
+                'error_message' => $e->getMessage(),
+            ]);
+            return redirect()->back()->with('error', 'فشل معالجة ملف الحضور. تأكد من تنسيق الأعمدة ثم أعد المحاولة.');
+        }
     }
 
     public function showLectureAttendance(Lecture $lecture)
