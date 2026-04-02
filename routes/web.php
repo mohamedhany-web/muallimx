@@ -575,6 +575,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('student.classroom.recording.upload');
         Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('student.classroom.recording.presign');
         Route::post('/classroom/{meeting}/recording/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectRecordingUpload'])->name('student.classroom.recording.complete');
+        Route::post('/classroom/{meeting}/recording-audio/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignAudioUpload'])->name('student.classroom.recording-audio.presign');
+        Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('student.classroom.recording-audio.upload');
+        Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('student.classroom.recording-audio.complete');
         // الدعم الفني (ميزة من الباقة)
         Route::get('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'index'])->name('student.support.index');
         Route::post('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'store'])->name('student.support.store');
@@ -1395,6 +1398,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('classroom.recording.upload');
         Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('classroom.recording.presign');
         Route::post('/classroom/{meeting}/recording/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectRecordingUpload'])->name('classroom.recording.complete');
+        Route::post('/classroom/{meeting}/recording-audio/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignAudioUpload'])->name('classroom.recording-audio.presign');
+        Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('classroom.recording-audio.upload');
+        Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('classroom.recording-audio.complete');
 
         // بروفايل المدرب
         Route::get('/profile', [\App\Http\Controllers\Instructor\ProfileController::class, 'index'])->name('profile');
@@ -1503,6 +1509,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/{liveSession}', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'show'])->name('show');
             Route::post('/{liveSession}/start', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'start'])->name('start');
             Route::get('/{liveSession}/room', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'room'])->name('room');
+            Route::post('/{liveSession}/audio/presign', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'presignAudioUpload'])->name('audio.presign');
+            Route::post('/{liveSession}/audio/complete', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'completeAudioUpload'])->name('audio.complete');
             Route::post('/{liveSession}/end', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'end'])->name('end');
         });
 

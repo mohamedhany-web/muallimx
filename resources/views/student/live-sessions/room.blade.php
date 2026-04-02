@@ -55,6 +55,7 @@
         <main id="jitsi-container" role="application" aria-label="غرفة البث المباشر"></main>
     </div>
 
+    @include('partials.live-whiteboard')
     @include('partials.jitsi-iframe-media-allow')
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>

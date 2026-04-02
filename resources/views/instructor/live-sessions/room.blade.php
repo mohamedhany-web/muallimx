@@ -59,6 +59,7 @@
         <main id="jitsi-container" role="application" aria-label="غرفة البث المباشر"></main>
     </div>
 
+    @include('partials.live-whiteboard')
     @include('partials.jitsi-iframe-media-allow')
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>
@@ -108,6 +109,15 @@
         };
         const api = new JitsiMeetExternalAPI(domain, options);
         let isRecording = false;
+        let audioRecorder = null;
+        let audioStream = null;
+        let audioChunks = [];
+        let audioStartedAt = null;
+        let audioUploadFinalized = false;
+        let audioUploadInFlight = false;
+        const csrfToken = '{{ csrf_token() }}';
+        const audioPresignUrl = '{{ route("instructor.live-sessions.audio.presign", $liveSession) }}';
+        const audioCompleteUrl = '{{ route("instructor.live-sessions.audio.complete", $liveSession) }}';
 
         // تايمر البث
         const startTime = new Date('{{ $liveSession->started_at->toISOString() }}');
@@ -122,6 +132,128 @@
         setInterval(updateTimer, 1000);
         updateTimer();
 
+        function pickAudioMimeType() {
+            if (!window.MediaRecorder || typeof MediaRecorder.isTypeSupported !== 'function') return '';
+            const candidates = [
+                'audio/webm;codecs=opus',
+                'audio/webm',
+                'audio/ogg;codecs=opus',
+                'audio/ogg'
+            ];
+            for (const mime of candidates) {
+                if (MediaRecorder.isTypeSupported(mime)) return mime;
+            }
+            return '';
+        }
+
+        async function startAutoAudioRecording() {
+            if (audioRecorder || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+                return;
+            }
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const mimeType = pickAudioMimeType();
+                audioRecorder = mimeType ? new MediaRecorder(audioStream, { mimeType }) : new MediaRecorder(audioStream);
+                audioChunks = [];
+                audioStartedAt = Date.now();
+
+                audioRecorder.ondataavailable = function (event) {
+                    if (event.data && event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+
+                audioRecorder.start(1000);
+            } catch (error) {
+                console.warn('Auto audio recording could not start:', error);
+            }
+        }
+
+        async function uploadAudioBlob(blob, durationSeconds) {
+            if (!blob || blob.size <= 0) return;
+
+            const presignRes = await fetch(audioPresignUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    content_type: blob.type || 'audio/webm',
+                }),
+            });
+            if (!presignRes.ok) {
+                throw new Error('presign_failed');
+            }
+
+            const presign = await presignRes.json();
+            if (!presign.direct_upload || !presign.upload_url || !presign.upload_token) {
+                throw new Error('invalid_presign_response');
+            }
+
+            const uploadHeaders = Object.assign({}, presign.headers || {});
+            if (!uploadHeaders['Content-Type'] && !uploadHeaders['content-type']) {
+                uploadHeaders['Content-Type'] = presign.content_type || blob.type || 'audio/webm';
+            }
+
+            const putRes = await fetch(presign.upload_url, {
+                method: 'PUT',
+                headers: uploadHeaders,
+                body: blob,
+            });
+            if (!putRes.ok) {
+                throw new Error('r2_upload_failed');
+            }
+
+            const completeRes = await fetch(audioCompleteUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    upload_token: presign.upload_token,
+                    duration_seconds: Math.max(1, Math.floor(durationSeconds || 0)),
+                }),
+            });
+            if (!completeRes.ok) {
+                throw new Error('complete_failed');
+            }
+        }
+
+        async function stopAndUploadAutoAudio() {
+            if (audioUploadFinalized || audioUploadInFlight) return;
+            if (!audioRecorder) return;
+            audioUploadInFlight = true;
+
+            try {
+                if (audioRecorder.state !== 'inactive') {
+                    await new Promise((resolve) => {
+                        audioRecorder.addEventListener('stop', resolve, { once: true });
+                        audioRecorder.stop();
+                    });
+                }
+
+                const mimeType = audioRecorder.mimeType || 'audio/webm';
+                const blob = new Blob(audioChunks, { type: mimeType });
+                const durationSeconds = audioStartedAt ? ((Date.now() - audioStartedAt) / 1000) : 0;
+                await uploadAudioBlob(blob, durationSeconds);
+                audioUploadFinalized = true;
+            } catch (error) {
+                console.warn('Auto audio upload failed:', error);
+            } finally {
+                if (audioStream) {
+                    audioStream.getTracks().forEach(track => track.stop());
+                }
+                audioStream = null;
+                audioRecorder = null;
+                audioChunks = [];
+                audioUploadInFlight = false;
+            }
+        }
+
         api.addEventListener('videoConferenceJoined', function() {
             document.getElementById('btn-record').addEventListener('click', function() {
                 if (isRecording) {
@@ -130,7 +262,25 @@
                     api.executeCommand('startRecording', { mode: 'file' });
                 }
             });
+
+            startAutoAudioRecording();
         });
+
+        const endForm = document.querySelector('form[action="{{ route("instructor.live-sessions.end", $liveSession) }}"]');
+        if (endForm) {
+            endForm.addEventListener('submit', async function (e) {
+                if (endForm.dataset.audioHandled === '1') return;
+                e.preventDefault();
+                endForm.dataset.audioHandled = '1';
+                const submitBtn = endForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+                }
+                await stopAndUploadAutoAudio();
+                endForm.submit();
+            });
+        }
 
         api.addEventListener('recordingStatusChanged', function(data) {
             isRecording = data && (data.on === true || data.status === 'on');

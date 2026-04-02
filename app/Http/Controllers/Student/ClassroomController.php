@@ -531,6 +531,248 @@ class ClassroomController extends Controller
         ]);
     }
 
+    /**
+     * رابط موقّع لرفع ملف الصوت المنفصل مباشرة إلى R2/S3.
+     */
+    public function presignAudioUpload(Request $request, ClassroomMeeting $meeting)
+    {
+        @set_time_limit(120);
+
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if (! $meeting->started_at) {
+            return response()->json(['message' => 'لا يمكن رفع تسجيل صوتي لاجتماع لم يبدأ بعد.'], 422);
+        }
+
+        $disk = Storage::disk('live_recordings_r2');
+        if (! $disk->providesTemporaryUploadUrls()) {
+            return response()->json([
+                'direct_upload' => false,
+                'message' => 'التخزين الحالي لا يدعم الرفع المباشر.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'content_type' => ['nullable', 'string', 'max:191'],
+        ]);
+
+        $mime = $this->normalizeAudioMime((string) ($validated['content_type'] ?? 'audio/webm'));
+        $ext = $this->mimeToAudioExt($mime);
+        $directory = 'classroom-recordings-audio/'.now()->format('Y/m');
+        $fileName = sprintf(
+            'meeting-%d-audio-%s-%s.%s',
+            $meeting->id,
+            now()->format('Ymd-His'),
+            Str::lower(Str::random(8)),
+            $ext
+        );
+        $newPath = $directory.'/'.$fileName;
+
+        $token = Str::random(64);
+        Cache::put(
+            'classroom_audio_presign:'.$token,
+            [
+                'path' => $newPath,
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'mime' => $mime,
+            ],
+            now()->addMinutes(90)
+        );
+
+        try {
+            $signed = $disk->temporaryUploadUrl(
+                $newPath,
+                now()->addMinutes(75),
+                [
+                    'ContentType' => $mime,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Cache::forget('classroom_audio_presign:'.$token);
+            \Log::error('Classroom audio presign failed', [
+                'meeting_id' => $meeting->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'direct_upload' => false,
+                'message' => 'تعذر تجهيز رابط رفع الملف الصوتي إلى التخزين السحابي.',
+            ], 503);
+        }
+
+        return response()->json([
+            'direct_upload' => true,
+            'upload_url' => $signed['url'],
+            'upload_token' => $token,
+            'content_type' => $mime,
+            'headers' => $signed['headers'] ?? [],
+        ]);
+    }
+
+    /**
+     * رفع ملف الصوت عبر السيرفر (fallback عند عدم دعم direct upload).
+     */
+    public function uploadAudioRecording(Request $request, ClassroomMeeting $meeting)
+    {
+        @set_time_limit(0);
+        @ini_set('max_execution_time', '0');
+
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if (! $meeting->started_at) {
+            return response()->json(['message' => 'لا يمكن رفع تسجيل صوتي لاجتماع لم يبدأ بعد.'], 422);
+        }
+
+        try {
+            $validated = $request->validate([
+                'recording_audio' => ['required', 'file', 'max:1048576'],
+                'duration_seconds' => ['nullable', 'integer', 'min:1', 'max:43200'],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'فشل التحقق من الملف الصوتي المرفوع.',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        $file = $validated['recording_audio'];
+        $ext = strtolower((string) $file->getClientOriginalExtension());
+        if ($ext === '') {
+            $ext = strtolower((string) pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
+        }
+        if (! in_array($ext, ['webm', 'ogg', 'm4a', 'mp3', 'mp4'], true)) {
+            return response()->json(['message' => 'امتداد الصوت غير مدعوم.'], 422);
+        }
+
+        if ($file->getSize() <= 0) {
+            return response()->json(['message' => 'الملف الصوتي فارغ.'], 422);
+        }
+
+        $disk = Storage::disk('live_recordings_r2');
+        $directory = 'classroom-recordings-audio/'.now()->format('Y/m');
+        $fileName = sprintf('meeting-%d-audio-%s.%s', $meeting->id, now()->format('Ymd-His'), $ext ?: 'webm');
+        $newPath = $directory.'/'.$fileName;
+        $oldAudioPath = ($meeting->recording_disk === 'live_recordings_r2') ? $meeting->recording_audio_path : null;
+
+        try {
+            $disk->putFileAs($directory, $file, $fileName);
+        } catch (\Throwable $e) {
+            \Log::error('Classroom audio upload failed', [
+                'meeting_id' => $meeting->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'تعذر رفع ملف الصوت إلى التخزين السحابي.',
+            ], 500);
+        }
+
+        if ($oldAudioPath && $oldAudioPath !== $newPath) {
+            try {
+                $disk->delete($oldAudioPath);
+            } catch (\Throwable $e) {
+            }
+        }
+
+        $meeting->update([
+            'recording_disk' => 'live_recordings_r2',
+            'recording_audio_path' => $newPath,
+            'recording_audio_mime_type' => $file->getMimeType(),
+            'recording_audio_size' => $file->getSize(),
+            'recording_audio_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
+        ]);
+
+        return response()->json([
+            'message' => 'تم رفع التسجيل الصوتي بنجاح.',
+            'audio_download_url' => $meeting->fresh()->recording_audio_download_url,
+        ]);
+    }
+
+    /**
+     * بعد PUT الناجح للصوت: ربط ملف الصوت بالاجتماع.
+     */
+    public function completeDirectAudioUpload(Request $request, ClassroomMeeting $meeting)
+    {
+        @set_time_limit(120);
+
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if (! $meeting->started_at) {
+            return response()->json(['message' => 'لا يمكن رفع تسجيل صوتي لاجتماع لم يبدأ بعد.'], 422);
+        }
+
+        $validated = $request->validate([
+            'upload_token' => ['required', 'string', 'size:64'],
+            'duration_seconds' => ['nullable', 'integer', 'min:1', 'max:43200'],
+        ]);
+
+        $cacheKey = 'classroom_audio_presign:'.$validated['upload_token'];
+        $payload = Cache::pull($cacheKey);
+        if (! is_array($payload)
+            || (int) ($payload['meeting_id'] ?? 0) !== (int) $meeting->id
+            || (int) ($payload['user_id'] ?? 0) !== (int) $user->id) {
+            return response()->json([
+                'message' => 'انتهت صلاحية رابط رفع الصوت أو أنه غير صالح.',
+            ], 422);
+        }
+
+        $path = (string) ($payload['path'] ?? '');
+        $mime = (string) ($payload['mime'] ?? 'audio/webm');
+        if ($path === '' || str_contains($path, '..')) {
+            return response()->json(['message' => 'مسار التخزين غير صالح.'], 422);
+        }
+
+        $disk = Storage::disk('live_recordings_r2');
+        if (! $disk->exists($path)) {
+            return response()->json([
+                'message' => 'ملف الصوت غير ظاهر على التخزين بعد. انتظر ثانية ثم أعد التأكيد.',
+            ], 422);
+        }
+
+        $size = (int) $disk->size($path);
+        if ($size <= 0) {
+            return response()->json(['message' => 'ملف الصوت المرفوع فارغ.'], 422);
+        }
+
+        $maxBytes = 2147483648;
+        if ($size > $maxBytes) {
+            try {
+                $disk->delete($path);
+            } catch (\Throwable $e) {
+            }
+
+            return response()->json(['message' => 'حجم ملف الصوت يتجاوز الحد المسموح (٢ جيجابايت).'], 422);
+        }
+
+        $oldAudioPath = ($meeting->recording_disk === 'live_recordings_r2') ? $meeting->recording_audio_path : null;
+        if ($oldAudioPath && $oldAudioPath !== $path) {
+            try {
+                $disk->delete($oldAudioPath);
+            } catch (\Throwable $e) {
+            }
+        }
+
+        $meeting->update([
+            'recording_disk' => 'live_recordings_r2',
+            'recording_audio_path' => $path,
+            'recording_audio_mime_type' => $mime,
+            'recording_audio_size' => $size,
+            'recording_audio_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
+        ]);
+
+        return response()->json([
+            'message' => 'تم رفع التسجيل الصوتي إلى Cloudflare بنجاح.',
+            'audio_download_url' => $meeting->fresh()->recording_audio_download_url,
+        ]);
+    }
+
     public function destroy(ClassroomMeeting $meeting)
     {
         $user = Auth::user();
@@ -592,6 +834,30 @@ class ClassroomController extends Controller
             'video/mp4', 'video/quicktime' => 'mp4',
             'video/x-matroska' => 'mkv',
             'audio/ogg', 'video/ogg' => 'ogg',
+            default => 'webm',
+        };
+    }
+
+    private function normalizeAudioMime(string $mime): string
+    {
+        $mime = strtolower(trim($mime));
+        $allowed = [
+            'audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg',
+            'application/octet-stream', 'binary/octet-stream',
+        ];
+        if ($mime !== '' && in_array($mime, $allowed, true)) {
+            return $mime;
+        }
+
+        return 'audio/webm';
+    }
+
+    private function mimeToAudioExt(string $mime): string
+    {
+        return match ($mime) {
+            'audio/ogg' => 'ogg',
+            'audio/mp4' => 'm4a',
+            'audio/mpeg' => 'mp3',
             default => 'webm',
         };
     }

@@ -23,9 +23,13 @@ class ClassroomMeeting extends Model
         'ended_at',
         'recording_disk',
         'recording_path',
+        'recording_audio_path',
         'recording_mime_type',
+        'recording_audio_mime_type',
         'recording_size',
+        'recording_audio_size',
         'recording_duration_seconds',
+        'recording_audio_duration_seconds',
         'recording_uploaded_at',
     ];
 
@@ -37,7 +41,9 @@ class ClassroomMeeting extends Model
         'started_at' => 'datetime',
         'ended_at' => 'datetime',
         'recording_size' => 'integer',
+        'recording_audio_size' => 'integer',
         'recording_duration_seconds' => 'integer',
+        'recording_audio_duration_seconds' => 'integer',
         'recording_uploaded_at' => 'datetime',
     ];
 
@@ -84,6 +90,22 @@ class ClassroomMeeting extends Model
         try {
             return Storage::disk('live_recordings_r2')->temporaryUrl(
                 $this->recording_path,
+                now()->addHours(2)
+            );
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public function getRecordingAudioDownloadUrlAttribute(): ?string
+    {
+        if (!$this->hasBrowserRecording() || empty($this->recording_audio_path)) {
+            return null;
+        }
+
+        try {
+            return Storage::disk('live_recordings_r2')->temporaryUrl(
+                $this->recording_audio_path,
                 now()->addHours(2)
             );
         } catch (\Throwable $e) {

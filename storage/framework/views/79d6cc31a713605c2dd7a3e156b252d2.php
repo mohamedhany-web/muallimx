@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MuallimX Classroom — {{ $meeting->title ?: $meeting->code }}</title>
+    <title>MuallimX Classroom — <?php echo e($meeting->title ?: $meeting->code); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,16 +31,16 @@
     </style>
 </head>
 <body class="bg-slate-950">
-@php
+<?php
     $rp = ($useInstructorRoutes ?? false) ? 'instructor.' : 'student.';
     $roomExitUrl = ($useInstructorRoutes ?? false)
         ? ($meeting->consultation_request_id ? route('instructor.consultations.show', $meeting->consultation_request_id) : route('instructor.consultations.index'))
         : route('student.classroom.index');
-@endphp
-    {{-- شريط MuallimX العلوي — تصميم المنصة فقط --}}
+?>
+    
     <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg">
         <div class="flex items-center gap-4">
-            <a href="{{ $roomExitUrl }}" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+            <a href="<?php echo e($roomExitUrl); ?>" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
                 <span class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
                     <i class="fas fa-video text-lg"></i>
                 </span>
@@ -49,16 +49,17 @@
             <span class="w-px h-6 bg-slate-600 hidden sm:block"></span>
             <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50"></span>
-                <span class="text-white font-semibold text-sm">{{ $meeting->title ?: 'غرفة ' . $meeting->code }}</span>
-                <span class="text-slate-400 text-xs px-2 py-0.5 rounded-md bg-slate-700/80 font-mono">{{ $meeting->code }}</span>
+                <span class="text-white font-semibold text-sm"><?php echo e($meeting->title ?: 'غرفة ' . $meeting->code); ?></span>
+                <span class="text-slate-400 text-xs px-2 py-0.5 rounded-md bg-slate-700/80 font-mono"><?php echo e($meeting->code); ?></span>
             </div>
         </div>
         <div class="flex items-center gap-2">
             <span class="text-slate-300 text-xs px-2 py-1 rounded-md bg-slate-700/80">
-                الحد الأقصى للطلاب: {{ (int) ($meeting->max_participants ?? 25) }}
+                الحد الأقصى للطلاب: <?php echo e((int) ($meeting->max_participants ?? 25)); ?>
+
             </span>
             <span class="text-amber-200 text-xs px-2 py-1 rounded-md bg-amber-500/20 border border-amber-500/30" id="meeting-timer-chip">
-                مدة الاجتماع: {{ (int) $effectiveDurationMinutes }} دقيقة (حد الباقة {{ (int) $maxDurationMinutes }})
+                مدة الاجتماع: <?php echo e((int) $effectiveDurationMinutes); ?> دقيقة (حد الباقة <?php echo e((int) $maxDurationMinutes); ?>)
             </span>
             <span class="hidden text-sky-200 text-xs px-2 py-1 rounded-md bg-sky-500/20 border border-sky-500/30" id="record-status-chip"></span>
             <button type="button" id="btn-wb-toggle" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors border border-slate-600" title="تفعيل القلم والرسم على الشاشة فوق الاجتماع">
@@ -73,11 +74,11 @@
                 <i class="fas fa-circle-dot text-rose-400" id="record-icon"></i>
                 <span id="record-label">تسجيل المحاضرة</span>
             </button>
-            <button type="button" onclick="navigator.clipboard.writeText('{{ url('classroom/join/' . $meeting->code) }}'); this.innerHTML='<i class=\'fas fa-check ml-1\'></i> تم النسخ'; setTimeout(()=>{ this.innerHTML='<i class=\'fas fa-link ml-1\'></i> مشاركة الرابط'; }, 2000)" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors border border-slate-600">
+            <button type="button" onclick="navigator.clipboard.writeText('<?php echo e(url('classroom/join/' . $meeting->code)); ?>'); this.innerHTML='<i class=\'fas fa-check ml-1\'></i> تم النسخ'; setTimeout(()=>{ this.innerHTML='<i class=\'fas fa-link ml-1\'></i> مشاركة الرابط'; }, 2000)" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors border border-slate-600">
                 <i class="fas fa-link ml-1"></i> مشاركة الرابط
             </button>
-            <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" class="inline" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
-                @csrf
+            <form method="POST" action="<?php echo e(route($rp.'classroom.end', $meeting)); ?>" class="inline" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
+                <?php echo csrf_field(); ?>
                 <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-rose-500/20">
                     <i class="fas fa-stop"></i> إنهاء الاجتماع
                 </button>
@@ -86,7 +87,7 @@
     </header>
 
     <div class="room-body">
-    {{-- بوابة إذن الميكروفون/الكاميرا قبل تحميل Jitsi (تحل مشكلة بعض الأجهزة التي لا تُظهر الطلب تلقائياً) --}}
+    
     <div id="permission-gate" class="absolute inset-0 z-20 bg-slate-950/95 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900/95 shadow-2xl p-6 sm:p-7 text-center">
             <div class="w-14 h-14 mx-auto rounded-2xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center mb-4">
@@ -114,8 +115,8 @@
         </div>
     </div>
 
-    {{-- تنبيه: meet.jit.si للاختبار فقط — يُقطع بعد 5 دقائق --}}
-    @if(!empty($isDemoJitsi))
+    
+    <?php if(!empty($isDemoJitsi)): ?>
     <div class="bg-amber-500/15 border-b border-amber-500/40 px-4 py-2 flex items-center justify-between gap-3 text-amber-800 dark:text-amber-200 text-sm flex-shrink-0">
         <span class="flex items-center gap-2">
             <i class="fas fa-exclamation-triangle"></i>
@@ -123,15 +124,15 @@
         </span>
         <button type="button" onclick="this.parentElement.remove()" class="text-amber-600 hover:text-amber-800 p-1" aria-label="إغلاق"><i class="fas fa-times"></i></button>
     </div>
-    @endif
+    <?php endif; ?>
 
-    {{-- تذكير بصلاحيات الميكروفون/الكاميرا — يقلل التباس "Error obtaining microphone permission" --}}
+    
     <div id="media-tip" class="bg-slate-700/80 border-b border-slate-600 px-4 py-2 text-slate-300 text-xs flex items-center justify-between gap-2 flex-shrink-0">
         <span><i class="fas fa-info-circle text-cyan-400 ml-1"></i> عند طلب المتصفح استخدام <strong>الميكروفون أو الكاميرا</strong> اختر «السماح». يمكنك تفعيل الصوت والفيديو من الشريط بعد الدخول.</span>
         <button type="button" onclick="document.getElementById('media-tip').remove()" class="text-slate-400 hover:text-white p-1" aria-label="إغلاق"><i class="fas fa-times"></i></button>
     </div>
 
-    {{-- منطقة الاجتماع + طبقة رسم (لوحة بيضاء محلية فوق الفيديو) --}}
+    
     <div id="meeting-stage" class="flex-1 min-h-0 relative w-full">
         <main id="jitsi-container" class="flex-1 min-h-0 relative w-full" role="application" aria-label="غرفة الاجتماع">
             <div id="jitsi-loading" class="flex flex-col items-center justify-center h-full text-slate-400 text-sm gap-3">
@@ -141,13 +142,13 @@
             <div id="jitsi-error" class="hidden flex-col items-center justify-center h-full p-6 text-center max-w-lg mx-auto" style="display: none;">
                 <i class="fas fa-exclamation-triangle text-amber-500 text-4xl mb-3"></i>
                 <p class="font-bold text-slate-200 mb-2">لا يمكن تحميل غرفة الاجتماع</p>
-                <p class="text-slate-400 text-sm mb-3">المتصفح لم يستطع الاتصال بـ <strong class="text-slate-300">{{ $jitsiDomain }}</strong>.</p>
+                <p class="text-slate-400 text-sm mb-3">المتصفح لم يستطع الاتصال بـ <strong class="text-slate-300"><?php echo e($jitsiDomain); ?></strong>.</p>
                 <ul class="text-right text-slate-400 text-sm mb-4 list-none space-y-1">
                     <li>• النطاق يجب أن يكون <strong class="text-slate-300">النطاق الذي يعمل عليه Jitsi Meet</strong> (مثلاً <code class="bg-slate-700 px-1 rounded">meet.muallimx.com</code> وليس بالضرورة الموقع الرئيسي).</li>
-                    <li>• جرّب فتح <a href="https://{{ $jitsiDomain }}/external_api.js" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">هذا الرابط</a> في تاب جديد — إن لم يُحمّل، فـ Jitsi غير مُثبت على هذا النطاق أو النطاق غير متاح من جهازك.</li>
+                    <li>• جرّب فتح <a href="https://<?php echo e($jitsiDomain); ?>/external_api.js" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">هذا الرابط</a> في تاب جديد — إن لم يُحمّل، فـ Jitsi غير مُثبت على هذا النطاق أو النطاق غير متاح من جهازك.</li>
                     <li>• إن كان Jitsi على نطاق فرعي (مثل meet.muallimx.com)، غيّر النطاق من: <strong>لوحة الإدارة → سيرفرات البث</strong> ثم «استخدام كنطاق افتراضي» للسيرفر الصحيح.</li>
                 </ul>
-                <a href="https://{{ $jitsiDomain }}/{{ $meeting->room_name }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition-colors">
+                <a href="https://<?php echo e($jitsiDomain); ?>/<?php echo e($meeting->room_name); ?>" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition-colors">
                     <i class="fas fa-external-link-alt"></i> فتح الغرفة في نافذة جديدة
                 </a>
             </div>
@@ -168,7 +169,7 @@
     </div>
     </div>
 
-    {{-- لوحة بيضاء منبثقة بشاشة كبيرة --}}
+    
     <div id="wb-popup" class="hidden fixed inset-0 flex items-center justify-center p-2 sm:p-4" aria-hidden="true" role="dialog" aria-labelledby="wb-popup-title">
         <div id="wb-popup-backdrop" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm cursor-pointer" aria-hidden="true"></div>
         <div id="wb-popup-panel" class="relative z-[141] flex flex-col w-full max-w-[min(1680px,99vw)] h-[min(92vh,calc(100dvh-1rem))] rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl overflow-hidden">
@@ -203,30 +204,30 @@
         </div>
     </div>
 
-    @include('partials.jitsi-iframe-media-allow')
+    <?php echo $__env->make('partials.jitsi-iframe-media-allow', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <script>
         (function() {
-            var jitsiDomain = '{{ $jitsiDomain }}';
-            var roomName = '{{ $meeting->room_name }}';
-            var userName = {!! json_encode($user->name) !!};
-            var userEmail = {!! json_encode($user->email ?? '') !!};
+            var jitsiDomain = '<?php echo e($jitsiDomain); ?>';
+            var roomName = '<?php echo e($meeting->room_name); ?>';
+            var userName = <?php echo json_encode($user->name); ?>;
+            var userEmail = <?php echo json_encode($user->email ?? ''); ?>;
             var container = document.getElementById('jitsi-container');
             var loadingEl = document.getElementById('jitsi-loading');
             var errorEl = document.getElementById('jitsi-error');
-            var meetingEndsAt = {!! json_encode(optional($meetingEndsAt)->toIso8601String()) !!};
+            var meetingEndsAt = <?php echo json_encode(optional($meetingEndsAt)->toIso8601String()); ?>;
             var timerChip = document.getElementById('meeting-timer-chip');
             var recordBtn = document.getElementById('btn-record');
             var recordIcon = document.getElementById('record-icon');
             var recordLabel = document.getElementById('record-label');
             var recordStatusChip = document.getElementById('record-status-chip');
-            var uploadRecordingUrl = '{{ route($rp . 'classroom.recording.upload', $meeting) }}';
-            var presignRecordingUrl = '{{ route($rp . 'classroom.recording.presign', $meeting) }}';
-            var completeRecordingUrl = '{{ route($rp . 'classroom.recording.complete', $meeting) }}';
-            var presignAudioUrl = '{{ route($rp . 'classroom.recording-audio.presign', $meeting) }}';
-            var uploadAudioUrl = '{{ route($rp . 'classroom.recording-audio.upload', $meeting) }}';
-            var completeAudioUrl = '{{ route($rp . 'classroom.recording-audio.complete', $meeting) }}';
-            var csrfToken = '{{ csrf_token() }}';
-            var roomExitUrl = {!! json_encode($roomExitUrl) !!};
+            var uploadRecordingUrl = '<?php echo e(route($rp . 'classroom.recording.upload', $meeting)); ?>';
+            var presignRecordingUrl = '<?php echo e(route($rp . 'classroom.recording.presign', $meeting)); ?>';
+            var completeRecordingUrl = '<?php echo e(route($rp . 'classroom.recording.complete', $meeting)); ?>';
+            var presignAudioUrl = '<?php echo e(route($rp . 'classroom.recording-audio.presign', $meeting)); ?>';
+            var uploadAudioUrl = '<?php echo e(route($rp . 'classroom.recording-audio.upload', $meeting)); ?>';
+            var completeAudioUrl = '<?php echo e(route($rp . 'classroom.recording-audio.complete', $meeting)); ?>';
+            var csrfToken = '<?php echo e(csrf_token()); ?>';
+            var roomExitUrl = <?php echo json_encode($roomExitUrl); ?>;
             var permissionGate = document.getElementById('permission-gate');
             var permissionHelp = document.getElementById('permission-help');
             var requestMediaBtn = document.getElementById('btn-request-media');
@@ -1307,3 +1308,4 @@
     </script>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/student/classroom/room.blade.php ENDPATH**/ ?>

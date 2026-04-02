@@ -82,17 +82,29 @@
                                 وقت الرفع: {{ $meeting->recording_uploaded_at->format('Y-m-d H:i') }}
                             @endif
                         </p>
+                        @if($meeting->recording_audio_path)
+                            <p class="text-xs text-emerald-700 dark:text-emerald-300 mt-1">تم حفظ ملف الصوت المنفصل بنجاح.</p>
+                        @endif
                     @else
                         <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">لا يوجد تسجيل مرفوع لهذا الاجتماع.</p>
                     @endif
                 </div>
-                <div>
+                <div class="flex flex-wrap items-center gap-2">
                     @if($meeting->recording_download_url)
                         <a href="{{ $meeting->recording_download_url }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold">
                             <i class="fas fa-download"></i>
                             تحميل تسجيل المحاضرة
                         </a>
-                    @elseif($meeting->recording_path)
+                    @endif
+                    @if($meeting->recording_audio_download_url)
+                        <a href="{{ $meeting->recording_audio_download_url }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold">
+                            <i class="fas fa-music"></i>
+                            تحميل الفويس
+                        </a>
+                    @elseif($meeting->recording_audio_path)
+                        <span class="text-xs text-amber-700 dark:text-amber-300">الفويس موجود لكن رابط التحميل غير متاح حالياً.</span>
+                    @endif
+                    @if(!$meeting->recording_download_url && !$meeting->recording_audio_download_url && $meeting->recording_path)
                         <span class="text-xs text-amber-700 dark:text-amber-300">التسجيل موجود ولكن رابط التحميل غير متاح حالياً.</span>
                     @endif
                 </div>

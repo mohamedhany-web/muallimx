@@ -9,6 +9,10 @@ use App\Models\LiveServer;
 use App\Models\SessionAttendance;
 use App\Models\AdvancedCourse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use App\Models\LiveRecording;
 
 class LiveSessionController extends Controller
 {
@@ -153,5 +157,180 @@ class LiveSessionController extends Controller
 
         return redirect()->route('instructor.live-sessions.show', $liveSession)
             ->with('success', 'تم إنهاء جلسة البث');
+    }
+
+    /**
+     * تجهيز رابط رفع مباشر للتسجيل الصوتي المنفصل إلى Cloudflare R2.
+     */
+    public function presignAudioUpload(Request $request, LiveSession $liveSession)
+    {
+        if ($liveSession->instructor_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if (! $liveSession->isLive()) {
+            return response()->json(['message' => 'الجلسة ليست في وضع البث.'], 422);
+        }
+
+        $disk = Storage::disk('live_recordings_r2');
+        if (! $disk->providesTemporaryUploadUrls()) {
+            return response()->json([
+                'direct_upload' => false,
+                'message' => 'التخزين الحالي لا يدعم الرفع المباشر. تحقق من إعدادات R2.',
+            ], 503);
+        }
+
+        $validated = $request->validate([
+            'content_type' => ['nullable', 'string', 'max:191'],
+        ]);
+
+        $mime = $this->normalizeAudioMime((string) ($validated['content_type'] ?? 'audio/webm'));
+        $ext = $this->mimeToAudioExt($mime);
+        $directory = 'live-session-audio/'.now()->format('Y/m');
+        $fileName = sprintf(
+            'session-%d-audio-%s-%s.%s',
+            $liveSession->id,
+            now()->format('Ymd-His'),
+            Str::lower(Str::random(8)),
+            $ext
+        );
+        $path = $directory.'/'.$fileName;
+
+        $token = Str::random(64);
+        Cache::put(
+            'live_session_audio_presign:'.$token,
+            [
+                'path' => $path,
+                'session_id' => $liveSession->id,
+                'user_id' => auth()->id(),
+                'mime' => $mime,
+            ],
+            now()->addMinutes(90)
+        );
+
+        try {
+            $signed = $disk->temporaryUploadUrl(
+                $path,
+                now()->addMinutes(75),
+                ['ContentType' => $mime]
+            );
+        } catch (\Throwable $e) {
+            Cache::forget('live_session_audio_presign:'.$token);
+
+            return response()->json([
+                'direct_upload' => false,
+                'message' => 'تعذر تجهيز رابط الرفع إلى التخزين السحابي.',
+            ], 503);
+        }
+
+        return response()->json([
+            'direct_upload' => true,
+            'upload_url' => $signed['url'],
+            'upload_token' => $token,
+            'content_type' => $mime,
+            'headers' => $signed['headers'] ?? [],
+        ]);
+    }
+
+    /**
+     * إنهاء رفع التسجيل الصوتي وإنشاء سجل منفصل في live_recordings.
+     */
+    public function completeAudioUpload(Request $request, LiveSession $liveSession)
+    {
+        if ($liveSession->instructor_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'upload_token' => ['required', 'string', 'size:64'],
+            'duration_seconds' => ['nullable', 'integer', 'min:1', 'max:43200'],
+        ]);
+
+        $payload = Cache::pull('live_session_audio_presign:'.$validated['upload_token']);
+        if (! is_array($payload)
+            || (int) ($payload['session_id'] ?? 0) !== (int) $liveSession->id
+            || (int) ($payload['user_id'] ?? 0) !== (int) auth()->id()) {
+            return response()->json([
+                'message' => 'انتهت صلاحية رابط الرفع أو أنه غير صالح.',
+            ], 422);
+        }
+
+        $path = (string) ($payload['path'] ?? '');
+        if ($path === '' || str_contains($path, '..')) {
+            return response()->json(['message' => 'مسار التخزين غير صالح.'], 422);
+        }
+
+        $disk = Storage::disk('live_recordings_r2');
+        if (! $disk->exists($path)) {
+            return response()->json([
+                'message' => 'الملف غير ظاهر على التخزين بعد. أعد المحاولة بعد ثوانٍ.',
+            ], 422);
+        }
+
+        $size = (int) $disk->size($path);
+        if ($size <= 0) {
+            return response()->json(['message' => 'ملف الصوت فارغ.'], 422);
+        }
+
+        $maxBytes = 2147483648;
+        if ($size > $maxBytes) {
+            try {
+                $disk->delete($path);
+            } catch (\Throwable $e) {
+            }
+
+            return response()->json(['message' => 'حجم الملف يتجاوز الحد المسموح (٢ جيجابايت).'], 422);
+        }
+
+        $recording = LiveRecording::firstOrNew([
+            'session_id' => $liveSession->id,
+            'file_path' => $path,
+            'storage_disk' => 'r2',
+        ]);
+
+        if (! $recording->exists) {
+            $recording->title = 'تسجيل صوتي منفصل - '.$liveSession->title;
+            $recording->status = 'ready';
+            $recording->is_published = false;
+        }
+
+        $recording->file_size = $size;
+        $recording->duration_seconds = (int) ($validated['duration_seconds'] ?? 0);
+        $recording->save();
+
+        return response()->json([
+            'success' => true,
+            'recording_id' => $recording->id,
+            'message' => 'تم رفع التسجيل الصوتي المنفصل بنجاح.',
+        ]);
+    }
+
+    private function normalizeAudioMime(string $mime): string
+    {
+        $mime = strtolower(trim($mime));
+        $allowed = [
+            'audio/webm',
+            'audio/ogg',
+            'audio/mp4',
+            'audio/mpeg',
+            'application/octet-stream',
+            'binary/octet-stream',
+        ];
+
+        if ($mime !== '' && in_array($mime, $allowed, true)) {
+            return $mime;
+        }
+
+        return 'audio/webm';
+    }
+
+    private function mimeToAudioExt(string $mime): string
+    {
+        return match ($mime) {
+            'audio/ogg' => 'ogg',
+            'audio/mp4' => 'm4a',
+            'audio/mpeg' => 'mp3',
+            default => 'webm',
+        };
     }
 }
