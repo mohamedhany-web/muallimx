@@ -1,9 +1,7 @@
-@extends('layouts.admin')
+<?php $__env->startSection('title', 'التقارير المالية'); ?>
+<?php $__env->startSection('header', 'التقارير المالية'); ?>
 
-@section('title', 'التقارير المالية')
-@section('header', 'التقارير المالية')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="space-y-6">
     <!-- الهيدر -->
     <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
@@ -18,11 +16,11 @@
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-                <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                <a href="<?php echo e(route('admin.reports.index')); ?>" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                     <i class="fas fa-arrow-right"></i>
                     العودة
                 </a>
-                <a href="{{ route('admin.reports.export.financial', array_merge(request()->all())) }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
+                <a href="<?php echo e(route('admin.reports.export.financial', array_merge(request()->all()))); ?>" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
                     <i class="fas fa-file-excel"></i>
                     تصدير إلى Excel
                 </a>
@@ -43,30 +41,30 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-2">الفترة</label>
                     <select name="period" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="today" {{ $period == 'today' ? 'selected' : '' }}>اليوم</option>
-                        <option value="week" {{ $period == 'week' ? 'selected' : '' }}>هذا الأسبوع</option>
-                        <option value="month" {{ $period == 'month' ? 'selected' : '' }}>هذا الشهر</option>
-                        <option value="year" {{ $period == 'year' ? 'selected' : '' }}>هذا العام</option>
-                        <option value="all" {{ $period == 'all' ? 'selected' : '' }}>الكل</option>
+                        <option value="today" <?php echo e($period == 'today' ? 'selected' : ''); ?>>اليوم</option>
+                        <option value="week" <?php echo e($period == 'week' ? 'selected' : ''); ?>>هذا الأسبوع</option>
+                        <option value="month" <?php echo e($period == 'month' ? 'selected' : ''); ?>>هذا الشهر</option>
+                        <option value="year" <?php echo e($period == 'year' ? 'selected' : ''); ?>>هذا العام</option>
+                        <option value="all" <?php echo e($period == 'all' ? 'selected' : ''); ?>>الكل</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-2">من تاريخ</label>
-                    <input type="date" name="start_date" value="{{ $startDate ? $startDate->format('Y-m-d') : '' }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    <input type="date" name="start_date" value="<?php echo e($startDate ? $startDate->format('Y-m-d') : ''); ?>" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-2">إلى تاريخ</label>
-                    <input type="date" name="end_date" value="{{ $endDate ? $endDate->format('Y-m-d') : '' }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    <input type="date" name="end_date" value="<?php echo e($endDate ? $endDate->format('Y-m-d') : ''); ?>" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-2">النوع</label>
                     <select name="type" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="all" {{ $type == 'all' ? 'selected' : '' }}>الكل</option>
-                        <option value="summary" {{ $type == 'summary' ? 'selected' : '' }}>الملخص</option>
-                        <option value="invoices" {{ $type == 'invoices' ? 'selected' : '' }}>الفواتير فقط</option>
-                        <option value="payments" {{ $type == 'payments' ? 'selected' : '' }}>المدفوعات فقط</option>
-                        <option value="transactions" {{ $type == 'transactions' ? 'selected' : '' }}>المعاملات فقط</option>
-                        <option value="expenses" {{ $type == 'expenses' ? 'selected' : '' }}>المصروفات فقط</option>
+                        <option value="all" <?php echo e($type == 'all' ? 'selected' : ''); ?>>الكل</option>
+                        <option value="summary" <?php echo e($type == 'summary' ? 'selected' : ''); ?>>الملخص</option>
+                        <option value="invoices" <?php echo e($type == 'invoices' ? 'selected' : ''); ?>>الفواتير فقط</option>
+                        <option value="payments" <?php echo e($type == 'payments' ? 'selected' : ''); ?>>المدفوعات فقط</option>
+                        <option value="transactions" <?php echo e($type == 'transactions' ? 'selected' : ''); ?>>المعاملات فقط</option>
+                        <option value="expenses" <?php echo e($type == 'expenses' ? 'selected' : ''); ?>>المصروفات فقط</option>
                     </select>
                 </div>
                 <div class="md:col-span-4 flex items-end gap-3">
@@ -74,7 +72,7 @@
                         <i class="fas fa-filter"></i>
                         تطبيق الفلاتر
                     </button>
-                    <a href="{{ route('admin.reports.financial') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                    <a href="<?php echo e(route('admin.reports.financial')); ?>" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-times"></i>
                     </a>
                 </div>
@@ -91,7 +89,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">إجمالي الإيرادات</p>
-                    <p class="text-2xl font-black text-slate-900">{{ number_format($stats['total_revenue'] ?? 0, 2) }} ج.م</p>
+                    <p class="text-2xl font-black text-slate-900"><?php echo e(number_format($stats['total_revenue'] ?? 0, 2)); ?> ج.م</p>
                 </div>
             </div>
         </div>
@@ -102,7 +100,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">إجمالي المصروفات</p>
-                    <p class="text-2xl font-black text-slate-900">{{ number_format($stats['total_expenses'] ?? 0, 2) }} ج.م</p>
+                    <p class="text-2xl font-black text-slate-900"><?php echo e(number_format($stats['total_expenses'] ?? 0, 2)); ?> ج.م</p>
                 </div>
             </div>
         </div>
@@ -113,7 +111,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">الربح الصافي</p>
-                    <p class="text-2xl font-black {{ ($stats['net_profit'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">{{ number_format($stats['net_profit'] ?? 0, 2) }} ج.م</p>
+                    <p class="text-2xl font-black <?php echo e(($stats['net_profit'] ?? 0) >= 0 ? 'text-emerald-600' : 'text-rose-600'); ?>"><?php echo e(number_format($stats['net_profit'] ?? 0, 2)); ?> ج.م</p>
                 </div>
             </div>
         </div>
@@ -124,24 +122,24 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">عدد الفواتير</p>
-                    <p class="text-2xl font-black text-slate-900">{{ number_format($stats['total_invoices'] ?? 0) }}</p>
+                    <p class="text-2xl font-black text-slate-900"><?php echo e(number_format($stats['total_invoices'] ?? 0)); ?></p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- الفواتير -->
-    @if(in_array($type, ['all', 'invoices']))
+    <?php if(in_array($type, ['all', 'invoices'])): ?>
     <section class="rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden">
         <div class="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
                 <i class="fas fa-file-invoice-dollar text-blue-600"></i>
                 الفواتير
             </h3>
-            <span class="text-xs font-semibold text-slate-600">{{ $invoices->total() }} فاتورة</span>
+            <span class="text-xs font-semibold text-slate-600"><?php echo e($invoices->total()); ?> فاتورة</span>
         </div>
         <div class="p-6">
-            @if($invoices->count() > 0)
+            <?php if($invoices->count() > 0): ?>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
@@ -154,32 +152,34 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-200">
-                            @foreach($invoices as $invoice)
+                            <?php $__currentLoopData = $invoices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $invoice): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ htmlspecialchars($invoice->invoice_number ?? 'N/A', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($invoice->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ number_format($invoice->total_amount ?? 0, 2) }} ج.م</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900"><?php echo e(htmlspecialchars($invoice->invoice_number ?? 'N/A', ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e(htmlspecialchars($invoice->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900"><?php echo e(number_format($invoice->total_amount ?? 0, 2)); ?> ج.م</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border 
-                                        {{ $invoice->status == 'paid' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 
+                                        <?php echo e($invoice->status == 'paid' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 
                                            ($invoice->status == 'pending' ? 'bg-amber-100 text-amber-700 border-amber-200' : 
-                                           'bg-rose-100 text-rose-700 border-rose-200') }}">
+                                           'bg-rose-100 text-rose-700 border-rose-200')); ?>">
                                         <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                                        {{ htmlspecialchars($invoice->status, ENT_QUOTES, 'UTF-8') }}
+                                        <?php echo e(htmlspecialchars($invoice->status, ENT_QUOTES, 'UTF-8')); ?>
+
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ $invoice->created_at->format('d/m/Y H:i') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e($invoice->created_at->format('d/m/Y H:i')); ?></td>
                             </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
-                @if($invoices->hasPages())
+                <?php if($invoices->hasPages()): ?>
                     <div class="mt-5 border-t border-slate-200 pt-5">
-                        {{ $invoices->appends(request()->query())->links() }}
+                        <?php echo e($invoices->appends(request()->query())->links()); ?>
+
                     </div>
-                @endif
-            @else
+                <?php endif; ?>
+            <?php else: ?>
                 <div class="text-center py-12">
                     <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600">
                         <i class="fas fa-file-invoice text-2xl"></i>
@@ -187,23 +187,23 @@
                     <p class="text-sm font-bold text-slate-900 mb-1">لا توجد بيانات</p>
                     <p class="text-xs text-slate-600">لا توجد فواتير مطابقة للبحث الحالي.</p>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </section>
-    @endif
+    <?php endif; ?>
 
     <!-- المدفوعات -->
-    @if(in_array($type, ['all', 'payments']))
+    <?php if(in_array($type, ['all', 'payments'])): ?>
     <section class="rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden">
         <div class="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
                 <i class="fas fa-credit-card text-blue-600"></i>
                 المدفوعات
             </h3>
-            <span class="text-xs font-semibold text-slate-600">{{ $payments->total() }} دفع</span>
+            <span class="text-xs font-semibold text-slate-600"><?php echo e($payments->total()); ?> دفع</span>
         </div>
         <div class="p-6">
-            @if($payments->count() > 0)
+            <?php if($payments->count() > 0): ?>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
@@ -217,30 +217,32 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-200">
-                            @foreach($payments as $payment)
+                            <?php $__currentLoopData = $payments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $payment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ $payment->id }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($payment->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600">{{ number_format($payment->amount, 2) }} ج.م</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($payment->payment_method ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900"><?php echo e($payment->id); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e(htmlspecialchars($payment->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600"><?php echo e(number_format($payment->amount, 2)); ?> ج.م</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e(htmlspecialchars($payment->payment_method ?? '-', ENT_QUOTES, 'UTF-8')); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border {{ $payment->status == 'completed' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200' }}">
+                                    <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border <?php echo e($payment->status == 'completed' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-amber-100 text-amber-700 border-amber-200'); ?>">
                                         <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                                        {{ htmlspecialchars($payment->status, ENT_QUOTES, 'UTF-8') }}
+                                        <?php echo e(htmlspecialchars($payment->status, ENT_QUOTES, 'UTF-8')); ?>
+
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ $payment->paid_at ? $payment->paid_at->format('d/m/Y H:i') : '-' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e($payment->paid_at ? $payment->paid_at->format('d/m/Y H:i') : '-'); ?></td>
                             </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
-                @if($payments->hasPages())
+                <?php if($payments->hasPages()): ?>
                     <div class="mt-5 border-t border-slate-200 pt-5">
-                        {{ $payments->appends(request()->query())->links() }}
+                        <?php echo e($payments->appends(request()->query())->links()); ?>
+
                     </div>
-                @endif
-            @else
+                <?php endif; ?>
+            <?php else: ?>
                 <div class="text-center py-12">
                     <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600">
                         <i class="fas fa-credit-card text-2xl"></i>
@@ -248,23 +250,23 @@
                     <p class="text-sm font-bold text-slate-900 mb-1">لا توجد بيانات</p>
                     <p class="text-xs text-slate-600">لا توجد مدفوعات مطابقة للبحث الحالي.</p>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </section>
-    @endif
+    <?php endif; ?>
 
     <!-- المعاملات -->
-    @if(in_array($type, ['all', 'transactions']))
+    <?php if(in_array($type, ['all', 'transactions'])): ?>
     <section class="rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden">
         <div class="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
                 <i class="fas fa-right-left text-blue-600"></i>
                 المعاملات
             </h3>
-            <span class="text-xs font-semibold text-slate-600">{{ $transactions->total() }} معاملة</span>
+            <span class="text-xs font-semibold text-slate-600"><?php echo e($transactions->total()); ?> معاملة</span>
         </div>
         <div class="p-6">
-            @if($transactions->count() > 0)
+            <?php if($transactions->count() > 0): ?>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
@@ -278,25 +280,26 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-200">
-                            @foreach($transactions as $transaction)
+                            <?php $__currentLoopData = $transactions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $transaction): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ $transaction->id }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($transaction->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($transaction->type ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ number_format((float)($transaction->amount ?? 0), 2) }} ج.م</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($transaction->status ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ $transaction->created_at ? $transaction->created_at->format('d/m/Y H:i') : '-' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900"><?php echo e($transaction->id); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e(htmlspecialchars($transaction->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e(htmlspecialchars($transaction->type ?? '-', ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900"><?php echo e(number_format((float)($transaction->amount ?? 0), 2)); ?> ج.م</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e(htmlspecialchars($transaction->status ?? '-', ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e($transaction->created_at ? $transaction->created_at->format('d/m/Y H:i') : '-'); ?></td>
                             </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
-                @if($transactions->hasPages())
+                <?php if($transactions->hasPages()): ?>
                     <div class="mt-5 border-t border-slate-200 pt-5">
-                        {{ $transactions->appends(request()->query())->links() }}
+                        <?php echo e($transactions->appends(request()->query())->links()); ?>
+
                     </div>
-                @endif
-            @else
+                <?php endif; ?>
+            <?php else: ?>
                 <div class="text-center py-12">
                     <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600">
                         <i class="fas fa-right-left text-2xl"></i>
@@ -304,23 +307,23 @@
                     <p class="text-sm font-bold text-slate-900 mb-1">لا توجد بيانات</p>
                     <p class="text-xs text-slate-600">لا توجد معاملات مطابقة للبحث الحالي.</p>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </section>
-    @endif
+    <?php endif; ?>
 
     <!-- المصروفات -->
-    @if(in_array($type, ['all', 'expenses']))
+    <?php if(in_array($type, ['all', 'expenses'])): ?>
     <section class="rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden">
         <div class="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
                 <i class="fas fa-receipt text-blue-600"></i>
                 المصروفات
             </h3>
-            <span class="text-xs font-semibold text-slate-600">{{ $expenses->total() }} مصروف</span>
+            <span class="text-xs font-semibold text-slate-600"><?php echo e($expenses->total()); ?> مصروف</span>
         </div>
         <div class="p-6">
-            @if($expenses->count() > 0)
+            <?php if($expenses->count() > 0): ?>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
@@ -334,25 +337,26 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-200">
-                            @foreach($expenses as $expense)
+                            <?php $__currentLoopData = $expenses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $expense): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ htmlspecialchars($expense->expense_number ?? 'N/A', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($expense->title ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($expense->category ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-rose-600">{{ number_format((float)($expense->amount ?? 0), 2) }} ج.م</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($expense->status ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ $expense->expense_date ? $expense->expense_date->format('d/m/Y') : '-' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900"><?php echo e(htmlspecialchars($expense->expense_number ?? 'N/A', ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e(htmlspecialchars($expense->title ?? '-', ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e(htmlspecialchars($expense->category ?? '-', ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-rose-600"><?php echo e(number_format((float)($expense->amount ?? 0), 2)); ?> ج.م</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e(htmlspecialchars($expense->status ?? '-', ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e($expense->expense_date ? $expense->expense_date->format('d/m/Y') : '-'); ?></td>
                             </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
-                @if($expenses->hasPages())
+                <?php if($expenses->hasPages()): ?>
                     <div class="mt-5 border-t border-slate-200 pt-5">
-                        {{ $expenses->appends(request()->query())->links() }}
+                        <?php echo e($expenses->appends(request()->query())->links()); ?>
+
                     </div>
-                @endif
-            @else
+                <?php endif; ?>
+            <?php else: ?>
                 <div class="text-center py-12">
                     <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600">
                         <i class="fas fa-receipt text-2xl"></i>
@@ -360,9 +364,11 @@
                     <p class="text-sm font-bold text-slate-900 mb-1">لا توجد بيانات</p>
                     <p class="text-xs text-slate-600">لا توجد مصروفات مطابقة للبحث الحالي.</p>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </section>
-    @endif
+    <?php endif; ?>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/admin/reports/financial.blade.php ENDPATH**/ ?>

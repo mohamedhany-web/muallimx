@@ -176,10 +176,11 @@ class ReportsController extends Controller
 
         try {
             // Sanitization
-            $period = strip_tags(trim($request->input('period', 'month')));
+            $period = strip_tags(trim($request->input('period', 'all')));
             $startDate = $request->input('start_date');
             $endDate = $request->input('end_date');
             $role = strip_tags(trim($request->input('role', '')));
+            $status = strip_tags(trim($request->input('status', '')));
             $status = strip_tags(trim($request->input('status', '')));
 
             // حساب التواريخ
@@ -196,6 +197,10 @@ class ReportsController extends Controller
                 } else {
                     $query->where('role', $role);
                 }
+            }
+
+            if ($status && in_array($status, ['active', 'inactive'])) {
+                $query->where('is_active', $status === 'active');
             }
 
             if ($status && in_array($status, ['active', 'inactive'])) {
@@ -283,7 +288,7 @@ class ReportsController extends Controller
 
         try {
             // Sanitization
-            $period = strip_tags(trim($request->input('period', 'month')));
+            $period = strip_tags(trim($request->input('period', 'all')));
             $startDate = $request->input('start_date');
             $endDate = $request->input('end_date');
             $status = strip_tags(trim($request->input('status', '')));
@@ -380,9 +385,10 @@ class ReportsController extends Controller
 
         try {
             // Sanitization
-            $period = strip_tags(trim($request->input('period', 'month')));
+            $period = strip_tags(trim($request->input('period', 'all')));
             $startDate = $request->input('start_date');
             $endDate = $request->input('end_date');
+            $status = strip_tags(trim($request->input('status', '')));
             $type = strip_tags(trim($request->input('type', 'all')));
 
             // حساب التواريخ
@@ -469,9 +475,10 @@ class ReportsController extends Controller
 
         try {
             // Sanitization
-            $period = strip_tags(trim($request->input('period', 'month')));
+            $period = strip_tags(trim($request->input('period', 'all')));
             $startDate = $request->input('start_date');
             $endDate = $request->input('end_date');
+            $status = strip_tags(trim($request->input('status', '')));
 
             // حساب التواريخ
             $dates = $this->calculateDateRange($period, $startDate, $endDate);
@@ -555,9 +562,10 @@ class ReportsController extends Controller
 
         try {
             // Sanitization
-            $period = strip_tags(trim($request->input('period', 'month')));
+            $period = strip_tags(trim($request->input('period', 'all')));
             $startDate = $request->input('start_date');
             $endDate = $request->input('end_date');
+            $status = strip_tags(trim($request->input('status', '')));
             $action = strip_tags(trim($request->input('action', '')));
             $user_id = filter_var($request->input('user_id'), FILTER_VALIDATE_INT);
 
@@ -750,10 +758,11 @@ class ReportsController extends Controller
 
         try {
             // Sanitization
-            $period = strip_tags(trim($request->input('period', 'month')));
+            $period = strip_tags(trim($request->input('period', 'all')));
             $startDate = $request->input('start_date');
             $endDate = $request->input('end_date');
             $role = strip_tags(trim($request->input('role', '')));
+            $status = strip_tags(trim($request->input('status', '')));
 
             // حساب التواريخ
             $dates = $this->calculateDateRange($period, $startDate, $endDate);
@@ -771,6 +780,10 @@ class ReportsController extends Controller
                 }
             }
 
+            if ($status && in_array($status, ['active', 'inactive'])) {
+                $query->where('is_active', $status === 'active');
+            }
+
             $users = $query->whereBetween('created_at', [$startDate, $endDate])
                           ->orderBy('created_at', 'desc')
                           ->get();
@@ -778,18 +791,34 @@ class ReportsController extends Controller
             // إنشاء ملف Excel مع Service
             $excelService = new ExcelExportService();
 
+            $roleLabel = match($role) {
+                'student' => 'الطلاب',
+                'instructor', 'teacher' => 'المدربين',
+                'admin', 'super_admin' => 'الإدارة',
+                default => 'كل الأدوار',
+            };
+            $statusLabel = match($status) {
+                'active' => 'نشط',
+                'inactive' => 'غير نشط',
+                default => 'كل الحالات',
+            };
+
             $excelService->addHeader(
                 'تقرير المستخدمين الشامل - MuallimX',
-                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
+                'من تاريخ: ' . $startDate->format('Y-m-d')
+                . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
+                . ' | الدور: ' . $roleLabel
+                . ' | الحالة: ' . $statusLabel
             );
 
             // إضافة إحصائيات
             $stats = [
-                'إجمالي المستخدمين' => $users->count(),
+                'إجمالي المستخدمين (بعد الفلترة)' => $users->count(),
                 'الطلاب' => $users->where('role', 'student')->count(),
                 'المدربين' => $users->whereIn('role', ['instructor', 'teacher'])->count(),
                 'الإدارة' => $users->whereIn('role', ['admin', 'super_admin'])->count(),
                 'المستخدمين النشطين' => $users->where('is_active', true)->count(),
+                'المستخدمين غير النشطين' => $users->where('is_active', false)->count(),
             ];
             $excelService->addSectionTitle('الإحصائيات');
             $excelService->addStatistics($stats);
@@ -853,9 +882,10 @@ class ReportsController extends Controller
 
         try {
             // Sanitization
-            $period = strip_tags(trim($request->input('period', 'month')));
+            $period = strip_tags(trim($request->input('period', 'all')));
             $startDate = $request->input('start_date');
             $endDate = $request->input('end_date');
+            $status = strip_tags(trim($request->input('status', '')));
 
             // حساب التواريخ
             $dates = $this->calculateDateRange($period, $startDate, $endDate);
@@ -863,7 +893,12 @@ class ReportsController extends Controller
             $endDate = $dates['end'];
 
             // Query
-            $courses = AdvancedCourse::with(['academicSubject', 'academicYear'])
+            $coursesQuery = AdvancedCourse::with(['academicSubject', 'academicYear']);
+            if ($status && in_array($status, ['active', 'inactive'], true)) {
+                $coursesQuery->where('is_active', $status === 'active');
+            }
+
+            $courses = $coursesQuery
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->withCount('enrollments')
                 ->orderBy('created_at', 'desc')
@@ -874,7 +909,9 @@ class ReportsController extends Controller
 
             $excelService->addHeader(
                 'تقرير الكورسات الشامل - MuallimX',
-                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
+                'من تاريخ: ' . $startDate->format('Y-m-d')
+                . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
+                . ' | الحالة: ' . ($status === 'active' ? 'نشط' : ($status === 'inactive' ? 'غير نشط' : 'كل الحالات'))
             );
 
             // إضافة إحصائيات
@@ -939,7 +976,7 @@ class ReportsController extends Controller
 
         try {
             // Sanitization
-            $period = strip_tags(trim($request->input('period', 'month')));
+            $period = strip_tags(trim($request->input('period', 'all')));
             $startDate = $request->input('start_date');
             $endDate = $request->input('end_date');
             $type = strip_tags(trim($request->input('type', 'all')));
@@ -954,7 +991,16 @@ class ReportsController extends Controller
 
             $excelService->addHeader(
                 'التقارير المالية الشاملة - MuallimX',
-                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
+                'من تاريخ: ' . $startDate->format('Y-m-d')
+                . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
+                . ' | النوع: ' . match($type) {
+                    'summary' => 'الملخص',
+                    'invoices' => 'الفواتير',
+                    'payments' => 'المدفوعات',
+                    'transactions' => 'المعاملات',
+                    'expenses' => 'المصروفات',
+                    default => 'الكل',
+                }
             );
 
             // الملخص المالي
@@ -1059,6 +1105,32 @@ class ReportsController extends Controller
                 $excelService->addTableData($headers, $rows);
             }
 
+            // المعاملات
+            if ($type === 'all' || $type === 'transactions') {
+                $transactions = Transaction::with(['user', 'payment'])
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+                $excelService->addSectionTitle('المعاملات');
+                $headers = ['ID', 'المستخدم', 'النوع', 'المبلغ', 'الحالة', 'رقم الدفعة', 'تاريخ الإنشاء'];
+                $rows = [];
+
+                foreach ($transactions as $transaction) {
+                    $rows[] = [
+                        $transaction->id,
+                        $transaction->user->name ?? 'غير محدد',
+                        $transaction->type ?? '-',
+                        number_format((float) ($transaction->amount ?? 0), 2) . ' ج.م',
+                        $transaction->status ?? '-',
+                        $transaction->payment->id ?? '-',
+                        $transaction->created_at ? $transaction->created_at->format('Y-m-d H:i:s') : '-',
+                    ];
+                }
+
+                $excelService->addTableData($headers, $rows);
+            }
+
             // تنزيل الملف
             $filename = 'التقارير_المالية_' . $startDate->format('Y-m-d') . '_' . $endDate->format('Y-m-d');
             return $excelService->download($filename);
@@ -1066,6 +1138,96 @@ class ReportsController extends Controller
             \Illuminate\Support\Facades\RateLimiter::clear($key);
             Log::error('Error exporting financial report: ' . $e->getMessage());
             return back()->with('error', 'حدث خطأ أثناء تصدير التقرير');
+        }
+    }
+
+    /**
+     * تصدير التقارير الأكاديمية إلى Excel
+     * محمي من: Unauthorized Access, SQL Injection, Brute Force
+     */
+    public function exportAcademic(Request $request)
+    {
+        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+            abort(403, 'غير مصرح لك بتصدير التقارير');
+        }
+
+        $key = 'report_export_' . Auth::id();
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, 10)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($key);
+            return back()->with('error', "تم تجاوز عدد المحاولات. يرجى المحاولة بعد {$seconds} ثانية.");
+        }
+        \Illuminate\Support\Facades\RateLimiter::hit($key, 300);
+
+        try {
+            $period = strip_tags(trim($request->input('period', 'all')));
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+
+            $dates = $this->calculateDateRange($period, $startDate, $endDate);
+            $startDate = $dates['start'];
+            $endDate = $dates['end'];
+
+            $excelService = new ExcelExportService();
+            $excelService->addHeader(
+                'التقرير الأكاديمي الشامل - MuallimX',
+                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
+            );
+
+            $stats = [
+                'إجمالي الامتحانات' => AdvancedExam::whereBetween('created_at', [$startDate, $endDate])->count(),
+                'إجمالي محاولات الامتحانات' => ExamAttempt::whereBetween('created_at', [$startDate, $endDate])->count(),
+                'المحاولات الناجحة' => ExamAttempt::where('status', 'passed')->whereBetween('created_at', [$startDate, $endDate])->count(),
+                'المحاولات غير الناجحة' => ExamAttempt::where('status', 'failed')->whereBetween('created_at', [$startDate, $endDate])->count(),
+                'إجمالي الواجبات' => Assignment::whereBetween('created_at', [$startDate, $endDate])->count(),
+                'إجمالي التسليمات' => AssignmentSubmission::whereBetween('created_at', [$startDate, $endDate])->count(),
+                'إجمالي المحاضرات' => Lecture::whereBetween('created_at', [$startDate, $endDate])->count(),
+                'إجمالي الشهادات' => Certificate::whereBetween('created_at', [$startDate, $endDate])->count(),
+            ];
+            $excelService->addSectionTitle('الإحصائيات الأكاديمية');
+            $excelService->addStatistics($stats);
+            $excelService->addEmptyRow(2);
+
+            $exams = AdvancedExam::withCount('attempts')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->orderBy('created_at', 'desc')
+                ->get();
+            $excelService->addSectionTitle('الامتحانات');
+            $excelService->addTableData(
+                ['ID', 'العنوان', 'عدد المحاولات', 'تاريخ الإنشاء'],
+                $exams->map(fn($exam) => [
+                    $exam->id,
+                    $exam->title ?? '-',
+                    (int) ($exam->attempts_count ?? 0),
+                    optional($exam->created_at)->format('Y-m-d H:i:s') ?? '-',
+                ])->toArray()
+            );
+            $excelService->addEmptyRow(2);
+
+            $submissions = AssignmentSubmission::with(['assignment', 'student'])
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->orderBy('created_at', 'desc')
+                ->limit(5000)
+                ->get();
+            $excelService->addSectionTitle('تسليمات الواجبات');
+            $excelService->addTableData(
+                ['ID', 'الواجب', 'الطالب', 'الدرجة', 'الحالة', 'تاريخ التسليم'],
+                $submissions->map(fn($s) => [
+                    $s->id,
+                    $s->assignment->title ?? '-',
+                    $s->student->name ?? '-',
+                    $s->grade ?? '-',
+                    $s->status ?? '-',
+                    optional($s->created_at)->format('Y-m-d H:i:s') ?? '-',
+                ])->toArray()
+            );
+            $excelService->addEmptyRow(2);
+
+            $filename = 'التقارير_الأكاديمية_' . $startDate->format('Y-m-d') . '_' . $endDate->format('Y-m-d');
+            return $excelService->download($filename);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\RateLimiter::clear($key);
+            Log::error('Error exporting academic report: ' . $e->getMessage());
+            return back()->with('error', 'حدث خطأ أثناء تصدير التقرير الأكاديمي');
         }
     }
 

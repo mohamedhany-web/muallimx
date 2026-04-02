@@ -1181,6 +1181,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/export/financial', [\App\Http\Controllers\Admin\ReportsController::class, 'exportFinancial'])
                 ->middleware('throttle:10,5')
                 ->name('export.financial');
+            Route::get('/export/academic', [\App\Http\Controllers\Admin\ReportsController::class, 'exportAcademic'])
+                ->middleware('throttle:10,5')
+                ->name('export.academic');
             Route::get('/export/comprehensive', [\App\Http\Controllers\Admin\ReportsController::class, 'exportComprehensive'])
                 ->middleware('throttle:5,10')
                 ->name('export.comprehensive');

@@ -1,9 +1,7 @@
-@extends('layouts.admin')
+<?php $__env->startSection('title', 'التقارير الأكاديمية'); ?>
+<?php $__env->startSection('header', 'التقارير الأكاديمية'); ?>
 
-@section('title', 'التقارير الأكاديمية')
-@section('header', 'التقارير الأكاديمية')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="space-y-6">
     <!-- الهيدر -->
     <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
@@ -18,11 +16,11 @@
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-                <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                <a href="<?php echo e(route('admin.reports.index')); ?>" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                     <i class="fas fa-arrow-right"></i>
                     العودة
                 </a>
-                <a href="{{ route('admin.reports.export.academic', array_merge(request()->all())) }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
+                <a href="<?php echo e(route('admin.reports.export.academic', array_merge(request()->all()))); ?>" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
                     <i class="fas fa-file-excel"></i>
                     تصدير إلى Excel
                 </a>
@@ -43,27 +41,27 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-2">الفترة</label>
                     <select name="period" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="today" {{ $period == 'today' ? 'selected' : '' }}>اليوم</option>
-                        <option value="week" {{ $period == 'week' ? 'selected' : '' }}>هذا الأسبوع</option>
-                        <option value="month" {{ $period == 'month' ? 'selected' : '' }}>هذا الشهر</option>
-                        <option value="year" {{ $period == 'year' ? 'selected' : '' }}>هذا العام</option>
-                        <option value="all" {{ $period == 'all' ? 'selected' : '' }}>الكل</option>
+                        <option value="today" <?php echo e($period == 'today' ? 'selected' : ''); ?>>اليوم</option>
+                        <option value="week" <?php echo e($period == 'week' ? 'selected' : ''); ?>>هذا الأسبوع</option>
+                        <option value="month" <?php echo e($period == 'month' ? 'selected' : ''); ?>>هذا الشهر</option>
+                        <option value="year" <?php echo e($period == 'year' ? 'selected' : ''); ?>>هذا العام</option>
+                        <option value="all" <?php echo e($period == 'all' ? 'selected' : ''); ?>>الكل</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-2">من تاريخ</label>
-                    <input type="date" name="start_date" value="{{ $startDate ? $startDate->format('Y-m-d') : '' }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    <input type="date" name="start_date" value="<?php echo e($startDate ? $startDate->format('Y-m-d') : ''); ?>" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-2">إلى تاريخ</label>
-                    <input type="date" name="end_date" value="{{ $endDate ? $endDate->format('Y-m-d') : '' }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    <input type="date" name="end_date" value="<?php echo e($endDate ? $endDate->format('Y-m-d') : ''); ?>" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                 </div>
                 <div class="md:col-span-3 flex items-end gap-3">
                     <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
                         <i class="fas fa-filter"></i>
                         تطبيق الفلاتر
                     </button>
-                    <a href="{{ route('admin.reports.academic') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                    <a href="<?php echo e(route('admin.reports.academic')); ?>" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                         <i class="fas fa-times"></i>
                     </a>
                 </div>
@@ -80,7 +78,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">الامتحانات</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['total_exams'] ?? 0) }}</p>
+                    <p class="text-xl font-black text-slate-900"><?php echo e(number_format($stats['total_exams'] ?? 0)); ?></p>
                 </div>
             </div>
         </div>
@@ -91,7 +89,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">المحاولات</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['total_attempts'] ?? 0) }}</p>
+                    <p class="text-xl font-black text-slate-900"><?php echo e(number_format($stats['total_attempts'] ?? 0)); ?></p>
                 </div>
             </div>
         </div>
@@ -102,7 +100,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">الواجبات</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['total_assignments'] ?? 0) }}</p>
+                    <p class="text-xl font-black text-slate-900"><?php echo e(number_format($stats['total_assignments'] ?? 0)); ?></p>
                 </div>
             </div>
         </div>
@@ -113,7 +111,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">المحاضرات</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['total_lectures'] ?? 0) }}</p>
+                    <p class="text-xl font-black text-slate-900"><?php echo e(number_format($stats['total_lectures'] ?? 0)); ?></p>
                 </div>
             </div>
         </div>
@@ -124,7 +122,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">الشهادات</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['total_certificates'] ?? 0) }}</p>
+                    <p class="text-xl font-black text-slate-900"><?php echo e(number_format($stats['total_certificates'] ?? 0)); ?></p>
                 </div>
             </div>
         </div>
@@ -138,34 +136,36 @@
                     <i class="fas fa-clipboard-check text-blue-600"></i>
                     الامتحانات
                 </h3>
-                <span class="text-xs font-semibold text-slate-600">{{ $exams->total() }} امتحان</span>
+                <span class="text-xs font-semibold text-slate-600"><?php echo e($exams->total()); ?> امتحان</span>
             </div>
             <div class="p-6">
-                @if($exams->count() > 0)
+                <?php if($exams->count() > 0): ?>
                     <div class="space-y-3 max-h-96 overflow-y-auto">
-                        @foreach($exams as $exam)
+                        <?php $__currentLoopData = $exams; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $exam): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="rounded-lg border border-slate-200 bg-white p-4 hover:shadow-md transition-shadow">
                             <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-sm font-bold text-slate-900">{{ htmlspecialchars($exam->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</h4>
+                                <h4 class="text-sm font-bold text-slate-900"><?php echo e(htmlspecialchars($exam->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?></h4>
                                 <span class="inline-flex items-center gap-1.5 rounded-lg bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 border border-blue-200">
                                     <i class="fas fa-users"></i>
-                                    {{ number_format($exam->attempts_count) }}
+                                    <?php echo e(number_format($exam->attempts_count)); ?>
+
                                 </span>
                             </div>
-                            <p class="text-xs text-slate-600">{{ $exam->created_at->format('d/m/Y') }}</p>
+                            <p class="text-xs text-slate-600"><?php echo e($exam->created_at->format('d/m/Y')); ?></p>
                         </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
-                    @if($exams->hasPages())
+                    <?php if($exams->hasPages()): ?>
                         <div class="mt-5 border-t border-slate-200 pt-5">
-                            {{ $exams->appends(request()->query())->links() }}
+                            <?php echo e($exams->appends(request()->query())->links()); ?>
+
                         </div>
-                    @endif
-                @else
+                    <?php endif; ?>
+                <?php else: ?>
                     <div class="text-center py-8">
                         <p class="text-sm text-slate-600">لا توجد امتحانات</p>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
 
@@ -175,34 +175,36 @@
                     <i class="fas fa-file-alt text-blue-600"></i>
                     الواجبات
                 </h3>
-                <span class="text-xs font-semibold text-slate-600">{{ $assignments->total() }} واجب</span>
+                <span class="text-xs font-semibold text-slate-600"><?php echo e($assignments->total()); ?> واجب</span>
             </div>
             <div class="p-6">
-                @if($assignments->count() > 0)
+                <?php if($assignments->count() > 0): ?>
                     <div class="space-y-3 max-h-96 overflow-y-auto">
-                        @foreach($assignments as $assignment)
+                        <?php $__currentLoopData = $assignments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $assignment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="rounded-lg border border-slate-200 bg-white p-4 hover:shadow-md transition-shadow">
                             <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-sm font-bold text-slate-900">{{ htmlspecialchars($assignment->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</h4>
+                                <h4 class="text-sm font-bold text-slate-900"><?php echo e(htmlspecialchars($assignment->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?></h4>
                                 <span class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
                                     <i class="fas fa-check-circle"></i>
-                                    {{ number_format($assignment->submissions_count ?? 0) }}
+                                    <?php echo e(number_format($assignment->submissions_count ?? 0)); ?>
+
                                 </span>
                             </div>
-                            <p class="text-xs text-slate-600">{{ $assignment->created_at->format('d/m/Y') }}</p>
+                            <p class="text-xs text-slate-600"><?php echo e($assignment->created_at->format('d/m/Y')); ?></p>
                         </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
-                    @if($assignments->hasPages())
+                    <?php if($assignments->hasPages()): ?>
                         <div class="mt-5 border-t border-slate-200 pt-5">
-                            {{ $assignments->appends(request()->query())->links() }}
+                            <?php echo e($assignments->appends(request()->query())->links()); ?>
+
                         </div>
-                    @endif
-                @else
+                    <?php endif; ?>
+                <?php else: ?>
                     <div class="text-center py-8">
                         <p class="text-sm text-slate-600">لا توجد واجبات</p>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -214,29 +216,30 @@
                     <i class="fas fa-history text-blue-600"></i>
                     محاولات الامتحانات
                 </h3>
-                <span class="text-xs font-semibold text-slate-600">{{ $examAttempts->total() }} محاولة</span>
+                <span class="text-xs font-semibold text-slate-600"><?php echo e($examAttempts->total()); ?> محاولة</span>
             </div>
             <div class="p-6">
-                @if($examAttempts->count() > 0)
+                <?php if($examAttempts->count() > 0): ?>
                     <div class="space-y-3 max-h-96 overflow-y-auto">
-                        @foreach($examAttempts as $attempt)
+                        <?php $__currentLoopData = $examAttempts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $attempt): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="rounded-lg border border-slate-200 p-3">
                                 <div class="flex items-center justify-between gap-2">
-                                    <p class="text-sm font-semibold text-slate-900">{{ htmlspecialchars($attempt->exam->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</p>
-                                    <span class="text-xs {{ ($attempt->status ?? '') === 'passed' ? 'text-emerald-700' : 'text-rose-700' }}">{{ htmlspecialchars($attempt->status ?? '-', ENT_QUOTES, 'UTF-8') }}</span>
+                                    <p class="text-sm font-semibold text-slate-900"><?php echo e(htmlspecialchars($attempt->exam->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?></p>
+                                    <span class="text-xs <?php echo e(($attempt->status ?? '') === 'passed' ? 'text-emerald-700' : 'text-rose-700'); ?>"><?php echo e(htmlspecialchars($attempt->status ?? '-', ENT_QUOTES, 'UTF-8')); ?></span>
                                 </div>
-                                <p class="text-xs text-slate-500 mt-1">{{ htmlspecialchars($attempt->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }} • {{ $attempt->created_at?->format('d/m/Y H:i') }}</p>
+                                <p class="text-xs text-slate-500 mt-1"><?php echo e(htmlspecialchars($attempt->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?> • <?php echo e($attempt->created_at?->format('d/m/Y H:i')); ?></p>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
-                    @if($examAttempts->hasPages())
+                    <?php if($examAttempts->hasPages()): ?>
                         <div class="mt-5 border-t border-slate-200 pt-5">
-                            {{ $examAttempts->appends(request()->query())->links() }}
+                            <?php echo e($examAttempts->appends(request()->query())->links()); ?>
+
                         </div>
-                    @endif
-                @else
+                    <?php endif; ?>
+                <?php else: ?>
                     <div class="text-center py-8 text-sm text-slate-600">لا توجد محاولات</div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
 
@@ -246,29 +249,30 @@
                     <i class="fas fa-paper-plane text-blue-600"></i>
                     تسليمات الواجبات
                 </h3>
-                <span class="text-xs font-semibold text-slate-600">{{ $submissions->total() }} تسليم</span>
+                <span class="text-xs font-semibold text-slate-600"><?php echo e($submissions->total()); ?> تسليم</span>
             </div>
             <div class="p-6">
-                @if($submissions->count() > 0)
+                <?php if($submissions->count() > 0): ?>
                     <div class="space-y-3 max-h-96 overflow-y-auto">
-                        @foreach($submissions as $submission)
+                        <?php $__currentLoopData = $submissions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $submission): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="rounded-lg border border-slate-200 p-3">
                                 <div class="flex items-center justify-between gap-2">
-                                    <p class="text-sm font-semibold text-slate-900">{{ htmlspecialchars($submission->assignment->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</p>
-                                    <span class="text-xs text-slate-700">{{ htmlspecialchars($submission->status ?? '-', ENT_QUOTES, 'UTF-8') }}</span>
+                                    <p class="text-sm font-semibold text-slate-900"><?php echo e(htmlspecialchars($submission->assignment->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?></p>
+                                    <span class="text-xs text-slate-700"><?php echo e(htmlspecialchars($submission->status ?? '-', ENT_QUOTES, 'UTF-8')); ?></span>
                                 </div>
-                                <p class="text-xs text-slate-500 mt-1">{{ htmlspecialchars($submission->student->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }} • {{ $submission->created_at?->format('d/m/Y H:i') }}</p>
+                                <p class="text-xs text-slate-500 mt-1"><?php echo e(htmlspecialchars($submission->student->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?> • <?php echo e($submission->created_at?->format('d/m/Y H:i')); ?></p>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
-                    @if($submissions->hasPages())
+                    <?php if($submissions->hasPages()): ?>
                         <div class="mt-5 border-t border-slate-200 pt-5">
-                            {{ $submissions->appends(request()->query())->links() }}
+                            <?php echo e($submissions->appends(request()->query())->links()); ?>
+
                         </div>
-                    @endif
-                @else
+                    <?php endif; ?>
+                <?php else: ?>
                     <div class="text-center py-8 text-sm text-slate-600">لا توجد تسليمات</div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </section>
@@ -280,26 +284,27 @@
                     <i class="fas fa-video text-blue-600"></i>
                     المحاضرات
                 </h3>
-                <span class="text-xs font-semibold text-slate-600">{{ $lectures->total() }} محاضرة</span>
+                <span class="text-xs font-semibold text-slate-600"><?php echo e($lectures->total()); ?> محاضرة</span>
             </div>
             <div class="p-6">
-                @if($lectures->count() > 0)
+                <?php if($lectures->count() > 0): ?>
                     <div class="space-y-3 max-h-96 overflow-y-auto">
-                        @foreach($lectures as $lecture)
+                        <?php $__currentLoopData = $lectures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $lecture): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="rounded-lg border border-slate-200 p-3">
-                                <p class="text-sm font-semibold text-slate-900">{{ htmlspecialchars($lecture->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</p>
-                                <p class="text-xs text-slate-500 mt-1">{{ htmlspecialchars($lecture->instructor->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }} • {{ $lecture->scheduled_at?->format('d/m/Y H:i') ?? '-' }}</p>
+                                <p class="text-sm font-semibold text-slate-900"><?php echo e(htmlspecialchars($lecture->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?></p>
+                                <p class="text-xs text-slate-500 mt-1"><?php echo e(htmlspecialchars($lecture->instructor->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?> • <?php echo e($lecture->scheduled_at?->format('d/m/Y H:i') ?? '-'); ?></p>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
-                    @if($lectures->hasPages())
+                    <?php if($lectures->hasPages()): ?>
                         <div class="mt-5 border-t border-slate-200 pt-5">
-                            {{ $lectures->appends(request()->query())->links() }}
+                            <?php echo e($lectures->appends(request()->query())->links()); ?>
+
                         </div>
-                    @endif
-                @else
+                    <?php endif; ?>
+                <?php else: ?>
                     <div class="text-center py-8 text-sm text-slate-600">لا توجد محاضرات</div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
 
@@ -309,28 +314,31 @@
                     <i class="fas fa-certificate text-blue-600"></i>
                     الشهادات
                 </h3>
-                <span class="text-xs font-semibold text-slate-600">{{ $certificates->total() }} شهادة</span>
+                <span class="text-xs font-semibold text-slate-600"><?php echo e($certificates->total()); ?> شهادة</span>
             </div>
             <div class="p-6">
-                @if($certificates->count() > 0)
+                <?php if($certificates->count() > 0): ?>
                     <div class="space-y-3 max-h-96 overflow-y-auto">
-                        @foreach($certificates as $certificate)
+                        <?php $__currentLoopData = $certificates; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $certificate): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <div class="rounded-lg border border-slate-200 p-3">
-                                <p class="text-sm font-semibold text-slate-900">{{ htmlspecialchars($certificate->course->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }}</p>
-                                <p class="text-xs text-slate-500 mt-1">{{ htmlspecialchars($certificate->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8') }} • {{ $certificate->issued_at?->format('d/m/Y') ?? '-' }}</p>
+                                <p class="text-sm font-semibold text-slate-900"><?php echo e(htmlspecialchars($certificate->course->title ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?></p>
+                                <p class="text-xs text-slate-500 mt-1"><?php echo e(htmlspecialchars($certificate->user->name ?? 'غير محدد', ENT_QUOTES, 'UTF-8')); ?> • <?php echo e($certificate->issued_at?->format('d/m/Y') ?? '-'); ?></p>
                             </div>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </div>
-                    @if($certificates->hasPages())
+                    <?php if($certificates->hasPages()): ?>
                         <div class="mt-5 border-t border-slate-200 pt-5">
-                            {{ $certificates->appends(request()->query())->links() }}
+                            <?php echo e($certificates->appends(request()->query())->links()); ?>
+
                         </div>
-                    @endif
-                @else
+                    <?php endif; ?>
+                <?php else: ?>
                     <div class="text-center py-8 text-sm text-slate-600">لا توجد شهادات</div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
     </section>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/admin/reports/academic.blade.php ENDPATH**/ ?>

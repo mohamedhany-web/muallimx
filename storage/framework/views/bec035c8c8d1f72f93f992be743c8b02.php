@@ -1,9 +1,7 @@
-@extends('layouts.admin')
+<?php $__env->startSection('title', 'تقارير المستخدمين'); ?>
+<?php $__env->startSection('header', 'تقارير المستخدمين'); ?>
 
-@section('title', 'تقارير المستخدمين')
-@section('header', 'تقارير المستخدمين')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="space-y-6">
     <!-- الهيدر -->
     <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
@@ -17,7 +15,7 @@
                     <p class="text-sm text-slate-600 mt-1">تقارير شاملة عن المستخدمين، الطلاب، المدربين، والإدارة</p>
                 </div>
             </div>
-            <a href="{{ route('admin.reports.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+            <a href="<?php echo e(route('admin.reports.index')); ?>" class="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                 <i class="fas fa-arrow-right"></i>
                 العودة
             </a>
@@ -40,11 +38,11 @@
                         الفترة
                     </label>
                     <select name="period" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                        <option value="today" {{ $period == 'today' ? 'selected' : '' }}>اليوم</option>
-                        <option value="week" {{ $period == 'week' ? 'selected' : '' }}>هذا الأسبوع</option>
-                        <option value="month" {{ $period == 'month' ? 'selected' : '' }}>هذا الشهر</option>
-                        <option value="year" {{ $period == 'year' ? 'selected' : '' }}>هذا العام</option>
-                        <option value="all" {{ $period == 'all' ? 'selected' : '' }}>الكل</option>
+                        <option value="today" <?php echo e($period == 'today' ? 'selected' : ''); ?>>اليوم</option>
+                        <option value="week" <?php echo e($period == 'week' ? 'selected' : ''); ?>>هذا الأسبوع</option>
+                        <option value="month" <?php echo e($period == 'month' ? 'selected' : ''); ?>>هذا الشهر</option>
+                        <option value="year" <?php echo e($period == 'year' ? 'selected' : ''); ?>>هذا العام</option>
+                        <option value="all" <?php echo e($period == 'all' ? 'selected' : ''); ?>>الكل</option>
                     </select>
                 </div>
                 <div>
@@ -52,14 +50,14 @@
                         <i class="fas fa-calendar-alt text-blue-600 text-sm"></i>
                         من تاريخ
                     </label>
-                    <input type="date" name="start_date" value="{{ $startDate ? $startDate->format('Y-m-d') : '' }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    <input type="date" name="start_date" value="<?php echo e($startDate ? $startDate->format('Y-m-d') : ''); ?>" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
                         <i class="fas fa-calendar-check text-blue-600 text-sm"></i>
                         إلى تاريخ
                     </label>
-                    <input type="date" name="end_date" value="{{ $endDate ? $endDate->format('Y-m-d') : '' }}" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
+                    <input type="date" name="end_date" value="<?php echo e($endDate ? $endDate->format('Y-m-d') : ''); ?>" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" />
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
@@ -68,9 +66,9 @@
                     </label>
                     <select name="role" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         <option value="">جميع الأدوار</option>
-                        <option value="student" {{ $role == 'student' ? 'selected' : '' }}>الطلاب</option>
-                        <option value="instructor" {{ $role == 'instructor' ? 'selected' : '' }}>المدربين</option>
-                        <option value="admin" {{ $role == 'admin' ? 'selected' : '' }}>الإدارة</option>
+                        <option value="student" <?php echo e($role == 'student' ? 'selected' : ''); ?>>الطلاب</option>
+                        <option value="instructor" <?php echo e($role == 'instructor' ? 'selected' : ''); ?>>المدربين</option>
+                        <option value="admin" <?php echo e($role == 'admin' ? 'selected' : ''); ?>>الإدارة</option>
                     </select>
                 </div>
                 <div>
@@ -80,8 +78,8 @@
                     </label>
                     <select name="status" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         <option value="">كل الحالات</option>
-                        <option value="active" {{ ($status ?? '') == 'active' ? 'selected' : '' }}>نشط</option>
-                        <option value="inactive" {{ ($status ?? '') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
+                        <option value="active" <?php echo e(($status ?? '') == 'active' ? 'selected' : ''); ?>>نشط</option>
+                        <option value="inactive" <?php echo e(($status ?? '') == 'inactive' ? 'selected' : ''); ?>>غير نشط</option>
                     </select>
                 </div>
                 <div class="md:col-span-5 flex flex-wrap items-end gap-3">
@@ -89,10 +87,10 @@
                         <i class="fas fa-filter"></i>
                         تطبيق الفلاتر
                     </button>
-                    <a href="{{ route('admin.reports.users') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors" title="مسح الفلتر">
+                    <a href="<?php echo e(route('admin.reports.users')); ?>" class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors" title="مسح الفلتر">
                         <i class="fas fa-times"></i>
                     </a>
-                    <a href="{{ route('admin.reports.export.users', array_merge(request()->all())) }}" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
+                    <a href="<?php echo e(route('admin.reports.export.users', array_merge(request()->all()))); ?>" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
                         <i class="fas fa-file-excel"></i>
                         تصدير إلى Excel
                     </a>
@@ -110,7 +108,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">إجمالي المستخدمين</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['total']) }}</p>
+                    <p class="text-xl font-black text-slate-900"><?php echo e(number_format($stats['total'])); ?></p>
                 </div>
             </div>
         </div>
@@ -121,7 +119,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">الطلاب</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['students']) }}</p>
+                    <p class="text-xl font-black text-slate-900"><?php echo e(number_format($stats['students'])); ?></p>
                 </div>
             </div>
         </div>
@@ -132,7 +130,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">المدربين</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['instructors']) }}</p>
+                    <p class="text-xl font-black text-slate-900"><?php echo e(number_format($stats['instructors'])); ?></p>
                 </div>
             </div>
         </div>
@@ -143,7 +141,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">الإدارة</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['admins']) }}</p>
+                    <p class="text-xl font-black text-slate-900"><?php echo e(number_format($stats['admins'])); ?></p>
                 </div>
             </div>
         </div>
@@ -154,7 +152,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">نشط</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['active'] ?? 0) }}</p>
+                    <p class="text-xl font-black text-slate-900"><?php echo e(number_format($stats['active'] ?? 0)); ?></p>
                 </div>
             </div>
         </div>
@@ -165,7 +163,7 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-semibold text-slate-600">غير نشط</p>
-                    <p class="text-xl font-black text-slate-900">{{ number_format($stats['inactive'] ?? 0) }}</p>
+                    <p class="text-xl font-black text-slate-900"><?php echo e(number_format($stats['inactive'] ?? 0)); ?></p>
                 </div>
             </div>
         </div>
@@ -178,10 +176,10 @@
                 <i class="fas fa-list text-blue-600"></i>
                 قائمة المستخدمين
             </h3>
-            <span class="text-xs font-semibold text-slate-600">{{ $users->total() }} مستخدم</span>
+            <span class="text-xs font-semibold text-slate-600"><?php echo e($users->total()); ?> مستخدم</span>
         </div>
         <div class="p-6">
-            @if($users->count() > 0)
+            <?php if($users->count() > 0): ?>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-slate-200">
                         <thead class="bg-slate-50">
@@ -196,42 +194,44 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-200">
-                            @foreach($users as $user)
+                            <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{{ $user->id }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900">{{ htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($user->email, ENT_QUOTES, 'UTF-8') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ htmlspecialchars($user->phone ?? '-', ENT_QUOTES, 'UTF-8') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900"><?php echo e($user->id); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900"><?php echo e(htmlspecialchars($user->name, ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e(htmlspecialchars($user->email, ENT_QUOTES, 'UTF-8')); ?></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e(htmlspecialchars($user->phone ?? '-', ENT_QUOTES, 'UTF-8')); ?></td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border
-                                        @if($user->role == 'student') bg-emerald-100 text-emerald-700 border-emerald-200
-                                        @elseif(in_array($user->role, ['instructor', 'teacher'])) bg-amber-100 text-amber-700 border-amber-200
-                                        @else bg-purple-100 text-purple-700 border-purple-200
-                                        @endif">
-                                        @if($user->role == 'student') الطلاب
-                                        @elseif(in_array($user->role, ['instructor', 'teacher'])) المدربين
-                                        @else الإدارة
-                                        @endif
+                                        <?php if($user->role == 'student'): ?> bg-emerald-100 text-emerald-700 border-emerald-200
+                                        <?php elseif(in_array($user->role, ['instructor', 'teacher'])): ?> bg-amber-100 text-amber-700 border-amber-200
+                                        <?php else: ?> bg-purple-100 text-purple-700 border-purple-200
+                                        <?php endif; ?>">
+                                        <?php if($user->role == 'student'): ?> الطلاب
+                                        <?php elseif(in_array($user->role, ['instructor', 'teacher'])): ?> المدربين
+                                        <?php else: ?> الإدارة
+                                        <?php endif; ?>
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border {{ $user->is_active ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-rose-100 text-rose-700 border-rose-200' }}">
+                                    <span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold border <?php echo e($user->is_active ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-rose-100 text-rose-700 border-rose-200'); ?>">
                                         <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                                        {{ $user->is_active ? 'نشط' : 'غير نشط' }}
+                                        <?php echo e($user->is_active ? 'نشط' : 'غير نشط'); ?>
+
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{{ $user->created_at->format('d/m/Y H:i') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><?php echo e($user->created_at->format('d/m/Y H:i')); ?></td>
                             </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </tbody>
                     </table>
                 </div>
-                @if($users->hasPages())
+                <?php if($users->hasPages()): ?>
                     <div class="mt-5 border-t border-slate-200 pt-5">
-                        {{ $users->appends(request()->query())->links() }}
+                        <?php echo e($users->appends(request()->query())->links()); ?>
+
                     </div>
-                @endif
-            @else
+                <?php endif; ?>
+            <?php else: ?>
                 <div class="text-center py-12">
                     <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600">
                         <i class="fas fa-users text-2xl"></i>
@@ -239,9 +239,11 @@
                     <p class="text-sm font-bold text-slate-900 mb-1">لا توجد بيانات</p>
                     <p class="text-xs text-slate-600">لا توجد مستخدمين مطابقين للبحث الحالي.</p>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </section>
 </div>
 
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/admin/reports/users.blade.php ENDPATH**/ ?>
