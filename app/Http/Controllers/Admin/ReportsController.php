@@ -777,16 +777,10 @@ class ReportsController extends Controller
 
             // إنشاء ملف Excel مع Service
             $excelService = new ExcelExportService();
-            $logoPath = public_path('logo.jpeg');
-            if (!file_exists($logoPath)) {
-                $logoPath = public_path('logo-removebg-preview.png');
-            }
-            
-            // إضافة الهيدر
+
             $excelService->addHeader(
-                'تقرير المستخدمين الشامل - Mindlytics',
-                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d'),
-                file_exists($logoPath) ? $logoPath : null
+                'تقرير المستخدمين الشامل - MuallimX',
+                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
             );
 
             // إضافة إحصائيات
@@ -877,16 +871,10 @@ class ReportsController extends Controller
 
             // إنشاء ملف Excel مع Service
             $excelService = new ExcelExportService();
-            $logoPath = public_path('logo.jpeg');
-            if (!file_exists($logoPath)) {
-                $logoPath = public_path('logo-removebg-preview.png');
-            }
-            
-            // إضافة الهيدر
+
             $excelService->addHeader(
-                'تقرير الكورسات الشامل - Mindlytics',
-                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d'),
-                file_exists($logoPath) ? $logoPath : null
+                'تقرير الكورسات الشامل - MuallimX',
+                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
             );
 
             // إضافة إحصائيات
@@ -963,16 +951,10 @@ class ReportsController extends Controller
 
             // إنشاء ملف Excel مع Service
             $excelService = new ExcelExportService();
-            $logoPath = public_path('logo.jpeg');
-            if (!file_exists($logoPath)) {
-                $logoPath = public_path('logo-removebg-preview.png');
-            }
-            
-            // إضافة الهيدر
+
             $excelService->addHeader(
-                'التقارير المالية الشاملة - Mindlytics',
-                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d'),
-                file_exists($logoPath) ? $logoPath : null
+                'التقارير المالية الشاملة - MuallimX',
+                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
             );
 
             // الملخص المالي
@@ -1119,16 +1101,10 @@ class ReportsController extends Controller
 
             // إنشاء ملف Excel مع Service
             $excelService = new ExcelExportService();
-            $logoPath = public_path('logo.jpeg');
-            if (!file_exists($logoPath)) {
-                $logoPath = public_path('logo-removebg-preview.png');
-            }
-            
-            // === الصفحة الرئيسية ===
+
             $excelService->addHeader(
-                'التقرير الشامل - Mindlytics',
-                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d'),
-                file_exists($logoPath) ? $logoPath : null
+                'التقرير الشامل - MuallimX',
+                'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
             );
 
             // المستخدمين
@@ -1171,8 +1147,8 @@ class ReportsController extends Controller
             $excelService->addStatistics($stats);
             $excelService->addEmptyRow(2);
 
-            // الأكاديمية
-            $excelService->addSectionTitle('التقرير الأكاديمي');
+            // المحتوى الدراسي
+            $excelService->addSectionTitle('التقرير الدراسي');
             $stats = [
                 'إجمالي الامتحانات' => number_format(AdvancedExam::count()),
                 'إجمالي المحاولات' => number_format(ExamAttempt::whereBetween('created_at', [$startDate, $endDate])->count()),

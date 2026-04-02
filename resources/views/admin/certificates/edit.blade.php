@@ -14,8 +14,8 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">المعلم *</label>
-                    <select name="user_id" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">الطالب *</label>
+                    <select id="certificate-user" name="user_id" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                         @foreach($users as $user)
                         <option value="{{ $user->id }}" {{ $certificate->user_id == $user->id ? 'selected' : '' }}>{{ $user->name }} - {{ $user->phone }}</option>
                         @endforeach
@@ -24,7 +24,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">الكورس *</label>
-                    <select name="course_id" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                    <select id="certificate-course" name="course_id" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                         <option value="">اختر الكورس</option>
                         @foreach($courses as $course)
                         <option value="{{ $course->id }}" {{ $certificate->course_id == $course->id ? 'selected' : '' }}>{{ $course->title }}</option>
@@ -63,7 +63,7 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">ملف الشهادة (PDF أو صورة)</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">ملف الشهادة (PDF فقط)</label>
                 @if(!empty($certificate->pdf_path))
                     <div class="mb-3 text-sm">
                         <span class="text-gray-500">ملف حالي:</span>
@@ -72,12 +72,12 @@
                            target="_blank" rel="noopener">عرض الملف</a>
                     </div>
                 @endif
-                <input type="file" name="certificate_file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*"
+                <input type="file" name="certificate_file" accept=".pdf,application/pdf"
                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white">
                 @error('certificate_file')
                     <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
                 @enderror
-                <p class="text-xs text-gray-500 mt-2">اتركه فارغًا إذا لا تريد تغيير الملف. الحد الأقصى 50MB.</p>
+                <p class="text-xs text-gray-500 mt-2">اتركه فارغًا إن لم تغيّر الملف. PDF فقط — حتى 50 ميجابايت.</p>
             </div>
 
             <div class="flex gap-4">
@@ -93,3 +93,69 @@
 </div>
 @endsection
 
+@push('scripts')
+<script>
+    (function () {
+        const userSelect = document.getElementById('certificate-user');
+        const courseSelect = document.getElementById('certificate-course');
+        if (!userSelect || !courseSelect) return;
+
+        const currentCourseId = @json((string) $certificate->course_id);
+        const allCourseOptions = Array.from(courseSelect.querySelectorAll('option')).map(o => ({
+            value: o.value,
+            text: o.textContent,
+            selected: o.value === currentCourseId
+        }));
+
+        function setCourseOptions(options) {
+            courseSelect.innerHTML = '';
+            for (const opt of options) {
+                const el = document.createElement('option');
+                el.value = opt.value;
+                el.textContent = opt.text;
+                if (opt.selected) el.selected = true;
+                courseSelect.appendChild(el);
+            }
+        }
+
+        async function loadUserCourses(userId) {
+            setCourseOptions([{ value: '', text: 'اختر الكورس', selected: false }]);
+            if (!userId) return;
+
+            try {
+                const res = await fetch(`{{ url('/admin/certificates/user') }}/${encodeURIComponent(userId)}/courses`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!res.ok) throw new Error('Failed');
+                const data = await res.json();
+                const courses = Array.isArray(data.courses) ? data.courses : [];
+
+                if (courses.length > 0) {
+                    const opts = [{ value: '', text: 'اختر الكورس', selected: false }].concat(
+                        courses.map(c => ({
+                            value: String(c.id),
+                            text: c.title,
+                            selected: String(c.id) === currentCourseId
+                        }))
+                    );
+                    setCourseOptions(opts);
+                } else {
+                    setCourseOptions(allCourseOptions.map(o => ({
+                        ...o,
+                        selected: o.value === currentCourseId
+                    })));
+                }
+            } catch (e) {
+                setCourseOptions(allCourseOptions.map(o => ({
+                    ...o,
+                    selected: o.value === currentCourseId
+                })));
+            }
+        }
+
+        userSelect.addEventListener('change', function () {
+            loadUserCourses(userSelect.value);
+        });
+    })();
+</script>
+@endpush

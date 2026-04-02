@@ -8,7 +8,9 @@ use App\Models\LiveSetting;
 use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ClassroomController extends Controller
@@ -200,6 +202,21 @@ class ClassroomController extends Controller
         $this->ensureMeetingOwnership($meeting, $user);
         $this->ensureClassroomAccess($user, $meeting);
 
+        if ($meeting->ended_at) {
+            if (request()->routeIs('instructor.*')) {
+                if ($meeting->consultation_request_id) {
+                    return redirect()->route('instructor.consultations.show', $meeting->consultation_request_id)
+                        ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
+                }
+
+                return redirect()->route('instructor.consultations.index')
+                    ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
+            }
+
+            return redirect()->route('student.classroom.show', $meeting)
+                ->with('error', 'انتهى هذا الاجتماع ولا يمكن إعادة فتح الغرفة.');
+        }
+
         $limits = SubscriptionLimitService::limitsForUser($user);
         if ($meeting->consultation_request_id) {
             $effectiveDurationMinutes = (int) ($meeting->planned_duration_minutes ?: 60);
@@ -253,6 +270,9 @@ class ClassroomController extends Controller
 
     public function uploadRecording(Request $request, ClassroomMeeting $meeting)
     {
+        @set_time_limit(0);
+        @ini_set('max_execution_time', '0');
+
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
         $this->ensureClassroomAccess($user, $meeting);
@@ -261,20 +281,67 @@ class ClassroomController extends Controller
             return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
         }
 
-        $validated = $request->validate([
-            'recording' => ['required', 'file', 'mimetypes:video/webm,video/mp4,audio/webm,audio/ogg', 'max:1048576'],
-            'duration_seconds' => ['nullable', 'integer', 'min:1', 'max:43200'],
-        ]);
+        try {
+            $validated = $request->validate([
+                // max بالكيلوبايت في Laravel — 1048576 ≈ 1 جيجابايت
+                'recording' => ['required', 'file', 'max:1048576'],
+                'duration_seconds' => ['nullable', 'integer', 'min:1', 'max:43200'],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'فشل التحقق من الملف المرفوع.',
+                'errors' => $e->errors(),
+            ], 422);
+        }
 
         $file = $validated['recording'];
+
+        $ext = strtolower((string) $file->getClientOriginalExtension());
+        if ($ext === '') {
+            $ext = strtolower((string) pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
+        }
+        if (! in_array($ext, ['webm', 'mp4', 'ogg', 'mkv'], true)) {
+            return response()->json([
+                'message' => 'امتداد الملف غير مدعوم. يُتوقع تسجيل المتصفح بصيغة webm.',
+            ], 422);
+        }
+
+        if ($file->getSize() <= 0) {
+            return response()->json([
+                'message' => 'الملف المرفوع فارغ. أعد المحاولة من Chrome أو Edge، واضغط «إيقاف التسجيل» قبل إغلاق مشاركة الشاشة.',
+            ], 422);
+        }
+
+        $mime = strtolower((string) $file->getMimeType());
+        $allowedMimes = [
+            'video/webm', 'video/mp4', 'video/quicktime', 'video/x-matroska',
+            'audio/webm', 'audio/ogg', 'application/octet-stream', 'binary/octet-stream',
+        ];
+        if ($mime !== '' && ! in_array($mime, $allowedMimes, true)) {
+            return response()->json([
+                'message' => 'نوع الملف غير متوقع ('.$mime.'). إن استمر ذلك، جرّب متصفحاً آخر.',
+            ], 422);
+        }
+
         $disk = Storage::disk('live_recordings_r2');
-        $directory = 'classroom-recordings/' . now()->format('Y/m');
-        $fileName = sprintf('meeting-%d-%s.webm', $meeting->id, now()->format('Ymd-His'));
-        $newPath = $directory . '/' . $fileName;
+        $directory = 'classroom-recordings/'.now()->format('Y/m');
+        $fileName = sprintf('meeting-%d-%s.%s', $meeting->id, now()->format('Ymd-His'), $ext ?: 'webm');
+        $newPath = $directory.'/'.$fileName;
 
         $oldPath = ($meeting->recording_disk === 'live_recordings_r2') ? $meeting->recording_path : null;
 
-        $disk->putFileAs($directory, $file, $fileName);
+        try {
+            $disk->putFileAs($directory, $file, $fileName);
+        } catch (\Throwable $e) {
+            \Log::error('Classroom recording upload failed', [
+                'meeting_id' => $meeting->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'تعذر حفظ التسجيل على التخزين السحابي. تحقق من إعدادات R2 أو حاول لاحقاً.',
+            ], 500);
+        }
 
         if ($oldPath && $oldPath !== $newPath) {
             try {
@@ -289,6 +356,171 @@ class ClassroomController extends Controller
             'recording_path' => $newPath,
             'recording_mime_type' => $file->getMimeType(),
             'recording_size' => $file->getSize(),
+            'recording_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
+            'recording_uploaded_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'تم رفع تسجيل المحاضرة إلى Cloudflare بنجاح.',
+            'download_url' => $meeting->fresh()->recording_download_url,
+        ]);
+    }
+
+    /**
+     * رابط موقّع لرفع التسجيل مباشرة من المتصفح إلى R2/S3 (يتجاوز حدود PHP و nginx لحجم الطلب).
+     */
+    public function presignRecordingUpload(Request $request, ClassroomMeeting $meeting)
+    {
+        @set_time_limit(120);
+
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if (! $meeting->started_at) {
+            return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
+        }
+
+        $disk = Storage::disk('live_recordings_r2');
+        if (! $disk->providesTemporaryUploadUrls()) {
+            return response()->json([
+                'direct_upload' => false,
+                'message' => 'التخزين الحالي لا يدعم الرفع المباشر؛ سيتم الرفع عبر الخادم.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'content_type' => ['nullable', 'string', 'max:191'],
+        ]);
+
+        $mime = $this->normalizeRecordingMime((string) ($validated['content_type'] ?? 'video/webm'));
+        $ext = $this->mimeToRecordingExt($mime);
+
+        $directory = 'classroom-recordings/'.now()->format('Y/m');
+        $fileName = sprintf(
+            'meeting-%d-%s-%s.%s',
+            $meeting->id,
+            now()->format('Ymd-His'),
+            Str::lower(Str::random(8)),
+            $ext
+        );
+        $newPath = $directory.'/'.$fileName;
+
+        $token = Str::random(64);
+        Cache::put(
+            'classroom_recording_presign:'.$token,
+            [
+                'path' => $newPath,
+                'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
+                'mime' => $mime,
+            ],
+            now()->addMinutes(90)
+        );
+
+        try {
+            $signed = $disk->temporaryUploadUrl(
+                $newPath,
+                now()->addMinutes(75),
+                [
+                    'ContentType' => $mime,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Cache::forget('classroom_recording_presign:'.$token);
+            \Log::error('Classroom recording presign failed', [
+                'meeting_id' => $meeting->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'direct_upload' => false,
+                'message' => 'تعذر تجهيز رابط الرفع إلى التخزين السحابي. تحقق من إعدادات R2 في .env.',
+            ], 503);
+        }
+
+        return response()->json([
+            'direct_upload' => true,
+            'upload_url' => $signed['url'],
+            'upload_token' => $token,
+            'content_type' => $mime,
+            'headers' => $signed['headers'] ?? [],
+        ]);
+    }
+
+    /**
+     * بعد PUT الناجح إلى R2: ربط الملف بالاجتماع (طلب JSON صغير لا يتأثر بحدود رفع الملف).
+     */
+    public function completeDirectRecordingUpload(Request $request, ClassroomMeeting $meeting)
+    {
+        @set_time_limit(120);
+
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if (! $meeting->started_at) {
+            return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
+        }
+
+        $validated = $request->validate([
+            'upload_token' => ['required', 'string', 'size:64'],
+            'duration_seconds' => ['nullable', 'integer', 'min:1', 'max:43200'],
+        ]);
+
+        $cacheKey = 'classroom_recording_presign:'.$validated['upload_token'];
+        $payload = Cache::pull($cacheKey);
+        if (! is_array($payload)
+            || (int) ($payload['meeting_id'] ?? 0) !== (int) $meeting->id
+            || (int) ($payload['user_id'] ?? 0) !== (int) $user->id) {
+            return response()->json([
+                'message' => 'انتهت صلاحية رابط الرفع أو أنه غير صالح. أعد محاولة الرفع.',
+            ], 422);
+        }
+
+        $path = (string) ($payload['path'] ?? '');
+        $mime = (string) ($payload['mime'] ?? 'video/webm');
+        if ($path === '' || str_contains($path, '..')) {
+            return response()->json(['message' => 'مسار التخزين غير صالح.'], 422);
+        }
+
+        $disk = Storage::disk('live_recordings_r2');
+        if (! $disk->exists($path)) {
+            return response()->json([
+                'message' => 'الملف غير ظاهر على التخزين بعد. انتظر ثانية ثم أعد تأكيد الرفع، أو أعد الرفع من جديد.',
+            ], 422);
+        }
+
+        $size = (int) $disk->size($path);
+        $maxBytes = 2147483648;
+
+        if ($size <= 0) {
+            return response()->json(['message' => 'الملف المرفوع فارغ.'], 422);
+        }
+
+        if ($size > $maxBytes) {
+            try {
+                $disk->delete($path);
+            } catch (\Throwable $e) {
+            }
+
+            return response()->json(['message' => 'حجم التسجيل يتجاوز الحد المسموح (٢ جيجابايت).'], 422);
+        }
+
+        $oldPath = ($meeting->recording_disk === 'live_recordings_r2') ? $meeting->recording_path : null;
+
+        if ($oldPath && $oldPath !== $path) {
+            try {
+                $disk->delete($oldPath);
+            } catch (\Throwable $e) {
+            }
+        }
+
+        $meeting->update([
+            'recording_disk' => 'live_recordings_r2',
+            'recording_path' => $path,
+            'recording_mime_type' => $mime,
+            'recording_size' => $size,
             'recording_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
             'recording_uploaded_at' => now(),
         ]);
@@ -338,5 +570,29 @@ class ClassroomController extends Controller
         if ((int) $meeting->user_id !== (int) $user->id) {
             abort(403);
         }
+    }
+
+    private function normalizeRecordingMime(string $mime): string
+    {
+        $mime = strtolower(trim($mime));
+        $allowed = [
+            'video/webm', 'video/mp4', 'video/quicktime', 'video/x-matroska',
+            'audio/webm', 'audio/ogg', 'application/octet-stream', 'binary/octet-stream',
+        ];
+        if ($mime !== '' && in_array($mime, $allowed, true)) {
+            return $mime;
+        }
+
+        return 'video/webm';
+    }
+
+    private function mimeToRecordingExt(string $mime): string
+    {
+        return match ($mime) {
+            'video/mp4', 'video/quicktime' => 'mp4',
+            'video/x-matroska' => 'mkv',
+            'audio/ogg', 'video/ogg' => 'ogg',
+            default => 'webm',
+        };
     }
 }

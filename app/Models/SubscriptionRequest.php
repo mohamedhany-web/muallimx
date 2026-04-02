@@ -78,21 +78,21 @@ class SubscriptionRequest extends Model
                 'price' => 200,
                 'billing_cycle' => 'monthly',
                 'subscription_type' => 'monthly',
-                'features' => ['library_access', 'ai_tools', 'classroom_access', 'zoom_access', 'support'],
+                'features' => ['library_access', 'ai_tools', 'classroom_access', 'support'],
             ],
             'teacher_pro' => [
                 'plan_name' => 'باقة المعلم المحترف',
                 'price' => 600,
                 'billing_cycle' => 'quarterly',
                 'subscription_type' => 'quarterly',
-                'features' => ['library_access', 'ai_tools', 'classroom_access', 'zoom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite'],
+                'features' => ['library_access', 'ai_tools', 'classroom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite'],
             ],
             'teacher_premium' => [
                 'plan_name' => 'باقة المعلم المميز',
                 'price' => 1500,
                 'billing_cycle' => 'yearly',
                 'subscription_type' => 'yearly',
-                'features' => ['library_access', 'ai_tools', 'classroom_access', 'zoom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support'],
+                'features' => ['library_access', 'ai_tools', 'classroom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support'],
             ],
         ];
         return $plans[$key] ?? $plans['teacher_starter'];

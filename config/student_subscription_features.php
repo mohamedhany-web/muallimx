@@ -27,13 +27,6 @@ return [
         'route' => 'student.classroom.index',
         'route_params' => [],
     ],
-    'zoom_access' => [
-        'icon' => 'fa-video',
-        'icon_bg' => 'bg-sky-100 dark:bg-sky-900/40',
-        'icon_text' => 'text-sky-600 dark:text-sky-400',
-        'route' => 'student.features.show',
-        'route_params' => ['feature' => 'zoom_access'],
-    ],
     'support' => [
         'icon' => 'fa-headset',
         'icon_bg' => 'bg-amber-100 dark:bg-amber-900/40',
@@ -94,7 +87,7 @@ return [
         'icon' => 'fa-life-ring',
         'icon_bg' => 'bg-cyan-100 dark:bg-cyan-900/40',
         'icon_text' => 'text-cyan-600 dark:text-cyan-400',
-        'route' => 'student.features.show',
-        'route_params' => ['feature' => 'direct_support'],
+        'route' => 'student.support.index',
+        'route_params' => [],
     ],
 ];

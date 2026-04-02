@@ -167,12 +167,12 @@
             </div>
         </section>
 
-        <!-- الأكاديمية -->
+        <!-- المحتوى الدراسي -->
         <section class="rounded-xl bg-white border border-slate-200 shadow-lg overflow-hidden">
             <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">
                 <h3 class="text-lg font-black text-slate-900 mb-2 flex items-center gap-2">
                     <i class="fas fa-book text-purple-600"></i>
-                    الأكاديمية
+                    المحتوى الدراسي
                 </h3>
             </div>
             <div class="p-6">

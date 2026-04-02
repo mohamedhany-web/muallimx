@@ -110,11 +110,6 @@
 
                 <?php
                     $planKeys = ['teacher_starter', 'teacher_pro', 'teacher_premium'];
-                    $planMeta = [
-                        'teacher_starter' => ['subtitle' => 'ابدأ التدريس أونلاين بسهولة', 'badge' => null, 'priceHint' => 'أقل من 7 جنيه يوميًا.', 'cta' => 'ابدأ الآن', 'card' => 'white', 'accent' => 'sky'],
-                        'teacher_pro'     => ['subtitle' => 'أفضل اختيار للمعلمين الذين يريدون العمل أونلاين', 'badge' => 'الأفضل للبدء أونلاين', 'priceHint' => 'استثمار ربع سنوي يمنحك حضورًا مهنيًا وفرص عمل حقيقية.', 'cta' => 'ابدأ العمل الآن', 'card' => 'dark', 'accent' => 'sky'],
-                        'teacher_premium' => ['subtitle' => 'للمعلمين الجادين في بناء مسار مهني مستقر', 'badge' => null, 'priceHint' => 'اشتراك سنوي يمنحك استقرارًا وفرص تدريس مستمرة طوال العام.', 'cta' => 'ابدأ رحلتك الآن', 'card' => 'white', 'accent' => 'amber'],
-                    ];
                     $billingPhrases = ['monthly' => 'جنيه شهريًا', 'quarterly' => 'جنيه / 3 شهور', 'yearly' => 'جنيه سنويًا'];
                 ?>
 
@@ -123,7 +118,13 @@
                         <?php
                             $plan = $teacherPlans[$planKey] ?? null;
                             if (!$plan) continue;
-                            $meta = $planMeta[$planKey] ?? [];
+                            $meta = [
+                                'subtitle' => $plan['card_subtitle'] ?? '',
+                                'badge' => trim((string) ($plan['card_badge'] ?? '')),
+                                'priceHint' => $plan['card_price_hint'] ?? '',
+                                'cta' => $plan['card_cta'] ?? 'ابدأ الآن',
+                                'footer_note' => $plan['card_footer_note'] ?? '',
+                            ];
                             $label = $plan['label'] ?? $planKey;
                             $price = (float) ($plan['price'] ?? 0);
                             $cycle = $plan['billing_cycle'] ?? 'monthly';
@@ -136,21 +137,23 @@
                             <?php elseif($planKey === 'teacher_premium'): ?> border-[#FB5607]/30
                             <?php else: ?> border-slate-200
                             <?php endif; ?>">
-                            <?php if(!empty($meta['badge'])): ?>
+                            <?php if($meta['badge'] !== ''): ?>
                                 <div class="absolute -top-3 left-4 bg-[#FB5607] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg"><?php echo e($meta['badge']); ?></div>
                             <?php endif; ?>
                             <div class="mb-4">
                                 <h3 class="text-2xl font-black text-mx-indigo mb-1"><?php echo e($label); ?></h3>
+                                <?php if($meta['subtitle'] !== ''): ?>
                                 <p class="text-sm font-semibold <?php echo e($planKey === 'teacher_premium' ? 'text-[#FB5607]' : 'text-[#283593]'); ?>">
-                                    <?php echo e($meta['subtitle'] ?? ''); ?>
+                                    <?php echo e($meta['subtitle']); ?>
 
                                 </p>
+                                <?php endif; ?>
                             </div>
                             <div class="mb-6">
                                 <div class="text-3xl font-black text-mx-indigo mb-1">
                                     <?php echo e(number_format($price, 0)); ?> <span class="text-base sm:text-lg font-bold text-slate-600"><?php echo e($cyclePhrase); ?></span>
                                 </div>
-                                <?php if(!empty($meta['priceHint'])): ?>
+                                <?php if($meta['priceHint'] !== ''): ?>
                                     <p class="text-sm text-slate-500"><?php echo e($meta['priceHint']); ?></p>
                                 <?php endif; ?>
                             </div>
@@ -162,11 +165,11 @@
                                     </li>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </ul>
-                            <?php if($isPro): ?>
-                                <div class="mb-4 text-[#283593] bg-[#EFF2FF] border border-[#dbe4ff] px-3 py-2 rounded-xl text-sm font-semibold">فرص حقيقية للعمل مع أكاديميات، وليس مجرد أدوات.</div>
-                            <?php endif; ?>
-                            <?php if($planKey === 'teacher_premium'): ?>
-                                <div class="mb-4 text-[#FB5607] bg-[#FFF7ED] border border-[#ffe5d3] px-3 py-2 rounded-xl text-sm font-semibold">نساعدك في الوصول إلى فرص تدريس حقيقية وبناء اسمك كمعلم أونلاين.</div>
+                            <?php if($meta['footer_note'] !== ''): ?>
+                                <div class="mb-4 px-3 py-2 rounded-xl text-sm font-semibold
+                                    <?php if($planKey === 'teacher_premium'): ?> text-[#FB5607] bg-[#FFF7ED] border border-[#ffe5d3]
+                                    <?php else: ?> text-[#283593] bg-[#EFF2FF] border border-[#dbe4ff]
+                                    <?php endif; ?>"><?php echo e($meta['footer_note']); ?></div>
                             <?php endif; ?>
                             <a href="<?php echo e(route('public.subscription.checkout', $planKey)); ?>" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors
                                 <?php if($isPro): ?> bg-[#283593] hover:bg-[#1f2a7a] text-white
@@ -238,8 +241,13 @@
                         <?php endif; ?>
                     </div>
                     
-                    <?php if($package->description): ?>
-                    <p class="<?php echo e($package->is_popular ? 'text-white/85' : 'text-gray-600'); ?>"><?php echo e(Str::limit($package->description, 50)); ?></p>
+                    <?php
+                        $cardBody = trim((string) ($package->card_summary ?? '')) !== ''
+                            ? $package->card_summary
+                            : ($package->description ?? '');
+                    ?>
+                    <?php if($cardBody !== ''): ?>
+                    <p class="<?php echo e($package->is_popular ? 'text-white/85' : 'text-gray-600'); ?> text-sm leading-relaxed whitespace-pre-line line-clamp-6"><?php echo e($cardBody); ?></p>
                     <?php endif; ?>
                     
                     <?php if($package->courses_count > 0): ?>
@@ -250,33 +258,17 @@
                     <?php endif; ?>
                 </div>
                 
-                <!-- Features -->
-                <?php if($package->features && count($package->features) > 0): ?>
+                <?php
+                    $cardFeatures = collect($package->features ?? [])->map(fn ($f) => trim((string) $f))->filter()->values();
+                ?>
+                <?php if($cardFeatures->isNotEmpty()): ?>
                 <ul class="space-y-4 mb-8">
-                    <?php $__currentLoopData = $package->features; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $feature): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php $__currentLoopData = $cardFeatures; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $feature): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <li class="flex items-center <?php echo e($package->is_popular ? 'text-white' : 'text-gray-700'); ?>">
-                        <i class="fas fa-check-circle <?php echo e($package->is_popular ? 'text-[#FFE569]' : 'text-[#283593]'); ?> ml-3"></i>
-                        <?php echo e($feature); ?>
-
+                        <i class="fas fa-check-circle <?php echo e($package->is_popular ? 'text-[#FFE569]' : 'text-[#283593]'); ?> ml-3 shrink-0"></i>
+                        <span><?php echo e($feature); ?></span>
                     </li>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                </ul>
-                <?php else: ?>
-                <ul class="space-y-4 mb-8">
-                    <li class="flex items-center <?php echo e($package->is_popular ? 'text-white' : 'text-gray-700'); ?>">
-                        <i class="fas fa-check-circle <?php echo e($package->is_popular ? 'text-[#FFE569]' : 'text-[#283593]'); ?> ml-3"></i>
-                        وصول لجميع الكورسات في الباقة
-                    </li>
-                    <?php if($package->courses_count > 0): ?>
-                    <li class="flex items-center <?php echo e($package->is_popular ? 'text-white' : 'text-gray-700'); ?>">
-                        <i class="fas fa-check-circle <?php echo e($package->is_popular ? 'text-[#FFE569]' : 'text-[#283593]'); ?> ml-3"></i>
-                        <?php echo e($package->courses_count); ?> كورس برمجي شامل
-                    </li>
-                    <?php endif; ?>
-                    <li class="flex items-center <?php echo e($package->is_popular ? 'text-white' : 'text-gray-700'); ?>">
-                        <i class="fas fa-check-circle <?php echo e($package->is_popular ? 'text-[#FFE569]' : 'text-[#283593]'); ?> ml-3"></i>
-                        دعم فني متواصل
-                    </li>
                 </ul>
                 <?php endif; ?>
                 

@@ -140,10 +140,6 @@
                             <span>استخدام MuallimX Classroom للتدريس</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[zoom_access]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>عقد حصص عبر Zoom</span>
-                        </label>
-                        <label class="inline-flex items-center">
                             <input type="checkbox" name="features[support]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
                             <span>دعم فني للمعلمين</span>
                         </label>
@@ -263,7 +259,6 @@
                         'library_access',
                         'ai_tools',
                         'classroom_access',
-                        'zoom_access',
                         'support',
                     ];
                 } else if (key === 'teacher_pro') {
@@ -275,7 +270,6 @@
                         'library_access',
                         'ai_tools',
                         'classroom_access',
-                        'zoom_access',
                         'support',
                         'teacher_profile',
                         'visible_to_academies',
@@ -291,7 +285,6 @@
                         'library_access',
                         'ai_tools',
                         'classroom_access',
-                        'zoom_access',
                         'support',
                         'teacher_profile',
                         'visible_to_academies',

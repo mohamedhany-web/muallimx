@@ -81,6 +81,7 @@ return [
          * تسجيلات جلسات البث المباشر (Jibri → R2).
          * يمكن استخدام نفس R2 أو bucket منفصل عبر R2_LIVE_RECORDINGS_* في .env
          */
+        // للرفع المباشر من المتصفح: أضف في R2 → CORS للـ bucket: AllowedMethods PUT,GET,HEAD و AllowedOrigins = نطاق الموقع.
         'live_recordings_r2' => [
             'driver' => 's3',
             'key' => env('R2_LIVE_RECORDINGS_ACCESS_KEY_ID', env('AWS_ACCESS_KEY_ID')),

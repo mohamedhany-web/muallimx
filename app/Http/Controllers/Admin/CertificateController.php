@@ -185,7 +185,7 @@ class CertificateController extends Controller
             'description' => 'nullable|string',
             'issued_at' => 'nullable|date',
             'status' => 'required|in:pending,issued,revoked',
-            'certificate_file' => 'required|file|mimes:pdf,jpg,jpeg,png,webp|max:51200',
+            'certificate_file' => 'required|file|mimes:pdf|max:51200',
         ]);
 
         $courseId = (int) $validated['course_id'];
@@ -193,9 +193,7 @@ class CertificateController extends Controller
         $storedPath = null;
         if ($request->hasFile('certificate_file')) {
             $file = $request->file('certificate_file');
-            $ext = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'pdf');
-            $safeExt = in_array($ext, ['pdf', 'jpg', 'jpeg', 'png', 'webp'], true) ? $ext : 'pdf';
-            $fileName = 'cert-' . Str::uuid()->toString() . '.' . $safeExt;
+            $fileName = 'cert-' . Str::uuid()->toString() . '.pdf';
             $storedPath = $file->storeAs('certificates/' . (int) $validated['user_id'], $fileName, 'public');
         }
 
@@ -214,7 +212,7 @@ class CertificateController extends Controller
             'is_verified' => $validated['status'] === 'issued',
             'instructor_id' => $validated['instructor_id'] ?? null,
             'academy_signature_name' => $validated['academy_signature_name'] ?? 'المدير العام',
-            'academy_signature_title' => $validated['academy_signature_title'] ?? 'Mindlytics Academy',
+            'academy_signature_title' => $validated['academy_signature_title'] ?? 'MuallimX',
             'instructor_signature_name' => $validated['instructor_signature_name'] ?? null,
             'instructor_signature_title' => $validated['instructor_signature_title'] ?? 'المدرب المعتمد',
             'pdf_path' => $storedPath,
@@ -299,7 +297,42 @@ class CertificateController extends Controller
     public function show(Certificate $certificate)
     {
         $certificate->load(['user', 'course']);
+
         return view('admin.certificates.show', compact('certificate'));
+    }
+
+    public function file(Certificate $certificate)
+    {
+        return $this->serveCertificateFile($certificate, false);
+    }
+
+    public function download(Certificate $certificate)
+    {
+        return $this->serveCertificateFile($certificate, true);
+    }
+
+    private function serveCertificateFile(Certificate $certificate, bool $asAttachment)
+    {
+        if (empty($certificate->pdf_path)) {
+            abort(404, 'لا يوجد ملف مرفوع لهذه الشهادة.');
+        }
+
+        $disk = Storage::disk('public');
+        if (! $disk->exists($certificate->pdf_path)) {
+            abort(404, 'ملف الشهادة غير موجود على الخادم.');
+        }
+
+        $ext = strtolower(pathinfo($certificate->pdf_path, PATHINFO_EXTENSION) ?: 'pdf');
+        $base = 'MuallimX-certificate-' . preg_replace('/[^A-Za-z0-9._-]+/', '_', (string) ($certificate->certificate_number ?? $certificate->id));
+        $downloadName = $base . '.' . ($ext ?: 'pdf');
+
+        if ($asAttachment) {
+            return $disk->download($certificate->pdf_path, $downloadName);
+        }
+
+        return $disk->response($certificate->pdf_path, $downloadName, [
+            'Content-Disposition' => 'inline; filename="' . $downloadName . '"',
+        ]);
     }
 
     public function edit(Certificate $certificate)
@@ -331,7 +364,7 @@ class CertificateController extends Controller
             'description' => 'nullable|string',
             'issued_at' => 'nullable|date',
             'status' => 'required|in:pending,issued,revoked',
-            'certificate_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:51200',
+            'certificate_file' => 'nullable|file|mimes:pdf|max:51200',
         ]);
 
         $updateData = $validated;
@@ -349,9 +382,7 @@ class CertificateController extends Controller
 
         if ($request->hasFile('certificate_file')) {
             $file = $request->file('certificate_file');
-            $ext = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'pdf');
-            $safeExt = in_array($ext, ['pdf', 'jpg', 'jpeg', 'png', 'webp'], true) ? $ext : 'pdf';
-            $fileName = 'cert-' . Str::uuid()->toString() . '.' . $safeExt;
+            $fileName = 'cert-' . Str::uuid()->toString() . '.pdf';
             $newPath = $file->storeAs('certificates/' . (int) $validated['user_id'], $fileName, 'public');
 
             if ($certificate->pdf_path) {
@@ -383,14 +414,36 @@ class CertificateController extends Controller
 
         $certificate->update($this->filterCertificateTableColumns($updateData));
 
+        if (($validated['status'] ?? '') === 'issued') {
+            $needsSave = false;
+            if (Schema::hasColumn('certificates', 'certificate_hash')) {
+                $certificate->certificate_hash = $certificate->generateHash();
+                $needsSave = true;
+            }
+            if (Schema::hasColumn('certificates', 'certified_at') && ! $certificate->certified_at) {
+                $certificate->certified_at = now();
+                $needsSave = true;
+            }
+            if ($needsSave) {
+                $certificate->save();
+            }
+        }
+
         return redirect()->route('admin.certificates.index')
             ->with('success', 'تم تحديث الشهادة بنجاح');
     }
 
     public function destroy(Certificate $certificate)
     {
+        if ($certificate->pdf_path) {
+            try {
+                Storage::disk('public')->delete($certificate->pdf_path);
+            } catch (\Throwable $e) {
+            }
+        }
         $certificate->delete();
+
         return redirect()->route('admin.certificates.index')
-            ->with('success', 'تم حذف الشهادة بنجاح');
+            ->with('success', 'تم حذف الشهادة والملف المرفق بنجاح');
     }
 }

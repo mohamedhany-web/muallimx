@@ -20,6 +20,14 @@
         }
         .room-body { display: flex; flex-direction: column; height: calc(100vh - 72px); }
         #jitsi-container iframe { width: 100% !important; height: 100% !important; border: none; }
+        #meeting-stage { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; width: 100%; }
+        #wb-canvas { position: absolute; inset: 0; z-index: 12; pointer-events: none; touch-action: none; }
+        #wb-canvas.wb-active { pointer-events: auto; cursor: crosshair; }
+        #wb-toolbar { display: none; }
+        #wb-toolbar.wb-visible { display: flex; }
+        #wb-popup { z-index: 140; }
+        #wb-popup-stage { min-height: 50vh; }
+        #wb-popup-canvas { touch-action: none; cursor: crosshair; }
     </style>
 </head>
 <body class="bg-slate-950">
@@ -53,6 +61,14 @@
                 مدة الاجتماع: {{ (int) $effectiveDurationMinutes }} دقيقة (حد الباقة {{ (int) $maxDurationMinutes }})
             </span>
             <span class="hidden text-sky-200 text-xs px-2 py-1 rounded-md bg-sky-500/20 border border-sky-500/30" id="record-status-chip"></span>
+            <button type="button" id="btn-wb-toggle" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors border border-slate-600" title="تفعيل القلم والرسم على الشاشة فوق الاجتماع">
+                <i class="fas fa-pen-nib text-amber-400" id="wb-toggle-icon"></i>
+                <span id="wb-toggle-label" class="hidden sm:inline">لوحة فوق الفيديو</span>
+            </button>
+            <button type="button" id="btn-wb-popup-open" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 text-sm font-medium transition-colors border border-amber-500/40" title="فتح لوحة بيضاء كبيرة في نافذة منبثقة">
+                <i class="fas fa-expand text-amber-300"></i>
+                <span class="hidden sm:inline">لوحة كبيرة</span>
+            </button>
             <button type="button" id="btn-record" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors border border-slate-600" title="تسجيل المحاضرة">
                 <i class="fas fa-circle-dot text-rose-400" id="record-icon"></i>
                 <span id="record-label">تسجيل المحاضرة</span>
@@ -115,26 +131,76 @@
         <button type="button" onclick="document.getElementById('media-tip').remove()" class="text-slate-400 hover:text-white p-1" aria-label="إغلاق"><i class="fas fa-times"></i></button>
     </div>
 
-    {{-- منطقة الاجتماع --}}
-    <main id="jitsi-container" role="application" aria-label="غرفة الاجتماع">
-        <div id="jitsi-loading" class="flex flex-col items-center justify-center h-full text-slate-400 text-sm gap-3">
-            <i class="fas fa-spinner fa-spin text-2xl text-cyan-400"></i>
-            <span>جاري تحميل غرفة الاجتماع…</span>
+    {{-- منطقة الاجتماع + طبقة رسم (لوحة بيضاء محلية فوق الفيديو) --}}
+    <div id="meeting-stage" class="flex-1 min-h-0 relative w-full">
+        <main id="jitsi-container" class="flex-1 min-h-0 relative w-full" role="application" aria-label="غرفة الاجتماع">
+            <div id="jitsi-loading" class="flex flex-col items-center justify-center h-full text-slate-400 text-sm gap-3">
+                <i class="fas fa-spinner fa-spin text-2xl text-cyan-400"></i>
+                <span>جاري تحميل غرفة الاجتماع…</span>
+            </div>
+            <div id="jitsi-error" class="hidden flex-col items-center justify-center h-full p-6 text-center max-w-lg mx-auto" style="display: none;">
+                <i class="fas fa-exclamation-triangle text-amber-500 text-4xl mb-3"></i>
+                <p class="font-bold text-slate-200 mb-2">لا يمكن تحميل غرفة الاجتماع</p>
+                <p class="text-slate-400 text-sm mb-3">المتصفح لم يستطع الاتصال بـ <strong class="text-slate-300">{{ $jitsiDomain }}</strong>.</p>
+                <ul class="text-right text-slate-400 text-sm mb-4 list-none space-y-1">
+                    <li>• النطاق يجب أن يكون <strong class="text-slate-300">النطاق الذي يعمل عليه Jitsi Meet</strong> (مثلاً <code class="bg-slate-700 px-1 rounded">meet.muallimx.com</code> وليس بالضرورة الموقع الرئيسي).</li>
+                    <li>• جرّب فتح <a href="https://{{ $jitsiDomain }}/external_api.js" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">هذا الرابط</a> في تاب جديد — إن لم يُحمّل، فـ Jitsi غير مُثبت على هذا النطاق أو النطاق غير متاح من جهازك.</li>
+                    <li>• إن كان Jitsi على نطاق فرعي (مثل meet.muallimx.com)، غيّر النطاق من: <strong>لوحة الإدارة → سيرفرات البث</strong> ثم «استخدام كنطاق افتراضي» للسيرفر الصحيح.</li>
+                </ul>
+                <a href="https://{{ $jitsiDomain }}/{{ $meeting->room_name }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition-colors">
+                    <i class="fas fa-external-link-alt"></i> فتح الغرفة في نافذة جديدة
+                </a>
+            </div>
+        </main>
+        <canvas id="wb-canvas" aria-hidden="true"></canvas>
+        <div id="wb-toolbar" class="absolute bottom-3 left-1/2 -translate-x-1/2 z-[13] items-center gap-2 flex-wrap justify-center px-3 py-2 rounded-xl bg-slate-900/95 border border-slate-600 shadow-xl max-w-[95vw]">
+            <label class="flex items-center gap-1.5 text-slate-300 text-xs">
+                <span>لون</span>
+                <input type="color" id="wb-color" value="#fbbf24" class="h-8 w-10 rounded border border-slate-500 cursor-pointer bg-slate-800 p-0.5" title="لون القلم">
+            </label>
+            <label class="flex items-center gap-1.5 text-slate-300 text-xs">
+                <span>سمك</span>
+                <input type="range" id="wb-width" min="1" max="16" value="4" class="w-24 align-middle" title="سمك الخط">
+            </label>
+            <button type="button" id="wb-clear" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-medium border border-slate-500">مسح اللوحة</button>
+            <span class="text-slate-500 text-[10px] max-w-[200px] leading-tight hidden md:inline">الرسم يظهر على جهازك فقط؛ عطّل «لوحة بيضاء» للنقر داخل الاجتماع.</span>
         </div>
-        <div id="jitsi-error" class="hidden flex-col items-center justify-center h-full p-6 text-center max-w-lg mx-auto" style="display: none;">
-            <i class="fas fa-exclamation-triangle text-amber-500 text-4xl mb-3"></i>
-            <p class="font-bold text-slate-200 mb-2">لا يمكن تحميل غرفة الاجتماع</p>
-            <p class="text-slate-400 text-sm mb-3">المتصفح لم يستطع الاتصال بـ <strong class="text-slate-300">{{ $jitsiDomain }}</strong>.</p>
-            <ul class="text-right text-slate-400 text-sm mb-4 list-none space-y-1">
-                <li>• النطاق يجب أن يكون <strong class="text-slate-300">النطاق الذي يعمل عليه Jitsi Meet</strong> (مثلاً <code class="bg-slate-700 px-1 rounded">meet.muallimx.com</code> وليس بالضرورة الموقع الرئيسي).</li>
-                <li>• جرّب فتح <a href="https://{{ $jitsiDomain }}/external_api.js" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">هذا الرابط</a> في تاب جديد — إن لم يُحمّل، فـ Jitsi غير مُثبت على هذا النطاق أو النطاق غير متاح من جهازك.</li>
-                <li>• إن كان Jitsi على نطاق فرعي (مثل meet.muallimx.com)، غيّر النطاق من: <strong>لوحة الإدارة → سيرفرات البث</strong> ثم «استخدام كنطاق افتراضي» للسيرفر الصحيح.</li>
-            </ul>
-            <a href="https://{{ $jitsiDomain }}/{{ $meeting->room_name }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition-colors">
-                <i class="fas fa-external-link-alt"></i> فتح الغرفة في نافذة جديدة
-            </a>
+    </div>
+    </div>
+
+    {{-- لوحة بيضاء منبثقة بشاشة كبيرة --}}
+    <div id="wb-popup" class="hidden fixed inset-0 flex items-center justify-center p-2 sm:p-4" aria-hidden="true" role="dialog" aria-labelledby="wb-popup-title">
+        <div id="wb-popup-backdrop" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm cursor-pointer" aria-hidden="true"></div>
+        <div id="wb-popup-panel" class="relative z-[141] flex flex-col w-full max-w-[min(1680px,99vw)] h-[min(92vh,calc(100dvh-1rem))] rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-700 bg-slate-800/95 shrink-0">
+                <h2 id="wb-popup-title" class="text-base font-bold text-white m-0 flex items-center gap-2">
+                    <i class="fas fa-chalkboard text-amber-400"></i>
+                    لوحة بيضاء — شاشة كبيرة
+                </h2>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btn-wb-popup-fullscreen" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium border border-slate-600" title="ملء الشاشة (اخرج بـ Esc)">
+                        <i class="fas fa-expand"></i>
+                        <span class="hidden sm:inline">ملء الشاشة</span>
+                    </button>
+                    <button type="button" id="wb-popup-close" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-700 hover:bg-rose-600/80 text-white text-lg leading-none border border-slate-600" aria-label="إغلاق اللوحة">&times;</button>
+                </div>
+            </div>
+            <div id="wb-popup-stage" class="relative flex-1 min-h-0 bg-white">
+                <canvas id="wb-popup-canvas" class="absolute inset-0 w-full h-full block"></canvas>
+            </div>
+            <div id="wb-popup-toolbar" class="flex flex-wrap items-center justify-center gap-3 px-4 py-3 border-t border-slate-700 bg-slate-800/95 shrink-0">
+                <label class="flex items-center gap-1.5 text-slate-300 text-xs">
+                    <span>لون</span>
+                    <input type="color" id="wb-popup-color" value="#fbbf24" class="h-8 w-10 rounded border border-slate-500 cursor-pointer bg-slate-800 p-0.5" title="لون القلم">
+                </label>
+                <label class="flex items-center gap-1.5 text-slate-300 text-xs">
+                    <span>سمك</span>
+                    <input type="range" id="wb-popup-width" min="1" max="24" value="6" class="w-28 align-middle" title="سمك الخط">
+                </label>
+                <button type="button" id="wb-popup-clear" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-medium border border-slate-500">مسح اللوحة</button>
+                <span class="text-slate-500 text-[10px] max-w-[240px] leading-tight text-center">عند الإغلاق تُنسخ اللوحة إلى الطبقة فوق الاجتماع. الرسم محلي على جهازك فقط.</span>
+            </div>
         </div>
-    </main>
     </div>
 
     @include('partials.jitsi-iframe-media-allow')
@@ -154,7 +220,10 @@
             var recordLabel = document.getElementById('record-label');
             var recordStatusChip = document.getElementById('record-status-chip');
             var uploadRecordingUrl = '{{ route($rp . 'classroom.recording.upload', $meeting) }}';
+            var presignRecordingUrl = '{{ route($rp . 'classroom.recording.presign', $meeting) }}';
+            var completeRecordingUrl = '{{ route($rp . 'classroom.recording.complete', $meeting) }}';
             var csrfToken = '{{ csrf_token() }}';
+            var roomExitUrl = {!! json_encode($roomExitUrl) !!};
             var permissionGate = document.getElementById('permission-gate');
             var permissionHelp = document.getElementById('permission-help');
             var requestMediaBtn = document.getElementById('btn-request-media');
@@ -167,6 +236,362 @@
             var recordingStartedAt = null;
             var activeRecordingStream = null;
             var micStream = null;
+
+            var wbCanvas = document.getElementById('wb-canvas');
+            var wbToolbar = document.getElementById('wb-toolbar');
+            var wbToggle = document.getElementById('btn-wb-toggle');
+            var wbCtx = wbCanvas && wbCanvas.getContext ? wbCanvas.getContext('2d') : null;
+            var wbDrawing = false;
+            var wbMode = false;
+            var wbLast = null;
+            var wbCssW = 0;
+            var wbCssH = 0;
+
+            var wbPopup = document.getElementById('wb-popup');
+            var wbPopupStage = document.getElementById('wb-popup-stage');
+            var wbPopupPanel = document.getElementById('wb-popup-panel');
+            var wbPopupCanvas = document.getElementById('wb-popup-canvas');
+            var wbPopupCtx = wbPopupCanvas && wbPopupCanvas.getContext ? wbPopupCanvas.getContext('2d') : null;
+            var wbPopupDrawing = false;
+            var wbPopupLast = null;
+            var wbPopupCssW = 0;
+            var wbPopupCssH = 0;
+
+            function mergeMainCanvasToPopup() {
+                if (!wbCanvas || !wbPopupCanvas || !wbPopupCtx) return;
+                if (wbCanvas.width < 2 || wbCanvas.height < 2) return;
+                wbPopupCtx.save();
+                wbPopupCtx.setTransform(1, 0, 0, 1, 0, 0);
+                wbPopupCtx.drawImage(wbCanvas, 0, 0, wbPopupCanvas.width, wbPopupCanvas.height);
+                wbPopupCtx.restore();
+                var dpr = window.devicePixelRatio || 1;
+                wbPopupCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                wbPopupCtx.lineCap = 'round';
+                wbPopupCtx.lineJoin = 'round';
+            }
+
+            function mergePopupCanvasToMain() {
+                if (!wbCanvas || !wbCtx || !wbPopupCanvas || !wbPopupCtx) return;
+                resizeWbCanvas();
+                if (wbCanvas.width < 2 || wbCanvas.height < 2) return;
+                if (wbPopupCanvas.width < 2 || wbPopupCanvas.height < 2) return;
+                wbCtx.save();
+                wbCtx.setTransform(1, 0, 0, 1, 0, 0);
+                wbCtx.drawImage(wbPopupCanvas, 0, 0, wbCanvas.width, wbCanvas.height);
+                wbCtx.restore();
+                var dpr = window.devicePixelRatio || 1;
+                wbCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                wbCtx.lineCap = 'round';
+                wbCtx.lineJoin = 'round';
+            }
+
+            function resizeWbPopupCanvas() {
+                if (!wbPopupCanvas || !wbPopupCtx || !wbPopupStage) return;
+                var rect = wbPopupStage.getBoundingClientRect();
+                var w = Math.max(1, Math.floor(rect.width));
+                var h = Math.max(1, Math.floor(rect.height));
+                if (w === wbPopupCssW && h === wbPopupCssH && wbPopupCanvas.width > 0) return;
+                wbPopupCssW = w;
+                wbPopupCssH = h;
+                var dpr = window.devicePixelRatio || 1;
+                wbPopupCanvas.width = Math.floor(w * dpr);
+                wbPopupCanvas.height = Math.floor(h * dpr);
+                wbPopupCanvas.style.width = w + 'px';
+                wbPopupCanvas.style.height = h + 'px';
+                wbPopupCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                wbPopupCtx.lineCap = 'round';
+                wbPopupCtx.lineJoin = 'round';
+            }
+
+            function resizeWbPopupCanvasPreserve() {
+                if (!wbPopupCanvas || !wbPopupCtx || !wbPopupStage) return;
+                if (wbPopupCanvas.width < 2) {
+                    resizeWbPopupCanvas();
+                    return;
+                }
+                var rect = wbPopupStage.getBoundingClientRect();
+                var w = Math.max(1, Math.floor(rect.width));
+                var h = Math.max(1, Math.floor(rect.height));
+                var dpr = window.devicePixelRatio || 1;
+                var newCw = Math.floor(w * dpr);
+                var newCh = Math.floor(h * dpr);
+                if (newCw === wbPopupCanvas.width && newCh === wbPopupCanvas.height) return;
+                var tmp = document.createElement('canvas');
+                tmp.width = wbPopupCanvas.width;
+                tmp.height = wbPopupCanvas.height;
+                var tctx = tmp.getContext('2d');
+                if (tctx) tctx.drawImage(wbPopupCanvas, 0, 0);
+                wbPopupCssW = w;
+                wbPopupCssH = h;
+                wbPopupCanvas.width = newCw;
+                wbPopupCanvas.height = newCh;
+                wbPopupCanvas.style.width = w + 'px';
+                wbPopupCanvas.style.height = h + 'px';
+                wbPopupCtx.setTransform(1, 0, 0, 1, 0, 0);
+                wbPopupCtx.drawImage(tmp, 0, 0, newCw, newCh);
+                wbPopupCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                wbPopupCtx.lineCap = 'round';
+                wbPopupCtx.lineJoin = 'round';
+            }
+
+            function getWbPopupPos(ev) {
+                var rect = wbPopupCanvas.getBoundingClientRect();
+                var cx = ev.clientX;
+                var cy = ev.clientY;
+                if (ev.touches && ev.touches[0]) {
+                    cx = ev.touches[0].clientX;
+                    cy = ev.touches[0].clientY;
+                }
+                return { x: cx - rect.left, y: cy - rect.top };
+            }
+
+            function wbPopupStart(ev) {
+                wbPopupDrawing = true;
+                wbPopupLast = getWbPopupPos(ev);
+                if (ev.preventDefault) ev.preventDefault();
+            }
+
+            function wbPopupMove(ev) {
+                if (!wbPopupDrawing || wbPopupLast === null || !wbPopupCtx) return;
+                var p = getWbPopupPos(ev);
+                var colorEl = document.getElementById('wb-popup-color');
+                var widthEl = document.getElementById('wb-popup-width');
+                wbPopupCtx.strokeStyle = colorEl ? colorEl.value : '#fbbf24';
+                wbPopupCtx.lineWidth = widthEl ? parseInt(widthEl.value, 10) || 6 : 6;
+                wbPopupCtx.beginPath();
+                wbPopupCtx.moveTo(wbPopupLast.x, wbPopupLast.y);
+                wbPopupCtx.lineTo(p.x, p.y);
+                wbPopupCtx.stroke();
+                wbPopupLast = p;
+                if (ev.preventDefault) ev.preventDefault();
+            }
+
+            function wbPopupEnd(ev) {
+                wbPopupDrawing = false;
+                wbPopupLast = null;
+                if (ev && ev.preventDefault) ev.preventDefault();
+            }
+
+            function syncToolbarToPopup() {
+                var c1 = document.getElementById('wb-color');
+                var c2 = document.getElementById('wb-popup-color');
+                var w1 = document.getElementById('wb-width');
+                var w2 = document.getElementById('wb-popup-width');
+                if (c1 && c2) c2.value = c1.value;
+                if (w1 && w2) w2.value = String(Math.max(parseInt(w1.value, 10) || 4, 1));
+            }
+
+            function syncToolbarToMain() {
+                var c1 = document.getElementById('wb-color');
+                var c2 = document.getElementById('wb-popup-color');
+                var w1 = document.getElementById('wb-width');
+                var w2 = document.getElementById('wb-popup-width');
+                if (c1 && c2) c1.value = c2.value;
+                if (w1 && w2) w1.value = String(Math.min(Math.max(parseInt(w2.value, 10) || 4, 1), 16));
+            }
+
+            function openWbPopup() {
+                if (!wbPopup) return;
+                syncToolbarToPopup();
+                wbPopup.classList.remove('hidden');
+                wbPopup.classList.add('flex');
+                wbPopup.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+                wbPopupCssW = 0;
+                wbPopupCssH = 0;
+                resizeWbPopupCanvas();
+                mergeMainCanvasToPopup();
+                setTimeout(function() {
+                    resizeWbPopupCanvas();
+                    mergeMainCanvasToPopup();
+                }, 50);
+            }
+
+            function closeWbPopup() {
+                if (!wbPopup || wbPopup.classList.contains('hidden')) return;
+                mergePopupCanvasToMain();
+                wbPopup.classList.add('hidden');
+                wbPopup.classList.remove('flex');
+                wbPopup.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+                syncToolbarToMain();
+                try {
+                    if (document.fullscreenElement) document.exitFullscreen();
+                } catch (fe) {}
+            }
+
+            function resizeWbCanvas() {
+                if (!wbCanvas || !wbCtx) return;
+                var stage = document.getElementById('meeting-stage');
+                if (!stage) return;
+                var rect = stage.getBoundingClientRect();
+                var w = Math.max(1, Math.floor(rect.width));
+                var h = Math.max(1, Math.floor(rect.height));
+                if (w === wbCssW && h === wbCssH && wbCanvas.width > 0) return;
+                wbCssW = w;
+                wbCssH = h;
+                var dpr = window.devicePixelRatio || 1;
+                wbCanvas.width = Math.floor(w * dpr);
+                wbCanvas.height = Math.floor(h * dpr);
+                wbCanvas.style.width = w + 'px';
+                wbCanvas.style.height = h + 'px';
+                wbCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                wbCtx.lineCap = 'round';
+                wbCtx.lineJoin = 'round';
+            }
+
+            function getWbPos(ev) {
+                var rect = wbCanvas.getBoundingClientRect();
+                var cx = ev.clientX;
+                var cy = ev.clientY;
+                if (ev.touches && ev.touches[0]) {
+                    cx = ev.touches[0].clientX;
+                    cy = ev.touches[0].clientY;
+                }
+                return { x: cx - rect.left, y: cy - rect.top };
+            }
+
+            function wbStart(ev) {
+                if (!wbMode) return;
+                wbDrawing = true;
+                wbLast = getWbPos(ev);
+                if (ev.preventDefault) ev.preventDefault();
+            }
+
+            function wbMove(ev) {
+                if (!wbDrawing || wbLast === null || !wbCtx) return;
+                var p = getWbPos(ev);
+                var colorEl = document.getElementById('wb-color');
+                var widthEl = document.getElementById('wb-width');
+                wbCtx.strokeStyle = colorEl ? colorEl.value : '#fbbf24';
+                wbCtx.lineWidth = widthEl ? parseInt(widthEl.value, 10) || 4 : 4;
+                wbCtx.beginPath();
+                wbCtx.moveTo(wbLast.x, wbLast.y);
+                wbCtx.lineTo(p.x, p.y);
+                wbCtx.stroke();
+                wbLast = p;
+                if (ev.preventDefault) ev.preventDefault();
+            }
+
+            function wbEnd(ev) {
+                wbDrawing = false;
+                wbLast = null;
+                if (ev && ev.preventDefault) ev.preventDefault();
+            }
+
+            function setWbMode(on) {
+                wbMode = on;
+                if (wbCanvas) wbCanvas.classList.toggle('wb-active', on);
+                if (wbToolbar) wbToolbar.classList.toggle('wb-visible', on);
+                if (wbToggle) {
+                    wbToggle.classList.toggle('ring-2', on);
+                    wbToggle.classList.toggle('ring-amber-400', on);
+                    wbToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+                }
+            }
+
+            if (wbToggle && wbCanvas && wbCtx) {
+                wbToggle.addEventListener('click', function() {
+                    setWbMode(!wbMode);
+                    resizeWbCanvas();
+                });
+                var wbClearBtn = document.getElementById('wb-clear');
+                if (wbClearBtn) {
+                    wbClearBtn.addEventListener('click', function() {
+                        if (!wbCtx || !wbCanvas) return;
+                        wbCtx.setTransform(1, 0, 0, 1, 0, 0);
+                        wbCtx.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
+                        var dpr = window.devicePixelRatio || 1;
+                        wbCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                        wbCtx.lineCap = 'round';
+                        wbCtx.lineJoin = 'round';
+                    });
+                }
+                wbCanvas.addEventListener('mousedown', wbStart);
+                wbCanvas.addEventListener('mousemove', wbMove);
+                wbCanvas.addEventListener('mouseup', wbEnd);
+                wbCanvas.addEventListener('mouseleave', wbEnd);
+                wbCanvas.addEventListener('touchstart', wbStart, { passive: false });
+                wbCanvas.addEventListener('touchmove', wbMove, { passive: false });
+                wbCanvas.addEventListener('touchend', wbEnd);
+                wbCanvas.addEventListener('touchcancel', wbEnd);
+                window.addEventListener('resize', resizeWbCanvas);
+                var meetingStageEl = document.getElementById('meeting-stage');
+                if (meetingStageEl && typeof ResizeObserver !== 'undefined') {
+                    new ResizeObserver(resizeWbCanvas).observe(meetingStageEl);
+                }
+                resizeWbCanvas();
+
+                var cMain = document.getElementById('wb-color');
+                var cPop = document.getElementById('wb-popup-color');
+                var wMain = document.getElementById('wb-width');
+                var wPop = document.getElementById('wb-popup-width');
+                if (cMain && cPop) {
+                    cMain.addEventListener('input', function() { cPop.value = cMain.value; });
+                    cPop.addEventListener('input', function() { cMain.value = cPop.value; });
+                }
+                if (wMain && wPop) {
+                    wMain.addEventListener('input', function() { wPop.value = wMain.value; });
+                    wPop.addEventListener('input', function() {
+                        var pv = parseInt(wPop.value, 10) || 4;
+                        wMain.value = String(Math.min(pv, 16));
+                    });
+                }
+
+                var wbOpenPopupBtn = document.getElementById('btn-wb-popup-open');
+                if (wbOpenPopupBtn) wbOpenPopupBtn.addEventListener('click', openWbPopup);
+                var wbClosePopupBtn = document.getElementById('wb-popup-close');
+                if (wbClosePopupBtn) wbClosePopupBtn.addEventListener('click', closeWbPopup);
+                var wbBackdropEl = document.getElementById('wb-popup-backdrop');
+                if (wbBackdropEl) wbBackdropEl.addEventListener('click', closeWbPopup);
+                var wbFsBtn = document.getElementById('btn-wb-popup-fullscreen');
+                if (wbFsBtn && wbPopupPanel) {
+                    wbFsBtn.addEventListener('click', function() {
+                        if (!document.fullscreenElement) {
+                            wbPopupPanel.requestFullscreen().catch(function() {});
+                        } else {
+                            try { document.exitFullscreen(); } catch (ex) {}
+                        }
+                    });
+                }
+
+                document.addEventListener('keydown', function(ev) {
+                    if (ev.key === 'Escape' && wbPopup && !wbPopup.classList.contains('hidden')) {
+                        closeWbPopup();
+                    }
+                });
+
+                if (wbPopupCanvas && wbPopupCtx) {
+                    wbPopupCanvas.addEventListener('mousedown', wbPopupStart);
+                    wbPopupCanvas.addEventListener('mousemove', wbPopupMove);
+                    wbPopupCanvas.addEventListener('mouseup', wbPopupEnd);
+                    wbPopupCanvas.addEventListener('mouseleave', wbPopupEnd);
+                    wbPopupCanvas.addEventListener('touchstart', wbPopupStart, { passive: false });
+                    wbPopupCanvas.addEventListener('touchmove', wbPopupMove, { passive: false });
+                    wbPopupCanvas.addEventListener('touchend', wbPopupEnd);
+                    wbPopupCanvas.addEventListener('touchcancel', wbPopupEnd);
+                    var wbPopupClearBtn = document.getElementById('wb-popup-clear');
+                    if (wbPopupClearBtn) {
+                        wbPopupClearBtn.addEventListener('click', function() {
+                            if (!wbPopupCtx || !wbPopupCanvas) return;
+                            wbPopupCtx.setTransform(1, 0, 0, 1, 0, 0);
+                            wbPopupCtx.clearRect(0, 0, wbPopupCanvas.width, wbPopupCanvas.height);
+                            var dprP = window.devicePixelRatio || 1;
+                            wbPopupCtx.setTransform(dprP, 0, 0, dprP, 0, 0);
+                            wbPopupCtx.lineCap = 'round';
+                            wbPopupCtx.lineJoin = 'round';
+                        });
+                    }
+                }
+
+                if (wbPopupStage && typeof ResizeObserver !== 'undefined') {
+                    new ResizeObserver(function() {
+                        if (wbPopup && !wbPopup.classList.contains('hidden')) {
+                            resizeWbPopupCanvasPreserve();
+                        }
+                    }).observe(wbPopupStage);
+                }
+            }
 
             function showError() {
                 if (loadingEl) loadingEl.classList.add('hidden');
@@ -221,6 +646,40 @@
                 }
             }
 
+            function pickMediaRecorderOptions() {
+                var candidates = [
+                    'video/webm;codecs=vp9,opus',
+                    'video/webm;codecs=vp8,opus',
+                    'video/webm'
+                ];
+                var mimeType = '';
+                for (var i = 0; i < candidates.length; i++) {
+                    if (MediaRecorder.isTypeSupported(candidates[i])) {
+                        mimeType = candidates[i];
+                        break;
+                    }
+                }
+                var opts = { videoBitsPerSecond: 1500000, audioBitsPerSecond: 96000 };
+                if (mimeType) {
+                    opts.mimeType = mimeType;
+                }
+                return opts;
+            }
+
+            function formatBytes(n) {
+                var x = Number(n) || 0;
+                if (x < 1024) {
+                    return x + ' B';
+                }
+                if (x < 1048576) {
+                    return (x / 1024).toFixed(1) + ' KB';
+                }
+                if (x < 1073741824) {
+                    return (x / 1048576).toFixed(1) + ' MB';
+                }
+                return (x / 1073741824).toFixed(2) + ' GB';
+            }
+
             async function buildRecordingStream() {
                 var displayStream = await navigator.mediaDevices.getDisplayMedia({
                     video: true,
@@ -242,26 +701,142 @@
                 return new MediaStream(tracks);
             }
 
-            function uploadRecordedBlob(blob, durationSeconds) {
-                var formData = new FormData();
-                formData.append('recording', blob, 'meeting-recording.webm');
-                formData.append('duration_seconds', String(durationSeconds || 0));
+            function uploadRecordedBlobViaFormData(blob, durationSeconds) {
+                return new Promise(function(resolve, reject) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', uploadRecordingUrl, true);
+                    xhr.setRequestHeader('X-CSRF-TOKEN', csrfToken);
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    xhr.timeout = 0;
 
-                return fetch(uploadRecordingUrl, {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: formData
-                }).then(function(response) {
-                    return response.json().then(function(data) {
-                        return { ok: response.ok, data: data };
-                    }).catch(function() {
-                        return { ok: response.ok, data: {} };
-                    });
+                    xhr.upload.onprogress = function(e) {
+                        if (e.lengthComputable && e.total > 0) {
+                            var p = Math.min(100, Math.round((e.loaded / e.total) * 100));
+                            setRecordStatus('جاري الرفع عبر الخادم ' + p + '% — لا تغلق الصفحة.', false);
+                        } else if (e.loaded) {
+                            setRecordStatus('جاري الرفع عبر الخادم... ' + formatBytes(e.loaded) + ' — لا تغلق الصفحة.', false);
+                        }
+                    };
+
+                    xhr.onerror = function() {
+                        reject(new Error('فشل الاتصال أثناء الرفع. تحقق من الإنترنت وحاول مرة أخرى.'));
+                    };
+                    xhr.ontimeout = function() {
+                        reject(new Error('انتهت مهلة الرفع. جرّب شبكة أسرع أو قسّم المحاضرة إلى جزئين.'));
+                    };
+
+                    xhr.onload = function() {
+                        var raw = xhr.responseText || '';
+                        var data = {};
+                        try {
+                            data = raw ? JSON.parse(raw) : {};
+                        } catch (parseErr) {
+                            if (xhr.status === 413) {
+                                reject(new Error('حجم الملف يتجاوز حد السيرفر (PHP/nginx). عادةً يُرفع التسجيل مباشرة إلى Cloudflare R2؛ إن ظهرت هذه الرسالة فتحقق من CORS لدلوكل R2 أو زِد upload_max_filesize و post_max_size و client_max_body_size من الاستضافة.'));
+                                return;
+                            }
+                            reject(new Error('استجابة غير متوقعة من الخادم (رمز ' + xhr.status + ').'));
+                            return;
+                        }
+
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve({ ok: true, data: data });
+                            return;
+                        }
+
+                        var msg = (data && data.message) ? data.message : 'فشل رفع التسجيل.';
+                        if (data && data.errors) {
+                            var firstKey = Object.keys(data.errors)[0];
+                            if (firstKey && data.errors[firstKey] && data.errors[firstKey][0]) {
+                                msg = data.errors[firstKey][0];
+                            }
+                        }
+                        if (xhr.status === 413) {
+                            msg = 'حجم الملف كبير جداً لإعدادات السيرفر الحالية.';
+                        }
+                        reject(new Error(msg));
+                    };
+
+                    var formData = new FormData();
+                    formData.append('recording', blob, 'meeting-recording.webm');
+                    formData.append('duration_seconds', String(durationSeconds || 0));
+                    xhr.send(formData);
                 });
+            }
+
+            async function uploadRecordedBlob(blob, durationSeconds) {
+                var putSucceeded = false;
+                try {
+                    var presignRes = await fetch(presignRecordingUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            content_type: blob.type || 'video/webm',
+                        }),
+                    });
+                    var presignData = {};
+                    try {
+                        presignData = await presignRes.json();
+                    } catch (je) {
+                        presignData = {};
+                    }
+
+                    if (presignRes.ok && presignData.direct_upload === false) {
+                        return uploadRecordedBlobViaFormData(blob, durationSeconds);
+                    }
+
+                    if (presignRes.ok && presignData.upload_url && presignData.upload_token && presignData.content_type) {
+                        setRecordStatus('جاري الرفع مباشرة إلى Cloudflare (' + formatBytes(blob.size) + ')... لا تغلق الصفحة.', false);
+                        var putRes = await fetch(presignData.upload_url, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': presignData.content_type },
+                            body: blob,
+                        });
+                        if (!putRes.ok) {
+                            var putErr = 'فشل الرفع إلى التخزين السحابي (HTTP ' + putRes.status + '). من Cloudflare R2 → إعدادات الـ bucket → CORS: اسمح بـ PUT و Origin لنطاق موقعك.';
+                            throw new Error(putErr);
+                        }
+                        putSucceeded = true;
+
+                        var completeRes = await fetch(completeRecordingUrl, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                upload_token: presignData.upload_token,
+                                duration_seconds: durationSeconds || 0,
+                            }),
+                        });
+                        var completeData = {};
+                        try {
+                            completeData = await completeRes.json();
+                        } catch (je2) {
+                            completeData = {};
+                        }
+                        if (!completeRes.ok) {
+                            var cmsg = (completeData && completeData.message) ? completeData.message : 'فشل ربط الملف بالاجتماع بعد الرفع.';
+                            throw new Error(cmsg);
+                        }
+                        return { ok: true, data: completeData };
+                    }
+                } catch (err) {
+                    if (putSucceeded) {
+                        throw err;
+                    }
+                    console.warn('Direct R2 upload path skipped or failed, using server upload:', err);
+                }
+                return uploadRecordedBlobViaFormData(blob, durationSeconds);
             }
 
             async function startBrowserRecording() {
@@ -284,14 +859,20 @@
                     return;
                 }
 
+                var recorderOpts = pickMediaRecorderOptions();
                 try {
-                    mediaRecorder = new MediaRecorder(activeRecordingStream, { mimeType: 'video/webm' });
+                    mediaRecorder = new MediaRecorder(activeRecordingStream, recorderOpts);
                 } catch (err) {
-                    stopCaptureTracks(activeRecordingStream);
-                    activeRecordingStream = null;
-                    setRecordButtonBusy(false);
-                    alert('تعذر بدء التسجيل. جرّب متصفح Chrome أو Edge بإصدار حديث.');
-                    return;
+                    try {
+                        var fallback = recorderOpts.mimeType ? { mimeType: recorderOpts.mimeType } : {};
+                        mediaRecorder = new MediaRecorder(activeRecordingStream, fallback);
+                    } catch (err2) {
+                        stopCaptureTracks(activeRecordingStream);
+                        activeRecordingStream = null;
+                        setRecordButtonBusy(false);
+                        alert('تعذر بدء التسجيل. جرّب متصفح Chrome أو Edge بإصدار حديث.');
+                        return;
+                    }
                 }
 
                 recordedChunks = [];
@@ -303,23 +884,30 @@
                     }
                 });
 
-                mediaRecorder.addEventListener('stop', async function() {
+                mediaRecorder.addEventListener('stop', async function onRecorderStopped() {
+                    isRecording = false;
+                    setRecordButtonState(false);
+
+                    stopCaptureTracks(activeRecordingStream);
+                    activeRecordingStream = null;
+                    stopCaptureTracks(micStream);
+                    micStream = null;
+
                     var durationSeconds = recordingStartedAt ? Math.max(1, Math.round((Date.now() - recordingStartedAt) / 1000)) : 0;
-                    var blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    var outType = (mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'video/webm';
+                    var blob = new Blob(recordedChunks, { type: outType });
 
                     if (!blob.size) {
                         setRecordButtonBusy(false);
                         setRecordStatus('لا يوجد محتوى في التسجيل.', true);
-                        alert('لا يوجد محتوى في التسجيل. حاول مرة أخرى.');
+                        alert('لا يوجد محتوى في التسجيل. إن استمر ذلك بعد محاضرة طويلة، جرّب Chrome/Edge ولا تغلق تبويب مشاركة الشاشة قبل الضغط على «إيقاف التسجيل».');
+                        recordedChunks = [];
                         return;
                     }
 
                     try {
-                        setRecordStatus('جاري رفع التسجيل... لا تغلق الصفحة.', false);
-                        var result = await uploadRecordedBlob(blob, durationSeconds);
-                        if (!result.ok) {
-                            throw new Error((result.data && result.data.message) ? result.data.message : 'فشل رفع التسجيل إلى الخادم.');
-                        }
+                        setRecordStatus('جاري رفع التسجيل (' + formatBytes(blob.size) + ')... لا تغلق الصفحة.', false);
+                        await uploadRecordedBlob(blob, durationSeconds);
                         setRecordStatus('تم رفع التسجيل بنجاح.', false);
                         alert('تم رفع التسجيل إلى Cloudflare بنجاح. سيظهر رابط التحميل في صفحة الاجتماع بعد إنهائه.');
                     } catch (uploadError) {
@@ -335,12 +923,20 @@
                 activeRecordingStream.getVideoTracks().forEach(function(track) {
                     track.addEventListener('ended', function() {
                         if (mediaRecorder && mediaRecorder.state === 'recording') {
+                            setRecordButtonBusy(true);
+                            setRecordStatus('انتهت مشاركة الشاشة. جاري إنهاء الملف والرفع...', false);
+                            try {
+                                if (typeof mediaRecorder.requestData === 'function') {
+                                    mediaRecorder.requestData();
+                                }
+                            } catch (e) {}
                             mediaRecorder.stop();
                         }
                     });
                 });
 
-                mediaRecorder.start(1000);
+                /* كل 4 ثوانٍ: أقل عدّد مقاطع من timeslice=1s يقلل الضغط على الذاكرة في التسجيلات الطويلة */
+                mediaRecorder.start(4000);
                 isRecording = true;
                 setRecordButtonState(true);
                 setRecordStatus('جاري التسجيل الآن...', false);
@@ -352,14 +948,17 @@
                     return;
                 }
                 setRecordButtonBusy(true);
+                setRecordStatus('جاري إنهاء التسجيل ودمج المقاطع... لا تغلق مشاركة الشاشة بعد.', false);
+                try {
+                    if (typeof mediaRecorder.requestData === 'function') {
+                        mediaRecorder.requestData();
+                    }
+                } catch (reqErr) {
+                    console.warn('requestData:', reqErr);
+                }
                 mediaRecorder.stop();
-                stopCaptureTracks(activeRecordingStream);
-                activeRecordingStream = null;
-                stopCaptureTracks(micStream);
-                micStream = null;
                 isRecording = false;
                 setRecordButtonState(false);
-                setRecordStatus('تم إيقاف التسجيل. تجهيز الرفع...', false);
             }
 
             async function handleRecordButtonClick() {
@@ -481,7 +1080,8 @@
                             TOOLBAR_BUTTONS: [
                                 'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
                                 'fodeviceselection', 'hangup', 'chat', 'recording',
-                                'raisehand', 'invite', 'tileview', 'videoquality', 'filmstrip'
+                                'raisehand', 'invite', 'tileview', 'videoquality', 'filmstrip',
+                                'whiteboard'
                             ],
                             SHOW_JITSI_WATERMARK: false,
                             SHOW_WATERMARK_FOR_GUESTS: false,
@@ -495,19 +1095,20 @@
                     api = new JitsiMeetExternalAPI(jitsiDomain, options);
 
                     if (loadingEl) loadingEl.classList.add('hidden');
-
-                    api.addEventListener('readyToClose', function() {
-                        window.location.href = '{{ route("student.classroom.index") }}';
-                    });
-
-                    api.addEventListener('videoConferenceJoined', function() {
-                        hasJoinedConference = true;
-                    });
+                    setTimeout(resizeWbCanvas, 300);
+                    setTimeout(resizeWbCanvas, 1200);
 
                     api.addEventListener('readyToClose', function() {
                         if (isRecording) {
                             stopBrowserRecording();
                         }
+                        window.location.href = roomExitUrl;
+                    });
+
+                    api.addEventListener('videoConferenceJoined', function() {
+                        hasJoinedConference = true;
+                        resizeWbCanvas();
+                        setTimeout(resizeWbCanvas, 500);
                     });
                 } catch (e) {
                     console.error('Jitsi init error:', e);
@@ -524,7 +1125,7 @@
                     timerChip.textContent = 'انتهت المدة المسموح بها';
                     timerChip.classList.remove('bg-amber-500/20', 'border-amber-500/30', 'text-amber-200');
                     timerChip.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
-                    window.location.href = '{{ route("student.classroom.index") }}';
+                    window.location.href = roomExitUrl;
                     return;
                 }
                 var mins = Math.floor(diff / 60000);

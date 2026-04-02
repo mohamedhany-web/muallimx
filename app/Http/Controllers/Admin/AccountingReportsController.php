@@ -489,8 +489,8 @@ class AccountingReportsController extends Controller
 
         $spreadsheet = new Spreadsheet();
         $spreadsheet->getProperties()
-            ->setCreator('Mindlytics')
-            ->setTitle('التقارير المالية - المنصة')
+            ->setCreator('MuallimX')
+            ->setTitle('التقارير المالية - MuallimX')
             ->setSubject('تقارير محاسبية شاملة');
 
         $headerStyle = [
@@ -532,7 +532,7 @@ class AccountingReportsController extends Controller
             if ($type === 'orders') $this->addOrdersSheet($spreadsheet, 1, $startDate, $endDate, $headerStyle, $headerFont, $border);
         }
 
-        $filename = 'التقارير_المالية_Mindlytics_' . $startDate->format('Y-m-d') . '_' . $endDate->format('Y-m-d') . '.xlsx';
+        $filename = 'التقارير_المالية_MuallimX_' . $startDate->format('Y-m-d') . '_' . $endDate->format('Y-m-d') . '.xlsx';
         $asciiFilename = 'accounting_reports_' . $startDate->format('Y-m-d') . '_' . $endDate->format('Y-m-d') . '.xlsx';
         $disposition = "attachment; filename=\"{$asciiFilename}\"; filename*=UTF-8''" . rawurlencode($filename);
 
@@ -548,7 +548,7 @@ class AccountingReportsController extends Controller
 
     private function writeSummarySheet($sheet, $stats, $startDate, $endDate, $headerStyle, $headerFont, $border)
     {
-        $sheet->setCellValue('A1', 'تقارير مالية شاملة - منصة Mindlytics');
+        $sheet->setCellValue('A1', 'تقارير مالية شاملة - MuallimX');
         $sheet->mergeCells('A1:D1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->setCellValue('A2', 'الفترة: من ' . $startDate->format('Y-m-d') . ' إلى ' . $endDate->format('Y-m-d'));

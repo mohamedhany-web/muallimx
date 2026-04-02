@@ -97,7 +97,7 @@
                     'microphone', 'camera', 'desktop', 'chat',
                     'raisehand', 'participants-pane', 'tileview',
                     'fullscreen', 'hangup', 'recording',
-                    'settings', 'select-background',
+                    'settings', 'select-background', 'whiteboard',
                 ],
                 SHOW_JITSI_WATERMARK: false,
                 SHOW_WATERMARK_FOR_GUESTS: false,

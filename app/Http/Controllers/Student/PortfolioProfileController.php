@@ -3,19 +3,27 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class PortfolioProfileController extends Controller
 {
+    private function ensureTeacherProfileSubscription(User $user): void
+    {
+        abort_unless($user->hasSubscriptionFeature('teacher_profile'), 403, 'ميزة البروفايل التسويقي للمعلم غير مفعّلة في اشتراكك. يمكنك الترقية من صفحة التسعير.');
+    }
+
     public function edit()
     {
         $user = auth()->user();
+        $this->ensureTeacherProfileSubscription($user);
         return view('student.portfolio.profile', compact('user'));
     }
 
     public function update(Request $request)
     {
         $user = auth()->user();
+        $this->ensureTeacherProfileSubscription($user);
 
         $validated = $request->validate([
             'portfolio_headline' => 'nullable|string|max:120',

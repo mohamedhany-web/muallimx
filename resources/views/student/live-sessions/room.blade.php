@@ -89,7 +89,7 @@
             interfaceConfigOverwrite: {
                 TOOLBAR_BUTTONS: [
                     'microphone', 'camera', 'chat',
-                    'raisehand', 'tileview', 'fullscreen',
+                    'raisehand', 'tileview', 'fullscreen', 'whiteboard',
                     @if($liveSession->allow_screen_share)
                     'desktop',
                     @endif

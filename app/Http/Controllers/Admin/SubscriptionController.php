@@ -203,6 +203,7 @@ class SubscriptionController extends Controller
         if (!empty($validated['features']) && is_array($validated['features'])) {
             $featureKeys = array_keys(array_filter($validated['features'], fn ($v) => (bool) $v));
         }
+        $featureKeys = Subscription::normalizeFeatureKeys($featureKeys);
 
         try {
             DB::beginTransaction();
@@ -281,7 +282,7 @@ class SubscriptionController extends Controller
         }
 
         $data = $validated;
-        $data['features'] = $featureKeys;
+        $data['features'] = Subscription::normalizeFeatureKeys($featureKeys);
 
         $subscription->update($data);
 
@@ -310,6 +311,7 @@ class SubscriptionController extends Controller
         $settings = $featuresController->getSettings();
         $planConfig = $settings[$subscriptionRequest->teacher_plan_key] ?? null;
         $features = $planConfig['features'] ?? SubscriptionRequest::planDefaults($subscriptionRequest->teacher_plan_key)['features'] ?? [];
+        $features = Subscription::normalizeFeatureKeys($features);
 
         $startDate = Carbon::now();
         $endDate = match ($subscriptionRequest->billing_cycle) {

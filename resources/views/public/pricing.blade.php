@@ -110,11 +110,6 @@
 
                 @php
                     $planKeys = ['teacher_starter', 'teacher_pro', 'teacher_premium'];
-                    $planMeta = [
-                        'teacher_starter' => ['subtitle' => 'ابدأ التدريس أونلاين بسهولة', 'badge' => null, 'priceHint' => 'أقل من 7 جنيه يوميًا.', 'cta' => 'ابدأ الآن', 'card' => 'white', 'accent' => 'sky'],
-                        'teacher_pro'     => ['subtitle' => 'أفضل اختيار للمعلمين الذين يريدون العمل أونلاين', 'badge' => 'الأفضل للبدء أونلاين', 'priceHint' => 'استثمار ربع سنوي يمنحك حضورًا مهنيًا وفرص عمل حقيقية.', 'cta' => 'ابدأ العمل الآن', 'card' => 'dark', 'accent' => 'sky'],
-                        'teacher_premium' => ['subtitle' => 'للمعلمين الجادين في بناء مسار مهني مستقر', 'badge' => null, 'priceHint' => 'اشتراك سنوي يمنحك استقرارًا وفرص تدريس مستمرة طوال العام.', 'cta' => 'ابدأ رحلتك الآن', 'card' => 'white', 'accent' => 'amber'],
-                    ];
                     $billingPhrases = ['monthly' => 'جنيه شهريًا', 'quarterly' => 'جنيه / 3 شهور', 'yearly' => 'جنيه سنويًا'];
                 @endphp
 
@@ -123,7 +118,13 @@
                         @php
                             $plan = $teacherPlans[$planKey] ?? null;
                             if (!$plan) continue;
-                            $meta = $planMeta[$planKey] ?? [];
+                            $meta = [
+                                'subtitle' => $plan['card_subtitle'] ?? '',
+                                'badge' => trim((string) ($plan['card_badge'] ?? '')),
+                                'priceHint' => $plan['card_price_hint'] ?? '',
+                                'cta' => $plan['card_cta'] ?? 'ابدأ الآن',
+                                'footer_note' => $plan['card_footer_note'] ?? '',
+                            ];
                             $label = $plan['label'] ?? $planKey;
                             $price = (float) ($plan['price'] ?? 0);
                             $cycle = $plan['billing_cycle'] ?? 'monthly';
@@ -136,20 +137,22 @@
                             @elseif($planKey === 'teacher_premium') border-[#FB5607]/30
                             @else border-slate-200
                             @endif">
-                            @if(!empty($meta['badge']))
+                            @if($meta['badge'] !== '')
                                 <div class="absolute -top-3 left-4 bg-[#FB5607] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">{{ $meta['badge'] }}</div>
                             @endif
                             <div class="mb-4">
                                 <h3 class="text-2xl font-black text-mx-indigo mb-1">{{ $label }}</h3>
+                                @if($meta['subtitle'] !== '')
                                 <p class="text-sm font-semibold {{ $planKey === 'teacher_premium' ? 'text-[#FB5607]' : 'text-[#283593]' }}">
-                                    {{ $meta['subtitle'] ?? '' }}
+                                    {{ $meta['subtitle'] }}
                                 </p>
+                                @endif
                             </div>
                             <div class="mb-6">
                                 <div class="text-3xl font-black text-mx-indigo mb-1">
                                     {{ number_format($price, 0) }} <span class="text-base sm:text-lg font-bold text-slate-600">{{ $cyclePhrase }}</span>
                                 </div>
-                                @if(!empty($meta['priceHint']))
+                                @if($meta['priceHint'] !== '')
                                     <p class="text-sm text-slate-500">{{ $meta['priceHint'] }}</p>
                                 @endif
                             </div>
@@ -161,11 +164,11 @@
                                     </li>
                                 @endforeach
                             </ul>
-                            @if($isPro)
-                                <div class="mb-4 text-[#283593] bg-[#EFF2FF] border border-[#dbe4ff] px-3 py-2 rounded-xl text-sm font-semibold">فرص حقيقية للعمل مع أكاديميات، وليس مجرد أدوات.</div>
-                            @endif
-                            @if($planKey === 'teacher_premium')
-                                <div class="mb-4 text-[#FB5607] bg-[#FFF7ED] border border-[#ffe5d3] px-3 py-2 rounded-xl text-sm font-semibold">نساعدك في الوصول إلى فرص تدريس حقيقية وبناء اسمك كمعلم أونلاين.</div>
+                            @if($meta['footer_note'] !== '')
+                                <div class="mb-4 px-3 py-2 rounded-xl text-sm font-semibold
+                                    @if($planKey === 'teacher_premium') text-[#FB5607] bg-[#FFF7ED] border border-[#ffe5d3]
+                                    @else text-[#283593] bg-[#EFF2FF] border border-[#dbe4ff]
+                                    @endif">{{ $meta['footer_note'] }}</div>
                             @endif
                             <a href="{{ route('public.subscription.checkout', $planKey) }}" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors
                                 @if($isPro) bg-[#283593] hover:bg-[#1f2a7a] text-white
@@ -236,8 +239,13 @@
                         @endif
                     </div>
                     
-                    @if($package->description)
-                    <p class="{{ $package->is_popular ? 'text-white/85' : 'text-gray-600' }}">{{ Str::limit($package->description, 50) }}</p>
+                    @php
+                        $cardBody = trim((string) ($package->card_summary ?? '')) !== ''
+                            ? $package->card_summary
+                            : ($package->description ?? '');
+                    @endphp
+                    @if($cardBody !== '')
+                    <p class="{{ $package->is_popular ? 'text-white/85' : 'text-gray-600' }} text-sm leading-relaxed whitespace-pre-line line-clamp-6">{{ $cardBody }}</p>
                     @endif
                     
                     @if($package->courses_count > 0)
@@ -248,32 +256,17 @@
                     @endif
                 </div>
                 
-                <!-- Features -->
-                @if($package->features && count($package->features) > 0)
+                @php
+                    $cardFeatures = collect($package->features ?? [])->map(fn ($f) => trim((string) $f))->filter()->values();
+                @endphp
+                @if($cardFeatures->isNotEmpty())
                 <ul class="space-y-4 mb-8">
-                    @foreach($package->features as $feature)
+                    @foreach($cardFeatures as $feature)
                     <li class="flex items-center {{ $package->is_popular ? 'text-white' : 'text-gray-700' }}">
-                        <i class="fas fa-check-circle {{ $package->is_popular ? 'text-[#FFE569]' : 'text-[#283593]' }} ml-3"></i>
-                        {{ $feature }}
+                        <i class="fas fa-check-circle {{ $package->is_popular ? 'text-[#FFE569]' : 'text-[#283593]' }} ml-3 shrink-0"></i>
+                        <span>{{ $feature }}</span>
                     </li>
                     @endforeach
-                </ul>
-                @else
-                <ul class="space-y-4 mb-8">
-                    <li class="flex items-center {{ $package->is_popular ? 'text-white' : 'text-gray-700' }}">
-                        <i class="fas fa-check-circle {{ $package->is_popular ? 'text-[#FFE569]' : 'text-[#283593]' }} ml-3"></i>
-                        وصول لجميع الكورسات في الباقة
-                    </li>
-                    @if($package->courses_count > 0)
-                    <li class="flex items-center {{ $package->is_popular ? 'text-white' : 'text-gray-700' }}">
-                        <i class="fas fa-check-circle {{ $package->is_popular ? 'text-[#FFE569]' : 'text-[#283593]' }} ml-3"></i>
-                        {{ $package->courses_count }} كورس برمجي شامل
-                    </li>
-                    @endif
-                    <li class="flex items-center {{ $package->is_popular ? 'text-white' : 'text-gray-700' }}">
-                        <i class="fas fa-check-circle {{ $package->is_popular ? 'text-[#FFE569]' : 'text-[#283593]' }} ml-3"></i>
-                        دعم فني متواصل
-                    </li>
                 </ul>
                 @endif
                 

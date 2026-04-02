@@ -47,11 +47,12 @@
     </div>
 
     {{-- المزايا المتاحة --}}
-    @if(!empty($sub->features) && is_array($sub->features))
+    @php $displayFeatures = \App\Models\Subscription::normalizeFeatureKeys($sub->features ?? []); @endphp
+    @if(count($displayFeatures) > 0)
         <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-6">
             <h2 class="text-lg font-black text-slate-900 dark:text-slate-100 mb-4">المزايا المتاحة في باقتك</h2>
             <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                @foreach($sub->features as $featureKey)
+                @foreach($displayFeatures as $featureKey)
                     <li class="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                         <span class="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
                             <i class="fas fa-check text-[10px]"></i>

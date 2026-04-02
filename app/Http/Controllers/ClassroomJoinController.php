@@ -27,8 +27,9 @@ class ClassroomJoinController extends Controller
         $jitsiDomain = LiveSetting::getJitsiDomain();
         $joinUrl = url('classroom/join/' . $code);
         $maxParticipants = (int) ($meeting?->max_participants ?? 25);
+        $meetingEnded = (bool) ($meeting && $meeting->ended_at);
 
-        return view('classroom.join', compact('code', 'roomName', 'meeting', 'jitsiDomain', 'joinUrl', 'maxParticipants'));
+        return view('classroom.join', compact('code', 'roomName', 'meeting', 'jitsiDomain', 'joinUrl', 'maxParticipants', 'meetingEnded'));
     }
 
     public function enter(Request $request, string $code)

@@ -38,6 +38,11 @@ class TeacherFeaturesController extends Controller
             'plans.*.limits.personal_marketing_profile_sections' => 'nullable|integer|min:1|max:20',
             'plans.*.limits.personal_marketing_priority_score' => 'nullable|integer|min:0|max:100',
             'plans.*.limits.personal_marketing_monthly_featured_days' => 'nullable|integer|min:0|max:31',
+            'plans.*.card_subtitle' => 'nullable|string|max:500',
+            'plans.*.card_badge' => 'nullable|string|max:200',
+            'plans.*.card_price_hint' => 'nullable|string|max:500',
+            'plans.*.card_cta' => 'nullable|string|max:120',
+            'plans.*.card_footer_note' => 'nullable|string|max:500',
         ]);
 
         $plans = $validated['plans'];
@@ -49,7 +54,10 @@ class TeacherFeaturesController extends Controller
                 ? $plans[$key]['billing_cycle']
                 : ($this->defaultSettings()[$key]['billing_cycle'] ?? 'monthly');
             $plans[$key]['features'] = isset($plans[$key]['features']) && is_array($plans[$key]['features'])
-                ? array_values(array_filter($plans[$key]['features']))
+                ? array_values(array_filter(
+                    $plans[$key]['features'],
+                    static fn ($f) => $f !== null && $f !== '' && $f !== 'zoom_access'
+                ))
                 : [];
             $defaults = $this->defaultSettings()[$key]['limits'] ?? [];
             $limits = $plans[$key]['limits'] ?? [];
@@ -64,6 +72,12 @@ class TeacherFeaturesController extends Controller
             ];
             if ($plans[$key]['limits']['classroom_default_duration_minutes'] > $plans[$key]['limits']['classroom_max_duration_minutes']) {
                 $plans[$key]['limits']['classroom_default_duration_minutes'] = $plans[$key]['limits']['classroom_max_duration_minutes'];
+            }
+
+            $defCard = $this->defaultSettings()[$key];
+            foreach (['card_subtitle', 'card_badge', 'card_price_hint', 'card_cta', 'card_footer_note'] as $cf) {
+                $raw = $plans[$key][$cf] ?? ($defCard[$cf] ?? '');
+                $plans[$key][$cf] = is_string($raw) ? trim($raw) : '';
             }
         }
 
@@ -108,7 +122,22 @@ class TeacherFeaturesController extends Controller
                 return $this->defaultSettings();
             }
 
-            return array_merge($this->defaultSettings(), $decoded);
+            $defaults = $this->defaultSettings();
+            $merged = [];
+            foreach (['teacher_starter', 'teacher_pro', 'teacher_premium'] as $planKey) {
+                $merged[$planKey] = array_merge(
+                    $defaults[$planKey] ?? [],
+                    is_array($decoded[$planKey] ?? null) ? $decoded[$planKey] : []
+                );
+                if (isset($merged[$planKey]['features']) && is_array($merged[$planKey]['features'])) {
+                    $merged[$planKey]['features'] = array_values(array_filter(
+                        $merged[$planKey]['features'],
+                        static fn ($f) => $f !== 'zoom_access'
+                    ));
+                }
+            }
+
+            return $merged;
         });
     }
 
@@ -119,11 +148,15 @@ class TeacherFeaturesController extends Controller
                 'label' => 'باقة البداية',
                 'price' => 200,
                 'billing_cycle' => 'monthly',
+                'card_subtitle' => 'ابدأ التدريس أونلاين بسهولة',
+                'card_badge' => '',
+                'card_price_hint' => 'أقل من 7 جنيه يوميًا.',
+                'card_cta' => 'ابدأ الآن',
+                'card_footer_note' => '',
                 'features' => [
                     'library_access',
                     'ai_tools',
                     'classroom_access',
-                    'zoom_access',
                     'support',
                 ],
                 'limits' => [
@@ -140,11 +173,15 @@ class TeacherFeaturesController extends Controller
                 'label' => 'باقة المعلم المحترف',
                 'price' => 600,
                 'billing_cycle' => 'quarterly',
+                'card_subtitle' => 'أفضل اختيار للمعلمين الذين يريدون العمل أونلاين',
+                'card_badge' => 'الأفضل للبدء أونلاين',
+                'card_price_hint' => 'استثمار ربع سنوي يمنحك حضورًا مهنيًا وفرص عمل حقيقية.',
+                'card_cta' => 'ابدأ العمل الآن',
+                'card_footer_note' => 'فرص حقيقية للعمل مع أكاديميات، وليس مجرد أدوات.',
                 'features' => [
                     'library_access',
                     'ai_tools',
                     'classroom_access',
-                    'zoom_access',
                     'support',
                     'teacher_profile',
                     'visible_to_academies',
@@ -165,11 +202,15 @@ class TeacherFeaturesController extends Controller
                 'label' => 'باقة المعلم المميز',
                 'price' => 1500,
                 'billing_cycle' => 'yearly',
+                'card_subtitle' => 'للمعلمين الجادين في بناء مسار مهني مستقر',
+                'card_badge' => '',
+                'card_price_hint' => 'اشتراك سنوي يمنحك استقرارًا وفرص تدريس مستمرة طوال العام.',
+                'card_cta' => 'ابدأ رحلتك الآن',
+                'card_footer_note' => 'نساعدك في الوصول إلى فرص تدريس حقيقية وبناء اسمك كمعلم أونلاين.',
                 'features' => [
                     'library_access',
                     'ai_tools',
                     'classroom_access',
-                    'zoom_access',
                     'support',
                     'teacher_profile',
                     'visible_to_academies',

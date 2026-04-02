@@ -308,25 +308,11 @@ class StudentControlController extends Controller
             'library_access' => function ($userIds) use ($startAt, $endAt) {
                 return $this->fromActivityUrl($userIds, ['/curriculum-library'], $startAt, $endAt);
             },
-            'zoom_access' => function ($userIds) use ($startAt, $endAt) {
-                $attendanceUsers = collect();
-                $attendanceEvents = 0;
-                if (Schema::hasTable('session_attendance')) {
-                    $attendanceUsers = DB::table('session_attendance')
-                        ->whereIn('user_id', $userIds)
-                        ->whereBetween('created_at', [$startAt, $endAt])
-                        ->distinct()
-                        ->pluck('user_id');
-                    $attendanceEvents = DB::table('session_attendance')
-                        ->whereIn('user_id', $userIds)
-                        ->whereBetween('created_at', [$startAt, $endAt])
-                        ->count();
-                }
-                $liveLogs = $this->fromActivityUrl($userIds, ['/student/live-sessions', '/live-sessions'], $startAt, $endAt);
-                return [
-                    'used_user_ids' => $attendanceUsers->merge($liveLogs['used_user_ids'])->unique()->values(),
-                    'events_count' => $attendanceEvents + $liveLogs['events_count'],
-                ];
+            'ai_tools' => function ($userIds) use ($startAt, $endAt) {
+                return $this->fromActivityUrl($userIds, ['/features/ai_tools', '/curriculum-library'], $startAt, $endAt);
+            },
+            'full_ai_suite' => function ($userIds) use ($startAt, $endAt) {
+                return $this->fromActivityUrl($userIds, ['/features/full_ai_suite', '/full-ai-suite'], $startAt, $endAt);
             },
             'classroom_access' => function ($userIds) use ($startAt, $endAt) {
                 $meetingUsers = collect();

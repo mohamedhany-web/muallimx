@@ -14,6 +14,7 @@ class Package extends Model
         'name',
         'slug',
         'description',
+        'card_summary',
         'features',
         'price',
         'original_price',

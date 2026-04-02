@@ -22,6 +22,19 @@
     {{-- شاشة الانضمام --}}
     <div id="join-screen" class="min-h-screen flex flex-col items-center justify-center p-4">
         <div class="w-full max-w-md rounded-2xl bg-slate-800/90 border border-slate-600 p-6 shadow-2xl shadow-black/30">
+            @if(!empty($meetingEnded))
+                <div class="text-center mb-2">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-600/40 text-slate-400 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-door-closed text-3xl"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-white">انتهى الاجتماع</h1>
+                    <p class="text-slate-400 text-sm mt-3 leading-relaxed">قام منظم الاجتماع بإنهائه. لا يمكن إعادة فتح الغرفة أو الانضمام مرة أخرى من هذا الرابط.</p>
+                </div>
+                @if($meeting && $meeting->title)
+                    <p class="text-slate-500 text-sm mb-4 text-center">{{ $meeting->title }}</p>
+                @endif
+                <p class="text-slate-500 text-xs text-center">كود الغرفة: <span class="font-mono text-slate-400">{{ $code }}</span></p>
+            @else
             <div class="text-center mb-6">
                 <div class="w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-video text-3xl"></i>
@@ -49,6 +62,7 @@
                 </a>
             </div>
             <p class="text-slate-500 text-xs mt-4 text-center">لا تحتاج إلى حساب. ادخل باسمك وانضم مباشرة.</p>
+            @endif
         </div>
     </div>
 
@@ -72,6 +86,7 @@
     </div>
 
     @include('partials.jitsi-iframe-media-allow')
+    @if(empty($meetingEnded))
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>
         const domain = '{{ $jitsiDomain }}';
@@ -204,5 +219,6 @@
             navigator.sendBeacon(`/classroom/join/${code}/leave`, new Blob([JSON.stringify({ token: joinToken, _token: csrfToken })], { type: 'application/json' }));
         });
     </script>
+    @endif
 </body>
 </html>

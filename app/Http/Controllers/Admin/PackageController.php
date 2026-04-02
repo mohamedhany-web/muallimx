@@ -39,7 +39,8 @@ class PackageController extends Controller
             $search = $request->search;
             $packagesQuery->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('card_summary', 'like', "%{$search}%");
             });
         }
 
@@ -156,6 +157,7 @@ class PackageController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:packages,slug',
             'description' => 'nullable|string',
+            'card_summary' => 'nullable|string',
             'features' => 'nullable|array',
             'price' => 'required|numeric|min:0',
             'original_price' => 'nullable|numeric|min:0',
@@ -174,6 +176,11 @@ class PackageController extends Controller
         // إنشاء slug إذا لم يتم توفيره
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['name']);
+        }
+
+        $validated['card_summary'] = $validated['card_summary'] ?? null;
+        if ($validated['card_summary'] !== null) {
+            $validated['card_summary'] = trim($validated['card_summary']) ?: null;
         }
 
         // رفع الصورة
@@ -228,6 +235,7 @@ class PackageController extends Controller
             'name' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255|unique:packages,slug,' . $package->id,
             'description' => 'nullable|string',
+            'card_summary' => 'nullable|string',
             'features' => 'nullable|array',
             'price' => 'required|numeric|min:0',
             'original_price' => 'nullable|numeric|min:0',
@@ -246,6 +254,11 @@ class PackageController extends Controller
         // إنشاء slug إذا لم يتم توفيره
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['name']);
+        }
+
+        $validated['card_summary'] = $validated['card_summary'] ?? null;
+        if ($validated['card_summary'] !== null) {
+            $validated['card_summary'] = trim($validated['card_summary']) ?: null;
         }
 
         // رفع الصورة

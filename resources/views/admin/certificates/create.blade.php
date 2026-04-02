@@ -60,13 +60,13 @@
             </div>
 
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">ملف الشهادة (PDF أو صورة) *</label>
-                <input type="file" name="certificate_file" required accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*"
+                <label class="block text-sm font-medium text-gray-700 mb-2">ملف الشهادة (PDF فقط) *</label>
+                <input type="file" name="certificate_file" required accept=".pdf,application/pdf"
                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white">
                 @error('certificate_file')
                     <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
                 @enderror
-                <p class="text-xs text-gray-500 mt-2">يفضل PDF. الحد الأقصى 50MB.</p>
+                <p class="text-xs text-gray-500 mt-2">يُسلَّم للطالب كملف PDF. الحد الأقصى 50 ميجابايت.</p>
             </div>
 
             <div class="flex gap-4">

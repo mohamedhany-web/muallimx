@@ -8,10 +8,6 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Font;
-use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
-use PhpOffice\PhpSpreadsheet\Worksheet\HeaderFooter;
-use PhpOffice\PhpSpreadsheet\Worksheet\HeaderFooterDrawing;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class ExcelExportService
@@ -45,36 +41,11 @@ class ExcelExportService
     }
 
     /**
-     * إضافة الهيدر مع اللوجو
+     * إضافة هيدر التقرير (عنوان + فترة + تاريخ التصدير)
      */
-    public function addHeader($title, $subtitle = null, $logoPath = null)
+    public function addHeader($title, $subtitle = null)
     {
-        // إضافة اللوجو إذا كان موجوداً
-        if ($logoPath && file_exists($logoPath)) {
-            try {
-                $drawing = new Drawing();
-                $drawing->setName('Logo');
-                $drawing->setDescription('Platform Logo');
-                $drawing->setPath($logoPath);
-                $drawing->setHeight(60);
-                $drawing->setWidth(60);
-                $drawing->setCoordinates('A1');
-                $drawing->setOffsetX(10);
-                $drawing->setOffsetY(10);
-                $drawing->setWorksheet($this->sheet);
-                
-                // دمج الخلايا للوغو
-                $this->sheet->mergeCells('A1:B3');
-                $this->sheet->getRowDimension(1)->setRowHeight(35);
-                $this->sheet->getRowDimension(2)->setRowHeight(25);
-                $this->sheet->getRowDimension(3)->setRowHeight(20);
-            } catch (\Exception $e) {
-                // في حالة فشل إضافة اللوجو، تجاهل الخطأ
-            }
-        }
-
-        // العنوان الرئيسي
-        $titleCol = $logoPath ? 'C' : 'A';
+        $titleCol = 'A';
         $this->sheet->setCellValue($titleCol . '1', $title);
         $this->sheet->mergeCells($titleCol . '1:H1');
         $this->sheet->getStyle($titleCol . '1')->applyFromArray([

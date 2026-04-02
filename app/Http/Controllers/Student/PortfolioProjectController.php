@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\PortfolioProject;
 use App\Models\PortfolioProjectImage;
+use App\Models\User;
 use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -12,9 +13,15 @@ use Illuminate\Support\Str;
 
 class PortfolioProjectController extends Controller
 {
+    private function ensureTeacherProfileSubscription(User $user): void
+    {
+        abort_unless($user->hasSubscriptionFeature('teacher_profile'), 403, 'ميزة البروفايل والمشاريع للمعلم غير مفعّلة في اشتراكك. يمكنك الترقية من صفحة التسعير.');
+    }
+
     public function index()
     {
         $user = auth()->user();
+        $this->ensureTeacherProfileSubscription($user);
         $projects = $user->portfolioProjects()->with(['academicYear', 'advancedCourse', 'images'])->latest()->paginate(10);
         $subscription = $user->activeSubscription();
         $limits = SubscriptionLimitService::limitsForUser($user);
@@ -24,12 +31,14 @@ class PortfolioProjectController extends Controller
 
     public function create()
     {
+        $this->ensureTeacherProfileSubscription(auth()->user());
         $contentTypeLabels = PortfolioProject::contentTypeLabels();
         return view('student.portfolio.create', compact('contentTypeLabels'));
     }
 
     public function store(Request $request)
     {
+        $this->ensureTeacherProfileSubscription(auth()->user());
         $request->validate([
             'title' => 'required|string|max:255',
             'project_type' => 'nullable|string|in:web_app,mobile_app,api,library,script,design,game,desktop,cli,other',
@@ -100,6 +109,7 @@ class PortfolioProjectController extends Controller
     public function show(PortfolioProject $project)
     {
         $user = auth()->user();
+        $this->ensureTeacherProfileSubscription($user);
         abort_unless((int) $project->user_id === (int) $user->id, 403);
 
         $project->load(['academicYear', 'advancedCourse', 'images', 'reviewer:id,name']);
@@ -110,6 +120,7 @@ class PortfolioProjectController extends Controller
     public function edit(PortfolioProject $project)
     {
         $user = auth()->user();
+        $this->ensureTeacherProfileSubscription($user);
         abort_unless((int) $project->user_id === (int) $user->id, 403);
 
         if (in_array($project->status, [PortfolioProject::STATUS_APPROVED, PortfolioProject::STATUS_PUBLISHED], true)) {
@@ -125,6 +136,7 @@ class PortfolioProjectController extends Controller
     public function update(Request $request, PortfolioProject $project)
     {
         $user = auth()->user();
+        $this->ensureTeacherProfileSubscription($user);
         abort_unless((int) $project->user_id === (int) $user->id, 403);
 
         if (in_array($project->status, [PortfolioProject::STATUS_APPROVED, PortfolioProject::STATUS_PUBLISHED], true)) {
@@ -202,6 +214,7 @@ class PortfolioProjectController extends Controller
     public function destroy(PortfolioProject $project)
     {
         $user = auth()->user();
+        $this->ensureTeacherProfileSubscription($user);
         abort_unless((int) $project->user_id === (int) $user->id, 403);
 
         if ($project->status === PortfolioProject::STATUS_PUBLISHED) {
@@ -230,6 +243,7 @@ class PortfolioProjectController extends Controller
     public function destroyImage(PortfolioProject $project, PortfolioProjectImage $image)
     {
         $user = auth()->user();
+        $this->ensureTeacherProfileSubscription($user);
         abort_unless((int) $project->user_id === (int) $user->id, 403);
         abort_unless((int) $image->portfolio_project_id === (int) $project->id, 404);
 

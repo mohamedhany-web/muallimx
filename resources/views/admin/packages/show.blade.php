@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'تفاصيل الباقة')
 @section('header', 'تفاصيل الباقة')
@@ -31,9 +31,16 @@
 
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
-                    <p class="text-gray-600">{{ $package->description ?? 'لا يوجد وصف' }}</p>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">الوصف (صفحة التفاصيل)</label>
+                    <p class="text-gray-600 whitespace-pre-line">{{ $package->description ?? 'لا يوجد وصف' }}</p>
                 </div>
+
+                @if(filled($package->card_summary))
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">نص البطاقة (صفحة الأسعار)</label>
+                    <p class="text-gray-600 whitespace-pre-line">{{ $package->card_summary }}</p>
+                </div>
+                @endif
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>

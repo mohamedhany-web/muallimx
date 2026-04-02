@@ -51,7 +51,7 @@ class InstructorMarketingRankingService
 
         $profiles->each(function ($profile) use ($subByUser, $planLimits, $defaultLimits, $today, $daysInMonth, $featureWeights) {
             $sub = $subByUser->get($profile->user_id);
-            $features = is_array($sub?->features) ? $sub->features : [];
+            $features = Subscription::normalizeFeatureKeys(is_array($sub?->features) ? $sub->features : []);
             $planKey = $sub?->teacher_plan_key;
             $limits = $planLimits[$planKey]['limits'] ?? $defaultLimits;
 

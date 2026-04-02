@@ -238,7 +238,12 @@ class User extends Authenticatable
         if (!$sub || !is_array($sub->features)) {
             return false;
         }
-        return in_array($featureKey, $sub->features, true);
+        $features = array_values(array_filter(
+            $sub->features,
+            static fn ($f) => is_string($f) && $f !== '' && $f !== 'zoom_access'
+        ));
+
+        return in_array($featureKey, $features, true);
     }
 
     /**

@@ -85,7 +85,7 @@ class Certificate extends Model
         $attempt = 0;
         
         do {
-            $serial = 'MIND-' . date('Y') . '-' . strtoupper(substr(uniqid(), -8)) . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            $serial = 'MLX-' . date('Y') . '-' . strtoupper(substr(uniqid(), -8)) . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
             $exists = $hasSerialColumn
                 ? self::whereNotNull('serial_number')->where('serial_number', $serial)->exists()
                 : false;
@@ -93,7 +93,7 @@ class Certificate extends Model
             
             if ($attempt >= $maxAttempts) {
                 // Fallback: use timestamp if we can't generate unique serial
-                $serial = 'MIND-' . date('Y') . '-' . time() . '-' . rand(1000, 9999);
+                $serial = 'MLX-' . date('Y') . '-' . time() . '-' . rand(1000, 9999);
                 break;
             }
         } while ($exists);

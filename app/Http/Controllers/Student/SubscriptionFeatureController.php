@@ -27,6 +27,16 @@ class SubscriptionFeatureController extends Controller
             abort(403, 'هذه الميزة غير متاحة في باقتك الحالية. يمكنك ترقية اشتراكك من صفحة التسعير.');
         }
 
+        if ($feature === 'ai_tools') {
+            if ($user->hasSubscriptionFeature('full_ai_suite')) {
+                return redirect()->route('student.features.show', ['feature' => 'full_ai_suite']);
+            }
+            if ($user->hasSubscriptionFeature('library_access')) {
+                return redirect()->route('curriculum-library.index')
+                    ->with('info', 'من هنا تصل إلى مكتبة المناهج والمواد لدعم تحضير الدروس ضمن باقتك.');
+            }
+        }
+
         if ($feature === 'classroom_access') {
             return redirect()->route('student.classroom.index');
         }
@@ -38,6 +48,21 @@ class SubscriptionFeatureController extends Controller
         }
         if ($feature === 'can_apply_opportunities') {
             return redirect()->route('student.opportunities.index');
+        }
+        if ($feature === 'direct_support') {
+            return redirect()->route('student.support.index');
+        }
+        if ($feature === 'teacher_evaluation') {
+            return redirect()->route('student.support.index')
+                ->with('info', 'تقييم المعلم يتم بالتنسيق مع فريق المنصة عبر تذاكر الدعم.');
+        }
+        if (in_array($feature, ['recommended_to_academies', 'priority_opportunities'], true)) {
+            if ($user->hasSubscriptionFeature('visible_to_academies')) {
+                return redirect()->route('student.academies.visibility');
+            }
+            if ($user->hasSubscriptionFeature('can_apply_opportunities')) {
+                return redirect()->route('student.opportunities.index');
+            }
         }
 
         $featureConfig = $config[$feature];

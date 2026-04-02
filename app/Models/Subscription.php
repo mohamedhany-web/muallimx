@@ -143,4 +143,15 @@ class Subscription extends Model
     {
         return $this->end_date && $this->end_date < now();
     }
+
+    /**
+     * @param  array<int, mixed>  $keys
+     * @return array<int, string>
+     */
+    public static function normalizeFeatureKeys(array $keys): array
+    {
+        return array_values(array_filter($keys, static function ($k) {
+            return is_string($k) && $k !== '' && $k !== 'zoom_access';
+        }));
+    }
 }

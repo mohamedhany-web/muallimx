@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'تعديل الباقة')
 @section('header', 'تعديل الباقة')
@@ -79,8 +79,17 @@
 
             <!-- الوصف -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">الوصف</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">الوصف (صفحة تفاصيل الباقة)</label>
                 <textarea name="description" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">{{ old('description', $package->description) }}</textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">نص البطاقة (صفحة الأسعار)</label>
+                <textarea name="card_summary" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500" placeholder="يظهر تحت السعر في بطاقة الباقة في /pricing">{{ old('card_summary', $package->card_summary) }}</textarea>
+                <p class="mt-1 text-xs text-gray-500">إن تُرك فارغاً يُعرض الوصف أعلاه في البطاقة (بدون قصّ ثابت). النقاط ذات علامة الصح تُضبط من حقل «المميزات» أدناه فقط.</p>
+                @error('card_summary')
+                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                @enderror
             </div>
 
             <!-- الصورة -->

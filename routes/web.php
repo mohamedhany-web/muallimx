@@ -573,6 +573,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('student.classroom.end');
         Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('student.classroom.recording.upload');
+        Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('student.classroom.recording.presign');
+        Route::post('/classroom/{meeting}/recording/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectRecordingUpload'])->name('student.classroom.recording.complete');
         // الدعم الفني (ميزة من الباقة)
         Route::get('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'index'])->name('student.support.index');
         Route::post('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'store'])->name('student.support.store');
@@ -587,7 +589,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // صفحات المزايا المرتبطة بالاشتراك (كل ميزة لها صفحة)
         Route::get('/features/{feature}', [\App\Http\Controllers\Student\SubscriptionFeatureController::class, 'show'])
             ->name('student.features.show')
-            ->where('feature', 'library_access|ai_tools|classroom_access|zoom_access|support|visible_to_academies|can_apply_opportunities|full_ai_suite|teacher_evaluation|recommended_to_academies|priority_opportunities|direct_support');
+            ->where('feature', 'library_access|ai_tools|classroom_access|support|visible_to_academies|can_apply_opportunities|full_ai_suite|teacher_evaluation|recommended_to_academies|priority_opportunities|direct_support');
         Route::post('/features/full-ai-suite/preview', [\App\Http\Controllers\Student\SubscriptionFeatureController::class, 'previewFullAiSuite'])
             ->name('student.features.full-ai-suite.preview');
         // مكتبة المناهج التفاعلية (مناهج أكس — معاينة ملف واحد مجاناً ثم اشتراك)
@@ -1262,10 +1264,14 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::put('/{loyaltyProgram}', [\App\Http\Controllers\Admin\LoyaltyController::class, 'update'])->name('update');
         });
 
-        // إدارة الشهادات والإنجازات
-        Route::resource('certificates', \App\Http\Controllers\Admin\CertificateController::class);
+        // إدارة الشهادات والإنجازات (مسارات محددة قبل الـ resource)
         Route::get('certificates/user/{user}/courses', [\App\Http\Controllers\Admin\CertificateController::class, 'userCourses'])
             ->name('certificates.user-courses');
+        Route::get('certificates/{certificate}/file', [\App\Http\Controllers\Admin\CertificateController::class, 'file'])
+            ->name('certificates.file');
+        Route::get('certificates/{certificate}/download', [\App\Http\Controllers\Admin\CertificateController::class, 'download'])
+            ->name('certificates.download');
+        Route::resource('certificates', \App\Http\Controllers\Admin\CertificateController::class);
         Route::resource('achievements', \App\Http\Controllers\Admin\AchievementController::class);
         Route::resource('badges', \App\Http\Controllers\Admin\BadgeController::class);
         Route::resource('reviews', \App\Http\Controllers\Admin\ReviewController::class);
@@ -1387,6 +1393,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('classroom.room');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('classroom.end');
         Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('classroom.recording.upload');
+        Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('classroom.recording.presign');
+        Route::post('/classroom/{meeting}/recording/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectRecordingUpload'])->name('classroom.recording.complete');
 
         // بروفايل المدرب
         Route::get('/profile', [\App\Http\Controllers\Instructor\ProfileController::class, 'index'])->name('profile');

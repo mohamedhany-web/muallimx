@@ -250,10 +250,7 @@
             @endif
 
             @foreach($featureConfig as $featureKey => $cfg)
-                @if(in_array($featureKey, ['zoom_access', 'ai_tools']))
-                    @continue
-                @endif
-                @if(!$user->hasSubscriptionFeature($featureKey) && !($featureKey === 'teacher_profile' && $user->hasPermission('student.view.profile')))
+                @if(!$user->hasSubscriptionFeature($featureKey))
                     @continue
                 @endif
                 @php

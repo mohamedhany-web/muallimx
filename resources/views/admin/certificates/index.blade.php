@@ -66,11 +66,12 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">رقم الشهادة</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المعلم</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الطالب</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العنوان</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكورس</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الإصدار</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">ملف PDF</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
                         </tr>
                     </thead>
@@ -99,12 +100,45 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $certificate->issued_at ? $certificate->issued_at->format('Y-m-d') : ($certificate->issue_date ? $certificate->issue_date->format('Y-m-d') : '-') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    @if(!empty($certificate->pdf_path))
+                                        <span class="inline-flex items-center gap-1 text-emerald-700 font-medium">
+                                            <i class="fas fa-check-circle"></i>
+                                            موجود
+                                        </span>
+                                    @else
+                                        <span class="text-amber-600 text-sm">غير مرفوع</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="{{ route('admin.certificates.show', $certificate) }}"
-                                       class="inline-flex items-center gap-1 text-sky-600 hover:text-sky-900 font-medium transition-colors">
-                                        <i class="fas fa-eye"></i>
-                                        <span>عرض</span>
-                                    </a>
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                        <a href="{{ route('admin.certificates.show', $certificate) }}"
+                                           class="inline-flex items-center gap-1 text-sky-600 hover:text-sky-900 transition-colors">
+                                            <i class="fas fa-eye"></i>
+                                            عرض
+                                        </a>
+                                        @if(!empty($certificate->pdf_path))
+                                            <a href="{{ route('admin.certificates.download', $certificate) }}"
+                                               class="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-800 transition-colors">
+                                                <i class="fas fa-download"></i>
+                                                تحميل
+                                            </a>
+                                        @endif
+                                        <a href="{{ route('admin.certificates.edit', $certificate) }}"
+                                           class="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 transition-colors">
+                                            <i class="fas fa-edit"></i>
+                                            تعديل
+                                        </a>
+                                        <form action="{{ route('admin.certificates.destroy', $certificate) }}" method="POST" class="inline"
+                                              onsubmit="return confirm('حذف هذه الشهادة وملفها نهائياً؟');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center gap-1 text-rose-600 hover:text-rose-800 transition-colors">
+                                                <i class="fas fa-trash-alt"></i>
+                                                حذف
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
