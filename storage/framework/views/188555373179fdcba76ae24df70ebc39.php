@@ -186,4 +186,4 @@ if ($_jldType === 'about') {
 ?>
 <?php echo $_outputScripts; ?>
 
-<?php /**PATH C:\xampp\htdocs\Muallimx\resources\views\partials\seo-jsonld.blade.php ENDPATH**/ ?>
+<?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/partials/seo-jsonld.blade.php ENDPATH**/ ?>

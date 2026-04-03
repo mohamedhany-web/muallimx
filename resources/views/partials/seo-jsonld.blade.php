@@ -1,224 +1,187 @@
-{{--
-  ╔══════════════════════════════════════════════════════════════════╗
-  ║  MuallimX — JSON-LD Structured Data                             ║
-  ║  Usage: @include('partials.seo-jsonld', ['type' => 'website'])  ║
-  ║  Types: website | course | instructor | faq | breadcrumb        ║
-  ╚══════════════════════════════════════════════════════════════════╝
---}}
 @php
-    $jsonldType = $jsonldType ?? 'website';
-    $siteName   = 'MuallimX';
-    $siteUrl    = url('/');
-    $logoUrl    = asset('images/og-image.jpg');
-@endphp
+/*
+ * MuallimX — JSON-LD Structured Data
+ * Usage: @include('partials.seo-jsonld', ['jsonldType' => 'website|course|instructor|about'])
+ */
+$_jldType    = $jsonldType ?? 'website';
+$_siteUrl    = url('/');
+$_logoUrl    = asset('images/og-image.jpg');
+$_siteName   = 'MuallimX';
 
-{{-- ══════════════ BASE: WebSite + Organization (تُضاف في كل صفحة) ══════════════ --}}
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebSite",
-      "@id": "{{ $siteUrl }}/#website",
-      "url": "{{ $siteUrl }}",
-      "name": "{{ $siteName }}",
-      "description": "منصة عربية متخصصة في تأهيل وتطوير المعلمين للعمل أونلاين باحتراف",
-      "inLanguage": ["ar", "en"],
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": {
-          "@type": "EntryPoint",
-          "urlTemplate": "{{ url('/courses') }}?search={search_term_string}"
-        },
-        "query-input": "required name=search_term_string"
-      }
-    },
-    {
-      "@type": "EducationalOrganization",
-      "@id": "{{ $siteUrl }}/#organization",
-      "name": "{{ $siteName }}",
-      "url": "{{ $siteUrl }}",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "{{ $logoUrl }}",
-        "width": 1200,
-        "height": 630
-      },
-      "sameAs": [
-        "https://twitter.com/MuallimX",
-        "https://www.facebook.com/MuallimX",
-        "https://www.linkedin.com/company/muallimx",
-        "https://www.youtube.com/@MuallimX"
-      ],
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "contactType": "customer support",
-        "availableLanguage": ["Arabic", "English"]
-      }
+// ── Base: WebSite + EducationalOrganization ──────────────────────────────
+$_baseGraph = [
+    '@context' => 'https://schema.org',
+    '@graph'   => [
+        [
+            '@type'         => 'WebSite',
+            '@id'           => $_siteUrl . '/#website',
+            'url'           => $_siteUrl,
+            'name'          => $_siteName,
+            'description'   => 'منصة عربية متخصصة في تأهيل وتطوير المعلمين للعمل أونلاين باحتراف',
+            'inLanguage'    => ['ar', 'en'],
+            'potentialAction' => [
+                '@type'        => 'SearchAction',
+                'target'       => ['@type' => 'EntryPoint', 'urlTemplate' => url('/courses') . '?search={search_term_string}'],
+                'query-input'  => 'required name=search_term_string',
+            ],
+        ],
+        [
+            '@type'  => 'EducationalOrganization',
+            '@id'    => $_siteUrl . '/#organization',
+            'name'   => $_siteName,
+            'url'    => $_siteUrl,
+            'logo'   => ['@type' => 'ImageObject', 'url' => $_logoUrl, 'width' => 1200, 'height' => 630],
+            'sameAs' => [
+                'https://twitter.com/MuallimX',
+                'https://www.facebook.com/MuallimX',
+                'https://www.linkedin.com/company/muallimx',
+                'https://www.youtube.com/@MuallimX',
+            ],
+            'contactPoint' => ['@type' => 'ContactPoint', 'contactType' => 'customer support', 'availableLanguage' => ['Arabic', 'English']],
+        ],
+    ],
+];
+$_outputScripts = '<script type="application/ld+json">' . json_encode($_baseGraph, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+
+// ── Course Page ───────────────────────────────────────────────────────────
+if ($_jldType === 'course' && isset($course)) {
+    $_thumbnail = !empty($course->thumbnail)
+        ? asset('storage/' . str_replace('\\', '/', $course->thumbnail))
+        : $_logoUrl;
+
+    $_courseData = [
+        '@context'  => 'https://schema.org',
+        '@type'     => 'Course',
+        '@id'       => url('/course/' . ($course->id ?? 0)) . '#course',
+        'name'      => (string)($course->title ?? ''),
+        'description' => \Illuminate\Support\Str::limit(strip_tags((string)($course->description ?? '')), 300),
+        'url'       => url('/course/' . ($course->id ?? 0)),
+        'image'     => $_thumbnail,
+        'inLanguage'=> 'ar',
+        'courseLanguage' => 'Arabic',
+        'provider'  => ['@type' => 'EducationalOrganization', '@id' => $_siteUrl . '/#organization', 'name' => $_siteName],
+        'hasCourseInstance' => ['@type' => 'CourseInstance', 'courseMode' => 'online', 'inLanguage' => 'ar'],
+    ];
+    if (!empty($course->level)) {
+        $_courseData['educationalLevel'] = $course->level;
     }
-  ]
-}
-</script>
-
-{{-- ══════════════ COURSE PAGE ══════════════ --}}
-@if($jsonldType === 'course' && isset($course))
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Course",
-  "@id": "{{ url('/course/' . $course->id) }}#course",
-  "name": "{{ addslashes($course->title ?? '') }}",
-  "description": "{{ addslashes(Str::limit(strip_tags($course->description ?? ''), 300)) }}",
-  "url": "{{ url('/course/' . $course->id) }}",
-  "provider": {
-    "@type": "EducationalOrganization",
-    "@id": "{{ $siteUrl }}/#organization",
-    "name": "{{ $siteName }}"
-  },
-  @if($course->thumbnail ?? null)
-  "image": "{{ asset('storage/' . str_replace('\\','/', $course->thumbnail)) }}",
-  @else
-  "image": "{{ $logoUrl }}",
-  @endif
-  "inLanguage": "ar",
-  "courseLanguage": "Arabic",
-  @if($course->level ?? null)
-  "educationalLevel": "{{ $course->level }}",
-  @endif
-  @if(($course->price ?? null) !== null)
-  "offers": {
-    "@type": "Offer",
-    "price": "{{ $course->price ?? 0 }}",
-    "priceCurrency": "USD",
-    "availability": "https://schema.org/InStock",
-    "url": "{{ url('/course/' . $course->id) }}"
-  },
-  @endif
-  "hasCourseInstance": {
-    "@type": "CourseInstance",
-    "courseMode": "online",
-    "inLanguage": "ar"
-  }
-  @if(($course->instructor ?? null) && ($course->instructor->name ?? null))
-  ,"instructor": {
-    "@type": "Person",
-    "name": "{{ addslashes($course->instructor->name) }}"
-  }
-  @endif
-}
-</script>
-
-{{-- BreadcrumbList for course --}}
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "الرئيسية", "item": "{{ $siteUrl }}" },
-    { "@type": "ListItem", "position": 2, "name": "الكورسات", "item": "{{ url('/courses') }}" },
-    { "@type": "ListItem", "position": 3, "name": "{{ addslashes($course->title ?? 'كورس') }}", "item": "{{ url('/course/' . ($course->id ?? '')) }}" }
-  ]
-}
-</script>
-@endif
-
-{{-- ══════════════ INSTRUCTOR PROFILE PAGE ══════════════ --}}
-@if($jsonldType === 'instructor' && isset($profile))
-@php
-    $instrName  = $profile->user->name ?? 'مدرب';
-    $instrBio   = Str::limit(strip_tags($profile->bio ?? $profile->headline ?? ''), 300);
-    $instrImage = ($profile->profile_image ?? null) ? asset('storage/' . $profile->profile_image) : $logoUrl;
-    $instrUrl   = route('public.instructors.show', $profile->user ?? $profile);
-@endphp
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "ProfilePage",
-  "@id": "{{ $instrUrl }}#profile",
-  "url": "{{ $instrUrl }}",
-  "name": "{{ addslashes($instrName) }} - مدرب على MuallimX",
-  "mainEntity": {
-    "@type": "Person",
-    "@id": "{{ $instrUrl }}#person",
-    "name": "{{ addslashes($instrName) }}",
-    "description": "{{ addslashes($instrBio) }}",
-    "image": "{{ $instrImage }}",
-    "url": "{{ $instrUrl }}",
-    "jobTitle": "{{ addslashes($profile->headline ?? 'مدرب') }}",
-    "worksFor": {
-      "@type": "EducationalOrganization",
-      "@id": "{{ $siteUrl }}/#organization",
-      "name": "{{ $siteName }}"
+    if (isset($course->price) && $course->price !== null) {
+        $_courseData['offers'] = [
+            '@type' => 'Offer', 'price' => (string)$course->price,
+            'priceCurrency' => 'USD', 'availability' => 'https://schema.org/InStock',
+        ];
     }
-    @php $socials = $profile->social_links ?? []; @endphp
-    @if(!empty($socials))
-    ,"sameAs": [
-      @php $sameAs = array_values(array_filter([$socials['linkedin'] ?? null, $socials['twitter'] ?? null, $socials['youtube'] ?? null, $socials['facebook'] ?? null, $socials['website'] ?? null])); @endphp
-      {{ collect($sameAs)->map(fn($s) => '"' . addslashes($s) . '"')->implode(',') }}
-    ]
-    @endif
-  }
-}
-</script>
+    if (!empty($course->instructor) && !empty($course->instructor->name)) {
+        $_courseData['instructor'] = ['@type' => 'Person', 'name' => $course->instructor->name];
+    }
 
-{{-- BreadcrumbList for instructor --}}
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "الرئيسية", "item": "{{ $siteUrl }}" },
-    { "@type": "ListItem", "position": 2, "name": "المدربون", "item": "{{ url('/instructors') }}" },
-    { "@type": "ListItem", "position": 3, "name": "{{ addslashes($instrName) }}", "item": "{{ $instrUrl }}" }
-  ]
-}
-</script>
-@endif
+    $_breadcrumbCourse = [
+        '@context' => 'https://schema.org', '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'الرئيسية', 'item' => $_siteUrl],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'الكورسات',  'item' => url('/courses')],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => (string)($course->title ?? 'كورس'), 'item' => url('/course/' . ($course->id ?? 0))],
+        ],
+    ];
 
-{{-- ══════════════ FAQ PAGE ══════════════ --}}
-@if($jsonldType === 'faq' && isset($faqs) && $faqs->count())
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    @foreach($faqs as $i => $faq)
-    {
-      "@type": "Question",
-      "name": "{{ addslashes(strip_tags($faq->question ?? '')) }}",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "{{ addslashes(Str::limit(strip_tags($faq->answer ?? ''), 400)) }}"
-      }
-    }{{ !$loop->last ? ',' : '' }}
-    @endforeach
-  ]
+    $_outputScripts .= '<script type="application/ld+json">' . json_encode($_courseData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+    $_outputScripts .= '<script type="application/ld+json">' . json_encode($_breadcrumbCourse, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
 }
-</script>
-@endif
 
-{{-- ══════════════ ABOUT / HOME PAGE ══════════════ --}}
-@if($jsonldType === 'about')
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "AboutPage",
-  "url": "{{ url('/about') }}",
-  "name": "من نحن - MuallimX",
-  "description": "تعرف على منصة MuallimX، رسالتنا وقيمنا في تأهيل المعلمين للعمل أونلاين باحتراف",
-  "mainEntity": {
-    "@type": "EducationalOrganization",
-    "@id": "{{ $siteUrl }}/#organization",
-    "name": "MuallimX",
-    "url": "{{ $siteUrl }}",
-    "foundingDate": "2023",
-    "description": "منصة عربية متخصصة في تأهيل وتطوير المعلمين للعمل أونلاين",
-    "areaServed": {
-      "@type": "Place",
-      "name": "العالم العربي"
-    },
-    "knowsAbout": ["تعليم إلكتروني", "تأهيل المعلمين", "أدوات AI للتعليم", "منصات التدريس الأونلاين"]
-  }
+// ── Instructor Profile Page ───────────────────────────────────────────────
+if ($_jldType === 'instructor' && isset($profile)) {
+    $_instrName = (string)($profile->user->name ?? 'مدرب');
+    $_instrBio  = \Illuminate\Support\Str::limit(strip_tags((string)($profile->bio ?? $profile->headline ?? '')), 300);
+    $_instrImg  = !empty($profile->profile_image) ? asset('storage/' . $profile->profile_image) : $_logoUrl;
+
+    try {
+        $_instrUrl = route('public.instructors.show', $profile->user ?? $profile);
+    } catch (\Exception $_e) {
+        $_instrUrl = url('/instructors');
+    }
+
+    $_socialLinks = is_array($profile->social_links ?? null) ? $profile->social_links : [];
+    $_sameAs = array_values(array_filter([
+        $_socialLinks['linkedin']  ?? null,
+        $_socialLinks['twitter']   ?? null,
+        $_socialLinks['youtube']   ?? null,
+        $_socialLinks['facebook']  ?? null,
+        $_socialLinks['website']   ?? null,
+    ]));
+
+    $_personData = [
+        '@type'       => 'Person',
+        '@id'         => $_instrUrl . '#person',
+        'name'        => $_instrName,
+        'description' => $_instrBio,
+        'image'       => $_instrImg,
+        'url'         => $_instrUrl,
+        'jobTitle'    => (string)($profile->headline ?? 'مدرب'),
+        'worksFor'    => ['@type' => 'EducationalOrganization', '@id' => $_siteUrl . '/#organization', 'name' => $_siteName],
+    ];
+    if (!empty($_sameAs)) {
+        $_personData['sameAs'] = $_sameAs;
+    }
+
+    $_instrPageData = [
+        '@context'   => 'https://schema.org',
+        '@type'      => 'ProfilePage',
+        '@id'        => $_instrUrl . '#profile',
+        'url'        => $_instrUrl,
+        'name'       => $_instrName . ' — مدرب على ' . $_siteName,
+        'mainEntity' => $_personData,
+    ];
+
+    $_breadcrumbInstr = [
+        '@context' => 'https://schema.org', '@type' => 'BreadcrumbList',
+        'itemListElement' => [
+            ['@type' => 'ListItem', 'position' => 1, 'name' => 'الرئيسية', 'item' => $_siteUrl],
+            ['@type' => 'ListItem', 'position' => 2, 'name' => 'المدربون',  'item' => url('/instructors')],
+            ['@type' => 'ListItem', 'position' => 3, 'name' => $_instrName,  'item' => $_instrUrl],
+        ],
+    ];
+
+    $_outputScripts .= '<script type="application/ld+json">' . json_encode($_instrPageData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+    $_outputScripts .= '<script type="application/ld+json">' . json_encode($_breadcrumbInstr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
 }
-</script>
-@endif
+
+// ── FAQ Page ──────────────────────────────────────────────────────────────
+if ($_jldType === 'faq' && isset($faqs) && method_exists($faqs, 'count') && $faqs->count() > 0) {
+    $_faqItems = [];
+    foreach ($faqs as $_faqItem) {
+        $_faqItems[] = [
+            '@type' => 'Question',
+            'name'  => strip_tags((string)($_faqItem->question ?? '')),
+            'acceptedAnswer' => [
+                '@type' => 'Answer',
+                'text'  => \Illuminate\Support\Str::limit(strip_tags((string)($_faqItem->answer ?? '')), 400),
+            ],
+        ];
+    }
+    $_faqData = ['@context' => 'https://schema.org', '@type' => 'FAQPage', 'mainEntity' => $_faqItems];
+    $_outputScripts .= '<script type="application/ld+json">' . json_encode($_faqData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+}
+
+// ── About Page ────────────────────────────────────────────────────────────
+if ($_jldType === 'about') {
+    $_aboutData = [
+        '@context'    => 'https://schema.org',
+        '@type'       => 'AboutPage',
+        'url'         => url('/about'),
+        'name'        => 'من نحن — ' . $_siteName,
+        'description' => 'تعرف على منصة MuallimX، رسالتنا وقيمنا في تأهيل المعلمين للعمل أونلاين باحتراف',
+        'mainEntity'  => [
+            '@type'       => 'EducationalOrganization',
+            '@id'         => $_siteUrl . '/#organization',
+            'name'        => $_siteName,
+            'url'         => $_siteUrl,
+            'foundingDate'=> '2023',
+            'description' => 'منصة عربية متخصصة في تأهيل وتطوير المعلمين للعمل أونلاين',
+            'areaServed'  => ['@type' => 'Place', 'name' => 'العالم العربي'],
+            'knowsAbout'  => ['تعليم إلكتروني', 'تأهيل المعلمين', 'أدوات AI للتعليم', 'منصات التدريس الأونلاين'],
+        ],
+    ];
+    $_outputScripts .= '<script type="application/ld+json">' . json_encode($_aboutData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+}
+@endphp
+{!! $_outputScripts !!}
