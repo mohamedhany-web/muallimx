@@ -28,14 +28,7 @@ class PermissionController extends Controller
      */
     public function create()
     {
-        $groups = Permission::query()
-            ->whereNotNull('group')
-            ->where('group', '!=', '')
-            ->distinct()
-            ->orderBy('group')
-            ->pluck('group');
-
-        return view('admin.permissions.create', compact('groups'));
+        abort(403, 'إضافة الصلاحيات تتم فقط من خلال الفريق التقني.');
     }
 
     /**
@@ -43,29 +36,7 @@ class PermissionController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:191',
-                'regex:/^[a-zA-Z0-9_]+$/',
-                Rule::unique('permissions', 'name'),
-            ],
-            'display_name' => ['required', 'string', 'max:191'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'group' => ['nullable', 'string', 'max:191'],
-        ]);
-
-        Permission::create([
-            'name' => $validated['name'],
-            'display_name' => $validated['display_name'],
-            'description' => $validated['description'] ?? null,
-            'group' => $validated['group'] ?: null,
-        ]);
-
-        return redirect()
-            ->route('admin.permissions.index')
-            ->with('success', 'تم إنشاء الصلاحية بنجاح');
+        abort(403, 'إضافة الصلاحيات تتم فقط من خلال الفريق التقني.');
     }
 
     /**
@@ -83,16 +54,7 @@ class PermissionController extends Controller
      */
     public function edit(Permission $permission)
     {
-        $permission->load('roles');
-
-        $groups = Permission::query()
-            ->whereNotNull('group')
-            ->where('group', '!=', '')
-            ->distinct()
-            ->orderBy('group')
-            ->pluck('group');
-
-        return view('admin.permissions.edit', compact('permission', 'groups'));
+        abort(403, 'تعديل الصلاحيات يتم فقط من خلال الفريق التقني.');
     }
 
     /**
@@ -100,29 +62,7 @@ class PermissionController extends Controller
      */
     public function update(Request $request, Permission $permission)
     {
-        $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:191',
-                'regex:/^[a-zA-Z0-9_]+$/',
-                Rule::unique('permissions', 'name')->ignore($permission->id),
-            ],
-            'display_name' => ['required', 'string', 'max:191'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'group' => ['nullable', 'string', 'max:191'],
-        ]);
-
-        $permission->update([
-            'name' => $validated['name'],
-            'display_name' => $validated['display_name'],
-            'description' => $validated['description'] ?? null,
-            'group' => $validated['group'] ?: null,
-        ]);
-
-        return redirect()
-            ->route('admin.permissions.index')
-            ->with('success', 'تم تحديث الصلاحية بنجاح');
+        abort(403, 'تعديل الصلاحيات يتم فقط من خلال الفريق التقني.');
     }
 
     /**
@@ -130,16 +70,6 @@ class PermissionController extends Controller
      */
     public function destroy(Permission $permission)
     {
-        $permission->loadCount('roles');
-        if (($permission->roles_count ?? 0) > 0) {
-            return back()->with('error', 'لا يمكن حذف صلاحية مرتبطة بأدوار. قم بإزالتها من الأدوار أولاً.');
-        }
-
-        $permission->roles()->detach();
-        $permission->delete();
-
-        return redirect()
-            ->route('admin.permissions.index')
-            ->with('success', 'تم حذف الصلاحية بنجاح');
+        abort(403, 'حذف الصلاحيات يتم فقط من خلال الفريق التقني.');
     }
 }

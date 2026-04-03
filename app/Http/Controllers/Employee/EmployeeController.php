@@ -23,6 +23,12 @@ class EmployeeController extends Controller
         if (!$user->isEmployee()) {
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
         }
+
+        // الموظفون الذين لديهم دور RBAC مخصص → لوحة الأدمن المفلترة
+        if ($user->roles()->exists()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         if (!$user->employeeCan('dashboard')) {
             abort(403, 'لوحة التحكم غير متاحة لوظيفتك الحالية.');
         }

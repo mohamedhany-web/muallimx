@@ -76,7 +76,8 @@ class EmployeeController extends Controller
     public function create()
     {
         $jobs = EmployeeJob::active()->fixedJobs()->orderBy('name')->get();
-        return view('admin.employees.create', compact('jobs'));
+        $roles = \App\Models\Role::orderBy('display_name')->get();
+        return view('admin.employees.create', compact('jobs', 'roles'));
     }
 
     /**
@@ -94,6 +95,7 @@ class EmployeeController extends Controller
             'hire_date' => 'required|date',
             'salary' => 'nullable|numeric|min:0',
             'is_active' => 'boolean',
+            'rbac_role' => 'nullable|integer|exists:roles,id',
         ]);
 
         // إنشاء رمز الموظف إذا لم يتم توفيره
@@ -109,6 +111,22 @@ class EmployeeController extends Controller
         $validated['is_active'] = $request->has('is_active') ? true : false;
 
         $employee = User::create($validated);
+
+        // ربط دور RBAC مخصص بالموظف إن تم اختياره
+        if (!empty($validated['rbac_role'])) {
+            try {
+                $role = \App\Models\Role::find($validated['rbac_role']);
+                if ($role) {
+                    $employee->assignRole($role);
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to assign RBAC role to employee on store', [
+                    'employee_id' => $employee->id,
+                    'rbac_role_id' => $validated['rbac_role'],
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         // إنشاء اتفاقية تلقائياً إذا تم تحديد راتب
         if (!empty($validated['salary']) && $validated['salary'] > 0) {
@@ -159,7 +177,9 @@ class EmployeeController extends Controller
     {
         $this->ensureEmployee($employee);
         $jobs = EmployeeJob::active()->fixedJobs()->orderBy('name')->get();
-        return view('admin.employees.edit', compact('employee', 'jobs'));
+        $roles = \App\Models\Role::orderBy('display_name')->get();
+        $employee->loadMissing('roles');
+        return view('admin.employees.edit', compact('employee', 'jobs', 'roles'));
     }
 
     /**
@@ -185,6 +205,7 @@ class EmployeeController extends Controller
             'bank_account_holder_name' => 'nullable|string|max:255',
             'bank_iban' => 'nullable|string|max:50',
             'is_active' => 'boolean',
+            'rbac_role' => 'nullable|integer|exists:roles,id',
         ]);
 
         if (!empty($validated['password'])) {
@@ -196,6 +217,21 @@ class EmployeeController extends Controller
         $validated['is_active'] = $request->has('is_active') ? true : false;
 
         $employee->update($validated);
+
+        // تحديث دور RBAC المخصص للموظف
+        try {
+            if (!empty($validated['rbac_role'])) {
+                $employee->roles()->sync([$validated['rbac_role']]);
+            } else {
+                $employee->roles()->sync([]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to sync RBAC role for employee on update', [
+                'employee_id' => $employee->id,
+                'rbac_role_id' => $validated['rbac_role'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return redirect()->route('admin.employees.show', $employee)
                         ->with('success', 'تم تحديث بيانات الموظف بنجاح');

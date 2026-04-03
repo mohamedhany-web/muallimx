@@ -1,6 +1,9 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', __('public.terms_page_title') . ' - ' . __('public.site_suffix'))
+@section('meta_description', 'الشروط والأحكام الخاصة باستخدام منصة MuallimX — اقرأ حقوقك والتزاماتك كمستخدم.')
+@section('meta_keywords', 'الشروط والأحكام, MuallimX, سياسة الاستخدام, قواعد المنصة')
+@section('canonical_url', url('/terms'))
 
 @push('styles')
 <style>
@@ -110,3 +113,4 @@
     </div>
 </section>
 @endsection
+

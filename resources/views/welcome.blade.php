@@ -8,15 +8,43 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>{{ __('landing.meta.title') }}</title>
+    <meta name="title"       content="{{ __('landing.meta.title') }}">
     <meta name="description" content="{{ __('landing.meta.description') }}">
+    <meta name="keywords"    content="تأهيل المعلمين, تدريب المعلمين أونلاين, أدوات AI للمعلم, دروس أونلاين, منصة تعليم, MuallimX, بناء بروفايل المعلم">
+    <meta name="author"      content="MuallimX">
+    <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="language"    content="{{ $locale === 'ar' ? 'Arabic' : 'English' }}">
     <meta name="theme-color" content="#283593">
-    <link rel="canonical" href="{{ url('/') }}">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ url('/') }}">
-    <meta property="og:title" content="{{ __('landing.meta.og_title') }}">
-    <meta property="og:description" content="{{ __('landing.meta.og_description') }}">
-    <meta property="og:image" content="{{ asset('images/og-image.jpg') }}">
+    <link rel="canonical"    href="{{ url('/') }}">
+    <!-- hreflang -->
+    <link rel="alternate" hreflang="ar"        href="{{ url('/') }}?lang=ar">
+    <link rel="alternate" hreflang="en"        href="{{ url('/') }}?lang=en">
+    <link rel="alternate" hreflang="x-default" href="{{ url('/') }}">
+    <!-- Open Graph -->
+    <meta property="og:type"             content="website">
+    <meta property="og:url"              content="{{ url('/') }}">
+    <meta property="og:title"            content="{{ __('landing.meta.og_title') }}">
+    <meta property="og:description"      content="{{ __('landing.meta.og_description') }}">
+    <meta property="og:image"            content="{{ asset('images/og-image.jpg') }}">
+    <meta property="og:image:alt"        content="{{ __('landing.meta.og_title') }}">
+    <meta property="og:image:width"      content="1200">
+    <meta property="og:image:height"     content="630">
+    <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
+    <meta property="og:locale:alternate" content="{{ $locale === 'ar' ? 'en_US' : 'ar_AR' }}">
+    <meta property="og:site_name"        content="MuallimX">
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:site"        content="@MuallimX">
+    <meta name="twitter:creator"     content="@MuallimX">
+    <meta name="twitter:url"         content="{{ url('/') }}">
+    <meta name="twitter:title"       content="{{ __('landing.meta.og_title') }}">
+    <meta name="twitter:description" content="{{ __('landing.meta.og_description') }}">
+    <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
+    <meta name="twitter:image:alt"   content="{{ __('landing.meta.og_title') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('logo-removebg-preview.png') }}">
+    @include('partials.seo-jsonld', ['jsonldType' => 'website'])
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

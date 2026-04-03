@@ -480,10 +480,81 @@
                 </button>
 
                 <!-- Notifications -->
-                <button class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center text-slate-400 dark:text-slate-400 transition-all active:scale-95 relative">
-                    <i class="fas fa-bell text-sm"></i>
-                    <span class="absolute -top-0.5 -right-0.5 w-[18px] h-[18px] bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-800">3</span>
-                </button>
+                @php
+                    $adminUnreadNotifications = \App\Models\Notification::where('user_id', auth()->id())
+                        ->unread()
+                        ->valid()
+                        ->limit(5)
+                        ->orderByDesc('created_at')
+                        ->get();
+                    $adminUnreadCount = $adminUnreadNotifications->count();
+                @endphp
+                <div class="relative" x-data="{ openNotif: false }" @click.outside="openNotif = false">
+                    <button type="button"
+                            @click="openNotif = !openNotif"
+                            class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center text-slate-400 dark:text-slate-400 transition-all active:scale-95 relative">
+                        <i class="fas fa-bell text-sm"></i>
+                        @if($adminUnreadCount > 0)
+                            <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-800 px-1">
+                                {{ $adminUnreadCount > 9 ? '9+' : $adminUnreadCount }}
+                            </span>
+                        @endif
+                    </button>
+                    <!-- Notifications dropdown -->
+                    <div x-show="openNotif" x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                         x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                         class="absolute left-0 mt-2 w-80 max-h-[420px] overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-200/60 border border-slate-100 z-50">
+                        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+                            <div>
+                                <p class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                    <i class="fas fa-bell text-amber-500"></i>
+                                    {{ __('أحدث الإشعارات') }}
+                                </p>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    {{ $adminUnreadCount > 0 ? "لديك {$adminUnreadCount} إشعار غير مقروء" : 'لا توجد إشعارات جديدة حالياً' }}
+                                </p>
+                            </div>
+                            <a href="{{ route('admin.notifications.index') }}" class="text-xs font-semibold text-sky-600 hover:text-sky-700">
+                                {{ __('عرض الكل') }}
+                            </a>
+                        </div>
+                        <div class="max-h-[320px] overflow-y-auto">
+                            @forelse($adminUnreadNotifications as $notif)
+                                <a href="{{ route('admin.notifications.show', $notif) }}"
+                                   class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-b-0">
+                                    <div class="mt-0.5">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-semibold
+                                            @if($notif->priority === 'urgent') bg-rose-100 text-rose-600
+                                            @elseif($notif->priority === 'high') bg-amber-100 text-amber-600
+                                            @else bg-sky-100 text-sky-600 @endif">
+                                            <i class="{{ $notif->type_icon }}"></i>
+                                        </span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-bold text-slate-900 truncate">
+                                            {{ $notif->title }}
+                                        </p>
+                                        <p class="text-xs text-slate-600 mt-0.5 line-clamp-2">
+                                            {{ $notif->message }}
+                                        </p>
+                                        <p class="text-[10px] text-slate-400 mt-1">
+                                            {{ $notif->created_at->diffForHumans() }}
+                                        </p>
+                                    </div>
+                                </a>
+                            @empty
+                                <div class="px-4 py-6 text-center text-xs text-slate-500">
+                                    <p>{{ $adminRtl ? 'لا توجد إشعارات جديدة' : 'No new notifications' }}</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Settings -->
                 <a href="{{ route('settings') }}" class="hidden sm:flex w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 items-center justify-center text-slate-400 transition-all active:scale-95">

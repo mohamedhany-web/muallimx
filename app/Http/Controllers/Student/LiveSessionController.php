@@ -119,4 +119,15 @@ class LiveSessionController extends Controller
         return redirect()->route('student.live-sessions.index')
             ->with('success', 'تم تسجيل خروجك من الجلسة');
     }
+
+    /**
+     * فحص حالة الجلسة (polling من الطالب)
+     */
+    public function status(LiveSession $liveSession)
+    {
+        return response()->json([
+            'status' => $liveSession->status,
+            'ended'  => in_array($liveSession->status, ['ended', 'cancelled']),
+        ]);
+    }
 }

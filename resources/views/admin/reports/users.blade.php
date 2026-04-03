@@ -33,7 +33,7 @@
             </h3>
         </div>
         <div class="p-6">
-            <form method="GET" id="filterForm" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <form method="GET" id="filterForm" class="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
                         <i class="fas fa-calendar text-blue-600 text-sm"></i>
@@ -84,7 +84,18 @@
                         <option value="inactive" {{ ($status ?? '') == 'inactive' ? 'selected' : '' }}>غير نشط</option>
                     </select>
                 </div>
-                <div class="md:col-span-5 flex flex-wrap items-end gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                        <i class="fas fa-id-card text-emerald-600 text-sm"></i>
+                        حالة الاشتراك
+                    </label>
+                    <select name="subscription" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                        <option value="">الكل</option>
+                        <option value="subscribed" {{ (request('subscription') ?? '') == 'subscribed' ? 'selected' : '' }}>مشتركين</option>
+                        <option value="not_subscribed" {{ (request('subscription') ?? '') == 'not_subscribed' ? 'selected' : '' }}>غير مشتركين</option>
+                    </select>
+                </div>
+                <div class="md:col-span-6 flex flex-wrap items-end gap-3">
                     <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200">
                         <i class="fas fa-filter"></i>
                         تطبيق الفلاتر

@@ -122,19 +122,36 @@
                                 <p class="text-xs text-slate-600 mt-1">حدد مستوى الوصول المسموح للمستخدم وحالة الحساب عند الإنشاء.</p>
                             </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                             <div class="space-y-1">
                                 <label for="role" class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
                                     <i class="fas fa-user-tag text-indigo-600 text-sm"></i>
-                                    الدور <span class="text-rose-500">*</span>
+                                    الدور الأساسي في النظام <span class="text-rose-500">*</span>
                                 </label>
                                 <select name="role" id="role" required class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all hover:border-slate-400 cursor-pointer">
                                     <option value="">اختر الدور</option>
-                                    <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>إداري</option>
-                                    <option value="instructor" {{ old('role') == 'instructor' ? 'selected' : '' }}>مدرس</option>
+                                    <option value="super_admin" {{ old('role') == 'super_admin' ? 'selected' : '' }}>إداري كامل (Super Admin)</option>
+                                    <option value="instructor" {{ old('role') == 'instructor' ? 'selected' : '' }}>مدرس / معلم</option>
                                     <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>{{ __('admin.student_role_label') }}</option>
                                 </select>
                                 @error('role')<p class="mt-1.5 text-xs text-rose-600 font-medium flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>@enderror
+                            </div>
+                            <div class="space-y-1">
+                                <label for="rbac_role" class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                                    <i class="fas fa-user-shield text-emerald-600 text-sm"></i>
+                                    دور مخصص من الأدوار الموجودة (اختياري)
+                                </label>
+                                <select name="rbac_role" id="rbac_role" class="w-full rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all hover:border-slate-400 cursor-pointer">
+                                    <option value="">بدون دور مخصص</option>
+                                    @foreach(($roles ?? []) as $roleModel)
+                                        <option value="{{ $roleModel->id }}" {{ old('rbac_role') == $roleModel->id ? 'selected' : '' }}>
+                                            {{ $roleModel->display_name }} ({{ $roleModel->name }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="mt-1 text-[11px] text-slate-500">
+                                    هذا الاختيار يربط المستخدم بأحد الأدوار المعرفة في النظام وتحدد صلاحياته ما يظهر له في السايدبار داخل لوحة الأدمن.
+                                </p>
                             </div>
                             <div class="space-y-1">
                                 <label for="is_active" class="block text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">

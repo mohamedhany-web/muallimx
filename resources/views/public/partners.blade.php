@@ -1,6 +1,9 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', __('public.partners_page_title') . ' - ' . __('public.site_suffix'))
+@section('meta_description', 'شركاء منصة MuallimX — المؤسسات التعليمية والشركات التي تدعم رسالتنا في تأهيل المعلمين.')
+@section('meta_keywords', 'شركاء, MuallimX, شراكات تعليمية, مؤسسات تعليمية')
+@section('canonical_url', url('/partners'))
 
 @section('content')
 <!-- Hero Section -->
@@ -44,3 +47,4 @@
     </div>
 </section>
 @endsection
+

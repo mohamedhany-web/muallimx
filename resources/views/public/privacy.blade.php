@@ -1,6 +1,9 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', __('public.privacy_page_title') . ' - ' . __('public.site_suffix'))
+@section('meta_description', 'سياسة الخصوصية لمنصة MuallimX — كيف نحمي بياناتك وخصوصيتك عند استخدام خدماتنا.')
+@section('meta_keywords', 'سياسة الخصوصية, MuallimX, حماية البيانات, خصوصية المستخدم')
+@section('canonical_url', url('/privacy'))
 
 @push('styles')
 <style>
@@ -126,3 +129,4 @@
     </div>
 </section>
 @endsection
+

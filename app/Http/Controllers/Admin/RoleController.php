@@ -77,7 +77,12 @@ class RoleController extends Controller
     {
         $role->load(['permissions', 'users']);
 
-        return view('admin.roles.show', compact('role'));
+        $permissions = Permission::orderBy('group')
+            ->orderBy('display_name')
+            ->get()
+            ->groupBy('group');
+
+        return view('admin.roles.show', compact('role', 'permissions'));
     }
 
     /**
@@ -152,9 +157,9 @@ class RoleController extends Controller
     }
 
     /**
-     * تحديث صلاحيات دور معين (endpoint مساعد للواجهة/الـ AJAX)
+     * تحديث صلاحيات دور معين من صفحة التفاصيل
      */
-    public function updatePermissions(Request $request, Role $role): Response
+    public function updatePermissions(Request $request, Role $role)
     {
         $validated = $request->validate([
             'permissions' => ['nullable', 'array'],
@@ -163,6 +168,8 @@ class RoleController extends Controller
 
         $role->permissions()->sync($validated['permissions'] ?? []);
 
-        return response()->noContent();
+        return redirect()
+            ->route('admin.roles.show', $role)
+            ->with('success', 'تم تحديث صلاحيات الدور "' . $role->display_name . '" بنجاح');
     }
 }

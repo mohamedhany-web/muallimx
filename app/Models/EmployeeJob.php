@@ -39,8 +39,8 @@ class EmployeeJob extends Model
         return $query->where('is_active', true);
     }
 
-    /** الوظائف الثابتة: محاسب، اشراف عام، HR، مشرفه، سيلز */
-    public const FIXED_CODES = ['accountant', 'general_supervision', 'hr', 'supervisor', 'sales'];
+    /** الوظائف الثابتة: محاسب، اشراف عام، HR، مشرفه، سيلز، مخصص */
+    public const FIXED_CODES = ['accountant', 'general_supervision', 'hr', 'supervisor', 'sales', 'custom'];
 
     /**
      * Scope للوظائف الثابتة فقط (لاختيارها عند إضافة/تعديل موظف)

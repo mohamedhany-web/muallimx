@@ -20,9 +20,43 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>{{ $course->title ?? __('public.course_detail_title') }} - {{ __('public.site_suffix') }}</title>
-    <meta name="description" content="{{ Str::limit(strip_tags($course->description ?? ''), 160) }}">
+    @php
+        $courseOgImg  = $thumbUrl ?? asset('images/og-image.jpg');
+        $courseDesc   = Str::limit(strip_tags($course->description ?? ''), 160);
+        $courseTitle  = ($course->title ?? __('public.course_detail_title')) . ' | MuallimX';
+        $courseUrl    = url('/course/' . ($course->id ?? ''));
+    @endphp
+    <title>{{ $courseTitle }}</title>
+    <meta name="title"       content="{{ $courseTitle }}">
+    <meta name="description" content="{{ $courseDesc }}">
+    <meta name="keywords"    content="{{ $course->title ?? 'كورس' }}, تعلم أونلاين, كورسات عربية, MuallimX, {{ $levelLabel ?? '' }}">
+    <meta name="author"      content="{{ ($course->instructor->name ?? null) ?? 'MuallimX' }}">
+    <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#283593">
+    <link rel="canonical"    href="{{ $courseUrl }}">
+    <link rel="alternate" hreflang="ar"        href="{{ $courseUrl }}?lang=ar">
+    <link rel="alternate" hreflang="en"        href="{{ $courseUrl }}?lang=en">
+    <link rel="alternate" hreflang="x-default" href="{{ $courseUrl }}">
+    <!-- Open Graph -->
+    <meta property="og:type"             content="article">
+    <meta property="og:url"              content="{{ $courseUrl }}">
+    <meta property="og:title"            content="{{ $courseTitle }}">
+    <meta property="og:description"      content="{{ $courseDesc }}">
+    <meta property="og:image"            content="{{ $courseOgImg }}">
+    <meta property="og:image:alt"        content="{{ $course->title ?? 'كورس' }}">
+    <meta property="og:image:width"      content="1200">
+    <meta property="og:image:height"     content="630">
+    <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
+    <meta property="og:site_name"        content="MuallimX">
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:site"        content="@MuallimX">
+    <meta name="twitter:url"         content="{{ $courseUrl }}">
+    <meta name="twitter:title"       content="{{ $courseTitle }}">
+    <meta name="twitter:description" content="{{ $courseDesc }}">
+    <meta name="twitter:image"       content="{{ $courseOgImg }}">
+    <meta name="twitter:image:alt"   content="{{ $course->title ?? 'كورس' }}">
+    @include('partials.seo-jsonld', ['jsonldType' => 'course', 'course' => $course])
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">

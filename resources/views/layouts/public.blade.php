@@ -72,6 +72,7 @@
     <!-- Custom Styles from welcome.blade.php -->
     @include('layouts.public-styles')
     @stack('styles')
+    @include('partials.seo-jsonld', ['jsonldType' => 'website'])
 </head>
 
 <body class="bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100 transition-colors"

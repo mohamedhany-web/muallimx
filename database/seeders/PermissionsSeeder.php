@@ -74,6 +74,58 @@ class PermissionsSeeder extends Seeder
             // التقويم
             ['name' => 'view.calendar', 'display_name' => 'عرض التقويم', 'description' => 'عرض التقويم', 'group' => 'التقويم'],
 
+            // جلسات البث المباشر
+            ['name' => 'manage.live-sessions',       'display_name' => 'إدارة جلسات البث المباشر',       'description' => 'إدارة الجلسات المباشرة والتسجيلات',           'group' => 'جلسات البث المباشر'],
+            ['name' => 'manage.live-servers',        'display_name' => 'إدارة سيرفرات البث (VPS)',        'description' => 'إدارة سيرفرات البث المباشر',                 'group' => 'جلسات البث المباشر'],
+
+            // الاتفاقيات والسحب
+            ['name' => 'manage.agreements',          'display_name' => 'إدارة اتفاقيات المدربين',         'description' => 'إدارة اتفاقيات المدربين',                     'group' => 'الاتفاقيات والسحب'],
+            ['name' => 'manage.withdrawals',         'display_name' => 'إدارة طلبات السحب',               'description' => 'إدارة طلبات سحب الأرباح',                    'group' => 'الاتفاقيات والسحب'],
+            ['name' => 'manage.employee-agreements', 'display_name' => 'إدارة اتفاقيات الموظفين',         'description' => 'إدارة اتفاقيات الموظفين ورواتبهم',           'group' => 'الاتفاقيات والسحب'],
+
+            // المالية التفصيلية
+            ['name' => 'manage.salaries',            'display_name' => 'إدارة رواتب المدربين',            'description' => 'إدارة رواتب وتسويات المدربين',               'group' => 'المالية التفصيلية'],
+            ['name' => 'manage.expenses',            'display_name' => 'إدارة المصروفات',                 'description' => 'إدارة المصروفات والنفقات التشغيلية',         'group' => 'المالية التفصيلية'],
+            ['name' => 'manage.instructor-accounts', 'display_name' => 'إدارة حسابات المدربين',           'description' => 'عرض وإدارة الحسابات المالية للمدربين',       'group' => 'المالية التفصيلية'],
+
+            // العناصر المدفوعة التفصيلية
+            ['name' => 'manage.video-providers',     'display_name' => 'إدارة مصادر الفيديو',             'description' => 'إدارة مصادر وموفري الفيديو للمنصة',         'group' => 'إدارة المحتوى'],
+            ['name' => 'manage.packages',            'display_name' => 'إدارة الباقات والأسعار',          'description' => 'إدارة باقات الاشتراك والتسعير',              'group' => 'العناصر المدفوعة'],
+            ['name' => 'manage.teacher-features',    'display_name' => 'إدارة مزايا اشتراك المدربين',     'description' => 'إدارة مزايا ومستويات اشتراك المدربين',       'group' => 'العناصر المدفوعة'],
+            ['name' => 'manage.curriculum-library',  'display_name' => 'إدارة مكتبة المناهج',             'description' => 'إدارة مكتبة مناهج ومحتوى المنصة',            'group' => 'العناصر المدفوعة'],
+
+            // التسويق التفصيلي
+            ['name' => 'manage.popup-ads',           'display_name' => 'إدارة الإعلانات المنبثقة',        'description' => 'إدارة البوبأب والإعلانات الترويجية',         'group' => 'إدارة التسويق'],
+            ['name' => 'manage.personal-branding',   'display_name' => 'إدارة العلامة الشخصية',           'description' => 'إدارة تخصيص العلامة التجارية للمدربين',     'group' => 'إدارة التسويق'],
+
+            // رقابة الجودة والمتابعة
+            ['name' => 'manage.quality-control',     'display_name' => 'الرقابة والجودة',                 'description' => 'متابعة جودة العمليات ورقابة الطلاب والمدربين','group' => 'الرقابة والجودة'],
+            ['name' => 'manage.student-control',     'display_name' => 'إدارة رقابة الطلاب',              'description' => 'متابعة وتحليل أداء الطلاب',                  'group' => 'الرقابة والجودة'],
+
+            // الإدارة التفصيلية للنظام
+            ['name' => 'manage.performance',         'display_name' => 'مراقبة أداء المنصة',              'description' => 'عرض إحصائيات وأداء المنصة التقني',           'group' => 'إدارة النظام'],
+            ['name' => 'manage.email-broadcasts',    'display_name' => 'إدارة البريد الجماعي (Gmail)',    'description' => 'إرسال وإدارة البريد الجماعي عبر Gmail',       'group' => 'إدارة النظام'],
+            ['name' => 'manage.two-factor-logs',     'display_name' => 'سجلات المصادقة الثنائية',         'description' => 'عرض سجلات المصادقة الثنائية',                 'group' => 'إدارة النظام'],
+
+            // الموارد البشرية التفصيلية
+            ['name' => 'manage.leaves',              'display_name' => 'إدارة طلبات الإجازة',             'description' => 'إدارة ومراجعة طلبات إجازة الموظفين',         'group' => 'الموارد البشرية'],
+            ['name' => 'manage.instructor-requests', 'display_name' => 'إدارة طلبات انضمام المدربين',     'description' => 'مراجعة والبت في طلبات انضمام المدربين',       'group' => 'الموارد البشرية'],
+
+            // التقارير
+            ['name' => 'view.reports',               'display_name' => 'عرض التقارير الشاملة',            'description' => 'الوصول إلى جميع صفحات التقارير',             'group' => 'التقارير'],
+            ['name' => 'view.financial-reports',     'display_name' => 'عرض التقارير المالية',            'description' => 'الوصول إلى التقارير المالية والمحاسبية',      'group' => 'التقارير'],
+            ['name' => 'view.academic-reports',      'display_name' => 'عرض التقارير الأكاديمية',         'description' => 'الوصول إلى التقارير الأكاديمية',             'group' => 'التقارير'],
+
+            // المبيعات التفصيلية
+            ['name' => 'manage.leads',               'display_name' => 'إدارة العملاء المحتملين (Leads)', 'description' => 'إدارة قاعدة العملاء المحتملين',               'group' => 'إدارة المبيعات'],
+            ['name' => 'view.sales-analytics',       'display_name' => 'عرض تحليلات المبيعات',           'description' => 'الوصول إلى لوحة تحليلات المبيعات',           'group' => 'إدارة المبيعات'],
+
+            // التحكم بالطلاب والخدمات
+            ['name' => 'manage.support-tickets',     'display_name' => 'إدارة تذاكر الدعم الفني',        'description' => 'إدارة تذاكر الدعم الفني وتصنيفاتها',         'group' => 'التحكم بالطلاب'],
+            ['name' => 'manage.consultations',       'display_name' => 'إدارة استشارات المدربين',        'description' => 'إدارة جلسات الاستشارات مع المدربين',         'group' => 'التحكم بالطلاب'],
+            ['name' => 'manage.hiring-academies',    'display_name' => 'إدارة الأكاديميات وفرص العمل',   'description' => 'إدارة الأكاديميات التوظيفية وفرص العمل',     'group' => 'التحكم بالطلاب'],
+            ['name' => 'manage.students-accounts',   'display_name' => 'إدارة حسابات الطلاب',            'description' => 'إدارة حسابات ومعلومات الطلاب',               'group' => 'التحكم بالطلاب'],
+
             // صلاحيات المدرب
             ['name' => 'instructor.view.courses', 'display_name' => 'عرض كورساتي', 'description' => 'عرض الكورسات الخاصة بالمدرب', 'group' => 'صلاحيات المدرب'],
             ['name' => 'instructor.manage.lectures', 'display_name' => 'إدارة محاضراتي', 'description' => 'إدارة المحاضرات الخاصة بالمدرب', 'group' => 'صلاحيات المدرب'],

@@ -1,11 +1,38 @@
+@php $locale = app()->getLocale(); $isRtl = $locale === 'ar'; @endphp
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <title>{{ __('public.about_page_title') }} - {{ __('public.site_suffix') }}</title>
+        <meta name="title"       content="{{ __('public.about_page_title') }} - MuallimX">
+        <meta name="description" content="تعرف على منصة MuallimX — رسالتنا في تأهيل المعلمين العرب للعمل أونلاين باحتراف، وقيمنا في التعليم الإلكتروني والتطوير المهني.">
+        <meta name="keywords"    content="من نحن, MuallimX, منصة تعليم, تأهيل معلمين, تعليم إلكتروني عربي">
+        <meta name="author"      content="MuallimX">
+        <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
+        <link rel="canonical"    href="{{ url('/about') }}">
+        <link rel="alternate" hreflang="ar"        href="{{ url('/about') }}?lang=ar">
+        <link rel="alternate" hreflang="en"        href="{{ url('/about') }}?lang=en">
+        <link rel="alternate" hreflang="x-default" href="{{ url('/about') }}">
+        <meta property="og:type"             content="website">
+        <meta property="og:url"              content="{{ url('/about') }}">
+        <meta property="og:title"            content="{{ __('public.about_page_title') }} - MuallimX">
+        <meta property="og:description"      content="تعرف على منصة MuallimX ورسالتها في تأهيل المعلمين العرب للعمل أونلاين.">
+        <meta property="og:image"            content="{{ asset('images/og-image.jpg') }}">
+        <meta property="og:image:alt"        content="من نحن - MuallimX">
+        <meta property="og:image:width"      content="1200">
+        <meta property="og:image:height"     content="630">
+        <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
+        <meta property="og:site_name"        content="MuallimX">
+        <meta name="twitter:card"        content="summary_large_image">
+        <meta name="twitter:site"        content="@MuallimX">
+        <meta name="twitter:url"         content="{{ url('/about') }}">
+        <meta name="twitter:title"       content="{{ __('public.about_page_title') }} - MuallimX">
+        <meta name="twitter:description" content="تعرف على منصة MuallimX ورسالتها في تأهيل المعلمين العرب للعمل أونلاين.">
+        <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
+        @include('partials.seo-jsonld', ['jsonldType' => 'about'])
 
         <!-- خط عربي موحّد مع الصفحة الرئيسية -->
         <link rel="preconnect" href="https://fonts.googleapis.com">

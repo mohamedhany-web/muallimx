@@ -181,7 +181,7 @@ class ReportsController extends Controller
             $endDate = $request->input('end_date');
             $role = strip_tags(trim($request->input('role', '')));
             $status = strip_tags(trim($request->input('status', '')));
-            $status = strip_tags(trim($request->input('status', '')));
+            $subscription = strip_tags(trim($request->input('subscription', '')));
 
             // حساب التواريخ
             $dates = $this->calculateDateRange($period, $startDate, $endDate);
@@ -203,8 +203,13 @@ class ReportsController extends Controller
                 $query->where('is_active', $status === 'active');
             }
 
-            if ($status && in_array($status, ['active', 'inactive'])) {
-                $query->where('is_active', $status === 'active');
+            if ($subscription && in_array($subscription, ['subscribed', 'not_subscribed'])) {
+                $query->whereHas('subscriptions', function ($q) {
+                    $q->where('status', 'active')
+                      ->where(function ($d) {
+                          $d->whereNull('end_date')->orWhere('end_date', '>=', now());
+                      });
+                }, $subscription === 'subscribed' ? '>' : '=', 0);
             }
 
             // إحصائيات

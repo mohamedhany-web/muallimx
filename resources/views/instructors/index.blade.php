@@ -8,9 +8,41 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>{{ __('public.instructors_page_title') }} - {{ __('public.site_suffix') }}</title>
+    <meta name="title"       content="{{ __('public.instructors_page_title') }} - {{ __('public.site_suffix') }}">
     <meta name="description" content="{{ __('public.instructors_subtitle') }}">
+    <meta name="keywords"    content="مدربون أونلاين, معلمون محترفون, مدرب معتمد, MuallimX, تدريس أونلاين">
+    <meta name="author"      content="MuallimX">
+    <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#283593">
+    <link rel="canonical"    href="{{ url('/instructors') }}">
+    <link rel="alternate" hreflang="ar"        href="{{ url('/instructors') }}?lang=ar">
+    <link rel="alternate" hreflang="en"        href="{{ url('/instructors') }}?lang=en">
+    <link rel="alternate" hreflang="x-default" href="{{ url('/instructors') }}">
+    <!-- Open Graph -->
+    <meta property="og:type"             content="website">
+    <meta property="og:url"              content="{{ url('/instructors') }}">
+    <meta property="og:title"            content="{{ __('public.instructors_page_title') }} - MuallimX">
+    <meta property="og:description"      content="{{ __('public.instructors_subtitle') }}">
+    <meta property="og:image"            content="{{ asset('images/og-image.jpg') }}">
+    <meta property="og:image:alt"        content="مدربو MuallimX">
+    <meta property="og:image:width"      content="1200">
+    <meta property="og:image:height"     content="630">
+    <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
+    <meta property="og:site_name"        content="MuallimX">
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:site"        content="@MuallimX">
+    <meta name="twitter:url"         content="{{ url('/instructors') }}">
+    <meta name="twitter:title"       content="{{ __('public.instructors_page_title') }} - MuallimX">
+    <meta name="twitter:description" content="{{ __('public.instructors_subtitle') }}">
+    <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
+    <!-- BreadcrumbList JSON-LD -->
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"الرئيسية","item":"{{ url('/') }}"},{"@type":"ListItem","position":2,"name":"المدربون","item":"{{ url('/instructors') }}"}]}
+    </script>
+    @include('partials.seo-jsonld', ['jsonldType' => 'website'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">

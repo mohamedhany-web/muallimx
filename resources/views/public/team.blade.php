@@ -1,6 +1,9 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', __('public.team_page_title') . ' - ' . __('public.site_suffix'))
+@section('meta_description', 'تعرف على فريق MuallimX المتميز الذي يعمل على تطوير منصة تأهيل المعلمين العرب.')
+@section('meta_keywords', 'فريق العمل, MuallimX, فريق المنصة, من نحن')
+@section('canonical_url', url('/team'))
 
 @section('content')
 <!-- Hero Section -->
@@ -49,3 +52,4 @@
     </div>
 </section>
 @endsection
+

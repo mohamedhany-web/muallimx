@@ -1,5 +1,8 @@
 @extends('layouts.admin')
 
+@section('title', 'تفاصيل الرسالة - MuallimX')
+@section('header', 'تفاصيل الرسالة')
+
 @section('content')
 <div class="p-6 bg-gray-50 min-h-screen">
     <!-- Header Section -->
@@ -7,10 +10,12 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                    <i class="fas fa-comment-dots text-sky-600 ml-3"></i>
+                    <i class="fas fa-envelope-open-text text-primary-600 ml-3"></i>
                     {{ __('تفاصيل الرسالة') }}
                 </h1>
-                <p class="text-gray-600">{{ __('عرض تفاصيل الرسالة المرسلة عبر الواتساب') }}</p>
+                <p class="text-gray-600">
+                    {{ __('عرض تفاصيل الرسالة المرسلة عبر منصة MuallimX (بريد إلكتروني / قنوات أخرى)') }}
+                </p>
             </div>
             <a href="{{ route('admin.messages.index') }}" 
                class="bg-gradient-to-l from-gray-600 to-gray-500 hover:from-gray-700 hover:to-gray-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2">
@@ -24,10 +29,10 @@
         <!-- تفاصيل الرسالة -->
         <div class="lg:col-span-2">
             <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200">
-                <div class="p-6 bg-gradient-to-r from-sky-50 to-blue-50 border-b border-gray-200">
+                <div class="p-6 bg-gradient-to-r from-primary-50 to-primary-100 border-b border-gray-200">
                     <div class="flex items-center justify-between">
                         <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-                            <i class="fas fa-file-alt text-sky-600"></i>
+                            <i class="fas fa-file-alt text-primary-600"></i>
                             {{ __('محتوى الرسالة') }}
                         </h3>
                         <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold shadow-md
@@ -43,16 +48,16 @@
                 </div>
 
                 <div class="p-6">
-                    <!-- معاينة الرسالة كما تظهر في الواتساب -->
-                    <div class="bg-gradient-to-br from-green-50 via-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200 shadow-lg">
+                    <!-- معاينة الرسالة كما تظهر للمستلم -->
+                    <div class="bg-gradient-to-br from-primary-50 via-primary-50 to-primary-100 rounded-xl p-6 border-2 border-primary-200 shadow-lg">
                         <div class="flex items-start gap-4">
-                            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
-                                <i class="fab fa-whatsapp text-white text-xl"></i>
+                            <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
+                                <i class="fas fa-envelope text-white text-xl"></i>
                             </div>
                             <div class="flex-1">
                                 <div class="flex items-center justify-between mb-2">
-                                    <div class="text-sm font-bold text-green-700">
-                                        {{ __('منصة Mindlytics') }}
+                                    <div class="text-sm font-bold text-primary-700">
+                                        {{ __('منصة MuallimX') }}
                                     </div>
                                     @if($message->status === 'sent')
                                         <div class="text-green-600 text-lg">
@@ -68,7 +73,7 @@
                                         </div>
                                     @endif
                                 </div>
-                                <div class="bg-white rounded-lg p-4 shadow-sm border border-green-100 mb-3">
+                                <div class="bg-white rounded-lg p-4 shadow-sm border border-primary-100 mb-3">
                                     <div class="text-gray-900 text-base whitespace-pre-wrap leading-relaxed">
                                         {{ $message->message }}
                                     </div>
@@ -176,22 +181,12 @@
             <!-- الإجراءات -->
             <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-200">
                 <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <i class="fas fa-cogs text-sky-600"></i>
+                    <i class="fas fa-cogs text-primary-600"></i>
                     {{ __('الإجراءات') }}
                 </h3>
                 
                 <div class="space-y-3">
-                    @if($message->status === 'failed')
-                        <form action="{{ route('admin.messages.resend', $message) }}" method="POST">
-                            @csrf
-                            <button type="submit" 
-                                    onclick="return confirm('{{ __('هل تريد إعادة إرسال هذه الرسالة؟') }}')"
-                                    class="w-full bg-gradient-to-l from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white px-4 py-3 rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2">
-                                <i class="fas fa-redo"></i>
-                                {{ __('إعادة الإرسال') }}
-                            </button>
-                        </form>
-                    @endif
+                    {{-- زر إعادة الإرسال خاص بتكامل الواتساب القديم، تم إخفاؤه حالياً للرسائل البريدية --}}
 
                     <form action="{{ route('admin.messages.destroy', $message) }}" method="POST">
                         @csrf

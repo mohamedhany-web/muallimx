@@ -1,6 +1,8 @@
 @extends('layouts.public')
 
-@section('title', $media->title . ' - Mindlytics')
+@section('title', ($media->title ?? 'مقال') . ' - MuallimX')
+@section('meta_description', Str::limit(strip_tags($media->excerpt ?? $media->content ?? ''), 160))
+@section('canonical_url', route('public.media.show', $media))
 
 @section('content')
 <!-- Hero Section -->

@@ -1,12 +1,15 @@
 ﻿@extends('layouts.admin')
 
+@section('title', 'التقارير الشهرية - MuallimX')
+@section('header', 'التقارير الشهرية')
+
 @section('content')
 <div class="p-6">
     <div class="mb-6">
         <div class="flex items-center justify-between mb-2">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ __('التقارير الشهرية') }}</h1>
-                <p class="text-gray-600">{{ __('إدارة التقارير الشهرية للطلاب وأولياء الأمور') }}</p>
+                <h1 class="text-2xl font-bold text-gray-900">{{ __('التقارير الشهرية للطلاب') }}</h1>
+                <p class="text-gray-600">{{ __('متابعة التقارير الشهرية المرسلة للطلاب وأولياء الأمور عبر منصة MuallimX') }}</p>
             </div>
             <div class="flex space-x-2 space-x-reverse">
                 <button onclick="showGenerateModal()" 
@@ -169,15 +172,10 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div class="flex space-x-1 space-x-reverse">
                                         <button onclick="viewReport({{ $report->id }})" 
-                                                class="text-blue-600 hover:text-blue-800 p-1">
+                                                class="text-blue-600 hover:text-blue-800 p-1"
+                                                title="{{ __('عرض بيانات التقرير') }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        @if($report->status === 'failed')
-                                            <button onclick="resendReport({{ $report->id }})" 
-                                                    class="text-green-600 hover:text-green-800 p-1">
-                                                <i class="fas fa-redo"></i>
-                                            </button>
-                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -245,7 +243,7 @@
                             </span>
                         </label>
                         <p class="text-xs text-gray-500 mt-1">
-                            {{ __('سيتم إرسال التقارير للطلاب وأولياء أمورهم عبر الواتساب') }}
+                            {{ __('سيتم إرسال التقارير للطلاب وأولياء أمورهم عبر قنوات التنبيهات المفعّلة في المنصة') }}
                         </p>
                     </div>
 
@@ -280,26 +278,7 @@ function viewReport(reportId) {
     console.log('View report:', reportId);
 }
 
-function resendReport(reportId) {
-    if (confirm('{{ __("هل تريد إعادة إرسال هذا التقرير؟") }}')) {
-        // إرسال طلب إعادة الإرسال
-        fetch(`/admin/reports/${reportId}/resend`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('{{ __("حدث خطأ في إعادة الإرسال") }}');
-            }
-        });
-    }
-}
+// يمكن لاحقاً إضافة إعادة إرسال للتقرير عند الحاجة
 </script>
 @endpush
 @endsection

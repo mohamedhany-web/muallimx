@@ -1,6 +1,9 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', __('public.refund_page_title') . ' - ' . __('public.site_suffix'))
+@section('meta_description', 'سياسة الاسترداد والإلغاء لمنصة MuallimX — تعرف على شروط استرداد مدفوعاتك.')
+@section('meta_keywords', 'سياسة الاسترداد, استرداد المبلغ, MuallimX, إلغاء الاشتراك')
+@section('canonical_url', url('/refund'))
 
 @section('content')
 <!-- Hero Section -->
@@ -85,3 +88,4 @@
     </div>
 </section>
 @endsection
+

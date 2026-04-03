@@ -1,6 +1,9 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', __('public.certificates_page_title') . ' - ' . __('public.site_suffix'))
+@section('meta_description', 'شهادات MuallimX المعتمدة للمعلمين والطلاب — تحقق من صحة شهادتك أو استعرض الشهادات المتاحة.')
+@section('meta_keywords', 'شهادات معتمدة, MuallimX, شهادة تدريب, شهادة إتمام')
+@section('canonical_url', url('/certificates'))
 
 @section('content')
 <!-- Hero Section -->
@@ -70,3 +73,4 @@
     </div>
 </section>
 @endsection
+

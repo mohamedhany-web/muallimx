@@ -1,6 +1,9 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', __('public.testimonials_page_title') . ' - ' . __('public.site_suffix'))
+@section('meta_description', 'آراء ومراجعات المعلمين والطلاب الذين استفادوا من منصة MuallimX في تطوير مساراتهم.')
+@section('meta_keywords', 'آراء المستخدمين, تقييمات, MuallimX, قصص نجاح')
+@section('canonical_url', url('/testimonials'))
 
 @section('content')
 <!-- Hero Section -->
@@ -44,3 +47,4 @@
     </div>
 </section>
 @endsection
+

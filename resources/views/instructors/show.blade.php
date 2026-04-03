@@ -9,11 +9,48 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>{{ $profile->user->name ?? __('public.instructor_fallback') }} - {{ __('public.site_suffix') }}</title>
-    <meta name="description" content="{{ Str::limit($profile->bio ?? $profile->headline ?? '', 160) }}">
+    @php
+        $instrPageTitle = ($profile->user->name ?? __('public.instructor_fallback')) . ' — ' . ($profile->headline ?? 'مدرب') . ' | MuallimX';
+        $instrPageDesc  = Str::limit(strip_tags($profile->bio ?? $profile->headline ?? ''), 160);
+        $instrPageImg   = ($profile->profile_image ?? null) ? asset('storage/' . $profile->profile_image) : asset('images/og-image.jpg');
+        $instrPageUrl   = route('public.instructors.show', $profile->user ?? $profile);
+    @endphp
+    <title>{{ $instrPageTitle }}</title>
+    <meta name="title"       content="{{ $instrPageTitle }}">
+    <meta name="description" content="{{ $instrPageDesc }}">
+    <meta name="keywords"    content="{{ ($profile->user->name ?? '') }}, مدرب أونلاين, {{ ($profile->headline ?? '') }}, MuallimX">
+    <meta name="author"      content="{{ $profile->user->name ?? 'MuallimX' }}">
+    <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#283593">
+    <link rel="canonical"    href="{{ $instrPageUrl }}">
+    <link rel="alternate" hreflang="ar"        href="{{ $instrPageUrl }}?lang=ar">
+    <link rel="alternate" hreflang="en"        href="{{ $instrPageUrl }}?lang=en">
+    <link rel="alternate" hreflang="x-default" href="{{ $instrPageUrl }}">
+    <!-- Open Graph -->
+    <meta property="og:type"             content="profile">
+    <meta property="og:url"              content="{{ $instrPageUrl }}">
+    <meta property="og:title"            content="{{ $instrPageTitle }}">
+    <meta property="og:description"      content="{{ $instrPageDesc }}">
+    <meta property="og:image"            content="{{ $instrPageImg }}">
+    <meta property="og:image:alt"        content="{{ $profile->user->name ?? 'مدرب' }}">
+    <meta property="og:image:width"      content="800">
+    <meta property="og:image:height"     content="800">
+    <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
+    <meta property="og:site_name"        content="MuallimX">
+    @if($profile->user->name ?? null)
+    <meta property="profile:first_name"  content="{{ $profile->user->name }}">
+    @endif
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:site"        content="@MuallimX">
+    <meta name="twitter:url"         content="{{ $instrPageUrl }}">
+    <meta name="twitter:title"       content="{{ $instrPageTitle }}">
+    <meta name="twitter:description" content="{{ $instrPageDesc }}">
+    <meta name="twitter:image"       content="{{ $instrPageImg }}">
+    <meta name="twitter:image:alt"   content="{{ $profile->user->name ?? 'مدرب' }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
+    @include('partials.seo-jsonld', ['jsonldType' => 'instructor', 'profile' => $profile])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">

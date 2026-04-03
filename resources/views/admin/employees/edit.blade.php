@@ -60,7 +60,7 @@
             <!-- القسم الوظيفي -->
             <div class="border-b border-gray-200 pb-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">المعلومات الوظيفية</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">الوظيفة *</label>
                         <select name="employee_job_id" required 
@@ -99,6 +99,26 @@
                         <input type="number" name="salary" value="{{ old('salary', $employee->salary) }}" min="0" step="0.01" 
                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                         @error('salary')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            دور مخصص من الأدوار (لوحة التحكم)
+                        </label>
+                        @php $currentRoleId = old('rbac_role', optional($employee->roles->first())->id); @endphp
+                        <select name="rbac_role"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="">بدون دور مخصص</option>
+                            @foreach(($roles ?? []) as $role)
+                                <option value="{{ $role->id }}" {{ (string)$currentRoleId === (string)$role->id ? 'selected' : '' }}>
+                                    {{ $role->display_name }} ({{ $role->name }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('rbac_role')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                        <p class="mt-1 text-xs text-gray-500">
+                            هذا الدور يحدد ما يظهر للموظف في لوحة الموظف حسب الصلاحيات المربوطة به.
+                        </p>
                     </div>
                 </div>
             </div>

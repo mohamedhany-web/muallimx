@@ -1,6 +1,9 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', __('public.media_page_title') . ' - ' . __('public.site_suffix'))
+@section('meta_description', 'المكتبة الإعلامية لمنصة MuallimX — مقالات، مقاطع فيديو، وموارد تعليمية للمعلمين.')
+@section('meta_keywords', 'مكتبة إعلامية, MuallimX, مقالات تعليمية, فيديوهات')
+@section('canonical_url', url('/media'))
 
 @section('content')
 <!-- Hero Section -->
@@ -114,5 +117,6 @@
     </div>
 </section>
 @endsection
+
 
 

@@ -1,7 +1,9 @@
 @extends('layouts.public')
 
 @section('title', __('public.faq_page_title') . ' - ' . __('public.site_suffix'))
-
+@section('meta_description', 'إجابات على أكثر الأسئلة شيوعاً حول منصة MuallimX — التسجيل، الدفع، الكورسات، والدعم الفني.')
+@section('meta_keywords', 'أسئلة شائعة, FAQ, MuallimX, مساعدة, دعم فني, كورسات')
+@section('canonical_url', url('/faq'))
 @push('styles')
 <style>
     .hero-faq {

@@ -1,16 +1,20 @@
 ﻿@extends('layouts.admin')
 
+@section('title', 'قوالب الرسائل - MuallimX')
+@section('header', 'قوالب الرسائل')
+
 @section('content')
 <div class="p-6">
     <div class="mb-6">
         <div class="flex items-center justify-between mb-2">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">{{ __('قوالب الرسائل') }}</h1>
-                <p class="text-gray-600">{{ __('إدارة قوالب الرسائل المختلفة') }}</p>
+                <p class="text-gray-600">{{ __('إدارة قوالب الرسائل المستخدمة داخل منصة MuallimX') }}</p>
             </div>
             <div class="flex space-x-2 space-x-reverse">
                 <button onclick="showCreateTemplateModal()" 
-                        class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        class="text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors"
+                        style="background-color:#16a34a;">
                     <i class="fas fa-plus ml-2"></i>
                     {{ __('قالب جديد') }}
                 </button>
@@ -21,62 +25,6 @@
                 </a>
             </div>
         </div>
-    </div>
-
-    <!-- قوالب محددة مسبقاً -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        @php
-            $predefinedTemplates = [
-                [
-                    'title' => 'تقرير شهري للطالب',
-                    'type' => 'student_report',
-                    'icon' => 'fa-chart-line',
-                    'color' => 'blue',
-                    'content' => "مرحباً {student_name}!\n\nإليك تقريرك الشهري لشهر {month_name}:\n• متوسط درجاتك: {avg_score}%\n• عدد الكورسات: {courses_count}\n\nاستمر في التقدم! 🎓"
-                ],
-                [
-                    'title' => 'نتيجة امتحان',
-                    'type' => 'exam_result',
-                    'icon' => 'fa-clipboard-check',
-                    'color' => 'green',
-                    'content' => "عزيزي {student_name}،\n\nنتيجة امتحان {exam_title}:\n• الدرجة: {score}/{total_marks}\n• النسبة: {percentage}%\n• الحالة: {status}\n\nمبروك! 🎉"
-                ],
-                [
-                    'title' => 'تقرير لولي الأمر',
-                    'type' => 'parent_report',
-                    'icon' => 'fa-user-friends',
-                    'color' => 'purple',
-                    'content' => "عزيزي {parent_name}،\n\nتقرير شهري عن {student_name} لشهر {month_name}:\n• التقييم العام: {overall_grade}\n• تقدم الكورسات: {courses_progress}\n\nشكراً لثقتكم بنا."
-                ]
-            ];
-        @endphp
-
-        @foreach($predefinedTemplates as $template)
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-                <div class="flex items-center mb-4">
-                    <div class="p-3 bg-{{ $template['color'] }}-100 $template['color'] }}-900 rounded-full">
-                        <i class="fas {{ $template['icon'] }} text-{{ $template['color'] }}-600 $template['color'] }}-300"></i>
-                    </div>
-                    <div class="mr-4">
-                        <h3 class="text-lg font-semibold text-gray-900">
-                            {{ $template['title'] }}
-                        </h3>
-                        <p class="text-sm text-gray-500">
-                            {{ $template['type'] }}
-                        </p>
-                    </div>
-                </div>
-                
-                <div class="bg-gray-50 p-4 rounded-lg text-sm text-gray-700 mb-4">
-                    {{ Str::limit($template['content'], 100) }}
-                </div>
-                
-                <button onclick="useTemplate('{{ addslashes($template['content']) }}', '{{ $template['type'] }}', '{{ $template['title'] }}')"
-                        class="w-full bg-{{ $template['color'] }}-600 hover:bg-{{ $template['color'] }}-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                    {{ __('استخدام هذا القالب') }}
-                </button>
-            </div>
-        @endforeach
     </div>
 
     <!-- القوالب المخصصة -->
@@ -97,8 +45,7 @@
                                     <h4 class="text-lg font-medium text-gray-900">
                                         {{ $template->title }}
                                     </h4>
-                                    <span class="mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                        {{ $template->is_active ? 'bg-green-100 text-green-800 ': ''bg-gray-100 text-gray-800 }}">']
+                                    <span class="mr-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $template->is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
                                         {{ $template->is_active ? __('نشط') : __('معطل') }}
                                     </span>
                                 </div>
@@ -210,13 +157,14 @@
                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                                   placeholder="{{ __('اكتب محتوى القالب... يمكنك استخدام المتغيرات مثل {student_name}') }}"></textarea>
                         <div class="mt-2 text-xs text-gray-500">
-                            {{ __('المتغيرات المتاحة: {student_name}, {month_name}, {avg_score}, {courses_count}, {date}') }}
+                            {{ __('أمثلة على المتغيرات للطلاب: {student_name}, {courses_count}, {avg_score}, {month_name}, {date}') }}
                         </div>
                     </div>
 
                     <div class="flex space-x-2 space-x-reverse">
-                        <button type="submit" 
-                                class="flex-1 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        <button type="submit"
+                                class="flex-1 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors"
+                                style="background-color:#16a34a;">
                             {{ __('إنشاء القالب') }}
                         </button>
                         <button type="button" onclick="hideCreateTemplateModal()" 

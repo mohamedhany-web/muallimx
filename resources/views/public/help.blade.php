@@ -1,6 +1,9 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', __('public.help_page_title') . ' - ' . __('public.site_suffix'))
+@section('meta_description', 'مركز المساعدة والدعم الفني لمنصة MuallimX — إجابات وأدلة استخدام لحل مشاكلك بسرعة.')
+@section('meta_keywords', 'مساعدة, دعم فني, MuallimX, مركز المساعدة')
+@section('canonical_url', url('/help'))
 
 @push('styles')
 <style>
@@ -201,3 +204,4 @@
     </div>
 </section>
 @endsection
+

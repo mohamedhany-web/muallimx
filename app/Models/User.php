@@ -530,9 +530,12 @@ class User extends Authenticatable
      */
     public function hasPermission($permissionName)
     {
-        // إذا كان admin، يعيد true دائماً
+        // إذا كان admin (Super Admin) لكن تم ربطه بأدوار RBAC مخصّصة،
+        // عندها لا نتجاوز الصلاحيات تلقائياً بل نعتمد على صلاحيات الدور.
         if ($this->isAdmin()) {
-            return true;
+            if (!$this->roles()->exists()) {
+                return true;
+            }
         }
 
         // التحقق من الصلاحيات المباشرة
@@ -723,25 +726,45 @@ class User extends Authenticatable
     }
 
     /**
-     * هل الموظف يملك صلاحية عرض خانة في السايدبار حسب وظيفته
+     * هل الموظف يملك صلاحية عرض خانة في السايدبار.
+     *
+     * الأولوية:
+     * 1. عناصر أساسية (dashboard, profile, notifications, settings) → دائماً مسموح.
+     * 2. إذا كان للمستخدم أدوار RBAC مخصصة → نعتمد على hasPermission() فقط.
+     * 3. إذا لم يكن للمستخدم أدوار RBAC → نعود للصلاحيات المحددة في EmployeeJob.
      */
     public function employeeCan(string $permission): bool
     {
         if (!$this->is_employee) {
             return false;
         }
+
+        // عناصر أساسية متاحة لكل موظف بغض النظر عن صلاحياته
+        $alwaysAllowed = ['dashboard', 'profile', 'notifications', 'settings'];
+        if (in_array($permission, $alwaysAllowed, true)) {
+            return true;
+        }
+
+        // إذا كان للمستخدم أدوار RBAC مخصصة → اعتمد عليها فقط
+        if ($this->roles()->exists()) {
+            return $this->hasPermission($permission);
+        }
+
+        // لا يوجد دور RBAC → اعتمد على صلاحيات وظيفة الموظف (النظام القديم)
         if (!$this->relationLoaded('employeeJob')) {
             $this->load('employeeJob');
         }
         $job = $this->employeeJob;
         if (!$job) {
-            return true; // قديم: بدون وظيفة يعرض كل الخانات
+            // بدون وظيفة ولا RBAC: اعرض كل شيء (مدير يدوي)
+            return true;
         }
-        $permissions = $job->permissions;
-        if (!is_array($permissions) || empty($permissions)) {
-            return true; // بدون صلاحيات محددة يعرض كل الخانات
+        $jobPermissions = $job->permissions;
+        if (!is_array($jobPermissions) || empty($jobPermissions)) {
+            // وظيفة بدون صلاحيات محددة → لا تُعرَض الأقسام الإضافية
+            return false;
         }
-        return in_array($permission, $permissions, true);
+        return in_array($permission, $jobPermissions, true);
     }
 
     /**
@@ -749,9 +772,12 @@ class User extends Authenticatable
      */
     public function hasPermissionDirect($permissionName)
     {
-        // إذا كان admin، يعيد true دائماً
+        // إذا كان admin (Super Admin) لكن تم ربطه بأدوار RBAC مخصّصة،
+        // عندها لا نتجاوز الصلاحيات تلقائياً.
         if ($this->isAdmin()) {
-            return true;
+            if (!$this->roles()->exists()) {
+                return true;
+            }
         }
 
         // التحقق من الصلاحيات المباشرة

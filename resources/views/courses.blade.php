@@ -8,9 +8,43 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}</title>
+    <meta name="title"       content="{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}">
     <meta name="description" content="{{ __('public.courses_subtitle') }}">
+    <meta name="keywords"    content="كورسات أونلاين, تعلم أونلاين, دورات تعليمية, تدريب معلمين, MuallimX, كورسات عربية">
+    <meta name="author"      content="MuallimX">
+    <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#283593">
+    <link rel="canonical"    href="{{ url('/courses') }}">
+    <link rel="alternate" hreflang="ar"        href="{{ url('/courses') }}?lang=ar">
+    <link rel="alternate" hreflang="en"        href="{{ url('/courses') }}?lang=en">
+    <link rel="alternate" hreflang="x-default" href="{{ url('/courses') }}">
+    <!-- Open Graph -->
+    <meta property="og:type"             content="website">
+    <meta property="og:url"              content="{{ url('/courses') }}">
+    <meta property="og:title"            content="{{ __('public.courses_page_title') }} - MuallimX">
+    <meta property="og:description"      content="{{ __('public.courses_subtitle') }}">
+    <meta property="og:image"            content="{{ asset('images/og-image.jpg') }}">
+    <meta property="og:image:alt"        content="كورسات MuallimX">
+    <meta property="og:image:width"      content="1200">
+    <meta property="og:image:height"     content="630">
+    <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
+    <meta property="og:locale:alternate" content="{{ $locale === 'ar' ? 'en_US' : 'ar_AR' }}">
+    <meta property="og:site_name"        content="MuallimX">
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:site"        content="@MuallimX">
+    <meta name="twitter:url"         content="{{ url('/courses') }}">
+    <meta name="twitter:title"       content="{{ __('public.courses_page_title') }} - MuallimX">
+    <meta name="twitter:description" content="{{ __('public.courses_subtitle') }}">
+    <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
+    <meta name="twitter:image:alt"   content="كورسات MuallimX">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
+    <!-- BreadcrumbList JSON-LD -->
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"الرئيسية","item":"{{ url('/') }}"},{"@type":"ListItem","position":2,"name":"الكورسات","item":"{{ url('/courses') }}"}]}
+    </script>
+    @include('partials.seo-jsonld', ['jsonldType' => 'website'])
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

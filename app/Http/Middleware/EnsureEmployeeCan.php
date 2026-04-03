@@ -17,6 +17,12 @@ class EnsureEmployeeCan
         if (!$user || !$user->isEmployee()) {
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
         }
+
+        // الموظفون ذوو الدور RBAC المخصص → يعملون من لوحة الأدمن فقط
+        if ($user->roles()->exists()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         if (!$user->employeeCan($permission)) {
             abort(403, 'هذه الصفحة غير متاحة لوظيفتك الحالية.');
         }

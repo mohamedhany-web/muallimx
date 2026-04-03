@@ -27,8 +27,14 @@ class EnsurePermission
 
         $user = Auth::user();
 
-        // إذا كان المستخدم admin، يتجاوز التحقق من الصلاحيات
-        if ($user->isAdmin()) {
+        // Super Admin بدون أدوار RBAC مخصصة → يتجاوز كل الفحوصات
+        if ($user->isAdmin() && !$user->roles()->exists()) {
+            return $next($request);
+        }
+
+        // admin.access: السماح لأي موظف يملك دوراً RBAC مخصصاً
+        // (كل الأدوار الأخرى تُتحقق منها بصلاحياتها الفعلية في السايدبار)
+        if ($permission === 'admin.access' && $user->is_employee && $user->roles()->exists()) {
             return $next($request);
         }
 

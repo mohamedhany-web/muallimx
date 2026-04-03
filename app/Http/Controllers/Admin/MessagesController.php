@@ -9,16 +9,19 @@ use App\Models\MessageTemplate;
 use App\Models\User;
 use App\Models\AdvancedCourse;
 use App\Services\WhatsAppService;
+use App\Services\EmailNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class MessagesController extends Controller
 {
     protected $whatsappService;
+    protected $emailService;
 
-    public function __construct(WhatsAppService $whatsappService)
+    public function __construct(WhatsAppService $whatsappService, EmailNotificationService $emailService)
     {
         $this->whatsappService = $whatsappService;
+        $this->emailService = $emailService;
     }
 
     /**
@@ -66,13 +69,17 @@ class MessagesController extends Controller
     /**
      * عرض صفحة إرسال رسالة جديدة
      */
-    public function create()
+    public function create(Request $request)
     {
-        $students = User::students()->select('id', 'name', 'phone')->get();
+        $students = User::students()->select('id', 'name', 'phone', 'email')->get();
+        $employees = User::where('role', 'employee')->select('id', 'name', 'phone', 'email')->get();
         $templates = MessageTemplate::active()->get();
         $courses = AdvancedCourse::active()->select('id', 'title')->get();
 
-        return view('admin.messages.create', compact('students', 'templates', 'courses'));
+        $prefillMessage = $request->input('template_content');
+        $prefillTitle = $request->input('template_title');
+
+        return view('admin.messages.create', compact('students', 'employees', 'templates', 'courses', 'prefillMessage', 'prefillTitle'));
     }
 
     /**
@@ -84,6 +91,7 @@ class MessagesController extends Controller
             'user_id' => 'required|exists:users,id',
             'message' => 'required|string|max:4096',
             'template_id' => 'nullable|exists:message_templates,id',
+            'channel' => 'nullable|in:email',
         ], [
             'user_id.required' => 'يجب اختيار الطالب',
             'message.required' => 'نص الرسالة مطلوب',
@@ -100,13 +108,29 @@ class MessagesController extends Controller
             $message = $template->render($variables);
         }
 
-        $result = $this->whatsappService->sendStudentMessage($student, $message, 'manual');
+        $mailResult = $this->emailService->sendToUser($student, $message);
 
-        if ($result['success']) {
-            return back()->with('success', 'تم إرسال الرسالة بنجاح إلى ' . $student->name);
-        } else {
-            return back()->with('error', 'فشل في إرسال الرسالة: ' . ($result['error'] ?? 'خطأ غير معروف'));
+        // تسجيل الرسالة في جدول الرسائل لعرضها في لوحة الرسائل
+        WhatsAppMessage::create([
+            'user_id' => $student->id,
+            'phone_number' => $student->phone,
+            'message' => $message,
+            'type' => 'email_single',
+            'status' => $mailResult['success'] ? 'sent' : 'failed',
+            'response_data' => null,
+            'whatsapp_message_id' => null,
+            'sent_at' => $mailResult['success'] ? now() : null,
+            'template_name' => $request->template_id ? optional(MessageTemplate::find($request->template_id))->name : null,
+            'template_params' => null,
+            'error_message' => $mailResult['success'] ? null : ($mailResult['error'] ?? 'خطأ غير معروف'),
+        ]);
+
+        if ($mailResult['success']) {
+            return back()->with('success', 'تم إرسال الرسالة البريدية بنجاح إلى ' . $student->name);
         }
+
+        $error = $mailResult['error'] ?? 'خطأ غير معروف';
+        return back()->with('error', 'فشل في إرسال الرسالة: ' . $error);
     }
 
     /**
@@ -115,19 +139,20 @@ class MessagesController extends Controller
     public function sendBulk(Request $request)
     {
         $request->validate([
-            'recipient_type' => 'required|in:all_students,course_students,selected_students',
+            'recipient_type' => 'required|in:all_students,course_students,selected_students,all_employees,all_users',
             'course_id' => 'required_if:recipient_type,course_students|exists:advanced_courses,id',
             'selected_students' => 'required_if:recipient_type,selected_students|array',
             'selected_students.*' => 'exists:users,id',
             'message' => 'required|string|max:4096',
             'template_id' => 'nullable|exists:message_templates,id',
+            'channel' => 'nullable|in:email',
         ]);
 
         // تحديد المستلمين
         $students = $this->getRecipients($request);
 
         if ($students->isEmpty()) {
-            return back()->with('error', 'لا توجد طلاب لإرسال الرسالة إليهم');
+            return back()->with('error', 'لا توجد مستلمين لإرسال الرسالة إليهم');
         }
 
         $message = $request->message;
@@ -144,15 +169,28 @@ class MessagesController extends Controller
         foreach ($students as $student) {
             $finalMessage = $message;
             
-            // تطبيق القالب مع المتغيرات الخاصة بكل طالب
             if (isset($template)) {
                 $variables = $this->getStudentVariables($student);
                 $finalMessage = $template->render($variables);
             }
 
-            $result = $this->whatsappService->sendStudentMessage($student, $finalMessage, 'bulk');
-            
-            if ($result['success']) {
+            $mailResult = $this->emailService->sendToUser($student, $finalMessage);
+
+            WhatsAppMessage::create([
+                'user_id' => $student->id,
+                'phone_number' => $student->phone,
+                'message' => $finalMessage,
+                'type' => 'email_bulk',
+                'status' => $mailResult['success'] ? 'sent' : 'failed',
+                'response_data' => null,
+                'whatsapp_message_id' => null,
+                'sent_at' => $mailResult['success'] ? now() : null,
+                'template_name' => $request->template_id ? optional($template)->name : null,
+                'template_params' => null,
+                'error_message' => $mailResult['success'] ? null : ($mailResult['error'] ?? 'خطأ غير معروف'),
+            ]);
+
+            if ($mailResult['success']) {
                 $successCount++;
             } else {
                 $failCount++;
@@ -160,13 +198,13 @@ class MessagesController extends Controller
             
             $results[] = [
                 'student' => $student->name,
-                'success' => $result['success'],
-                'error' => $result['error'] ?? null
+                'success' => $mailResult['success'],
+                'error' => $mailResult['error'] ?? null,
             ];
         }
 
         return back()->with('success', 
-            "تم إرسال {$successCount} رسالة بنجاح" . 
+            "تم إرسال {$successCount} رسالة بريدية بنجاح" . 
             ($failCount > 0 ? " وفشل في إرسال {$failCount} رسالة" : "")
         );
     }
@@ -332,8 +370,10 @@ class MessagesController extends Controller
                     $q->where('advanced_course_id', $request->course_id);
                 })->get(),
             'selected_students' => User::students()
-                ->whereIn('id', $request->selected_students)
+                ->whereIn('id', $request->selected_students ?? [])
                 ->get(),
+            'all_employees' => User::where('role', 'employee')->get(),
+            'all_users' => User::query()->get(),
             default => collect()
         };
     }
@@ -344,6 +384,7 @@ class MessagesController extends Controller
     private function getStudentVariables(User $student): array
     {
         $reportData = $this->whatsappService->generateStudentReportData($student);
+        $parent = $student->parent ?? null;
         
         return [
             'student_name' => $student->name,
@@ -353,6 +394,7 @@ class MessagesController extends Controller
             'total_exams' => count($reportData['exams']),
             'month_name' => now()->locale('ar')->format('F Y'),
             'overall_grade' => $reportData['overall']['grade'],
+            'parent_name' => $parent?->name,
             'platform_name' => 'منصة مستر طارق الداجن',
             'support_phone' => config('app.support_phone', '01000000000'),
             'date' => now()->format('d/m/Y'),

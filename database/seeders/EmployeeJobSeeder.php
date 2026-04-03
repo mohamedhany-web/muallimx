@@ -64,6 +64,14 @@ class EmployeeJobSeeder extends Seeder
                     'public_catalog',
                 ],
             ],
+            [
+                'name' => 'مخصص',
+                'code' => 'custom',
+                'description' => 'وظيفة مخصصة يتم ضبط صلاحياتها من هنا',
+                'permissions' => [
+                    // تُترك فارغة افتراضياً؛ يتم تعديلها من لوحة إدارة الوظائف لتحديد الأقسام المسموح بها
+                ],
+            ],
         ];
 
         foreach ($jobs as $job) {

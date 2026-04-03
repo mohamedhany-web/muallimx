@@ -1,6 +1,9 @@
-@extends('layouts.public')
+﻿@extends('layouts.public')
 
 @section('title', __('public.events_page_title') . ' - ' . __('public.site_suffix'))
+@section('meta_description', 'فعاليات وأحداث منصة MuallimX — ورش عمل، ندوات مباشرة، وأيام تدريبية للمعلمين.')
+@section('meta_keywords', 'فعاليات, أحداث, ورش عمل, MuallimX, ندوات مباشرة')
+@section('canonical_url', url('/events'))
 
 @section('content')
 <!-- Hero Section -->
@@ -59,3 +62,4 @@
     </div>
 </section>
 @endsection
+

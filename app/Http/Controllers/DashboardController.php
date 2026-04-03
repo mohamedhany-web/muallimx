@@ -33,8 +33,13 @@ class DashboardController extends Controller
             return redirect('/login')->with('error', 'حسابك غير نشط. يرجى التواصل مع الإدارة.');
         }
         
-        // التحقق من كون المستخدم موظف أولاً
+        // التحقق من كون المستخدم موظف
         if ($user->isEmployee()) {
+            // الموظف ذو دور RBAC مخصص → لوحة تحكم الأدمن بصلاحيات محدودة
+            if ($user->roles()->exists()) {
+                return redirect()->route('admin.dashboard');
+            }
+            // الموظف العادي → لوحة الموظفين
             return redirect()->route('employee.dashboard');
         }
         

@@ -61,91 +61,133 @@ Route::get('/storage/{path}', function ($path) {
     return response()->file($realPath, $headers);
 })->where('path', '.*')->name('storage.file')->middleware('web');
 
-// Sitemap Route
+// Sitemap Route — MuallimX SEO
 Route::get('/sitemap.xml', function() {
     $xmlEscape = static fn (?string $value): string => htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
     $urls = [];
 
-    $urls[] = [
-        'loc' => url('/'),
-        'lastmod' => now()->toDateString(),
-        'changefreq' => 'daily',
-        'priority' => '1.0',
+    // الصفحة الرئيسية
+    $urls[] = ['loc' => url('/'), 'lastmod' => now()->toDateString(), 'changefreq' => 'daily', 'priority' => '1.0'];
+
+    // الصفحات العامة الثابتة
+    $staticPages = [
+        ['url' => '/courses',      'priority' => '0.9', 'changefreq' => 'daily'],
+        ['url' => '/instructors',  'priority' => '0.8', 'changefreq' => 'weekly'],
+        ['url' => '/pricing',      'priority' => '0.8', 'changefreq' => 'weekly'],
+        ['url' => '/about',        'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['url' => '/contact',      'priority' => '0.7', 'changefreq' => 'monthly'],
+        ['url' => '/portfolio',    'priority' => '0.7', 'changefreq' => 'weekly'],
+        ['url' => '/faq',          'priority' => '0.7', 'changefreq' => 'monthly'],
+        ['url' => '/team',         'priority' => '0.6', 'changefreq' => 'monthly'],
+        ['url' => '/events',       'priority' => '0.6', 'changefreq' => 'weekly'],
+        ['url' => '/testimonials', 'priority' => '0.6', 'changefreq' => 'monthly'],
+        ['url' => '/partners',     'priority' => '0.6', 'changefreq' => 'monthly'],
+        ['url' => '/media',        'priority' => '0.6', 'changefreq' => 'weekly'],
+        ['url' => '/help',         'priority' => '0.6', 'changefreq' => 'monthly'],
+        ['url' => '/certificates', 'priority' => '0.5', 'changefreq' => 'weekly'],
+        ['url' => '/terms',        'priority' => '0.4', 'changefreq' => 'yearly'],
+        ['url' => '/privacy',      'priority' => '0.4', 'changefreq' => 'yearly'],
+        ['url' => '/refund',       'priority' => '0.4', 'changefreq' => 'yearly'],
     ];
 
-    $publicPages = [
-        ['url' => '/courses', 'priority' => '0.9', 'changefreq' => 'daily'],
-        ['url' => '/instructors', 'priority' => '0.8', 'changefreq' => 'weekly'],
-        ['url' => '/portfolio', 'priority' => '0.7', 'changefreq' => 'weekly'],
-        ['url' => '/about', 'priority' => '0.8', 'changefreq' => 'monthly'],
-        ['url' => '/contact', 'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['url' => '/pricing', 'priority' => '0.8', 'changefreq' => 'weekly'],
-        ['url' => '/faq', 'priority' => '0.7', 'changefreq' => 'monthly'],
-        ['url' => '/terms', 'priority' => '0.5', 'changefreq' => 'yearly'],
-        ['url' => '/privacy', 'priority' => '0.5', 'changefreq' => 'yearly'],
-    ];
-
-    foreach ($publicPages as $page) {
+    foreach ($staticPages as $page) {
         $urls[] = [
-            'loc' => url($page['url']),
-            'lastmod' => now()->toDateString(),
+            'loc'        => url($page['url']),
+            'lastmod'    => now()->toDateString(),
             'changefreq' => $page['changefreq'],
-            'priority' => $page['priority'],
+            'priority'   => $page['priority'],
         ];
     }
 
+    // الكورسات النشطة مع صورة (Image Sitemap)
     try {
         $courses = \App\Models\AdvancedCourse::where('is_active', true)
-            ->select('id', 'updated_at')
+            ->select('id', 'title', 'thumbnail', 'description', 'updated_at')
             ->orderBy('updated_at', 'desc')
             ->get();
 
         foreach ($courses as $course) {
-            $urls[] = [
-                'loc' => url('/course/' . $course->id),
-                'lastmod' => optional($course->updated_at)->format('Y-m-d') ?: now()->toDateString(),
+            $entry = [
+                'loc'        => url('/course/' . $course->id),
+                'lastmod'    => optional($course->updated_at)->format('Y-m-d') ?: now()->toDateString(),
                 'changefreq' => 'weekly',
-                'priority' => '0.8',
+                'priority'   => '0.8',
             ];
+            if ($course->thumbnail) {
+                $entry['image_loc']     = asset('storage/' . str_replace('\\', '/', $course->thumbnail));
+                $entry['image_title']   = $course->title ?? '';
+                $entry['image_caption'] = \Illuminate\Support\Str::limit(strip_tags($course->description ?? ''), 100);
+            }
+            $urls[] = $entry;
         }
-    } catch (\Exception $e) {
-        // Skip if table is unavailable during setup.
-    }
+    } catch (\Exception $e) {}
 
+    // المدربون النشطون مع صورة
     try {
         $instructors = \App\Models\User::whereIn('role', ['instructor', 'teacher'])
             ->where('is_active', true)
-            ->select('id', 'updated_at')
+            ->select('id', 'name', 'updated_at')
             ->orderBy('updated_at', 'desc')
             ->limit(1000)
             ->get();
 
         foreach ($instructors as $instructor) {
             $urls[] = [
-                'loc' => route('public.instructors.show', $instructor),
-                'lastmod' => optional($instructor->updated_at)->format('Y-m-d') ?: now()->toDateString(),
+                'loc'        => route('public.instructors.show', $instructor),
+                'lastmod'    => optional($instructor->updated_at)->format('Y-m-d') ?: now()->toDateString(),
                 'changefreq' => 'weekly',
-                'priority' => '0.7',
+                'priority'   => '0.7',
             ];
         }
-    } catch (\Exception $e) {
-        // Skip if users table is unavailable during setup.
-    }
+    } catch (\Exception $e) {}
 
-    $sitemap = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
-    $sitemap .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . PHP_EOL;
+    // مقالات Media المنشورة
+    try {
+        $mediaItems = \App\Models\Media::where('is_published', true)
+            ->select('id', 'updated_at')
+            ->orderBy('updated_at', 'desc')
+            ->limit(500)
+            ->get();
+
+        foreach ($mediaItems as $item) {
+            $urls[] = [
+                'loc'        => route('public.media.show', $item),
+                'lastmod'    => optional($item->updated_at)->format('Y-m-d') ?: now()->toDateString(),
+                'changefreq' => 'monthly',
+                'priority'   => '0.5',
+            ];
+        }
+    } catch (\Exception $e) {}
+
+    // بناء XML مع دعم Image Sitemap
+    $sitemap  = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
+    $sitemap .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' . PHP_EOL;
+    $sitemap .= '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">' . PHP_EOL;
+
     foreach ($urls as $entry) {
         $sitemap .= '  <url>' . PHP_EOL;
-        $sitemap .= '    <loc>' . $xmlEscape($entry['loc']) . '</loc>' . PHP_EOL;
-        $sitemap .= '    <lastmod>' . $xmlEscape($entry['lastmod']) . '</lastmod>' . PHP_EOL;
+        $sitemap .= '    <loc>'        . $xmlEscape($entry['loc'])        . '</loc>'        . PHP_EOL;
+        $sitemap .= '    <lastmod>'    . $xmlEscape($entry['lastmod'])    . '</lastmod>'    . PHP_EOL;
         $sitemap .= '    <changefreq>' . $xmlEscape($entry['changefreq']) . '</changefreq>' . PHP_EOL;
-        $sitemap .= '    <priority>' . $xmlEscape($entry['priority']) . '</priority>' . PHP_EOL;
+        $sitemap .= '    <priority>'   . $xmlEscape($entry['priority'])   . '</priority>'   . PHP_EOL;
+        if (!empty($entry['image_loc'])) {
+            $sitemap .= '    <image:image>' . PHP_EOL;
+            $sitemap .= '      <image:loc>'     . $xmlEscape($entry['image_loc'])     . '</image:loc>'     . PHP_EOL;
+            if (!empty($entry['image_title'])) {
+                $sitemap .= '      <image:title>'   . $xmlEscape($entry['image_title'])   . '</image:title>'   . PHP_EOL;
+            }
+            if (!empty($entry['image_caption'])) {
+                $sitemap .= '      <image:caption>' . $xmlEscape($entry['image_caption']) . '</image:caption>' . PHP_EOL;
+            }
+            $sitemap .= '    </image:image>' . PHP_EOL;
+        }
         $sitemap .= '  </url>' . PHP_EOL;
     }
     $sitemap .= '</urlset>';
 
     return response($sitemap, 200)
-        ->header('Content-Type', 'application/xml');
+        ->header('Content-Type', 'application/xml')
+        ->header('Cache-Control', 'public, max-age=3600');
 })->name('sitemap');
 
 // الصفحة الرئيسية (Home) - الترجمة عبر SetLocale في مجموعة web
@@ -1022,9 +1064,6 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/create', [\App\Http\Controllers\Admin\MessagesController::class, 'create'])->name('create');
             Route::post('/send-single', [\App\Http\Controllers\Admin\MessagesController::class, 'sendSingle'])->name('send-single');
             Route::post('/send-bulk', [\App\Http\Controllers\Admin\MessagesController::class, 'sendBulk'])->name('send-bulk');
-            Route::get('/{message}', [\App\Http\Controllers\Admin\MessagesController::class, 'show'])->name('show');
-            Route::post('/{message}/resend', [\App\Http\Controllers\Admin\MessagesController::class, 'resend'])->name('resend');
-            Route::delete('/{message}', [\App\Http\Controllers\Admin\MessagesController::class, 'destroy'])->name('destroy');
             
             // التقارير الشهرية
             Route::get('/monthly-reports', [\App\Http\Controllers\Admin\MessagesController::class, 'monthlyReports'])->name('monthly-reports');
@@ -1039,6 +1078,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/settings', [\App\Http\Controllers\Admin\WhatsAppSettingsController::class, 'settings'])->name('settings');
             Route::post('/save-api-settings', [\App\Http\Controllers\Admin\WhatsAppSettingsController::class, 'saveApiSettings'])->name('save-api-settings');
             Route::post('/test-api', [\App\Http\Controllers\Admin\WhatsAppSettingsController::class, 'testApi'])->name('test-api');
+
+            // مسارات عرض الرسائل الفردية يجب أن تأتي في النهاية حتى لا تعترض المسارات الثابتة
+            Route::get('/{message}', [\App\Http\Controllers\Admin\MessagesController::class, 'show'])->name('show');
+            Route::post('/{message}/resend', [\App\Http\Controllers\Admin\MessagesController::class, 'resend'])->name('resend');
+            Route::delete('/{message}', [\App\Http\Controllers\Admin\MessagesController::class, 'destroy'])->name('destroy');
         });
 
         // إدارة المحاسبة
@@ -1382,6 +1426,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/{liveSession}', [\App\Http\Controllers\Student\LiveSessionController::class, 'show'])->name('show');
             Route::post('/{liveSession}/join', [\App\Http\Controllers\Student\LiveSessionController::class, 'join'])->name('join');
             Route::post('/{liveSession}/leave', [\App\Http\Controllers\Student\LiveSessionController::class, 'leave'])->name('leave');
+            Route::get('/{liveSession}/status', [\App\Http\Controllers\Student\LiveSessionController::class, 'status'])->name('status');
         });
         // تسجيلات الجلسات (R2 — عرض للمنشور فقط)
         Route::get('/live-recordings', [\App\Http\Controllers\Student\LiveRecordingController::class, 'index'])->name('live-recordings.index');

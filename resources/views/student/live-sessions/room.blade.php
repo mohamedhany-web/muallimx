@@ -12,17 +12,48 @@
     <style>
         * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
         body { margin: 0; padding: 0; background: #0c1222; overflow: hidden; height: 100vh; }
-        #jitsi-container {
-            width: 100%;
-            flex: 1;
-            min-height: 0;
-            background: #0f172a;
-        }
+        #jitsi-container { width: 100%; flex: 1; min-height: 0; background: #0f172a; }
         .room-body { display: flex; flex-direction: column; height: calc(100vh - 72px); }
         #jitsi-container iframe { width: 100% !important; height: 100% !important; border: none; }
+
+        /* Session ended overlay */
+        #mx-session-ended {
+            display: none;
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(10,17,32,0.95);
+            flex-direction: column; align-items: center; justify-content: center;
+            gap: 16px;
+            backdrop-filter: blur(8px);
+        }
+        #mx-session-ended.show { display: flex; }
+        #mx-session-ended .mx-icon { font-size: 56px; color: #f87171; }
+        #mx-session-ended h2 { color: #f1f5f9; font-size: 20px; font-weight: 700; margin: 0; }
+        #mx-session-ended p  { color: #94a3b8; font-size: 14px; margin: 0; }
+        #mx-redir-bar {
+            width: 200px; height: 4px; background: rgba(148,163,184,0.2);
+            border-radius: 2px; overflow: hidden;
+        }
+        #mx-redir-fill {
+            height: 100%; background: #38bdf8; border-radius: 2px;
+            width: 0; transition: width 5s linear;
+        }
     </style>
 </head>
 <body class="bg-slate-950">
+
+    {{-- Session ended overlay --}}
+    <div id="mx-session-ended">
+        <div class="mx-icon"><i class="fas fa-broadcast-tower"></i></div>
+        <h2>انتهت الجلسة</h2>
+        <p>قام المدرب بإنهاء البث المباشر</p>
+        <div id="mx-redir-bar"><div id="mx-redir-fill"></div></div>
+        <p style="font-size:12px;color:#64748b;">سيتم توجيهك تلقائياً...</p>
+        <a href="{{ route('student.live-sessions.index') }}"
+           class="mt-2 inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-semibold">
+            <i class="fas fa-arrow-left"></i> العودة الآن
+        </a>
+    </div>
+
     {{-- شريط MuallimX العلوي --}}
     <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg">
         <div class="flex items-center gap-4">
@@ -55,15 +86,18 @@
         <main id="jitsi-container" role="application" aria-label="غرفة البث المباشر"></main>
     </div>
 
+    @php $whiteboardRole = 'student'; @endphp
     @include('partials.live-whiteboard')
     @include('partials.jitsi-iframe-media-allow')
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>
-        const domain = '{{ $jitsiDomain }}';
+        const domain    = '{{ $jitsiDomain }}';
+        const indexUrl  = '{{ route("student.live-sessions.index") }}';
         const jitsiRoot = document.querySelector('#jitsi-container');
         if (typeof muallimxEnsureJitsiIframeMediaAllow === 'function') {
             muallimxEnsureJitsiIframeMediaAllow(jitsiRoot);
         }
+
         const options = {
             roomName: '{{ $liveSession->room_name }}',
             parentNode: jitsiRoot,
@@ -99,14 +133,51 @@
                 SHOW_WATERMARK_FOR_GUESTS: false,
                 DEFAULT_BACKGROUND: '#0f172a',
                 DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
-                FILM_STRIP_MAX_HEIGHT: 100,
+                FILM_STRIP_MAX_HEIGHT: 120, // كاميرات الطلاب تبقى ظاهرة حتى عند مشاركة الشاشة
             }
         };
+
         const api = new JitsiMeetExternalAPI(domain, options);
 
+        /* ══════════════════════════════════════════════
+           إعادة التوجيه عند انتهاء الجلسة
+        ══════════════════════════════════════════════ */
+        function showSessionEndedAndRedirect() {
+            var overlay = document.getElementById('mx-session-ended');
+            var fill    = document.getElementById('mx-redir-fill');
+            overlay.classList.add('show');
+            // شريط التقدم
+            setTimeout(function() { fill.style.width = '100%'; }, 100);
+            // توجيه تلقائي بعد 5 ثوانٍ
+            setTimeout(function() {
+                window.location.href = indexUrl;
+            }, 5500);
+        }
+
+        // عند مغادرة الطالب نفسه
         api.addEventListener('readyToClose', function() {
-            window.location.href = '{{ route("student.live-sessions.index") }}';
+            window.location.href = indexUrl;
         });
+
+        // عند إنهاء المعلم للجلسة أو قطع الاتصال
+        api.addEventListener('videoConferenceLeft', function() {
+            showSessionEndedAndRedirect();
+        });
+
+        // احتياط إضافي - فحص حالة الجلسة كل 30 ثانية
+        setInterval(async function() {
+            try {
+                const res = await fetch('{{ route("student.live-sessions.status", $liveSession) }}', {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.status === 'ended' || data.ended === true) {
+                        showSessionEndedAndRedirect();
+                    }
+                }
+            } catch (e) { /* تجاهل أخطاء الشبكة */ }
+        }, 30000);
     </script>
 </body>
 </html>

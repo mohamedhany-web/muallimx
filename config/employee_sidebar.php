@@ -1,12 +1,29 @@
 <?php
 
 /**
- * عناصر القائمة: المفتاح = نفس مفتاح permissions في employee_jobs.
- * route = اسم مسار Laravel.
+ * خريطة السايدبار للموظفين.
+ *
+ * كل عنصر يحتوي على:
+ *   permission => اسم صلاحية RBAC (من جدول permissions) مطلوبة لإظهار هذا العنصر.
+ *                 إذا لم يُحدَّد، يُستخدَم المفتاح نفسه (key).
+ *
+ * الصلاحيات المتاحة في النظام:
+ *   manage.orders      → قسم المبيعات
+ *   manage.invoices    → قسم المحاسبة
+ *   manage.users       → قسم الموارد البشرية
+ *   manage.tasks       → قسم المهام والإجازات
+ *   view.statistics    → قسم التقارير + الإشراف
+ *   view.calendar      → قسم التقويم
+ *   manage.messages    → إدارة الرسائل
+ *   view.dashboard     → لوحة التحكم الرئيسية
+ *   manage.coupons     → إدارة الكوبونات
+ *   manage.referrals   → إدارة الإحالات
+ *   manage.courses     → إدارة الكورسات
  */
 return [
     'items' => [
         'dashboard' => [
+            // متاح دائماً لكل موظف (alwaysAllowed في employeeCan)
             'label' => 'لوحة التحكم',
             'icon' => 'fas fa-home',
             'route' => 'employee.dashboard',
@@ -14,6 +31,7 @@ return [
             'active_class' => 'bg-blue-600 shadow-lg',
         ],
         'desk_accountant' => [
+            'permission' => 'manage.invoices',
             'label' => 'لوحة المحاسب',
             'icon' => 'fas fa-calculator',
             'route' => 'employee.accountant-desk.index',
@@ -21,6 +39,7 @@ return [
             'active_class' => 'bg-amber-600 shadow-lg',
         ],
         'sales_desk' => [
+            'permission' => 'manage.orders',
             'label' => 'لوحة المبيعات',
             'icon' => 'fas fa-chart-line',
             'route' => 'employee.sales.desk',
@@ -28,7 +47,7 @@ return [
             'active_class' => 'bg-emerald-600 shadow-lg',
         ],
         'sales_orders' => [
-            'permission' => 'sales_desk',
+            'permission' => 'manage.orders',
             'label' => 'طلبات المبيعات',
             'icon' => 'fas fa-shopping-bag',
             'route' => 'employee.sales.orders.index',
@@ -36,6 +55,7 @@ return [
             'active_class' => 'bg-emerald-700 shadow-lg',
         ],
         'hr_desk' => [
+            'permission' => 'manage.users',
             'label' => 'لوحة الموارد البشرية',
             'icon' => 'fas fa-users',
             'route' => 'employee.hr-desk.index',
@@ -43,7 +63,7 @@ return [
             'active_class' => 'bg-rose-600 shadow-lg',
         ],
         'hr_leave_requests' => [
-            'permission' => 'hr_desk',
+            'permission' => 'manage.users',
             'label' => 'مراجعة الإجازات',
             'icon' => 'fas fa-calendar-check',
             'route' => 'employee.hr.leaves.index',
@@ -51,7 +71,7 @@ return [
             'active_class' => 'bg-rose-700 shadow-lg',
         ],
         'hr_directory' => [
-            'permission' => 'hr_desk',
+            'permission' => 'manage.users',
             'label' => 'دليل الموظفين',
             'icon' => 'fas fa-address-book',
             'route' => 'employee.hr.employees.index',
@@ -59,7 +79,7 @@ return [
             'active_class' => 'bg-indigo-700 shadow-lg',
         ],
         'hr_recruitment' => [
-            'permission' => 'hr_desk',
+            'permission' => 'manage.users',
             'label' => 'التوظيف والمقابلات',
             'icon' => 'fas fa-user-tie',
             'route' => 'employee.hr.recruitment.index',
@@ -67,6 +87,7 @@ return [
             'active_class' => 'bg-violet-700 shadow-lg',
         ],
         'supervision_desk' => [
+            'permission' => 'view.statistics',
             'label' => 'لوحة الإشراف',
             'icon' => 'fas fa-clipboard-check',
             'route' => 'employee.supervision-desk.index',
@@ -74,13 +95,15 @@ return [
             'active_class' => 'bg-indigo-600 shadow-lg',
         ],
         'public_catalog' => [
-            'label' => 'تصفح الكورسات (العامة)',
+            'permission' => 'manage.courses',
+            'label' => 'تصفح الكورسات',
             'icon' => 'fas fa-graduation-cap',
             'route' => 'public.courses',
             'route_patterns' => ['public.courses', 'public.course.*'],
             'active_class' => 'bg-teal-600 shadow-lg',
         ],
         'tasks' => [
+            'permission' => 'manage.tasks',
             'label' => 'مهامي',
             'icon' => 'fas fa-tasks',
             'route' => 'employee.tasks.index',
@@ -88,6 +111,7 @@ return [
             'active_class' => 'bg-sky-600 shadow-lg',
         ],
         'leaves' => [
+            'permission' => 'manage.tasks',
             'label' => 'إجازاتي',
             'icon' => 'fas fa-umbrella-beach',
             'route' => 'employee.leaves.index',
@@ -95,6 +119,7 @@ return [
             'active_class' => 'bg-cyan-600 shadow-lg',
         ],
         'accounting' => [
+            'permission' => 'manage.invoices',
             'label' => 'محاسبتي الشخصية',
             'icon' => 'fas fa-wallet',
             'route' => 'employee.accounting.index',
@@ -102,6 +127,7 @@ return [
             'active_class' => 'bg-slate-500 shadow-lg',
         ],
         'agreements' => [
+            'permission' => 'manage.invoices',
             'label' => 'اتفاقيات العمل',
             'icon' => 'fas fa-file-contract',
             'route' => 'employee.agreements.index',
@@ -109,13 +135,15 @@ return [
             'active_class' => 'bg-violet-600 shadow-lg',
         ],
         'reports' => [
+            'permission' => 'view.statistics',
             'label' => 'تقاريري',
-            'icon' => 'fas fa-chart-line',
+            'icon' => 'fas fa-chart-bar',
             'route' => 'employee.reports',
             'route_patterns' => ['employee.reports'],
             'active_class' => 'bg-purple-600 shadow-lg',
         ],
         'calendar' => [
+            'permission' => 'view.calendar',
             'label' => 'التقويم',
             'icon' => 'fas fa-calendar-alt',
             'route' => 'employee.calendar',
@@ -123,6 +151,7 @@ return [
             'active_class' => 'bg-orange-600 shadow-lg',
         ],
         'profile' => [
+            // متاح دائماً لكل موظف (alwaysAllowed)
             'label' => 'الملف الشخصي',
             'icon' => 'fas fa-user',
             'route' => 'employee.profile',
@@ -130,6 +159,7 @@ return [
             'active_class' => 'bg-blue-600 shadow-lg',
         ],
         'notifications' => [
+            // متاح دائماً لكل موظف (alwaysAllowed)
             'label' => 'الإشعارات',
             'icon' => 'fas fa-bell',
             'route' => 'employee.notifications',
@@ -137,6 +167,7 @@ return [
             'active_class' => 'bg-blue-600 shadow-lg',
         ],
         'settings' => [
+            // متاح دائماً لكل موظف (alwaysAllowed)
             'label' => 'الإعدادات',
             'icon' => 'fas fa-cog',
             'route' => 'employee.settings',
@@ -146,56 +177,68 @@ return [
     ],
 
     /*
-     * قائمة كل وظيفة: أقسام عربية + ترتيب العناصر حسب ما يلزم الوظيفة.
-     * يُعرض فقط ما وُجد في permissions للموظف (employeeCan).
+     * قائمة كل وظيفة محددة: الأقسام وترتيب العناصر.
+     * يُعرض فقط ما يملك الموظف صلاحيته (employeeCan).
      */
     'menus_by_job' => [
         'accountant' => [
             ['title' => 'القيادة', 'keys' => ['dashboard']],
-            ['title' => 'عمل المحاسبة والمالية', 'keys' => ['desk_accountant', 'agreements', 'accounting']],
+            ['title' => 'المحاسبة والمالية', 'keys' => ['desk_accountant', 'agreements', 'accounting']],
             ['title' => 'المهام والإجازات', 'keys' => ['tasks', 'leaves']],
             ['title' => 'التخطيط والتقارير', 'keys' => ['calendar', 'reports']],
-            ['title' => 'حسابي والتنبيهات', 'keys' => ['profile', 'notifications', 'settings']],
+            ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
         'sales' => [
-            ['title' => 'القيادة والمبيعات', 'keys' => ['dashboard', 'sales_desk', 'sales_orders', 'sales_leads']],
-            ['title' => 'الكتالوج والعروض', 'keys' => ['public_catalog']],
+            ['title' => 'القيادة والمبيعات', 'keys' => ['dashboard', 'sales_desk', 'sales_orders']],
+            ['title' => 'الكتالوج', 'keys' => ['public_catalog']],
             ['title' => 'المهام والمتابعة', 'keys' => ['tasks', 'leaves']],
-            ['title' => 'التخطيط والتقارير', 'keys' => ['calendar', 'reports']],
-            ['title' => 'حسابي والتنبيهات', 'keys' => ['profile', 'notifications', 'settings']],
+            ['title' => 'التقارير', 'keys' => ['reports', 'calendar']],
+            ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
         'hr' => [
             ['title' => 'القيادة والموارد البشرية', 'keys' => ['dashboard', 'hr_desk', 'hr_leave_requests', 'hr_directory', 'hr_recruitment']],
             ['title' => 'مهامي وإجازاتي', 'keys' => ['tasks', 'leaves']],
-            ['title' => 'التخطيط والتقارير', 'keys' => ['calendar', 'reports']],
-            ['title' => 'حسابي والتنبيهات', 'keys' => ['profile', 'notifications', 'settings']],
+            ['title' => 'التقارير', 'keys' => ['reports', 'calendar']],
+            ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
         'general_supervision' => [
             ['title' => 'القيادة والإشراف', 'keys' => ['dashboard', 'supervision_desk']],
             ['title' => 'المهام والإجازات', 'keys' => ['tasks', 'leaves']],
-            ['title' => 'التخطيط والتقارير', 'keys' => ['calendar', 'reports']],
-            ['title' => 'حسابي والتنبيهات', 'keys' => ['profile', 'notifications', 'settings']],
+            ['title' => 'التقارير', 'keys' => ['reports', 'calendar']],
+            ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
         'supervisor' => [
             ['title' => 'القيادة والإشراف', 'keys' => ['dashboard', 'supervision_desk']],
             ['title' => 'المهام والإجازات', 'keys' => ['tasks', 'leaves']],
-            ['title' => 'التخطيط والتقارير', 'keys' => ['calendar', 'reports']],
-            ['title' => 'حسابي والتنبيهات', 'keys' => ['profile', 'notifications', 'settings']],
+            ['title' => 'التقارير', 'keys' => ['reports', 'calendar']],
+            ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
+        ],
+        /*
+         * الموظف المخصص (custom): يظهر كل الأقسام مُرشَّحة بصلاحياته RBAC.
+         */
+        'custom' => [
+            ['title' => 'القيادة', 'keys' => ['dashboard']],
+            ['title' => 'المبيعات', 'keys' => ['sales_desk', 'sales_orders']],
+            ['title' => 'المحاسبة والمالية', 'keys' => ['desk_accountant', 'agreements', 'accounting']],
+            ['title' => 'الموارد البشرية', 'keys' => ['hr_desk', 'hr_leave_requests', 'hr_directory', 'hr_recruitment']],
+            ['title' => 'الإشراف', 'keys' => ['supervision_desk']],
+            ['title' => 'الكورسات', 'keys' => ['public_catalog']],
+            ['title' => 'المهام والإجازات', 'keys' => ['tasks', 'leaves']],
+            ['title' => 'التقارير والتقويم', 'keys' => ['reports', 'calendar']],
+            ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
     ],
 
-    /** موظف بلا وظيفة محددة أو كود غير معروف: كل المفاتيح المعروفة بالترتيب العام */
+    /** موظف بلا وظيفة محددة أو كود غير معروف: كل الأقسام مرشَّحة بالصلاحيات */
     'fallback_sections' => [
-        [
-            'title' => null,
-            'keys' => [
-                'dashboard',
-                'desk_accountant', 'sales_desk', 'sales_orders', 'sales_leads', 'hr_desk', 'hr_leave_requests', 'hr_directory', 'hr_recruitment', 'supervision_desk',
-                'public_catalog',
-                'tasks', 'leaves', 'accounting', 'agreements',
-                'reports', 'calendar',
-                'profile', 'notifications', 'settings',
-            ],
-        ],
+        ['title' => 'القيادة', 'keys' => ['dashboard']],
+        ['title' => 'المبيعات', 'keys' => ['sales_desk', 'sales_orders']],
+        ['title' => 'المحاسبة والمالية', 'keys' => ['desk_accountant', 'agreements', 'accounting']],
+        ['title' => 'الموارد البشرية', 'keys' => ['hr_desk', 'hr_leave_requests', 'hr_directory', 'hr_recruitment']],
+        ['title' => 'الإشراف', 'keys' => ['supervision_desk']],
+        ['title' => 'الكورسات', 'keys' => ['public_catalog']],
+        ['title' => 'المهام والإجازات', 'keys' => ['tasks', 'leaves']],
+        ['title' => 'التقارير والتقويم', 'keys' => ['reports', 'calendar']],
+        ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
     ],
 ];

@@ -70,6 +70,49 @@
                     @enderror
                 </div>
 
+                <!-- خريطة الصلاحيات → أقسام السايدبار -->
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-map text-blue-600"></i>
+                        <h4 class="text-sm font-semibold text-blue-800">دليل: أي صلاحية تُظهر أي قسم في سايدبار الموظف؟</h4>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
+                        @php
+                        $sidebarMap = [
+                            ['perm' => 'manage.orders',   'icon' => 'fa-chart-line',    'color' => 'emerald', 'sections' => 'لوحة المبيعات + طلبات المبيعات'],
+                            ['perm' => 'manage.invoices', 'icon' => 'fa-calculator',    'color' => 'amber',   'sections' => 'لوحة المحاسب + محاسبتي + الاتفاقيات'],
+                            ['perm' => 'manage.users',    'icon' => 'fa-users',         'color' => 'rose',    'sections' => 'الموارد البشرية + الإجازات + الدليل + التوظيف'],
+                            ['perm' => 'manage.tasks',    'icon' => 'fa-tasks',         'color' => 'sky',     'sections' => 'مهامي + إجازاتي'],
+                            ['perm' => 'view.statistics', 'icon' => 'fa-chart-bar',     'color' => 'purple',  'sections' => 'تقاريري + لوحة الإشراف'],
+                            ['perm' => 'view.calendar',   'icon' => 'fa-calendar-alt',  'color' => 'orange',  'sections' => 'التقويم'],
+                            ['perm' => 'manage.courses',  'icon' => 'fa-graduation-cap','color' => 'teal',    'sections' => 'تصفح الكورسات'],
+                        ];
+                        $colorMap = [
+                            'emerald' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                            'amber'   => 'bg-amber-100 text-amber-800 border-amber-200',
+                            'rose'    => 'bg-rose-100 text-rose-800 border-rose-200',
+                            'sky'     => 'bg-sky-100 text-sky-800 border-sky-200',
+                            'purple'  => 'bg-purple-100 text-purple-800 border-purple-200',
+                            'orange'  => 'bg-orange-100 text-orange-800 border-orange-200',
+                            'teal'    => 'bg-teal-100 text-teal-800 border-teal-200',
+                        ];
+                        @endphp
+                        @foreach($sidebarMap as $item)
+                        <div class="flex items-start gap-2 p-2 rounded-lg border {{ $colorMap[$item['color']] }}">
+                            <i class="fas {{ $item['icon'] }} mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <code class="font-mono font-bold text-xs block">{{ $item['perm'] }}</code>
+                                <span class="text-xs opacity-80">{{ $item['sections'] }}</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    <p class="mt-2 text-xs text-blue-600">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        العناصر: لوحة التحكم، الملف الشخصي، الإشعارات، الإعدادات — تظهر دائماً لكل موظف بغض النظر عن الصلاحيات.
+                    </p>
+                </div>
+
                 <!-- الصلاحيات -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-3">

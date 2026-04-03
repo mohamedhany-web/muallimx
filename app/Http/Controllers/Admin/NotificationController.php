@@ -295,14 +295,19 @@ class NotificationController extends Controller
      */
     public function show(Notification $notification)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+        // التحقق من تسجيل الدخول
+        if (!Auth::check()) {
             abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
         }
 
-        // التحقق من ملكية الإشعار (فقط المرسل يمكنه رؤيته)
-        if ($notification->sender_id !== Auth::id()) {
+        // السماح برؤية الإشعار إذا كان المستخدم هو المرسل أو المستقبل
+        if ($notification->sender_id !== Auth::id() && $notification->user_id !== Auth::id()) {
             abort(403, 'غير مصرح لك بعرض هذا الإشعار');
+        }
+
+        // تعليم الإشعار كمقروء إذا كان المستخدم هو المستقبل
+        if ($notification->user_id === Auth::id() && !$notification->is_read) {
+            $notification->markAsRead();
         }
 
         $notification->load(['user', 'sender']);

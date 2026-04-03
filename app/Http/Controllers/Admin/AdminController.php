@@ -689,8 +689,12 @@ class AdminController extends Controller
                 $defaultCountry = ['code' => 'SA', 'dial_code' => '+966', 'name_ar' => 'السعودية', 'name_en' => 'Saudi Arabia'];
             }
 
+            // الأدوار المخصصة (RBAC) لربط المستخدم بأدوار إضافية داخل لوحة الأدمن
+            $roles = \App\Models\Role::orderBy('display_name')->get();
+
             // إجبار الرندر داخل try لالتقاط أي خطأ في الـ Blade/Layout
             $view = view('admin.users.create', compact('phoneCountries', 'defaultCountry'))
+                ->with('roles', $roles)
                 ->with('errors', session('errors', new ViewErrorBag()));
             $rendered = $view->render();
 
@@ -742,6 +746,7 @@ class AdminController extends Controller
             'role' => $request->input('role'),
             'is_active' => $isActive,
             'bio' => strip_tags(trim($request->input('bio', ''))),
+            'rbac_role' => $request->input('rbac_role'),
         ];
 
         // Validation محسن
@@ -772,6 +777,7 @@ class AdminController extends Controller
             ],
             'is_active' => ['nullable'],
             'bio' => ['nullable', 'string', 'max:1000'],
+            'rbac_role' => ['nullable', 'integer', 'exists:roles,id'],
         ], [
             'name.required' => 'الاسم مطلوب',
             'name.regex' => 'الاسم يجب أن يحتوي على أحرف عربية فقط',
@@ -825,6 +831,9 @@ class AdminController extends Controller
             ]);
 
             // إنشاء المستخدم باستخدام Mass Assignment Protection (fillable)
+            // إذا تم اختيار دور RBAC مخصص، نعامِل المستخدم كموظف (لوحة employee)
+            $isEmployee = !empty($sanitizedData['rbac_role']);
+
             $user = User::create([
                 'name' => $sanitizedData['name'],
                 'email' => $sanitizedData['email'],
@@ -832,8 +841,25 @@ class AdminController extends Controller
                 'password' => Hash::make($sanitizedData['password']), // حماية كلمة المرور
                 'role' => $sanitizedData['role'],
                 'is_active' => $sanitizedData['is_active'],
+                'is_employee' => $isEmployee,
                 'bio' => !empty($sanitizedData['bio']) ? $sanitizedData['bio'] : null,
             ]);
+
+            // ربط دور لوحة التحكم (RBAC) بالمستخدم إن تم اختياره
+            if (!empty($sanitizedData['rbac_role'])) {
+                try {
+                    $rbacRole = \App\Models\Role::find($sanitizedData['rbac_role']);
+                    if ($rbacRole) {
+                        $user->assignRole($rbacRole);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to attach RBAC role to user on create', [
+                        'user_id' => $user->id,
+                        'rbac_role_id' => $sanitizedData['rbac_role'],
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             Log::info('User created successfully', ['user_id' => $user->id]);
 
