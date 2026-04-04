@@ -1,48 +1,48 @@
-@php
+<?php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
-@endphp
+?>
 <!DOCTYPE html>
-<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
+<html lang="<?php echo e($locale); ?>" dir="<?php echo e($isRtl ? 'rtl' : 'ltr'); ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>{{ __('public.instructors_page_title') }} - {{ __('public.site_suffix') }}</title>
-    <meta name="title"       content="{{ __('public.instructors_page_title') }} - {{ __('public.site_suffix') }}">
-    <meta name="description" content="{{ __('public.instructors_subtitle') }}">
+    <title><?php echo e(__('public.instructors_page_title')); ?> - <?php echo e(__('public.site_suffix')); ?></title>
+    <meta name="title"       content="<?php echo e(__('public.instructors_page_title')); ?> - <?php echo e(__('public.site_suffix')); ?>">
+    <meta name="description" content="<?php echo e(__('public.instructors_subtitle')); ?>">
     <meta name="keywords"    content="مدربون أونلاين, معلمون محترفون, مدرب معتمد, MuallimX, تدريس أونلاين">
     <meta name="author"      content="MuallimX">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#283593">
-    <link rel="canonical"    href="{{ url('/instructors') }}">
-    <link rel="alternate" hreflang="ar"        href="{{ url('/instructors') }}?lang=ar">
-    <link rel="alternate" hreflang="en"        href="{{ url('/instructors') }}?lang=en">
-    <link rel="alternate" hreflang="x-default" href="{{ url('/instructors') }}">
+    <link rel="canonical"    href="<?php echo e(url('/instructors')); ?>">
+    <link rel="alternate" hreflang="ar"        href="<?php echo e(url('/instructors')); ?>?lang=ar">
+    <link rel="alternate" hreflang="en"        href="<?php echo e(url('/instructors')); ?>?lang=en">
+    <link rel="alternate" hreflang="x-default" href="<?php echo e(url('/instructors')); ?>">
     <!-- Open Graph -->
     <meta property="og:type"             content="website">
-    <meta property="og:url"              content="{{ url('/instructors') }}">
-    <meta property="og:title"            content="{{ __('public.instructors_page_title') }} - MuallimX">
-    <meta property="og:description"      content="{{ __('public.instructors_subtitle') }}">
-    <meta property="og:image"            content="{{ asset('images/og-image.jpg') }}">
+    <meta property="og:url"              content="<?php echo e(url('/instructors')); ?>">
+    <meta property="og:title"            content="<?php echo e(__('public.instructors_page_title')); ?> - MuallimX">
+    <meta property="og:description"      content="<?php echo e(__('public.instructors_subtitle')); ?>">
+    <meta property="og:image"            content="<?php echo e(asset('images/og-image.jpg')); ?>">
     <meta property="og:image:alt"        content="مدربو MuallimX">
     <meta property="og:image:width"      content="1200">
     <meta property="og:image:height"     content="630">
-    <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
+    <meta property="og:locale"           content="<?php echo e($locale === 'ar' ? 'ar_AR' : 'en_US'); ?>">
     <meta property="og:site_name"        content="MuallimX">
     <!-- Twitter Card -->
     <meta name="twitter:card"        content="summary_large_image">
     <meta name="twitter:site"        content="@MuallimX">
-    <meta name="twitter:url"         content="{{ url('/instructors') }}">
-    <meta name="twitter:title"       content="{{ __('public.instructors_page_title') }} - MuallimX">
-    <meta name="twitter:description" content="{{ __('public.instructors_subtitle') }}">
-    <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
+    <meta name="twitter:url"         content="<?php echo e(url('/instructors')); ?>">
+    <meta name="twitter:title"       content="<?php echo e(__('public.instructors_page_title')); ?> - MuallimX">
+    <meta name="twitter:description" content="<?php echo e(__('public.instructors_subtitle')); ?>">
+    <meta name="twitter:image"       content="<?php echo e(asset('images/og-image.jpg')); ?>">
+    <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo e(asset('logo-removebg-preview.png')); ?>">
     <!-- BreadcrumbList JSON-LD -->
     <script type="application/ld+json">
-    {"@@context":"https://schema.org","@@type":"BreadcrumbList","itemListElement":[{"@@type":"ListItem","position":1,"name":"الرئيسية","item":"{{ url('/') }}"},{"@@type":"ListItem","position":2,"name":"المدربون","item":"{{ url('/instructors') }}"}]}
+    {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"الرئيسية","item":"<?php echo e(url('/')); ?>"},{"@type":"ListItem","position":2,"name":"المدربون","item":"<?php echo e(url('/instructors')); ?>"}]}
     </script>
-    @include('partials.seo-jsonld', ['jsonldType' => 'website'])
+    <?php echo $__env->make('partials.seo-jsonld', ['jsonldType' => 'website'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
@@ -108,10 +108,10 @@
 </head>
 <body class="font-body text-slate-800">
     <div id="scroll-progress"></div>
-    @include('components.unified-navbar')
+    <?php echo $__env->make('components.unified-navbar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <main class="flex-1">
-        {{-- ══════ HERO ══════ --}}
+        
         <section class="pt-10 sm:pt-14 lg:pt-16 pb-10 sm:pb-12 overflow-hidden relative" style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.65),transparent 28%),radial-gradient(circle at 88% 20%,rgba(40,53,147,.10),transparent 30%),linear-gradient(180deg,#f4f6ff 0%,#fbfbff 55%,#ffffff 100%)">
             <div class="absolute inset-0 pointer-events-none opacity-40" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.08) 1px,transparent 0);background-size:30px 30px"></div>
 
@@ -120,24 +120,27 @@
                     <div class="reveal">
                         <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-6" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
                             <i class="fas fa-chalkboard-teacher"></i>
-                            {{ __('public.instructors_page_title') }}
+                            <?php echo e(__('public.instructors_page_title')); ?>
+
                         </span>
                     </div>
                     <h1 class="reveal s1 font-heading text-[2rem] sm:text-[2.8rem] lg:text-[3.35rem] leading-[1.22] font-black text-mx-indigo mb-5">
-                        {{ __('public.instructors_heading') }}
+                        <?php echo e(__('public.instructors_heading')); ?>
+
                     </h1>
                     <p class="reveal s2 text-slate-600 text-base sm:text-lg leading-8 max-w-3xl mx-auto mb-7">
-                        {{ __('public.instructors_subtitle') }}
+                        <?php echo e(__('public.instructors_subtitle')); ?>
+
                     </p>
 
-                    {{-- Quick stats --}}
+                    
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-8 reveal s3 max-w-xl mx-auto">
                         <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                            <p class="text-3xl sm:text-4xl font-black text-mx-indigo">{{ $profiles->count() }}</p>
+                            <p class="text-3xl sm:text-4xl font-black text-mx-indigo"><?php echo e($profiles->count()); ?></p>
                             <p class="text-xs sm:text-sm text-slate-600 mt-1">مدرّب معتمد</p>
                         </article>
                         <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#FFE5F7] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                            <p class="text-3xl sm:text-4xl font-black text-[#FB5607]">{{ $profiles->sum('courses_count') }}</p>
+                            <p class="text-3xl sm:text-4xl font-black text-[#FB5607]"><?php echo e($profiles->sum('courses_count')); ?></p>
                             <p class="text-xs sm:text-sm text-slate-600 mt-1">كورس نشط</p>
                         </article>
                     </div>
@@ -145,7 +148,7 @@
             </div>
         </section>
 
-        {{-- ══════ INSTRUCTORS GRID ══════ --}}
+        
         <section class="py-20 md:py-28 bg-white">
             <div class="container-1200">
                 <div class="text-center max-w-3xl mx-auto mb-14 reveal">
@@ -157,16 +160,16 @@
                     <p class="text-slate-600 leading-8">يتم ترتيب الظهور تلقائياً حسب مزايا الباقة التسويقية (الأولوية، الأيام المميزة، والمزايا المفعلة).</p>
                 </div>
 
-                @if($profiles->isNotEmpty())
+                <?php if($profiles->isNotEmpty()): ?>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                    @foreach($profiles as $idx => $p)
-                    <div class="reveal s{{ min($idx + 1, 4) }} card-base hover-lift group !p-0 overflow-hidden flex flex-col">
-                    <a href="{{ route('public.instructors.show', $p->user) }}" class="block flex-1 min-h-0">
+                    <?php $__currentLoopData = $profiles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <div class="reveal s<?php echo e(min($idx + 1, 4)); ?> card-base hover-lift group !p-0 overflow-hidden flex flex-col">
+                    <a href="<?php echo e(route('public.instructors.show', $p->user)); ?>" class="block flex-1 min-h-0">
 
-                        {{-- Photo section --}}
+                        
                         <div class="relative aspect-[4/3] overflow-hidden" style="background:linear-gradient(135deg,#e9edff,#f8f9ff)">
-                            @if($p->photo_path)
-                                <img src="{{ $p->photo_url }}" alt="{{ $p->user->name }}"
+                            <?php if($p->photo_path): ?>
+                                <img src="<?php echo e($p->photo_url); ?>" alt="<?php echo e($p->user->name); ?>"
                                      class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                                      onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden')">
                                 <div class="hidden absolute inset-0 flex items-center justify-center" style="background:linear-gradient(135deg,#e9edff,#f8f9ff)">
@@ -174,155 +177,159 @@
                                         <i class="fas fa-user text-[#283593]/60 text-4xl"></i>
                                     </div>
                                 </div>
-                            @else
+                            <?php else: ?>
                                 <div class="absolute inset-0 flex items-center justify-center">
                                     <div class="w-24 h-24 rounded-full bg-[#283593]/10 flex items-center justify-center">
                                         <i class="fas fa-user text-[#283593]/60 text-4xl"></i>
                                     </div>
                                 </div>
-                            @endif
+                            <?php endif; ?>
 
-                            {{-- Gradient overlay --}}
+                            
                             <div class="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent"></div>
 
-                            {{-- Courses count badge --}}
-                            @if($p->courses_count > 0)
-                            <span class="absolute top-3 {{ $isRtl?'right':'left' }}-3 px-3 py-1.5 rounded-full bg-[#283593] text-white text-[11px] font-bold flex items-center gap-1.5 shadow-lg">
+                            
+                            <?php if($p->courses_count > 0): ?>
+                            <span class="absolute top-3 <?php echo e($isRtl?'right':'left'); ?>-3 px-3 py-1.5 rounded-full bg-[#283593] text-white text-[11px] font-bold flex items-center gap-1.5 shadow-lg">
                                 <i class="fas fa-book-open text-[9px]"></i>
-                                {{ $p->courses_count }} {{ $p->courses_count > 1 ? 'كورسات' : 'كورس' }}
-                            </span>
-                            @endif
+                                <?php echo e($p->courses_count); ?> <?php echo e($p->courses_count > 1 ? 'كورسات' : 'كورس'); ?>
 
-                            @if(!empty($p->marketing_featured_today))
-                            <span class="absolute top-3 {{ $isRtl?'left':'right' }}-3 px-3 py-1.5 rounded-full bg-[#FB5607] text-white text-[11px] font-bold flex items-center gap-1.5 shadow-lg">
+                            </span>
+                            <?php endif; ?>
+
+                            <?php if(!empty($p->marketing_featured_today)): ?>
+                            <span class="absolute top-3 <?php echo e($isRtl?'left':'right'); ?>-3 px-3 py-1.5 rounded-full bg-[#FB5607] text-white text-[11px] font-bold flex items-center gap-1.5 shadow-lg">
                                 <i class="fas fa-bolt text-[9px]"></i>
                                 Featured
                             </span>
-                            @endif
+                            <?php endif; ?>
 
-                            {{-- Social links --}}
-                            <div class="absolute bottom-3 {{ $isRtl?'right':'left' }}-3 flex gap-2">
-                                @if(!empty($p->social_links['linkedin']))
+                            
+                            <div class="absolute bottom-3 <?php echo e($isRtl?'right':'left'); ?>-3 flex gap-2">
+                                <?php if(!empty($p->social_links['linkedin'])): ?>
                                 <span role="link" tabindex="0"
-                                      data-url="{{ $p->social_links['linkedin'] }}"
+                                      data-url="<?php echo e($p->social_links['linkedin']); ?>"
                                       onclick="event.preventDefault();event.stopPropagation();window.open(this.dataset.url,'_blank')"
                                       class="w-9 h-9 rounded-xl bg-[#0A66C2] text-white flex items-center justify-center shadow-lg hover:bg-[#004182] hover:scale-110 transition-all cursor-pointer"
                                       title="LinkedIn">
                                     <i class="fab fa-linkedin-in text-sm"></i>
                                 </span>
-                                @endif
-                                @if(!empty($p->social_links['twitter']))
+                                <?php endif; ?>
+                                <?php if(!empty($p->social_links['twitter'])): ?>
                                 <span role="link" tabindex="0"
-                                      data-url="{{ $p->social_links['twitter'] }}"
+                                      data-url="<?php echo e($p->social_links['twitter']); ?>"
                                       onclick="event.preventDefault();event.stopPropagation();window.open(this.dataset.url,'_blank')"
                                       class="w-9 h-9 rounded-xl bg-[#1F2A7A] text-white flex items-center justify-center shadow-lg hover:bg-[#0f172a] hover:scale-110 transition-all cursor-pointer"
                                       title="X / Twitter">
                                     <i class="fab fa-x-twitter text-sm"></i>
                                 </span>
-                                @endif
-                                @if(!empty($p->social_links['youtube']))
+                                <?php endif; ?>
+                                <?php if(!empty($p->social_links['youtube'])): ?>
                                 <span role="link" tabindex="0"
-                                      data-url="{{ $p->social_links['youtube'] }}"
+                                      data-url="<?php echo e($p->social_links['youtube']); ?>"
                                       onclick="event.preventDefault();event.stopPropagation();window.open(this.dataset.url,'_blank')"
                                       class="w-9 h-9 rounded-xl bg-red-600 text-white flex items-center justify-center shadow-lg hover:bg-red-700 hover:scale-110 transition-all cursor-pointer"
                                       title="YouTube">
                                     <i class="fab fa-youtube text-sm"></i>
                                 </span>
-                                @endif
+                                <?php endif; ?>
                             </div>
                         </div>
 
-                        {{-- Card body --}}
+                        
                         <div class="p-5 sm:p-6">
                             <h3 class="font-heading text-xl font-bold text-mx-indigo mb-1.5 group-hover:text-[#FB5607] transition-colors duration-300">
-                                {{ $p->user->name }}
+                                <?php echo e($p->user->name); ?>
+
                             </h3>
                             <p class="text-sm text-[#FB5607] font-medium mb-3">
-                                {{ $p->headline ?? __('public.instructor_fallback') }}
+                                <?php echo e($p->headline ?? __('public.instructor_fallback')); ?>
+
                             </p>
 
-                            {{-- Skills --}}
-                            @if(count($p->skills_list) > 0)
+                            
+                            <?php if(count($p->skills_list) > 0): ?>
                             <div class="flex flex-wrap gap-1.5 mb-4">
-                                @foreach(array_slice($p->skills_list, 0, 3) as $skill)
-                                <span class="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-[11px] font-medium border border-slate-100">{{ $skill }}</span>
-                                @endforeach
-                                @if(count($p->skills_list) > 3)
-                                <span class="px-2.5 py-1 rounded-lg bg-[#FFE5F7] text-[#283593] text-[11px] font-medium">+{{ count($p->skills_list) - 3 }}</span>
-                                @endif
+                                <?php $__currentLoopData = array_slice($p->skills_list, 0, 3); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $skill): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 text-[11px] font-medium border border-slate-100"><?php echo e($skill); ?></span>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                <?php if(count($p->skills_list) > 3): ?>
+                                <span class="px-2.5 py-1 rounded-lg bg-[#FFE5F7] text-[#283593] text-[11px] font-medium">+<?php echo e(count($p->skills_list) - 3); ?></span>
+                                <?php endif; ?>
                             </div>
-                            @endif
+                            <?php endif; ?>
 
-                            {{-- Bio preview --}}
-                            @if($p->bio)
-                            <p class="text-[13px] text-slate-500 leading-relaxed line-clamp-2 mb-4">{{ $p->bio }}</p>
-                            @endif
+                            
+                            <?php if($p->bio): ?>
+                            <p class="text-[13px] text-slate-500 leading-relaxed line-clamp-2 mb-4"><?php echo e($p->bio); ?></p>
+                            <?php endif; ?>
 
-                            {{-- Footer (داخل الرابط) --}}
+                            
                             <div class="flex items-center justify-between pt-4 border-t border-slate-100">
                                 <div class="flex items-center gap-2 text-xs text-slate-400">
                                     <i class="fas fa-check-circle text-emerald-500"></i>
                                     <span class="font-medium">مدرّب معتمد</span>
-                                    @if(isset($p->marketing_priority_score))
+                                    <?php if(isset($p->marketing_priority_score)): ?>
                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
                                             <i class="fas fa-signal text-[10px]"></i>
-                                            {{ (int) $p->marketing_priority_score }}
+                                            <?php echo e((int) $p->marketing_priority_score); ?>
+
                                         </span>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                                 <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#283593] text-white font-bold text-[12px] shadow-lg group-hover:bg-[#1f2a7a] group-hover:scale-105 transition-all duration-300">
                                     عرض الملف
-                                    <i class="fas fa-arrow-{{ $isRtl?'left':'right' }} text-[9px]"></i>
+                                    <i class="fas fa-arrow-<?php echo e($isRtl?'left':'right'); ?> text-[9px]"></i>
                                 </span>
                             </div>
                         </div>
                     </a>
-                        @if(isset($consultationSetting) && $consultationSetting->is_active)
+                        <?php if(isset($consultationSetting) && $consultationSetting->is_active): ?>
                         <div class="px-5 sm:px-6 pb-5 pt-1 border-t border-slate-50">
                             <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                <span class="text-[11px] text-slate-500 font-medium">استشارة — <strong class="text-mx-indigo">{{ number_format($p->effectiveConsultationPriceEgp(), 2) }}</strong> ج.م</span>
-                                @auth
-                                    @if(auth()->user()->isStudent())
-                                        <a href="{{ route('consultations.create', $p->user) }}"
+                                <span class="text-[11px] text-slate-500 font-medium">استشارة — <strong class="text-mx-indigo"><?php echo e(number_format($p->effectiveConsultationPriceEgp(), 2)); ?></strong> ج.م</span>
+                                <?php if(auth()->guard()->check()): ?>
+                                    <?php if(auth()->user()->isStudent()): ?>
+                                        <a href="<?php echo e(route('consultations.create', $p->user)); ?>"
                                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#FB5607] hover:bg-[#e84d00] text-white text-xs font-bold shadow-md transition-all">
                                             <i class="fas fa-comments text-[11px]"></i>
                                             طلب استشارة
                                         </a>
-                                    @else
+                                    <?php else: ?>
                                         <span class="text-[11px] text-slate-400">تسجيل الدخول كطالب لطلب استشارة</span>
-                                    @endif
-                                @else
-                                    <a href="{{ route('login', ['redirect' => route('consultations.create', $p->user)]) }}"
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <a href="<?php echo e(route('login', ['redirect' => route('consultations.create', $p->user)])); ?>"
                                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#FB5607] hover:bg-[#e84d00] text-white text-xs font-bold shadow-md transition-all">
                                         <i class="fas fa-comments text-[11px]"></i>
                                         طلب استشارة
                                     </a>
-                                @endauth
+                                <?php endif; ?>
                             </div>
                         </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
-                @else
+                <?php else: ?>
                 <div class="text-center py-20 reveal">
                     <div class="max-w-md mx-auto">
                         <div class="w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm" style="background:#FFE5F7">
                             <i class="fas fa-chalkboard-teacher text-[#283593] text-4xl"></i>
                         </div>
-                        <h3 class="font-heading text-2xl font-bold text-mx-indigo mb-3">{{ __('public.no_instructors') }}</h3>
+                        <h3 class="font-heading text-2xl font-bold text-mx-indigo mb-3"><?php echo e(__('public.no_instructors')); ?></h3>
                         <p class="text-slate-500 mb-8 leading-relaxed">سيتم إضافة مدربين جدد قريباً</p>
-                        <a href="{{ url('/') }}" class="btn-primary inline-flex items-center gap-2.5 !bg-[#FB5607] hover:!bg-[#e84d00] text-white px-7 py-3.5 rounded-2xl font-bold shadow-xl">
+                        <a href="<?php echo e(url('/')); ?>" class="btn-primary inline-flex items-center gap-2.5 !bg-[#FB5607] hover:!bg-[#e84d00] text-white px-7 py-3.5 rounded-2xl font-bold shadow-xl">
                             <i class="fas fa-home"></i>
                             العودة للرئيسية
                         </a>
                     </div>
                 </div>
-                @endif
+                <?php endif; ?>
             </div>
         </section>
 
-        {{-- ══════ CTA ══════ --}}
+        
         <section class="pt-14 sm:pt-18 pb-10 sm:pb-12" style="background:linear-gradient(180deg,#f4f7ff 0%,#ffffff 100%)">
             <div class="container-1200">
                 <div class="reveal rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_44px_-26px_rgba(31,42,122,.28)] px-6 sm:px-10 py-10 sm:py-12 text-center">
@@ -335,13 +342,13 @@
                     شارك خبراتك مع آلاف المعلمين وساهم في بناء جيل من المعلمين المحترفين
                 </p>
                 <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-                    <a href="{{ route('register') }}" class="btn-primary inline-flex items-center justify-center gap-3 !bg-[#FB5607] hover:!bg-[#e84d00] text-white font-bold text-base sm:text-lg px-8 py-4 rounded-2xl">
+                    <a href="<?php echo e(route('register')); ?>" class="btn-primary inline-flex items-center justify-center gap-3 !bg-[#FB5607] hover:!bg-[#e84d00] text-white font-bold text-base sm:text-lg px-8 py-4 rounded-2xl">
                         سجّل كمدرّب
-                        <i class="fas fa-arrow-{{ $isRtl?'left':'right' }} text-sm"></i>
+                        <i class="fas fa-arrow-<?php echo e($isRtl?'left':'right'); ?> text-sm"></i>
                     </a>
-                    <a href="{{ route('public.courses') }}" class="btn-secondary inline-flex items-center justify-center gap-3 !bg-[#283593] !text-white !border-[#283593] hover:!bg-[#1f2a7a] font-semibold text-base sm:text-lg px-8 py-4 rounded-2xl">
+                    <a href="<?php echo e(route('public.courses')); ?>" class="btn-secondary inline-flex items-center justify-center gap-3 !bg-[#283593] !text-white !border-[#283593] hover:!bg-[#1f2a7a] font-semibold text-base sm:text-lg px-8 py-4 rounded-2xl">
                         تصفّح الكورسات
-                        <i class="fas fa-arrow-{{ $isRtl?'left':'right' }} text-sm"></i>
+                        <i class="fas fa-arrow-<?php echo e($isRtl?'left':'right'); ?> text-sm"></i>
                     </a>
                 </div>
             </div>
@@ -365,9 +372,9 @@
             <div>
                 <h3 class="font-heading font-bold mb-3 text-white">روابط سريعة</h3>
                 <ul class="space-y-2 text-sm text-white/85">
-                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('home') }}">الرئيسية</a></li>
-                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.courses') }}">الكورسات</a></li>
-                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.instructors.index') }}">المدربون</a></li>
+                    <li><a class="hover:text-mx-gold transition-colors" href="<?php echo e(route('home')); ?>">الرئيسية</a></li>
+                    <li><a class="hover:text-mx-gold transition-colors" href="<?php echo e(route('public.courses')); ?>">الكورسات</a></li>
+                    <li><a class="hover:text-mx-gold transition-colors" href="<?php echo e(route('public.instructors.index')); ?>">المدربون</a></li>
                 </ul>
             </div>
             <div>
@@ -379,7 +386,7 @@
             </div>
         </div>
         <div class="pt-5 flex flex-col sm:flex-row gap-2 justify-between text-xs text-white/75">
-            <p>&copy; {{ date('Y') }} MuallimX — جميع الحقوق محفوظة</p>
+            <p>&copy; <?php echo e(date('Y')); ?> MuallimX — جميع الحقوق محفوظة</p>
             <p>تعليم عربي احترافي يركز على النتائج</p>
         </div>
     </div>
@@ -394,3 +401,4 @@
     </script>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/instructors/index.blade.php ENDPATH**/ ?>

@@ -113,12 +113,12 @@
                             <div class="md:col-span-2 space-y-2">
                                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                                     <i class="fas fa-video text-sky-600 ml-1"></i>
-                                    رابط فيديو المقدمة
+                                    رابط الفيديو التقديمي (يظهر في صفحة الكورس)
                                 </label>
                                 <input type="url" name="video_url" value="{{ old('video_url') }}"
                                        class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"
-                                       placeholder="YouTube، Vimeo، أو رابط .mp4">
-                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">يُعرض في صفحة الكورس على الموقع.</p>
+                                       placeholder="رابط تضمين Bunny (iframe.mediadelivery.net)، YouTube، Vimeo، أو .mp4">
+                                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">يُعرض في الصندوق الرئيسي بجانب وصف الكورس (بدل كارد السعر السابق).</p>
                                 @error('video_url') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                             </div>
 

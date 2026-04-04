@@ -40,10 +40,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="<?php echo e(asset('logo-removebg-preview.png')); ?>">
     <!-- BreadcrumbList JSON-LD -->
     <script type="application/ld+json">
-    {"<?php $__contextArgs = [];
-if (context()->has($__contextArgs[0])) :
-if (isset($value)) { $__contextPrevious[] = $value; }
-$value = context()->get($__contextArgs[0]); ?>":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"الرئيسية","item":"<?php echo e(url('/')); ?>"},{"@type":"ListItem","position":2,"name":"المدربون","item":"<?php echo e(url('/instructors')); ?>"}]}
+    {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"الرئيسية","item":"<?php echo e(url('/')); ?>"},{"@type":"ListItem","position":2,"name":"المدربون","item":"<?php echo e(url('/instructors')); ?>"}]}
     </script>
     <?php echo $__env->make('partials.seo-jsonld', ['jsonldType' => 'website'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">

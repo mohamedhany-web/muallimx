@@ -3,11 +3,19 @@
     $isRtl = $locale === 'ar';
     $thumbUrl = ($course->thumbnail ?? null) ? asset('storage/' . str_replace('\\','/', $course->thumbnail)) : null;
     $introVideoUrl = trim((string)($course->video_url ?? ''));
-    $introEmbedUrl = null;
-    if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/', $introVideoUrl, $m)) {
-        $introEmbedUrl = 'https://www.youtube.com/embed/' . $m[1] . '?rel=0&modestbranding=1';
-    } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $introVideoUrl, $m)) {
-        $introEmbedUrl = 'https://player.vimeo.com/video/' . $m[1];
+    $introEmbedUrl = \App\Helpers\VideoHelper::getEmbedUrl($introVideoUrl);
+    if (!$introEmbedUrl && $introVideoUrl !== '') {
+        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/', $introVideoUrl, $m)) {
+            $introEmbedUrl = 'https://www.youtube.com/embed/' . $m[1] . '?rel=0&modestbranding=1';
+        } elseif (preg_match('/vimeo\.com\/(?:video\/)?(\d+)/', $introVideoUrl, $m)) {
+            $introEmbedUrl = 'https://player.vimeo.com/video/' . $m[1];
+        }
+    }
+    $introDirectVideo = null;
+    if (!$introEmbedUrl && $introVideoUrl !== '' && filter_var($introVideoUrl, FILTER_VALIDATE_URL)) {
+        if (preg_match('/\.(mp4|webm|ogg)(\?.*)?$/i', $introVideoUrl)) {
+            $introDirectVideo = $introVideoUrl;
+        }
     }
     $levelLabel = match($course->level ?? 'beginner') {
         'intermediate' => __('public.level_intermediate'),
@@ -224,77 +232,27 @@
                         </div>
                     </div>
 
-                    {{-- Right: Price card + Video (2 cols) --}}
-                    <div class="lg:col-span-2 reveal stagger-2 space-y-5">
-                        {{-- Price card --}}
-                        <div class="card-hover rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-200 bg-white">
-                            <div class="text-center mb-5">
-                                @if(($course->price ?? 0) > 0)
-                                    <div class="text-4xl sm:text-5xl font-black text-mx-indigo mb-1">{{ number_format($course->price, 0) }}</div>
-                                    <div class="text-slate-500 text-sm font-medium">{{ __('public.currency_egp') }}</div>
-                                @else
-                                    <div class="text-3xl font-black text-emerald-600 flex items-center justify-center gap-2">
-                                        <i class="fas fa-gift text-2xl"></i>
-                                        {{ __('public.free_price') }}
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="space-y-3 mb-6">
-                                <div class="flex items-center gap-3 text-slate-700 text-sm">
-                                    <i class="fas fa-check-circle text-brand-400 flex-shrink-0"></i>
-                                    <span>وصول كامل مدى الحياة</span>
-                                </div>
-                                <div class="flex items-center gap-3 text-slate-700 text-sm">
-                                    <i class="fas fa-check-circle text-brand-400 flex-shrink-0"></i>
-                                    <span>{{ $course->lessons_count ?? 0 }} {{ __('public.lesson_single') }} تفاعلي</span>
-                                </div>
-                                <div class="flex items-center gap-3 text-slate-700 text-sm">
-                                    <i class="fas fa-check-circle text-brand-400 flex-shrink-0"></i>
-                                    <span>شهادة إتمام</span>
-                                </div>
-                                <div class="flex items-center gap-3 text-slate-700 text-sm">
-                                    <i class="fas fa-check-circle text-brand-400 flex-shrink-0"></i>
-                                    <span>دعم فني مباشر</span>
-                                </div>
-                            </div>
-                            @auth
-                                @if($isEnrolled ?? false)
-                                    <a href="{{ route('my-courses.show', $course) }}" class="block w-full text-center py-3.5 rounded-2xl bg-gradient-to-l from-brand-400 to-brand-500 text-navy-950 font-bold text-base shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
-                                        <i class="fas fa-play-circle {{ $isRtl?'ml-2':'mr-2' }}"></i>{{ __('public.start_learning_now') }}
-                                    </a>
-                                @elseif(($course->price ?? 0) > 0 && !($course->is_free ?? false))
-                                    <a href="{{ route('public.course.checkout', $course->id) }}" class="block w-full text-center py-3.5 rounded-2xl bg-gradient-to-l from-brand-400 to-brand-500 text-navy-950 font-bold text-base shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
-                                        <i class="fas fa-shopping-cart {{ $isRtl?'ml-2':'mr-2' }}"></i>{{ __('public.buy_now') }}
-                                    </a>
-                                @else
-                                    <form action="{{ route('public.course.enroll.free', $course->id) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="block w-full text-center py-3.5 rounded-2xl bg-gradient-to-l from-emerald-400 to-emerald-500 text-navy-950 font-bold text-base shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] cursor-pointer">
-                                            <i class="fas fa-gift {{ $isRtl?'ml-2':'mr-2' }}"></i>{{ __('public.register_free') }}
-                                        </button>
-                                    </form>
-                                @endif
-                            @endauth
-                            @guest
-                                @if(($course->price ?? 0) > 0 && !($course->is_free ?? false))
-                                    <a href="{{ route('register', ['redirect' => route('public.course.checkout', $course->id)]) }}" class="block w-full text-center py-3.5 rounded-2xl bg-gradient-to-l from-brand-400 to-brand-500 text-navy-950 font-bold text-base shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
-                                        <i class="fas fa-shopping-cart {{ $isRtl?'ml-2':'mr-2' }}"></i>{{ __('public.buy_now') }}
-                                    </a>
-                                @else
-                                    <a href="{{ route('register', ['redirect' => route('public.course.show', $course->id)]) }}" class="block w-full text-center py-3.5 rounded-2xl bg-gradient-to-l from-emerald-400 to-emerald-500 text-navy-950 font-bold text-base shadow-lg hover:shadow-xl transition-all hover:scale-[1.02]">
-                                        <i class="fas fa-gift {{ $isRtl?'ml-2':'mr-2' }}"></i>{{ __('public.register_free') }}
-                                    </a>
-                                @endif
-                            @endguest
-                        </div>
-
-                        {{-- Video / Thumbnail --}}
+                    {{-- Right: Intro video (نفس مكان كارد السعر سابقاً) --}}
+                    <div class="lg:col-span-2 reveal stagger-2">
                         @if($introEmbedUrl)
-                        <div class="rounded-2xl overflow-hidden border border-slate-200 shadow-xl aspect-video bg-white">
-                            <iframe src="{{ $introEmbedUrl }}" class="w-full h-full" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen></iframe>
+                        <div class="card-hover rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-slate-900 ring-1 ring-slate-200/80">
+                            <div class="aspect-video w-full">
+                                <iframe src="{{ $introEmbedUrl }}" title="{{ __('public.course_intro_video') }}"
+                                    class="w-full h-full min-h-[220px]"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                                    allowfullscreen loading="lazy"></iframe>
+                            </div>
+                        </div>
+                        @elseif($introDirectVideo)
+                        <div class="card-hover rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-black ring-1 ring-slate-200/80">
+                            <div class="aspect-video w-full">
+                                <video src="{{ $introDirectVideo }}" controls playsinline preload="metadata" class="w-full h-full object-contain">
+                                    {{ __('public.course_intro_video_unsupported') }}
+                                </video>
+                            </div>
                         </div>
                         @elseif($thumbUrl)
-                        <div class="rounded-2xl overflow-hidden border border-slate-200 shadow-xl aspect-video bg-white">
+                        <div class="card-hover rounded-3xl overflow-hidden border border-slate-200 shadow-xl aspect-video bg-white ring-1 ring-slate-200/80">
                             <img src="{{ $thumbUrl }}" alt="{{ $course->title }}" class="w-full h-full object-cover">
                         </div>
                         @endif

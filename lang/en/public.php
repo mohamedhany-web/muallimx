@@ -198,6 +198,8 @@ return [
     'featured_course_badge' => 'Featured course',
     'course_title_fallback' => 'Course name',
     'course_desc_fallback' => 'Comprehensive training course for teachers',
+    'course_intro_video' => 'Course introduction video',
+    'course_intro_video_unsupported' => 'Your browser does not support playing this video.',
     'hours' => 'hour',
     'level_label' => 'Level',
     'instructor_label' => 'Instructor:',

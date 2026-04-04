@@ -1,50 +1,50 @@
-﻿@php
+﻿<?php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
-@endphp
+?>
 <!DOCTYPE html>
-<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
+<html lang="<?php echo e($locale); ?>" dir="<?php echo e($isRtl ? 'rtl' : 'ltr'); ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}</title>
-    <meta name="title"       content="{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}">
-    <meta name="description" content="{{ __('public.courses_subtitle') }}">
+    <title><?php echo e(__('public.courses_page_title')); ?> - <?php echo e(__('public.site_suffix')); ?></title>
+    <meta name="title"       content="<?php echo e(__('public.courses_page_title')); ?> - <?php echo e(__('public.site_suffix')); ?>">
+    <meta name="description" content="<?php echo e(__('public.courses_subtitle')); ?>">
     <meta name="keywords"    content="كورسات أونلاين, تعلم أونلاين, دورات تعليمية, تدريب معلمين, MuallimX, كورسات عربية">
     <meta name="author"      content="MuallimX">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#283593">
-    <link rel="canonical"    href="{{ url('/courses') }}">
-    <link rel="alternate" hreflang="ar"        href="{{ url('/courses') }}?lang=ar">
-    <link rel="alternate" hreflang="en"        href="{{ url('/courses') }}?lang=en">
-    <link rel="alternate" hreflang="x-default" href="{{ url('/courses') }}">
+    <link rel="canonical"    href="<?php echo e(url('/courses')); ?>">
+    <link rel="alternate" hreflang="ar"        href="<?php echo e(url('/courses')); ?>?lang=ar">
+    <link rel="alternate" hreflang="en"        href="<?php echo e(url('/courses')); ?>?lang=en">
+    <link rel="alternate" hreflang="x-default" href="<?php echo e(url('/courses')); ?>">
     <!-- Open Graph -->
     <meta property="og:type"             content="website">
-    <meta property="og:url"              content="{{ url('/courses') }}">
-    <meta property="og:title"            content="{{ __('public.courses_page_title') }} - MuallimX">
-    <meta property="og:description"      content="{{ __('public.courses_subtitle') }}">
-    <meta property="og:image"            content="{{ asset('images/og-image.jpg') }}">
+    <meta property="og:url"              content="<?php echo e(url('/courses')); ?>">
+    <meta property="og:title"            content="<?php echo e(__('public.courses_page_title')); ?> - MuallimX">
+    <meta property="og:description"      content="<?php echo e(__('public.courses_subtitle')); ?>">
+    <meta property="og:image"            content="<?php echo e(asset('images/og-image.jpg')); ?>">
     <meta property="og:image:alt"        content="كورسات MuallimX">
     <meta property="og:image:width"      content="1200">
     <meta property="og:image:height"     content="630">
-    <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
-    <meta property="og:locale:alternate" content="{{ $locale === 'ar' ? 'en_US' : 'ar_AR' }}">
+    <meta property="og:locale"           content="<?php echo e($locale === 'ar' ? 'ar_AR' : 'en_US'); ?>">
+    <meta property="og:locale:alternate" content="<?php echo e($locale === 'ar' ? 'en_US' : 'ar_AR'); ?>">
     <meta property="og:site_name"        content="MuallimX">
     <!-- Twitter Card -->
     <meta name="twitter:card"        content="summary_large_image">
     <meta name="twitter:site"        content="@MuallimX">
-    <meta name="twitter:url"         content="{{ url('/courses') }}">
-    <meta name="twitter:title"       content="{{ __('public.courses_page_title') }} - MuallimX">
-    <meta name="twitter:description" content="{{ __('public.courses_subtitle') }}">
-    <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
+    <meta name="twitter:url"         content="<?php echo e(url('/courses')); ?>">
+    <meta name="twitter:title"       content="<?php echo e(__('public.courses_page_title')); ?> - MuallimX">
+    <meta name="twitter:description" content="<?php echo e(__('public.courses_subtitle')); ?>">
+    <meta name="twitter:image"       content="<?php echo e(asset('images/og-image.jpg')); ?>">
     <meta name="twitter:image:alt"   content="كورسات MuallimX">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
+    <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo e(asset('logo-removebg-preview.png')); ?>">
     <!-- BreadcrumbList JSON-LD -->
     <script type="application/ld+json">
-    {"@@context":"https://schema.org","@@type":"BreadcrumbList","itemListElement":[{"@@type":"ListItem","position":1,"name":"الرئيسية","item":"{{ url('/') }}"},{"@@type":"ListItem","position":2,"name":"الكورسات","item":"{{ url('/courses') }}"}]}
+    {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"الرئيسية","item":"<?php echo e(url('/')); ?>"},{"@type":"ListItem","position":2,"name":"الكورسات","item":"<?php echo e(url('/courses')); ?>"}]}
     </script>
-    @include('partials.seo-jsonld', ['jsonldType' => 'website'])
+    <?php echo $__env->make('partials.seo-jsonld', ['jsonldType' => 'website'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -107,7 +107,7 @@
       x-data="{
         searchQuery: '',
         selectedLevel: '',
-        courses: @js($courses ?? []),
+        courses: <?php echo \Illuminate\Support\Js::from($courses ?? [])->toHtml() ?>,
         get filteredCourses() {
           const q = this.searchQuery.toLowerCase().trim();
           const level = this.selectedLevel;
@@ -120,36 +120,38 @@
       }">
 <div id="scroll-progress"></div>
 
-@include('components.unified-navbar')
+<?php echo $__env->make('components.unified-navbar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 <main class="flex-1">
-  {{-- HERO --}}
+  
   <section class="pt-10 sm:pt-14 lg:pt-16 pb-10 sm:pb-12 overflow-hidden relative" style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.65),transparent 28%),radial-gradient(circle at 88% 20%,rgba(40,53,147,.10),transparent 30%),linear-gradient(180deg,#f4f6ff 0%,#fbfbff 55%,#ffffff 100%)">
     <div class="absolute inset-0 pointer-events-none opacity-40" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.08) 1px,transparent 0);background-size:30px 30px"></div>
     <div class="container-1200 relative z-10">
       <div class="max-w-4xl mx-auto text-center reveal">
         <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-6" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
-          <i class="fas fa-graduation-cap"></i> {{ __('public.courses_page_title') }}
+          <i class="fas fa-graduation-cap"></i> <?php echo e(__('public.courses_page_title')); ?>
+
         </span>
         <h1 class="font-heading text-[2rem] sm:text-[2.8rem] lg:text-[3.35rem] leading-[1.22] font-black text-mx-indigo mb-5">
-          {{ __('public.courses_hero') }}
-          <span class="block" style="color:#FB5607">{{ __('public.courses_hero_highlight') }}</span>
+          <?php echo e(__('public.courses_hero')); ?>
+
+          <span class="block" style="color:#FB5607"><?php echo e(__('public.courses_hero_highlight')); ?></span>
         </h1>
-        <p class="text-slate-600 text-base sm:text-lg leading-8 mb-7 max-w-3xl mx-auto">{{ __('public.courses_subtitle') }}</p>
+        <p class="text-slate-600 text-base sm:text-lg leading-8 mb-7 max-w-3xl mx-auto"><?php echo e(__('public.courses_subtitle')); ?></p>
 
         <div class="grid sm:grid-cols-[1fr_180px] gap-3 max-w-3xl mx-auto">
           <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
             <i class="fas fa-search text-slate-400"></i>
-            <input type="text" x-model="searchQuery" placeholder="{{ __('public.search_course_placeholder') }}" class="flex-1 bg-transparent border-0 outline-none text-mx-indigo placeholder-slate-400">
+            <input type="text" x-model="searchQuery" placeholder="<?php echo e(__('public.search_course_placeholder')); ?>" class="flex-1 bg-transparent border-0 outline-none text-mx-indigo placeholder-slate-400">
           </div>
           <div class="relative">
-            <select x-model="selectedLevel" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 {{ $isRtl?'pl-10':'pr-10' }} text-mx-indigo focus:outline-none">
-              <option value="">{{ __('public.all_levels') }}</option>
-              <option value="beginner">{{ __('public.level_beginner') }}</option>
-              <option value="intermediate">{{ __('public.level_intermediate') }}</option>
-              <option value="advanced">{{ __('public.level_advanced') }}</option>
+            <select x-model="selectedLevel" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 <?php echo e($isRtl?'pl-10':'pr-10'); ?> text-mx-indigo focus:outline-none">
+              <option value=""><?php echo e(__('public.all_levels')); ?></option>
+              <option value="beginner"><?php echo e(__('public.level_beginner')); ?></option>
+              <option value="intermediate"><?php echo e(__('public.level_intermediate')); ?></option>
+              <option value="advanced"><?php echo e(__('public.level_advanced')); ?></option>
             </select>
-            <i class="fas fa-chevron-down absolute {{ $isRtl?'left':'right' }}-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <i class="fas fa-chevron-down absolute <?php echo e($isRtl?'left':'right'); ?>-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
           </div>
         </div>
       </div>
@@ -157,7 +159,7 @@
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-10 reveal s2">
         <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
           <p class="text-3xl sm:text-4xl font-black text-mx-indigo" x-text="courses.length">0</p>
-          <p class="text-xs sm:text-sm text-slate-600 mt-1">{{ __('public.course_available') }}</p>
+          <p class="text-xs sm:text-sm text-slate-600 mt-1"><?php echo e(__('public.course_available')); ?></p>
         </article>
         <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#fff7f2] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
           <p class="text-3xl sm:text-4xl font-black text-[#FB5607]" x-text="courses.filter(c=>!c.price||c.price==0).length">0</p>
@@ -175,26 +177,26 @@
     </div>
   </section>
 
-  {{-- COURSES GRID --}}
+  
   <section class="py-14 sm:py-16 bg-white">
     <div class="container-1200">
       <div class="flex items-end justify-between mb-7 gap-4">
         <div class="reveal max-w-2xl">
-          <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-2">{{ __('public.courses_section_title') }}</h2>
-          <p class="text-slate-600">{{ __('public.courses_section_subtitle') }}</p>
+          <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-2"><?php echo e(__('public.courses_section_title')); ?></h2>
+          <p class="text-slate-600"><?php echo e(__('public.courses_section_subtitle')); ?></p>
         </div>
       </div>
 
       <template x-if="filteredCourses && filteredCourses.length > 0">
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
           <template x-for="(course, index) in filteredCourses" :key="course.id">
-            <a :href="'{{ url('/course') }}/' + course.id" class="card-base hover-lift block reveal" :class="'s' + (Math.min((index % 4) + 1,4))">
+            <a :href="'<?php echo e(url('/course')); ?>/' + course.id" class="card-base hover-lift block reveal" :class="'s' + (Math.min((index % 4) + 1,4))">
               <div class="rounded-xl h-44 mb-4 relative overflow-hidden" style="background:linear-gradient(135deg,#e9edff,#f8f9ff)">
                 <template x-if="course.thumbnail">
-                  <img :src="'{{ asset('storage') }}/' + course.thumbnail" :alt="course.title" class="absolute inset-0 w-full h-full object-cover">
+                  <img :src="'<?php echo e(asset('storage')); ?>/' + course.thumbnail" :alt="course.title" class="absolute inset-0 w-full h-full object-cover">
                 </template>
                 <template x-if="course.is_featured">
-                  <span class="absolute top-3 {{ $isRtl?'right':'left' }}-3 text-[11px] font-bold px-3 py-1 rounded-full" style="background:#FFE569;color:#5c4500">{{ __('public.featured_badge') }}</span>
+                  <span class="absolute top-3 <?php echo e($isRtl?'right':'left'); ?>-3 text-[11px] font-bold px-3 py-1 rounded-full" style="background:#FFE569;color:#5c4500"><?php echo e(__('public.featured_badge')); ?></span>
                 </template>
               </div>
 
@@ -202,24 +204,24 @@
                 <span class="inline-block text-[11px] font-bold px-3 py-1 rounded-full mb-3" style="background:#FFE5F7;color:#283593" x-text="course.academic_subject.name"></span>
               </template>
 
-              <h3 class="font-heading text-lg font-extrabold text-mx-indigo leading-snug mb-2 line-clamp-2" x-text="course.title || '{{ addslashes(__('public.no_title_fallback')) }}'"></h3>
+              <h3 class="font-heading text-lg font-extrabold text-mx-indigo leading-snug mb-2 line-clamp-2" x-text="course.title || '<?php echo e(addslashes(__('public.no_title_fallback'))); ?>'"></h3>
               <p class="text-sm text-slate-500 mb-4 line-clamp-2" x-text="(course.description || '').substring(0,120) + ((course.description && course.description.length>120) ? '...' : '')"></p>
 
               <div class="flex items-center justify-between text-sm mb-4">
-                <span class="text-slate-500" x-text="(course.lessons_count || 0) + ' {{ __('public.lesson_single') }}'"></span>
-                <span class="text-slate-500" x-text="course.duration_hours ? course.duration_hours + ' {{ __('public.hours') }}' : ''"></span>
+                <span class="text-slate-500" x-text="(course.lessons_count || 0) + ' <?php echo e(__('public.lesson_single')); ?>'"></span>
+                <span class="text-slate-500" x-text="course.duration_hours ? course.duration_hours + ' <?php echo e(__('public.hours')); ?>' : ''"></span>
               </div>
 
               <div class="flex items-center justify-between pt-3 border-t border-slate-100">
                 <div>
                   <template x-if="course.price && course.price > 0">
-                    <div><span class="text-xl font-black text-mx-orange" x-text="course.price"></span> <span class="text-xs text-slate-400">{{ __('public.currency_egp') }}</span></div>
+                    <div><span class="text-xl font-black text-mx-orange" x-text="course.price"></span> <span class="text-xs text-slate-400"><?php echo e(__('public.currency_egp')); ?></span></div>
                   </template>
                   <template x-if="!course.price || course.price == 0">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-600 font-bold text-sm">{{ __('public.free_price') }}</span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-600 font-bold text-sm"><?php echo e(__('public.free_price')); ?></span>
                   </template>
                 </div>
-                <span class="btn-secondary !py-2 !px-4 !text-sm">{{ __('public.view_details') }}</span>
+                <span class="btn-secondary !py-2 !px-4 !text-sm"><?php echo e(__('public.view_details')); ?></span>
               </div>
             </a>
           </template>
@@ -227,14 +229,14 @@
       </template>
 
       <div x-show="filteredCourses && filteredCourses.length === 0" x-cloak class="text-center py-16 reveal">
-        <h3 class="font-heading text-2xl font-black text-mx-indigo mb-2">{{ __('public.no_results') }}</h3>
-        <p class="text-slate-500 mb-6">{{ __('public.no_results_hint') }}</p>
+        <h3 class="font-heading text-2xl font-black text-mx-indigo mb-2"><?php echo e(__('public.no_results')); ?></h3>
+        <p class="text-slate-500 mb-6"><?php echo e(__('public.no_results_hint')); ?></p>
         <button @click="searchQuery=''; selectedLevel='';" class="btn-secondary">إعادة تعيين البحث</button>
       </div>
     </div>
   </section>
 
-  {{-- CTA --}}
+  
   <section class="pt-14 sm:pt-18 pb-10 sm:pb-12" style="background:linear-gradient(180deg,#f4f7ff 0%,#ffffff 100%)">
     <div class="container-1200">
       <div class="reveal rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_44px_-26px_rgba(31,42,122,.28)] px-6 sm:px-10 py-10 sm:py-12 text-center">
@@ -244,8 +246,8 @@
         <h2 class="font-heading text-3xl sm:text-5xl font-black text-mx-indigo mb-4">جاهز لاختيار كورسك المناسب؟</h2>
         <p class="text-slate-600 text-base sm:text-lg max-w-3xl mx-auto leading-8 mb-7">سجّل الآن وابدأ التعلم بخطوات واضحة وأدوات عملية.</p>
         <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-          <a href="{{ route('register') }}" class="btn-primary inline-flex items-center justify-center gap-2">{{ __('public.register_free_now') }}</a>
-          <a href="{{ route('login') }}" class="btn-secondary inline-flex items-center justify-center gap-2">{{ __('public.have_account') }}</a>
+          <a href="<?php echo e(route('register')); ?>" class="btn-primary inline-flex items-center justify-center gap-2"><?php echo e(__('public.register_free_now')); ?></a>
+          <a href="<?php echo e(route('login')); ?>" class="btn-secondary inline-flex items-center justify-center gap-2"><?php echo e(__('public.have_account')); ?></a>
         </div>
       </div>
     </div>
@@ -268,9 +270,9 @@
       <div>
         <h3 class="font-heading font-bold mb-3 text-white">روابط سريعة</h3>
         <ul class="space-y-2 text-sm text-white/85">
-          <li><a class="hover:text-mx-gold transition-colors" href="{{ route('home') }}">الرئيسية</a></li>
-          <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.courses') }}">الكورسات</a></li>
-          <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.instructors.index') }}">المدربون</a></li>
+          <li><a class="hover:text-mx-gold transition-colors" href="<?php echo e(route('home')); ?>">الرئيسية</a></li>
+          <li><a class="hover:text-mx-gold transition-colors" href="<?php echo e(route('public.courses')); ?>">الكورسات</a></li>
+          <li><a class="hover:text-mx-gold transition-colors" href="<?php echo e(route('public.instructors.index')); ?>">المدربون</a></li>
         </ul>
       </div>
       <div>
@@ -282,7 +284,7 @@
       </div>
     </div>
     <div class="pt-5 flex flex-col sm:flex-row gap-2 justify-between text-xs text-white/75">
-      <p>&copy; {{ date('Y') }} MuallimX — جميع الحقوق محفوظة</p>
+      <p>&copy; <?php echo e(date('Y')); ?> MuallimX — جميع الحقوق محفوظة</p>
       <p>تعليم عربي احترافي يركز على النتائج</p>
     </div>
   </div>
@@ -299,3 +301,4 @@
 </script>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/courses.blade.php ENDPATH**/ ?>

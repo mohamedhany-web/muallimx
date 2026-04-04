@@ -198,6 +198,8 @@ return [
     'featured_course_badge' => 'كورس مميز',
     'course_title_fallback' => 'اسم الكورس',
     'course_desc_fallback' => 'دورة تدريبية شاملة للمعلمين',
+    'course_intro_video' => 'فيديو تقديمي للكورس',
+    'course_intro_video_unsupported' => 'المتصفح لا يدعم تشغيل هذا الفيديو.',
     'hours' => 'ساعة',
     'level_label' => 'المستوى',
     'instructor_label' => 'المدرب:',
