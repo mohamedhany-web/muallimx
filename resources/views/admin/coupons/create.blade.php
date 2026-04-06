@@ -82,6 +82,65 @@
             @error('description')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
         </div>
 
+        <div class="rounded-xl border border-slate-200 dark:border-slate-600 p-5 space-y-4 bg-slate-50/80 dark:bg-slate-900/30">
+            <h2 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-2"><i class="fas fa-bullseye text-violet-500"></i> نطاق التطبيق (الكورسات)</h2>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">ينطبق على <span class="text-red-500">*</span></label>
+                <select name="applicable_to" required class="w-full max-w-xl rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                    <option value="all" {{ old('applicable_to', 'all') === 'all' ? 'selected' : '' }}>جميع الكورسات (صفحة دفع الكورس)</option>
+                    <option value="courses" {{ old('applicable_to') === 'courses' ? 'selected' : '' }}>كورسات محددة فقط</option>
+                    <option value="specific" {{ old('applicable_to') === 'specific' ? 'selected' : '' }}>كورسات محددة + تقييد مستخدمين (اختياري بالأسفل)</option>
+                    <option value="subscriptions" {{ old('applicable_to') === 'subscriptions' ? 'selected' : '' }}>الاشتراكات فقط (لا يُطبَّق على دفع الكورس)</option>
+                </select>
+                @error('applicable_to')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">الكورسات (عند اختيار «محددة»)</label>
+                <div class="max-h-56 overflow-y-auto rounded-lg border border-slate-200 dark:border-slate-600 p-3 space-y-2 bg-white dark:bg-slate-800">
+                    @forelse($courses ?? [] as $c)
+                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="checkbox" name="applicable_course_ids[]" value="{{ $c->id }}" {{ in_array($c->id, old('applicable_course_ids', []), true) ? 'checked' : '' }} class="rounded border-slate-300 text-violet-600 focus:ring-violet-500">
+                        <span class="text-slate-800 dark:text-slate-200">{{ $c->title }}</span>
+                    </label>
+                    @empty
+                    <p class="text-sm text-slate-500">لا توجد كورسات في النظام.</p>
+                    @endforelse
+                </div>
+                @error('applicable_course_ids')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-amber-200 dark:border-amber-900/50 p-5 space-y-4 bg-amber-50/50 dark:bg-amber-950/20">
+            <h2 class="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-2"><i class="fas fa-user-tag text-amber-600"></i> كوبون تسويقي شخصي + عمولة</h2>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">معرّفات المستخدمين المسموح لهم (اختياري)</label>
+                <textarea name="applicable_user_ids_text" rows="2" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white font-mono text-sm" placeholder="مثال: 12, 45 أو سطر لكل رقم">{{ old('applicable_user_ids_text') }}</textarea>
+                <p class="text-xs text-slate-500 mt-1">إن تركتها فارغة يمكن لأي مستخدم يملك الكود استخدامه (مع بقية الشروط). للتسويق المستهدف: أدخل معرّف الطالب وأزل «ظاهر للجميع».</p>
+                @error('applicable_user_ids_text')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">مستفيد العمولة (معرّف مستخدم)</label>
+                    <input type="number" name="beneficiary_user_id" min="1" value="{{ old('beneficiary_user_id') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white font-mono" placeholder="فارغ = بدون عمولة">
+                    @error('beneficiary_user_id')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">نسبة العمولة %</label>
+                    <input type="number" name="commission_percent" step="0.01" min="0" max="100" value="{{ old('commission_percent') }}" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                    @error('commission_percent')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">احتساب العمولة من</label>
+                    <select name="commission_on" class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+                        <option value="final_paid" {{ old('commission_on', 'final_paid') === 'final_paid' ? 'selected' : '' }}>المبلغ النهائي بعد الخصم</option>
+                        <option value="original_price" {{ old('commission_on') === 'original_price' ? 'selected' : '' }}>السعر الأصلي قبل الخصم</option>
+                    </select>
+                    @error('commission_on')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                </div>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-400">تُسجَّل العمولة عند اعتماد الطلب من الإدارة، ثم من «عمولات كوبونات التسويق» يمكن إنشاء مصروف تسويقي؛ عند اعتماد المصروف تُحدَّث الحالة إلى مسوّى.</p>
+        </div>
+
         <div class="flex flex-wrap gap-6">
             <label class="inline-flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }} class="rounded border-slate-300 text-violet-600 focus:ring-violet-500">

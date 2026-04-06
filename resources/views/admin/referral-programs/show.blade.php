@@ -15,7 +15,15 @@
                     </h1>
                     <p class="text-gray-600">{{ $referralProgram->description }}</p>
                 </div>
-                <div class="flex gap-3">
+                <div class="flex flex-wrap gap-3 items-center">
+                    @if($referralProgram->is_default)
+                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-violet-100 text-violet-800">البرنامج الافتراضي للتسجيل</span>
+                    @elseif($referralProgram->is_active && $referralProgram->isValid())
+                    <form action="{{ route('admin.referral-programs.set-default', $referralProgram) }}" method="POST" onsubmit="return confirm('تعيين هذا البرنامج كافتراضي؟');">
+                        @csrf
+                        <button type="submit" class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium">تعيين كافتراضي</button>
+                    </form>
+                    @endif
                     <a href="{{ route('admin.referral-programs.edit', $referralProgram) }}" 
                        class="bg-gradient-to-l from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2">
                         <i class="fas fa-edit"></i>
@@ -63,6 +71,10 @@
                 </h2>
                 
                 <div class="space-y-4">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                        <span class="text-gray-600">افتراضي للتسجيل</span>
+                        <span class="font-medium {{ $referralProgram->is_default ? 'text-violet-700' : 'text-gray-500' }}">{{ $referralProgram->is_default ? 'نعم' : 'لا' }}</span>
+                    </div>
                     <div class="flex justify-between items-center py-2 border-b border-gray-200">
                         <span class="text-gray-600">الحالة</span>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium

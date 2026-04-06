@@ -12,6 +12,7 @@ class CouponUsage extends Model
     protected $fillable = [
         'coupon_id',
         'user_id',
+        'order_id',
         'invoice_id',
         'discount_amount',
         'order_amount',
@@ -37,5 +38,10 @@ class CouponUsage extends Model
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
     }
 }

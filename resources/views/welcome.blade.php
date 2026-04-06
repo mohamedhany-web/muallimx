@@ -373,42 +373,8 @@
     </section>
 </main>
 
-{{-- 9) Footer --}}
-<footer style="background:#283593" class="text-white">
-    <div class="container-1200 pt-12 pb-8">
-        <div class="grid md:grid-cols-4 gap-8 pb-8 border-b border-white/15">
-            <div class="md:col-span-2">
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="w-11 h-11 rounded-xl bg-mx-orange text-white font-black flex items-center justify-center">M</span>
-                    <div>
-                        <p class="font-heading text-xl font-black">MuallimX</p>
-                        <p class="text-xs text-white/70">منصة تطوير المعلم العربي</p>
-                    </div>
-                </div>
-                <p class="text-sm text-white/85 leading-7 max-w-md">تجربة تعليمية عربية تركز على التمكين المهني للمعلم عبر التدريب العملي وأدوات التدريس الحديثة.</p>
-            </div>
-            <div>
-                <h3 class="font-heading font-bold mb-3 text-white">روابط سريعة</h3>
-                <ul class="space-y-2 text-sm text-white/85">
-                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('home') }}">الرئيسية</a></li>
-                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.courses') }}">الكورسات</a></li>
-                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.instructors.index') }}">المدربون</a></li>
-                </ul>
-            </div>
-            <div>
-                <h3 class="font-heading font-bold mb-3 text-white">تواصل معنا</h3>
-                <ul class="space-y-2 text-sm text-white/85">
-                    <li><a class="hover:text-mx-gold transition-colors" href="mailto:info@mualimx.com">info@mualimx.com</a></li>
-                    <li><a class="hover:text-mx-gold transition-colors" href="https://wa.me/201044610507" target="_blank">واتساب: 01044610507</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="pt-5 flex flex-col sm:flex-row gap-2 justify-between text-xs text-white/75">
-            <p>&copy; {{ date('Y') }} MuallimX — جميع الحقوق محفوظة</p>
-            <p>تعليم عربي احترافي يركز على النتائج</p>
-        </div>
-    </div>
-</footer>
+{{-- 9) Footer — من إعدادات النظام في لوحة الإدارة --}}
+@include('partials.public-site-footer')
 
 @if(isset($popupAd) && $popupAd)
     @include('partials.popup-ad', ['ad' => $popupAd])

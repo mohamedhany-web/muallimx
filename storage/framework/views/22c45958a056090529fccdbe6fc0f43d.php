@@ -25,6 +25,7 @@
                     ['route' => 'public.courses', 'icon' => 'fa-graduation-cap', 'label' => __('landing.nav.courses')],
                     ['route' => 'public.portfolio.index', 'icon' => 'fa-briefcase', 'label' => __('landing.nav.portfolio')],
                     ['route' => 'public.instructors.index', 'icon' => 'fa-chalkboard-teacher', 'label' => __('landing.nav.instructors')],
+                    ['route' => 'public.services.index', 'icon' => 'fa-concierge-bell', 'label' => __('landing.nav.services')],
                     ['route' => 'public.pricing', 'icon' => 'fa-tags', 'label' => __('landing.nav.pricing')],
                 ];
                 ?>
@@ -120,6 +121,7 @@
                 ['route' => 'public.courses', 'icon' => 'fa-graduation-cap', 'label' => __('landing.nav.courses'), 'color' => 'blue'],
                 ['route' => 'public.portfolio.index', 'icon' => 'fa-briefcase', 'label' => __('landing.nav.portfolio'), 'color' => 'purple'],
                 ['route' => 'public.instructors.index', 'icon' => 'fa-chalkboard-teacher', 'label' => __('landing.nav.instructors'), 'color' => 'emerald'],
+                ['route' => 'public.services.index', 'icon' => 'fa-concierge-bell', 'label' => __('landing.nav.services'), 'color' => 'orange'],
                 ['route' => 'public.pricing', 'icon' => 'fa-tags', 'label' => __('landing.nav.pricing'), 'color' => 'cyan'],
             ];
             ?>

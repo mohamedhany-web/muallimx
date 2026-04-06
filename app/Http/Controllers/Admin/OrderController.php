@@ -454,6 +454,16 @@ class OrderController extends Controller
                 Log::warning('Referral update failed during order approval: ' . $e->getMessage(), ['order_id' => $order->id]);
             }
 
+            try {
+                app(\App\Services\CouponCommissionService::class)->accrueFromApprovedOrder(
+                    $order->fresh(),
+                    $invoice->id ?? null,
+                    $payment->id ?? null
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Coupon commission accrual failed during order approval: ' . $e->getMessage(), ['order_id' => $order->id]);
+            }
+
             // إذا كان الطلب للمسار التعليمي، تسجيل الطالب في المسار (لا نوقف الموافقة إذا فشل)
             if ($order->academic_year_id) {
                 Log::info('Order approve: starting learning path enrollment', ['order_id' => $order->id, 'academic_year_id' => $order->academic_year_id]);

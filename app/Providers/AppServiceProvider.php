@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
+use App\Services\AdminPanelBranding;
+use App\Services\PublicFooterSettings;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -135,6 +137,23 @@ class AppServiceProvider extends ServiceProvider
             if (method_exists($user, 'hasPermission')) {
                 return $user->hasPermission($ability) ? true : null;
             }
+        });
+
+        View::composer(
+            [
+                'welcome',
+                'public.services.index',
+                'public.services.show',
+                'public.pricing',
+                'public.portfolio.index',
+            ],
+            function ($view) {
+                $view->with('publicFooter', PublicFooterSettings::payload());
+            }
+        );
+
+        View::composer('layouts.admin', function ($view) {
+            $view->with('adminPanelLogoUrl', AdminPanelBranding::logoPublicUrl());
         });
     }
 }

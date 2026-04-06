@@ -27,6 +27,7 @@ class ReferralProgram extends Model
         'starts_at',
         'expires_at',
         'is_active',
+        'is_default',
         'settings',
     ];
 
@@ -43,8 +44,22 @@ class ReferralProgram extends Model
         'starts_at' => 'date',
         'expires_at' => 'date',
         'is_active' => 'boolean',
+        'is_default' => 'boolean',
         'settings' => 'array',
     ];
+
+    /**
+     * البرنامج المستخدم لتسجيل إحالات جديدة (افتراضي نشط، أو آخر برنامج نشط).
+     */
+    public static function currentForNewReferrals(): ?self
+    {
+        $default = static::active()->where('is_default', true)->orderByDesc('id')->first();
+        if ($default) {
+            return $default;
+        }
+
+        return static::active()->orderByDesc('id')->first();
+    }
 
     // العلاقات
     public function referrals()

@@ -317,6 +317,59 @@
     .mx-bg-lined { background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='40'%3E%3Cline x1='0' y1='39' x2='100%25' y2='39' stroke='%23bfdbfe' stroke-width='1'/%3E%3C/svg%3E"); }
     .mx-bg-dark { background: #1e293b; }
     .mx-bg-green { background: #166534; }
+    .mx-bg-cream { background: #fffbeb; }
+    .mx-bg-black { background: #0f172a; }
+
+    .mx-wb-toolbar-wrap {
+        max-height: 168px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        flex-shrink: 0;
+        border-bottom: 1px solid rgba(148,163,184,0.12);
+        background: rgba(15,23,42,0.92);
+    }
+    .mx-wb-toolbar-wrap::-webkit-scrollbar { height: 6px; width: 6px; }
+    .mx-wb-toolbar-wrap::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.35); border-radius: 4px; }
+
+    .mx-tool-btn-sm { width: 30px !important; height: 30px !important; font-size: 11px !important; }
+    .mx-wb-select {
+        background: rgba(30,41,59,0.95);
+        border: 1px solid rgba(148,163,184,0.2);
+        border-radius: 8px;
+        color: #cbd5e1;
+        font-size: 11px;
+        padding: 5px 8px;
+        max-width: 120px;
+        cursor: pointer;
+    }
+    .mx-color-presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+        max-width: 140px;
+    }
+    .mx-cp {
+        width: 18px; height: 18px;
+        border-radius: 4px;
+        border: 2px solid rgba(148,163,184,0.25);
+        cursor: pointer;
+        padding: 0;
+        flex-shrink: 0;
+    }
+    .mx-cp:hover { transform: scale(1.08); border-color: #38bdf8; }
+    .mx-sym-btn {
+        font-size: 13px;
+        font-weight: 700;
+        min-width: 28px;
+    }
+    .mx-row-label {
+        font-size: 9px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        width: 100%;
+        padding: 2px 6px 0;
+    }
 </style>
 
 {{-- ═══════════════ FLOATING FAB BUTTON ═══════════════ --}}
@@ -347,14 +400,24 @@
     <canvas id="mx-annotation-canvas"></canvas>
     <div id="mx-annotation-toolbar">
         <button class="mx-ann-btn active" id="mx-ann-pen" title="قلم"><i class="fas fa-pen"></i></button>
+        <button class="mx-ann-btn" id="mx-ann-highlighter" title="تمييز شفاف"><i class="fas fa-highlighter"></i></button>
         <button class="mx-ann-btn" id="mx-ann-line" title="خط"><i class="fas fa-minus"></i></button>
+        <button class="mx-ann-btn" id="mx-ann-line-dash" title="خط متقطع"><i class="fas fa-grip-lines"></i></button>
         <button class="mx-ann-btn" id="mx-ann-arrow" title="سهم"><i class="fas fa-arrow-right"></i></button>
         <button class="mx-ann-btn" id="mx-ann-rect" title="مستطيل"><i class="far fa-square"></i></button>
         <button class="mx-ann-btn" id="mx-ann-circle" title="دائرة"><i class="far fa-circle"></i></button>
         <button class="mx-ann-btn" id="mx-ann-eraser" title="ممحاة"><i class="fas fa-eraser"></i></button>
         <div class="mx-ann-sep"></div>
+        <span class="mx-ann-presets" style="display:flex;gap:3px;flex-wrap:wrap;max-width:120px;">
+            <button type="button" class="mx-ann-btn" style="width:22px;height:22px;padding:0;background:#ef4444" data-ann-c="#ef4444" title="أحمر"></button>
+            <button type="button" class="mx-ann-btn" style="width:22px;height:22px;padding:0;background:#22c55e" data-ann-c="#22c55e" title="أخضر"></button>
+            <button type="button" class="mx-ann-btn" style="width:22px;height:22px;padding:0;background:#3b82f6" data-ann-c="#3b82f6" title="أزرق"></button>
+            <button type="button" class="mx-ann-btn" style="width:22px;height:22px;padding:0;background:#eab308" data-ann-c="#eab308" title="أصفر"></button>
+            <button type="button" class="mx-ann-btn" style="width:22px;height:22px;padding:0;background:#fff;border:1px solid #64748b" data-ann-c="#ffffff" title="أبيض"></button>
+            <button type="button" class="mx-ann-btn" style="width:22px;height:22px;padding:0;background:#a855f7" data-ann-c="#a855f7" title="بنفسجي"></button>
+        </span>
         <input type="color" class="mx-ann-color" id="mx-ann-color" value="#ef4444" title="اللون">
-        <input type="range" id="mx-ann-size" min="1" max="20" value="4" title="الحجم">
+        <input type="range" id="mx-ann-size" min="1" max="28" value="4" title="الحجم">
         <div class="mx-ann-sep"></div>
         <button class="mx-ann-btn" id="mx-ann-undo" title="تراجع"><i class="fas fa-rotate-left"></i></button>
         <button class="mx-ann-btn" id="mx-ann-clear" title="مسح الكل"><i class="fas fa-trash"></i></button>
@@ -377,49 +440,120 @@
         </div>
     </div>
 
-    <div class="mx-wb-toolbar">
-        {{-- أدوات الرسم --}}
-        <div class="mx-tool-group">
-            <button class="mx-tool-btn is-active" data-tool="select" title="تحديد"><i class="fas fa-mouse-pointer"></i></button>
-            <button class="mx-tool-btn" data-tool="draw" title="قلم حر"><i class="fas fa-pen"></i></button>
-            <button class="mx-tool-btn" data-tool="eraser" title="ممحاة"><i class="fas fa-eraser"></i></button>
-        </div>
-        {{-- الأشكال --}}
-        <div class="mx-tool-group">
-            <button class="mx-tool-btn" data-tool="line" title="خط مستقيم"><i class="fas fa-minus"></i></button>
-            <button class="mx-tool-btn" data-tool="rect" title="مستطيل"><i class="far fa-square"></i></button>
-            <button class="mx-tool-btn" data-tool="circle" title="دائرة / بيضاوي"><i class="far fa-circle"></i></button>
-            <button class="mx-tool-btn" data-tool="triangle" title="مثلث"><i class="fas fa-play fa-rotate-270"></i></button>
-            <button class="mx-tool-btn" data-tool="arrow" title="سهم"><i class="fas fa-arrow-right"></i></button>
-        </div>
-        {{-- نص --}}
-        <div class="mx-tool-group">
-            <button class="mx-tool-btn" data-tool="text" title="إضافة نص"><i class="fas fa-font"></i></button>
-        </div>
-        {{-- الألوان والحجم --}}
-        <div class="mx-tool-group">
-            <input type="color" class="mx-color-input" id="mx-stroke-color" value="#0f172a" title="لون الخط / النص">
-            <input type="color" class="mx-color-input" id="mx-fill-color" value="#ffffff" title="لون التعبئة">
-            <div class="mx-size-wrap">
-                <i class="fas fa-circle-dot" style="font-size:9px;"></i>
-                <input type="range" id="mx-stroke-width" min="1" max="24" value="3">
-                <i class="fas fa-circle" style="font-size:13px;"></i>
+    <div class="mx-wb-toolbar-wrap">
+        <div class="mx-row-label">الرسم والتحديد</div>
+        <div class="mx-wb-toolbar">
+            <div class="mx-tool-group">
+                <button class="mx-tool-btn is-active" data-tool="select" title="تحديد ونقل"><i class="fas fa-mouse-pointer"></i></button>
+                <button class="mx-tool-btn" data-tool="draw" title="قلم حر"><i class="fas fa-pen"></i></button>
+                <button class="mx-tool-btn" data-tool="highlight" title="تمييز شفاف (ماركر)"><i class="fas fa-highlighter"></i></button>
+                <button class="mx-tool-btn" data-tool="eraser" title="ممحاة"><i class="fas fa-eraser"></i></button>
+            </div>
+            <div class="mx-tool-group">
+                <button class="mx-tool-btn" data-tool="line" title="خط"><i class="fas fa-minus"></i></button>
+                <button class="mx-tool-btn" data-tool="arrow" title="سهم"><i class="fas fa-arrow-right"></i></button>
+                <button class="mx-tool-btn" data-tool="darrow" title="سهم مزدوج"><i class="fas fa-arrows-left-right"></i></button>
+                <button class="mx-tool-btn" data-tool="rect" title="مستطيل"><i class="far fa-square"></i></button>
+                <button class="mx-tool-btn" data-tool="roundrect" title="مستطيل مستدير"><i class="fas fa-square"></i></button>
+                <button class="mx-tool-btn" data-tool="circle" title="بيضاوي"><i class="far fa-circle"></i></button>
+                <button class="mx-tool-btn" data-tool="triangle" title="مثلث"><i class="fas fa-play fa-rotate-270"></i></button>
+                <button class="mx-tool-btn" data-tool="diamond" title="معين"><i class="fas fa-gem"></i></button>
+                <button class="mx-tool-btn" data-tool="hex" title="سداسي"><span style="font-size:14px;font-weight:800;line-height:1">⬡</span></button>
+                <button class="mx-tool-btn" data-tool="star" title="نجمة"><i class="fas fa-star"></i></button>
+            </div>
+            <div class="mx-tool-group">
+                <button class="mx-tool-btn" data-tool="text" title="نص حر"><i class="fas fa-font"></i></button>
+                <button class="mx-tool-btn mx-sym-btn" data-tool="stamp-check" title="صح ✓">✓</button>
+                <button class="mx-tool-btn mx-sym-btn" data-tool="stamp-x" title="خطأ ✗">✗</button>
+                <button class="mx-tool-btn mx-sym-btn" data-tool="stamp-q" title="سؤال ؟">?</button>
+                <button class="mx-tool-btn mx-sym-btn" data-tool="stamp-bang" title="تنبيه !">!</button>
             </div>
         </div>
-        {{-- خلفية اللوحة --}}
-        <div class="mx-tool-group mx-bg-switcher">
-            <button class="mx-bg-btn is-active" data-bg="white" style="background:#fff;" title="أبيض"></button>
-            <button class="mx-bg-btn" data-bg="grid" style="background:linear-gradient(#e2e8f0 1px,transparent 1px),linear-gradient(90deg,#e2e8f0 1px,transparent 1px),#fff;background-size:20px 20px;" title="شبكة"></button>
-            <button class="mx-bg-btn" data-bg="lined" style="background:repeating-linear-gradient(#fff,#fff 34px,#bfdbfe 35px,#bfdbfe 35px);" title="مسطرة"></button>
-            <button class="mx-bg-btn" data-bg="dark" style="background:#1e293b;" title="داكن"></button>
-            <button class="mx-bg-btn" data-bg="green" style="background:#166534;" title="سبورة خضراء"></button>
-        </div>
-        {{-- أدوات الإجراءات --}}
-        <div class="mx-tool-group">
-            <button class="mx-tool-btn" id="mx-undo" title="تراجع"><i class="fas fa-rotate-left"></i></button>
-            <button class="mx-tool-btn" id="mx-redo" title="إعادة"><i class="fas fa-rotate-right"></i></button>
-            <button class="mx-tool-btn" id="mx-clear" title="مسح الكل" style="color:#f87171;"><i class="fas fa-trash-alt"></i></button>
-            <button class="mx-tool-btn" id="mx-download" title="حفظ كصورة"><i class="fas fa-download"></i></button>
+        <div class="mx-row-label">المظهر — الخط — الطبقات</div>
+        <div class="mx-wb-toolbar">
+            <div class="mx-tool-group">
+                <span style="font-size:10px;color:#64748b;white-space:nowrap;">ألوان جاهزة</span>
+                <div class="mx-color-presets" id="mx-stroke-presets"></div>
+            </div>
+            <div class="mx-tool-group">
+                <input type="color" class="mx-color-input" id="mx-stroke-color" value="#0f172a" title="لون الحد / النص">
+                <input type="color" class="mx-color-input" id="mx-fill-color" value="#ffffff" title="تعبئة">
+                <label class="mx-size-wrap" title="بدون تعبئة" style="cursor:pointer;white-space:nowrap;">
+                    <input type="checkbox" id="mx-fill-transparent" style="accent-color:#0ea5e9;">
+                    <span>شفاف</span>
+                </label>
+            </div>
+            <div class="mx-tool-group">
+                <div class="mx-size-wrap">
+                    <span>سمك</span>
+                    <input type="range" id="mx-stroke-width" min="1" max="32" value="3">
+                </div>
+                <div class="mx-size-wrap">
+                    <span>شفافية</span>
+                    <input type="range" id="mx-opacity" min="15" max="100" value="100" title="شفافية العنصر المحدد أو الرسم القادم">
+                </div>
+                <div class="mx-size-wrap">
+                    <span>خط النص</span>
+                    <input type="range" id="mx-text-size" min="14" max="72" value="22" title="حجم خط النص الجديد">
+                </div>
+            </div>
+            <div class="mx-tool-group">
+                <label style="font-size:10px;color:#64748b;">نمط الخط</label>
+                <select id="mx-line-dash" class="mx-wb-select" title="متقطع للأشكال الجديدة">
+                    <option value="">متصل</option>
+                    <option value="8,6">متقطع</option>
+                    <option value="2,4">نقاط</option>
+                    <option value="12,6,2,6">شرطات طويلة</option>
+                </select>
+            </div>
+            <div class="mx-tool-group">
+                <span style="font-size:10px;color:#64748b;">رموز</span>
+                <select id="mx-math-insert" class="mx-wb-select" title="إدراج رمز عند النقر على اللوحة">
+                    <option value="">+ رياضيات</option>
+                    <option value="×">×</option>
+                    <option value="÷">÷</option>
+                    <option value="±">±</option>
+                    <option value="√">√</option>
+                    <option value="π">π</option>
+                    <option value="θ">θ</option>
+                    <option value="Δ">Δ</option>
+                    <option value="°">°</option>
+                    <option value="²">²</option>
+                    <option value="³">³</option>
+                    <option value="→">→</option>
+                    <option value="←">←</option>
+                    <option value="↑">↑</option>
+                    <option value="↓">↓</option>
+                    <option value="∞">∞</option>
+                    <option value="≠">≠</option>
+                    <option value="≤">≤</option>
+                    <option value="≥">≥</option>
+                    <option value="≈">≈</option>
+                    <option value="∑">∑</option>
+                    <option value="∫">∫</option>
+                </select>
+            </div>
+            <div class="mx-tool-group">
+                <button class="mx-tool-btn" id="mx-dup" title="نسخ العنصر المحدد"><i class="fas fa-copy"></i></button>
+                <button class="mx-tool-btn" id="mx-front" title="إحضار للأمام"><i class="fas fa-arrow-up"></i></button>
+                <button class="mx-tool-btn" id="mx-back" title="إرسال للخلف"><i class="fas fa-arrow-down"></i></button>
+            </div>
+            <div class="mx-tool-group mx-bg-switcher">
+                <span style="font-size:10px;color:#64748b;">خلفية</span>
+                <button class="mx-bg-btn is-active" data-bg="white" style="background:#fff;" title="أبيض"></button>
+                <button class="mx-bg-btn" data-bg="cream" style="background:#fffbeb;" title="كريمي"></button>
+                <button class="mx-bg-btn" data-bg="grid" style="background:linear-gradient(#e2e8f0 1px,transparent 1px),linear-gradient(90deg,#e2e8f0 1px,transparent 1px),#fff;background-size:20px 20px;" title="شبكة"></button>
+                <button class="mx-bg-btn" data-bg="lined" style="background:repeating-linear-gradient(#fff,#fff 34px,#bfdbfe 35px,#bfdbfe 35px);" title="مسطرة"></button>
+                <button class="mx-bg-btn" data-bg="dark" style="background:#1e293b;" title="داكن"></button>
+                <button class="mx-bg-btn" data-bg="black" style="background:#0f172a;" title="أسود"></button>
+                <button class="mx-bg-btn" data-bg="green" style="background:#166534;" title="سبورة خضراء"></button>
+            </div>
+            <div class="mx-tool-group">
+                <button class="mx-tool-btn" id="mx-undo" title="تراجع"><i class="fas fa-rotate-left"></i></button>
+                <button class="mx-tool-btn" id="mx-redo" title="إعادة"><i class="fas fa-rotate-right"></i></button>
+                <button class="mx-tool-btn" id="mx-clear" title="مسح الكل" style="color:#f87171;"><i class="fas fa-trash-alt"></i></button>
+                <button class="mx-tool-btn" id="mx-download" title="PNG"><i class="fas fa-download"></i></button>
+            </div>
         </div>
     </div>
 
@@ -487,7 +621,7 @@
     }
 
     annCanvas.addEventListener('mousedown', function(e) {
-        if (annTool === 'eraser' || annTool === 'pen') {
+        if (annTool === 'eraser' || annTool === 'pen' || annTool === 'highlighter') {
             annDrawing = true;
             annLastX = e.offsetX; annLastY = e.offsetY;
             annCtx.beginPath();
@@ -504,6 +638,8 @@
         if (!annDrawing) return;
         var x = e.offsetX, y = e.offsetY;
         if (annTool === 'pen') {
+            annCtx.setLineDash([]);
+            annCtx.globalAlpha = 1;
             annCtx.strokeStyle = annColor();
             annCtx.lineWidth   = annSize();
             annCtx.lineCap     = 'round';
@@ -512,7 +648,22 @@
             annCtx.lineTo(x, y);
             annCtx.stroke();
             annLastX = x; annLastY = y;
+        } else if (annTool === 'highlighter') {
+            annCtx.save();
+            annCtx.setLineDash([]);
+            annCtx.globalAlpha = 0.38;
+            annCtx.strokeStyle = annColor();
+            annCtx.lineWidth   = Math.max(10, annSize() * 3);
+            annCtx.lineCap     = 'round';
+            annCtx.lineJoin    = 'round';
+            annCtx.globalCompositeOperation = 'source-over';
+            annCtx.lineTo(x, y);
+            annCtx.stroke();
+            annCtx.restore();
+            annLastX = x; annLastY = y;
         } else if (annTool === 'eraser') {
+            annCtx.setLineDash([]);
+            annCtx.globalAlpha = 1;
             annCtx.globalCompositeOperation = 'destination-out';
             annCtx.lineWidth = annSize() * 4;
             annCtx.lineCap   = 'round';
@@ -523,12 +674,15 @@
             annCtx.putImageData(annSnapshot, 0, 0);
             annCtx.strokeStyle = annColor();
             annCtx.lineWidth   = annSize();
+            annCtx.globalAlpha = 1;
             annCtx.globalCompositeOperation = 'source-over';
-            if (annTool === 'line') {
+            if (annTool === 'line' || annTool === 'lineDash') {
+                annCtx.setLineDash(annTool === 'lineDash' ? [10, 7] : []);
                 annCtx.beginPath();
                 annCtx.moveTo(annStartX, annStartY);
                 annCtx.lineTo(x, y);
                 annCtx.stroke();
+                annCtx.setLineDash([]);
             } else if (annTool === 'arrow') {
                 drawAnnArrow(annStartX, annStartY, x, y);
             } else if (annTool === 'rect') {
@@ -567,17 +721,26 @@
     function setAnnTool(tool) {
         annTool = tool;
         annCtx.globalCompositeOperation = 'source-over';
+        annCtx.globalAlpha = 1;
         document.querySelectorAll('#mx-annotation-toolbar .mx-ann-btn[id^="mx-ann-"]').forEach(function(b) {
             b.classList.remove('active');
         });
-        var active = document.getElementById('mx-ann-' + tool);
+        var btnSuffix = tool === 'lineDash' ? 'line-dash' : tool;
+        var active = document.getElementById('mx-ann-' + btnSuffix);
         if (active) active.classList.add('active');
         annCanvas.style.cursor = (tool === 'eraser') ? 'cell' : 'crosshair';
     }
 
-    ['pen','line','arrow','rect','circle','eraser'].forEach(function(t) {
-        var btn = document.getElementById('mx-ann-' + t);
+    ['pen','highlighter','line','line-dash','arrow','rect','circle','eraser'].forEach(function(id) {
+        var t = id === 'line-dash' ? 'lineDash' : id;
+        var btn = document.getElementById('mx-ann-' + id);
         if (btn) btn.addEventListener('click', function() { setAnnTool(t); });
+    });
+    document.querySelectorAll('#mx-annotation-toolbar [data-ann-c]').forEach(function(b) {
+        b.addEventListener('click', function(ev) {
+            ev.preventDefault();
+            document.getElementById('mx-ann-color').value = b.getAttribute('data-ann-c');
+        });
     });
 
     document.getElementById('mx-ann-undo').addEventListener('click', function() {
@@ -614,6 +777,7 @@
     if (!wbCanvasEl || !wbWrap || typeof fabric === 'undefined') return;
 
     var wbCanvas  = new fabric.Canvas(wbCanvasEl, { selection: true, preserveObjectStacking: true });
+    var WB_SHAPE_TOOLS = ['line','arrow','darrow','rect','roundrect','circle','triangle','diamond','hex','star'];
     var wbTool    = 'select';
     var wbDrawObj = null;
     var wbStart   = null;
@@ -625,11 +789,76 @@
 
     var bgPatterns = {
         white: '#ffffff',
+        cream: '#fffbeb',
         grid:  '#ffffff',
         lined: '#ffffff',
         dark:  '#1e293b',
+        black: '#0f172a',
         green: '#166534'
     };
+
+    var STROKE_PRESET_COLORS = ['#0f172a','#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#8b5cf6','#ec4899','#ffffff','#94a3b8'];
+
+    function hexToRgba(hex, alpha) {
+        var h = (hex || '#000000').replace('#', '');
+        if (h.length === 3) h = h.split('').map(function(c) { return c + c; }).join('');
+        var n = parseInt(h, 16);
+        if (isNaN(n)) return 'rgba(0,0,0,' + alpha + ')';
+        var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+        return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+    }
+
+    function wbDashArray() {
+        var v = (document.getElementById('mx-line-dash') && document.getElementById('mx-line-dash').value) || '';
+        if (!v) return null;
+        var a = v.split(',').map(function(s) { return parseFloat(s.trim()); }).filter(function(n) { return !isNaN(n); });
+        return a.length ? a : null;
+    }
+
+    function wbFillFromUI() {
+        var tr = document.getElementById('mx-fill-transparent');
+        if (tr && tr.checked) return 'transparent';
+        return wbFillColor();
+    }
+
+    function wbNewOpacity() {
+        var el = document.getElementById('mx-opacity');
+        var n = el ? parseInt(el.value, 10) : 100;
+        if (isNaN(n)) n = 100;
+        return Math.max(0.15, Math.min(1, n / 100));
+    }
+
+    function wbTextSize() {
+        var el = document.getElementById('mx-text-size');
+        var n = el ? parseInt(el.value, 10) : 22;
+        return isNaN(n) ? 22 : n;
+    }
+
+    function applyWbStrokeOpts(obj) {
+        if (!obj) return;
+        var dash = wbDashArray();
+        if (dash) obj.set('strokeDashArray', dash);
+        else if (obj.strokeDashArray) obj.set('strokeDashArray', null);
+        obj.set('opacity', wbNewOpacity());
+    }
+
+    (function initStrokePresets() {
+        var wrap = document.getElementById('mx-stroke-presets');
+        if (!wrap) return;
+        STROKE_PRESET_COLORS.forEach(function(c) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'mx-cp';
+            b.style.background = c;
+            b.title = c;
+            if (c === '#ffffff') b.style.border = '1px solid #64748b';
+            b.addEventListener('click', function() {
+                document.getElementById('mx-stroke-color').value = c;
+                document.getElementById('mx-stroke-color').dispatchEvent(new Event('input', { bubbles: true }));
+            });
+            wrap.appendChild(b);
+        });
+    })();
 
     function resizeWbCanvas() {
         var rect = wbWrap.getBoundingClientRect();
@@ -663,41 +892,137 @@
         if (bg === 'grid')  wrap.classList.add('mx-bg-grid');
         else if (bg === 'lined') wrap.classList.add('mx-bg-lined');
         else if (bg === 'dark')  wrap.classList.add('mx-bg-dark');
+        else if (bg === 'black') wrap.classList.add('mx-bg-black');
+        else if (bg === 'cream') wrap.classList.add('mx-bg-cream');
         else if (bg === 'green') wrap.classList.add('mx-bg-green');
         wbCanvas.setBackgroundColor(bgPatterns[bg] || '#ffffff', wbCanvas.renderAll.bind(wbCanvas));
         document.querySelectorAll('.mx-bg-btn').forEach(function(b) {
             b.classList.toggle('is-active', b.getAttribute('data-bg') === bg);
         });
-        // Adjust default stroke for dark/green boards
-        if (bg === 'dark' || bg === 'green') {
+        if (bg === 'dark' || bg === 'green' || bg === 'black') {
             document.getElementById('mx-stroke-color').value = '#ffffff';
         }
+        if (wbTool === 'draw' || wbTool === 'highlight' || wbTool === 'eraser') activateWbTool(wbTool);
     }
 
     function activateWbTool(tool) {
         wbTool = tool;
-        wbCanvas.isDrawingMode = (tool === 'draw' || tool === 'eraser');
+        wbCanvas.isDrawingMode = (tool === 'draw' || tool === 'highlight' || tool === 'eraser');
         wbCanvas.selection = (tool === 'select');
         wbCanvas.forEachObject(function(o) { o.selectable = (tool === 'select'); o.evented = (tool === 'select'); });
-        if (tool === 'draw' || tool === 'eraser') {
+        if (tool === 'draw' || tool === 'highlight' || tool === 'eraser') {
             wbCanvas.freeDrawingBrush = new fabric.PencilBrush(wbCanvas);
-            wbCanvas.freeDrawingBrush.width = tool === 'eraser' ? Math.max(14, wbStrokeWidth() * 4) : wbStrokeWidth();
-            wbCanvas.freeDrawingBrush.color = tool === 'eraser' ? (bgPatterns[wbBg] || '#ffffff') : wbStrokeColor();
+            if (tool === 'eraser') {
+                wbCanvas.freeDrawingBrush.width = Math.max(14, wbStrokeWidth() * 4);
+                wbCanvas.freeDrawingBrush.color = bgPatterns[wbBg] || '#ffffff';
+            } else if (tool === 'highlight') {
+                wbCanvas.freeDrawingBrush.width = Math.max(12, wbStrokeWidth() * 3);
+                wbCanvas.freeDrawingBrush.color = hexToRgba(wbStrokeColor(), 0.38);
+            } else {
+                wbCanvas.freeDrawingBrush.width = wbStrokeWidth();
+                wbCanvas.freeDrawingBrush.color = wbStrokeColor();
+            }
         }
         document.querySelectorAll('#mx-whiteboard-panel [data-tool]').forEach(function(b) {
             b.classList.toggle('is-active', b.getAttribute('data-tool') === tool);
         });
-        // Cursor
-        wbCanvasEl.style.cursor = (tool === 'text') ? 'text' : 'default';
+        wbCanvasEl.style.cursor = (tool === 'select') ? 'default' : (tool === 'text') ? 'text' : 'crosshair';
+    }
+
+    function wbShapeBase() {
+        return {
+            stroke: wbStrokeColor(),
+            strokeWidth: wbStrokeWidth(),
+            fill: wbFillFromUI(),
+            opacity: wbNewOpacity(),
+            selectable: false,
+            evented: false
+        };
+    }
+
+    function diamondPolyPoints(w, h) {
+        return [
+            { x: w / 2, y: 0 },
+            { x: w, y: h / 2 },
+            { x: w / 2, y: h },
+            { x: 0, y: h / 2 }
+        ];
+    }
+
+    function hexPolyPoints(w, h) {
+        var cx = w / 2, cy = h / 2, r = Math.min(w, h) / 2;
+        var pts = [];
+        for (var i = 0; i < 6; i++) {
+            var a = -Math.PI / 2 + i * Math.PI / 3;
+            pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+        }
+        return pts;
+    }
+
+    function starPolyPoints(w, h) {
+        var cx = w / 2, cy = h / 2, outer = Math.min(w, h) / 2, inner = outer * 0.42;
+        var pts = [];
+        for (var i = 0; i < 10; i++) {
+            var rad = (i % 2 === 0) ? outer : inner;
+            var ang = -Math.PI / 2 + (i * Math.PI) / 5;
+            pts.push({ x: cx + rad * Math.cos(ang), y: cy + rad * Math.sin(ang) });
+        }
+        return pts;
     }
 
     function createWbShape(tool, x, y) {
-        var opts = { left: x, top: y, stroke: wbStrokeColor(), strokeWidth: wbStrokeWidth(), fill: wbFillColor(), selectable: false, evented: false };
-        if (tool === 'line' || tool === 'arrow') return new fabric.Line([x, y, x, y], Object.assign({}, opts, { fill: 'transparent' }));
-        if (tool === 'rect')     return new fabric.Rect(Object.assign({}, opts, { width: 1, height: 1 }));
-        if (tool === 'circle')   return new fabric.Ellipse(Object.assign({}, opts, { rx: 1, ry: 1 }));
+        var opts = Object.assign({ left: x, top: y }, wbShapeBase());
+        var dash = wbDashArray();
+        if (tool === 'line' || tool === 'arrow' || tool === 'darrow') {
+            var ln = new fabric.Line([x, y, x, y], Object.assign({}, opts, { fill: 'transparent' }));
+            if (dash) ln.set('strokeDashArray', dash.slice());
+            return ln;
+        }
+        if (tool === 'rect') return new fabric.Rect(Object.assign({}, opts, { width: 1, height: 1 }));
+        if (tool === 'roundrect') return new fabric.Rect(Object.assign({}, opts, { width: 1, height: 1, rx: 4, ry: 4 }));
+        if (tool === 'circle') return new fabric.Ellipse(Object.assign({}, opts, { rx: 1, ry: 1 }));
         if (tool === 'triangle') return new fabric.Triangle(Object.assign({}, opts, { width: 1, height: 1 }));
+        if (tool === 'diamond') return new fabric.Polygon(diamondPolyPoints(8, 8), Object.assign({}, opts, { objectCaching: false }));
+        if (tool === 'hex') return new fabric.Polygon(hexPolyPoints(8, 8), Object.assign({}, opts, { objectCaching: false }));
+        if (tool === 'star') return new fabric.Polygon(starPolyPoints(8, 8), Object.assign({}, opts, { objectCaching: false }));
         return null;
+    }
+
+    function stampCharForTool(tool) {
+        if (tool === 'stamp-check') return '✓';
+        if (tool === 'stamp-x') return '✗';
+        if (tool === 'stamp-q') return '?';
+        if (tool === 'stamp-bang') return '!';
+        return '';
+    }
+
+    function addWbStamp(p, ch) {
+        var t = new fabric.IText(ch, {
+            left: p.x, top: p.y,
+            fontSize: Math.max(28, wbTextSize() * 1.4),
+            fill: wbStrokeColor(),
+            fontFamily: 'IBM Plex Sans Arabic, system-ui, sans-serif',
+            fontWeight: '700',
+            opacity: wbNewOpacity(),
+            selectable: false,
+            evented: false
+        });
+        wbCanvas.add(t).setActiveObject(t);
+        saveWbState();
+    }
+
+    function addWbMathSymbol(p, sym) {
+        var t = new fabric.IText(sym, {
+            left: p.x, top: p.y,
+            fontSize: wbTextSize(),
+            fill: wbStrokeColor(),
+            fontFamily: 'IBM Plex Sans Arabic, system-ui, sans-serif',
+            opacity: wbNewOpacity(),
+            selectable: false,
+            evented: false
+        });
+        wbCanvas.add(t).setActiveObject(t);
+        saveWbState();
     }
 
     /* Text popup */
@@ -719,7 +1044,8 @@
         if (!wbTextPending || !textInput.value.trim()) { textPopup.style.display = 'none'; return; }
         var t = new fabric.IText(textInput.value.trim(), {
             left: wbTextPending.x, top: wbTextPending.y,
-            fontSize: 22, fill: wbStrokeColor(),
+            fontSize: wbTextSize(), fill: wbStrokeColor(),
+            opacity: wbNewOpacity(),
             fontFamily: 'IBM Plex Sans Arabic, sans-serif',
             selectable: (wbTool === 'select'), editable: true
         });
@@ -742,7 +1068,15 @@
     wbCanvas.on('mouse:down', function(opt) {
         var p = wbCanvas.getPointer(opt.e);
         if (wbTool === 'text') { showTextPopup(p.x, p.y); return; }
-        if (!['line','rect','circle','triangle','arrow'].includes(wbTool)) return;
+        var mathSel = document.getElementById('mx-math-insert');
+        if (wbTool === 'select' && mathSel && mathSel.value) {
+            addWbMathSymbol(p, mathSel.value);
+            mathSel.value = '';
+            return;
+        }
+        var st = stampCharForTool(wbTool);
+        if (st) { addWbStamp(p, st); return; }
+        if (WB_SHAPE_TOOLS.indexOf(wbTool) < 0) return;
         wbStart = p;
         wbDrawObj = createWbShape(wbTool, p.x, p.y);
         if (wbDrawObj) wbCanvas.add(wbDrawObj);
@@ -751,33 +1085,65 @@
     wbCanvas.on('mouse:move', function(opt) {
         if (!wbDrawObj || !wbStart) return;
         var p = wbCanvas.getPointer(opt.e);
-        if (wbTool === 'line' || wbTool === 'arrow') {
+        if (wbTool === 'line' || wbTool === 'arrow' || wbTool === 'darrow') {
             wbDrawObj.set({ x2: p.x, y2: p.y });
         } else if (wbTool === 'rect' || wbTool === 'triangle') {
             wbDrawObj.set({ left: Math.min(wbStart.x, p.x), top: Math.min(wbStart.y, p.y), width: Math.abs(wbStart.x - p.x), height: Math.abs(wbStart.y - p.y) });
+        } else if (wbTool === 'roundrect') {
+            var rl = Math.min(wbStart.x, p.x), rt = Math.min(wbStart.y, p.y);
+            var rw = Math.abs(wbStart.x - p.x), rh = Math.abs(wbStart.y - p.y);
+            var rr = Math.min(rw / 2, rh / 2, Math.max(4, Math.min(rw, rh) * 0.22));
+            wbDrawObj.set({ left: rl, top: rt, width: rw, height: rh, rx: rr, ry: rr });
         } else if (wbTool === 'circle') {
             var rx = Math.abs(p.x - wbStart.x) / 2, ry = Math.abs(p.y - wbStart.y) / 2;
             wbDrawObj.set({ left: Math.min(wbStart.x, p.x), top: Math.min(wbStart.y, p.y), rx: rx, ry: ry });
+        } else if (wbTool === 'diamond' || wbTool === 'hex' || wbTool === 'star') {
+            var pl = Math.min(wbStart.x, p.x), pt = Math.min(wbStart.y, p.y);
+            var pw = Math.max(2, Math.abs(wbStart.x - p.x)), ph = Math.max(2, Math.abs(wbStart.y - p.y));
+            var pts = wbTool === 'diamond' ? diamondPolyPoints(pw, ph) : (wbTool === 'hex' ? hexPolyPoints(pw, ph) : starPolyPoints(pw, ph));
+            wbDrawObj.set({ left: pl, top: pt, points: pts });
         }
         wbCanvas.requestRenderAll();
     });
 
     wbCanvas.on('mouse:up', function() {
         if (!wbDrawObj) return;
+        var op = wbNewOpacity();
         if (wbTool === 'arrow') {
             var line = wbDrawObj;
             var angle = Math.atan2(line.y2 - line.y1, line.x2 - line.x1);
             var sz = 14 + wbStrokeWidth();
-            var head = new fabric.Triangle({ left: line.x2, top: line.y2, originX: 'center', originY: 'center', width: sz, height: sz + 4, fill: wbStrokeColor(), angle: (angle * 180 / Math.PI) + 90, selectable: false, evented: false });
-            var grp = new fabric.Group([line, head], { selectable: false, evented: false });
+            var head = new fabric.Triangle({ left: line.x2, top: line.y2, originX: 'center', originY: 'center', width: sz, height: sz + 4, fill: wbStrokeColor(), angle: (angle * 180 / Math.PI) + 90, opacity: 1, selectable: false, evented: false });
+            var grp = new fabric.Group([line, head], { selectable: false, evented: false, opacity: op });
             wbCanvas.remove(line);
             wbCanvas.add(grp);
+        } else if (wbTool === 'darrow') {
+            var line2 = wbDrawObj;
+            var ang = Math.atan2(line2.y2 - line2.y1, line2.x2 - line2.x1);
+            var sz2 = 14 + wbStrokeWidth();
+            var h1 = new fabric.Triangle({ left: line2.x2, top: line2.y2, originX: 'center', originY: 'center', width: sz2, height: sz2 + 4, fill: wbStrokeColor(), angle: (ang * 180 / Math.PI) + 90, opacity: 1, selectable: false, evented: false });
+            var h2 = new fabric.Triangle({ left: line2.x1, top: line2.y1, originX: 'center', originY: 'center', width: sz2, height: sz2 + 4, fill: wbStrokeColor(), angle: ((ang + Math.PI) * 180 / Math.PI) + 90, opacity: 1, selectable: false, evented: false });
+            var grp2 = new fabric.Group([line2, h1, h2], { selectable: false, evented: false, opacity: op });
+            wbCanvas.remove(line2);
+            wbCanvas.add(grp2);
+        } else {
+            applyWbStrokeOpts(wbDrawObj);
         }
         wbDrawObj = null; wbStart = null;
         saveWbState();
     });
 
-    wbCanvas.on('path:created', saveWbState);
+    wbCanvas.on('path:created', function(opt) {
+        var path = opt.path;
+        if (wbTool === 'eraser') { saveWbState(); return; }
+        if (wbTool === 'highlight') {
+            path.set('opacity', 1);
+            saveWbState();
+            return;
+        }
+        if (wbTool === 'draw') applyWbStrokeOpts(path);
+        saveWbState();
+    });
     wbCanvas.on('object:modified', saveWbState);
 
     /* Tool buttons */
@@ -792,7 +1158,7 @@
 
     /* Color/size live update */
     document.getElementById('mx-stroke-color').addEventListener('input', function() {
-        if (wbTool === 'draw' || wbTool === 'eraser') activateWbTool(wbTool);
+        if (wbTool === 'draw' || wbTool === 'highlight' || wbTool === 'eraser') activateWbTool(wbTool);
         var obj = wbCanvas.getActiveObject();
         if (obj && wbTool === 'select') {
             obj.set({ stroke: wbStrokeColor() });
@@ -808,12 +1174,75 @@
         }
     });
     document.getElementById('mx-stroke-width').addEventListener('input', function() {
-        if (wbTool === 'draw' || wbTool === 'eraser') activateWbTool(wbTool);
+        if (wbTool === 'draw' || wbTool === 'highlight' || wbTool === 'eraser') activateWbTool(wbTool);
         var obj = wbCanvas.getActiveObject();
         if (obj && wbTool === 'select') {
             obj.set('strokeWidth', wbStrokeWidth());
             wbCanvas.requestRenderAll(); saveWbState();
         }
+    });
+
+    var opEl = document.getElementById('mx-opacity');
+    if (opEl) opEl.addEventListener('input', function() {
+        var obj = wbCanvas.getActiveObject();
+        if (obj && wbTool === 'select') {
+            obj.set('opacity', wbNewOpacity());
+            wbCanvas.requestRenderAll(); saveWbState();
+        }
+    });
+
+    var dashEl = document.getElementById('mx-line-dash');
+    if (dashEl) dashEl.addEventListener('change', function() {
+        var obj = wbCanvas.getActiveObject();
+        if (obj && wbTool === 'select') {
+            var d = wbDashArray();
+            obj.set('strokeDashArray', d ? d.slice() : null);
+            wbCanvas.requestRenderAll(); saveWbState();
+        }
+    });
+
+    var fillTr = document.getElementById('mx-fill-transparent');
+    if (fillTr) fillTr.addEventListener('change', function() {
+        var obj = wbCanvas.getActiveObject();
+        if (obj && wbTool === 'select' && obj.type !== 'line' && obj.type !== 'i-text') {
+            obj.set('fill', wbFillFromUI());
+            wbCanvas.requestRenderAll(); saveWbState();
+        }
+    });
+
+    var tsEl = document.getElementById('mx-text-size');
+    if (tsEl) tsEl.addEventListener('input', function() {
+        var obj = wbCanvas.getActiveObject();
+        if (obj && wbTool === 'select' && obj.type === 'i-text') {
+            obj.set('fontSize', wbTextSize());
+            wbCanvas.requestRenderAll(); saveWbState();
+        }
+    });
+
+    document.getElementById('mx-dup') && document.getElementById('mx-dup').addEventListener('click', function() {
+        var obj = wbCanvas.getActiveObject();
+        if (!obj) return;
+        obj.clone(function(cloned) {
+            cloned.set({ left: (obj.left || 0) + 24, top: (obj.top || 0) + 24 });
+            wbCanvas.add(cloned);
+            wbCanvas.setActiveObject(cloned);
+            wbCanvas.requestRenderAll();
+            saveWbState();
+        });
+    });
+    document.getElementById('mx-front') && document.getElementById('mx-front').addEventListener('click', function() {
+        var o = wbCanvas.getActiveObject();
+        if (!o) return;
+        wbCanvas.bringToFront(o);
+        wbCanvas.requestRenderAll();
+        saveWbState();
+    });
+    document.getElementById('mx-back') && document.getElementById('mx-back').addEventListener('click', function() {
+        var o = wbCanvas.getActiveObject();
+        if (!o) return;
+        wbCanvas.sendToBack(o);
+        wbCanvas.requestRenderAll();
+        saveWbState();
     });
 
     /* Undo / Redo / Clear / Download */

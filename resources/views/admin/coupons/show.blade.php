@@ -29,6 +29,9 @@
             </div>
         </div>
         <div class="flex flex-wrap gap-2">
+            <a href="{{ route('admin.coupon-commissions.index', array_filter(['beneficiary_id' => $coupon->beneficiary_user_id])) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-sm font-semibold hover:bg-amber-50 dark:hover:bg-amber-900/20">
+                <i class="fas fa-coins"></i> عمولات التسويق
+            </a>
             <a href="{{ route('admin.coupons.edit', $coupon) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold transition-colors">
                 <i class="fas fa-edit"></i> تعديل
             </a>
@@ -68,6 +71,50 @@
         </div>
     </div>
 
+    @php
+        $scopeLabel = match ($coupon->applicable_to ?? 'all') {
+            'courses' => 'كورسات محددة',
+            'specific' => 'كورسات محددة + مستخدمون (إن وُجد)',
+            'subscriptions' => 'الاشتراكات فقط',
+            default => 'جميع الكورسات',
+        };
+    @endphp
+    <div class="grid md:grid-cols-2 gap-5">
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+            <h2 class="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><i class="fas fa-bullseye text-violet-500"></i> النطاق والمستخدمون</h2>
+            <dl class="space-y-3 text-sm">
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">نطاق الكورسات</dt><dd class="font-medium text-slate-800 dark:text-white">{{ $scopeLabel }}</dd></div>
+                @if(isset($scopedCourses) && $scopedCourses->count() > 0)
+                <div>
+                    <dt class="text-slate-500 mb-2">الكورسات المحددة</dt>
+                    <dd class="text-slate-700 dark:text-slate-200 space-y-1">
+                        @foreach($scopedCourses as $sc)
+                        <div class="text-xs font-mono bg-slate-100 dark:bg-slate-700/50 rounded px-2 py-1">{{ $sc->title }} <span class="text-slate-500">#{{ $sc->id }}</span></div>
+                        @endforeach
+                    </dd>
+                </div>
+                @endif
+                @if(is_array($coupon->applicable_user_ids) && count($coupon->applicable_user_ids) > 0)
+                <div class="flex justify-between gap-4 flex-wrap"><dt class="text-slate-500">مستخدمون مسموح لهم</dt><dd class="font-mono text-xs">{{ implode(', ', $coupon->applicable_user_ids) }}</dd></div>
+                @else
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">تقييد المستخدمين</dt><dd>لا يوجد (أي مستخدم يحقق الشروط)</dd></div>
+                @endif
+            </dl>
+        </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl border border-amber-200 dark:border-amber-900/40 p-6 shadow-sm">
+            <h2 class="font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2"><i class="fas fa-coins text-amber-500"></i> عمولة التسويق</h2>
+            @if($coupon->beneficiary_user_id && $coupon->commission_percent)
+            <dl class="space-y-3 text-sm">
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">المستفيد</dt><dd class="font-medium text-slate-800 dark:text-white">{{ $coupon->beneficiary->name ?? '—' }} <span class="font-mono text-xs text-slate-500">#{{ $coupon->beneficiary_user_id }}</span></dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">النسبة</dt><dd class="font-bold">{{ $coupon->commission_percent }}%</dd></div>
+                <div class="flex justify-between gap-4"><dt class="text-slate-500">القاعدة</dt><dd>{{ ($coupon->commission_on ?? 'final_paid') === 'original_price' ? 'السعر الأصلي' : 'المبلغ النهائي بعد الخصم' }}</dd></div>
+            </dl>
+            @else
+            <p class="text-sm text-slate-500 dark:text-slate-400">لا توجد عمولة مسجّلة لهذا الكوبون.</p>
+            @endif
+        </div>
+    </div>
+
     @if($coupon->description)
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
         <h2 class="font-bold text-slate-800 dark:text-white mb-2">الوصف</h2>
@@ -85,6 +132,7 @@
                 <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-600">
                     <tr>
                         <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">المستخدم</th>
+                        <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">الطلب</th>
                         <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">مبلغ الخصم</th>
                         <th class="px-4 py-3 text-right font-semibold text-slate-600 dark:text-slate-300">التاريخ</th>
                     </tr>
@@ -93,6 +141,13 @@
                     @foreach($coupon->usages as $usage)
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                         <td class="px-4 py-3 text-slate-800 dark:text-white">{{ $usage->user->name ?? '—' }}</td>
+                        <td class="px-4 py-3 font-mono">
+                            @if($usage->order_id)
+                            <a href="{{ route('admin.orders.show', $usage->order_id) }}" class="text-violet-600 dark:text-violet-400 hover:underline">#{{ $usage->order_id }}</a>
+                            @else
+                            —
+                            @endif
+                        </td>
                         <td class="px-4 py-3 font-mono">{{ number_format($usage->discount_amount ?? 0, 2) }} ج.م</td>
                         <td class="px-4 py-3 text-slate-500">{{ $usage->created_at ? $usage->created_at->format('Y-m-d H:i') : '—' }}</td>
                     </tr>

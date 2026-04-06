@@ -14,12 +14,16 @@ class ReferralProgramController extends Controller
      */
     public function index()
     {
-        $programs = ReferralProgram::orderBy('created_at', 'desc')->paginate(20);
+        $programs = ReferralProgram::withCount('referrals')
+            ->orderByDesc('is_default')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
 
         $stats = [
             'total' => ReferralProgram::count(),
             'active' => ReferralProgram::where('is_active', true)->count(),
             'inactive' => ReferralProgram::where('is_active', false)->count(),
+            'valid_now' => ReferralProgram::active()->count(),
         ];
 
         return view('admin.referral-programs.index', compact('programs', 'stats'));
@@ -51,13 +55,24 @@ class ReferralProgramController extends Controller
             'referral_code_valid_days' => 'nullable|integer|min:1',
             'max_referrals_per_user' => 'nullable|integer|min:1',
             'max_discount_uses_per_referred' => 'required|integer|min:1',
-            'allow_self_referral' => 'boolean',
             'starts_at' => 'nullable|date',
-            'expires_at' => 'nullable|date|after:starts_at',
-            'is_active' => 'boolean',
+            'expires_at' => 'nullable|date|after_or_equal:starts_at',
         ]);
 
-        ReferralProgram::create($validated);
+        $data = array_merge($validated, [
+            'is_active' => $request->boolean('is_active', true),
+            'allow_self_referral' => $request->boolean('allow_self_referral'),
+            'is_default' => false,
+        ]);
+
+        $program = ReferralProgram::create($data);
+
+        if ($request->boolean('is_default')) {
+            DB::transaction(function () use ($program) {
+                ReferralProgram::whereKeyNot($program->id)->update(['is_default' => false]);
+                $program->forceFill(['is_default' => true])->save();
+            });
+        }
 
         return redirect()->route('admin.referral-programs.index')
             ->with('success', 'تم إنشاء برنامج الإحالات بنجاح');
@@ -107,16 +122,43 @@ class ReferralProgramController extends Controller
             'referral_code_valid_days' => 'nullable|integer|min:1',
             'max_referrals_per_user' => 'nullable|integer|min:1',
             'max_discount_uses_per_referred' => 'required|integer|min:1',
-            'allow_self_referral' => 'boolean',
             'starts_at' => 'nullable|date',
-            'expires_at' => 'nullable|date|after:starts_at',
-            'is_active' => 'boolean',
+            'expires_at' => 'nullable|date|after_or_equal:starts_at',
         ]);
 
-        $referralProgram->update($validated);
+        $data = array_merge($validated, [
+            'is_active' => $request->boolean('is_active', true),
+            'allow_self_referral' => $request->boolean('allow_self_referral'),
+        ]);
+
+        $referralProgram->update($data);
+
+        if ($request->boolean('is_default')) {
+            DB::transaction(function () use ($referralProgram) {
+                ReferralProgram::whereKeyNot($referralProgram->id)->update(['is_default' => false]);
+                $referralProgram->forceFill(['is_default' => true])->save();
+            });
+        }
 
         return redirect()->route('admin.referral-programs.index')
             ->with('success', 'تم تحديث برنامج الإحالات بنجاح');
+    }
+
+    /**
+     * جعل البرنامج هو الافتراضي لتسجيل الإحالات الجديدة (يجب أن يكون نشطاً وضمن فترة الصلاحية).
+     */
+    public function setDefault(ReferralProgram $referralProgram)
+    {
+        if (! $referralProgram->is_active || ! $referralProgram->isValid()) {
+            return back()->with('error', 'فعّل البرنامج وتأكد من تواريخ البدء والانتهاء قبل تعيينه افتراضياً.');
+        }
+
+        DB::transaction(function () use ($referralProgram) {
+            ReferralProgram::whereKeyNot($referralProgram->id)->update(['is_default' => false]);
+            $referralProgram->forceFill(['is_default' => true])->save();
+        });
+
+        return back()->with('success', 'تم تعيين البرنامج الافتراضي لإحالات التسجيل الجديدة.');
     }
 
     /**

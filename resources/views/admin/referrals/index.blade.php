@@ -131,11 +131,11 @@
             <i class="fas fa-filter text-sky-600"></i>
             <h3 class="text-lg font-black text-gray-900">فلترة وبحث الإحالات</h3>
         </div>
-        <form method="GET" action="{{ route('admin.referrals.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <form method="GET" action="{{ route('admin.referrals.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">البحث</label>
                 <input type="text" name="search" value="{{ request('search') }}" 
-                       placeholder="اسم المستخدم، رقم الهاتف، كود الإحالة..."
+                       placeholder="اسم، هاتف، كود..."
                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
             </div>
             <div>
@@ -155,6 +155,14 @@
                         <option value="{{ $program->id }}" {{ request('program_id') == $program->id ? 'selected' : '' }}>{{ $program->name }}</option>
                     @endforeach
                 </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">من تاريخ</label>
+                <input type="date" name="date_from" value="{{ request('date_from') }}" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">إلى تاريخ</label>
+                <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
             </div>
             <div class="flex items-end gap-2">
                 <button type="submit" class="flex-1 bg-gradient-to-l from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 text-white px-5 py-3 rounded-xl font-medium transition-all duration-200 shadow-md hover:shadow-lg">

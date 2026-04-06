@@ -38,22 +38,12 @@ class PersonalBrandingController extends Controller
             'bio' => 'nullable|string|max:5000',
             'experience' => 'nullable|string|max:50000',
             'skills' => 'nullable|string|max:5000',
-            'linkedin' => 'nullable|string|max:500|url',
-            'twitter' => 'nullable|string|max:500|url',
-            'youtube' => 'nullable|string|max:500|url',
-            'facebook' => 'nullable|string|max:500|url',
-            'website' => 'nullable|string|max:500|url',
             'consultation_price_egp' => 'nullable|numeric|min:0|max:999999.99',
             'consultation_duration_minutes' => 'nullable|integer|min:15|max:480',
             'photo' => 'nullable|image|max:2048',
         ], [
             'experience.max' => 'الخبرات في المجال يجب ألا تتجاوز 50 ألف حرف. إن احتجت مساحة أكبر تواصل مع الإدارة.',
             'skills.max' => 'المهارات يجب ألا تتجاوز 5 آلاف حرف.',
-            'linkedin.url' => 'رابط LinkedIn يجب أن يكون رابطاً صالحاً (مثال: https://www.linkedin.com/in/اسم-المستخدم)',
-            'twitter.url' => 'رابط X/Twitter يجب أن يكون رابطاً صالحاً.',
-            'youtube.url' => 'رابط YouTube يجب أن يكون رابطاً صالحاً.',
-            'facebook.url' => 'رابط Facebook يجب أن يكون رابطاً صالحاً.',
-            'website.url' => 'رابط الموقع يجب أن يكون رابطاً صالحاً (https://...).',
             'photo.image' => 'الملف الذي تم رفعه يجب أن يكون صورة',
             'photo.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
         ]);
@@ -66,13 +56,7 @@ class PersonalBrandingController extends Controller
         }
 
         unset($data['photo']);
-        $socialLinks = is_array($profile->social_links) ? $profile->social_links : [];
-        foreach (['linkedin', 'twitter', 'youtube', 'facebook', 'website'] as $k) {
-            $v = trim((string) ($data[$k] ?? ''));
-            $socialLinks[$k] = $v !== '' ? $v : null;
-            unset($data[$k]);
-        }
-        $data['social_links'] = $socialLinks;
+        $data['social_links'] = [];
 
         // normalize numeric fields (empty string -> null)
         foreach (['consultation_price_egp', 'consultation_duration_minutes'] as $k) {

@@ -132,9 +132,15 @@
                 </div>
                 @endif
                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span class="text-gray-600">المكافأة</span>
+                    <span class="text-gray-600">المكافأة (مالية)</span>
                     <span class="font-bold text-emerald-600">{{ number_format($referral->reward_amount ?? 0, 2) }} ج.م</span>
                 </div>
+                @if(($referral->reward_points ?? 0) > 0)
+                <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                    <span class="text-gray-600">نقاط المكافأة</span>
+                    <span class="font-bold text-amber-600">{{ number_format($referral->reward_points) }}</span>
+                </div>
+                @endif
                 @if($referral->autoCoupon)
                 <div class="flex justify-between items-center py-2 border-b border-gray-200">
                     <span class="text-gray-600">الكوبون التلقائي</span>

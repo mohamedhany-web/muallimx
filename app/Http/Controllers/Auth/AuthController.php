@@ -30,12 +30,21 @@ class AuthController extends Controller
         if ($request->has('redirect')) {
             session(['register_redirect' => $request->input('redirect')]);
         }
+
+        if ($request->filled('ref')) {
+            session([
+                'pending_referral_code' => strtoupper(preg_replace('/\s+/', '', (string) $request->query('ref'))),
+            ]);
+        }
+
+        $pendingReferralCode = session('pending_referral_code');
+
         $phoneCountries = config('phone_countries.countries', []);
         $defaultCountry = collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'));
         $authBackgroundUrl = \Illuminate\Support\Facades\Storage::disk('public')->exists(\App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
             ? asset('storage/' . \App\Providers\AppServiceProvider::AUTH_BACKGROUND_STORAGE_PATH)
             : asset('images/brainstorm-meeting.jpg');
-        return view('auth.register', compact('phoneCountries', 'defaultCountry', 'authBackgroundUrl'));
+        return view('auth.register', compact('phoneCountries', 'defaultCountry', 'authBackgroundUrl', 'pendingReferralCode'));
     }
 
     public function login(Request $request)
@@ -317,10 +326,20 @@ class AuthController extends Controller
             'is_active' => true,
         ]);
 
+        $referralCode = $request->input('referral_code');
+        if ($referralCode === null || $referralCode === '') {
+            $referralCode = session('pending_referral_code');
+        }
+        if ($referralCode === null || $referralCode === '') {
+            $referralCode = $request->query('ref');
+        }
+        $referralCode = $referralCode ? strtoupper(preg_replace('/\s+/', '', (string) $referralCode)) : null;
+        session()->forget('pending_referral_code');
+
         // معالجة كود الإحالة في Queue لتقليل الضغط على السيرفر
         \App\Jobs\ProcessStudentRegistration::dispatch(
             $user->id,
-            $request->referral_code
+            $referralCode
         )->onQueue('registrations');
 
         Auth::login($user);

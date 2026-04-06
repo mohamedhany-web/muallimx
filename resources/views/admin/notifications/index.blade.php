@@ -43,7 +43,7 @@
                 </div>
                 <div>
                     <h2 class="text-2xl font-black text-slate-900">مركز الإشعارات</h2>
-                    <p class="text-sm text-slate-600 mt-1">إرسال التنبيهات ومتابعة حالة القراءة لجميع المستلمين.</p>
+                    <p class="text-sm text-slate-600 mt-1">إرسال التنبيهات للطلاب ومتابعة حالة القراءة للمستلمين. تنبيهات تذاكر الدعم وغيرها من الرسائل الموجهة لك تظهر في <a href="{{ route('admin.notifications.inbox') }}" class="text-sky-600 font-semibold hover:underline">وارد الإشعارات</a>.</p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-3">

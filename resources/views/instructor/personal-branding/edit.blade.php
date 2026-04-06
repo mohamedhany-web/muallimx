@@ -99,36 +99,6 @@
             @endif
         </div>
 
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ __('instructor.linkedin_url') }}</label>
-            <input type="url" name="linkedin" value="{{ old('linkedin', $profile->social_links['linkedin'] ?? '') }}" placeholder="https://www.linkedin.com/in/اسم-المستخدم" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm" dir="ltr">
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ __('instructor.linkedin_optional_hint') }}</p>
-            @error('linkedin')<p class="text-rose-600 text-sm mt-1">{{ $message }}</p>@enderror
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">X / Twitter</label>
-                <input type="url" name="twitter" value="{{ old('twitter', $profile->social_links['twitter'] ?? '') }}" placeholder="https://x.com/username" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm" dir="ltr">
-                @error('twitter')<p class="text-rose-600 text-sm mt-1">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">YouTube</label>
-                <input type="url" name="youtube" value="{{ old('youtube', $profile->social_links['youtube'] ?? '') }}" placeholder="https://www.youtube.com/@channel" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm" dir="ltr">
-                @error('youtube')<p class="text-rose-600 text-sm mt-1">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Facebook</label>
-                <input type="url" name="facebook" value="{{ old('facebook', $profile->social_links['facebook'] ?? '') }}" placeholder="https://facebook.com/page" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm" dir="ltr">
-                @error('facebook')<p class="text-rose-600 text-sm mt-1">{{ $message }}</p>@enderror
-            </div>
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Website</label>
-                <input type="url" name="website" value="{{ old('website', $profile->social_links['website'] ?? '') }}" placeholder="https://example.com" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm" dir="ltr">
-                @error('website')<p class="text-rose-600 text-sm mt-1">{{ $message }}</p>@enderror
-            </div>
-        </div>
-
         <div class="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 sm:p-5 bg-slate-50/60 dark:bg-slate-800/40">
             <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">الاستشارات (اختياري)</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">يمكنك تحديد سعر ومدة الاستشارة للطلاب. إن تركتها فارغة سيُستخدم الافتراضي من إعدادات المنصة.</p>

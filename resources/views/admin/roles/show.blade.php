@@ -71,6 +71,8 @@
             ['perm'=>'manage.loyalty',            'icon'=>'fa-star',               'color'=>'text-pink-600',    'section'=>'التسويق (الولاء)'],
             ['perm'=>'manage.popup-ads',          'icon'=>'fa-bullhorn',           'color'=>'text-pink-500',    'section'=>'التسويق (الإعلانات المنبثقة)'],
             ['perm'=>'manage.personal-branding',  'icon'=>'fa-user-tie',           'color'=>'text-pink-500',    'section'=>'التسويق (العلامة الشخصية)'],
+            ['perm'=>'manage.site-services',       'icon'=>'fa-concierge-bell',    'color'=>'text-sky-500',     'section'=>'صفحة الخدمات (الواجهة العامة)'],
+            ['perm'=>'manage.system-settings',     'icon'=>'fa-sliders-h',         'color'=>'text-slate-600',   'section'=>'إعدادات النظام والفوتر'],
             // ── الموارد البشرية ──
             ['perm'=>'manage.leaves',             'icon'=>'fa-calendar-alt',       'color'=>'text-cyan-500',    'section'=>'الموارد البشرية (الإجازات)'],
             ['perm'=>'manage.employee-agreements','icon'=>'fa-file-contract',      'color'=>'text-cyan-600',    'section'=>'الموارد البشرية (اتفاقيات الموظفين)'],

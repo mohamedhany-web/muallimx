@@ -330,6 +330,12 @@ class ExpenseController extends Controller
 
             DB::commit();
 
+            try {
+                app(\App\Services\CouponCommissionService::class)->markSettledFromExpense($expense->fresh());
+            } catch (\Throwable $e) {
+                Log::warning('Coupon commission settle from expense failed: ' . $e->getMessage(), ['expense_id' => $expense->id]);
+            }
+
             return back()->with('success', 'تمت الموافقة على المصروف ' . ($wallet ? 'وتم خصم المبلغ من المحفظة' : '') . ' بنجاح');
 
         } catch (\Exception $e) {

@@ -593,6 +593,7 @@
                 </li>
                 @endhasPermission
 
+                @if(auth()->user()->isStudent())
                 <!-- برنامج الإحالات -->
                 <li>
                     <a href="{{ route('referrals.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 relative overflow-hidden group {{ request()->routeIs('referrals.*') ? 'bg-gradient-to-r from-sky-500 to-sky-600 text-white shadow-lg shadow-sky-500/30' : 'text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800' }}">
@@ -604,6 +605,7 @@
                         @endif
                     </a>
                 </li>
+                @endif
 
                 <!-- فواتيري -->
                 @hasPermission('student.view.invoices')

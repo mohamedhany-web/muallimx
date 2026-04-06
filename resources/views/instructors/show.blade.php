@@ -1,8 +1,6 @@
 @php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
-    $socials = $profile->social_links ?? [];
-    $hasSocials = !empty($socials['linkedin']) || !empty($socials['twitter']) || !empty($socials['youtube']) || !empty($socials['facebook']) || !empty($socials['website']);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -207,36 +205,6 @@
                                     طلب استشارة
                                 </a>
                             @endauth
-                        </div>
-                        @endif
-
-                        @if($hasSocials)
-                        <div class="flex flex-wrap gap-2.5 justify-center md:justify-start">
-                            @if(!empty($socials['linkedin']))
-                            <a href="{{ $socials['linkedin'] }}" target="_blank" rel="noopener noreferrer" class="w-11 h-11 rounded-xl bg-[#0A66C2] text-white flex items-center justify-center shadow-md hover:bg-[#004182] hover:scale-105 transition-all">
-                                <i class="fab fa-linkedin-in text-lg"></i>
-                            </a>
-                            @endif
-                            @if(!empty($socials['twitter']))
-                            <a href="{{ $socials['twitter'] }}" target="_blank" rel="noopener noreferrer" class="w-11 h-11 rounded-xl bg-mx-indigo text-white flex items-center justify-center shadow-md hover:bg-[#0f172a] hover:scale-105 transition-all">
-                                <i class="fab fa-x-twitter text-lg"></i>
-                            </a>
-                            @endif
-                            @if(!empty($socials['youtube']))
-                            <a href="{{ $socials['youtube'] }}" target="_blank" rel="noopener noreferrer" class="w-11 h-11 rounded-xl bg-red-600 text-white flex items-center justify-center shadow-md hover:bg-red-700 hover:scale-105 transition-all">
-                                <i class="fab fa-youtube text-lg"></i>
-                            </a>
-                            @endif
-                            @if(!empty($socials['facebook']))
-                            <a href="{{ $socials['facebook'] }}" target="_blank" rel="noopener noreferrer" class="w-11 h-11 rounded-xl bg-[#1877F2] text-white flex items-center justify-center shadow-md hover:bg-[#0d65d9] hover:scale-105 transition-all">
-                                <i class="fab fa-facebook-f text-lg"></i>
-                            </a>
-                            @endif
-                            @if(!empty($socials['website']))
-                            <a href="{{ $socials['website'] }}" target="_blank" rel="noopener noreferrer" class="w-11 h-11 rounded-xl border border-slate-200 bg-white text-mx-indigo flex items-center justify-center shadow-sm hover:border-mx-indigo hover:scale-105 transition-all">
-                                <i class="fas fa-globe text-lg"></i>
-                            </a>
-                            @endif
                         </div>
                         @endif
                     </div>

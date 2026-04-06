@@ -34,6 +34,19 @@ class ReferralController extends Controller
             });
         }
 
+        if ($request->filled('date_from')) {
+            $df = strip_tags(trim($request->date_from));
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $df)) {
+                $query->whereDate('created_at', '>=', $df);
+            }
+        }
+        if ($request->filled('date_to')) {
+            $dt = strip_tags(trim($request->date_to));
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dt)) {
+                $query->whereDate('created_at', '<=', $dt);
+            }
+        }
+
         $referrals = $query->paginate(20);
 
         $stats = [

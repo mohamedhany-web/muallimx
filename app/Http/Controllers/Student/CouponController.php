@@ -49,14 +49,13 @@ class CouponController extends Controller
             ], 400);
         }
 
-        // التحقق من أن الكوبون ينطبق على الكورس
-        if ($coupon->applicable_to === 'specific' && $coupon->applicable_course_ids) {
-            if (!in_array($course->id, $coupon->applicable_course_ids)) {
-                return response()->json([
-                    'valid' => false,
-                    'message' => 'هذا الكوبون لا ينطبق على هذا الكورس',
-                ], 400);
-            }
+        if (! $coupon->appliesToAdvancedCourseId((int) $course->id)) {
+            return response()->json([
+                'valid' => false,
+                'message' => $coupon->applicable_to === 'subscriptions'
+                    ? 'هذا الكوبون مخصص للاشتراكات وليس لتسجيل الكورسات'
+                    : 'هذا الكوبون لا ينطبق على هذا الكورس',
+            ], 400);
         }
 
         // التحقق من الحد الأدنى للمبلغ

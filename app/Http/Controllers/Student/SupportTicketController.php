@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\SupportInquiryCategory;
 use App\Models\SupportTicket;
 use App\Models\SupportTicketReply;
+use App\Services\SupportTicketAlertService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class SupportTicketController extends Controller
@@ -65,6 +67,13 @@ class SupportTicketController extends Controller
             'sender_type' => 'student',
             'message' => $data['message'],
         ]);
+
+        try {
+            app(SupportTicketAlertService::class)->notifyNewTicket($ticket);
+        } catch (\Throwable $e) {
+            report($e);
+            Log::error('Support ticket in-app/email alert failed', ['ticket_id' => $ticket->id]);
+        }
 
         return redirect()->route('student.support.show', $ticket)->with('success', 'تم إنشاء تذكرة الدعم بنجاح.');
     }

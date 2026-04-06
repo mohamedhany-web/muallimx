@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Referral;
+use App\Models\ReferralProgram;
 use App\Services\ReferralService;
 use Illuminate\Http\Request;
 
@@ -46,10 +47,11 @@ class ReferralController extends Controller
                 ->sum('discount_amount'),
         ];
 
-        // رابط الإحالة
-        $referralLink = url('/register?ref=' . $referralCode);
+        $referralLink = url('/register?ref=' . urlencode($referralCode));
 
-        return view('student.referrals.index', compact('referralCode', 'referralLink', 'referrals', 'stats'));
+        $activeProgram = ReferralProgram::currentForNewReferrals();
+
+        return view('student.referrals.index', compact('referralCode', 'referralLink', 'referrals', 'stats', 'activeProgram'));
     }
 
     /**
@@ -59,7 +61,7 @@ class ReferralController extends Controller
     {
         $user = auth()->user();
         $referralCode = $this->referralService->getUserReferralCode($user);
-        $referralLink = url('/register?ref=' . $referralCode);
+        $referralLink = url('/register?ref=' . urlencode($referralCode));
 
         return response()->json([
             'success' => true,

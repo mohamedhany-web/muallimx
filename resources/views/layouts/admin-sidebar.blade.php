@@ -2,9 +2,15 @@
     <!-- Logo -->
     <div class="px-4 py-5 flex-shrink-0 border-b border-slate-200 dark:border-slate-600">
         <div class="sidebar-logo flex items-center gap-3">
+            @if(! empty($adminPanelLogoUrl))
+            <div class="w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-600 shadow-sm">
+                <img src="{{ $adminPanelLogoUrl }}" alt="" width="36" height="36" class="w-full h-full object-contain p-0.5">
+            </div>
+            @else
             <div class="w-9 h-9 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md shadow-blue-500/25 flex-shrink-0">
                 <span class="text-lg font-black text-white">M</span>
             </div>
+            @endif
             <div class="sidebar-logo-text">
                 <h2 class="text-sm font-heading font-bold text-slate-800 dark:text-slate-100 tracking-tight leading-tight">MuallimX</h2>
                 <p class="text-[9px] text-slate-500 dark:text-slate-400 font-medium">{{ __('admin.admin_panel') }}</p>
@@ -37,6 +43,40 @@
                     <span>{{ __('admin.profile') }}</span>
                 </a>
             </li>
+
+            @php
+                try {
+                    $sidebarInboxUnread = \App\Models\Notification::where('user_id', $u->id)->unread()->valid()->count();
+                } catch (\Exception $e) {
+                    $sidebarInboxUnread = 0;
+                }
+            @endphp
+            <li>
+                <a href="{{ route('admin.notifications.inbox') }}" class="sidebar-link {{ request()->routeIs('admin.notifications.inbox') ? 'active' : '' }}">
+                    <i class="fas fa-inbox"></i>
+                    <span>وارد الإشعارات</span>
+                    @if($sidebarInboxUnread > 0)
+                        <span class="sidebar-badge bg-rose-500 text-white">{{ $sidebarInboxUnread > 99 ? '99+' : $sidebarInboxUnread }}</span>
+                    @endif
+                </a>
+            </li>
+
+            @if($isFull || $u->hasPermission('manage.site-services'))
+            <li>
+                <a href="{{ route('admin.site-services.index') }}" class="sidebar-link {{ request()->routeIs('admin.site-services.*') ? 'active' : '' }}">
+                    <i class="fas fa-concierge-bell"></i>
+                    <span>خدمات الموقع</span>
+                </a>
+            </li>
+            @endif
+            @if($isFull || $u->hasPermission('manage.system-settings'))
+            <li>
+                <a href="{{ route('admin.system-settings.edit') }}" class="sidebar-link {{ request()->routeIs('admin.system-settings.*') ? 'active' : '' }}">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>إعدادات النظام</span>
+                </a>
+            </li>
+            @endif
 
             @if($isFull)<li class="sidebar-section-label">أقسام حسب الوظيفة</li>@endif
 
@@ -192,7 +232,7 @@
 
             @if($isFull || $u->hasPermission('manage.orders') || $u->hasPermission('manage.coupons') || $u->hasPermission('manage.referrals') || $u->hasPermission('manage.leads') || $u->hasPermission('view.sales-analytics'))
             {{-- قسم المبيعات (ما يقدمه السيلز) --}}
-            @php $salesSectionOpen = request()->routeIs('admin.orders.*') || request()->routeIs('admin.sales.index') || request()->routeIs('admin.sales.leads.*') || request()->routeIs('admin.coupons.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.referral-programs.*'); @endphp
+            @php $salesSectionOpen = request()->routeIs('admin.orders.*') || request()->routeIs('admin.sales.index') || request()->routeIs('admin.sales.leads.*') || request()->routeIs('admin.coupons.*') || request()->routeIs('admin.coupon-commissions.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.referral-programs.*'); @endphp
             <li x-data="{ open: {{ $salesSectionOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-shopping-cart w-5 text-center text-emerald-400"></i><span>قسم المبيعات</span></span>
@@ -223,7 +263,8 @@
                     </li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.coupons'))
-                    <li><a href="{{ route('admin.coupons.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}"><i class="fas fa-ticket-alt"></i><span>الكوبونات والخصومات</span></a></li>
+                    <li><a href="{{ route('admin.coupons.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.coupons.*') && !request()->routeIs('admin.coupon-commissions.*') ? 'active' : '' }}"><i class="fas fa-ticket-alt"></i><span>الكوبونات والخصومات</span></a></li>
+                    <li><a href="{{ route('admin.coupon-commissions.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.coupon-commissions.*') ? 'active' : '' }}"><i class="fas fa-coins"></i><span>عمولات كوبونات التسويق</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.referrals'))
                     <li><a href="{{ route('admin.referral-programs.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.referral-programs.*') ? 'active' : '' }}"><i class="fas fa-gift"></i><span>برامج الإحالة</span></a></li>
@@ -480,7 +521,7 @@
             @if($isFull || $u->hasPermission('manage.coupons') || $u->hasPermission('manage.referrals') || $u->hasPermission('manage.loyalty') || $u->hasPermission('manage.popup-ads') || $u->hasPermission('manage.personal-branding'))
             {{-- إدارة التسويق --}}
             @php
-                $marketingOpen = request()->routeIs('admin.coupons.*') || request()->routeIs('admin.referral-programs.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.loyalty.*') || request()->routeIs('admin.personal-branding.*') || request()->routeIs('admin.popup-ads.*');
+                $marketingOpen = request()->routeIs('admin.coupons.*') || request()->routeIs('admin.coupon-commissions.*') || request()->routeIs('admin.referral-programs.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.loyalty.*') || request()->routeIs('admin.personal-branding.*') || request()->routeIs('admin.popup-ads.*');
             @endphp
             <li x-data="{ open: {{ $marketingOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
@@ -495,7 +536,8 @@
                     <li><a href="{{ route('admin.personal-branding.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.personal-branding.*') ? 'active' : '' }}"><i class="fas fa-user-tie"></i><span>{{ __('admin.personal_branding') }}</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.coupons'))
-                    <li><a href="{{ route('admin.coupons.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.coupons.*') ? 'active' : '' }}"><i class="fas fa-ticket-alt"></i><span>{{ __('admin.coupons_discounts') }}</span></a></li>
+                    <li><a href="{{ route('admin.coupons.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.coupons.*') && !request()->routeIs('admin.coupon-commissions.*') ? 'active' : '' }}"><i class="fas fa-ticket-alt"></i><span>{{ __('admin.coupons_discounts') }}</span></a></li>
+                    <li><a href="{{ route('admin.coupon-commissions.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.coupon-commissions.*') ? 'active' : '' }}"><i class="fas fa-coins"></i><span>عمولات كوبونات التسويق</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.referrals'))
                     <li><a href="{{ route('admin.referral-programs.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.referral-programs.*') ? 'active' : '' }}"><i class="fas fa-gift"></i><span>{{ __('admin.referral_programs') }}</span></a></li>

@@ -38,35 +38,27 @@ class ReferralService
      */
     public function processReferral(User $referrer, User $referred, string $referralCode = null): ?Referral
     {
-        // البحث عن برنامج إحالة نشط
-        $program = ReferralProgram::active()->first();
-        
-        if (!$program) {
-            return null; // لا يوجد برنامج إحالة نشط
-        }
+        $program = ReferralProgram::currentForNewReferrals();
 
-        // التحقق من صحة كود الإحالة
-        if ($referralCode && $referralCode !== $referrer->referral_code) {
+        if (! $program) {
             return null;
         }
 
-        // التحقق من إمكانية الإحالة
-        if (!$program->canUserRefer($referrer->id)) {
+        if ($referralCode && strtoupper(trim($referralCode)) !== strtoupper(trim((string) $referrer->referral_code))) {
             return null;
         }
 
-        // التحقق من عدم الإحالة الذاتية
-        if (!$program->allow_self_referral && $referrer->id === $referred->id) {
+        if (! $program->canUserRefer($referrer->id)) {
             return null;
         }
 
-        // التحقق من عدم وجود إحالة سابقة
-        $existingReferral = Referral::where('referred_id', $referred->id)
-            ->where('referrer_id', $referrer->id)
-            ->first();
+        if (! $program->allow_self_referral && $referrer->id === $referred->id) {
+            return null;
+        }
 
-        if ($existingReferral) {
-            return $existingReferral;
+        $existingForReferred = Referral::where('referred_id', $referred->id)->first();
+        if ($existingForReferred) {
+            return $existingForReferred;
         }
 
         // إنشاء الإحالة
@@ -194,21 +186,22 @@ class ReferralService
         $referrer->increment('completed_referrals');
 
         // حساب المكافأة للمحيل (إذا كان هناك مكافأة)
-        if ($referral->referralProgram && $referral->referralProgram->referrer_reward_value) {
-            $program = $referral->referralProgram;
-            
-            if ($program->referrer_reward_type === 'percentage' && $orderAmount) {
-                $rewardAmount = ($orderAmount * $program->referrer_reward_value) / 100;
+        $program = $referral->referralProgram;
+        if ($program && $program->referrer_reward_value !== null && (float) $program->referrer_reward_value > 0) {
+            if ($program->referrer_reward_type === 'points') {
+                $referral->update([
+                    'reward_points' => (int) round((float) $program->referrer_reward_value),
+                    'reward_amount' => 0,
+                ]);
+            } elseif ($program->referrer_reward_type === 'percentage' && $orderAmount) {
+                $rewardAmount = ($orderAmount * (float) $program->referrer_reward_value) / 100;
+                $referral->update(['reward_amount' => round($rewardAmount, 2), 'reward_points' => 0]);
             } else {
-                $rewardAmount = $program->referrer_reward_value;
+                $referral->update([
+                    'reward_amount' => round((float) $program->referrer_reward_value, 2),
+                    'reward_points' => 0,
+                ]);
             }
-
-            $referral->update([
-                'reward_amount' => $rewardAmount,
-            ]);
-
-            // هنا يمكن إضافة المكافأة لمحفظة المستخدم أو نقاط الولاء
-            // TODO: تطبيق نظام المكافآت
         }
     }
 

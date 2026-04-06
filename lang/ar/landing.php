@@ -16,6 +16,7 @@ return [
         'portfolio' => 'البورتفوليو',
         'instructors' => 'المدربون',
         'pricing' => 'الأسعار والباقات',
+        'services' => 'الخدمات',
         'login' => 'تسجيل دخول',
         'register' => 'انشاء حساب',
         'dashboard' => 'لوحة التحكم',

@@ -77,6 +77,7 @@ Route::get('/sitemap.xml', function() {
         ['url' => '/about',        'priority' => '0.8', 'changefreq' => 'monthly'],
         ['url' => '/contact',      'priority' => '0.7', 'changefreq' => 'monthly'],
         ['url' => '/portfolio',    'priority' => '0.7', 'changefreq' => 'weekly'],
+        ['url' => '/services',     'priority' => '0.75', 'changefreq' => 'weekly'],
         ['url' => '/faq',          'priority' => '0.7', 'changefreq' => 'monthly'],
         ['url' => '/team',         'priority' => '0.6', 'changefreq' => 'monthly'],
         ['url' => '/events',       'priority' => '0.6', 'changefreq' => 'weekly'],
@@ -159,6 +160,22 @@ Route::get('/sitemap.xml', function() {
         }
     } catch (\Exception $e) {}
 
+    // صفحات الخدمات النشطة
+    try {
+        $siteServices = \App\Models\SiteService::where('is_active', true)
+            ->select('slug', 'updated_at')
+            ->orderBy('sort_order')
+            ->get();
+        foreach ($siteServices as $svc) {
+            $urls[] = [
+                'loc'        => route('public.services.show', $svc->slug),
+                'lastmod'    => optional($svc->updated_at)->format('Y-m-d') ?: now()->toDateString(),
+                'changefreq' => 'monthly',
+                'priority'   => '0.65',
+            ];
+        }
+    } catch (\Exception $e) {}
+
     // بناء XML مع دعم Image Sitemap
     $sitemap  = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
     $sitemap .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' . PHP_EOL;
@@ -214,6 +231,10 @@ Route::get('/partners', [\App\Http\Controllers\Public\PageController::class, 'pa
 // Mindlytics Portfolio (معرض أعمال الطلاب)
 Route::get('/portfolio', [\App\Http\Controllers\Public\PortfolioController::class, 'index'])->name('public.portfolio.index');
 Route::get('/portfolio/{id}', [\App\Http\Controllers\Public\PortfolioController::class, 'show'])->name('public.portfolio.show')->where('id', '[0-9]+');
+
+// صفحة الخدمات (محتوى من لوحة الإدارة)
+Route::get('/services', [\App\Http\Controllers\Public\SiteServiceController::class, 'index'])->name('public.services.index');
+Route::get('/services/{siteService}', [\App\Http\Controllers\Public\SiteServiceController::class, 'show'])->name('public.services.show');
 
 // تم إيقاف مجتمع البيانات والذكاء الاصطناعي (مسابقات، داتاسيت، مجتمع) بالكامل، لذا أزيلت جميع مساراته.
 
@@ -446,9 +467,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         
     });
     
-    // الإحالات
-    Route::get('/referrals', [\App\Http\Controllers\Student\ReferralController::class, 'index'])->name('referrals.index');
-    Route::post('/referrals/copy-link', [\App\Http\Controllers\Student\ReferralController::class, 'copyLink'])->name('referrals.copy-link');
+    // الإحالات (طلاب فقط)
+    Route::middleware(['role:student'])->group(function () {
+        Route::get('/referrals', [\App\Http\Controllers\Student\ReferralController::class, 'index'])->name('referrals.index');
+        Route::post('/referrals/copy-link', [\App\Http\Controllers\Student\ReferralController::class, 'copyLink'])->name('referrals.copy-link');
+    });
     
     // API للتحقق من الكوبون
     Route::post('/api/validate-coupon', [\App\Http\Controllers\Student\CouponController::class, 'validateCoupon'])->name('api.validate-coupon');
@@ -734,6 +757,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
     Route::prefix('admin')->name('admin.')->middleware(['auth', 'permission:admin.access'])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('dashboard');
 
+        Route::get('/api/nav-notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'navPoll'])
+            ->middleware('throttle:90,1')
+            ->name('api.nav-notifications');
+
         // بروفايل الأدمن
         Route::get('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'index'])->name('profile');
         Route::put('/profile', [\App\Http\Controllers\Admin\ProfileController::class, 'update'])->name('profile.update');
@@ -950,6 +977,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::resource('contact-messages', \App\Http\Controllers\Admin\ContactMessageController::class);
         Route::post('/contact-messages/{contactMessage}/mark-as-read', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markAsRead'])->name('contact-messages.mark-as-read');
         Route::post('/contact-messages/{contactMessage}/mark-as-unread', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markAsUnread'])->name('contact-messages.mark-as-unread');
+
+        Route::resource('site-services', \App\Http\Controllers\Admin\SiteServiceController::class)->except(['show']);
+
+        Route::get('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'edit'])->name('system-settings.edit');
+        Route::put('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('system-settings.update');
         
         // إدارة الأسعار والباقات
         Route::resource('packages', \App\Http\Controllers\Admin\PackageController::class);
@@ -959,7 +991,14 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // إدارة الإشعارات
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('index');
+            Route::get('/inbox', [\App\Http\Controllers\Admin\NotificationController::class, 'inbox'])->name('inbox');
+            Route::post('/inbox/mark-all-read', [\App\Http\Controllers\Admin\NotificationController::class, 'inboxMarkAllRead'])
+                ->middleware('throttle:30,1')
+                ->name('inbox.mark-all-read');
             Route::get('/create', [\App\Http\Controllers\Admin\NotificationController::class, 'create'])->name('create');
+            Route::get('/{notification}/open-support-ticket', [\App\Http\Controllers\Admin\NotificationController::class, 'openSupportTicket'])
+                ->middleware('throttle:60,1')
+                ->name('open-support-ticket');
             Route::post('/', [\App\Http\Controllers\Admin\NotificationController::class, 'store'])
                 ->middleware('throttle:20,5')
                 ->name('store');
@@ -1299,9 +1338,16 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/personal-branding/{personal_branding}/send-back', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'sendBackForReview'])->name('personal-branding.send-back');
         Route::post('/personal-branding/{personal_branding}/consultation-pricing', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'updateConsultationPricing'])->name('personal-branding.consultation-pricing');
         Route::resource('coupons', \App\Http\Controllers\Admin\CouponController::class);
+        Route::get('/coupon-commissions', [\App\Http\Controllers\Admin\CouponCommissionController::class, 'index'])->name('coupon-commissions.index');
+        Route::post('/coupon-commissions/{accrual}/expense', [\App\Http\Controllers\Admin\CouponCommissionController::class, 'storeExpense'])
+            ->middleware('throttle:20,1')
+            ->name('coupon-commissions.store-expense');
         // إدارة برامج الإحالات
         Route::resource('referral-programs', \App\Http\Controllers\Admin\ReferralProgramController::class);
-        
+        Route::post('/referral-programs/{referralProgram}/set-default', [\App\Http\Controllers\Admin\ReferralProgramController::class, 'setDefault'])
+            ->middleware('throttle:30,1')
+            ->name('referral-programs.set-default');
+
         // إدارة الإحالات
         Route::prefix('referrals')->name('referrals.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\ReferralController::class, 'index'])->name('index');

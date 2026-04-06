@@ -49,6 +49,32 @@
         .employee-sidebar-nav::-webkit-scrollbar {
             display: none;
         }
+
+        /* الوضع الداكن — نصوص وبطاقات متناسقة (الهيدر + main) */
+        html.dark header.sticky {
+            background: linear-gradient(to left, #0f172a, #1e293b, #0f172a) !important;
+            border-bottom-color: #334155 !important;
+        }
+        html.dark main.flex-1 {
+            background: #0f172a !important;
+            color: #e2e8f0;
+        }
+        html.dark main h1, html.dark main h2, html.dark main h3, html.dark main h4 {
+            color: #f1f5f9 !important;
+        }
+        html.dark main .bg-white, html.dark header .bg-white {
+            background: #1e293b !important;
+            border-color: #475569 !important;
+        }
+        html.dark [class*="text-slate-8"], html.dark [class*="text-slate-9"], html.dark [class*="text-slate-7"],
+        html.dark [class*="text-gray-8"], html.dark [class*="text-gray-9"], html.dark [class*="text-gray-7"] { color: #e2e8f0 !important; }
+        html.dark [class*="text-slate-6"], html.dark [class*="text-slate-5"],
+        html.dark [class*="text-gray-6"], html.dark [class*="text-gray-5"] { color: #94a3b8 !important; }
+        html.dark main [class*="text-[#1C"], html.dark main [class*="text-[#1F3"], html.dark main [class*="text-[#1F2"], html.dark main [class*="text-[#283593]"] { color: #f1f5f9 !important; }
+        html.dark main input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]),
+        html.dark main textarea,
+        html.dark main select { background: #334155 !important; border-color: #475569 !important; color: #e2e8f0 !important; }
+        html.dark main table th, html.dark main table td { color: #e2e8f0; border-color: #334155; }
     </style>
     
     @stack('styles')

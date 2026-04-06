@@ -97,36 +97,19 @@ class OrderController extends Controller
 
         $couponId = null;
         $couponDiscountAmount = 0;
+        $appliedCoupon = null;
 
-        // التحقق من كوبون يدوي إذا كان موجوداً
+        // التحقق من كوبون يدوي إذا كان موجوداً (يُسجَّل الاستخدام بعد إنشاء الطلب لربط order_id)
         if ($request->filled('applied_coupon_id')) {
             $coupon = Coupon::find($request->applied_coupon_id);
-            if ($coupon && $coupon->isValid() && $coupon->canBeUsedByUser(auth()->id())) {
-                // التحقق من أن الكوبون ينطبق على الكورس
-                $canApply = true;
-                if ($coupon->applicable_to === 'specific' && $coupon->applicable_course_ids) {
-                    if (!in_array($advancedCourse->id, $coupon->applicable_course_ids)) {
-                        $canApply = false;
-                    }
-                }
-
-                if ($canApply) {
-                    $couponDiscountAmount = $coupon->calculateDiscount($finalAmount);
+            if ($coupon && $coupon->isValid() && $coupon->canBeUsedByUser(auth()->id()) && $coupon->appliesToAdvancedCourseId((int) $advancedCourse->id)) {
+                $couponDiscountAmount = $coupon->calculateDiscount($finalAmount);
+                if ($couponDiscountAmount > 0) {
                     $discountAmount += $couponDiscountAmount;
                     $finalAmount -= $couponDiscountAmount;
                     $couponId = $coupon->id;
-                    
-                    // زيادة عدد مرات استخدام الكوبون
-                    $coupon->incrementUsage();
-                    
-                    // تسجيل استخدام الكوبون
-                    \App\Models\CouponUsage::create([
-                        'coupon_id' => $coupon->id,
-                        'user_id' => auth()->id(),
-                        'discount_amount' => $couponDiscountAmount,
-                        'order_amount' => $originalAmount,
-                        'final_amount' => $finalAmount,
-                    ]);
+                    $appliedCoupon = $coupon;
+                    $appliedCoupon->incrementUsage();
                 }
             }
         }
@@ -154,7 +137,7 @@ class OrderController extends Controller
             }
         }
         if ($couponDiscountAmount > 0) {
-            $discountNotes[] = "خصم الكوبون (" . ($coupon->code ?? '') . "): " . number_format($couponDiscountAmount, 2) . " ج.م";
+            $discountNotes[] = 'خصم الكوبون (' . ($appliedCoupon->code ?? '') . '): ' . number_format($couponDiscountAmount, 2) . ' ج.م';
         }
         if (!empty($discountNotes)) {
             $orderData['notes'] .= (!empty($orderData['notes']) ? "\n" : '') . implode("\n", $discountNotes);
@@ -162,7 +145,18 @@ class OrderController extends Controller
 
         $orderData['wallet_id'] = $request->payment_method === 'bank_transfer' ? $request->wallet_id : null;
 
-        Order::create($orderData);
+        $order = Order::create($orderData);
+
+        if ($appliedCoupon && $couponDiscountAmount > 0) {
+            \App\Models\CouponUsage::create([
+                'coupon_id' => $appliedCoupon->id,
+                'user_id' => auth()->id(),
+                'order_id' => $order->id,
+                'discount_amount' => $couponDiscountAmount,
+                'order_amount' => $originalAmount,
+                'final_amount' => $order->amount,
+            ]);
+        }
 
         return back()->with('success', 'تم إرسال طلبك بنجاح! سيتم مراجعته قريباً');
     }

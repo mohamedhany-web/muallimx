@@ -100,15 +100,6 @@ if ($_jldType === 'instructor' && isset($profile)) {
         $_instrUrl = url('/instructors');
     }
 
-    $_socialLinks = is_array($profile->social_links ?? null) ? $profile->social_links : [];
-    $_sameAs = array_values(array_filter([
-        $_socialLinks['linkedin']  ?? null,
-        $_socialLinks['twitter']   ?? null,
-        $_socialLinks['youtube']   ?? null,
-        $_socialLinks['facebook']  ?? null,
-        $_socialLinks['website']   ?? null,
-    ]));
-
     $_personData = [
         '@type'       => 'Person',
         '@id'         => $_instrUrl . '#person',
@@ -119,9 +110,6 @@ if ($_jldType === 'instructor' && isset($profile)) {
         'jobTitle'    => (string)($profile->headline ?? 'مدرب'),
         'worksFor'    => ['@type' => 'EducationalOrganization', '@id' => $_siteUrl . '/#organization', 'name' => $_siteName],
     ];
-    if (!empty($_sameAs)) {
-        $_personData['sameAs'] = $_sameAs;
-    }
 
     $_instrPageData = [
         '@context'   => 'https://schema.org',

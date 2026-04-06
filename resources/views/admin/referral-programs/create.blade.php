@@ -113,6 +113,13 @@
                             <p class="text-xs text-gray-500 mt-1">اتركه فارغاً للسماح بإحالات غير محدودة</p>
                         </div>
 
+                        <div>
+                            <label for="referral_code_valid_days" class="block text-sm font-medium text-gray-700 mb-2">صلاحية رابط الإحالة (أيام)</label>
+                            <input type="number" name="referral_code_valid_days" id="referral_code_valid_days" min="1" value="{{ old('referral_code_valid_days') }}"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
+                            <p class="text-xs text-gray-500 mt-1">اختياري — للأرشفة فقط؛ التسجيل يعتمد على كود المحيل الحالي</p>
+                        </div>
+
                         <!-- السماح بالإحالة الذاتية -->
                         <div class="flex items-center gap-3 pt-8">
                             <input type="checkbox" name="allow_self_referral" id="allow_self_referral" value="1" {{ old('allow_self_referral') ? 'checked' : '' }}
@@ -140,6 +147,15 @@
                                 class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
                         </div>
                     </div>
+                </div>
+
+                <div class="rounded-xl border border-violet-200 bg-violet-50/50 p-4 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" name="is_default" id="is_default" value="1" {{ old('is_default') ? 'checked' : '' }}
+                            class="h-5 w-5 text-violet-600 focus:ring-violet-500 border-gray-300 rounded">
+                        <label for="is_default" class="text-sm font-medium text-gray-800">جعل هذا البرنامج <strong>الافتراضي</strong> لإحالات التسجيل الجديدة</label>
+                    </div>
+                    <p class="text-xs text-gray-600 mr-8">يُلغى الافتراضي عن البرامج الأخرى تلقائياً. يُفضّل أن يكون البرنامج الافتراضي مفعّلاً وضمن فترة صلاحية.</p>
                 </div>
 
                 <!-- الحالة -->

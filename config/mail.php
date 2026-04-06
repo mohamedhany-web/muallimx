@@ -116,4 +116,18 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | تنبيهات تذاكر الدعم الفني
+    |--------------------------------------------------------------------------
+    |
+    | عناوين بريد تستقبل نسخة فورية عند إنشاء تذكرة دعم (مفصولة بفاصلة).
+    | مثال Gmail: SUPPORT_ALERT_EMAIL=support@gmail.com,admin@gmail.com
+    |
+    */
+    'support_alert_addresses' => array_values(array_filter(
+        array_map('trim', explode(',', (string) env('SUPPORT_ALERT_EMAIL', ''))),
+        fn (string $email) => (bool) filter_var($email, FILTER_VALIDATE_EMAIL)
+    )),
+
 ];

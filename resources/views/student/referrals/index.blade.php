@@ -101,6 +101,48 @@
         </div>
     </div>
 
+    @if($activeProgram)
+    <div class="mb-8 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-800 p-6 shadow-lg">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            <i class="fas fa-gift text-emerald-600"></i>
+            القواعد الحالية (برنامج: {{ $activeProgram->name }})
+        </h3>
+        <ul class="text-sm text-gray-700 dark:text-slate-300 space-y-2 list-disc list-inside">
+            <li>خصم للصديق المدعو:
+                @if($activeProgram->discount_type === 'percentage')
+                    {{ rtrim(rtrim(number_format($activeProgram->discount_value, 2), '0'), '.') }}% على أول شراء (كورس) ضمن الشروط
+                @else
+                    {{ number_format($activeProgram->discount_value, 2) }} ج.م
+                @endif
+                @if($activeProgram->maximum_discount)
+                    — حد أقصى للخصم {{ number_format($activeProgram->maximum_discount, 2) }} ج.م
+                @endif
+            </li>
+            <li>مدة صلاحية كوبون الخصم: {{ $activeProgram->discount_valid_days }} يوماً من تاريخ التسجيل.</li>
+            <li>مكافأتك عند اكتمال الطلب:
+                @if($activeProgram->referrer_reward_type === 'points')
+                    {{ number_format($activeProgram->referrer_reward_value ?? 0, 0) }} نقطة
+                @elseif($activeProgram->referrer_reward_type === 'percentage')
+                    {{ rtrim(rtrim(number_format($activeProgram->referrer_reward_value ?? 0, 2), '0'), '.') }}% من قيمة الطلب
+                @else
+                    {{ number_format($activeProgram->referrer_reward_value ?? 0, 2) }} ج.م
+                @endif
+                @if(!$activeProgram->referrer_reward_value)
+                    (غير محددة في البرنامج)
+                @endif
+            </li>
+            @if($activeProgram->max_referrals_per_user)
+            <li>حد أقصى {{ $activeProgram->max_referrals_per_user }} إحالة لكل حساب ضمن هذا البرنامج.</li>
+            @endif
+        </ul>
+    </div>
+    @else
+    <div class="mb-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900 text-sm">
+        <i class="fas fa-exclamation-triangle ml-2"></i>
+        لا يوجد برنامج إحالات نشط حالياً. يمكنك نسخ رابطك، لكن لن تُسجَّل إحالات أو مكافآت حتى يفعّل المشرف برنامجاً من لوحة الإدارة.
+    </div>
+    @endif
+
     <!-- Referral Code Card -->
     <div class="bg-gradient-to-br from-sky-500 via-sky-600 to-purple-600 rounded-2xl shadow-2xl p-8 mb-8 text-white relative overflow-hidden border border-sky-400/30 hover:shadow-2xl transition-all duration-300 card-hover-effect group">
         <div class="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full -mr-40 -mt-40 blur-3xl group-hover:bg-white/15 transition-all duration-500"></div>
@@ -131,7 +173,7 @@
                                 </p>
                                 <p class="text-3xl font-black tracking-wider bg-white/10 px-4 py-2 rounded-lg inline-block">{{ $referralCode }}</p>
                             </div>
-                            <button onclick="copyReferralCode('{{ $referralCode }}')" 
+                            <button type="button" onclick="copyReferralCode('{{ $referralCode }}')" 
                                     class="bg-white text-sky-600 px-6 py-3 rounded-xl font-bold hover:bg-sky-50 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg transform hover:scale-105">
                                 <i class="fas fa-copy"></i>
                                 نسخ الكود
@@ -150,11 +192,16 @@
                                    value="{{ $referralLink }}" 
                                    readonly
                                    class="flex-1 bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg px-4 py-3 text-white font-medium focus:outline-none focus:ring-2 focus:ring-white/50 text-sm">
-                            <button onclick="copyReferralLink()" 
+                            <button type="button" onclick="copyReferralLink()" 
                                     class="bg-white text-sky-600 px-6 py-3 rounded-lg font-bold hover:bg-sky-50 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg transform hover:scale-105">
                                 <i class="fas fa-copy"></i>
                                 نسخ الرابط
                             </button>
+                            <a href="https://wa.me/?text={{ urlencode('سجّل في المنصة عبر رابطي واحصل على خصم: ' . $referralLink) }}" target="_blank" rel="noopener"
+                               class="bg-emerald-500 text-white px-5 py-3 rounded-lg font-bold hover:bg-emerald-600 transition-all flex items-center justify-center gap-2 shadow-lg">
+                                <i class="fab fa-whatsapp"></i>
+                                واتساب
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -185,13 +232,13 @@
             </div>
             <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-300 group">
                 <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">2</div>
-                <h4 class="font-bold text-gray-900 mb-2 text-lg">صديقك يسجل</h4>
-                <p class="text-sm text-gray-600">صديقك يسجل باستخدام كودك ويحصل على خصم خاص</p>
+                <h4 class="font-bold text-gray-900 mb-2 text-lg">صديقك يسجّل بالرابط</h4>
+                <p class="text-sm text-gray-600">يفتح <span class="font-mono text-xs bg-white/80 px-1 rounded">/register?ref=كودك</span> ويكمل التسجيل — يُربط تلقائياً بك</p>
             </div>
             <div class="text-center p-6 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 hover:shadow-lg transition-all duration-300 group">
                 <div class="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">3</div>
-                <h4 class="font-bold text-gray-900 mb-2 text-lg">احصل على المكافأة</h4>
-                <p class="text-sm text-gray-600">عند شراء صديقك لأي كورس، تحصل أنت على مكافأة</p>
+                <h4 class="font-bold text-gray-900 mb-2 text-lg">اكتمال الإحالة</h4>
+                <p class="text-sm text-gray-600">عندما يشتري صديقك كورساً ويُعتمد الطلب، تُسجَّل إحالتك «مكتملة» وتظهر مكافأتك حسب البرنامج</p>
             </div>
         </div>
     </div>
@@ -276,38 +323,35 @@
     </div>
 </div>
 
-<script>
-function copyReferralCode(code) {
-    navigator.clipboard.writeText(code).then(() => {
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-        });
-        Toast.fire({
-            icon: 'success',
-            title: 'تم نسخ كود الإحالة: ' + code
-        });
-    });
-}
+<div id="referral-toast" class="fixed top-4 left-4 rtl:left-auto rtl:right-4 z-[100] hidden px-4 py-3 rounded-xl bg-emerald-600 text-white text-sm font-semibold shadow-lg max-w-sm" role="status"></div>
 
+<script>
+function showReferralToast(msg) {
+    var el = document.getElementById('referral-toast');
+    if (!el) { alert(msg); return; }
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    clearTimeout(window._refToastT);
+    window._refToastT = setTimeout(function() { el.classList.add('hidden'); }, 3200);
+}
+function copyReferralCode(code) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(function() {
+            showReferralToast('تم نسخ كود الإحالة');
+        }).catch(function() { showReferralToast('انسخ الكود يدوياً: ' + code); });
+    } else {
+        showReferralToast('انسخ الكود يدوياً: ' + code);
+    }
+}
 function copyReferralLink() {
-    const link = document.getElementById('referralLink').value;
-    navigator.clipboard.writeText(link).then(() => {
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-        });
-        Toast.fire({
-            icon: 'success',
-            title: 'تم نسخ رابط الإحالة'
-        });
-    });
+    var link = document.getElementById('referralLink').value;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(link).then(function() {
+            showReferralToast('تم نسخ رابط الإحالة');
+        }).catch(function() { showReferralToast('انسخ الرابط يدوياً من الحقل'); });
+    } else {
+        showReferralToast('انسخ الرابط يدوياً من الحقل');
+    }
 }
 </script>
 @endsection

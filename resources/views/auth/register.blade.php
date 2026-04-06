@@ -149,8 +149,21 @@
                     <p class="text-xs sm:text-sm font-semibold text-navy-950">هذا النموذج لتسجيل المعلمين والطلاب. للتسجيل كمدرب تواصل معنا.</p>
                 </div>
 
+                @if(!empty($pendingReferralCode))
+                <div class="mb-5 flex items-center gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+                    <span class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center flex-shrink-0 text-white">
+                        <i class="fas fa-gift text-lg"></i>
+                    </span>
+                    <div class="text-sm text-emerald-950">
+                        <p class="font-bold mb-1">أنت تسجّل عبر رابط دعوة</p>
+                        <p class="text-emerald-800">سيتم ربط حسابك بكود الإحالة <span class="font-mono font-bold">{{ $pendingReferralCode }}</span> بعد إتمام التسجيل (إن كان البرنامج مفعّلاً).</p>
+                    </div>
+                </div>
+                @endif
+
                 <form action="{{ route('register') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="referral_code" value="{{ old('referral_code', $pendingReferralCode ?? '') }}">
                     @php
                         $phoneCountries = $phoneCountries ?? config('phone_countries.countries', []);
                         $defaultCountry = $defaultCountry ?? collect($phoneCountries)->firstWhere('code', config('phone_countries.default_country', 'SA'));

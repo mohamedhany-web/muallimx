@@ -34,6 +34,7 @@ class ReferralProgramSeeder extends Seeder
                 'max_discount_uses_per_referred' => 1,
                 'allow_self_referral' => false,
                 'is_active' => true,
+                'is_default' => true,
             ]
         );
 

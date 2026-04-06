@@ -22,8 +22,15 @@
         </div>
     </div>
 
+    @if(session('success'))
+    <div class="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 text-sm">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+    <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-sm">{{ session('error') }}</div>
+    @endif
+
     <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-r-4 border-sky-500">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
@@ -59,6 +66,22 @@
                 </div>
             </div>
         </div>
+
+        <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border-r-4 border-violet-500">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-gray-500 text-sm font-medium mb-1">نشطة ضمن الفترة</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['valid_now'] ?? 0) }}</p>
+                </div>
+                <div class="w-16 h-16 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-calendar-check text-white text-2xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+        <strong class="text-slate-900">البرنامج الافتراضي:</strong> يُستخدم عند تسجيل مستخدم جديد برابط إحالة لتحديد قواعد الخصم والمكافأة. إن لم يُحدَّد برنامج افتراضي، يُختار أحدث برنامج <em>نشط وصالح</em> تلقائياً.
     </div>
 
     <!-- Programs List -->
@@ -69,9 +92,11 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اسم البرنامج</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الافتراضي</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإحالات</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">خصم المحال</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">مكافأة المحيل</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">مدة الصلاحية</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">مدة الخصم</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
                     </tr>
@@ -83,9 +108,22 @@
                             <div>
                                 <div class="text-sm font-medium text-gray-900">{{ $program->name }}</div>
                                 @if($program->description)
-                                <div class="text-sm text-gray-500">{{ Str::limit($program->description, 50) }}</div>
+                                <div class="text-sm text-gray-500">{{ \Illuminate\Support\Str::limit($program->description, 50) }}</div>
                                 @endif
                             </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($program->is_default)
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-violet-100 text-violet-800">افتراضي</span>
+                            @else
+                            <form action="{{ route('admin.referral-programs.set-default', $program) }}" method="POST" class="inline" onsubmit="return confirm('تعيين هذا البرنامج كافتراضي لإحالات التسجيل؟');">
+                                @csrf
+                                <button type="submit" class="text-xs text-violet-600 hover:text-violet-900 font-medium disabled:opacity-40" {{ !$program->is_active || !$program->isValid() ? 'disabled' : '' }}>تعيين افتراضي</button>
+                            </form>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-800">
+                            {{ number_format($program->referrals_count ?? 0) }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="text-sm font-medium text-gray-900">

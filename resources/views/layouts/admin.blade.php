@@ -7,10 +7,18 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', __('auth.dashboard')) - {{ config('app.name') }}</title>
     
+    @php $adminFavicon = ! empty($adminPanelLogoUrl) ? $adminPanelLogoUrl : null; @endphp
+    @if($adminFavicon)
+    <link rel="icon" type="image/png" href="{{ $adminFavicon }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ $adminFavicon }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ $adminFavicon }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ $adminFavicon }}">
+    @else
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('logo-removebg-preview.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('logo-removebg-preview.png') }}">
+    @endif
     
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,6 +35,78 @@
                 document.documentElement.classList.add('light');
             }
         })();
+    </script>
+    <script>
+        document.addEventListener('alpine:init', function () {
+            Alpine.data('adminNavNotifications', function (config) {
+                config = config || {};
+                var initialUnread = Number(config.unread) || 0;
+                var initialItems = Array.isArray(config.items) ? config.items : [];
+                var pollUrl = config.pollUrl || '';
+                return {
+                    openNotif: false,
+                    unread: initialUnread,
+                    lastSynced: initialUnread,
+                    firstPoll: true,
+                    items: initialItems.slice(),
+                    pollUrl: pollUrl,
+                    audioUnlocked: false,
+                    _pollTimer: null,
+                    init: function () {
+                        var self = this;
+                        document.body.addEventListener('click', function () { self.audioUnlocked = true; }, { once: true });
+                        document.body.addEventListener('keydown', function () { self.audioUnlocked = true; }, { once: true });
+                        this._pollTimer = setInterval(function () { self.poll(); }, 5000);
+                        this.poll();
+                    },
+                    destroy: function () {
+                        if (this._pollTimer) clearInterval(this._pollTimer);
+                    },
+                    poll: async function () {
+                        try {
+                            var token = document.querySelector('meta[name="csrf-token"]');
+                            var res = await fetch(this.pollUrl, {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRF-TOKEN': token ? token.getAttribute('content') : ''
+                                },
+                                credentials: 'same-origin'
+                            });
+                            if (!res.ok) return;
+                            var d = await res.json();
+                            if (!this.firstPoll && d.unread_count > this.lastSynced) {
+                                this.playBeep();
+                            }
+                            this.firstPoll = false;
+                            this.lastSynced = d.unread_count;
+                            this.unread = d.unread_count;
+                            this.items = Array.isArray(d.items) ? d.items : [];
+                        } catch (e) { /* ignore */ }
+                    },
+                    playBeep: function () {
+                        if (!this.audioUnlocked) return;
+                        try {
+                            var Ctx = window.AudioContext || window.webkitAudioContext;
+                            if (!Ctx) return;
+                            var ctx = new Ctx();
+                            var osc = ctx.createOscillator();
+                            var gain = ctx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.value = 880;
+                            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.22);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(ctx.currentTime);
+                            osc.stop(ctx.currentTime + 0.25);
+                            setTimeout(function () { ctx.close(); }, 400);
+                        } catch (e) { /* ignore */ }
+                    }
+                };
+            });
+        });
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     
@@ -264,6 +344,22 @@
         .dark .list-item-card,
         .dark .card-hover-effect,
         .dark .bg-white { background: #1e293b !important; border-color: #334155 !important; }
+        /* بطاقات شبه شفافة (مثل سجل النشاطات) — بدونها يبقى النص الفاتح على خلفية فاتحة */
+        .dark [class*="bg-white/95"],
+        .dark [class*="bg-white/85"],
+        .dark [class*="bg-white/80"],
+        .dark [class*="bg-white/70"] {
+            background-color: rgba(30, 41, 59, 0.97) !important;
+            border-color: #334155 !important;
+        }
+        .dark [class*="bg-slate-50/50"],
+        .dark [class*="bg-slate-50/60"] {
+            background-color: rgba(30, 41, 59, 0.65) !important;
+        }
+        .dark main .bg-gray-50,
+        .dark .content-wrapper .bg-gray-50 { background-color: #0f172a !important; }
+        .dark main [class*="bg-slate-200"],
+        .dark .content-wrapper [class*="bg-slate-200"] { background-color: #475569 !important; }
         .dark .stat-card:hover,
         .dark .section-card:hover { box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.3); border-color: #475569 !important; }
         .dark .stat-card::after { background: linear-gradient(135deg, transparent 60%, rgba(59, 130, 246, 0.05) 100%); }
@@ -289,6 +385,11 @@
         .dark [class*="text-gray-8"], .dark [class*="text-gray-9"], .dark [class*="text-gray-7"] { color: #e2e8f0 !important; }
         .dark [class*="text-gray-6"], .dark [class*="text-gray-5"] { color: #94a3b8 !important; }
         .dark [class*="text-navy-8"], .dark [class*="text-navy-7"] { color: #e2e8f0 !important; }
+        .dark main [class*="text-mx-indigo"], .dark main [class*="text-mx-navy"],
+        .dark .content-wrapper [class*="text-mx-indigo"], .dark .content-wrapper [class*="text-mx-navy"] { color: #c7d2fe !important; }
+        .dark main [class*="text-[#1C"], .dark main [class*="text-[#1F3"], .dark main [class*="text-[#1F2"], .dark main [class*="text-[#283593]"],
+        .dark .content-wrapper [class*="text-[#1C"], .dark .content-wrapper [class*="text-[#1F3"], .dark .content-wrapper [class*="text-[#1F2"], .dark .content-wrapper [class*="text-[#283593]"] { color: #f1f5f9 !important; }
+        .dark main [class*="text-[#2CA9BD]"], .dark .content-wrapper [class*="text-[#2CA9BD]"] { color: #67e8f9 !important; }
         .dark .content-wrapper input::placeholder,
         .dark .content-wrapper textarea::placeholder { color: #64748b; }
         .dark .content-wrapper input:not([type="submit"]):not([type="button"]),
@@ -450,6 +551,12 @@
                 <i class="fas fa-bars text-sm"></i>
             </button>
 
+            @if(! empty($adminPanelLogoUrl))
+            <div class="flex items-center shrink-0" title="MuallimX">
+                <img src="{{ $adminPanelLogoUrl }}" alt="" width="36" height="36" class="h-8 w-8 sm:h-9 sm:w-9 rounded-xl object-contain bg-white border border-slate-200/80 dark:border-slate-600 dark:bg-slate-800 shadow-sm">
+            </div>
+            @endif
+
             <!-- Page title -->
             <div class="flex-1 min-w-0">
                 <h1 class="text-lg font-heading font-bold text-slate-800 dark:text-slate-100 truncate">
@@ -479,26 +586,43 @@
                     <i class="fas fa-sun text-sm" x-show="darkMode" x-transition x-cloak></i>
                 </button>
 
-                <!-- Notifications -->
+                <!-- Notifications (تحديث تلقائي ~8ث + صوت عند زيادة العدد) -->
                 @php
+                    $adminUnreadCount = \App\Models\Notification::where('user_id', auth()->id())
+                        ->unread()
+                        ->valid()
+                        ->count();
                     $adminUnreadNotifications = \App\Models\Notification::where('user_id', auth()->id())
                         ->unread()
                         ->valid()
-                        ->limit(5)
                         ->orderByDesc('created_at')
+                        ->limit(5)
                         ->get();
-                    $adminUnreadCount = $adminUnreadNotifications->count();
+                    $adminNavItems = $adminUnreadNotifications->map(fn ($n) => [
+                        'id' => $n->id,
+                        'title' => $n->title,
+                        'message' => $n->message,
+                        'priority' => $n->priority,
+                        'href' => $n->action_url ?: route('admin.notifications.show', $n),
+                        'time' => $n->created_at->diffForHumans(),
+                        'icon' => $n->type_icon,
+                    ])->values();
+                    $adminNavBellConfig = [
+                        'unread' => (int) $adminUnreadCount,
+                        'items' => $adminNavItems->all(),
+                        'pollUrl' => route('admin.api.nav-notifications'),
+                    ];
                 @endphp
-                <div class="relative" x-data="{ openNotif: false }" @click.outside="openNotif = false">
+                <div class="relative"
+                     x-data="adminNavNotifications({{ \Illuminate\Support\Js::from($adminNavBellConfig) }})"
+                     @click.outside="openNotif = false">
                     <button type="button"
                             @click="openNotif = !openNotif"
                             class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center text-slate-400 dark:text-slate-400 transition-all active:scale-95 relative">
                         <i class="fas fa-bell text-sm"></i>
-                        @if($adminUnreadCount > 0)
-                            <span class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-800 px-1">
-                                {{ $adminUnreadCount > 9 ? '9+' : $adminUnreadCount }}
-                            </span>
-                        @endif
+                        <span x-show="unread > 0" x-cloak
+                              class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-800 px-1"
+                              x-text="unread > 9 ? '9+' : unread"></span>
                     </button>
                     <!-- Notifications dropdown -->
                     <div x-show="openNotif" x-cloak
@@ -508,56 +632,54 @@
                          x-transition:leave="transition ease-in duration-100"
                          x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                          x-transition:leave-end="opacity-0 translate-y-1 scale-95"
-                         class="absolute left-0 mt-2 w-80 max-h-[420px] overflow-hidden rounded-2xl bg-white shadow-xl shadow-slate-200/60 border border-slate-100 z-50">
-                        <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+                         class="absolute left-0 mt-2 w-80 max-h-[420px] overflow-hidden rounded-2xl bg-white dark:bg-slate-800 shadow-xl shadow-slate-200/60 border border-slate-100 dark:border-slate-600 z-50">
+                        <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-600 flex items-center justify-between bg-slate-50/80 dark:bg-slate-700/50">
                             <div>
-                                <p class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                <p class="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                                     <i class="fas fa-bell text-amber-500"></i>
                                     {{ __('أحدث الإشعارات') }}
                                 </p>
-                                <p class="text-xs text-slate-500 mt-0.5">
-                                    {{ $adminUnreadCount > 0 ? "لديك {$adminUnreadCount} إشعار غير مقروء" : 'لا توجد إشعارات جديدة حالياً' }}
-                                </p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" x-text="unread > 0 ? ('لديك ' + unread + ' إشعار غير مقروء') : 'لا توجد إشعارات جديدة حالياً'"></p>
                             </div>
-                            <a href="{{ route('admin.notifications.index') }}" class="text-xs font-semibold text-sky-600 hover:text-sky-700">
+                            <a href="{{ route('admin.notifications.inbox') }}" class="text-xs font-semibold text-sky-600 hover:text-sky-700">
                                 {{ __('عرض الكل') }}
                             </a>
                         </div>
                         <div class="max-h-[320px] overflow-y-auto">
-                            @forelse($adminUnreadNotifications as $notif)
-                                <a href="{{ route('admin.notifications.show', $notif) }}"
-                                   class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-b-0">
+                            <template x-for="item in items" :key="item.id">
+                                <a :href="item.href"
+                                   class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border-b border-slate-50 dark:border-slate-600 last:border-b-0">
                                     <div class="mt-0.5">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-semibold
-                                            @if($notif->priority === 'urgent') bg-rose-100 text-rose-600
-                                            @elseif($notif->priority === 'high') bg-amber-100 text-amber-600
-                                            @else bg-sky-100 text-sky-600 @endif">
-                                            <i class="{{ $notif->type_icon }}"></i>
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-semibold"
+                                              :class="{
+                                                  'bg-rose-100 text-rose-600': item.priority === 'urgent',
+                                                  'bg-amber-100 text-amber-600': item.priority === 'high',
+                                                  'bg-sky-100 text-sky-600': item.priority !== 'urgent' && item.priority !== 'high'
+                                              }">
+                                            <i :class="item.icon"></i>
                                         </span>
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-xs font-bold text-slate-900 truncate">
-                                            {{ $notif->title }}
-                                        </p>
-                                        <p class="text-xs text-slate-600 mt-0.5 line-clamp-2">
-                                            {{ $notif->message }}
-                                        </p>
-                                        <p class="text-[10px] text-slate-400 mt-1">
-                                            {{ $notif->created_at->diffForHumans() }}
-                                        </p>
+                                        <p class="text-xs font-bold text-slate-900 dark:text-slate-100 truncate" x-text="item.title"></p>
+                                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5 line-clamp-2" x-text="item.message"></p>
+                                        <p class="text-[10px] text-slate-400 mt-1" x-text="item.time"></p>
                                     </div>
                                 </a>
-                            @empty
-                                <div class="px-4 py-6 text-center text-xs text-slate-500">
-                                    <p>{{ $adminRtl ? 'لا توجد إشعارات جديدة' : 'No new notifications' }}</p>
-                                </div>
-                            @endforelse
+                            </template>
+                            <div x-show="items.length === 0" class="px-4 py-6 text-center text-xs text-slate-500">
+                                <p>{{ $adminRtl ? 'لا توجد إشعارات جديدة' : 'No new notifications' }}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Settings -->
-                <a href="{{ route('settings') }}" class="hidden sm:flex w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 items-center justify-center text-slate-400 transition-all active:scale-95">
+                @php
+                    $adminNavSettingsUrl = auth()->user()->hasPermission('manage.system-settings')
+                        ? route('admin.system-settings.edit')
+                        : route('admin.profile');
+                @endphp
+                <!-- إعدادات → صفحة إعدادات النظام (أو الملف الشخصي إن لم تتوفر الصلاحية) -->
+                <a href="{{ $adminNavSettingsUrl }}" title="إعدادات النظام" aria-label="إعدادات النظام" class="flex w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 items-center justify-center text-slate-400 dark:text-slate-400 transition-all active:scale-95">
                     <i class="fas fa-cog text-sm"></i>
                 </a>
 
@@ -601,8 +723,8 @@
                             <a href="{{ route('admin.profile') }}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors">
                                 <i class="fas fa-user w-4 text-slate-400 text-xs"></i> الملف الشخصي
                             </a>
-                            <a href="{{ route('settings') }}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors">
-                                <i class="fas fa-cog w-4 text-slate-400 text-xs"></i> الإعدادات
+                            <a href="{{ $adminNavSettingsUrl }}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-700/50 dark:text-slate-300 transition-colors">
+                                <i class="fas fa-cog w-4 text-slate-400 text-xs"></i> إعدادات النظام
                             </a>
                         </div>
                         <div class="border-t border-slate-100 py-1.5">

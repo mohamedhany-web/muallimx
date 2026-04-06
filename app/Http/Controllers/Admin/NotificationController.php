@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Models\SupportTicket;
 use App\Models\User;
 use App\Models\AdvancedCourse;
 use App\Models\AcademicYear;
@@ -290,9 +291,131 @@ class NotificationController extends Controller
     }
 
     /**
-     * عرض تفاصيل الإشعار
-     * محمي من: Unauthorized Access, Ownership
+     * وارد الإشعارات (ما يصل للمشرف: تذاكر دعم، تنبيهات، إلخ) — لأي مستخدم يملك admin.access.
+     * يختلف عن index الذي يعرض فقط الإشعارات التي أرسلها super_admin للطلاب.
      */
+    public function inbox(Request $request)
+    {
+        if (! Auth::check()) {
+            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
+        }
+
+        $userId = Auth::id();
+
+        $query = Notification::query()
+            ->where('user_id', $userId)
+            ->valid();
+
+        if ($request->filled('status')) {
+            $status = strip_tags(trim((string) $request->status));
+            if ($status === 'read') {
+                $query->where('is_read', true);
+            } elseif ($status === 'unread') {
+                $query->where('is_read', false);
+            }
+        }
+
+        $notifications = $query->orderByDesc('created_at')->paginate(25)->withQueryString();
+
+        $stats = [
+            'unread' => Notification::where('user_id', $userId)->unread()->valid()->count(),
+            'total' => Notification::where('user_id', $userId)->valid()->count(),
+        ];
+
+        return view('admin.notifications.inbox', compact('notifications', 'stats'));
+    }
+
+    /**
+     * تعليم كل وارد الإشعارات كمقروء للمستخدم الحالي.
+     */
+    public function inboxMarkAllRead(Request $request)
+    {
+        if (! Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+        }
+
+        $userId = Auth::id();
+
+        $count = Notification::where('user_id', $userId)
+            ->unread()
+            ->valid()
+            ->update([
+                'is_read' => true,
+                'read_at' => now(),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'marked' => $count,
+        ]);
+    }
+
+    /**
+     * بيانات الجرس في النافبار (تحديث تلقائي + صوت) — JSON.
+     */
+    public function navPoll()
+    {
+        if (! Auth::check()) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        $userId = Auth::id();
+
+        $count = Notification::where('user_id', $userId)
+            ->unread()
+            ->valid()
+            ->count();
+
+        $notifications = Notification::where('user_id', $userId)
+            ->unread()
+            ->valid()
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        $items = $notifications->map(function (Notification $n) {
+            return [
+                'id' => $n->id,
+                'title' => $n->title,
+                'message' => $n->message,
+                'priority' => $n->priority,
+                'href' => $n->action_url ?: route('admin.notifications.show', $n),
+                'time' => $n->created_at->diffForHumans(),
+                'icon' => $n->type_icon,
+            ];
+        })->values();
+
+        return response()->json([
+            'unread_count' => $count,
+            'items' => $items,
+        ]);
+    }
+
+    /**
+     * فتح تذكرة دعم من الإشعار وتعليم الإشعار كمقروء (جرس الأدمن).
+     */
+    public function openSupportTicket(Notification $notification)
+    {
+        if (! Auth::check()) {
+            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
+        }
+
+        if ((int) $notification->user_id !== (int) Auth::id()) {
+            abort(403, 'غير مصرح لك بعرض هذا الإشعار');
+        }
+
+        $ticketId = is_array($notification->data) ? ($notification->data['support_ticket_id'] ?? null) : null;
+        if (! $ticketId || ! SupportTicket::whereKey($ticketId)->exists()) {
+            abort(404, 'التذكرة غير موجودة');
+        }
+
+        if (! $notification->is_read) {
+            $notification->markAsRead();
+        }
+
+        return redirect()->route('admin.support-tickets.show', $ticketId);
+    }
+
     public function show(Notification $notification)
     {
         // التحقق من تسجيل الدخول

@@ -15,6 +15,8 @@ return [
         'community' => 'Data & AI Community',
         'portfolio' => 'Portfolio',
         'instructors' => 'Instructors',
+        'pricing' => 'Pricing & plans',
+        'services' => 'Services',
         'login' => 'Login',
         'register' => 'Sign Up',
         'dashboard' => 'Dashboard',

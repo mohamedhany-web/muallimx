@@ -307,6 +307,10 @@
         .dark [class*="text-gray-8"], .dark [class*="text-gray-9"], .dark [class*="text-gray-7"] { color: #e2e8f0 !important; }
         .dark [class*="text-gray-6"], .dark [class*="text-gray-5"] { color: #94a3b8 !important; }
         .dark [class*="text-navy-8"], .dark [class*="text-navy-7"] { color: #e2e8f0 !important; }
+        /* نصوص بألوان hex / براند ثابتة (لا تُطابق text-slate-*) */
+        .dark main [class*="text-mx-indigo"], .dark main [class*="text-mx-navy"] { color: #c7d2fe !important; }
+        .dark main [class*="text-[#1C"], .dark main [class*="text-[#1F3"], .dark main [class*="text-[#1F2"], .dark main [class*="text-[#283593]"] { color: #f1f5f9 !important; }
+        .dark main [class*="text-[#2CA9BD]"] { color: #67e8f9 !important; }
         .dark main input::placeholder,
         .dark main textarea::placeholder { color: #64748b; }
         .dark main input:not([type="submit"]):not([type="button"]),

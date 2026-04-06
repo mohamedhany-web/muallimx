@@ -199,37 +199,6 @@
                                 Featured
                             </span>
                             @endif
-
-                            {{-- Social links --}}
-                            <div class="absolute bottom-3 {{ $isRtl?'right':'left' }}-3 flex gap-2">
-                                @if(!empty($p->social_links['linkedin']))
-                                <span role="link" tabindex="0"
-                                      data-url="{{ $p->social_links['linkedin'] }}"
-                                      onclick="event.preventDefault();event.stopPropagation();window.open(this.dataset.url,'_blank')"
-                                      class="w-9 h-9 rounded-xl bg-[#0A66C2] text-white flex items-center justify-center shadow-lg hover:bg-[#004182] hover:scale-110 transition-all cursor-pointer"
-                                      title="LinkedIn">
-                                    <i class="fab fa-linkedin-in text-sm"></i>
-                                </span>
-                                @endif
-                                @if(!empty($p->social_links['twitter']))
-                                <span role="link" tabindex="0"
-                                      data-url="{{ $p->social_links['twitter'] }}"
-                                      onclick="event.preventDefault();event.stopPropagation();window.open(this.dataset.url,'_blank')"
-                                      class="w-9 h-9 rounded-xl bg-[#1F2A7A] text-white flex items-center justify-center shadow-lg hover:bg-[#0f172a] hover:scale-110 transition-all cursor-pointer"
-                                      title="X / Twitter">
-                                    <i class="fab fa-x-twitter text-sm"></i>
-                                </span>
-                                @endif
-                                @if(!empty($p->social_links['youtube']))
-                                <span role="link" tabindex="0"
-                                      data-url="{{ $p->social_links['youtube'] }}"
-                                      onclick="event.preventDefault();event.stopPropagation();window.open(this.dataset.url,'_blank')"
-                                      class="w-9 h-9 rounded-xl bg-red-600 text-white flex items-center justify-center shadow-lg hover:bg-red-700 hover:scale-110 transition-all cursor-pointer"
-                                      title="YouTube">
-                                    <i class="fab fa-youtube text-sm"></i>
-                                </span>
-                                @endif
-                            </div>
                         </div>
 
                         {{-- Card body --}}
