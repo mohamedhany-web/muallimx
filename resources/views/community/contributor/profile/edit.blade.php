@@ -39,7 +39,7 @@
                             </div>
                             <input type="file" name="photo" id="photo" accept="image/jpeg,image/png,image/jpg,image/webp" class="sr-only">
                         </label>
-                        <p class="text-xs text-slate-500 mt-2">JPG, PNG أو WebP. 2 ميجا كحد أقصى</p>
+                        <p class="text-xs text-slate-500 mt-2">JPG, PNG أو WebP. حتى 40 ميجابايت كحد أقصى</p>
                     </div>
                     <div class="flex-1 min-w-0">
                         <label for="bio" class="block text-sm font-bold text-slate-700 mb-2">نبذة عنك</label>

@@ -206,7 +206,7 @@
                             <span>اختر صورة جديدة (PNG أو JPG)</span>
                             <input type="file" name="profile_image" accept="image/*" class="hidden">
                         </label>
-                        <p class="mt-2 text-xs text-gray-600 font-medium">الحد الأقصى لحجم الملف 2 ميجابايت.</p>
+                        <p class="mt-2 text-xs text-gray-600 font-medium">الحد الأقصى لحجم الملف 40 ميجابايت.</p>
                         @error('profile_image')
                             <p class="text-red-600 text-xs mt-2 font-semibold">{{ $message }}</p>
                         @enderror

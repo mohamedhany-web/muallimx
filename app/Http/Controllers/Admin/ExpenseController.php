@@ -128,7 +128,7 @@ class ExpenseController extends Controller
             'payment_method' => 'required|in:cash,bank_transfer,card,wallet,other',
             'wallet_id' => 'nullable|exists:wallets,id',
             'reference_number' => 'nullable|string|max:255',
-            'attachment' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'attachment' => 'nullable|image|mimes:jpeg,png,jpg|max:'.config('upload_limits.max_upload_kb'),
             'notes' => 'nullable|string',
         ], [
             'title.required' => 'عنوان المصروف مطلوب',
@@ -214,7 +214,7 @@ class ExpenseController extends Controller
             'payment_method' => 'required|in:cash,bank_transfer,card,wallet,other',
             'wallet_id' => 'nullable|exists:wallets,id',
             'reference_number' => 'nullable|string|max:255',
-            'attachment' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'attachment' => 'nullable|image|mimes:jpeg,png,jpg|max:'.config('upload_limits.max_upload_kb'),
             'notes' => 'nullable|string',
         ]);
 

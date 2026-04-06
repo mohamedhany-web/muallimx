@@ -90,7 +90,7 @@ class ConsultationController extends Controller
             'student_message' => ['nullable', 'string', 'max:5000'],
             'payment_method' => ['required', 'in:bank_transfer,cash,other'],
             'wallet_id' => $walletRules,
-            'payment_proof' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
+            'payment_proof' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:'.config('upload_limits.max_upload_kb')],
             'payment_reference' => ['nullable', 'string', 'max:500'],
         ], [
             'payment_method.required' => 'طريقة الدفع مطلوبة',
@@ -98,7 +98,7 @@ class ConsultationController extends Controller
             'payment_proof.required' => 'صورة الإيصال مطلوبة',
             'payment_proof.image' => 'يجب أن يكون الملف صورة',
             'payment_proof.mimes' => 'يجب أن تكون الصورة بصيغة jpeg, png أو jpg',
-            'payment_proof.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
+            'payment_proof.max' => 'حجم الصورة يجب ألا يتجاوز ' . round(config('upload_limits.max_upload_kb') / 1024) . ' ميجابايت',
         ]);
 
         if (! empty($data['wallet_id'])) {

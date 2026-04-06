@@ -37,7 +37,7 @@ class ProfileController extends Controller
             'bio' => 'nullable|string|max:2000',
             'current_password' => 'nullable|string',
             'password' => 'nullable|string|min:8|confirmed',
-            'profile_image' => 'nullable|image|max:2048',
+            'profile_image' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
         ], [
             'name.required' => 'الاسم مطلوب',
             'phone.required' => 'رقم الهاتف مطلوب',

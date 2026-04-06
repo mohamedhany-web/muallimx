@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>403 - {{ __('errors.403_title') }} | Mindlytics</title>
+    <title>403 - {{ __('errors.403_title') }} | {{ config('app.name') }}</title>
     
     <!-- خط عربي أصيل -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -182,9 +182,9 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center fade-in-up" style="animation-delay: 0.5s;">
-                    <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-pink-500 text-white px-8 py-4 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                    <a href="{{ $errorHomeUrl }}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-pink-500 text-white px-8 py-4 rounded-full font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                         <i class="fas fa-home"></i>
-                        <span>{{ __('errors.back_dashboard') }}</span>
+                        <span>{{ $errorHomeLabel }}</span>
                     </a>
                     <a href="javascript:history.back()" class="inline-flex items-center justify-center gap-2 bg-white text-red-600 px-8 py-4 rounded-full font-bold text-base border-2 border-red-600 hover:bg-red-50 transition-all duration-300">
                         <i class="fas fa-arrow-right"></i>

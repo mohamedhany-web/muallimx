@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'إضافة سؤال جديد')
 @section('header', 'إضافة سؤال جديد لبنك الأسئلة')
@@ -245,7 +245,7 @@
                             </label>
                             <input type="file" name="image" id="image" accept="image/*"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                            <p class="mt-1 text-sm text-gray-500">الحد الأقصى: 2 ميجابايت. الأنواع المدعومة: JPG, PNG, GIF</p>
+                            <p class="mt-1 text-sm text-gray-500">الحد الأقصى: 40 ميجابايت. الأنواع المدعومة: JPG, PNG, GIF</p>
                         </div>
 
                         <!-- أو رابط صورة خارجي -->

@@ -200,7 +200,7 @@ return [
     'change_password_regularly' => 'Change your password regularly to protect your account.',
     'update_data_subtitle' => 'Review and update your information anytime',
     'bio_placeholder_short' => 'Write a short bio that appears to students...',
-    'choose_image_label' => 'Choose image (PNG or JPG - max 2MB)',
+    'choose_image_label' => 'Choose image (PNG or JPG - max 40 MB)',
     'leave_empty_if_no_change' => 'Leave fields empty if you do not want to change',
     'back_to_dashboard' => 'Back to dashboard',
 
@@ -408,7 +408,7 @@ return [
     'link_type' => 'Link',
     'submission_description_placeholder' => 'Brief description of submission',
     'file_label' => 'File',
-    'max_10mb' => 'Max 10 MB',
+    'max_10mb' => 'Max 40 MB',
     'submission_link_label' => 'Submission link',
     'submit_work' => 'Submit work',
     'edit_task' => 'Edit task',

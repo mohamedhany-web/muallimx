@@ -98,7 +98,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (\Illuminate\Validation\ValidationException $e, \Illuminate\Http\Request $request) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'خطأ في التحقق من البيانات',
+                    'message' => __('errors.validation_summary'),
                     'errors' => $e->errors(),
                 ], 422);
             }
@@ -130,6 +130,16 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->view('errors.429', ['retry_after' => $retryAfter], 429)
                 ->withHeaders(['Retry-After' => $retryAfter]);
         });
+
+        // انتهاء رمز CSRF / الجلسة — صفحة واضحة بدلاً من رسالة تقنية
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => __('errors.419_message'),
+                ], 419);
+            }
+            return response()->view('errors.419', [], 419);
+        });
         
         $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, \Illuminate\Http\Request $request) {
             if ($request->expectsJson()) {
@@ -160,7 +170,10 @@ return Application::configure(basePath: dirname(__DIR__))
             }
             
             if ($request->expectsJson()) {
-                return response()->json(['message' => $e->getMessage() ?: 'حدث خطأ'], $statusCode);
+                $jsonMsg = (config('app.debug') && filled($e->getMessage()))
+                    ? $e->getMessage()
+                    : __('errors.http_generic_json');
+                return response()->json(['message' => $jsonMsg], $statusCode);
             }
             
             if ($statusCode === 503 && view()->exists('errors.503')) {
@@ -191,13 +204,32 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($statusCode === 404 && view()->exists('errors.404')) {
                 return response()->view('errors.404', [], 404);
             }
+
+            if ($statusCode === 419 && view()->exists('errors.419')) {
+                return response()->view('errors.419', [], 419);
+            }
+
+            if (view()->exists('errors.generic')) {
+                $titleKey = 'errors.http_'.$statusCode.'_title';
+                $messageKey = 'errors.http_'.$statusCode.'_message';
+                $title = \Illuminate\Support\Facades\Lang::has($titleKey) ? __($titleKey) : __('errors.http_generic_title');
+                $message = \Illuminate\Support\Facades\Lang::has($messageKey) ? __($messageKey) : __('errors.http_generic_message');
+                return response()->view('errors.generic', [
+                    'statusCode' => $statusCode,
+                    'title' => $title,
+                    'message' => $message,
+                ], $statusCode);
+            }
         });
         
         // معالجة الأخطاء العامة
         $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
             if ($e instanceof \Illuminate\Validation\ValidationException) {
                 if ($request->expectsJson()) {
-                    return response()->json(['message' => 'Validation failed', 'errors' => $e->errors()], 422);
+                    return response()->json([
+                        'message' => __('errors.validation_summary'),
+                        'errors' => $e->errors(),
+                    ], 422);
                 }
                 return redirect()->back()->withInput()->withErrors($e->errors());
             }
@@ -208,9 +240,11 @@ return Application::configure(basePath: dirname(__DIR__))
                     'file' => $e->getFile(),
                     'line' => $e->getLine(),
                 ]);
-                $msg = mb_substr($e->getMessage(), 0, 400);
+                $msg = config('app.debug')
+                    ? ('تفاصيل (للمطوّر): ' . mb_substr($e->getMessage(), 0, 400))
+                    : __('errors.generic_action_failed');
                 return redirect()->to(url('/admin/employee-agreements/create'))
-                    ->with('error', 'حدث خطأ: ' . $msg);
+                    ->with('error', $msg);
             }
             // تسجيل الخطأ قبل عرض صفحة الخطأ
             \Illuminate\Support\Facades\Log::error('Unhandled exception: ' . $e->getMessage(), [

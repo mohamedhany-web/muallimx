@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>429 - {{ __('errors.429_title') }} | Mindlytics</title>
+    <title>429 - {{ __('errors.429_title') }} | {{ config('app.name') }}</title>
     
     <!-- خط عربي أصيل -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -157,7 +157,7 @@
                 <!-- Badge -->
                 <div class="inline-flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg mb-6 fade-in-up">
                     <i class="fas fa-clock text-white text-sm"></i>
-                    <span class="text-white font-bold text-sm">معدل الطلبات</span>
+                    <span class="text-white font-bold text-sm">{{ __('errors.429_badge') }}</span>
                 </div>
 
                 <!-- رمز الخطأ -->
@@ -201,9 +201,9 @@
                         <i class="fas fa-redo"></i>
                         <span>إعادة المحاولة</span>
                     </button>
-                    <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center justify-center gap-2 bg-white text-purple-600 px-8 py-4 rounded-full font-bold text-base border-2 border-purple-600 hover:bg-purple-50 transition-all duration-300">
+                    <a href="{{ $errorHomeUrl }}" class="inline-flex items-center justify-center gap-2 bg-white text-purple-600 px-8 py-4 rounded-full font-bold text-base border-2 border-purple-600 hover:bg-purple-50 transition-all duration-300">
                         <i class="fas fa-home"></i>
-                        <span>{{ __('errors.back_dashboard') }}</span>
+                        <span>{{ $errorHomeLabel }}</span>
                     </a>
                 </div>
 
@@ -232,7 +232,10 @@
             const timerEl = document.getElementById('timer');
             countdownEl.classList.remove('hidden');
             
-            let timeLeft = parseInt(retryAfter);
+            let timeLeft = parseInt(retryAfter, 10);
+            if (!Number.isFinite(timeLeft) || timeLeft < 1) {
+                timeLeft = 60;
+            }
             timerEl.textContent = timeLeft;
             
             const interval = setInterval(() => {

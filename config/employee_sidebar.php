@@ -94,6 +94,13 @@ return [
             'route_patterns' => ['employee.supervision-desk.*'],
             'active_class' => 'bg-indigo-600 shadow-lg',
         ],
+        'academic_supervision_desk' => [
+            'label' => 'الإشراف الأكاديمي',
+            'icon' => 'fas fa-user-graduate',
+            'route' => 'employee.academic-supervision.index',
+            'route_patterns' => ['employee.academic-supervision.*'],
+            'active_class' => 'bg-teal-600 shadow-lg',
+        ],
         'public_catalog' => [
             'permission' => 'manage.courses',
             'label' => 'تصفح الكورسات',
@@ -213,6 +220,12 @@ return [
             ['title' => 'التقارير', 'keys' => ['reports', 'calendar']],
             ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
         ],
+        'academic_supervisor' => [
+            ['title' => 'الإشراف الأكاديمي', 'keys' => ['dashboard', 'academic_supervision_desk']],
+            ['title' => 'المهام والإجازات', 'keys' => ['tasks', 'leaves']],
+            ['title' => 'التخطيط', 'keys' => ['calendar']],
+            ['title' => 'حسابي', 'keys' => ['profile', 'notifications', 'settings']],
+        ],
         /*
          * الموظف المخصص (custom): يظهر كل الأقسام مُرشَّحة بصلاحياته RBAC.
          */
@@ -221,7 +234,7 @@ return [
             ['title' => 'المبيعات', 'keys' => ['sales_desk', 'sales_orders']],
             ['title' => 'المحاسبة والمالية', 'keys' => ['desk_accountant', 'agreements', 'accounting']],
             ['title' => 'الموارد البشرية', 'keys' => ['hr_desk', 'hr_leave_requests', 'hr_directory', 'hr_recruitment']],
-            ['title' => 'الإشراف', 'keys' => ['supervision_desk']],
+            ['title' => 'الإشراف', 'keys' => ['supervision_desk', 'academic_supervision_desk']],
             ['title' => 'الكورسات', 'keys' => ['public_catalog']],
             ['title' => 'المهام والإجازات', 'keys' => ['tasks', 'leaves']],
             ['title' => 'التقارير والتقويم', 'keys' => ['reports', 'calendar']],

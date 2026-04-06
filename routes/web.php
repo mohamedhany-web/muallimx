@@ -719,6 +719,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         });
         Route::get('/desk/supervision', [\App\Http\Controllers\Employee\EmployeeSupervisionDeskController::class, 'index'])->middleware('employee.can:supervision_desk')->name('supervision-desk.index');
 
+        Route::get('/desk/academic-supervision', [\App\Http\Controllers\Employee\AcademicSupervisionController::class, 'index'])->middleware('employee.can:academic_supervision_desk')->name('academic-supervision.index');
+        Route::get('/desk/academic-supervision/students/{student}', [\App\Http\Controllers\Employee\AcademicSupervisionController::class, 'show'])->middleware('employee.can:academic_supervision_desk')->name('academic-supervision.show');
+        Route::get('/desk/academic-supervision/meetings/{meeting}/observe', [\App\Http\Controllers\Employee\AcademicSupervisionController::class, 'observerRoom'])->middleware('employee.can:academic_supervision_desk')->name('academic-supervision.meeting.observe');
+
         Route::get('/tasks', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'index'])->middleware('employee.can:tasks')->name('tasks.index');
         Route::get('/tasks/{task}', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'show'])->middleware('employee.can:tasks')->name('tasks.show');
         Route::put('/tasks/{task}/status', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'updateStatus'])->middleware('employee.can:tasks')->name('tasks.update-status');
@@ -748,6 +752,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         Route::get('/settings', [\App\Http\Controllers\Employee\EmployeeSettingsController::class, 'index'])->middleware('employee.can:settings')->name('settings');
         Route::put('/settings', [\App\Http\Controllers\Employee\EmployeeSettingsController::class, 'update'])->middleware('employee.can:settings')->name('settings.update');
+
+        Route::get('/api/nav-notifications', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'navPoll'])
+            ->middleware('throttle:90,1')
+            ->name('api.nav-notifications');
 
         Route::get('/api/notifications/unread', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'getUnread'])->middleware('employee.can:notifications')->name('notifications.unread');
         Route::post('/api/notifications/{notification}/mark-read', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'markAsRead'])->middleware('employee.can:notifications')->name('notifications.api.mark-read');
@@ -1071,6 +1079,15 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // إدارة الموظفين
         Route::resource('employees', \App\Http\Controllers\Admin\EmployeeController::class);
         Route::resource('employee-jobs', \App\Http\Controllers\Admin\EmployeeJobController::class);
+        Route::prefix('academic-supervision')->name('academic-supervision.')->middleware('permission:academic_supervision.manage')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'index'])->name('index');
+            Route::get('/search-students', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'searchStudents'])->name('search-students');
+            Route::get('/supervisors/{supervisor}', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'show'])->name('supervisors.show');
+            Route::post('/supervisors/{supervisor}/students', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'attachStudent'])->name('supervisors.students.attach');
+            Route::delete('/supervisors/{supervisor}/students/{student}', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'detachStudent'])->name('supervisors.students.detach');
+            Route::get('/supervisors/{supervisor}/students/{student}', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'studentShow'])->name('supervisors.students.show');
+            Route::get('/supervisors/{supervisor}/meetings/{meeting}/observe', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'observeMeeting'])->name('supervisors.meetings.observe');
+        });
         Route::resource('employee-tasks', \App\Http\Controllers\Admin\EmployeeTaskController::class);
         
         // إدارة الإجازات

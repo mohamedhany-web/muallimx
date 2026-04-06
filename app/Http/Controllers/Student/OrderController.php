@@ -38,7 +38,7 @@ class OrderController extends Controller
                 'required_if:payment_method,bank_transfer',
                 Rule::exists('wallets', 'id')->where('is_active', true)->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer']),
             ],
-            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:'.config('upload_limits.max_upload_kb'),
             'notes' => 'nullable|string|max:500',
         ], [
             'payment_method.required' => 'طريقة الدفع مطلوبة',

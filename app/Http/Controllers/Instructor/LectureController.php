@@ -122,7 +122,7 @@ class LectureController extends Controller
             'has_assignment' => 'boolean',
             'has_evaluation' => 'boolean',
             'material_files' => 'nullable|array',
-            'material_files.*' => 'nullable|file|max:20480', // 20MB - nullable لتفادي فشل التحقق عند صفوف بدون ملف
+            'material_files.*' => 'nullable|file|max:'.config('upload_limits.max_upload_kb'), // حتى 40 ميجابايت — nullable لتفادي فشل التحقق عند صفوف بدون ملف
             'material_titles' => 'nullable|array',
             'material_titles.*' => 'nullable|string|max:255',
             'material_visible' => 'nullable|array',
@@ -363,7 +363,7 @@ class LectureController extends Controller
             'material_delete_old' => 'nullable|array',
             'material_delete_old.*' => 'exists:lecture_materials,id',
             'material_files' => 'nullable|array',
-            'material_files.*' => 'nullable|file|max:20480',
+            'material_files.*' => 'nullable|file|max:'.config('upload_limits.max_upload_kb'),
             'material_titles' => 'nullable|array',
             'material_titles.*' => 'nullable|string|max:255',
             'material_visible' => 'nullable|array',
@@ -565,7 +565,7 @@ class LectureController extends Controller
         }
 
         $request->validate([
-            'file' => 'required|file|mimes:csv,xlsx,xls|max:10240',
+            'file' => 'required|file|mimes:csv,xlsx,xls|max:'.config('upload_limits.max_upload_kb'),
         ]);
 
         $file = $request->file('file');

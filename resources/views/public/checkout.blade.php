@@ -208,7 +208,7 @@
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">إيصال الدفع</label>
                                         <input type="file" name="payment_proof" accept="image/*" required
                                                class="w-full rounded-xl border border-slate-300 px-4 py-3 file:mr-3 file:rounded-lg file:border-0 file:bg-[#FFE5F7] file:px-3 file:py-2 file:text-[#283593] hover:file:bg-[#f8dff1]">
-                                        <p class="mt-1 text-xs text-slate-500">الصيغ المسموحة: JPG, PNG - الحد الأقصى 2MB.</p>
+                                        <p class="mt-1 text-xs text-slate-500">الصيغ المسموحة: JPG, PNG - الحد الأقصى 40 ميجابايت.</p>
                                     </div>
 
                                     <div>

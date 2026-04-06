@@ -238,7 +238,7 @@
                             <div class="flex-1">
                                 <label class="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100 hover:border-slate-300 transition-all">
                                     <i class="fas fa-upload text-blue-500"></i>
-                                    <span>اختر صورة جديدة (PNG أو JPG — حد أقصى 2 ميجابايت)</span>
+                                    <span>اختر صورة جديدة (PNG أو JPG — حد أقصى 40 ميجابايت)</span>
                                     <input type="file" name="profile_image" accept="image/*" class="hidden">
                                 </label>
                                 @error('profile_image')

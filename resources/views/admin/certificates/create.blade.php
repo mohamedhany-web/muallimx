@@ -66,7 +66,7 @@
                 @error('certificate_file')
                     <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
                 @enderror
-                <p class="text-xs text-gray-500 mt-2">يُسلَّم للطالب كملف PDF. الحد الأقصى 50 ميجابايت.</p>
+                <p class="text-xs text-gray-500 mt-2">يُسلَّم للطالب كملف PDF. الحد الأقصى 40 ميجابايت.</p>
             </div>
 
             <div class="flex gap-4">

@@ -54,6 +54,16 @@ class EmployeeJobSeeder extends Seeder
                 ],
             ],
             [
+                'name' => 'مشرف أكاديمي',
+                'code' => 'academic_supervisor',
+                'description' => 'متابعة الطلاب المعيّنين: الكورسات، الاشتراك، الميتينج، والنشاط',
+                'permissions' => [
+                    'dashboard', 'tasks', 'leaves', 'calendar',
+                    'profile', 'notifications', 'settings',
+                    'academic_supervision_desk',
+                ],
+            ],
+            [
                 'name' => 'سيلز',
                 'code' => 'sales',
                 'description' => 'المبيعات ومتابعة الطلبات والعملاء',

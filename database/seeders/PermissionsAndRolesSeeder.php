@@ -89,6 +89,9 @@ class PermissionsAndRolesSeeder extends Seeder
             // إدارة التقارير
             ['name' => 'reports.view', 'display_name' => 'عرض التقارير', 'group' => 'reports'],
             ['name' => 'reports.financial', 'display_name' => 'التقارير المالية', 'group' => 'reports'],
+
+            // الإشراف الأكاديمي (تعيين المشرفين وطلابهم)
+            ['name' => 'academic_supervision.manage', 'display_name' => 'إدارة الإشراف الأكاديمي', 'group' => 'supervision'],
         ];
 
         foreach ($permissions as $permission) {

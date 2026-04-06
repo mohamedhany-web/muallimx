@@ -73,7 +73,7 @@ class LessonController extends Controller
             'is_active' => 'nullable',
             'is_free' => 'nullable',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:10240', // 10MB
+            'attachments.*' => 'file|max:'.config('upload_limits.max_upload_kb'), // حتى 40 ميجابايت (Cloudflare)
         ], [
             'title.required' => 'عنوان الدرس مطلوب',
             'type.required' => 'نوع الدرس مطلوب',
@@ -172,7 +172,7 @@ class LessonController extends Controller
             'is_active' => 'nullable',
             'is_free' => 'nullable',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:10240',
+            'attachments.*' => 'file|max:'.config('upload_limits.max_upload_kb'),
         ]);
         
         // معالجة رفع الفيديو

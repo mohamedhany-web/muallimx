@@ -220,7 +220,7 @@
                                         <label class="block text-sm font-bold text-slate-700 mb-2">صورة إيصال الدفع <span class="text-rose-500">*</span></label>
                                         <input type="file" name="payment_proof" accept="image/jpeg,image/png,image/jpg" required
                                                class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:ring-2 focus:ring-[#283593] focus:border-[#283593] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#FFE5F7] file:text-[#283593] file:font-semibold">
-                                        <p class="text-xs text-slate-500 mt-1">صيغ مقبولة: jpeg, png, jpg — حجم أقصى 2 ميجابايت</p>
+                                        <p class="text-xs text-slate-500 mt-1">صيغ مقبولة: jpeg, png, jpg — حجم أقصى 40 ميجابايت</p>
                                     </div>
 
                                     <div>

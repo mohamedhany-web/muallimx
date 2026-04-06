@@ -349,6 +349,13 @@
             <p class="text-xs text-gray-600">مهام الفريق والمتأخرات</p>
         </a>
         @endif
+        @if($user->employeeCan('academic_supervision_desk'))
+        <a href="{{ route('employee.academic-supervision.index') }}" class="group rounded-xl border border-gray-200 bg-white p-6 hover:border-teal-300 hover:shadow-md transition-all">
+            <div class="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center text-teal-700 shadow-sm mb-3"><i class="fas fa-user-graduate text-lg"></i></div>
+            <h4 class="text-sm font-bold text-gray-900 mb-2">الإشراف الأكاديمي</h4>
+            <p class="text-xs text-gray-600">متابعة الطلاب المعيّنين لك</p>
+        </a>
+        @endif
 
         @if($user->employeeCan('leaves'))
         <a href="{{ route('employee.leaves.index') }}" class="group rounded-xl border border-gray-200 bg-white p-6 hover:border-cyan-300 hover:shadow-md transition-all">

@@ -40,7 +40,7 @@ class CourseLessonController extends Controller
             'content' => 'nullable|string',
             'video_url' => 'nullable|url',
 
-            'attachments.*' => 'nullable|file|max:10240', // 10MB per file
+            'attachments.*' => 'nullable|file|max:'.config('upload_limits.max_upload_kb'), // حتى 40 ميجابايت لكل ملف
             'duration_minutes' => 'nullable|integer|min:1',
             'order' => 'nullable|integer|min:0',
             'is_free' => 'boolean',
@@ -52,7 +52,7 @@ class CourseLessonController extends Controller
             'type.in' => 'نوع الدرس غير صحيح',
             'video_url.url' => 'رابط الفيديو غير صحيح',
 
-            'attachments.*.max' => 'حجم المرفق لا يجب أن يتجاوز 10MB',
+            'attachments.*.max' => 'حجم المرفق لا يجب أن يتجاوز 40 ميجابايت',
             'duration_minutes.min' => 'مدة الدرس يجب أن تكون دقيقة واحدة على الأقل',
         ]);
 
@@ -127,7 +127,7 @@ class CourseLessonController extends Controller
             'content' => 'nullable|string',
             'video_url' => 'nullable|url',
 
-            'attachments.*' => 'nullable|file|max:10240',
+            'attachments.*' => 'nullable|file|max:'.config('upload_limits.max_upload_kb'),
             'duration_minutes' => 'nullable|integer|min:1',
             'order' => 'nullable|integer|min:0',
             'is_free' => 'boolean',

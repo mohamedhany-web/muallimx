@@ -77,7 +77,7 @@
                 @error('certificate_file')
                     <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
                 @enderror
-                <p class="text-xs text-gray-500 mt-2">اتركه فارغًا إن لم تغيّر الملف. PDF فقط — حتى 50 ميجابايت.</p>
+                <p class="text-xs text-gray-500 mt-2">اتركه فارغًا إن لم تغيّر الملف. PDF فقط — حتى 40 ميجابايت.</p>
             </div>
 
             <div class="flex gap-4">

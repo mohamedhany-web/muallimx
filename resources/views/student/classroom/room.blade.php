@@ -32,10 +32,15 @@
 </head>
 <body class="bg-slate-950">
 @php
+    $academicObserverMode = !empty($academicObserverMode);
     $rp = ($useInstructorRoutes ?? false) ? 'instructor.' : 'student.';
-    $roomExitUrl = ($useInstructorRoutes ?? false)
-        ? ($meeting->consultation_request_id ? route('instructor.consultations.show', $meeting->consultation_request_id) : route('instructor.consultations.index'))
-        : route('student.classroom.index');
+    if ($academicObserverMode) {
+        $roomExitUrl = $academicObserverExitUrl ?? route('employee.dashboard');
+    } elseif (($useInstructorRoutes ?? false)) {
+        $roomExitUrl = $meeting->consultation_request_id ? route('instructor.consultations.show', $meeting->consultation_request_id) : route('instructor.consultations.index');
+    } else {
+        $roomExitUrl = route('student.classroom.index');
+    }
 @endphp
     {{-- شريط MuallimX العلوي — تصميم المنصة فقط --}}
     <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg">
@@ -61,6 +66,7 @@
                 مدة الاجتماع: {{ (int) $effectiveDurationMinutes }} دقيقة (حد الباقة {{ (int) $maxDurationMinutes }})
             </span>
             <span class="hidden text-sky-200 text-xs px-2 py-1 rounded-md bg-sky-500/20 border border-sky-500/30" id="record-status-chip"></span>
+            @unless($academicObserverMode)
             <button type="button" id="btn-wb-toggle" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors border border-slate-600" title="تفعيل القلم والرسم على الشاشة فوق الاجتماع">
                 <i class="fas fa-pen-nib text-amber-400" id="wb-toggle-icon"></i>
                 <span id="wb-toggle-label" class="hidden sm:inline">لوحة فوق الفيديو</span>
@@ -82,6 +88,11 @@
                     <i class="fas fa-stop"></i> إنهاء الاجتماع
                 </button>
             </form>
+            @else
+            <span class="text-amber-200 text-xs px-3 py-2 rounded-lg bg-amber-500/15 border border-amber-500/30 font-semibold">
+                <i class="fas fa-eye ml-1"></i> وضع مراقبة (قراءة فقط)
+            </span>
+            @endunless
         </div>
     </header>
 
@@ -208,7 +219,7 @@
         (function() {
             var jitsiDomain = '{{ $jitsiDomain }}';
             var roomName = '{{ $meeting->room_name }}';
-            var userName = {!! json_encode($user->name) !!};
+            var userName = {!! json_encode($jitsiDisplayName ?? $user->name) !!};
             var userEmail = {!! json_encode($user->email ?? '') !!};
             var container = document.getElementById('jitsi-container');
             var loadingEl = document.getElementById('jitsi-loading');

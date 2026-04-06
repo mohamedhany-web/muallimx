@@ -111,7 +111,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">صورة الباقة</label>
                 <input type="file" name="thumbnail" accept="image/*" 
                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                <p class="mt-1 text-xs text-gray-500">الصيغ المدعومة: JPEG, PNG, JPG, GIF (حد أقصى 2MB)</p>
+                <p class="mt-1 text-xs text-gray-500">الصيغ المدعومة: JPEG, PNG, JPG, GIF (حد أقصى 40 ميجابايت)</p>
                 @error('thumbnail')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror

@@ -197,6 +197,26 @@ class User extends Authenticatable
     }
 
     /**
+     * طلاب يشرف عليهم هذا الموظف كمشرف أكاديمي.
+     */
+    public function supervisedStudentsAsAcademic()
+    {
+        return $this->belongsToMany(User::class, 'academic_supervisor_students', 'supervisor_id', 'student_id')
+            ->withPivot('assigned_by')
+            ->withTimestamps();
+    }
+
+    /**
+     * المشرفون الأكاديميون المعيّنون لهذا الطالب.
+     */
+    public function academicSupervisors()
+    {
+        return $this->belongsToMany(User::class, 'academic_supervisor_students', 'student_id', 'supervisor_id')
+            ->withPivot('assigned_by')
+            ->withTimestamps();
+    }
+
+    /**
      * اشتراكات المستخدم (باقات المعلمين وغيرها)
      */
     public function subscriptions()
@@ -715,7 +735,7 @@ class User extends Authenticatable
     }
 
     /**
-     * رمز وظيفة الموظف (accountant, hr, sales, supervisor, general_supervision)
+     * رمز وظيفة الموظف (accountant, hr, sales, supervisor, academic_supervisor, general_supervision, …)
      */
     public function employeeJobCode(): ?string
     {

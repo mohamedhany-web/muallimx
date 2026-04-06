@@ -118,7 +118,7 @@
                         <div x-show="type === 'gallery'" x-cloak class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl px-4 py-3 bg-white/70 dark:bg-slate-900/20">
                             <input type="file" name="images[]" accept="image/*" multiple data-max="5" id="portfolio-images"
                                    class="w-full text-sm text-slate-700 dark:text-slate-200 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-black file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 dark:file:bg-slate-800 dark:file:text-slate-200 dark:hover:file:bg-slate-700">
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2" id="images-hint">يمكنك اختيار أكثر من صورة (حد أقصى 5)</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-2" id="images-hint">يمكنك اختيار أكثر من صورة (حد أقصى 5، كل صورة حتى 40 ميجابايت)</p>
                         </div>
                         <div x-show="type !== 'gallery'" x-cloak class="text-sm text-slate-600 dark:text-slate-300">
                             هذا النوع لا يحتاج صوراً.

@@ -64,7 +64,7 @@ class SystemSettingsController extends Controller
                 'remove_admin_panel_logo' => $request->boolean('remove_admin_panel_logo'),
             ]),
             array_merge($footerRules, [
-                'admin_panel_logo' => ['nullable', 'image', 'max:2048', 'mimes:jpg,jpeg,png,webp,gif'],
+                'admin_panel_logo' => ['nullable', 'image', 'max:'.config('upload_limits.max_upload_kb'), 'mimes:jpg,jpeg,png,webp,gif'],
                 'remove_admin_panel_logo' => ['nullable', 'boolean'],
             ])
         )->validate();

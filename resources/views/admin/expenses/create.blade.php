@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'إنشاء مصروف جديد')
 @section('header', 'إنشاء مصروف جديد')
@@ -154,7 +154,7 @@
                     </label>
                     <input type="file" name="attachment" accept="image/*" 
                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all">
-                    <p class="text-xs text-gray-500 mt-1">{{ __('يُسمح بالصور فقط (JPEG, PNG, JPG) - الحد الأقصى 2 ميجابايت') }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ __('يُسمح بالصور فقط (JPEG, PNG, JPG) - الحد الأقصى 40 ميجابايت') }}</p>
                     @error('attachment')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror

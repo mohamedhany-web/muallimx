@@ -304,7 +304,7 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">إيصال التحويل *</label>
                         <input type="file" name="transfer_receipt" accept=".pdf,.jpg,.jpeg,.png" required class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2">
-                        <p class="text-xs text-slate-500 mt-1">PDF أو صورة، حجم أقصى 5 ميجا</p>
+                        <p class="text-xs text-slate-500 mt-1">PDF أو صورة، حجم أقصى 40 ميجابايت</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">ملاحظات (اختياري)</label>

@@ -39,7 +39,7 @@ class CourseController extends Controller
             'level' => 'required|in:beginner,intermediate,advanced',
             'duration_hours' => 'nullable|integer|min:1',
             'price' => 'nullable|numeric|min:0',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:'.config('upload_limits.max_upload_kb'),
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
         ], [
@@ -109,7 +109,7 @@ class CourseController extends Controller
             'level' => 'required|in:beginner,intermediate,advanced',
             'duration_hours' => 'nullable|integer|min:1',
             'price' => 'nullable|numeric|min:0',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:'.config('upload_limits.max_upload_kb'),
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
         ], [

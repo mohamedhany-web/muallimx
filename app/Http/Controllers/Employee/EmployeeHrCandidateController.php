@@ -58,7 +58,7 @@ class EmployeeHrCandidateController extends Controller
             'portfolio_url' => 'nullable|url|max:500',
             'source' => ['required', Rule::in(array_keys(HrCandidate::sourceLabels()))],
             'notes' => 'nullable|string|max:10000',
-            'cv' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'cv' => 'nullable|file|mimes:pdf,doc,docx|max:'.config('upload_limits.max_upload_kb'),
         ]);
 
         $validated['created_by'] = Auth::id();
@@ -119,7 +119,7 @@ class EmployeeHrCandidateController extends Controller
             'portfolio_url' => 'nullable|url|max:500',
             'source' => ['required', Rule::in(array_keys(HrCandidate::sourceLabels()))],
             'notes' => 'nullable|string|max:10000',
-            'cv' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
+            'cv' => 'nullable|file|mimes:pdf,doc,docx|max:'.config('upload_limits.max_upload_kb'),
         ]);
 
         $data = [

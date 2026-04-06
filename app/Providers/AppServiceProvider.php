@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use App\Services\AdminPanelBranding;
 use App\Services\PublicFooterSettings;
+use App\Support\ErrorPageContext;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -155,5 +156,13 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layouts.admin', function ($view) {
             $view->with('adminPanelLogoUrl', AdminPanelBranding::logoPublicUrl());
         });
+
+        View::composer('errors.*', function ($view) {
+            $view->with([
+                'errorHomeUrl' => ErrorPageContext::homeUrl(),
+                'errorHomeLabel' => ErrorPageContext::homeLabel(),
+            ]);
+        });
     }
 }
+

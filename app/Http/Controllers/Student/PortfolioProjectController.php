@@ -51,7 +51,7 @@ class PortfolioProjectController extends Controller
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'advanced_course_id' => 'nullable|exists:advanced_courses,id',
             'images' => 'nullable|array|max:5',
-            'images.*' => 'image|max:2048',
+            'images.*' => 'image|max:'.config('upload_limits.max_upload_kb'),
         ], [
             'title.required' => 'عنوان المشروع مطلوب',
             'project_url.url' => 'رابط المشروع يجب أن يكون رابطاً صحيحاً',
@@ -155,7 +155,7 @@ class PortfolioProjectController extends Controller
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'advanced_course_id' => 'nullable|exists:advanced_courses,id',
             'images' => 'nullable|array|max:5',
-            'images.*' => 'image|max:2048',
+            'images.*' => 'image|max:'.config('upload_limits.max_upload_kb'),
         ]);
 
         $project->update([

@@ -148,7 +148,7 @@
                             </label>
                             <input type="file" name="payment_proof" accept="image/*" required
                                    class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-sm">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">jpeg أو png أو jpg — بحد أقصى 2 ميجابايت (مثل طلبات الكورسات).</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">jpeg أو png أو jpg — بحد أقصى 40 ميجابايت (مثل طلبات الكورسات).</p>
                         </div>
 
                         <div>

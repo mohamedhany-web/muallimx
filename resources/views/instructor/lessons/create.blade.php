@@ -165,7 +165,7 @@
                     </label>
                     <input type="file" name="attachments[]" multiple
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2CA9BD]">
-                    <p class="text-xs text-gray-500 mt-1">يمكنك رفع عدة ملفات (حتى 10MB لكل ملف)</p>
+                    <p class="text-xs text-gray-500 mt-1">يمكنك رفع عدة ملفات (حتى 40 ميجابايت لكل ملف)</p>
                 </div>
 
                 <!-- الخيارات -->

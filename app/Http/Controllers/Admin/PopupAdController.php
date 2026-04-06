@@ -26,7 +26,7 @@ class PopupAdController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'body' => 'required|string|max:5000',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:'.config('upload_limits.max_upload_kb'),
             'link_url' => 'nullable|url|max:500',
             'cta_text' => 'nullable|string|max:100',
             'starts_at' => 'required|date',
@@ -67,7 +67,7 @@ class PopupAdController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'body' => 'required|string|max:5000',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:'.config('upload_limits.max_upload_kb'),
             'link_url' => 'nullable|url|max:500',
             'cta_text' => 'nullable|string|max:100',
             'starts_at' => 'required|date',

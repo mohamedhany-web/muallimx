@@ -203,7 +203,7 @@ return [
     'change_password_regularly' => 'غيّر كلمة المرور دورياً لحماية حسابك.',
     'update_data_subtitle' => 'مراجعة وتحديث معلوماتك في أي وقت',
     'bio_placeholder_short' => 'اكتب نبذة قصيرة تظهر للمعلمين...',
-    'choose_image_label' => 'اختر صورة (PNG أو JPG - حد أقصى 2 ميجابايت)',
+    'choose_image_label' => 'اختر صورة (PNG أو JPG - حد أقصى 40 ميجابايت)',
     'leave_empty_if_no_change' => 'اترك الحقول فارغة إذا لم ترغب في التغيير',
     'back_to_dashboard' => 'رجوع إلى اللوحة',
 
@@ -411,7 +411,7 @@ return [
     'link_type' => 'رابط',
     'submission_description_placeholder' => 'وصف مختصر للتسليم',
     'file_label' => 'الملف',
-    'max_10mb' => 'حد أقصى 10 ميجا',
+    'max_10mb' => 'حد أقصى 40 ميجابايت',
     'submission_link_label' => 'رابط التسليم',
     'submit_work' => 'تسليم العمل',
     'edit_task' => 'تعديل المهمة',

@@ -40,7 +40,7 @@ class PersonalBrandingController extends Controller
             'skills' => 'nullable|string|max:5000',
             'consultation_price_egp' => 'nullable|numeric|min:0|max:999999.99',
             'consultation_duration_minutes' => 'nullable|integer|min:15|max:480',
-            'photo' => 'nullable|image|max:2048',
+            'photo' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
         ], [
             'experience.max' => 'الخبرات في المجال يجب ألا تتجاوز 50 ألف حرف. إن احتجت مساحة أكبر تواصل مع الإدارة.',
             'skills.max' => 'المهارات يجب ألا تتجاوز 5 آلاف حرف.',

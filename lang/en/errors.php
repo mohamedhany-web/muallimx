@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'validation_summary' => 'The given data was invalid.',
     '404_title' => 'Page Not Found',
     '404_message' => 'Sorry, the page you are looking for could not be found.',
     '403_title' => 'Forbidden',
@@ -8,7 +9,7 @@ return [
     '500_title' => 'Server Error',
     '500_message' => 'Something went wrong. Please try again later.',
     '429_title' => 'Too Many Requests',
-    '429_message' => 'Too many attempts. Please try again later.',
+    '429_message' => 'You sent many requests in a short time (for example rapid clicks). This protects the site and is not a problem with your account. Please wait a moment and try again.',
     '503_title' => 'Service Unavailable',
     '503_message' => 'The site is under maintenance. We will be back soon.',
     'page_not_found_badge' => 'Page not found',
@@ -18,6 +19,7 @@ return [
     'suggestion_use_menus' => 'Use the menus to navigate',
     'back_dashboard' => 'Back to Dashboard',
     'back_previous' => 'Back to previous page',
+    'refresh_page' => 'Refresh page',
     '403_message_full' => 'Sorry, you do not have the required permissions to access this page. Please contact the administrator if you believe this is an error.',
     '403_extra_info' => 'Additional information',
     '403_protected' => 'This page is protected and requires special permissions',
@@ -25,4 +27,20 @@ return [
     '500_badge' => 'Server Error',
     '429_badge' => 'Too Many Requests',
     '503_badge' => 'Service Unavailable',
+
+    'back_admin_home' => 'Admin dashboard',
+    'back_employee_home' => 'Employee dashboard',
+    'back_community_home' => 'Community home',
+    'back_my_account' => 'My account',
+    'back_site_home' => 'Home',
+
+    '419_title' => 'Session expired',
+    '419_message' => 'This page was open too long or the security token expired. Refresh the page (F5) and try again.',
+    '419_hint' => 'If you were submitting a form, copy your text temporarily, refresh, then submit again.',
+
+    'http_generic_title' => 'We couldn’t complete that',
+    'http_generic_message' => 'Something unexpected happened. Please go back or try again in a moment.',
+    'http_generic_json' => 'Request could not be completed. Please try again shortly.',
+
+    'generic_action_failed' => 'The action could not be completed. Please try again or contact support.',
 ];

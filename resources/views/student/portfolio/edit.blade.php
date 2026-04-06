@@ -122,7 +122,7 @@
                     <div class="border-2 border-dashed border-[#2CA9BD]/30 rounded-xl px-4 py-3 bg-gray-50/50 hover:bg-gray-50 transition-colors" x-show="type === 'gallery'" x-cloak>
                         <input type="file" name="images[]" accept="image/*" multiple data-max="5" id="portfolio-images"
                                class="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-semibold file:bg-[#2CA9BD]/10 file:text-[#2CA9BD] hover:file:bg-[#2CA9BD]/20">
-                        <p class="text-xs text-gray-500 mt-2" id="images-hint">سيتم إضافة الصور حتى يكتمل الحد الأقصى (5).</p>
+                        <p class="text-xs text-gray-500 mt-2" id="images-hint">سيتم إضافة الصور حتى يكتمل الحد الأقصى (5). كل صورة حتى 40 ميجابايت.</p>
                     </div>
                     <div class="rounded-xl border border-gray-200 p-4 text-sm text-gray-600" x-show="type !== 'gallery'" x-cloak>
                         لا توجد صور لهذا النوع.

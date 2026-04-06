@@ -135,13 +135,16 @@ class FileUploadSecurityMiddleware
             return $this->phpIniUploadMaxBytes();
         }
 
+        $maxBytes = (int) config('upload_limits.max_upload_bytes', 40 * 1024 * 1024);
+
         $sizeMap = [
             'video' => 524288000,   // 500 MB
             'recording' => 1073741824, // 1 GB
-            'image' => 10485760,   // 10 MB
-            'document' => 52428800, // 50 MB
-            'file' => 52428800,    // 50 MB (ملفات الموارد)
-            'avatar' => 2097152,   // 2 MB
+            'image' => $maxBytes,
+            'document' => $maxBytes,
+            'file' => $maxBytes,
+            'avatar' => $maxBytes,
+            'thumbnail' => $maxBytes,
         ];
 
         foreach ($sizeMap as $key => $size) {
@@ -150,6 +153,6 @@ class FileUploadSecurityMiddleware
             }
         }
 
-        return 10485760; // 10 MB افتراضي
+        return $maxBytes;
     }
 }

@@ -45,7 +45,7 @@ class EmployeeProfileController extends Controller
             'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
             'current_password' => 'nullable|string',
             'password' => 'nullable|string|min:8|confirmed',
-            'profile_image' => 'nullable|image|max:2048',
+            'profile_image' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
         ], [
             'name.required' => 'الاسم مطلوب',
             'phone.required' => 'رقم الهاتف مطلوب',

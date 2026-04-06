@@ -185,7 +185,7 @@ class CertificateController extends Controller
             'description' => 'nullable|string',
             'issued_at' => 'nullable|date',
             'status' => 'required|in:pending,issued,revoked',
-            'certificate_file' => 'required|file|mimes:pdf|max:51200',
+            'certificate_file' => 'required|file|mimes:pdf|max:'.config('upload_limits.max_upload_kb'),
         ]);
 
         $courseId = (int) $validated['course_id'];
@@ -364,7 +364,7 @@ class CertificateController extends Controller
             'description' => 'nullable|string',
             'issued_at' => 'nullable|date',
             'status' => 'required|in:pending,issued,revoked',
-            'certificate_file' => 'nullable|file|mimes:pdf|max:51200',
+            'certificate_file' => 'nullable|file|mimes:pdf|max:'.config('upload_limits.max_upload_kb'),
         ]);
 
         $updateData = $validated;

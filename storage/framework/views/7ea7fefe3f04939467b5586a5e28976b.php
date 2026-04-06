@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>500 - <?php echo e(__('errors.500_title')); ?> | Mindlytics</title>
+    <title>500 - <?php echo e(__('errors.500_title')); ?> | <?php echo e(config('app.name')); ?></title>
     
     <!-- خط عربي أصيل -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -188,11 +188,14 @@
                         <i class="fas fa-redo"></i>
                         <span>إعادة المحاولة</span>
                     </button>
-                    <a href="<?php echo e(route('admin.dashboard')); ?>" class="inline-flex items-center justify-center gap-2 bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-base border-2 border-orange-600 hover:bg-orange-50 transition-all duration-300">
+                    <a href="<?php echo e($errorHomeUrl); ?>" class="inline-flex items-center justify-center gap-2 bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-base border-2 border-orange-600 hover:bg-orange-50 transition-all duration-300">
                         <i class="fas fa-home"></i>
-                        <span><?php echo e(__('errors.back_dashboard')); ?></span>
+                        <span><?php echo e($errorHomeLabel); ?></span>
                     </a>
                 </div>
+                <?php if(config('app.debug') && !empty($message ?? null)): ?>
+                <p class="mt-10 text-left text-xs text-gray-500 font-mono break-all max-w-3xl mx-auto opacity-90"><?php echo e($message); ?><?php if(!empty($file ?? null)): ?><br><span class="text-gray-400"><?php echo e($file); ?>:<?php echo e($line ?? ''); ?></span><?php endif; ?></p>
+                <?php endif; ?>
             </div>
         </div>
     </section>

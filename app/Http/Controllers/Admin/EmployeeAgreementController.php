@@ -331,7 +331,7 @@ class EmployeeAgreementController extends Controller
         }
 
         $request->validate([
-            'transfer_receipt' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'transfer_receipt' => 'required|file|mimes:pdf,jpg,jpeg,png|max:'.config('upload_limits.max_upload_kb'),
             'notes' => 'nullable|string|max:500',
         ]);
 

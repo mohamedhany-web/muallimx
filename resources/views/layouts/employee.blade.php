@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', __('auth.dashboard')) - {{ config('app.name') }}</title>
     <script>
         (function() {
@@ -33,8 +34,81 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' };</script>
     
+    <script>
+        document.addEventListener('alpine:init', function () {
+            Alpine.data('employeeNavNotifications', function (config) {
+                config = config || {};
+                var initialUnread = Number(config.unread) || 0;
+                var initialItems = Array.isArray(config.items) ? config.items : [];
+                var pollUrl = config.pollUrl || '';
+                return {
+                    openNotif: false,
+                    unread: initialUnread,
+                    lastSynced: initialUnread,
+                    firstPoll: true,
+                    items: initialItems.slice(),
+                    pollUrl: pollUrl,
+                    audioUnlocked: false,
+                    _pollTimer: null,
+                    init: function () {
+                        var self = this;
+                        document.body.addEventListener('click', function () { self.audioUnlocked = true; }, { once: true });
+                        document.body.addEventListener('keydown', function () { self.audioUnlocked = true; }, { once: true });
+                        this._pollTimer = setInterval(function () { self.poll(); }, 8000);
+                        this.poll();
+                    },
+                    destroy: function () {
+                        if (this._pollTimer) clearInterval(this._pollTimer);
+                    },
+                    poll: async function () {
+                        if (!this.pollUrl) return;
+                        try {
+                            var token = document.querySelector('meta[name="csrf-token"]');
+                            var res = await fetch(this.pollUrl, {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRF-TOKEN': token ? token.getAttribute('content') : ''
+                                },
+                                credentials: 'same-origin'
+                            });
+                            if (!res.ok) return;
+                            var d = await res.json();
+                            if (!this.firstPoll && d.unread_count > this.lastSynced) {
+                                this.playBeep();
+                            }
+                            this.firstPoll = false;
+                            this.lastSynced = d.unread_count;
+                            this.unread = d.unread_count;
+                            this.items = Array.isArray(d.items) ? d.items : [];
+                        } catch (e) { /* ignore */ }
+                    },
+                    playBeep: function () {
+                        if (!this.audioUnlocked) return;
+                        try {
+                            var Ctx = window.AudioContext || window.webkitAudioContext;
+                            if (!Ctx) return;
+                            var ctx = new Ctx();
+                            var osc = ctx.createOscillator();
+                            var gain = ctx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.value = 880;
+                            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02);
+                            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.22);
+                            osc.connect(gain);
+                            gain.connect(ctx.destination);
+                            osc.start(ctx.currentTime);
+                            osc.stop(ctx.currentTime + 0.25);
+                            setTimeout(function () { ctx.close(); }, 400);
+                        } catch (e) { /* ignore */ }
+                    }
+                };
+            });
+        });
+    </script>
     <!-- Alpine.js -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     
     <!-- Custom Styles -->
     <style>
@@ -145,13 +219,92 @@
                     </div>
                     
                     <div class="flex items-center gap-2 sm:gap-4">
-                        <!-- Notifications -->
-                        <div class="relative">
-                            <button class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                        @php
+                            $empUserId = auth()->id();
+                            $empUnreadCount = \App\Models\Notification::where('user_id', $empUserId)
+                                ->where('audience', 'employee')
+                                ->where('is_read', false)
+                                ->whereNull('read_at')
+                                ->valid()
+                                ->count();
+                            $empUnreadList = \App\Models\Notification::where('user_id', $empUserId)
+                                ->where('audience', 'employee')
+                                ->where('is_read', false)
+                                ->whereNull('read_at')
+                                ->valid()
+                                ->orderByDesc('created_at')
+                                ->limit(5)
+                                ->get();
+                            $empNavItems = $empUnreadList->map(fn ($n) => [
+                                'id' => $n->id,
+                                'title' => $n->title,
+                                'message' => $n->message,
+                                'priority' => $n->priority,
+                                'href' => $n->action_url ? route('employee.notifications.go', $n) : route('employee.notifications.show', $n),
+                                'time' => $n->created_at->diffForHumans(),
+                                'icon' => $n->type_icon,
+                            ])->values();
+                            $empNavBellConfig = [
+                                'unread' => (int) $empUnreadCount,
+                                'items' => $empNavItems->all(),
+                                'pollUrl' => route('employee.api.nav-notifications'),
+                            ];
+                        @endphp
+                        <div class="relative"
+                             x-data="employeeNavNotifications({{ \Illuminate\Support\Js::from($empNavBellConfig) }})"
+                             @click.away="openNotif = false">
+                            <button type="button"
+                                    @click="openNotif = !openNotif"
+                                    class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                    aria-label="{{ $empRtl ? 'الإشعارات' : 'Notifications' }}">
                                 <i class="fas fa-bell text-lg"></i>
+                                <span x-show="unread > 0" x-cloak
+                                      class="absolute -top-0.5 {{ $empRtl ? '-left-0.5' : '-right-0.5' }} min-w-[18px] h-[18px] bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-slate-800 px-1"
+                                      x-text="unread > 9 ? '9+' : unread"></span>
                             </button>
+                            <div x-show="openNotif" x-cloak
+                                 x-transition
+                                 class="absolute {{ $empRtl ? 'right-0' : 'left-0' }} mt-2 w-80 max-h-[420px] overflow-hidden rounded-xl bg-white dark:bg-slate-800 shadow-xl border border-gray-200 dark:border-slate-600 z-50">
+                                <div class="px-4 py-3 border-b border-gray-100 dark:border-slate-600 flex items-center justify-between bg-slate-50/80 dark:bg-slate-700/50">
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
+                                            <i class="fas fa-bell text-amber-500"></i>
+                                            {{ $empRtl ? 'أحدث الإشعارات' : 'Recent notifications' }}
+                                        </p>
+                                        <p class="text-xs text-gray-500 dark:text-slate-400 mt-0.5" x-text="unread > 0 ? ('{{ $empRtl ? 'لديك ' : 'You have ' }}' + unread + '{{ $empRtl ? ' إشعار غير مقروء' : ' unread' }}') : '{{ $empRtl ? 'لا توجد إشعارات جديدة' : 'No new notifications' }}'"></p>
+                                    </div>
+                                    <a href="{{ route('employee.notifications') }}" class="text-xs font-semibold text-sky-600 hover:text-sky-700 shrink-0 ms-2">
+                                        {{ $empRtl ? 'عرض الكل' : 'All' }}
+                                    </a>
+                                </div>
+                                <div class="max-h-[320px] overflow-y-auto">
+                                    <template x-for="item in items" :key="item.id">
+                                        <a :href="item.href"
+                                           class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors border-b border-gray-50 dark:border-slate-600 last:border-b-0">
+                                            <div class="mt-0.5">
+                                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs"
+                                                      :class="{
+                                                          'bg-rose-100 text-rose-600': item.priority === 'urgent',
+                                                          'bg-amber-100 text-amber-600': item.priority === 'high',
+                                                          'bg-sky-100 text-sky-600': item.priority !== 'urgent' && item.priority !== 'high'
+                                                      }">
+                                                    <i :class="item.icon"></i>
+                                                </span>
+                                            </div>
+                                            <div class="flex-1 min-w-0 {{ $empRtl ? 'text-right' : 'text-left' }}">
+                                                <p class="text-xs font-bold text-gray-900 dark:text-slate-100 truncate" x-text="item.title"></p>
+                                                <p class="text-xs text-gray-600 dark:text-slate-300 mt-0.5 line-clamp-2" x-text="item.message"></p>
+                                                <p class="text-[10px] text-gray-400 mt-1" x-text="item.time"></p>
+                                            </div>
+                                        </a>
+                                    </template>
+                                    <div x-show="items.length === 0" class="px-4 py-6 text-center text-xs text-gray-500 dark:text-slate-400">
+                                        <p>{{ $empRtl ? 'لا توجد إشعارات جديدة' : 'No new notifications' }}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        
+
                         <!-- User Menu -->
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
@@ -173,7 +326,7 @@
                             <div x-show="open" 
                                  @click.away="open = false"
                                  x-transition
-                                 class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                                 class="absolute {{ $empRtl ? 'right-0' : 'left-0' }} mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                                 <a href="{{ route('employee.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class="fas fa-home mr-2"></i>لوحة التحكم
                                 </a>

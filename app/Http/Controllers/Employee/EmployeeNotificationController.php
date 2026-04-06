@@ -209,4 +209,50 @@ class EmployeeNotificationController extends Controller
             'count' => $notifications->count(),
         ]);
     }
+
+    /**
+     * بيانات جرس الناف بار (نفس شكل استجابة الأدمن للـ Alpine).
+     */
+    public function navPoll()
+    {
+        $user = Auth::user();
+        if (! $user || ! $user->isEmployee()) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        $userId = $user->id;
+
+        $base = Notification::query()
+            ->where('user_id', $userId)
+            ->where('audience', 'employee')
+            ->where('is_read', false)
+            ->whereNull('read_at')
+            ->valid();
+
+        $count = (clone $base)->count();
+
+        $notifications = (clone $base)
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        $items = $notifications->map(function (Notification $n) {
+            return [
+                'id' => $n->id,
+                'title' => $n->title,
+                'message' => $n->message,
+                'priority' => $n->priority,
+                'href' => $n->action_url
+                    ? route('employee.notifications.go', $n)
+                    : route('employee.notifications.show', $n),
+                'time' => $n->created_at->diffForHumans(),
+                'icon' => $n->type_icon,
+            ];
+        })->values();
+
+        return response()->json([
+            'unread_count' => $count,
+            'items' => $items,
+        ]);
+    }
 }

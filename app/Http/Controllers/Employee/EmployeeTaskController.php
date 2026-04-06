@@ -114,7 +114,7 @@ class EmployeeTaskController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'delivery_type' => 'required|in:file,image,link',
-            'file' => 'nullable|file|max:10240|required_if:delivery_type,file,image',
+            'file' => 'nullable|file|max:'.config('upload_limits.max_upload_kb').'|required_if:delivery_type,file,image',
             'link_url' => 'nullable|url|required_if:delivery_type,link',
         ];
         if ($task->isVideoEditing()) {

@@ -26,9 +26,6 @@ class ContributorController extends Controller
     /** امتدادات ملفات النماذج (أوزان، أرشيفات، سكربتات بايثون) — تُخزَّن على Cloudflare R2 */
     public const ALLOWED_MODEL_EXTENSIONS = 'pkl,pt,pth,h5,hdf5,onnx,joblib,zip,safetensors,bin,json,py,pyw,ipynb';
 
-    /** حد حجم ملف واحد بالكيلوبايت (25 ميجا) */
-    public const MAX_FILE_KB = 25600;
-
     /** أقصى عدد ملفات في تقديم واحد */
     public const MAX_FILES = 20;
 
@@ -73,13 +70,13 @@ class ContributorController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category' => 'nullable|string|in:' . implode(',', array_keys(CommunityDataset::CATEGORIES)),
-            'file' => 'nullable|file|mimes:xlsx,xls,csv,json,txt,zip,pdf,xml|max:' . self::MAX_FILE_KB,
+            'file' => 'nullable|file|mimes:xlsx,xls,csv,json,txt,zip,pdf,xml|max:' . config('upload_limits.max_upload_kb'),
             'files' => 'nullable|array|max:' . self::MAX_FILES,
-            'files.*' => 'file|mimes:xlsx,xls,csv,json,txt,zip,pdf,xml,tsv|max:' . self::MAX_FILE_KB,
+            'files.*' => 'file|mimes:xlsx,xls,csv,json,txt,zip,pdf,xml,tsv|max:' . config('upload_limits.max_upload_kb'),
             'file_url' => 'nullable|url|max:500',
         ], [
             'files.*.mimes' => 'الملفات المسموحة: xlsx, xls, csv, json, txt, zip, pdf, xml, tsv',
-            'files.*.max' => 'حجم كل ملف لا يتجاوز ' . (self::MAX_FILE_KB / 1024) . ' ميجا',
+            'files.*.max' => 'حجم كل ملف لا يتجاوز ' . round(config('upload_limits.max_upload_kb') / 1024) . ' ميجابايت',
         ]);
 
         $validated['slug'] = Str::slug($validated['title']) . '-' . uniqid();
@@ -256,10 +253,10 @@ class ContributorController extends Controller
             'bio' => 'nullable|string|max:2000',
             'experience' => 'nullable|string|max:3000',
             'linkedin_url' => 'nullable|url|max:500',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:'.config('upload_limits.max_upload_kb'),
         ], [
             'photo.image' => 'يجب أن يكون الملف صورة (jpeg, png, jpg, webp).',
-            'photo.max' => 'حجم الصورة لا يتجاوز 2 ميجا.',
+            'photo.max' => 'حجم الصورة لا يتجاوز ' . round(config('upload_limits.max_upload_kb') / 1024) . ' ميجابايت.',
         ]);
 
         $user = Auth::user();

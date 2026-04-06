@@ -246,7 +246,7 @@
                                 @endif
                                 <input type="file" name="thumbnail" accept="image/*"
                                        class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
-                                <p class="text-xs text-slate-500 dark:text-slate-400">PNG أو JPG بحد أقصى 2MB.</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">PNG أو JPG بحد أقصى 40 ميجابايت.</p>
                             </div>
                         </div>
                     </div>

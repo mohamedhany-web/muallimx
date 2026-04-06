@@ -55,7 +55,7 @@
                         <i class="fas fa-cloud-upload-alt text-2xl"></i>
                     </div>
                     <p class="text-slate-700 font-semibold mb-1">اسحب الملفات هنا أو انقر للاختيار</p>
-                    <p class="text-slate-500 text-sm">xlsx, xls, csv, json, txt, zip, pdf, xml, tsv — حتى 25 ميجا لكل ملف، حد أقصى {{ \App\Http\Controllers\Community\ContributorController::MAX_FILES }} ملفات</p>
+                    <p class="text-slate-500 text-sm">xlsx, xls, csv, json, txt, zip, pdf, xml, tsv — حتى {{ round(config('upload_limits.max_upload_kb') / 1024) }} ميجابايت لكل ملف، حد أقصى {{ \App\Http\Controllers\Community\ContributorController::MAX_FILES }} ملفات</p>
                 </div>
             </div>
             <p class="mt-1.5 text-xs text-slate-500">الملفات تُرفع وتُخزَّن على Cloudflare (R2) لتحميل أسرع.</p>
@@ -85,7 +85,7 @@
 <script>
 (function() {
     const MAX_FILES = {{ \App\Http\Controllers\Community\ContributorController::MAX_FILES }};
-    const MAX_MB = 25;
+    const MAX_MB = {{ round(config('upload_limits.max_upload_kb') / 1024) }};
     const dropZone = document.getElementById('dropZone');
     const filesInput = document.getElementById('filesInput');
     const fileList = document.getElementById('fileList');

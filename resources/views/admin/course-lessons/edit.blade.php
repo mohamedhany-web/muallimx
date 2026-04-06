@@ -227,7 +227,7 @@
                 <label for="attachments" class="block text-sm font-semibold text-gray-700 mb-2">إضافة مرفقات جديدة (اختياري)</label>
                 <input type="file" name="attachments[]" id="attachments" multiple
                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 file:font-semibold">
-                <p class="mt-1 text-sm text-gray-500">يمكن رفع عدة ملفات. الحد الأقصى لكل ملف: 10 ميجابايت. سيتم إضافتها للمرفقات الحالية.</p>
+                <p class="mt-1 text-sm text-gray-500">يمكن رفع عدة ملفات. الحد الأقصى لكل ملف: 40 ميجابايت. سيتم إضافتها للمرفقات الحالية.</p>
                 @error('attachments.*')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror

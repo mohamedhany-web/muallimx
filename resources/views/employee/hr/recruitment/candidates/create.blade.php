@@ -37,7 +37,7 @@
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">السيرة (PDF / Word — حتى 10 ميجا)</label>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">السيرة (PDF / Word — حتى 40 ميجابايت)</label>
                 <input type="file" name="cv" accept=".pdf,.doc,.docx" class="w-full text-sm">
             </div>
             <div>

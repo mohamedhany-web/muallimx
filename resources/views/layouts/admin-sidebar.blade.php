@@ -697,10 +697,10 @@
 
             @endif
 
-            @if($isFull || $u->hasPermission('manage.users') || $u->hasPermission('manage.tasks') || $u->hasPermission('manage.leaves') || $u->hasPermission('manage.instructor-requests') || $u->hasPermission('manage.employee-agreements'))
+            @if($isFull || $u->hasPermission('manage.users') || $u->hasPermission('manage.tasks') || $u->hasPermission('manage.leaves') || $u->hasPermission('manage.instructor-requests') || $u->hasPermission('manage.employee-agreements') || $u->hasPermission('academic_supervision.manage'))
             <li class="sidebar-section-label">الفريق</li>
             {{-- إدارة الموظفين --}}
-            @php $employeesOpen = request()->routeIs('admin.employees.*') || request()->routeIs('admin.employee-jobs.*') || request()->routeIs('admin.employee-tasks.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.tasks.*') || request()->routeIs('admin.instructor-requests.*'); @endphp
+            @php $employeesOpen = request()->routeIs('admin.employees.*') || request()->routeIs('admin.employee-jobs.*') || request()->routeIs('admin.employee-tasks.*') || request()->routeIs('admin.leaves.*') || request()->routeIs('admin.tasks.*') || request()->routeIs('admin.instructor-requests.*') || request()->routeIs('admin.academic-supervision.*'); @endphp
             <li x-data="{ open: {{ $employeesOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
                     <span class="flex items-center gap-3"><i class="fas fa-users-cog w-5 text-center text-cyan-400"></i><span>{{ __('admin.management') }}</span></span>
@@ -717,6 +717,9 @@
                             @if($pendingTasks > 0)<span class="sidebar-badge bg-amber-400 text-amber-900">{{ $pendingTasks }}</span>@endif
                         </a>
                     </li>
+                    @endif
+                    @if($isFull || $u->hasPermission('academic_supervision.manage'))
+                    <li><a href="{{ route('admin.academic-supervision.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.academic-supervision.*') ? 'active' : '' }}"><i class="fas fa-user-graduate"></i><span>الإشراف الأكاديمي</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.tasks'))
                     <li>

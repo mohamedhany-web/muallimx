@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Models\ClassroomMeeting;
 use App\Models\EmployeeAgreement;
 use App\Models\EmployeeSalaryPayment;
 use App\Models\EmployeeTask;
 use App\Models\LeaveRequest;
 use App\Models\Order;
 use App\Models\User;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 
 class EmployeeController extends Controller
@@ -35,6 +37,10 @@ class EmployeeController extends Controller
 
         $user->load('employeeJob');
 
+        if ($user->employeeJob?->code === 'academic_supervisor') {
+            return $this->academicSupervisorDashboard($user);
+        }
+
         $tasks = $user->employeeTasks()
             ->with(['assigner', 'deliverables'])
             ->latest()
@@ -56,6 +62,77 @@ class EmployeeController extends Controller
         $jobInsights = $this->buildJobInsights($user, $jobCode);
 
         return view('employee.dashboard', compact('user', 'tasks', 'stats', 'jobCode', 'jobInsights'));
+    }
+
+    /**
+     * لوحة تحكم مخصصة للمشرف الأكاديمي (لا تؤثر على باقي الموظفين).
+     */
+    private function academicSupervisorDashboard(User $user): View
+    {
+        $studentIds = $user->supervisedStudentsAsAcademic()
+            ->where('users.role', 'student')
+            ->pluck('users.id');
+
+        $liveMeetings = ClassroomMeeting::query()
+            ->whereIn('user_id', $studentIds)
+            ->whereNotNull('started_at')
+            ->whereNull('ended_at')
+            ->whereNull('consultation_request_id')
+            ->with(['user:id,name'])
+            ->withCount('participants')
+            ->orderByDesc('started_at')
+            ->get();
+
+        $inactiveThreshold = now()->subDays(14);
+        $inactiveStudentsCount = $user->supervisedStudentsAsAcademic()
+            ->where('users.role', 'student')
+            ->where(function ($q) use ($inactiveThreshold) {
+                $q->whereNull('users.last_login_at')
+                    ->orWhere('users.last_login_at', '<', $inactiveThreshold);
+            })
+            ->count();
+
+        $studentsWithEnrollment = $user->supervisedStudentsAsAcademic()
+            ->where('users.role', 'student')
+            ->whereHas('courseEnrollments')
+            ->count();
+
+        $stats = [
+            'supervised_students' => $studentIds->count(),
+            'live_meetings' => $liveMeetings->count(),
+            'inactive_students' => $inactiveStudentsCount,
+            'students_with_courses' => $studentsWithEnrollment,
+            'total_tasks' => $user->employeeTasks()->count(),
+            'pending_tasks' => $user->employeeTasks()->where('status', 'pending')->count(),
+            'overdue_tasks' => $user->employeeTasks()
+                ->where('deadline', '<', now())
+                ->whereIn('status', ['pending', 'in_progress'])
+                ->count(),
+        ];
+
+        $studentsPreview = $user->supervisedStudentsAsAcademic()
+            ->where('users.role', 'student')
+            ->orderBy('users.name')
+            ->limit(15)
+            ->select('users.*')
+            ->get();
+
+        $liveByStudentId = $liveMeetings->keyBy('user_id');
+
+        $tasks = $user->employeeTasks()
+            ->with(['assigner', 'deliverables'])
+            ->latest()
+            ->take(6)
+            ->get();
+
+        return view('employee.dashboard-academic-supervisor', compact(
+            'user',
+            'stats',
+            'liveMeetings',
+            'studentsPreview',
+            'liveByStudentId',
+            'tasks'
+        ));
     }
 
     /**

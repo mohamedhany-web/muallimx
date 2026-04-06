@@ -53,7 +53,7 @@
                 <label for="transfer_receipt" class="block text-sm font-medium text-gray-700 mb-1">إيصال التحويل (مطلوب) *</label>
                 <input type="file" name="transfer_receipt" id="transfer_receipt" accept=".pdf,.jpg,.jpeg,.png" required
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                <p class="text-xs text-gray-500 mt-1">PDF أو صورة، حجم أقصى 5 ميجا</p>
+                <p class="text-xs text-gray-500 mt-1">PDF أو صورة، حجم أقصى 40 ميجابايت</p>
                 @error('transfer_receipt')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
             <div>

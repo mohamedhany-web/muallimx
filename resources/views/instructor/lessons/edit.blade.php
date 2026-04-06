@@ -101,7 +101,7 @@
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">مرفقات إضافية</label>
                     <input type="file" name="attachments[]" multiple
                            class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100">
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">حتى 10MB لكل ملف. المرفقات الحالية تبقى مضافاً عليها الجديد.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">حتى 40 ميجابايت لكل ملف. المرفقات الحالية تبقى مضافاً عليها الجديد.</p>
                 </div>
 
                 <div class="rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-3">

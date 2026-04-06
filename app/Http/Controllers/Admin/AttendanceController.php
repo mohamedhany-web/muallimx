@@ -33,7 +33,7 @@ class AttendanceController extends Controller
     public function uploadTeamsFile(Request $request, Lecture $lecture)
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,xlsx,xls|max:10240',
+            'file' => 'required|file|mimes:csv,xlsx,xls|max:'.config('upload_limits.max_upload_kb'),
         ]);
 
         $file = $request->file('file');
