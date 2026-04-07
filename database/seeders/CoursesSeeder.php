@@ -348,3 +348,5 @@ class CoursesSeeder extends Seeder
         return $sectionsMap[$courseTitle];
     }
 }
+
+}

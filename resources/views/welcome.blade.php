@@ -345,7 +345,7 @@
         </div>
     </section>
 
-    {{-- 7) آراء المعلمين — من لوحة الإدارة + تمرير أفقي تلقائي --}}
+    {{-- 7) آراء المعلمين — من لوحة الإدارة (تمرير أفقي يدوي فقط) --}}
     @if(isset($homeTestimonials) && $homeTestimonials->isNotEmpty())
     @php
         $tCount = $homeTestimonials->count();
@@ -468,28 +468,6 @@
         requestAnimationFrame(bindSlideWidths);
     }
     activeDot();
-})();
-
-(function(){
-    var sc=document.getElementById('home-t-scroll');
-    if(!sc||sc.children.length<2)return;
-    var slides=[].slice.call(sc.children);
-    var n=slides.length;
-    var idx=0;
-    var iv;
-    function tick(){
-        var next=(idx+1)%n;
-        var beh=(next===0&&idx===n-1)?'auto':'smooth';
-        slides[next].scrollIntoView({inline:'center',block:'nearest',behavior:beh});
-        idx=next;
-    }
-    function start(){iv=setInterval(tick,5200);}
-    function stop(){if(iv){clearInterval(iv);iv=null;}}
-    start();
-    sc.addEventListener('mouseenter',stop);
-    sc.addEventListener('mouseleave',start);
-    sc.addEventListener('focusin',stop);
-    sc.addEventListener('focusout',start);
 })();
 </script>
 </body>
