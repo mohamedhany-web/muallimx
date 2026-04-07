@@ -1,209 +1,185 @@
 ﻿
 
+<?php
+    $brand = config('app.name');
+    $chevronNext = app()->getLocale() === 'ar' ? 'fa-chevron-left' : 'fa-chevron-right';
+?>
+
 <?php $__env->startSection('title', __('public.help_page_title') . ' - ' . __('public.site_suffix')); ?>
-<?php $__env->startSection('meta_description', 'مركز المساعدة والدعم الفني لمنصة MuallimX — إجابات وأدلة استخدام لحل مشاكلك بسرعة.'); ?>
-<?php $__env->startSection('meta_keywords', 'مساعدة, دعم فني, MuallimX, مركز المساعدة'); ?>
+<?php $__env->startSection('meta_description', __('public.help_meta_description', ['brand' => $brand])); ?>
+<?php $__env->startSection('meta_keywords', __('public.help_meta_keywords', ['brand' => $brand])); ?>
 <?php $__env->startSection('canonical_url', url('/help')); ?>
 
 <?php $__env->startPush('styles'); ?>
 <style>
-    .hero-help {
-        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 45%, #1d4ed8 100%);
-        position: relative;
-        overflow: hidden;
+    .help-hub-card {
+        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        border: 1px solid rgb(226 232 240);
     }
-    .hero-help::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M0 0h40v40H0V0zm2 2h36v36H2V2z'/%3E%3C/g%3E%3C/svg%3E");
-        opacity: 0.6;
+    .help-hub-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(40, 53, 147, 0.28);
+        box-shadow: 0 22px 48px -24px rgba(31, 42, 122, 0.38);
     }
-    .help-card {
-        transition: all 0.25s ease;
-        border: 2px solid #e2e8f0;
+    html.dark .help-hub-card {
+        border-color: rgb(51 65 85);
+        background: rgb(30 41 59 / 0.88);
     }
-    .help-card:hover {
-        border-color: rgba(59, 130, 246, 0.4);
-        box-shadow: 0 12px 32px rgba(59, 130, 246, 0.12);
-        transform: translateY(-2px);
+    .help-topic-row {
+        transition: background 0.2s ease, border-color 0.2s ease;
+        border-bottom: 1px solid rgb(241 245 249);
     }
-    .topic-card {
-        transition: all 0.2s ease;
-        border: 2px solid transparent;
+    .help-topic-row:last-child { border-bottom: none; }
+    .help-topic-row:hover {
+        background: rgba(255, 229, 247, 0.35);
     }
-    .topic-card:hover {
-        border-color: rgba(59, 130, 246, 0.25);
-        background: rgba(248, 250, 252, 0.8);
+    html.dark .help-topic-row {
+        border-color: rgb(51 65 85);
     }
-    .section-bar {
-        width: 50px;
-        height: 4px;
-        background: linear-gradient(90deg, #3b82f6, #10b981);
-        border-radius: 2px;
+    html.dark .help-topic-row:hover {
+        background: rgba(40, 53, 147, 0.2);
     }
 </style>
 <?php $__env->stopPush(); ?>
 
 <?php $__env->startSection('content'); ?>
 
-<section class="hero-help min-h-[42vh] flex items-center relative pt-24 pb-16 lg:pt-28 lg:pb-20">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-4" style="text-shadow: 0 2px 12px rgba(0,0,0,0.3);">
-            مركز المساعدة
+<section class="pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-14 overflow-hidden relative" style="background:radial-gradient(circle at 50% 120%,rgba(255,229,247,.55),transparent 42%),radial-gradient(circle at 10% 20%,rgba(40,53,147,.09),transparent 35%),linear-gradient(180deg,#f4f6ff 0%,#ffffff 100%)">
+    <div class="absolute inset-0 pointer-events-none opacity-30" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.06) 1px,transparent 0);background-size:32px 32px"></div>
+    <div class="w-full max-w-[1200px] mx-auto px-6 sm:px-8 relative z-10 text-center">
+        <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-6" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
+            <i class="fas fa-life-ring"></i> <?php echo e(__('public.help_hero_badge')); ?>
+
+        </span>
+        <h1 class="text-[1.85rem] sm:text-[2.6rem] lg:text-[3.15rem] leading-[1.12] font-black mb-5 text-[#1F2A7A] dark:text-white" style="font-family:Tajawal,Cairo,sans-serif">
+            <?php echo e(__('public.help_page_title')); ?>
+
+            <span class="block mt-2 text-[#FB5607] dark:text-orange-400 text-[1.5rem] sm:text-[2rem] lg:text-[2.35rem]"><?php echo e($brand); ?></span>
         </h1>
-        <p class="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto" style="text-shadow: 0 1px 4px rgba(0,0,0,0.2);">
-            دليلك للتعلم على منصة Mindlytics والتسجيل والدفع والشهادات
+        <p class="text-slate-600 dark:text-slate-400 text-base sm:text-lg leading-8 max-w-2xl mx-auto mb-8">
+            <?php echo e(__('public.help_hero_sub')); ?>
+
         </p>
-    </div>
-</section>
+        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <a href="<?php echo e(route('public.faq')); ?>" class="inline-flex items-center justify-center gap-2 rounded-2xl font-bold text-white px-7 py-3.5 shadow-lg transition-all hover:scale-[1.02]" style="background:#FB5607;box-shadow:0 12px 28px -10px rgba(251,86,7,.45)">
+                <i class="fas fa-circle-question"></i> <?php echo e(__('public.faq_page_title')); ?>
 
-
-<section class="py-12 md:py-16 bg-gradient-to-b from-slate-50 to-white">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
-        <div class="flex items-center gap-3 mb-8">
-            <div class="section-bar rounded-full"></div>
-            <h2 class="text-2xl font-bold text-slate-800">ابدأ من هنا</h2>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <a href="<?php echo e(route('public.faq')); ?>" class="help-card bg-white rounded-2xl shadow-md p-6 flex flex-col items-center text-center no-underline text-inherit">
-                <div class="w-14 h-14 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mb-4">
-                    <i class="fas fa-question-circle text-2xl"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800 mb-2">الأسئلة الشائعة</h3>
-                <p class="text-slate-600 text-sm">إجابات جاهزة عن المنصة، التسجيل، الدفع والشهادات</p>
             </a>
-            <a href="<?php echo e(route('public.contact')); ?>" class="help-card bg-white rounded-2xl shadow-md p-6 flex flex-col items-center text-center no-underline text-inherit">
-                <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
-                    <i class="fas fa-envelope text-2xl"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800 mb-2">تواصل معنا</h3>
-                <p class="text-slate-600 text-sm">أرسل استفسارك أو مشكلتك وسنرد في أقرب وقت</p>
-            </a>
-            <a href="<?php echo e(route('public.courses')); ?>" class="help-card bg-white rounded-2xl shadow-md p-6 flex flex-col items-center text-center no-underline text-inherit">
-                <div class="w-14 h-14 rounded-2xl bg-violet-100 text-violet-600 flex items-center justify-center mb-4">
-                    <i class="fas fa-book-open text-2xl"></i>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800 mb-2">تصفح الكورسات</h3>
-                <p class="text-slate-600 text-sm">اختر كورساً أو مساراً تعليمياً والتحق بالتعلم</p>
-            </a>
-        </div>
+            <a href="<?php echo e(route('public.contact')); ?>" class="inline-flex items-center justify-center gap-2 rounded-2xl font-bold px-7 py-3.5 border-2 transition-all text-white" style="background:#283593;border-color:#283593">
+                <i class="fas fa-envelope"></i> <?php echo e(__('public.contact_page_title')); ?>
 
-        
-        <div class="flex items-center gap-3 mt-14 mb-6">
-            <div class="section-bar rounded-full"></div>
-            <h2 class="text-2xl font-bold text-slate-800">مواضيع شائعة</h2>
-        </div>
-        <div class="bg-white rounded-2xl shadow-md border border-slate-100 overflow-hidden">
-            <div class="divide-y divide-slate-100">
-                <a href="<?php echo e(route('public.faq')); ?>#default" class="topic-card block px-6 py-5 no-underline text-inherit">
-                    <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-user-plus"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-slate-800 mb-1">كيف أُنشئ حساباً وأبدأ التعلم؟</h3>
-                            <p class="text-slate-600 text-sm">أنشئ حساباً من صفحة "إنشاء حساب"، ثم تصفح الكورسات أو المسارات واختر ما يناسبك. التسجيل في الكورسات المجانية فوري، والمدفوعة تتطلب إتمام الدفع ثم المراجعة.</p>
-                        </div>
-                        <i class="fas fa-chevron-left text-slate-300 flex-shrink-0 mt-1"></i>
-                    </div>
-                </a>
-                <a href="<?php echo e(route('public.faq')); ?>#default" class="topic-card block px-6 py-5 no-underline text-inherit">
-                    <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-credit-card"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-slate-800 mb-1">ما طرق الدفع ومتى يُفعّل الكورس؟</h3>
-                            <p class="text-slate-600 text-sm">نقبل التحويل البنكي، المحفظة الإلكترونية (فودافون كاش، إنستا باي)، والدفع الإلكتروني. بعد رفع إيصال الدفع تتم المراجعة وتفعيل الكورس تلقائياً خلال 24 ساعة عمل عادةً.</p>
-                        </div>
-                        <i class="fas fa-chevron-left text-slate-300 flex-shrink-0 mt-1"></i>
-                    </div>
-                </a>
-                <a href="<?php echo e(route('public.faq')); ?>#default" class="topic-card block px-6 py-5 no-underline text-inherit">
-                    <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-route"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-slate-800 mb-1">ما الفرق بين الكورس والمسار التعليمي؟</h3>
-                            <p class="text-slate-600 text-sm">الكورس مادة واحدة (مثلاً لغة برمجة). المسار مجموعة كورسات مرتبة لهدف أكبر (مثل "مطور الويب"). التسجيل في المسار يمنحك الوصول لجميع الكورسات ضمنه.</p>
-                        </div>
-                        <i class="fas fa-chevron-left text-slate-300 flex-shrink-0 mt-1"></i>
-                    </div>
-                </a>
-                <a href="<?php echo e(route('public.certificates')); ?>" class="topic-card block px-6 py-5 no-underline text-inherit">
-                    <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-certificate"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-slate-800 mb-1">كيف أحصل على الشهادة؟</h3>
-                            <p class="text-slate-600 text-sm">بعد إتمام متطلبات الكورس أو المسار يمكنك تحميل شهادة الإتمام من لوحة التحكم. الشهادات قابلة للمشاركة والتحقق من صحتها عبر صفحة التحقق من الشهادات.</p>
-                        </div>
-                        <i class="fas fa-chevron-left text-slate-300 flex-shrink-0 mt-1"></i>
-                    </div>
-                </a>
-                <a href="<?php echo e(route('public.contact')); ?>" class="topic-card block px-6 py-5 no-underline text-inherit">
-                    <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-headset"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-slate-800 mb-1">لم أجد حلاً لمشكلتي، ماذا أفعل؟</h3>
-                            <p class="text-slate-600 text-sm">استخدم صفحة "اتصل بنا" لوصف مشكلتك أو سؤالك. نحرص على الرد خلال أقرب وقت. يمكنك أيضاً مراجعة الأسئلة الشائعة للتأكد من وجود إجابة جاهزة.</p>
-                        </div>
-                        <i class="fas fa-chevron-left text-slate-300 flex-shrink-0 mt-1"></i>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        
-        <div class="flex items-center gap-3 mt-14 mb-6">
-            <div class="section-bar rounded-full"></div>
-            <h2 class="text-2xl font-bold text-slate-800">خطوات سريعة</h2>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white rounded-xl border-2 border-slate-100 p-5 text-center">
-                <span class="inline-flex w-10 h-10 rounded-full bg-blue-600 text-white font-bold items-center justify-center text-lg mb-3">1</span>
-                <p class="text-sm font-bold text-slate-800">إنشاء الحساب</p>
-                <p class="text-xs text-slate-600 mt-1">من صفحة إنشاء حساب</p>
-            </div>
-            <div class="bg-white rounded-xl border-2 border-slate-100 p-5 text-center">
-                <span class="inline-flex w-10 h-10 rounded-full bg-blue-600 text-white font-bold items-center justify-center text-lg mb-3">2</span>
-                <p class="text-sm font-bold text-slate-800">اختيار كورس أو مسار</p>
-                <p class="text-xs text-slate-600 mt-1">من الكورسات أو المسارات</p>
-            </div>
-            <div class="bg-white rounded-xl border-2 border-slate-100 p-5 text-center">
-                <span class="inline-flex w-10 h-10 rounded-full bg-blue-600 text-white font-bold items-center justify-center text-lg mb-3">3</span>
-                <p class="text-sm font-bold text-slate-800">إتمام الدفع</p>
-                <p class="text-xs text-slate-600 mt-1">تحويل أو محفظة أو دفع إلكتروني</p>
-            </div>
-            <div class="bg-white rounded-xl border-2 border-slate-100 p-5 text-center">
-                <span class="inline-flex w-10 h-10 rounded-full bg-blue-600 text-white font-bold items-center justify-center text-lg mb-3">4</span>
-                <p class="text-sm font-bold text-slate-800">البدء بالتعلم</p>
-                <p class="text-xs text-slate-600 mt-1">بعد تفعيل الطلب من الإدارة</p>
-            </div>
+            </a>
         </div>
     </div>
 </section>
 
-
-<section class="py-14 bg-white border-t border-slate-200">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-2xl">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 mb-4">
-            <i class="fas fa-headset text-2xl"></i>
+<section class="py-12 sm:py-16 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950">
+    <div class="w-full max-w-[1200px] mx-auto px-6 sm:px-8">
+        <div class="flex items-center gap-3 mb-8 justify-center sm:justify-start">
+            <span class="w-12 h-1 rounded-full shrink-0" style="background:linear-gradient(90deg,#283593,#FB5607)"></span>
+            <h2 class="text-xl sm:text-2xl font-black text-[#1F2A7A] dark:text-white" style="font-family:Tajawal,Cairo,sans-serif"><?php echo e(__('public.help_start_title')); ?></h2>
         </div>
-        <h3 class="text-2xl font-bold text-slate-800 mb-2">ما زلت تحتاج مساعدة؟</h3>
-        <p class="text-slate-600 mb-6">فريق الدعم جاهز للرد على استفساراتك. تواصل معنا وسنوضح لك كل شيء.</p>
-        <a href="<?php echo e(route('public.contact')); ?>" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-600 transition-all">
-            <i class="fas fa-envelope"></i>
-            اتصل بنا
-        </a>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
+            <a href="<?php echo e(route('public.faq')); ?>" class="help-hub-card rounded-[24px] bg-white dark:bg-slate-800 p-6 sm:p-7 flex flex-col items-center text-center no-underline text-inherit shadow-sm">
+                <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl mb-4 shadow-md" style="background:linear-gradient(135deg,#283593,#1F2A7A)">
+                    <i class="fas fa-circle-question"></i>
+                </div>
+                <h3 class="text-lg font-black text-[#1F2A7A] dark:text-white mb-2"><?php echo e(__('public.help_card_faq_title')); ?></h3>
+                <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed"><?php echo e(__('public.help_card_faq_desc')); ?></p>
+            </a>
+            <a href="<?php echo e(route('public.contact')); ?>" class="help-hub-card rounded-[24px] bg-white dark:bg-slate-800 p-6 sm:p-7 flex flex-col items-center text-center no-underline text-inherit shadow-sm">
+                <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl mb-4 shadow-md" style="background:#FB5607;box-shadow:0 10px 24px -8px rgba(251,86,7,.45)">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <h3 class="text-lg font-black text-[#1F2A7A] dark:text-white mb-2"><?php echo e(__('public.help_card_contact_title')); ?></h3>
+                <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed"><?php echo e(__('public.help_card_contact_desc')); ?></p>
+            </a>
+            <a href="<?php echo e(route('public.courses')); ?>" class="help-hub-card rounded-[24px] bg-white dark:bg-slate-800 p-6 sm:p-7 flex flex-col items-center text-center no-underline text-inherit shadow-sm">
+                <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl mb-4 shadow-md" style="background:linear-gradient(135deg,#1F2A7A,#3d4db8)">
+                    <i class="fas fa-chalkboard-user"></i>
+                </div>
+                <h3 class="text-lg font-black text-[#1F2A7A] dark:text-white mb-2"><?php echo e(__('public.help_card_courses_title')); ?></h3>
+                <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed"><?php echo e(__('public.help_card_courses_desc')); ?></p>
+            </a>
+        </div>
+
+        <div class="flex items-center gap-3 mt-14 mb-6 justify-center sm:justify-start">
+            <span class="w-12 h-1 rounded-full shrink-0" style="background:linear-gradient(90deg,#FB5607,#283593)"></span>
+            <h2 class="text-xl sm:text-2xl font-black text-[#1F2A7A] dark:text-white" style="font-family:Tajawal,Cairo,sans-serif"><?php echo e(__('public.help_topics_title')); ?></h2>
+        </div>
+        <div class="rounded-[28px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_20px_44px_-28px_rgba(31,42,122,.25)] overflow-hidden">
+            <?php
+                $topicLinks = [
+                    route('public.faq') . '#default',
+                    route('public.faq') . '#default',
+                    route('public.faq') . '#default',
+                    route('public.certificates'),
+                    route('public.contact'),
+                ];
+                $topicIcons = ['user-plus', 'credit-card', 'route', 'certificate', 'headset'];
+            ?>
+            <?php $__currentLoopData = range(1, 5); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <a href="<?php echo e($topicLinks[$i - 1]); ?>" class="help-topic-row block px-5 sm:px-8 py-5 sm:py-6 no-underline text-inherit">
+                <div class="flex items-start gap-4">
+                    <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-base shadow-sm" style="background:<?php echo e($i % 2 === 0 ? '#FB5607' : '#283593'); ?>">
+                        <i class="fas fa-<?php echo e($topicIcons[$i - 1]); ?>"></i>
+                    </div>
+                    <div class="flex-1 min-w-0 text-start">
+                        <h3 class="text-base sm:text-lg font-black text-[#1F2A7A] dark:text-white mb-1"><?php echo e(__('public.help_topic_'.$i.'_title')); ?></h3>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed"><?php echo e(__('public.help_topic_'.$i.'_desc')); ?></p>
+                    </div>
+                    <i class="fas <?php echo e($chevronNext); ?> text-slate-300 dark:text-slate-600 flex-shrink-0 mt-2 text-sm"></i>
+                </div>
+            </a>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </div>
+
+        <div class="flex items-center gap-3 mt-14 mb-8 justify-center sm:justify-start">
+            <span class="w-12 h-1 rounded-full shrink-0" style="background:linear-gradient(90deg,#283593,#FB5607)"></span>
+            <h2 class="text-xl sm:text-2xl font-black text-[#1F2A7A] dark:text-white" style="font-family:Tajawal,Cairo,sans-serif"><?php echo e(__('public.help_steps_title')); ?></h2>
+        </div>
+        <div class="relative max-w-3xl mx-auto ps-8 sm:ps-10 border-s-2 border-[#283593]/25 dark:border-indigo-500/30">
+            <?php $__currentLoopData = range(1, 4); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $step): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <div class="relative pb-10 last:pb-0">
+                <span class="absolute top-0 flex items-center justify-center w-9 h-9 rounded-full text-white text-sm font-black -start-[41px] sm:-start-[45px]" style="background:<?php echo e($step % 2 === 1 ? '#283593' : '#FB5607'); ?>;box-shadow:0 8px 20px -6px <?php echo e($step % 2 === 1 ? 'rgba(40,53,147,.35)' : 'rgba(251,86,7,.35)'); ?>">
+                    <?php echo e($step); ?>
+
+                </span>
+                <div class="rounded-2xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 px-5 py-4 shadow-sm">
+                    <p class="font-black text-[#1F2A7A] dark:text-white mb-1"><?php echo e(__('public.help_step_'.$step.'_title')); ?></p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400"><?php echo e(__('public.help_step_'.$step.'_desc')); ?></p>
+                </div>
+            </div>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+        </div>
+    </div>
+</section>
+
+<section class="pt-4 sm:pt-6 pb-14 sm:pb-16" style="background:linear-gradient(180deg,#f4f7ff 0%,#ffffff 100%)">
+    <div class="w-full max-w-[1200px] mx-auto px-6 sm:px-8">
+        <div class="rounded-[28px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_20px_44px_-26px_rgba(31,42,122,.28)] px-6 sm:px-10 py-10 sm:py-12 text-center">
+            <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-5" style="background:#FFE5F7;color:#283593">
+                <i class="fas fa-headset"></i> <?php echo e(__('public.support')); ?>
+
+            </span>
+            <h3 class="text-2xl sm:text-3xl font-black mb-3 text-[#1F2A7A] dark:text-white" style="font-family:Tajawal,Cairo,sans-serif"><?php echo e(__('public.help_cta_title')); ?></h3>
+            <p class="text-slate-600 dark:text-slate-400 text-base sm:text-lg max-w-2xl mx-auto leading-8 mb-8">
+                <?php echo e(__('public.help_cta_desc')); ?>
+
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                <a href="<?php echo e(route('public.contact')); ?>" class="inline-flex items-center justify-center gap-2 rounded-2xl font-bold text-white px-8 py-3.5 transition-all hover:scale-[1.02]" style="background:#FB5607;box-shadow:0 12px 28px -10px rgba(251,86,7,.45)">
+                    <i class="fas fa-paper-plane"></i> <?php echo e(__('public.help_cta_btn')); ?>
+
+                </a>
+                <a href="<?php echo e(route('public.faq')); ?>" class="inline-flex items-center justify-center gap-2 rounded-2xl font-bold px-8 py-3.5 border-2 border-slate-200 dark:border-slate-600 text-[#1F2A7A] dark:text-slate-100 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <i class="fas fa-circle-question"></i> <?php echo e(__('public.faq_page_title')); ?>
+
+                </a>
+            </div>
+        </div>
     </div>
 </section>
 <?php $__env->stopSection(); ?>
-
 
 <?php echo $__env->make('layouts.public', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Muallimx\resources\views\public\help.blade.php ENDPATH**/ ?>

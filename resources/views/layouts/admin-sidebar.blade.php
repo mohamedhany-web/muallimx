@@ -69,6 +69,14 @@
                 </a>
             </li>
             @endif
+            @if($isFull || $u->hasPermission('manage.site-testimonials') || $u->hasPermission('manage.site-services'))
+            <li>
+                <a href="{{ route('admin.site-testimonials.index') }}" class="sidebar-link {{ request()->routeIs('admin.site-testimonials.*') ? 'active' : '' }}">
+                    <i class="fas fa-quote-right"></i>
+                    <span>آراء الموقع (الرئيسية)</span>
+                </a>
+            </li>
+            @endif
             @if($isFull || $u->hasPermission('manage.system-settings'))
             <li>
                 <a href="{{ route('admin.system-settings.edit') }}" class="sidebar-link {{ request()->routeIs('admin.system-settings.*') ? 'active' : '' }}">

@@ -1,4 +1,8 @@
-@php $isRtl = app()->getLocale() === 'ar'; @endphp
+@php
+    $isRtl = app()->getLocale() === 'ar';
+    $navbarLogoUrl = $navbarLogoUrl ?? \App\Services\AdminPanelBranding::logoPublicUrl();
+    $navbarBrandTagline = $navbarBrandTagline ?? \App\Services\PublicFooterSettings::payload()['brand_tagline'];
+@endphp
 <nav id="navbar"
      class="fixed top-0 inset-x-0 z-[999] transition-all duration-500"
      :class="navSolid ? 'nav-solid' : 'nav-transparent'"
@@ -7,14 +11,20 @@
     <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-10">
         <div class="flex items-center justify-between h-[68px] lg:h-[76px]">
 
-            {{-- Logo --}}
+            {{-- Logo: صورة من إعدادات النظام، أو الحرف الافتراضي --}}
             <a href="{{ route('home') }}" class="flex items-center gap-3 group flex-shrink-0">
-                <div class="relative w-10 h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center shadow-lg transition-shadow duration-300" style="background:#FB5607;box-shadow:0 4px 16px -4px rgba(251,86,7,.3)">
-                    <span class="text-white font-black text-lg lg:text-xl select-none">M</span>
-                </div>
+                @if(!empty($navbarLogoUrl))
+                    <div class="relative w-10 h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center shadow-lg transition-shadow duration-300 bg-white/95 p-1 ring-1 ring-white/25" style="box-shadow:0 4px 16px -4px rgba(0,0,0,.2)">
+                        <img src="{{ $navbarLogoUrl }}" alt="{{ config('app.name') }}" class="w-full h-full object-contain" width="44" height="44" decoding="async">
+                    </div>
+                @else
+                    <div class="relative w-10 h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center shadow-lg transition-shadow duration-300" style="background:#FB5607;box-shadow:0 4px 16px -4px rgba(251,86,7,.3)">
+                        <span class="text-white font-black text-lg lg:text-xl select-none">M</span>
+                    </div>
+                @endif
                 <div class="flex flex-col leading-none">
                     <span class="text-[18px] lg:text-[20px] font-black text-white tracking-tight">MuallimX</span>
-                    <span class="text-[11px] lg:text-[12px] text-white/60 font-semibold mt-0.5">{{ __('landing.nav.brand') }}</span>
+                    <span class="text-[11px] lg:text-[12px] text-white/60 font-semibold mt-0.5">{{ $navbarBrandTagline }}</span>
                 </div>
             </a>
 
@@ -96,12 +106,18 @@
         {{-- Sidebar Header --}}
         <div class="relative flex items-center justify-between px-5 py-5 border-b border-white/[0.06]" style="padding-top: max(1.25rem, env(safe-area-inset-top));">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background:#FB5607">
-                    <span class="text-white font-black text-lg">M</span>
-                </div>
+                @if(!empty($navbarLogoUrl))
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg bg-white/95 p-1 ring-1 ring-white/20">
+                        <img src="{{ $navbarLogoUrl }}" alt="" class="w-full h-full object-contain" width="40" height="40" decoding="async">
+                    </div>
+                @else
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background:#FB5607">
+                        <span class="text-white font-black text-lg">M</span>
+                    </div>
+                @endif
                 <div>
                     <p class="text-white font-black text-[17px]">MuallimX</p>
-                    <p class="text-white/50 text-[12px] font-semibold">{{ __('landing.nav.brand') }}</p>
+                    <p class="text-white/50 text-[12px] font-semibold">{{ $navbarBrandTagline }}</p>
                 </div>
             </div>
             <button type="button" id="mobile-menu-close"

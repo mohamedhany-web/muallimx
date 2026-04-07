@@ -8,7 +8,7 @@
             <h1 class="text-xl font-bold text-slate-900">خدمة جديدة</h1>
             <p class="text-slate-500 mt-1">يُنشأ الرابط تلقائياً من الاسم إن تركت حقل الرابط فارغاً (أحرف إنجليزية وشرطة).</p>
         </div>
-        <form action="<?php echo e(route('admin.site-services.store')); ?>" method="POST" class="p-5 sm:p-8 space-y-6">
+        <form action="<?php echo e(route('admin.site-services.store')); ?>" method="POST" enctype="multipart/form-data" class="p-5 sm:p-8 space-y-6">
             <?php echo csrf_field(); ?>
             <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-2">اسم الخدمة <span class="text-rose-500">*</span></label>
@@ -29,6 +29,20 @@ unset($__errorArgs, $__bag); ?>
                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 font-mono text-sm">
                 <p class="mt-1 text-xs text-slate-500">فقط a-z و 0-9 و شرطة. يترك فارغاً للإنشاء التلقائي.</p>
                 <?php $__errorArgs = ['slug'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><p class="mt-1 text-sm text-rose-600"><?php echo e($message); ?></p><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">صورة الخدمة (اختياري)</label>
+                <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"
+                       class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100">
+                <p class="mt-1.5 text-xs text-slate-500">صورة للبطاقة وصفحة الخدمة — تُرفع على Cloudflare R2 عند ضبط <code class="bg-slate-100 px-1 rounded">SITE_SERVICES_DISK=r2</code> في ملف البيئة (مع AWS_*).</p>
+                <?php $__errorArgs = ['image'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }

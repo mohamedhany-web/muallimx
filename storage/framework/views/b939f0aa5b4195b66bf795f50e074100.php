@@ -74,6 +74,11 @@
                     <i class="fas fa-concierge-bell"></i> <?php echo e(__('public.services_page_title')); ?>
 
                 </span>
+                <?php if($siteService->publicImageUrl()): ?>
+                <div class="mb-8 rounded-[24px] overflow-hidden border border-slate-200 shadow-[0_16px_40px_-24px_rgba(31,42,122,.35)] max-w-2xl">
+                    <img src="<?php echo e($siteService->publicImageUrl()); ?>" alt="" class="w-full h-auto max-h-[320px] object-cover">
+                </div>
+                <?php endif; ?>
                 <h1 class="font-heading text-3xl sm:text-4xl lg:text-[2.75rem] font-black text-mx-indigo leading-tight mb-6"><?php echo e($siteService->name); ?></h1>
                 <?php if($siteService->summary): ?>
                 <p class="text-lg text-slate-600 leading-8 mb-8"><?php echo e($siteService->summary); ?></p>

@@ -53,7 +53,7 @@
                 <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-300 text-sm font-black">1</span>
                 <div>
                     <h3 class="text-base font-black text-slate-900 dark:text-slate-100">شعار لوحة التحكم وأيقونة الموقع</h3>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">يظهر بدل الحرف «M» في الشريط الجانبي، وبجانب عنوان الصفحة في الشريط العلوي، وكأيقونة تبويب المتصفح (favicon).</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">يظهر بدل الحرف «M» في الشريط الجانبي، وفي شعار النافبار العام (الصفحة الرئيسية والصفحات العامة)، وبجانب عنوان الصفحة في الشريط العلوي للوحة التحكم، وكأيقونة تبويب المتصفح (favicon).</p>
                     <p class="text-[11px] text-sky-700 dark:text-sky-300 mt-2 leading-relaxed rounded-lg bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800 px-3 py-2">
                         <strong>محلياً:</strong> نفّذ <code class="text-[10px] bg-white dark:bg-slate-800 px-1 rounded">php artisan storage:link</code> وتأكد أن <code class="text-[10px]">APP_URL</code> يطابق عنوان المتصفح (مثلاً <code class="text-[10px]">http://127.0.0.1:8000</code>).<br>
                         <strong>Cloudflare R2:</strong> في <code class="text-[10px]">.env</code> اضبط <code class="text-[10px]">ADMIN_BRANDING_DISK=r2</code> مع <code class="text-[10px]">AWS_*</code> و<code class="text-[10px]">AWS_URL</code> (رابط الـ bucket العام)، ثم <code class="text-[10px]">php artisan config:clear</code>.
@@ -100,7 +100,7 @@
                 <section class="space-y-4">
                     <h4 class="text-sm font-black text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-600 pb-2">الهوية والنص التعريفي</h4>
                     <div>
-                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">السطر تحت اسم MuallimX في الفوتر</label>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">السطر تحت اسم MuallimX (النافبار والفوتر)</label>
                         <input type="text" name="footer_brand_tagline" value="<?php echo e(old('footer_brand_tagline', $values['footer_brand_tagline'])); ?>"
                                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm text-slate-800 dark:text-slate-100"
                                placeholder="<?php echo e($defaults['footer_brand_tagline']); ?>">

@@ -75,14 +75,14 @@
     <?php echo $__env->make('partials.seo-jsonld', ['jsonldType' => 'website'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 </head>
 
-<body class="bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100 transition-colors"
+<body class="min-h-screen flex flex-col bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100 transition-colors"
       x-data="{ mobileMenu: false, searchQuery: '' }"
       :class="{ 'overflow-hidden': mobileMenu }">
     
     <?php echo $__env->make('components.unified-navbar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <!-- Main Content -->
-    <main>
+    <main class="flex-1 w-full">
         <?php echo $__env->yieldContent('content'); ?>
     </main>
 

@@ -75,14 +75,14 @@
     @include('partials.seo-jsonld', ['jsonldType' => 'website'])
 </head>
 
-<body class="bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100 transition-colors"
+<body class="min-h-screen flex flex-col bg-gray-50 text-gray-900 dark:bg-slate-900 dark:text-slate-100 transition-colors"
       x-data="{ mobileMenu: false, searchQuery: '' }"
       :class="{ 'overflow-hidden': mobileMenu }">
     
     @include('components.unified-navbar')
 
     <!-- Main Content -->
-    <main>
+    <main class="flex-1 w-full">
         @yield('content')
     </main>
 

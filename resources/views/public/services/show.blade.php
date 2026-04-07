@@ -73,6 +73,11 @@
                 <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold mb-5" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
                     <i class="fas fa-concierge-bell"></i> {{ __('public.services_page_title') }}
                 </span>
+                @if($siteService->publicImageUrl())
+                <div class="mb-8 rounded-[24px] overflow-hidden border border-slate-200 shadow-[0_16px_40px_-24px_rgba(31,42,122,.35)] max-w-2xl">
+                    <img src="{{ $siteService->publicImageUrl() }}" alt="" class="w-full h-auto max-h-[320px] object-cover">
+                </div>
+                @endif
                 <h1 class="font-heading text-3xl sm:text-4xl lg:text-[2.75rem] font-black text-mx-indigo leading-tight mb-6">{{ $siteService->name }}</h1>
                 @if($siteService->summary)
                 <p class="text-lg text-slate-600 leading-8 mb-8">{{ $siteService->summary }}</p>

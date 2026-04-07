@@ -252,10 +252,15 @@ Route::post('/contact', [\App\Http\Controllers\Public\ContactController::class, 
 Route::get('/media', [\App\Http\Controllers\Public\MediaController::class, 'index'])->name('public.media.index');
 Route::get('/media/{media}', [\App\Http\Controllers\Public\MediaController::class, 'show'])->name('public.media.show');
 
-// صفحة الكورسات العامة
-Route::get('/courses', function () {
+// صفحة الكورسات العامة (?subject=id لتصفية حسب المادة من الصفحة الرئيسية)
+Route::get('/courses', function (\Illuminate\Http\Request $request) {
     $coursesQuery = \App\Models\AdvancedCourse::where('is_active', true);
-    
+
+    $subjectId = (int) $request->query('subject', 0);
+    if ($subjectId > 0) {
+        $coursesQuery->where('academic_subject_id', $subjectId);
+    }
+
     $coursesCollection = $coursesQuery
         ->with(['academicSubject', 'academicYear', 'instructor:id,name'])
         ->withCount('lessons')
@@ -275,11 +280,12 @@ Route::get('/courses', function () {
             'is_free' => (bool)($course->is_free ?? false),
             'lessons_count' => (int)($course->lessons_count ?? 0),
             'thumbnail' => $course->thumbnail ? str_replace('\\', '/', $course->thumbnail) : null,
+            'academic_subject_id' => $course->academic_subject_id ? (int) $course->academic_subject_id : null,
             'academic_subject' => $course->academicSubject ? [
-                'name' => $course->academicSubject->name ?? 'غير محدد'
+                'name' => $course->academicSubject->name ?? 'غير محدد',
             ] : null,
             'instructor' => $course->instructor ? [
-                'name' => $course->instructor->name
+                'name' => $course->instructor->name,
             ] : null,
         ];
     })->values()->toArray();
@@ -987,6 +993,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/contact-messages/{contactMessage}/mark-as-unread', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markAsUnread'])->name('contact-messages.mark-as-unread');
 
         Route::resource('site-services', \App\Http\Controllers\Admin\SiteServiceController::class)->except(['show']);
+        Route::resource('site-testimonials', \App\Http\Controllers\Admin\SiteTestimonialController::class)->except(['show']);
 
         Route::get('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'edit'])->name('system-settings.edit');
         Route::put('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('system-settings.update');

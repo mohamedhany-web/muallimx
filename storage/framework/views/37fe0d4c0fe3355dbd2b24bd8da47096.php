@@ -1,3 +1,5 @@
+
+
 <?php $__env->startSection('title', 'طالب: '.$student->name); ?>
 <?php $__env->startSection('header', 'متابعة الطالب'); ?>
 

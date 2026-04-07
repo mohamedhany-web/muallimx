@@ -157,6 +157,13 @@ class AppServiceProvider extends ServiceProvider
             $view->with('adminPanelLogoUrl', AdminPanelBranding::logoPublicUrl());
         });
 
+        View::composer('components.unified-navbar', function ($view) {
+            $view->with([
+                'navbarLogoUrl' => AdminPanelBranding::logoPublicUrl(),
+                'navbarBrandTagline' => PublicFooterSettings::payload()['brand_tagline'],
+            ]);
+        });
+
         View::composer('errors.*', function ($view) {
             $view->with([
                 'errorHomeUrl' => ErrorPageContext::homeUrl(),

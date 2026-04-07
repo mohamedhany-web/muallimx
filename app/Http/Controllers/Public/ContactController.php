@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContactMessage;
+use App\Services\PublicFooterSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -11,7 +12,11 @@ class ContactController extends Controller
 {
     public function index()
     {
-        return view('public.contact');
+        $footer = PublicFooterSettings::payload();
+        $supportEmail = trim((string) ($footer['email'] ?? ''));
+        $supportPhone = trim((string) ($footer['phone'] ?? ''));
+
+        return view('public.contact', compact('supportEmail', 'supportPhone'));
     }
 
     public function store(Request $request)

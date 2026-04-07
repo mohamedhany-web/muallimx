@@ -1,4 +1,8 @@
-<?php $isRtl = app()->getLocale() === 'ar'; ?>
+<?php
+    $isRtl = app()->getLocale() === 'ar';
+    $navbarLogoUrl = $navbarLogoUrl ?? \App\Services\AdminPanelBranding::logoPublicUrl();
+    $navbarBrandTagline = $navbarBrandTagline ?? \App\Services\PublicFooterSettings::payload()['brand_tagline'];
+?>
 <nav id="navbar"
      class="fixed top-0 inset-x-0 z-[999] transition-all duration-500"
      :class="navSolid ? 'nav-solid' : 'nav-transparent'"
@@ -9,12 +13,18 @@
 
             
             <a href="<?php echo e(route('home')); ?>" class="flex items-center gap-3 group flex-shrink-0">
-                <div class="relative w-10 h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center shadow-lg transition-shadow duration-300" style="background:#FB5607;box-shadow:0 4px 16px -4px rgba(251,86,7,.3)">
-                    <span class="text-white font-black text-lg lg:text-xl select-none">M</span>
-                </div>
+                <?php if(!empty($navbarLogoUrl)): ?>
+                    <div class="relative w-10 h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center shadow-lg transition-shadow duration-300 bg-white/95 p-1 ring-1 ring-white/25" style="box-shadow:0 4px 16px -4px rgba(0,0,0,.2)">
+                        <img src="<?php echo e($navbarLogoUrl); ?>" alt="<?php echo e(config('app.name')); ?>" class="w-full h-full object-contain" width="44" height="44" decoding="async">
+                    </div>
+                <?php else: ?>
+                    <div class="relative w-10 h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center shadow-lg transition-shadow duration-300" style="background:#FB5607;box-shadow:0 4px 16px -4px rgba(251,86,7,.3)">
+                        <span class="text-white font-black text-lg lg:text-xl select-none">M</span>
+                    </div>
+                <?php endif; ?>
                 <div class="flex flex-col leading-none">
                     <span class="text-[18px] lg:text-[20px] font-black text-white tracking-tight">MuallimX</span>
-                    <span class="text-[11px] lg:text-[12px] text-white/60 font-semibold mt-0.5"><?php echo e(__('landing.nav.brand')); ?></span>
+                    <span class="text-[11px] lg:text-[12px] text-white/60 font-semibold mt-0.5"><?php echo e($navbarBrandTagline); ?></span>
                 </div>
             </a>
 
@@ -99,12 +109,18 @@
         
         <div class="relative flex items-center justify-between px-5 py-5 border-b border-white/[0.06]" style="padding-top: max(1.25rem, env(safe-area-inset-top));">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background:#FB5607">
-                    <span class="text-white font-black text-lg">M</span>
-                </div>
+                <?php if(!empty($navbarLogoUrl)): ?>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg bg-white/95 p-1 ring-1 ring-white/20">
+                        <img src="<?php echo e($navbarLogoUrl); ?>" alt="" class="w-full h-full object-contain" width="40" height="40" decoding="async">
+                    </div>
+                <?php else: ?>
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background:#FB5607">
+                        <span class="text-white font-black text-lg">M</span>
+                    </div>
+                <?php endif; ?>
                 <div>
                     <p class="text-white font-black text-[17px]">MuallimX</p>
-                    <p class="text-white/50 text-[12px] font-semibold"><?php echo e(__('landing.nav.brand')); ?></p>
+                    <p class="text-white/50 text-[12px] font-semibold"><?php echo e($navbarBrandTagline); ?></p>
                 </div>
             </div>
             <button type="button" id="mobile-menu-close"

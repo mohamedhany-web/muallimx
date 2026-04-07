@@ -61,6 +61,7 @@ class PermissionsSeeder extends Seeder
             ['name' => 'manage.contact-messages', 'display_name' => 'إدارة رسائل التواصل', 'description' => 'إدارة رسائل التواصل', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.media', 'display_name' => 'إدارة معرض الصور', 'description' => 'إدارة معرض الصور والفيديوهات', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.site-services', 'display_name' => 'إدارة خدمات الموقع', 'description' => 'إدارة صفحة الخدمات ومحتوى كل خدمة في الواجهة العامة', 'group' => 'إدارة الصفحات الخارجية'],
+            ['name' => 'manage.site-testimonials', 'display_name' => 'إدارة آراء الموقع (الرئيسية)', 'description' => 'إدارة شهادات المعلمين الظاهرة في الصفحة الرئيسية وصفحة الآراء', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.system-settings', 'display_name' => 'إعدادات النظام (الفوتر والتواصل)', 'description' => 'تعديل بيانات الفوتر والهاتف وروابط السوشيال في الواجهة العامة', 'group' => 'إدارة الصفحات الخارجية'],
 
             // المهام

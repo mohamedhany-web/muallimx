@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\SiteServiceImageStorage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,6 +13,7 @@ class SiteService extends Model
     protected $fillable = [
         'name',
         'slug',
+        'image_path',
         'summary',
         'body',
         'sort_order',
@@ -39,5 +41,19 @@ class SiteService extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function publicImageUrl(): ?string
+    {
+        return SiteServiceImageStorage::publicUrl($this->image_path);
+    }
+
+    protected static function booted(): void
+    {
+        static::deleting(function (SiteService $service) {
+            if (is_string($service->image_path) && $service->image_path !== '') {
+                SiteServiceImageStorage::delete($service->image_path);
+            }
+        });
     }
 }

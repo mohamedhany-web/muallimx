@@ -13,7 +13,8 @@
             فريقنا
         </h1>
         <p class="text-xl md:text-2xl text-white mb-10 fade-in font-semibold" style="text-shadow: 0 3px 12px rgba(0,0,0,0.7), 0 1px 6px rgba(0,0,0,0.5), 0 0 8px rgba(14, 165, 233, 0.3);">
-            تعرف على الفريق المتميز وراء Mindlytics
+            تعرف على الفريق المتميز وراء <?php echo e(config('app.name')); ?>
+
         </p>
     </div>
 </section>

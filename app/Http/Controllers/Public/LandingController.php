@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicSubject;
 use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
+use App\Models\Certificate;
 use App\Models\PopupAd;
+use App\Models\SiteTestimonial;
+use App\Models\User;
 use App\Services\InstructorMarketingRankingService;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -46,8 +49,49 @@ class LandingController extends Controller
             ->limit(8)
             ->get();
 
-        $fallbackIcons = ['fa-chalkboard', 'fa-robot', 'fa-camera', 'fa-list-check', 'fa-comments', 'fa-book'];
-        $homeCategories = AcademicSubject::query()
+        $homeCategories = $this->buildHomeCategories();
+
+        $homeInstructors = InstructorMarketingRankingService::rankApprovedProfiles();
+
+        $homeTestimonials = SiteTestimonial::query()
+            ->active()
+            ->ordered()
+            ->limit(24)
+            ->get();
+
+        $homeStats = [
+            'learners' => User::query()->where('role', 'student')->where('is_active', true)->count(),
+            'courses' => AdvancedCourse::query()->where('is_active', true)->count(),
+            'certificates' => Certificate::query()
+                ->where(function ($q) {
+                    $q->where('status', 'issued')->orWhere('is_verified', true);
+                })
+                ->count(),
+            'learning_paths' => AcademicYear::query()->where('is_active', true)->count(),
+        ];
+
+        return view('welcome', compact(
+            'popupAd',
+            'landingPaths',
+            'teacherPlans',
+            'featuredCourses',
+            'homeCategories',
+            'homeInstructors',
+            'homeTestimonials',
+            'homeStats'
+        ));
+    }
+
+    /**
+     * تصنيفات للصفحة الرئيسية: مواد نشطة لها كورسات، وإلا مواد نشطة، وإلا مجموعة احتياطية مترجمة (تأهيل معلمين).
+     *
+     * @return \Illuminate\Support\Collection<int, array{id: int|null, name: string, icon: string, url: string, courses_count: int|null}>
+     */
+    private function buildHomeCategories(): \Illuminate\Support\Collection
+    {
+        $fallbackIcons = ['fa-chalkboard-user', 'fa-laptop-file', 'fa-users-gear', 'fa-book-open-reader', 'fa-clipboard-check', 'fa-seedling'];
+
+        $withActiveCourses = AcademicSubject::query()
             ->active()
             ->withCount(['courses' => function ($q) {
                 $q->where('is_active', true);
@@ -56,22 +100,59 @@ class LandingController extends Controller
             ->orderByDesc('courses_count')
             ->orderBy('order')
             ->limit(6)
-            ->get(['id', 'name', 'icon'])
-            ->values()
-            ->map(function ($subject, $index) use ($fallbackIcons) {
-                $icon = is_string($subject->icon) && str_contains($subject->icon, 'fa-')
-                    ? $subject->icon
-                    : $fallbackIcons[$index % count($fallbackIcons)];
+            ->get(['id', 'name', 'icon']);
+
+        $subjects = $withActiveCourses->isNotEmpty()
+            ? $withActiveCourses
+            : AcademicSubject::query()
+                ->active()
+                ->withCount(['courses' => function ($q) {
+                    $q->where('is_active', true);
+                }])
+                ->orderByDesc('courses_count')
+                ->orderBy('order')
+                ->limit(6)
+                ->get(['id', 'name', 'icon']);
+
+        if ($subjects->isNotEmpty()) {
+            return $subjects->values()->map(function (AcademicSubject $subject, int $index) use ($fallbackIcons) {
+                $icon = $this->normalizeSubjectIcon($subject->icon, $fallbackIcons[$index % count($fallbackIcons)]);
 
                 return [
+                    'id' => (int) $subject->id,
                     'name' => $subject->name,
                     'icon' => $icon,
+                    'courses_count' => (int) ($subject->courses_count ?? 0),
+                    'url' => route('public.courses', ['subject' => $subject->id]),
                 ];
             });
+        }
 
-        $homeInstructors = InstructorMarketingRankingService::rankApprovedProfiles();
+        return collect(range(1, 6))->map(function (int $i) {
+            $iconKey = 'public.home_category_fallback_'.$i.'_icon';
+            $iconRaw = __($iconKey);
+            $icon = is_string($iconRaw) && preg_match('/\bfa-[a-z0-9-]+\b/i', $iconRaw, $m)
+                ? strtolower($m[0])
+                : 'fa-chalkboard-user';
 
-        return view('welcome', compact('popupAd', 'landingPaths', 'teacherPlans', 'featuredCourses', 'homeCategories', 'homeInstructors'));
+            return [
+                'id' => null,
+                'name' => __('public.home_category_fallback_'.$i.'_name'),
+                'icon' => $icon,
+                'courses_count' => null,
+                'url' => route('public.courses'),
+            ];
+        });
+    }
+
+    private function normalizeSubjectIcon(?string $icon, string $fallback): string
+    {
+        $icon = is_string($icon) ? trim($icon) : '';
+        if ($icon !== '' && preg_match('/\bfa-[a-z0-9-]+\b/i', $icon, $m)) {
+            return strtolower($m[0]);
+        }
+
+        return $fallback;
     }
 
     /**

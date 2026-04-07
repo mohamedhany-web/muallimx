@@ -35,6 +35,7 @@
                     <thead class="bg-slate-50">
                         <tr class="text-xs font-semibold uppercase text-slate-500">
                             <th class="px-4 py-3">الترتيب</th>
+                            <th class="px-4 py-3 w-20">صورة</th>
                             <th class="px-4 py-3">الاسم</th>
                             <th class="px-4 py-3">الرابط</th>
                             <th class="px-4 py-3">الحالة</th>
@@ -45,6 +46,13 @@
                         @forelse($services as $service)
                         <tr class="hover:bg-slate-50">
                             <td class="px-4 py-3 text-slate-600">{{ $service->sort_order }}</td>
+                            <td class="px-4 py-3">
+                                @if($service->publicImageUrl())
+                                    <img src="{{ $service->publicImageUrl() }}" alt="" class="w-14 h-10 object-cover rounded-lg border border-slate-200">
+                                @else
+                                    <span class="text-slate-300 text-xs">—</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 font-medium text-slate-800">{{ $service->name }}</td>
                             <td class="px-4 py-3">
                                 <a href="{{ route('public.services.show', $service) }}" target="_blank" rel="noopener" class="text-sky-600 hover:underline text-xs font-mono">/services/{{ $service->slug }}</a>
@@ -67,7 +75,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="px-4 py-12 text-center text-slate-500">
+                            <td colspan="6" class="px-4 py-12 text-center text-slate-500">
                                 <i class="fas fa-concierge-bell text-4xl text-slate-300 mb-3 block"></i>
                                 <p>لا توجد خدمات. <a href="{{ route('admin.site-services.create') }}" class="text-sky-600 hover:underline">أضف خدمة</a></p>
                             </td>

@@ -35,6 +35,7 @@
                     <thead class="bg-slate-50">
                         <tr class="text-xs font-semibold uppercase text-slate-500">
                             <th class="px-4 py-3">الترتيب</th>
+                            <th class="px-4 py-3 w-20">صورة</th>
                             <th class="px-4 py-3">الاسم</th>
                             <th class="px-4 py-3">الرابط</th>
                             <th class="px-4 py-3">الحالة</th>
@@ -45,6 +46,13 @@
                         <?php $__empty_1 = true; $__currentLoopData = $services; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $service): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <tr class="hover:bg-slate-50">
                             <td class="px-4 py-3 text-slate-600"><?php echo e($service->sort_order); ?></td>
+                            <td class="px-4 py-3">
+                                <?php if($service->publicImageUrl()): ?>
+                                    <img src="<?php echo e($service->publicImageUrl()); ?>" alt="" class="w-14 h-10 object-cover rounded-lg border border-slate-200">
+                                <?php else: ?>
+                                    <span class="text-slate-300 text-xs">—</span>
+                                <?php endif; ?>
+                            </td>
                             <td class="px-4 py-3 font-medium text-slate-800"><?php echo e($service->name); ?></td>
                             <td class="px-4 py-3">
                                 <a href="<?php echo e(route('public.services.show', $service)); ?>" target="_blank" rel="noopener" class="text-sky-600 hover:underline text-xs font-mono">/services/<?php echo e($service->slug); ?></a>
@@ -67,7 +75,7 @@
                         </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
-                            <td colspan="5" class="px-4 py-12 text-center text-slate-500">
+                            <td colspan="6" class="px-4 py-12 text-center text-slate-500">
                                 <i class="fas fa-concierge-bell text-4xl text-slate-300 mb-3 block"></i>
                                 <p>لا توجد خدمات. <a href="<?php echo e(route('admin.site-services.create')); ?>" class="text-sky-600 hover:underline">أضف خدمة</a></p>
                             </td>

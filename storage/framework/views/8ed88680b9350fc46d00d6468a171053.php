@@ -105,6 +105,10 @@
 
         .arrow-link::after{content:'\f177';font-family:'Font Awesome 6 Free';font-weight:900;margin-inline-start:8px}
         [dir='ltr'] .arrow-link::after{content:'\f178'}
+        .home-testimonials-wrap{overflow:hidden;-webkit-mask-image:linear-gradient(to right,transparent,black 4%,black 96%,transparent);mask-image:linear-gradient(to right,transparent,black 4%,black 96%,transparent)}
+        .home-testimonials-scroller{display:flex;flex-direction:row;gap:1rem;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;touch-action:pan-x;padding-block:4px}
+        .home-testimonials-scroller::-webkit-scrollbar{display:none}
+        .home-testimonials-slide{scroll-snap-align:center;flex-shrink:0}
 
         /* separated sticky header */
         .navbar-spacer{display:block!important}
@@ -146,21 +150,25 @@
                 </div>
             </div>
 
+            <?php
+                $hs = $homeStats ?? ['learners' => 0, 'courses' => 0, 'certificates' => 0, 'learning_paths' => 0];
+                $fmt = fn (int $n) => number_format($n, 0, '.', ',');
+            ?>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-10 reveal s2">
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo">+124</p>
+                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo" dir="ltr"><?php echo e($fmt((int) ($hs['learners'] ?? 0))); ?></p>
                     <p class="text-xs sm:text-sm text-slate-600 mt-1">متعلم عربي</p>
                 </article>
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                    <p class="text-3xl sm:text-4xl font-black text-[#FB5607]">+13</p>
+                    <p class="text-3xl sm:text-4xl font-black text-[#FB5607]" dir="ltr"><?php echo e($fmt((int) ($hs['courses'] ?? 0))); ?></p>
                     <p class="text-xs sm:text-sm text-slate-600 mt-1">دورة تدريبية</p>
                 </article>
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#FFE5F7] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo">+124</p>
+                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo" dir="ltr"><?php echo e($fmt((int) ($hs['certificates'] ?? 0))); ?></p>
                     <p class="text-xs sm:text-sm text-slate-600 mt-1">شهادة</p>
                 </article>
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#fffbea] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo">4</p>
+                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo" dir="ltr"><?php echo e($fmt((int) ($hs['learning_paths'] ?? 0))); ?></p>
                     <p class="text-xs sm:text-sm text-slate-600 mt-1">مسارات تعليمية</p>
                 </article>
             </div>
@@ -224,17 +232,20 @@
     
     <section class="py-12 sm:py-14 bg-mx-soft">
         <div class="container-1200">
-            <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-7 reveal">التصنيفات</h2>
+            <div class="max-w-3xl mb-7 reveal">
+                <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-3"><?php echo e(__('public.categories_sidebar')); ?></h2>
+                <p class="text-slate-600 text-sm sm:text-base leading-7"><?php echo e(__('public.home_categories_subtitle')); ?></p>
+            </div>
             <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
-                <?php $cats = ($homeCategories ?? collect())->toArray(); ?>
-                <?php $__empty_1 = true; $__currentLoopData = $cats; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                    <div class="reveal <?php echo e($i===1 ? 'lg:translate-y-2' : ''); ?> <?php echo e($i===4 ? 'lg:-translate-y-2' : ''); ?> card-base hover-lift text-center">
+                <?php $__currentLoopData = ($homeCategories ?? collect()); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $cat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <a href="<?php echo e($cat['url'] ?? route('public.courses')); ?>" class="reveal <?php echo e($i === 1 ? 'lg:translate-y-2' : ''); ?> <?php echo e($i === 4 ? 'lg:-translate-y-2' : ''); ?> card-base hover-lift text-center block no-underline text-inherit">
                         <div class="w-11 h-11 rounded-xl mx-auto mb-3 flex items-center justify-center text-mx-orange" style="background:#fff3ec"><i class="fas <?php echo e($cat['icon']); ?>"></i></div>
-                        <h3 class="font-semibold text-sm text-mx-indigo"><?php echo e($cat['name']); ?></h3>
-                    </div>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                    <div class="col-span-2 lg:col-span-6 text-center text-slate-500"><?php echo e(__('public.no_results')); ?></div>
-                <?php endif; ?>
+                        <h3 class="font-semibold text-sm text-mx-indigo leading-snug px-1"><?php echo e($cat['name']); ?></h3>
+                        <?php if(! empty($cat['courses_count'])): ?>
+                            <p class="text-[11px] text-slate-500 mt-2 font-medium"><?php echo e(__('public.home_category_courses_line', ['count' => $cat['courses_count']])); ?></p>
+                        <?php endif; ?>
+                    </a>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </div>
     </section>
@@ -338,23 +349,37 @@
     </section>
 
     
-    <section class="py-14 sm:py-18 bg-white">
-        <div class="container-1200">
-            <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-7 reveal">آراء وتجارب المعلمين</h2>
-            <div class="grid lg:grid-cols-12 gap-4">
-                <article class="reveal card-base lg:col-span-7 hover-lift">
-                    <p class="text-slate-600 leading-8">"قبل MuallimX كنت أضيع وقتًا طويلًا في التحضير. الآن صارت عندي خطة واضحة وأدوات عملية تختصر وقتي وتعطي نتائج أفضل."</p>
-                    <p class="mt-4 font-bold text-mx-indigo">نورة العتيبي</p>
-                </article>
-                <article class="reveal s1 card-base lg:col-span-5 hover-lift !bg-mx-indigo !text-white !border-mx-indigo">
-                    <p class="leading-8">"المنصة ساعدتني أبني حضوري المهني وأوصل لفرص تدريس حقيقية خلال فترة قصيرة."</p>
-                    <p class="mt-4 font-bold" style="color:#FFE569">أحمد المنصوري</p>
-                </article>
-                <article class="reveal s2 card-base lg:col-span-4 hover-lift"><p class="text-slate-600 leading-7">"تجربة عربية واضحة وسلسة جدًا."</p><p class="mt-3 text-sm font-bold text-mx-indigo">سارة الكويتي</p></article>
-                <article class="reveal s3 card-base lg:col-span-8 hover-lift"><p class="text-slate-600 leading-8">"المزيج بين المحتوى والتطبيق العملي هو أفضل ما في MuallimX."</p><p class="mt-3 text-sm font-bold text-mx-indigo">مها يوسف</p></article>
+    <?php if(isset($homeTestimonials) && $homeTestimonials->isNotEmpty()): ?>
+    <?php
+        $tCount = $homeTestimonials->count();
+    ?>
+    <section class="py-14 sm:py-20 bg-white border-t border-slate-100">
+        <div class="container-1200 mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 reveal">
+            <div>
+                <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold mb-3" style="background:#FFE5F7;color:#283593"><?php echo e(__('public.testimonials_page_title')); ?></span>
+                <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo"><?php echo e(__('public.home_testimonials_heading')); ?></h2>
+                <p class="text-slate-600 text-sm sm:text-base mt-2 max-w-xl leading-7"><?php echo e(__('public.home_testimonials_sub')); ?></p>
             </div>
+            <a href="<?php echo e(route('public.testimonials')); ?>" class="btn-secondary inline-flex items-center justify-center gap-2 shrink-0 text-sm"><?php echo e(__('public.home_testimonials_all_link')); ?> <i class="fas fa-arrow-<?php echo e($isRtl ? 'left' : 'right'); ?> text-xs"></i></a>
+        </div>
+        <div class="home-testimonials-wrap reveal">
+            <?php if($tCount === 1): ?>
+                <div class="flex justify-center px-1">
+                    <?php echo $__env->make('partials.home-testimonial-card', ['t' => $homeTestimonials->first()], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                </div>
+            <?php else: ?>
+                
+                <div id="home-t-scroll" class="home-testimonials-scroller" dir="ltr" role="region" aria-label="<?php echo e(__('public.home_testimonials_heading')); ?>">
+                    <?php $__currentLoopData = $homeTestimonials; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tItem): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <div class="home-testimonials-slide">
+                            <?php echo $__env->make('partials.home-testimonial-card', ['t' => $tItem], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                        </div>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </div>
+            <?php endif; ?>
         </div>
     </section>
+    <?php endif; ?>
 
     
     <section class="pt-14 sm:pt-18 pb-10 sm:pb-12" style="background:linear-gradient(180deg,#f4f7ff 0%,#ffffff 100%)">
@@ -446,6 +471,28 @@
         requestAnimationFrame(bindSlideWidths);
     }
     activeDot();
+})();
+
+(function(){
+    var sc=document.getElementById('home-t-scroll');
+    if(!sc||sc.children.length<2)return;
+    var slides=[].slice.call(sc.children);
+    var n=slides.length;
+    var idx=0;
+    var iv;
+    function tick(){
+        var next=(idx+1)%n;
+        var beh=(next===0&&idx===n-1)?'auto':'smooth';
+        slides[next].scrollIntoView({inline:'center',block:'nearest',behavior:beh});
+        idx=next;
+    }
+    function start(){iv=setInterval(tick,5200);}
+    function stop(){if(iv){clearInterval(iv);iv=null;}}
+    start();
+    sc.addEventListener('mouseenter',stop);
+    sc.addEventListener('mouseleave',start);
+    sc.addEventListener('focusin',stop);
+    sc.addEventListener('focusout',start);
 })();
 </script>
 </body>

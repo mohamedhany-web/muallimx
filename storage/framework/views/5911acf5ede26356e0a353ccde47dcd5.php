@@ -10,7 +10,7 @@
                 <p class="text-slate-500 mt-1 text-sm">معاينة: <a href="<?php echo e(route('public.services.show', $siteService)); ?>" target="_blank" rel="noopener" class="text-sky-600 hover:underline">/services/<?php echo e($siteService->slug); ?></a></p>
             </div>
         </div>
-        <form action="<?php echo e(route('admin.site-services.update', $siteService)); ?>" method="POST" class="p-5 sm:p-8 space-y-6">
+        <form action="<?php echo e(route('admin.site-services.update', $siteService)); ?>" method="POST" enctype="multipart/form-data" class="p-5 sm:p-8 space-y-6">
             <?php echo csrf_field(); ?>
             <?php echo method_field('PUT'); ?>
             <div>
@@ -32,6 +32,32 @@ unset($__errorArgs, $__bag); ?>
                        class="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500/30 focus:border-sky-500 font-mono text-sm">
                 <p class="mt-1 text-xs text-slate-500">اتركه فارغاً لإعادة توليد الرابط من الاسم.</p>
                 <?php $__errorArgs = ['slug'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><p class="mt-1 text-sm text-rose-600"><?php echo e($message); ?></p><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">صورة الخدمة</label>
+                <?php if($siteService->publicImageUrl()): ?>
+                    <div class="mb-3 rounded-xl border border-slate-200 overflow-hidden w-40 h-28 bg-slate-100">
+                        <img src="<?php echo e($siteService->publicImageUrl()); ?>" alt="" class="w-full h-full object-cover">
+                    </div>
+                <?php endif; ?>
+                <input type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif"
+                       class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100">
+                <p class="mt-1.5 text-xs text-slate-500">اترك الحقل فارغاً للإبقاء على الصورة الحالية. R2: <code class="bg-slate-100 px-1 rounded">SITE_SERVICES_DISK=r2</code>.</p>
+                <?php if($siteService->image_path): ?>
+                    <input type="hidden" name="remove_image" value="0">
+                    <label class="mt-3 inline-flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                        <input type="checkbox" name="remove_image" value="1" class="rounded border-slate-300 text-rose-600 focus:ring-rose-500">
+                        <span>حذف الصورة الحالية</span>
+                    </label>
+                <?php endif; ?>
+                <?php $__errorArgs = ['image'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }

@@ -1,116 +1,122 @@
 ﻿@extends('layouts.public')
 
+@php
+    $brand = config('app.name');
+@endphp
+
 @section('title', __('public.terms_page_title') . ' - ' . __('public.site_suffix'))
-@section('meta_description', 'الشروط والأحكام الخاصة باستخدام منصة MuallimX — اقرأ حقوقك والتزاماتك كمستخدم.')
-@section('meta_keywords', 'الشروط والأحكام, MuallimX, سياسة الاستخدام, قواعد المنصة')
+@section('meta_description', __('public.legal_terms_meta', ['brand' => $brand]))
+@section('meta_keywords', __('public.legal_terms_keywords', ['brand' => $brand]))
 @section('canonical_url', url('/terms'))
 
 @push('styles')
 <style>
-    .hero-legal {
-        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 45%, #1d4ed8 100%);
-        position: relative;
-        overflow: hidden;
+    .terms-home-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        border: 1px solid rgb(226 232 240);
     }
-    .hero-legal::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M0 0h40v40H0V0zm2 2h36v36H2V2z'/%3E%3C/g%3E%3C/svg%3E");
-        opacity: 0.6;
+    .terms-home-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 44px -22px rgba(31, 42, 122, 0.28);
     }
-    .legal-card {
-        transition: all 0.2s ease;
-        border: 2px solid #e2e8f0;
-    }
-    .legal-card:hover {
-        border-color: rgba(59, 130, 246, 0.25);
-        box-shadow: 0 8px 24px rgba(59, 130, 246, 0.08);
+    html.dark .terms-home-card {
+        border-color: rgb(51 65 85);
+        background: rgb(30 41 59 / 0.92);
     }
 </style>
 @endpush
 
 @section('content')
-<section class="hero-legal min-h-[38vh] flex items-center relative pt-24 pb-14 lg:pt-28 lg:pb-16">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight mb-4" style="text-shadow: 0 2px 12px rgba(0,0,0,0.3);">
-            الشروط والأحكام
-        </h1>
-        <p class="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto" style="text-shadow: 0 1px 4px rgba(0,0,0,0.2);">
-            يرجى قراءة الشروط والأحكام التالية بعناية قبل استخدام الخدمة
-        </p>
-    </div>
-</section>
-
-<section class="py-12 md:py-16 bg-gradient-to-b from-slate-50 to-white">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
-        <p class="text-slate-700 text-lg leading-relaxed mb-10">
-            مرحباً بك في منصة Mindlytics. باستخدامك للمنصة فإنك توافق على الالتزام بهذه الشروط والأحكام.
-        </p>
-
-        <div class="space-y-6">
-            <article class="legal-card bg-white rounded-2xl shadow-md p-6 md:p-8 border-r-4 border-blue-500">
-                <h2 class="text-xl font-bold text-slate-800 mb-3 flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"><i class="fas fa-check-circle"></i></span>
-                    1. القبول
-                </h2>
-                <p class="text-slate-600 leading-relaxed">
-                    باستخدامك لهذه المنصة، فإنك توافق على الالتزام بهذه الشروط والأحكام. إذا كنت لا توافق على أي جزء منها، يرجى عدم استخدام الخدمة.
-                </p>
-            </article>
-
-            <article class="legal-card bg-white rounded-2xl shadow-md p-6 md:p-8 border-r-4 border-blue-500">
-                <h2 class="text-xl font-bold text-slate-800 mb-3 flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"><i class="fas fa-shield-alt"></i></span>
-                    2. استخدام الخدمة
-                </h2>
-                <p class="text-slate-600 leading-relaxed">
-                    يجب استخدام الخدمة لأغراض قانونية وتعليمية فقط. لا يجوز استخدام المنصة لأي غرض غير قانوني أو محظور أو مخالف للآداب العامة.
-                </p>
-            </article>
-
-            <article class="legal-card bg-white rounded-2xl shadow-md p-6 md:p-8 border-r-4 border-blue-500">
-                <h2 class="text-xl font-bold text-slate-800 mb-3 flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"><i class="fas fa-user-shield"></i></span>
-                    3. الحسابات
-                </h2>
-                <p class="text-slate-600 leading-relaxed">
-                    أنت مسؤول عن الحفاظ على سرية معلومات حسابك وكلمة المرور. توافق على إبلاغنا فوراً بأي استخدام غير مصرح به لحسابك.
-                </p>
-            </article>
-
-            <article class="legal-card bg-white rounded-2xl shadow-md p-6 md:p-8 border-r-4 border-blue-500">
-                <h2 class="text-xl font-bold text-slate-800 mb-3 flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"><i class="fas fa-copyright"></i></span>
-                    4. الملكية الفكرية
-                </h2>
-                <p class="text-slate-600 leading-relaxed">
-                    جميع المحتويات والمواد المتاحة على المنصة (دروس، فيديوهات، نصوص، شعارات) محمية بحقوق الطبع والنشر والملكية الفكرية. لا يجوز نسخها أو إعادة نشرها دون إذن كتابي.
-                </p>
-            </article>
-
-            <article class="legal-card bg-white rounded-2xl shadow-md p-6 md:p-8 border-r-4 border-blue-500">
-                <h2 class="text-xl font-bold text-slate-800 mb-3 flex items-center gap-3">
-                    <span class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0"><i class="fas fa-edit"></i></span>
-                    5. التعديلات
-                </h2>
-                <p class="text-slate-600 leading-relaxed">
-                    نحتفظ بالحق في تعديل هذه الشروط في أي وقت. سيتم نشر أي تغييرات على هذه الصفحة، وننصح بمراجعتها دورياً.
-                </p>
-            </article>
+{{-- هيرو بنفس أسلوب الصفحة الرئيسية — مطابق لصفحة الخصوصية --}}
+<section class="pt-24 sm:pt-28 lg:pt-32 pb-12 sm:pb-14 overflow-hidden relative" style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.65),transparent 28%),radial-gradient(circle at 88% 20%,rgba(40,53,147,.10),transparent 30%),linear-gradient(180deg,#f4f6ff 0%,#fbfbff 55%,#ffffff 100%)">
+    <div class="absolute inset-0 pointer-events-none opacity-40" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.08) 1px,transparent 0);background-size:30px 30px"></div>
+    <div class="w-full max-w-[1200px] mx-auto px-6 sm:px-8 relative z-10">
+        <div class="max-w-4xl mx-auto text-center">
+            <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-6" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
+                <i class="fas fa-gavel"></i> {{ __('public.terms_page_title') }}
+            </span>
+            <h1 class="text-[1.85rem] sm:text-[2.5rem] lg:text-[3.1rem] leading-[1.2] font-black mb-4 text-[#1F2A7A] dark:text-white" style="font-family:Tajawal,Cairo,sans-serif">
+                {{ __('public.terms_short') }}
+                <span class="block mt-1 text-[#FB5607] dark:text-orange-400">{{ $brand }}</span>
+            </h1>
+            <p class="text-slate-600 dark:text-slate-400 text-base sm:text-lg leading-8 mb-8 max-w-3xl mx-auto">
+                {{ __('public.legal_terms_hero_sub') }}
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+                <a href="{{ route('public.contact') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl font-bold text-white px-7 py-3.5 shadow-lg transition-all hover:scale-[1.02]" style="background:#FB5607;box-shadow:0 12px 28px -10px rgba(251,86,7,.45)">
+                    <i class="fas fa-envelope"></i> {{ __('public.contact_page_title') }}
+                </a>
+                <a href="{{ route('public.privacy') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl font-bold px-7 py-3.5 border-2 transition-all hover:opacity-95 text-white" style="background:#283593;border-color:#283593">
+                    <i class="fas fa-shield-halved"></i> {{ __('public.privacy_page_title') }}
+                </a>
+            </div>
         </div>
     </div>
 </section>
 
-<section class="py-14 bg-white border-t border-slate-200">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-2xl">
-        <h3 class="text-2xl font-bold text-slate-800 mb-2">هل لديك استفسار؟</h3>
-        <p class="text-slate-600 mb-6">نحن هنا لمساعدتك في أي وقت</p>
-        <a href="{{ route('public.contact') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-blue-600 transition-all">
-            <i class="fas fa-envelope"></i>
-            تواصل معنا
-        </a>
+<section class="py-10 sm:py-12 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+    <div class="w-full max-w-[1200px] mx-auto px-6 sm:px-8">
+        <div class="rounded-[28px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_20px_44px_-26px_rgba(31,42,122,.28)] px-6 sm:px-10 py-8 sm:py-10">
+            <div class="flex flex-col sm:flex-row sm:items-start gap-6">
+                <div class="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-white text-xl shadow-md" style="background:linear-gradient(135deg,#283593,#1F2A7A)">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <p class="text-slate-700 dark:text-slate-200 text-base md:text-lg leading-[1.9] flex-1">
+                    {!! nl2br(e(__('public.legal_terms_intro', ['brand' => $brand]))) !!}
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-12 sm:py-16 bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+    <div class="w-full max-w-[1200px] mx-auto px-6 sm:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 lg:gap-6">
+            @php
+                $termsIcons = ['check-circle', 'chalkboard-teacher', 'user-lock', 'wallet', 'copyright', 'ban', 'balance-scale', 'file-signature'];
+            @endphp
+            @foreach(range(1, 8) as $i)
+            @php
+                $tintRose = in_array($i, [2, 5, 6], true);
+                $tintCream = $i === 4;
+            @endphp
+            <article class="terms-home-card rounded-2xl p-6 sm:p-7 flex flex-col h-full @if($tintRose) bg-[#FFE5F7]/90 dark:bg-slate-800 @elseif($tintCream) bg-[#fffbea] dark:bg-slate-800 @else bg-white dark:bg-slate-800 @endif @if($i === 8) md:col-span-2 @endif">
+                <div class="flex items-start gap-4 mb-3">
+                    <span class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white text-base shrink-0 shadow-[0_8px_20px_-8px_rgba(31,42,122,.35)]" style="background:{{ $i % 2 === 0 ? '#FB5607' : '#283593' }}">
+                        <i class="fas fa-{{ $termsIcons[$i-1] }}"></i>
+                    </span>
+                    <h2 class="text-lg sm:text-xl font-black leading-snug pt-1 flex-1 text-[#1F2A7A] dark:text-white" style="font-family:Tajawal,Cairo,sans-serif">
+                        {{ __('public.legal_terms_s'.$i.'_title') }}
+                    </h2>
+                </div>
+                <p class="text-slate-600 dark:text-slate-400 leading-relaxed text-sm sm:text-base flex-1 @if($i === 8) max-w-4xl @endif">
+                    {!! nl2br(e(__('public.legal_terms_s'.$i.'_body', ['brand' => $brand]))) !!}
+                </p>
+            </article>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+<section class="pt-14 sm:pt-16 pb-12 sm:pb-14" style="background:linear-gradient(180deg,#f4f7ff 0%,#ffffff 100%)">
+    <div class="w-full max-w-[1200px] mx-auto px-6 sm:px-8">
+        <div class="rounded-[28px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_20px_44px_-26px_rgba(31,42,122,.28)] px-6 sm:px-10 py-10 sm:py-12 text-center">
+            <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-5" style="background:#FFE5F7;color:#283593">
+                <i class="fas fa-headset"></i> {{ __('public.support') }}
+            </span>
+            <h3 class="text-2xl sm:text-3xl md:text-4xl font-black mb-3 text-[#1F2A7A] dark:text-white" style="font-family:Tajawal,Cairo,sans-serif">{{ __('public.legal_cta_title') }}</h3>
+            <p class="text-slate-600 dark:text-slate-400 text-base sm:text-lg max-w-2xl mx-auto leading-8 mb-8">
+                {{ __('public.legal_cta_desc') }}
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                <a href="{{ route('public.contact') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl font-bold text-white px-8 py-3.5 transition-all hover:scale-[1.02]" style="background:#FB5607;box-shadow:0 12px 28px -10px rgba(251,86,7,.45)">
+                    <i class="fas fa-paper-plane"></i> {{ __('public.contact_page_title') }}
+                </a>
+                <a href="{{ route('home') }}" class="inline-flex items-center justify-center gap-2 rounded-2xl font-bold px-8 py-3.5 border-2 border-slate-200 dark:border-slate-600 text-[#1F2A7A] dark:text-slate-100 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <i class="fas fa-home"></i> {{ __('public.home') }}
+                </a>
+            </div>
+        </div>
     </div>
 </section>
 @endsection
-

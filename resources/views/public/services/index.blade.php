@@ -111,11 +111,15 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                 @foreach($services as $idx => $service)
                 <a href="{{ route('public.services.show', $service) }}" class="card-base hover-lift reveal s{{ ($idx % 4) + 1 }} p-0 overflow-hidden block group">
-                    <div class="relative h-36 overflow-hidden flex items-center justify-center" style="background:linear-gradient(135deg,#e9edff,#f8f9ff)">
-                        <div class="text-[#283593]/80">
-                            <i class="fas fa-layer-group text-5xl group-hover:scale-105 transition-transform duration-300"></i>
-                        </div>
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"></div>
+                    <div class="relative h-36 overflow-hidden flex items-center justify-center bg-slate-100">
+                        @if($service->publicImageUrl())
+                            <img src="{{ $service->publicImageUrl() }}" alt="" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        @else
+                            <div class="text-[#283593]/80" style="background:linear-gradient(135deg,#e9edff,#f8f9ff);position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+                                <i class="fas fa-layer-group text-5xl group-hover:scale-105 transition-transform duration-300"></i>
+                            </div>
+                        @endif
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none"></div>
                     </div>
                     <div class="p-5">
                         <h2 class="font-heading text-lg font-extrabold text-mx-indigo leading-snug mb-2 line-clamp-2">{{ $service->name }}</h2>

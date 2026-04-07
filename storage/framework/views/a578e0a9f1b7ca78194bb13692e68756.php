@@ -1,3 +1,5 @@
+
+
 <?php $__env->startSection('title', 'مشرف: '.$supervisor->name); ?>
 
 <?php $__env->startSection('content'); ?>

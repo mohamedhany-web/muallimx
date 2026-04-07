@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SiteService;
+use App\Services\SiteServiceImageStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Throwable;
 
 class SiteServiceController extends Controller
 {
@@ -58,6 +60,7 @@ class SiteServiceController extends Controller
             'body' => 'required|string|max:65000',
             'sort_order' => 'nullable|integer|min:0|max:999999',
             'is_active' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:10240',
         ], [
             'name.required' => 'اسم الخدمة مطلوب',
             'body.required' => 'تفاصيل الخدمة مطلوبة',
@@ -70,9 +73,23 @@ class SiteServiceController extends Controller
             null
         );
 
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            try {
+                $imagePath = SiteServiceImageStorage::store($request->file('image'), null);
+            } catch (Throwable $e) {
+                report($e);
+
+                return back()->withErrors([
+                    'image' => 'تعذّر رفع الصورة. إن كنت تستخدم Cloudflare R2 فتأكد من AWS_* و AWS_ENDPOINT و AWS_URL ثم نفّذ php artisan config:clear.',
+                ])->withInput();
+            }
+        }
+
         SiteService::create([
             'name' => $validated['name'],
             'slug' => $slug,
+            'image_path' => $imagePath,
             'summary' => $validated['summary'] ?? null,
             'body' => $validated['body'],
             'sort_order' => $validated['sort_order'] ?? 0,
@@ -101,6 +118,8 @@ class SiteServiceController extends Controller
             'body' => 'required|string|max:65000',
             'sort_order' => 'nullable|integer|min:0|max:999999',
             'is_active' => 'boolean',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp,gif|max:10240',
+            'remove_image' => 'boolean',
         ], [
             'name.required' => 'اسم الخدمة مطلوب',
             'body.required' => 'تفاصيل الخدمة مطلوبة',
@@ -113,9 +132,26 @@ class SiteServiceController extends Controller
             $siteService->id
         );
 
+        $newImagePath = $siteService->image_path;
+        if ($request->hasFile('image')) {
+            try {
+                $newImagePath = SiteServiceImageStorage::store($request->file('image'), $siteService->image_path);
+            } catch (Throwable $e) {
+                report($e);
+
+                return back()->withErrors([
+                    'image' => 'تعذّر رفع الصورة. إن كنت تستخدم Cloudflare R2 فتأكد من AWS_* و AWS_ENDPOINT و AWS_URL ثم نفّذ php artisan config:clear.',
+                ])->withInput();
+            }
+        } elseif ($request->boolean('remove_image')) {
+            SiteServiceImageStorage::delete($siteService->image_path);
+            $newImagePath = null;
+        }
+
         $siteService->update([
             'name' => $validated['name'],
             'slug' => $slug,
+            'image_path' => $newImagePath,
             'summary' => $validated['summary'] ?? null,
             'body' => $validated['body'],
             'sort_order' => $validated['sort_order'] ?? 0,

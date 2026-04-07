@@ -69,6 +69,14 @@
                 </a>
             </li>
             <?php endif; ?>
+            <?php if($isFull || $u->hasPermission('manage.site-testimonials') || $u->hasPermission('manage.site-services')): ?>
+            <li>
+                <a href="<?php echo e(route('admin.site-testimonials.index')); ?>" class="sidebar-link <?php echo e(request()->routeIs('admin.site-testimonials.*') ? 'active' : ''); ?>">
+                    <i class="fas fa-quote-right"></i>
+                    <span>آراء الموقع (الرئيسية)</span>
+                </a>
+            </li>
+            <?php endif; ?>
             <?php if($isFull || $u->hasPermission('manage.system-settings')): ?>
             <li>
                 <a href="<?php echo e(route('admin.system-settings.edit')); ?>" class="sidebar-link <?php echo e(request()->routeIs('admin.system-settings.*') ? 'active' : ''); ?>">

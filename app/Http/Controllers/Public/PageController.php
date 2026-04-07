@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\SiteTestimonial;
 use Illuminate\Http\Request;
 
 class PageController extends Controller
@@ -141,7 +142,12 @@ class PageController extends Controller
 
     public function testimonials()
     {
-        return view('public.testimonials');
+        $testimonials = SiteTestimonial::query()
+            ->active()
+            ->ordered()
+            ->get();
+
+        return view('public.testimonials', compact('testimonials'));
     }
 
     public function events()
