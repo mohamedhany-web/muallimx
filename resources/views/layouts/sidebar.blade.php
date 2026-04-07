@@ -7,8 +7,8 @@
                 <i class="fas fa-code text-white text-lg relative z-10 rotate-animation"></i>
             </div>
             <div>
-                <h2 class="text-lg font-black text-gray-900 dark:text-white">Mindlytics</h2>
-                <p class="text-xs text-sky-600 dark:text-sky-400 font-medium">أكاديمية البرمجة</p>
+                <h2 class="text-lg font-black text-gray-900 dark:text-white">{{ config('app.name', 'Muallimx') }}</h2>
+                <p class="text-xs text-sky-600 dark:text-sky-400 font-medium">{{ config('app.name', 'Muallimx') }}</p>
             </div>
         </div>
     </div>
@@ -282,7 +282,7 @@
             @hasAnyPermission('manage.academic-years', 'manage.academic-subjects', 'manage.courses', 'manage.enrollments', 'manage.lectures', 'manage.assignments', 'manage.exams', 'manage.question-bank')
                 <!-- إدارة المحتوى -->
                 @php
-                    $contentManagementOpen = request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.enrollments.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*');
+                    $contentManagementOpen = request()->routeIs('admin.academic-years.*') || request()->routeIs('admin.academic-subjects.*') || request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.course-categories.*') || request()->routeIs('admin.enrollments.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*');
                 @endphp
                 <li x-data="{ open: {{ $contentManagementOpen ? 'true' : 'false' }} }">
                     <button @click="open = !open" 
@@ -320,6 +320,10 @@
                         <li><a href="{{ route('admin.advanced-courses.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ $advancedCoursesActive ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
                             <i class="fas fa-graduation-cap w-4"></i>
                             <span>إدارة الكورسات</span>
+                        </a></li>
+                        <li><a href="{{ route('admin.course-categories.index') }}" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-sky-50 hover:to-slate-50 dark:hover:from-gray-700 dark:hover:to-gray-800 transition-all duration-300 text-gray-600 dark:text-gray-400 hover:text-sky-700 dark:hover:text-sky-300 {{ request()->routeIs('admin.course-categories.*') ? 'bg-gradient-to-r from-sky-100 to-slate-100 dark:from-sky-900/30 dark:to-slate-900/30 text-sky-700 dark:text-sky-300 font-semibold' : '' }}">
+                            <i class="fas fa-tags w-4"></i>
+                            <span>{{ __('admin.course_categories') }}</span>
                         </a></li>
                         @endhasPermission
                         @hasPermission('manage.enrollments')

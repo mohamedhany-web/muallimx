@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
 use App\Models\AcademicYear;
 use App\Models\AcademicSubject;
+use App\Models\CourseCategory;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -28,14 +29,9 @@ class AdvancedCourseController extends Controller
         $query = AdvancedCourse::with(['instructor'])
             ->withCount(['lessons', 'enrollments', 'orders']);
 
-        // فلترة حسب التصنيف
-        if ($request->filled('category')) {
-            $query->where('category', $request->category);
-        }
-
-        // فلترة حسب المستوى
-        if ($request->filled('level')) {
-            $query->where('level', $request->level);
+        // فلترة حسب تصنيف الكورس (الجدول course_categories)
+        if ($request->filled('course_category_id')) {
+            $query->where('course_category_id', (int) $request->course_category_id);
         }
 
         // فلترة حسب الحالة
@@ -53,18 +49,14 @@ class AdvancedCourseController extends Controller
 
         $courses = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        $categories = AdvancedCourse::whereNotNull('category')
-            ->distinct()
-            ->pluck('category')
-            ->sort()
-            ->values();
+        $courseCategoryOptions = CourseCategory::query()->orderBy('sort_order')->orderBy('name')->get();
 
         $instructors = User::where('role', 'instructor')->where('is_active', true)->get();
 
         try {
             return view('admin.advanced-courses.index', compact(
                 'courses',
-                'categories',
+                'courseCategoryOptions',
                 'instructors'
             ));
         } catch (\Throwable $e) {
@@ -89,7 +81,7 @@ class AdvancedCourseController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $categories = AdvancedCourse::select('category')->whereNotNull('category')->distinct()->pluck('category');
+        $courseCategories = CourseCategory::active()->ordered()->get(['id', 'name']);
         $skills = AdvancedCourse::selectRaw('DISTINCT JSON_EXTRACT(skills, "$[*]") as skill')
             ->whereNotNull('skills')
             ->pluck('skill')
@@ -104,7 +96,7 @@ class AdvancedCourseController extends Controller
         return view('admin.advanced-courses.create', compact(
             'trackOptions',
             'instructors',
-            'categories',
+            'courseCategories',
             'skills'
         ));
     }
@@ -131,20 +123,20 @@ class AdvancedCourseController extends Controller
         $request->merge([
             'academic_year_id' => $request->filled('academic_year_id') ? $request->academic_year_id : null,
             'academic_subject_id' => $request->filled('academic_subject_id') ? $request->academic_subject_id : null,
+            'course_category_id' => $request->filled('course_category_id') ? $request->course_category_id : null,
         ]);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'academic_subject_id' => 'nullable|exists:academic_subjects,id',
+            'course_category_id' => 'nullable|exists:course_categories,id',
             'description' => 'nullable|string',
             'video_url' => 'nullable|url|max:500',
             'objectives' => 'nullable|string',
             'instructor_id' => 'nullable|exists:users,id',
             'programming_language' => 'nullable|string|max:100',
             'framework' => 'nullable|string|max:100',
-            'category' => 'nullable|string|max:100',
-            'level' => 'nullable|in:beginner,intermediate,advanced',
             'duration_hours' => 'nullable|numeric|min:0',
             'duration_minutes' => 'nullable|integer|min:0|max:59',
             'price' => 'nullable|numeric|min:0',
@@ -163,8 +155,8 @@ class AdvancedCourseController extends Controller
             'title.required' => 'عنوان الكورس مطلوب',
             'academic_year_id.exists' => 'المسار التعليمي المحدد غير موجود',
             'academic_subject_id.exists' => 'مجموعة المهارات المحددة غير موجودة',
+            'course_category_id.exists' => 'التصنيف المحدد غير موجود',
             'instructor_id.exists' => 'المدرب المحدد غير موجود',
-            'level.in' => 'مستوى الكورس غير صحيح',
             'duration_hours.numeric' => 'مدة الكورس يجب أن تكون رقم',
             'duration_hours.min' => 'مدة الكورس لا يمكن أن تكون أقل من صفر',
             'duration_minutes.integer' => 'المدة الإضافية يجب أن تكون رقم صحيح',
@@ -182,14 +174,13 @@ class AdvancedCourseController extends Controller
                 'title',
                 'academic_year_id',
                 'academic_subject_id',
+                'course_category_id',
                 'description',
                 'video_url',
                 'objectives',
                 'instructor_id',
                 'programming_language',
                 'framework',
-                'category',
-                'level',
                 'duration_hours',
                 'duration_minutes',
                 'price',
@@ -210,9 +201,16 @@ class AdvancedCourseController extends Controller
         );
         $data['academic_year_id'] = $request->filled('academic_year_id') ? (int) $data['academic_year_id'] : null;
         $data['academic_subject_id'] = $request->filled('academic_subject_id') ? (int) $data['academic_subject_id'] : null;
+        $data['course_category_id'] = $request->filled('course_category_id') ? (int) $data['course_category_id'] : null;
         $data['instructor_id'] = isset($data['instructor_id']) && $data['instructor_id'] !== '' ? (int) $data['instructor_id'] : null;
 
-        $data['level'] = $data['level'] ?? 'beginner';
+        if ($data['course_category_id']) {
+            $data['category'] = CourseCategory::whereKey($data['course_category_id'])->value('name');
+        } else {
+            $data['category'] = null;
+        }
+
+        $data['level'] = 'beginner';
         $data['price'] = $data['price'] ?? 0;
         $data['duration_hours'] = $data['duration_hours'] ?? 0;
         $data['duration_minutes'] = $data['duration_minutes'] ?? 0;
@@ -277,10 +275,16 @@ class AdvancedCourseController extends Controller
     {
         $instructors = User::where('role', 'instructor')->where('is_active', true)->orderBy('name')->get();
 
-        $categories = AdvancedCourse::whereNotNull('category')
-            ->distinct()
-            ->orderBy('category')
-            ->pluck('category');
+        $courseCategories = CourseCategory::query()
+            ->where(function ($q) use ($advancedCourse) {
+                $q->where('is_active', true);
+                if ($advancedCourse->course_category_id) {
+                    $q->orWhere('id', $advancedCourse->course_category_id);
+                }
+            })
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         $trackOptions = [];
 
@@ -294,7 +298,7 @@ class AdvancedCourseController extends Controller
         return view('admin.advanced-courses.edit', compact(
             'advancedCourse',
             'instructors',
-            'categories',
+            'courseCategories',
             'trackOptions',
             'selectedSkills'
         ));
@@ -309,20 +313,20 @@ class AdvancedCourseController extends Controller
         $request->merge([
             'academic_year_id' => $request->filled('academic_year_id') ? $request->academic_year_id : null,
             'academic_subject_id' => $request->filled('academic_subject_id') ? $request->academic_subject_id : null,
+            'course_category_id' => $request->filled('course_category_id') ? $request->course_category_id : null,
         ]);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'academic_subject_id' => 'nullable|exists:academic_subjects,id',
+            'course_category_id' => 'nullable|exists:course_categories,id',
             'description' => 'nullable|string',
             'video_url' => 'nullable|url|max:500',
             'objectives' => 'nullable|string',
             'instructor_id' => 'nullable|exists:users,id',
             'programming_language' => 'nullable|string|max:100',
             'framework' => 'nullable|string|max:100',
-            'category' => 'nullable|string|max:100',
-            'level' => 'nullable|in:beginner,intermediate,advanced',
             'duration_hours' => 'nullable|numeric|min:0',
             'duration_minutes' => 'nullable|integer|min:0|max:59',
             'price' => 'nullable|numeric|min:0',
@@ -341,6 +345,7 @@ class AdvancedCourseController extends Controller
             'title.required' => 'عنوان الكورس مطلوب',
             'academic_year_id.exists' => 'المسار التعليمي المحدد غير موجود',
             'academic_subject_id.exists' => 'مجموعة المهارات المحددة غير موجودة',
+            'course_category_id.exists' => 'التصنيف المحدد غير موجود',
             'instructor_id.exists' => 'المدرب المحدد غير موجود',
             'duration_minutes.max' => 'الدقائق يجب ألا تتجاوز 59 دقيقة',
             'thumbnail.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
@@ -351,14 +356,13 @@ class AdvancedCourseController extends Controller
             'title',
             'academic_year_id',
             'academic_subject_id',
+            'course_category_id',
             'description',
             'video_url',
             'objectives',
             'instructor_id',
             'programming_language',
             'framework',
-            'category',
-            'level',
             'duration_hours',
             'duration_minutes',
             'price',
@@ -370,7 +374,7 @@ class AdvancedCourseController extends Controller
             'ends_at',
         ]);
 
-        $data['level'] = $data['level'] ?? 'beginner';
+        $data['level'] = 'beginner';
         $data['price'] = $data['price'] ?? 0;
         $data['duration_hours'] = $data['duration_hours'] ?? 0;
         $data['duration_minutes'] = $data['duration_minutes'] ?? 0;
@@ -384,6 +388,12 @@ class AdvancedCourseController extends Controller
         // المسار ومجموعة المهارات اختياريان في التعديل
         $data['academic_year_id'] = $request->filled('academic_year_id') ? $data['academic_year_id'] : null;
         $data['academic_subject_id'] = $request->filled('academic_subject_id') ? $data['academic_subject_id'] : null;
+        $data['course_category_id'] = $request->filled('course_category_id') ? (int) $data['course_category_id'] : null;
+        if ($data['course_category_id']) {
+            $data['category'] = CourseCategory::whereKey($data['course_category_id'])->value('name');
+        } else {
+            $data['category'] = null;
+        }
 
         if ($request->hasFile('thumbnail')) {
             $data['thumbnail'] = $request->file('thumbnail')->store('courses', 'public');

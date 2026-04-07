@@ -1,11 +1,11 @@
 ﻿@extends('layouts.public')
 
 @php
-    $brand = config('app.name');
+    $brand = 'Muallimx';
     $chevronNext = app()->getLocale() === 'ar' ? 'fa-chevron-left' : 'fa-chevron-right';
 @endphp
 
-@section('title', __('public.help_page_title') . ' - ' . __('public.site_suffix'))
+@section('title', __('public.help_page_title') . ' — Muallimx')
 @section('meta_description', __('public.help_meta_description', ['brand' => $brand]))
 @section('meta_keywords', __('public.help_meta_keywords', ['brand' => $brand]))
 @section('canonical_url', url('/help'))
@@ -105,9 +105,9 @@
         <div class="rounded-[28px] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-[0_20px_44px_-28px_rgba(31,42,122,.25)] overflow-hidden">
             @php
                 $topicLinks = [
-                    route('public.faq') . '#default',
-                    route('public.faq') . '#default',
-                    route('public.faq') . '#default',
+                    route('public.faq') . '#faq-main',
+                    route('public.faq') . '#faq-main',
+                    route('public.faq') . '#faq-main',
                     route('public.certificates'),
                     route('public.contact'),
                 ];

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'دروس الكورس البرمجي')
+@section('title', 'دروس الكورس')
 @section('header', 'دروس الكورس: ' . $course->title)
 
 @section('content')
@@ -39,7 +39,7 @@
                 <h3 class="text-lg font-semibold text-gray-900">{{ $course->title }}</h3>
                 <p class="text-sm text-gray-500 mt-1">
                     {{ $course->academicYear->name ?? 'غير محدد' }} - {{ $course->academicSubject->name ?? 'غير محدد' }}
-                    <span class="text-sky-600 font-medium">| كورس برمجي</span>
+                    <span class="text-sky-600 font-medium">| كورس تدريبي</span>
                 </p>
             </div>
             <div class="text-center">

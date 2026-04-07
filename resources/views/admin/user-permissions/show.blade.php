@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'صلاحيات ' . $user->name . ' - Mindlytics')
+@section('title', 'صلاحيات ' . $user->name . ' - ' . config('app.name', 'Muallimx'))
 @section('header', 'صلاحيات ' . $user->name)
 
 @section('content')

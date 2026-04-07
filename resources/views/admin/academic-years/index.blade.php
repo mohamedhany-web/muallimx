@@ -14,7 +14,7 @@
                 <div class="space-y-4 max-w-3xl">
                     <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-100 text-sky-700 text-sm font-semibold">
                         <i class="fas fa-route"></i>
-                        إدارة مسارات التعلم في Mindlytics
+                        إدارة مسارات التعلم — {{ config('app.name', 'Muallimx') }}
                     </span>
                     <h1 class="text-3xl font-black text-gray-900 leading-tight">
                         أنشئ مسارات تعليمية مترابطة تجمع المهارات، الأطر، واللغات المطلوبة لسوق العمل
@@ -161,7 +161,7 @@
                                             </div>
                                             <div class="flex items-center gap-2 text-xs text-gray-400">
                                                 @if($course->programming_language)
-                                                    <span><i class="fas fa-code ml-1"></i>{{ $course->programming_language }}</span>
+                                                    <span><i class="fas fa-tag ml-1"></i>{{ $course->programming_language }}</span>
                                                 @endif
                                                 @if($course->level)
                                                     <span><i class="fas fa-signal ml-1"></i>{{ $course->level }}</span>

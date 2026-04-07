@@ -10,7 +10,7 @@
     @php
         $seoTitle = trim($__env->yieldContent('title')) ?: (config('app.name') . ' - ' . __('landing.nav.brand'));
         $seoDescription = trim($__env->yieldContent('meta_description')) ?: 'منصة عربية لتأهيل وتطوير المعلمين للعمل أونلاين باحتراف.';
-        $seoKeywords = trim($__env->yieldContent('meta_keywords')) ?: 'تأهيل المعلمين, تدريب المعلمين أونلاين, MuallimX';
+        $seoKeywords = trim($__env->yieldContent('meta_keywords')) ?: 'تأهيل المعلمين, تدريب المعلمين أونلاين, Muallimx';
         $seoImage = trim($__env->yieldContent('meta_image')) ?: asset('images/og-image.jpg');
         $seoType = trim($__env->yieldContent('meta_type')) ?: 'website';
         $seoCanonical = trim($__env->yieldContent('canonical_url')) ?: url()->current();

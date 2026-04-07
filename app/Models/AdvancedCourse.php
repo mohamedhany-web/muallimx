@@ -72,6 +72,7 @@ class AdvancedCourse extends Model
         'title',
         'academic_year_id',
         'academic_subject_id',
+        'course_category_id',
         'programming_language',
         'framework',
         'category',
@@ -117,6 +118,11 @@ class AdvancedCourse extends Model
     public function academicSubject()
     {
         return $this->belongsTo(AcademicSubject::class);
+    }
+
+    public function courseCategory()
+    {
+        return $this->belongsTo(CourseCategory::class, 'course_category_id');
     }
 
     public function instructor()

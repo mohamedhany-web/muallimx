@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تفاصيل طلب المدرب - Mindlytics')
+@section('title', 'تفاصيل طلب المدرب - ' . config('app.name', 'Muallimx'))
 @section('header', 'تفاصيل طلب المدرب')
 
 @section('content')

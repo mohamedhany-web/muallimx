@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'صلاحيات المستخدمين - Mindlytics')
+@section('title', 'صلاحيات المستخدمين - ' . config('app.name', 'Muallimx'))
 @section('header', 'صلاحيات المستخدمين')
 
 @section('content')

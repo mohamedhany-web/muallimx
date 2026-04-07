@@ -241,7 +241,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     'line' => $e->getLine(),
                 ]);
                 $msg = config('app.debug')
-                    ? ('تفاصيل (للمطوّر): ' . mb_substr($e->getMessage(), 0, 400))
+                    ? ('تفاصيل (وضع التصحيح): ' . mb_substr($e->getMessage(), 0, 400))
                     : __('errors.generic_action_failed');
                 return redirect()->to(url('/admin/employee-agreements/create'))
                     ->with('error', $msg);

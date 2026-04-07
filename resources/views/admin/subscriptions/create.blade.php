@@ -104,7 +104,7 @@
                     </label>
                     <label class="inline-flex items-center">
                         <input type="checkbox" name="features[classroom_access]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                        <span>استخدام MuallimX Classroom للتدريس</span>
+                        <span>استخدام Muallimx Classroom للتدريس</span>
                     </label>
                     <label class="inline-flex items-center">
                         <input type="checkbox" name="features[support]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
@@ -128,7 +128,7 @@
                     </label>
                     <label class="inline-flex items-center">
                         <input type="checkbox" name="features[teacher_evaluation]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                        <span>تقييم المعلم من فريق MuallimX</span>
+                        <span>تقييم المعلم من فريق Muallimx</span>
                     </label>
                     <label class="inline-flex items-center">
                         <input type="checkbox" name="features[recommended_to_academies]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">

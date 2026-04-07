@@ -42,7 +42,7 @@
                 <div>
                     <label class="block text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">عنوان تعريفي (Headline)</label>
                     <input type="text" name="portfolio_headline" value="{{ old('portfolio_headline', $user->portfolio_headline) }}"
-                           placeholder="مثال: معلم برمجة Full‑Stack | Laravel | React"
+                           placeholder="مثال: معلّم لغة عربية | تدريب أونلاين | تطوير مناهج"
                            class="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-900/30 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200/30">
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">يفضل 6–12 كلمة تُعرّفك بوضوح.</p>
                 </div>
@@ -65,7 +65,7 @@
             <div>
                 <label class="block text-sm font-bold text-slate-900 dark:text-slate-100 mb-2">المهارات (Skills)</label>
                 <textarea name="portfolio_skills" rows="3"
-                          placeholder="Laravel, PHP, MySQL, React, REST APIs ..."
+                          placeholder="تخطيط حصص، تقييم صفي، أدوات Zoom، إدارة صفية ..."
                           class="w-full rounded-xl border-2 border-slate-200 dark:border-slate-700 px-4 py-3 bg-white dark:bg-slate-900/30 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200/30">{{ old('portfolio_skills', $user->portfolio_skills) }}</textarea>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">افصل المهارات بفاصلة أو سطر جديد.</p>
             </div>

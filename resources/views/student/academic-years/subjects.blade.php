@@ -142,7 +142,7 @@
                                             </div>
                                             <div class="flex items-center gap-2 text-xs text-gray-400">
                                                 @if($course->programming_language)
-                                                    <span><i class="fas fa-code ml-1"></i>{{ $course->programming_language }}</span>
+                                                    <span><i class="fas fa-tag ml-1"></i>{{ $course->programming_language }}</span>
                                                 @endif
                                                 @if($course->level)
                                                     <span><i class="fas fa-signal ml-1"></i>{{ $course->level }}</span>
@@ -166,7 +166,7 @@
             </div>
             <h3 class="text-2xl font-bold text-gray-900">لم يتم إعداد مجموعات مهارية بعد</h3>
             <p class="text-gray-500 max-w-xl mx-auto">
-                لم يتم ربط هذا المسار بالكورسات البرمجية حتى الآن. تواصل مع فريق المنصة لإضافة مجموعات مهارات وتخصيص الكورسات المناسبة.
+                لم يُربَط هذا المسار بالكورسات التدريبية بعد. تواصل مع فريق المنصة لإضافة المجموعات وتوزيع الكورسات المناسبة.
             </p>
             <a href="{{ route('academic-years') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 text-white hover:bg-sky-700 transition-colors">
                 <i class="fas fa-arrow-right"></i>

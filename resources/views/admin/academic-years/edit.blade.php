@@ -265,7 +265,7 @@
                                                 <span class="truncate flex-1">{{ $course->title }}</span>
                                                 <div class="flex items-center gap-2 text-gray-400">
                                                     @if($course->programming_language)
-                                                        <span><i class="fas fa-code ml-1"></i>{{ $course->programming_language }}</span>
+                                                        <span><i class="fas fa-tag ml-1"></i>{{ $course->programming_language }}</span>
                                                     @endif
                                                     @if($course->level)
                                                         <span><i class="fas fa-signal ml-1"></i>{{ $course->level }}</span>
@@ -408,7 +408,7 @@
                                         @endif
                                         @if($course->programming_language)
                                             <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-purple-100 text-purple-700">
-                                                <i class="fas fa-code"></i>
+                                                <i class="fas fa-tag"></i>
                                                 {{ $course->programming_language }}
                                             </span>
                                         @endif

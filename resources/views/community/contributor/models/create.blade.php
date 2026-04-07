@@ -69,7 +69,7 @@
 
         <div>
             <label for="usage_instructions" class="block text-sm font-bold text-slate-700 mb-2">طريقة الاستخدام أو الاستدعاء</label>
-            <textarea name="usage_instructions" id="usage_instructions" rows="6" placeholder="كود أو أوامر لتحميل واستدعاء النموذج (مثلاً: load_model، predict، أو سكربت Python)..."
+            <textarea name="usage_instructions" id="usage_instructions" rows="6" placeholder="تعليمات استخدام النموذج أو المورد (مثلاً: كيفية التجربة، المعايير، أمثلة مدخلات/مخرجات)..."
                       class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 font-mono text-sm resize-y">{{ old('usage_instructions') }}</textarea>
         </div>
 

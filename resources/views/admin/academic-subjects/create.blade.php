@@ -79,12 +79,12 @@
                             @php
                                 $icons = [
                                     'fas fa-layer-group' => '🌐 مجموعة مهارات',
-                                    'fas fa-laptop-code' => '💻 برمجة',
-                                    'fas fa-paint-brush' => '🎨 تصميم',
-                                    'fas fa-robot' => '🤖 ذكاء اصطناعي',
-                                    'fas fa-database' => '🗄️ قواعد بيانات',
-                                    'fas fa-chart-line' => '📊 تحليل بيانات',
-                                    'fas fa-network-wired' => '🔗 بنية تحتية',
+                                    'fas fa-chalkboard-teacher' => '👩‍🏫 تأهيل معلمين',
+                                    'fas fa-laptop-house' => '💻 تدريس رقمي',
+                                    'fas fa-book-open' => '📖 تخطيط ومناهج',
+                                    'fas fa-users' => '👥 إدارة صفية',
+                                    'fas fa-certificate' => '🎓 تطوير مهني',
+                                    'fas fa-heart' => '❤️ تربية ودعم متعلم',
                                 ];
                             @endphp
                             @foreach($icons as $value => $label)
@@ -155,7 +155,7 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">لغات برمجة مرتبطة</label>
+                            <label class="block text-sm font-semibold text-gray-700">تخصصات مستخرجة من الكورسات</label>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($languages as $language)
                                     <span class="px-3 py-1 rounded-full bg-slate-100 text-xs text-slate-600">{{ $language }}</span>
@@ -166,7 +166,7 @@
                             </div>
                         </div>
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">أطر العمل المحتملة</label>
+                            <label class="block text-sm font-semibold text-gray-700">وسوم ذات صلة من الكورسات</label>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($frameworks as $framework)
                                     <span class="px-3 py-1 rounded-full bg-slate-100 text-xs text-slate-600">{{ $framework }}</span>

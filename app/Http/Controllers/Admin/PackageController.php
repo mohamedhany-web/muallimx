@@ -67,7 +67,7 @@ class PackageController extends Controller
             $coursesQuery->where('level', $request->course_level);
         }
 
-        // فلترة حسب لغة البرمجة
+        // فلترة حسب مجال التخصص (حقل programming_language في الكورس)
         if ($request->filled('course_language')) {
             $coursesQuery->where('programming_language', $request->course_language);
         }

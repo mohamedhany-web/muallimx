@@ -1,8 +1,8 @@
 ﻿@extends('layouts.public')
 
 @section('title', __('public.partners_page_title') . ' - ' . __('public.site_suffix'))
-@section('meta_description', 'شركاء منصة MuallimX — المؤسسات التعليمية والشركات التي تدعم رسالتنا في تأهيل المعلمين.')
-@section('meta_keywords', 'شركاء, MuallimX, شراكات تعليمية, مؤسسات تعليمية')
+@section('meta_description', 'شركاء منصة Muallimx — المؤسسات التعليمية والشركات التي تدعم رسالتنا في تأهيل المعلمين.')
+@section('meta_keywords', 'شركاء, Muallimx, شراكات تعليمية, مؤسسات تعليمية')
 @section('canonical_url', url('/partners'))
 
 @section('content')
@@ -37,7 +37,7 @@
         <div class="mt-12 bg-gradient-to-br from-sky-50 to-blue-50 rounded-xl shadow-lg p-8 max-w-4xl mx-auto text-center card-hover">
             <h2 class="text-3xl font-bold text-gray-900 mb-4">هل تريد أن تكون شريكاً معنا؟</h2>
             <p class="text-gray-600 mb-6">
-                نبحث عن شركاء استراتيجيين لتعزيز تجربة التعليم البرمجي. تواصل معنا لمناقشة فرص الشراكة.
+                نبحث عن شركاء استراتيجيين لتعزيز تأهيل المعلّمين والتعليم أونلاين. تواصل معنا لمناقشة فرص الشراكة.
             </p>
             <a href="{{ route('public.contact') }}" class="btn-primary">
                 <i class="fas fa-handshake ml-2"></i>

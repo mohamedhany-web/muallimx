@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'تعديل بنك الأسئلة - Mindlytics')
+@section('title', 'تعديل بنك الأسئلة - ' . config('app.name', 'Muallimx'))
 @section('header', 'تعديل بنك الأسئلة: ' . $questionBank->title)
 
 @push('styles')
@@ -84,7 +84,7 @@
                             </label>
                             <input type="text" name="title" id="title" value="{{ old('title', $questionBank->title) }}" required
                                    class="form-input w-full px-4 py-3 rounded-xl focus:outline-none"
-                                   placeholder="مثال: بنك أسئلة البرمجة الأساسية">
+                                   placeholder="مثال: بنك أسئلة التقييم الصفي">
                             @error('title')
                                 <p class="mt-1 text-sm text-red-600 font-medium">{{ $message }}</p>
                             @enderror

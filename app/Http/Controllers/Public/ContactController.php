@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContactMessage;
+use App\Services\ContactMessageAlertService;
 use App\Services\PublicFooterSettings;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 
 class ContactController extends Controller
 {
@@ -31,8 +31,12 @@ class ContactController extends Controller
 
         $message = ContactMessage::create($validated);
 
-        // TODO: إرسال إيميل للمسؤول
-        
+        try {
+            app(ContactMessageAlertService::class)->notifyAdmins($message);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         return redirect()->route('public.contact')
             ->with('success', 'تم إرسال رسالتك بنجاح. سنتواصل معك قريباً!');
     }

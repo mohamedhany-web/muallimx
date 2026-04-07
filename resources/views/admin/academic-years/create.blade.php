@@ -121,13 +121,13 @@
                                 class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-sky-500 focus:ring-4 focus:ring-sky-500/20 transition">
                             @php
                                 $icons = [
-                                    'fas fa-compass' => '🧭 مسار',
-                                    'fas fa-graduation-cap' => '🎓 تعليم أكاديمي',
-                                    'fas fa-laptop-code' => '💻 برمجة',
-                                    'fas fa-robot' => '🤖 ذكاء اصطناعي',
-                                    'fas fa-briefcase' => '💼 مسار مهني',
-                                    'fas fa-vial' => '🧪 علوم وتجارب',
-                                    'fas fa-globe' => '🌍 لغات ومهارات',
+                                    'fas fa-compass' => '🧭 مسار تدريبي',
+                                    'fas fa-graduation-cap' => '🎓 تأهيل معلمين',
+                                    'fas fa-chalkboard-teacher' => '👩‍🏫 تدريس أونلاين',
+                                    'fas fa-laptop-house' => '💻 مهارات رقمية صفية',
+                                    'fas fa-briefcase' => '💼 تطوير مهني',
+                                    'fas fa-users' => '👥 قيادة وتفاعل',
+                                    'fas fa-certificate' => '🎓 شهادات وإنجاز',
                                 ];
                             @endphp
                             @foreach($icons as $value => $label)

@@ -212,7 +212,7 @@ class CertificateController extends Controller
             'is_verified' => $validated['status'] === 'issued',
             'instructor_id' => $validated['instructor_id'] ?? null,
             'academy_signature_name' => $validated['academy_signature_name'] ?? 'المدير العام',
-            'academy_signature_title' => $validated['academy_signature_title'] ?? 'MuallimX',
+            'academy_signature_title' => $validated['academy_signature_title'] ?? 'Muallimx',
             'instructor_signature_name' => $validated['instructor_signature_name'] ?? null,
             'instructor_signature_title' => $validated['instructor_signature_title'] ?? 'المدرب المعتمد',
             'pdf_path' => $storedPath,
@@ -323,7 +323,7 @@ class CertificateController extends Controller
         }
 
         $ext = strtolower(pathinfo($certificate->pdf_path, PATHINFO_EXTENSION) ?: 'pdf');
-        $base = 'MuallimX-certificate-' . preg_replace('/[^A-Za-z0-9._-]+/', '_', (string) ($certificate->certificate_number ?? $certificate->id));
+        $base = 'Muallimx-certificate-' . preg_replace('/[^A-Za-z0-9._-]+/', '_', (string) ($certificate->certificate_number ?? $certificate->id));
         $downloadName = $base . '.' . ($ext ?: 'pdf');
 
         if ($asAttachment) {

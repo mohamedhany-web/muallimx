@@ -20,7 +20,7 @@ class EmailNotificationService
             ];
         }
 
-        $subject = $subject ?: 'رسالة من منصة MuallimX';
+        $subject = $subject ?: 'رسالة من منصة Muallimx';
 
         try {
             Mail::raw($message, function ($mail) use ($user, $subject) {

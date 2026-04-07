@@ -12,7 +12,7 @@
             </div>
             <?php endif; ?>
             <div class="sidebar-logo-text">
-                <h2 class="text-sm font-heading font-bold text-slate-800 dark:text-slate-100 tracking-tight leading-tight">MuallimX</h2>
+                <h2 class="text-sm font-heading font-bold text-slate-800 dark:text-slate-100 tracking-tight leading-tight">Muallimx</h2>
                 <p class="text-[9px] text-slate-500 dark:text-slate-400 font-medium"><?php echo e(__('admin.admin_panel')); ?></p>
             </div>
         </div>
@@ -60,6 +60,25 @@
                     <?php endif; ?>
                 </a>
             </li>
+
+            <?php if($isFull || $u->hasPermission('manage.contact-messages')): ?>
+            <?php
+                try {
+                    $sidebarContactUnread = \App\Models\ContactMessage::whereNull('read_at')->count();
+                } catch (\Exception $e) {
+                    $sidebarContactUnread = 0;
+                }
+            ?>
+            <li>
+                <a href="<?php echo e(route('admin.contact-messages.index')); ?>" class="sidebar-link <?php echo e(request()->routeIs('admin.contact-messages.*') ? 'active' : ''); ?>">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>رسائل التواصل</span>
+                    <?php if($sidebarContactUnread > 0): ?>
+                        <span class="sidebar-badge bg-amber-500 text-white"><?php echo e($sidebarContactUnread > 99 ? '99+' : $sidebarContactUnread); ?></span>
+                    <?php endif; ?>
+                </a>
+            </li>
+            <?php endif; ?>
 
             <?php if($isFull || $u->hasPermission('manage.site-services')): ?>
             <li>
@@ -610,7 +629,7 @@
             
             <?php if($isFull || $u->hasPermission('manage.courses') || $u->hasPermission('manage.lectures') || $u->hasPermission('manage.assignments') || $u->hasPermission('manage.exams') || $u->hasPermission('manage.question-bank')): ?>
             <?php
-                $contentManagementOpen = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*');
+                $contentManagementOpen = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.course-categories.*') || request()->routeIs('admin.exams.*') || request()->routeIs('admin.question-bank.*') || request()->routeIs('admin.question-categories.*') || request()->routeIs('admin.lectures.*') || request()->routeIs('admin.assignments.*');
             ?>
             <li x-data="{ open: <?php echo e($contentManagementOpen ? 'true' : 'false'); ?> }">
                 <button @click="open = !open" class="sidebar-group-btn">
@@ -621,6 +640,7 @@
                     <?php if($isFull || $u->hasPermission('manage.courses')): ?>
                     <?php $advancedCoursesActive = request()->routeIs('admin.advanced-courses.*') || request()->routeIs('admin.courses.lessons.*'); ?>
                     <li><a href="<?php echo e(route('admin.advanced-courses.index')); ?>" class="sidebar-sub-link <?php echo e($advancedCoursesActive ? 'active' : ''); ?>"><i class="fas fa-graduation-cap"></i><span><?php echo e(__('admin.courses_management')); ?></span></a></li>
+                    <li><a href="<?php echo e(route('admin.course-categories.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.course-categories.*') ? 'active' : ''); ?>"><i class="fas fa-tags"></i><span><?php echo e(__('admin.course_categories')); ?></span></a></li>
                     <?php endif; ?>
                     <?php if($isFull || $u->hasPermission('manage.lectures')): ?>
                     <li><a href="<?php echo e(route('admin.lectures.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.lectures.*') ? 'active' : ''); ?>"><i class="fas fa-video"></i><span><?php echo e(__('admin.lectures')); ?></span></a></li>

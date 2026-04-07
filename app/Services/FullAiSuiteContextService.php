@@ -68,7 +68,7 @@ class FullAiSuiteContextService
 
         $lines = [
             '[SYSTEM — educational assistant only]',
-            'You are an educational assistant in the MuallimX learning context. Refuse non-educational or harmful requests.',
+            'You are an educational assistant in the Muallimx learning context. Refuse non-educational or harmful requests.',
             '',
             '[CONTEXT]',
             '- Course: ' . $courseTitle,

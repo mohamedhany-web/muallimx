@@ -50,7 +50,7 @@
                 {{ auth()->user()->name }} - {{ date('Y-m-d H:i') }}
             </div>
             <div class="watermark-2 absolute text-white opacity-5 text-6xl font-bold select-none">
-                Mindlytics
+                {{ config('app.name', 'Muallimx') }}
             </div>
             <div class="watermark-3 absolute text-white opacity-5 text-3xl font-bold select-none animate-bounce">
                 منصة التعلم
@@ -119,7 +119,7 @@
                 منصة التعلم
             </div>
             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white opacity-5 text-8xl font-bold select-none">
-                Mindlytics
+                {{ config('app.name', 'Muallimx') }}
             </div>
         </div>
     </div>
@@ -148,6 +148,7 @@
 
 @push('scripts')
 <script>
+const PLATFORM_WATERMARK = @json(config('app.name', 'Muallimx'));
 let youtubePlayer = null;
 let vimeoPlayer = null;
 let videoElement = null;
@@ -212,7 +213,7 @@ function activateScreenshotProtection() {
         ctx.fillStyle = 'red';
         ctx.font = '48px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Mindlytics', canvas.width/2, canvas.height/2);
+        ctx.fillText(PLATFORM_WATERMARK, canvas.width/2, canvas.height/2);
         
         canvas.style.opacity = '1';
         canvas.style.zIndex = '1000';

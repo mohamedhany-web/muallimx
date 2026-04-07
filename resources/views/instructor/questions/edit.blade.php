@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'تعديل السؤال - Mindlytics')
+@section('title', 'تعديل السؤال - ' . config('app.name', 'Muallimx'))
 @section('header', 'تعديل السؤال')
 
 @push('styles')

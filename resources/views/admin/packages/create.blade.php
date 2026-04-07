@@ -22,7 +22,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">اسم الباقة *</label>
                     <input type="text" name="name" required value="{{ old('name') }}" 
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
-                           placeholder="مثال: باقة البرمجة الشاملة">
+                           placeholder="مثال: باقة تأهيل المعلّمين الشاملة">
                     @error('name')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror

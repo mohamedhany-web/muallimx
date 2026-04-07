@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>انضم إلى MuallimX Classroom — {{ $code }}</title>
+    <title>انضم إلى Muallimx Classroom — {{ $code }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +39,7 @@
                 <div class="w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-video text-3xl"></i>
                 </div>
-                <h1 class="text-xl font-bold text-white">MuallimX Classroom</h1>
+                <h1 class="text-xl font-bold text-white">Muallimx Classroom</h1>
                 <p class="text-slate-400 text-sm mt-1">انضم إلى الاجتماع باستخدام الكود أو الرابط</p>
             </div>
             @if($meeting && $meeting->title)
@@ -73,7 +73,7 @@
                 <span class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
                     <i class="fas fa-video text-lg"></i>
                 </span>
-                <span class="font-bold text-white">MuallimX Classroom</span>
+                <span class="font-bold text-white">Muallimx Classroom</span>
                 <span class="text-slate-400 text-sm">— {{ $code }}</span>
             </div>
             <button type="button" id="btn-leave" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-rose-500/20">
@@ -155,9 +155,9 @@
                     enableNoisyMicDetection: false,
                 },
                 interfaceConfigOverwrite: {
-                    APP_NAME: 'MuallimX Classroom',
-                    NATIVE_APP_NAME: 'MuallimX Classroom',
-                    PROVIDER_NAME: 'MuallimX',
+                    APP_NAME: 'Muallimx Classroom',
+                    NATIVE_APP_NAME: 'Muallimx Classroom',
+                    PROVIDER_NAME: 'Muallimx',
                     TOOLBAR_BUTTONS: [
                         'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
                         'fodeviceselection', 'hangup', 'chat',

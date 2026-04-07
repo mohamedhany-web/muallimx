@@ -56,7 +56,7 @@
                 <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center"><i class="fas fa-briefcase"></i></span>
                 الخبرات
             </h2>
-            <textarea name="experience" id="experience" rows="5" placeholder="اذكر خبراتك في التحليل أو البرمجة أو الذكاء الاصطناعي..."
+            <textarea name="experience" id="experience" rows="5" placeholder="اذكر خبراتك في التعليم، التحليل، البيانات، أو الذكاء الاصطناعي التطبيقي..."
                       class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 resize-y">{{ old('experience', $profile->experience) }}</textarea>
         </div>
 

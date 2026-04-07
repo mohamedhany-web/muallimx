@@ -24,7 +24,7 @@
                     <i class="fas fa-trophy text-2xl"></i>
                 </div>
                 <h3 class="text-xl font-black text-gray-900 mb-2">{{ __('public.community_features_competitions') }}</h3>
-                <p class="text-gray-600 text-sm">مسابقات برمجة وذكاء اصطناعي مع جوائز ولوحة متصدرين</p>
+                <p class="text-gray-600 text-sm">مسابقات وفعاليات مجتمعية مع جوائز ولوحة متصدرين عند التفعيل</p>
             </div>
             <div class="rounded-3xl bg-white p-8 shadow-xl border border-gray-100 hover:shadow-2xl hover:border-blue-100 transition-all duration-300 text-center">
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center mx-auto mb-5 shadow-lg">

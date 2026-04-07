@@ -332,9 +332,9 @@
                                     </select>
                                 </div>
 
-                                <!-- فلتر لغة البرمجة -->
+                                <!-- فلتر مجال التخصص -->
                                 <div>
-                                    <label for="course_language" class="block text-xs font-medium text-gray-700 mb-1.5 sm:mb-2">لغة البرمجة</label>
+                                    <label for="course_language" class="block text-xs font-medium text-gray-700 mb-1.5 sm:mb-2">مجال التخصص</label>
                                     <select name="course_language" id="course_language" 
                                             class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                                         <option value="">الكل</option>

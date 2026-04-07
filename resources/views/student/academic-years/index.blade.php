@@ -21,7 +21,7 @@
                         {{ __('student.choose_path_subtitle') }}
                     </h1>
                     <p class="text-white/80 text-lg sm:text-xl max-w-2xl">
-                        قمنا بتحويل التقسيمات التقليدية إلى مسارات احترافية تجمع المهارات والأدوات المطلوبة في سوق العمل البرمجي. كل مسار يحتوي على مجموعات مهارية متكاملة تساعدك على الانتقال من مستوى المبتدئ إلى المحترف.
+                        مسارات تدريبية تجمع مهارات التدريس أونلاين، التخطيط، التقييم، والأدوات الرقمية المناسبة للمعلّم. كل مسار يضم مجموعات مهارية متكاملة تدعم تطورك من الأساسيات إلى ممارسة احترافية.
                     </p>
                 </div>
                 <div class="bg-white/10 rounded-2xl backdrop-blur-md p-6 border border-white/20 shadow-lg w-full max-w-xs">
@@ -45,16 +45,16 @@
             </div>
             <div class="flex flex-wrap gap-3">
                 <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 text-white text-sm font-medium backdrop-blur-sm">
-                    <i class="fas fa-laptop-code text-emerald-300"></i>
-                    مشاريع تطبيقية واقعية
+                    <i class="fas fa-chalkboard-teacher text-emerald-300"></i>
+                    تطبيقات عملية في الصف الرقمي
                 </span>
                 <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 text-white text-sm font-medium backdrop-blur-sm">
                     <i class="fas fa-layer-group text-amber-300"></i>
                     مستويات متدرجة من المبتدئ للاحترافي
                 </span>
                 <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 text-white text-sm font-medium backdrop-blur-sm">
-                    <i class="fas fa-code-branch text-sky-300"></i>
-                    تكامل مع لغات وأطر عمل حديثة
+                    <i class="fas fa-book-reader text-sky-300"></i>
+                    محتوى متوافق مع احتياج المعلّم العربي
                 </span>
             </div>
         </div>
@@ -94,7 +94,7 @@
                                     <div>
                                         <h2 class="text-xl font-bold text-gray-900">{{ $track->name }}</h2>
                                         <p class="text-sm text-gray-500">
-                                            {{ $track->description ? Str::limit($track->description, 90) : 'مسار متكامل يجمع بين المهارات المطلوبة لتطوير حلول برمجية حديثة.' }}
+                                            {{ $track->description ? Str::limit($track->description, 90) : 'مسار تدريبي متكامل يدعم مهارات التدريس والتطوير المهني للمعلّم.' }}
                                         </p>
                                     </div>
                                 </div>
@@ -178,7 +178,7 @@
                                             </div>
                                             <div class="flex items-center gap-2 text-xs text-gray-400">
                                                 @if($course->programming_language)
-                                                    <span><i class="fas fa-code ml-1"></i>{{ $course->programming_language }}</span>
+                                                    <span><i class="fas fa-tag ml-1"></i>{{ $course->programming_language }}</span>
                                                 @endif
                                                 @if($course->level)
                                                     <span><i class="fas fa-signal ml-1"></i>{{ $course->level }}</span>
@@ -202,7 +202,7 @@
             </div>
             <h3 class="text-2xl font-bold text-gray-900">لم يتم إعداد المسارات بعد</h3>
             <p class="text-gray-500 max-w-xl mx-auto">
-                لم يتم ربط المسارات التعليمية بالكورسات البرمجية حتى الآن. تواصل مع فريق المنصة لإضافة المسارات وتوزيع الكورسات عليها.
+                لم تُربَط المسارات التدريبية بالكورسات بعد. تواصل مع فريق المنصة لإضافة المسارات وتوزيع البرامج عليها.
             </p>
             <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 text-white hover:bg-sky-700 transition-colors">
                 <i class="fas fa-arrow-right"></i>

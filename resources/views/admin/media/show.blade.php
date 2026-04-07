@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
-@section('title', ($medium ?? $media)->title . ' - Mindlytics')
+@section('title', ($medium ?? $media)->title . ' - ' . config('app.name', 'Muallimx'))
 
 @section('content')
 <div class="min-h-screen bg-gray-50">

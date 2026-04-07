@@ -153,7 +153,7 @@
 <section class="py-14 md:py-20 bg-white dark:bg-slate-900">
     <div class="max-w-[1200px] mx-auto px-6 sm:px-8">
         <h2 class="about-reveal text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white mb-12 md:mb-14 text-center">
-            {{ __('public.why_mindlytics') }}
+            {{ __('public.why_platform') }}
         </h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 about-reveal-stagger">
             <div class="rounded-[20px] p-6 md:p-8 border h-full flex flex-col transition-all duration-300 hover:shadow-lg dark:bg-slate-800/50" style="background:linear-gradient(180deg,#f4f6ff,#fff);border-color:rgba(40,53,147,.15)">

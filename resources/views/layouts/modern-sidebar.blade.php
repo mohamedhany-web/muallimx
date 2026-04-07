@@ -5,8 +5,8 @@
             <i class="fas fa-code text-white text-lg"></i>
         </div>
         <div>
-            <h2 class="text-lg font-black text-gray-900">Mindlytics</h2>
-            <p class="text-xs text-gray-500">أكاديمية البرمجة</p>
+            <h2 class="text-lg font-black text-gray-900">{{ config('app.name', 'Muallimx') }}</h2>
+            <p class="text-xs text-gray-500">{{ config('app.name', 'Muallimx') }}</p>
         </div>
     </div>
 

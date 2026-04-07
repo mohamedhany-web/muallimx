@@ -1,8 +1,8 @@
 ﻿@extends('layouts.public')
 
 @section('title', __('public.team_page_title') . ' - ' . __('public.site_suffix'))
-@section('meta_description', 'تعرف على فريق MuallimX المتميز الذي يعمل على تطوير منصة تأهيل المعلمين العرب.')
-@section('meta_keywords', 'فريق العمل, MuallimX, فريق المنصة, من نحن')
+@section('meta_description', 'تعرف على فريق Muallimx المتميز الذي يعمل على تطوير منصة تأهيل المعلمين العرب.')
+@section('meta_keywords', 'فريق العمل, Muallimx, فريق المنصة, من نحن')
 @section('canonical_url', url('/team'))
 
 @section('content')
@@ -33,9 +33,9 @@
                 </div>
                 <div class="p-6 text-center">
                     <h3 class="text-xl font-bold text-gray-900 mb-2">اسم المدرب {{ $i }}</h3>
-                    <p class="text-sky-600 font-semibold mb-4">مطور برمجيات</p>
+                    <p class="text-sky-600 font-semibold mb-4">فريق المنصة</p>
                     <p class="text-gray-600 text-sm mb-4">
-                        خبير في تطوير الويب والبرمجة مع أكثر من 10 سنوات من الخبرة
+                        نعمل على تطوير تجربة المعلّم والمتعلّم على {{ config('app.name', 'Muallimx') }} باستمرار
                     </p>
                     <div class="flex justify-center space-x-4 space-x-reverse">
                         <a href="#" class="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center text-sky-600 hover:bg-sky-600 hover:text-white transition-colors">

@@ -10,8 +10,8 @@
     <title>{{ __('landing.meta.title') }}</title>
     <meta name="title"       content="{{ __('landing.meta.title') }}">
     <meta name="description" content="{{ __('landing.meta.description') }}">
-    <meta name="keywords"    content="تأهيل المعلمين, تدريب المعلمين أونلاين, أدوات AI للمعلم, دروس أونلاين, منصة تعليم, MuallimX, بناء بروفايل المعلم">
-    <meta name="author"      content="MuallimX">
+    <meta name="keywords"    content="تأهيل المعلمين, تدريب المعلمين أونلاين, أدوات AI للمعلم, دروس أونلاين, منصة تعليم, Muallimx, بناء بروفايل المعلم">
+    <meta name="author"      content="Muallimx">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="language"    content="{{ $locale === 'ar' ? 'Arabic' : 'English' }}">
     <meta name="theme-color" content="#283593">
@@ -31,11 +31,11 @@
     <meta property="og:image:height"     content="630">
     <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
     <meta property="og:locale:alternate" content="{{ $locale === 'ar' ? 'en_US' : 'ar_AR' }}">
-    <meta property="og:site_name"        content="MuallimX">
+    <meta property="og:site_name"        content="Muallimx">
     <!-- Twitter / X Card -->
     <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:site"        content="@MuallimX">
-    <meta name="twitter:creator"     content="@MuallimX">
+    <meta name="twitter:site"        content="@Muallimx">
+    <meta name="twitter:creator"     content="@Muallimx">
     <meta name="twitter:url"         content="{{ url('/') }}">
     <meta name="twitter:title"       content="{{ __('landing.meta.og_title') }}">
     <meta name="twitter:description" content="{{ __('landing.meta.og_description') }}">
@@ -228,21 +228,19 @@
         </div>
     </section>
 
-    {{-- 4) Categories — بيانات من المواد الدراسية أو احتياطي مترجم لتأهيل المعلمين --}}
+    {{-- 4) Service highlights — كل البطاقات تؤدي إلى صفحة الخدمات --}}
     <section class="py-12 sm:py-14 bg-mx-soft">
         <div class="container-1200">
             <div class="max-w-3xl mb-7 reveal">
                 <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-3">{{ __('public.categories_sidebar') }}</h2>
                 <p class="text-slate-600 text-sm sm:text-base leading-7">{{ __('public.home_categories_subtitle') }}</p>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
-                @foreach(($homeCategories ?? collect()) as $i => $cat)
-                    <a href="{{ $cat['url'] ?? route('public.courses') }}" class="reveal {{ $i === 1 ? 'lg:translate-y-2' : '' }} {{ $i === 4 ? 'lg:-translate-y-2' : '' }} card-base hover-lift text-center block no-underline text-inherit">
-                        <div class="w-11 h-11 rounded-xl mx-auto mb-3 flex items-center justify-center text-mx-orange" style="background:#fff3ec"><i class="fas {{ $cat['icon'] }}"></i></div>
-                        <h3 class="font-semibold text-sm text-mx-indigo leading-snug px-1">{{ $cat['name'] }}</h3>
-                        @if(! empty($cat['courses_count']))
-                            <p class="text-[11px] text-slate-500 mt-2 font-medium">{{ __('public.home_category_courses_line', ['count' => $cat['courses_count']]) }}</p>
-                        @endif
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach(($homeCategories ?? collect()) as $cat)
+                    <a href="{{ $cat['url'] ?? route('public.services.index') }}" class="reveal card-base hover-lift block no-underline text-inherit text-start p-5 flex flex-col h-full">
+                        <div class="w-11 h-11 rounded-xl mb-3 flex items-center justify-center text-mx-orange shrink-0" style="background:#fff3ec"><i class="fas {{ $cat['icon'] }}"></i></div>
+                        <h3 class="font-heading font-bold text-mx-indigo leading-snug mb-2">{{ $cat['name'] }}</h3>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed grow">{{ $cat['description'] ?? '' }}</p>
                     </a>
                 @endforeach
             </div>
@@ -388,7 +386,7 @@
                     <i class="fas fa-rocket"></i> انطلاقتك المهنية تبدأ الآن
                 </span>
                 <h2 class="font-heading text-3xl sm:text-5xl font-black text-mx-indigo mb-4">جاهز تبدأ رحلتك التعليمية الاحترافية؟</h2>
-                <p class="text-slate-600 text-base sm:text-lg max-w-3xl mx-auto leading-8 mb-7">انضم إلى MuallimX اليوم وابدأ بخطوات واضحة، أدوات عملية، وتجربة تعلم عربية مصممة لتحقيق نتائج حقيقية.</p>
+                <p class="text-slate-600 text-base sm:text-lg max-w-3xl mx-auto leading-8 mb-7">انضم إلى Muallimx اليوم وابدأ بخطوات واضحة، أدوات عملية، وتجربة تعلم عربية مصممة لتحقيق نتائج حقيقية.</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                     <a href="{{ route('register') }}" class="btn-primary inline-flex items-center justify-center gap-2">إنشاء حساب مجاني <i class="fas fa-arrow-{{ $isRtl ? 'left' : 'right' }} text-xs"></i></a>
                     <a href="{{ route('public.courses') }}" class="btn-secondary inline-flex items-center justify-center gap-2">استكشف البرامج</a>
@@ -398,8 +396,8 @@
     </section>
 </main>
 
-{{-- 9) Footer — من إعدادات النظام في لوحة الإدارة --}}
-@include('partials.public-site-footer')
+{{-- 9) Footer — موحّد مع باقي الصفحات العامة (إعدادات النظام) --}}
+@include('components.unified-footer')
 
 @if(isset($popupAd) && $popupAd)
     @include('partials.popup-ad', ['ad' => $popupAd])

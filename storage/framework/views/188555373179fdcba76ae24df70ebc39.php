@@ -1,12 +1,12 @@
 <?php
 /*
- * MuallimX — JSON-LD Structured Data
+ * Muallimx — JSON-LD Structured Data
  * Usage: @include('partials.seo-jsonld', ['jsonldType' => 'website|course|instructor|about'])
  */
 $_jldType    = $jsonldType ?? 'website';
 $_siteUrl    = url('/');
 $_logoUrl    = asset('images/og-image.jpg');
-$_siteName   = 'MuallimX';
+$_siteName   = 'Muallimx';
 
 // ── Base: WebSite + EducationalOrganization ──────────────────────────────
 $_baseGraph = [
@@ -32,10 +32,10 @@ $_baseGraph = [
             'url'    => $_siteUrl,
             'logo'   => ['@type' => 'ImageObject', 'url' => $_logoUrl, 'width' => 1200, 'height' => 630],
             'sameAs' => [
-                'https://twitter.com/MuallimX',
-                'https://www.facebook.com/MuallimX',
+                'https://twitter.com/Muallimx',
+                'https://www.facebook.com/Muallimx',
                 'https://www.linkedin.com/company/muallimx',
-                'https://www.youtube.com/@MuallimX',
+                'https://www.youtube.com/@Muallimx',
             ],
             'contactPoint' => ['@type' => 'ContactPoint', 'contactType' => 'customer support', 'availableLanguage' => ['Arabic', 'English']],
         ],
@@ -157,7 +157,7 @@ if ($_jldType === 'about') {
         '@type'       => 'AboutPage',
         'url'         => url('/about'),
         'name'        => 'من نحن — ' . $_siteName,
-        'description' => 'تعرف على منصة MuallimX، رسالتنا وقيمنا في تأهيل المعلمين للعمل أونلاين باحتراف',
+        'description' => 'تعرف على منصة Muallimx، رسالتنا وقيمنا في تأهيل المعلمين للعمل أونلاين باحتراف',
         'mainEntity'  => [
             '@type'       => 'EducationalOrganization',
             '@id'         => $_siteUrl . '/#organization',

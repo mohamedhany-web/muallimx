@@ -44,14 +44,14 @@
     </style>
 </head>
 <body class="bg-slate-950">
-    {{-- شريط MuallimX العلوي --}}
+    {{-- شريط Muallimx العلوي --}}
     <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg">
         <div class="flex items-center gap-4">
             <a href="{{ route('instructor.live-sessions.index') }}" class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
                 <span class="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center">
                     <i class="fas fa-broadcast-tower text-lg"></i>
                 </span>
-                <span class="font-bold text-white hidden sm:inline">MuallimX</span>
+                <span class="font-bold text-white hidden sm:inline">Muallimx</span>
             </a>
             <span class="w-px h-6 bg-slate-600 hidden sm:block"></span>
             <div class="flex items-center gap-2">
@@ -135,7 +135,7 @@
                 @endif
             },
             interfaceConfigOverwrite: {
-                APP_NAME: 'MuallimX',
+                APP_NAME: 'Muallimx',
                 TOOLBAR_BUTTONS: [
                     'microphone', 'camera', 'desktop', 'chat',
                     'raisehand', 'participants-pane', 'tileview',

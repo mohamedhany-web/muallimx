@@ -20,7 +20,7 @@
                         كورسات متدرجة لبناء خبرتك داخل هذه المجموعة المهارية
                     </h1>
                     <p class="text-gray-600 text-lg">
-                        اختر الكورس المناسب لمستواك الحالي وتخصصك المستقبلي. جميع الكورسات تعتمد على مشاريع عملية، أدوات حديثة، وتكامل مع أفضل ممارسات مجتمع المطورين.
+                        اختر البرنامج المناسب لمستواك وأهدافك التربوية. الكورسات تركّز على التطبيق العملي في الصف، أدوات تدريس حديثة، وممارسات موثوقة لدعم المعلّم.
                     </p>
                 </div>
                 @if($academicSubject->academicYear)
@@ -108,7 +108,7 @@
                         <div class="grid grid-cols-2 gap-3 text-xs text-gray-500">
                             @if($course->programming_language)
                                 <div class="flex items-center gap-2">
-                                    <i class="fas fa-code text-sky-500"></i>
+                                    <i class="fas fa-tag text-sky-500"></i>
                                     <span>{{ $course->programming_language }}</span>
                                 </div>
                             @endif

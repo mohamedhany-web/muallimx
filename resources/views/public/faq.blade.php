@@ -120,7 +120,7 @@
     $hasDbFaqs = isset($faqs) && $faqs->isNotEmpty();
 @endphp
 
-<section class="pt-2 pb-14 sm:pb-16 bg-white dark:bg-slate-900">
+<section id="faq-main" class="pt-2 pb-14 sm:pb-16 bg-white dark:bg-slate-900">
     <div class="w-full max-w-[1200px] mx-auto px-6 sm:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12">
             {{-- عمود جانبي: فلاتر + روابط --}}

@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'الفواتير - التقارير المحاسبية - MuallimX')
+@section('title', 'الفواتير - التقارير المحاسبية - Muallimx')
 @section('header', 'الفواتير')
 
 @section('content')

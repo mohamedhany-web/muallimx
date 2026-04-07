@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'سجلات التحقق الثنائي (2FA) - Mindlytics')
+@section('title', 'سجلات التحقق الثنائي (2FA) - ' . config('app.name', 'Muallimx'))
 @section('header', 'تسجيلات الدخول (2FA)')
 
 @section('content')

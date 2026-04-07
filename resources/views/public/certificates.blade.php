@@ -1,8 +1,8 @@
 ﻿@extends('layouts.public')
 
 @section('title', __('public.certificates_page_title') . ' - ' . __('public.site_suffix'))
-@section('meta_description', 'شهادات MuallimX المعتمدة للمعلمين والطلاب — تحقق من صحة شهادتك أو استعرض الشهادات المتاحة.')
-@section('meta_keywords', 'شهادات معتمدة, MuallimX, شهادة تدريب, شهادة إتمام')
+@section('meta_description', 'شهادات Muallimx المعتمدة للمعلمين والطلاب — تحقق من صحة شهادتك أو استعرض الشهادات المتاحة.')
+@section('meta_keywords', 'شهادات معتمدة, Muallimx, شهادة تدريب, شهادة إتمام')
 @section('canonical_url', url('/certificates'))
 
 @section('content')
@@ -13,7 +13,7 @@
             الشهادات المعتمدة
         </h1>
         <p class="text-xl md:text-2xl text-white mb-10 fade-in font-semibold" style="text-shadow: 0 3px 12px rgba(0,0,0,0.7), 0 1px 6px rgba(0,0,0,0.5), 0 0 8px rgba(14, 165, 233, 0.3);">
-            احصل على شهادات معترف بها في مجال البرمجة
+            احصل على شهادات إتمام برامج التأهيل والتطوير المهني للمعلّمين
         </p>
     </div>
 </section>
@@ -52,7 +52,7 @@
                 </div>
                 <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">شهادة احترافية</h3>
                 <p class="text-gray-700 mb-6 text-center">
-                    شهادة احترافية متقدمة للمبرمجين المحترفين الذين يكملون جميع المسارات المتقدمة.
+                    شهادة احترافية للمعلّمين الذين يكملون متطلبات المسارات التدريبية المتقدمة على المنصة.
                 </p>
                 <ul class="space-y-3 text-gray-700">
                     <li class="flex items-center">

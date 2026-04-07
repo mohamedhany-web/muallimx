@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'طلب سحب جديد - Mindlytics')
+@section('title', 'طلب سحب جديد - ' . config('app.name', 'Muallimx'))
 @section('header', 'طلب سحب جديد')
 
 @section('content')

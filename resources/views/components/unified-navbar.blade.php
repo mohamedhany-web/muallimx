@@ -14,16 +14,16 @@
             {{-- Logo: صورة من إعدادات النظام، أو الحرف الافتراضي --}}
             <a href="{{ route('home') }}" class="flex items-center gap-3 group flex-shrink-0">
                 @if(!empty($navbarLogoUrl))
-                    <div class="relative w-10 h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center shadow-lg transition-shadow duration-300 bg-white/95 p-1 ring-1 ring-white/25" style="box-shadow:0 4px 16px -4px rgba(0,0,0,.2)">
-                        <img src="{{ $navbarLogoUrl }}" alt="{{ config('app.name') }}" class="w-full h-full object-contain" width="44" height="44" decoding="async">
-                    </div>
+                    <span class="relative h-10 w-10 lg:h-11 lg:w-11 flex-shrink-0 overflow-hidden rounded-full ring-1 ring-white/25 shadow-lg [box-shadow:0_4px_14px_-4px_rgba(0,0,0,.35)]">
+                        <img src="{{ $navbarLogoUrl }}" alt="{{ config('app.name') }}" class="h-full w-full object-cover object-center" decoding="async">
+                    </span>
                 @else
-                    <div class="relative w-10 h-10 lg:w-11 lg:h-11 rounded-xl flex items-center justify-center shadow-lg transition-shadow duration-300" style="background:#FB5607;box-shadow:0 4px 16px -4px rgba(251,86,7,.3)">
+                    <div class="relative w-10 h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center shadow-lg transition-shadow duration-300" style="background:#FB5607;box-shadow:0 4px 16px -4px rgba(251,86,7,.3)">
                         <span class="text-white font-black text-lg lg:text-xl select-none">M</span>
                     </div>
                 @endif
                 <div class="flex flex-col leading-none">
-                    <span class="text-[18px] lg:text-[20px] font-black text-white tracking-tight">MuallimX</span>
+                    <span class="text-[18px] lg:text-[20px] font-black text-white tracking-tight">Muallimx</span>
                     <span class="text-[11px] lg:text-[12px] text-white/60 font-semibold mt-0.5">{{ $navbarBrandTagline }}</span>
                 </div>
             </a>
@@ -107,16 +107,16 @@
         <div class="relative flex items-center justify-between px-5 py-5 border-b border-white/[0.06]" style="padding-top: max(1.25rem, env(safe-area-inset-top));">
             <div class="flex items-center gap-3">
                 @if(!empty($navbarLogoUrl))
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg bg-white/95 p-1 ring-1 ring-white/20">
-                        <img src="{{ $navbarLogoUrl }}" alt="" class="w-full h-full object-contain" width="40" height="40" decoding="async">
-                    </div>
+                    <span class="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full ring-1 ring-white/20 shadow-md [box-shadow:0_3px_12px_-4px_rgba(0,0,0,.4)]">
+                        <img src="{{ $navbarLogoUrl }}" alt="" class="h-full w-full object-cover object-center" decoding="async">
+                    </span>
                 @else
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style="background:#FB5607">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center shadow-lg" style="background:#FB5607">
                         <span class="text-white font-black text-lg">M</span>
                     </div>
                 @endif
                 <div>
-                    <p class="text-white font-black text-[17px]">MuallimX</p>
+                    <p class="text-white font-black text-[17px]">Muallimx</p>
                     <p class="text-white/50 text-[12px] font-semibold">{{ $navbarBrandTagline }}</p>
                 </div>
             </div>

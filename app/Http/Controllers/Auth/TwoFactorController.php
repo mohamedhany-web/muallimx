@@ -129,8 +129,9 @@ class TwoFactorController extends Controller
         $secret = $google2fa->generateSecretKey(32);
         $request->session()->put('two_factor.setup_secret', $secret);
 
-        $appName = config('app.name', 'Mindlytics');
-        $qrCodeUrl = $google2fa->getQRCodeUrl($appName, $user->email ?? $user->id . '@mindlytics.local', $secret);
+        $appName = config('app.name', 'Muallimx');
+        $accountLabel = $user->email ?? ('user-'.$user->id.'@'.Str::slug($appName).'.local');
+        $qrCodeUrl = $google2fa->getQRCodeUrl($appName, $accountLabel, $secret);
 
         return view('auth.two-factor.setup', [
             'secret' => $secret,

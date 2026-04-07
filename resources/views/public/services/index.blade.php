@@ -161,7 +161,7 @@
     </section>
 </main>
 
-@include('partials.public-site-footer')
+@include('components.unified-footer')
 
 <script>
 (function(){

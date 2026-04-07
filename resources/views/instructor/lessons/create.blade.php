@@ -61,7 +61,7 @@
                         <input type="text" name="title" 
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2CA9BD] focus:border-transparent" 
                                value="{{ old('title') }}" 
-                               placeholder="مثال: مقدمة في البرمجة" 
+                               placeholder="مثال: مقدمة في أهداف التعلّم" 
                                required>
                     </div>
 

@@ -61,7 +61,7 @@ Route::get('/storage/{path}', function ($path) {
     return response()->file($realPath, $headers);
 })->where('path', '.*')->name('storage.file')->middleware('web');
 
-// Sitemap Route — MuallimX SEO
+// Sitemap Route — Muallimx SEO
 Route::get('/sitemap.xml', function() {
     $xmlEscape = static fn (?string $value): string => htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
     $urls = [];
@@ -228,7 +228,7 @@ Route::get('/testimonials', [\App\Http\Controllers\Public\PageController::class,
 Route::get('/events', [\App\Http\Controllers\Public\PageController::class, 'events'])->name('public.events');
 Route::get('/partners', [\App\Http\Controllers\Public\PageController::class, 'partners'])->name('public.partners');
 
-// Mindlytics Portfolio (معرض أعمال الطلاب)
+// Portfolio (معرض أعمال الطلاب)
 Route::get('/portfolio', [\App\Http\Controllers\Public\PortfolioController::class, 'index'])->name('public.portfolio.index');
 Route::get('/portfolio/{id}', [\App\Http\Controllers\Public\PortfolioController::class, 'show'])->name('public.portfolio.show')->where('id', '[0-9]+');
 
@@ -238,7 +238,7 @@ Route::get('/services/{siteService}', [\App\Http\Controllers\Public\SiteServiceC
 
 // تم إيقاف مجتمع البيانات والذكاء الاصطناعي (مسابقات، داتاسيت، مجتمع) بالكامل، لذا أزيلت جميع مساراته.
 
-// MuallimX Classroom — دخول الضيوف برابط/كود (بدون تسجيل دخول)
+// Muallimx Classroom — دخول الضيوف برابط/كود (بدون تسجيل دخول)
 Route::get('/classroom/join/{code}', [\App\Http\Controllers\ClassroomJoinController::class, 'show'])->name('classroom.join')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/enter', [\App\Http\Controllers\ClassroomJoinController::class, 'enter'])->name('classroom.join.enter')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/heartbeat', [\App\Http\Controllers\ClassroomJoinController::class, 'heartbeat'])->name('classroom.join.heartbeat')->where('code', '[A-Za-z0-9]+');
@@ -262,11 +262,13 @@ Route::get('/courses', function (\Illuminate\Http\Request $request) {
     }
 
     $coursesCollection = $coursesQuery
-        ->with(['academicSubject', 'academicYear', 'instructor:id,name'])
-        ->withCount('lessons')
+        ->with(['academicSubject', 'academicYear', 'instructor:id,name', 'courseCategory'])
+        ->withCount('lectures')
         ->orderBy('is_featured', 'desc')
         ->orderBy('created_at', 'desc')
         ->get();
+
+    $courseFilterCategories = \App\Models\CourseCategory::active()->ordered()->get(['id', 'name']);
 
     $courses = $coursesCollection->map(function ($course) {
         return [
@@ -278,11 +280,15 @@ Route::get('/courses', function (\Illuminate\Http\Request $request) {
             'duration_hours' => (int)($course->duration_hours ?? 0),
             'is_featured' => (bool)($course->is_featured ?? false),
             'is_free' => (bool)($course->is_free ?? false),
-            'lessons_count' => (int)($course->lessons_count ?? 0),
+            'lectures_count' => (int)($course->lectures_count ?? 0),
             'thumbnail' => $course->thumbnail ? str_replace('\\', '/', $course->thumbnail) : null,
             'academic_subject_id' => $course->academic_subject_id ? (int) $course->academic_subject_id : null,
             'academic_subject' => $course->academicSubject ? [
                 'name' => $course->academicSubject->name ?? 'غير محدد',
+            ] : null,
+            'course_category_id' => $course->course_category_id ? (int) $course->course_category_id : null,
+            'course_category' => $course->courseCategory ? [
+                'name' => $course->courseCategory->name ?? '',
             ] : null,
             'instructor' => $course->instructor ? [
                 'name' => $course->instructor->name,
@@ -301,7 +307,7 @@ Route::get('/courses', function (\Illuminate\Http\Request $request) {
         ->orderBy('order')
         ->get();
     
-    return view('courses', compact('courses', 'packages'));
+    return view('courses', compact('courses', 'packages', 'courseFilterCategories'));
 })->name('public.courses');
 
 // صفحة المدربين (الملفات التعريفية المعتمدة)
@@ -631,7 +637,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         });
         // صفحة اشتراكي (عرض الباقة الحالية ومدة التفاعيل والانتهاء)
         Route::get('/my-subscription', [\App\Http\Controllers\Student\MySubscriptionController::class, 'show'])->name('student.my-subscription');
-        // MuallimX Classroom — بديل Zoom للمعلم (رابط/كود للضيوف بدون اشتراك)
+        // Muallimx Classroom — بديل Zoom للمعلم (رابط/كود للضيوف بدون اشتراك)
         Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
         Route::get('/classroom/create', [\App\Http\Controllers\Student\ClassroomController::class, 'create'])->name('student.classroom.create');
         Route::post('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'store'])->name('student.classroom.store');
@@ -825,6 +831,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::delete('/academic-subjects/{academicSubject}', function () { return redirect()->route('admin.advanced-courses.index', [], 302); })->name('academic-subjects.destroy');
         Route::post('/academic-subjects/{academicSubject}/toggle-status', function () { return redirect()->route('admin.advanced-courses.index', [], 302); })->name('academic-subjects.toggle-status');
         Route::post('/academic-subjects/reorder', function () { return redirect()->route('admin.advanced-courses.index', [], 302); })->name('academic-subjects.reorder');
+
+        // تصنيفات الكورسات (تصفية صفحة /courses العامة)
+        Route::resource('course-categories', \App\Http\Controllers\Admin\CourseCategoryController::class)->except(['show', 'create']);
 
         // إدارة الكورسات المتطورة
         Route::resource('advanced-courses', \App\Http\Controllers\Admin\AdvancedCourseController::class);

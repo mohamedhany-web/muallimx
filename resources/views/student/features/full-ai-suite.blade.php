@@ -28,7 +28,7 @@
             <span class="text-slate-300 dark:text-slate-600 select-none" aria-hidden="true">·</span>
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-200 border border-sky-200/80 dark:border-sky-800/60">
                 <span class="flex h-5 w-5 items-center justify-center rounded-full bg-sky-600 text-[10px] text-white font-black">2</span>
-                Laravel
+                {{ __('student.full_ai_suite.step_context_label') }}
             </span>
             <span class="text-slate-300 dark:text-slate-600 select-none" aria-hidden="true">·</span>
             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200 border border-purple-200/80 dark:border-purple-800/60">

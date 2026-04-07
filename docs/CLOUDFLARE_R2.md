@@ -33,7 +33,7 @@ AWS_USE_PATH_STYLE_ENDPOINT=true
 خطأ **"Class League\Flysystem\AwsS3V3\PortableVisibilityConverter not found"** يعني أن الحزمة غير مثبتة في بيئة الإنتاج. نفّذ على السيرفر (SSH أو من مجلد المشروع):
 
 ```bash
-cd /home/u387718849/domains/mindlytics-academy.com/public_html/Mindlytics
+cd /path/to/Muallimx
 composer install --no-dev
 ```
 

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('instructor.my_courses') . ' - Mindlytics')
+@section('title', __('instructor.my_courses') . ' - ' . config('app.name', 'Muallimx'))
 @section('header', __('instructor.my_courses'))
 
 @section('content')

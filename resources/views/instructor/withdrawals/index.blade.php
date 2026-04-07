@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('instructor.withdrawal_requests') . ' - Mindlytics')
+@section('title', __('instructor.withdrawal_requests') . ' - ' . config('app.name', 'Muallimx'))
 @section('header', __('instructor.withdrawal_requests'))
 
 @section('content')

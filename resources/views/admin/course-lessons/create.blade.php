@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'إضافة درس برمجي جديد')
+@section('title', 'إضافة درس جديد')
 @section('header', 'إضافة درس جديد للكورس: ' . $course->title)
 
 @section('content')

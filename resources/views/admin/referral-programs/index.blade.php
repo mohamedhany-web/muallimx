@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
-@section('title', 'برامج الإحالات - Mindlytics')
+@section('title', 'برامج الإحالات - ' . config('app.name', 'Muallimx'))
 
 @section('content')
 <div class="p-6 bg-gray-50 min-h-screen">

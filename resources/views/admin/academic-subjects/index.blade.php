@@ -170,7 +170,7 @@
                                             </div>
                                             <div class="flex items-center gap-2 text-xs text-gray-400">
                                                 @if($course->programming_language)
-                                                    <span><i class="fas fa-code ml-1"></i>{{ $course->programming_language }}</span>
+                                                    <span><i class="fas fa-tag ml-1"></i>{{ $course->programming_language }}</span>
                                                 @endif
                                                 @if($course->level)
                                                     <span><i class="fas fa-signal ml-1"></i>{{ $course->level }}</span>

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\AcademicSubject;
 use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
 use App\Models\Certificate;
@@ -83,76 +82,28 @@ class LandingController extends Controller
     }
 
     /**
-     * تصنيفات للصفحة الرئيسية: مواد نشطة لها كورسات، وإلا مواد نشطة، وإلا مجموعة احتياطية مترجمة (تأهيل معلمين).
+     * بطاقات تميّز مجالات الخدمة على الصفحة الرئيسية — جميعها تؤدي إلى صفحة الخدمات.
      *
-     * @return \Illuminate\Support\Collection<int, array{id: int|null, name: string, icon: string, url: string, courses_count: int|null}>
+     * @return \Illuminate\Support\Collection<int, array{name: string, description: string, icon: string, url: string}>
      */
     private function buildHomeCategories(): \Illuminate\Support\Collection
     {
-        $fallbackIcons = ['fa-chalkboard-user', 'fa-laptop-file', 'fa-users-gear', 'fa-book-open-reader', 'fa-clipboard-check', 'fa-seedling'];
+        $servicesUrl = route('public.services.index');
 
-        $withActiveCourses = AcademicSubject::query()
-            ->active()
-            ->withCount(['courses' => function ($q) {
-                $q->where('is_active', true);
-            }])
-            ->having('courses_count', '>', 0)
-            ->orderByDesc('courses_count')
-            ->orderBy('order')
-            ->limit(6)
-            ->get(['id', 'name', 'icon']);
-
-        $subjects = $withActiveCourses->isNotEmpty()
-            ? $withActiveCourses
-            : AcademicSubject::query()
-                ->active()
-                ->withCount(['courses' => function ($q) {
-                    $q->where('is_active', true);
-                }])
-                ->orderByDesc('courses_count')
-                ->orderBy('order')
-                ->limit(6)
-                ->get(['id', 'name', 'icon']);
-
-        if ($subjects->isNotEmpty()) {
-            return $subjects->values()->map(function (AcademicSubject $subject, int $index) use ($fallbackIcons) {
-                $icon = $this->normalizeSubjectIcon($subject->icon, $fallbackIcons[$index % count($fallbackIcons)]);
-
-                return [
-                    'id' => (int) $subject->id,
-                    'name' => $subject->name,
-                    'icon' => $icon,
-                    'courses_count' => (int) ($subject->courses_count ?? 0),
-                    'url' => route('public.courses', ['subject' => $subject->id]),
-                ];
-            });
-        }
-
-        return collect(range(1, 6))->map(function (int $i) {
+        return collect(range(1, 6))->map(function (int $i) use ($servicesUrl) {
             $iconKey = 'public.home_category_fallback_'.$i.'_icon';
             $iconRaw = __($iconKey);
             $icon = is_string($iconRaw) && preg_match('/\bfa-[a-z0-9-]+\b/i', $iconRaw, $m)
                 ? strtolower($m[0])
-                : 'fa-chalkboard-user';
+                : 'fa-circle';
 
             return [
-                'id' => null,
                 'name' => __('public.home_category_fallback_'.$i.'_name'),
+                'description' => __('public.home_category_fallback_'.$i.'_desc'),
                 'icon' => $icon,
-                'courses_count' => null,
-                'url' => route('public.courses'),
+                'url' => $servicesUrl,
             ];
         });
-    }
-
-    private function normalizeSubjectIcon(?string $icon, string $fallback): string
-    {
-        $icon = is_string($icon) ? trim($icon) : '';
-        if ($icon !== '' && preg_match('/\bfa-[a-z0-9-]+\b/i', $icon, $m)) {
-            return strtolower($m[0]);
-        }
-
-        return $fallback;
     }
 
     /**

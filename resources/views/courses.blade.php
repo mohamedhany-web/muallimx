@@ -10,8 +10,8 @@
     <title>{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}</title>
     <meta name="title"       content="{{ __('public.courses_page_title') }} - {{ __('public.site_suffix') }}">
     <meta name="description" content="{{ __('public.courses_subtitle') }}">
-    <meta name="keywords"    content="كورسات أونلاين, تعلم أونلاين, دورات تعليمية, تدريب معلمين, MuallimX, كورسات عربية">
-    <meta name="author"      content="MuallimX">
+    <meta name="keywords"    content="كورسات أونلاين, تعلم أونلاين, دورات تعليمية, تدريب معلمين, Muallimx, كورسات عربية">
+    <meta name="author"      content="Muallimx">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#283593">
     <link rel="canonical"    href="{{ url('/courses') }}">
@@ -21,23 +21,23 @@
     <!-- Open Graph -->
     <meta property="og:type"             content="website">
     <meta property="og:url"              content="{{ url('/courses') }}">
-    <meta property="og:title"            content="{{ __('public.courses_page_title') }} - MuallimX">
+    <meta property="og:title"            content="{{ __('public.courses_page_title') }} - Muallimx">
     <meta property="og:description"      content="{{ __('public.courses_subtitle') }}">
     <meta property="og:image"            content="{{ asset('images/og-image.jpg') }}">
-    <meta property="og:image:alt"        content="كورسات MuallimX">
+    <meta property="og:image:alt"        content="كورسات Muallimx">
     <meta property="og:image:width"      content="1200">
     <meta property="og:image:height"     content="630">
     <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
     <meta property="og:locale:alternate" content="{{ $locale === 'ar' ? 'en_US' : 'ar_AR' }}">
-    <meta property="og:site_name"        content="MuallimX">
+    <meta property="og:site_name"        content="Muallimx">
     <!-- Twitter Card -->
     <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:site"        content="@MuallimX">
+    <meta name="twitter:site"        content="@Muallimx">
     <meta name="twitter:url"         content="{{ url('/courses') }}">
-    <meta name="twitter:title"       content="{{ __('public.courses_page_title') }} - MuallimX">
+    <meta name="twitter:title"       content="{{ __('public.courses_page_title') }} - Muallimx">
     <meta name="twitter:description" content="{{ __('public.courses_subtitle') }}">
     <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
-    <meta name="twitter:image:alt"   content="كورسات MuallimX">
+    <meta name="twitter:image:alt"   content="كورسات Muallimx">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
     <!-- BreadcrumbList JSON-LD -->
@@ -106,15 +106,15 @@
 <body class="font-body text-slate-800"
       x-data="{
         searchQuery: '',
-        selectedLevel: '',
+        selectedCategoryId: '',
         courses: @js($courses ?? []),
         get filteredCourses() {
           const q = this.searchQuery.toLowerCase().trim();
-          const level = this.selectedLevel;
+          const cat = this.selectedCategoryId;
           return this.courses.filter(c => {
             const matchQ = !q || (c.title && c.title.toLowerCase().includes(q)) || (c.description && c.description.toLowerCase().includes(q));
-            const matchL = !level || (c.level || '') === level;
-            return matchQ && matchL;
+            const matchC = !cat || String(c.course_category_id || '') === String(cat);
+            return matchQ && matchC;
           });
         }
       }">
@@ -143,11 +143,11 @@
             <input type="text" x-model="searchQuery" placeholder="{{ __('public.search_course_placeholder') }}" class="flex-1 bg-transparent border-0 outline-none text-mx-indigo placeholder-slate-400">
           </div>
           <div class="relative">
-            <select x-model="selectedLevel" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 {{ $isRtl?'pl-10':'pr-10' }} text-mx-indigo focus:outline-none">
-              <option value="">{{ __('public.all_levels') }}</option>
-              <option value="beginner">{{ __('public.level_beginner') }}</option>
-              <option value="intermediate">{{ __('public.level_intermediate') }}</option>
-              <option value="advanced">{{ __('public.level_advanced') }}</option>
+            <select x-model="selectedCategoryId" class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 {{ $isRtl?'pl-10':'pr-10' }} text-mx-indigo focus:outline-none">
+              <option value="">{{ __('public.all_course_categories') }}</option>
+              @foreach($courseFilterCategories ?? [] as $cat)
+                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+              @endforeach
             </select>
             <i class="fas fa-chevron-down absolute {{ $isRtl?'left':'right' }}-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
           </div>
@@ -168,8 +168,8 @@
           <p class="text-xs sm:text-sm text-slate-700 mt-1">كورس مميز</p>
         </article>
         <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-          <p class="text-3xl sm:text-4xl font-black text-mx-indigo" x-text="courses.filter(c=>c.level==='advanced').length">0</p>
-          <p class="text-xs sm:text-sm text-slate-700 mt-1">مستوى متقدم</p>
+          <p class="text-3xl sm:text-4xl font-black text-mx-indigo" x-text="courses.filter(c=>c.course_category_id).length">0</p>
+          <p class="text-xs sm:text-sm text-slate-700 mt-1">{{ __('public.courses_stat_categorized') }}</p>
         </article>
       </div>
     </div>
@@ -198,15 +198,15 @@
                 </template>
               </div>
 
-              <template x-if="course.academic_subject && course.academic_subject.name">
-                <span class="inline-block text-[11px] font-bold px-3 py-1 rounded-full mb-3" style="background:#FFE5F7;color:#283593" x-text="course.academic_subject.name"></span>
+              <template x-if="(course.course_category && course.course_category.name) || (course.academic_subject && course.academic_subject.name)">
+                <span class="inline-block text-[11px] font-bold px-3 py-1 rounded-full mb-3" style="background:#FFE5F7;color:#283593" x-text="(course.course_category && course.course_category.name) || (course.academic_subject && course.academic_subject.name)"></span>
               </template>
 
               <h3 class="font-heading text-lg font-extrabold text-mx-indigo leading-snug mb-2 line-clamp-2" x-text="course.title || '{{ addslashes(__('public.no_title_fallback')) }}'"></h3>
               <p class="text-sm text-slate-500 mb-4 line-clamp-2" x-text="(course.description || '').substring(0,120) + ((course.description && course.description.length>120) ? '...' : '')"></p>
 
               <div class="flex items-center justify-between text-sm mb-4">
-                <span class="text-slate-500" x-text="(course.lessons_count || 0) + ' {{ __('public.lesson_single') }}'"></span>
+                <span class="text-slate-500" x-text="(course.lectures_count || 0) + ' {{ __('public.lecture_single') }}'"></span>
                 <span class="text-slate-500" x-text="course.duration_hours ? course.duration_hours + ' {{ __('public.hours') }}' : ''"></span>
               </div>
 
@@ -229,7 +229,7 @@
       <div x-show="filteredCourses && filteredCourses.length === 0" x-cloak class="text-center py-16 reveal">
         <h3 class="font-heading text-2xl font-black text-mx-indigo mb-2">{{ __('public.no_results') }}</h3>
         <p class="text-slate-500 mb-6">{{ __('public.no_results_hint') }}</p>
-        <button @click="searchQuery=''; selectedLevel='';" class="btn-secondary">إعادة تعيين البحث</button>
+        <button @click="searchQuery=''; selectedCategoryId='';" class="btn-secondary">إعادة تعيين البحث</button>
       </div>
     </div>
   </section>
@@ -252,41 +252,7 @@
   </section>
 </main>
 
-<footer style="background:#283593" class="text-white">
-  <div class="container-1200 pt-12 pb-8">
-    <div class="grid md:grid-cols-4 gap-8 pb-8 border-b border-white/15">
-      <div class="md:col-span-2">
-        <div class="flex items-center gap-3 mb-4">
-          <span class="w-11 h-11 rounded-xl bg-mx-orange text-white font-black flex items-center justify-center">M</span>
-          <div>
-            <p class="font-heading text-xl font-black">MuallimX</p>
-            <p class="text-xs text-white/70">منصة تطوير المعلم العربي</p>
-          </div>
-        </div>
-        <p class="text-sm text-white/85 leading-7 max-w-md">تجربة تعليمية عربية تركز على التمكين المهني للمعلم عبر التدريب العملي وأدوات التدريس الحديثة.</p>
-      </div>
-      <div>
-        <h3 class="font-heading font-bold mb-3 text-white">روابط سريعة</h3>
-        <ul class="space-y-2 text-sm text-white/85">
-          <li><a class="hover:text-mx-gold transition-colors" href="{{ route('home') }}">الرئيسية</a></li>
-          <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.courses') }}">الكورسات</a></li>
-          <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.instructors.index') }}">المدربون</a></li>
-        </ul>
-      </div>
-      <div>
-        <h3 class="font-heading font-bold mb-3 text-white">تواصل معنا</h3>
-        <ul class="space-y-2 text-sm text-white/85">
-          <li><a class="hover:text-mx-gold transition-colors" href="mailto:info@mualimx.com">info@mualimx.com</a></li>
-          <li><a class="hover:text-mx-gold transition-colors" href="https://wa.me/201044610507" target="_blank">واتساب: 01044610507</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="pt-5 flex flex-col sm:flex-row gap-2 justify-between text-xs text-white/75">
-      <p>&copy; {{ date('Y') }} MuallimX — جميع الحقوق محفوظة</p>
-      <p>تعليم عربي احترافي يركز على النتائج</p>
-    </div>
-  </div>
-</footer>
+@include('components.unified-footer')
 
 <script>
 (function(){

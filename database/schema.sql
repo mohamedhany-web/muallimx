@@ -1,5 +1,5 @@
 -- ============================================
--- Mindlytics Platform - Complete Database Schema
+-- Muallimx Platform - Complete Database Schema
 -- ============================================
 -- Auto-generated on: 2025-11-15 17:31:06
 -- ============================================
@@ -484,24 +484,24 @@ CREATE INDEX `whats_app_messages_user_id_sent_at_index` on `whats_app_messages` 
 -- ============================================
 
 -- Data for table `academic_subjects`
-INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (1, 1, 'البرمجة الأساسية', 'PROG101', NULL, 'fa-code', '#10B981', 1, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
-INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (2, 1, 'قواعد البيانات', 'DB101', NULL, 'fa-database', '#F59E0B', 2, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
-INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (3, 1, 'تطوير الويب', 'WEB101', NULL, 'fa-globe', '#8B5CF6', 3, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
-INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (4, 2, 'البرمجة المتقدمة', 'PROG201', NULL, 'fa-code', '#EF4444', 1, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
-INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (5, 2, 'تطوير التطبيقات', 'APP201', NULL, 'fa-mobile-alt', '#06B6D4', 2, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
-INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (6, 3, 'الذكاء الاصطناعي', 'AI301', NULL, 'fa-robot', '#EC4899', 1, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
-INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (7, 3, 'الأمن السيبراني', 'SEC301', NULL, 'fa-shield-alt', '#F59E0B', 2, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
+INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (1, 1, 'الحصة الرقمية والأدوات الأساسية', 'TCH101', NULL, 'fa-laptop-house', '#10B981', 1, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
+INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (2, 1, 'التخطيط والأهداف التعليمية', 'TCH102', NULL, 'fa-bullseye', '#F59E0B', 2, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
+INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (3, 1, 'التقييم والتغذية الراجعة', 'TCH103', NULL, 'fa-clipboard-check', '#8B5CF6', 3, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
+INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (4, 2, 'أدوات التواصل والتعاون الصفي', 'TCH201', NULL, 'fa-users', '#EF4444', 1, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
+INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (5, 2, 'الخصوصية والسلوك الرقمي في المدرسة', 'TCH202', NULL, 'fa-shield-halved', '#06B6D4', 2, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
+INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (6, 3, 'تصميم البرنامج التدريبي', 'TCH301', NULL, 'fa-diagram-project', '#EC4899', 1, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
+INSERT INTO `academic_subjects` (`id`,`academic_year_id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (7, 3, 'التواصل مع المتعلمين وخدمة ما بعد التدريب', 'TCH302', NULL, 'fa-comments', '#F59E0B', 2, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
 
 -- Data for table `academic_years`
-INSERT INTO `academic_years` (`id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (1, 'Frontend', 'G10', 'html - css', 'fas fa-calendar-alt', '#acf73b', 1, 1, '2025-11-01 23:31:15', '2025-11-12 12:22:38');
-INSERT INTO `academic_years` (`id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (2, 'الصف الثاني الثانوي', 'G11', 'السنة الثانية من المرحلة الثانوية', 'fa-graduation-cap', '#10B981', 2, 1, '2025-11-01 23:31:15', '2025-11-12 12:17:48');
-INSERT INTO `academic_years` (`id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (3, 'الصف الثالث الثانوي', 'G12', 'السنة الثالثة من المرحلة الثانوية', 'fa-graduation-cap', '#8B5CF6', 3, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
+INSERT INTO `academic_years` (`id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (1, 'مسار التمهيد للتدريس أونلاين', 'TCH-L1', 'المستوى الأول: أساسيات الحصة الرقمية والتفاعل مع المتعلمين', 'fa-chalkboard-teacher', '#3B82F6', 1, 1, '2025-11-01 23:31:15', '2025-11-12 12:22:38');
+INSERT INTO `academic_years` (`id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (2, 'مسار المهارات الرقمية للمعلم', 'TCH-L2', 'المستوى الثاني: دمج أدوات رقمية آمنة وفعّالة في التعليم', 'fa-laptop-code', '#10B981', 2, 1, '2025-11-01 23:31:15', '2025-11-12 12:17:48');
+INSERT INTO `academic_years` (`id`,`name`,`code`,`description`,`icon`,`color`,`order`,`is_active`,`created_at`,`updated_at`) VALUES (3, 'مسار التطوير المهني للمدرّب', 'TCH-L3', 'المستوى الثالث: بناء حضور مهني وتقديم برامج تدريبية أونلاين', 'fa-user-tie', '#8B5CF6', 3, 1, '2025-11-01 23:31:15', '2025-11-01 23:31:15');
 
 -- Data for table `blog_posts`
 INSERT INTO `blog_posts` (`id`,`author_id`,`title`,`slug`,`excerpt`,`content`,`featured_image`,`images`,`status`,`is_featured`,`views_count`,`tags`,`meta_title`,`meta_description`,`published_at`,`created_at`,`updated_at`) VALUES (1, 1, 'ااااااااا', 'الصف الأول الثانوي', 'ااااااااااااااااا', 'ااااااااااااااااااا', 'images/blog/1762386336_690be1a08b718.png', NULL, 'published', 0, 8, '[]', 'ىى', 'ىى', '2025-11-05 23:09:23', '2025-11-05 23:09:23', '2025-11-14 01:00:37');
 
 -- Data for table `contact_messages`
-INSERT INTO `contact_messages` (`id`,`name`,`email`,`phone`,`subject`,`message`,`status`,`admin_notes`,`replied_by`,`replied_at`,`created_at`,`updated_at`) VALUES (1, 'mohamed hany', 'loransmogay@gmail.com', '01203679764', 'اا', 'ااا', 'new', NULL, NULL, NULL, '2025-11-05 23:49:40', '2025-11-05 23:49:40');
+INSERT INTO `contact_messages` (`id`,`name`,`email`,`phone`,`subject`,`message`,`status`,`admin_notes`,`replied_by`,`replied_at`,`created_at`,`updated_at`) VALUES (1, 'زائر تجريبي', 'visitor@example.local', '0100000000', 'استفسار', 'نص تجريبي', 'new', NULL, NULL, NULL, '2025-11-05 23:49:40', '2025-11-05 23:49:40');
 
 -- Data for table `installment_plans`
 INSERT INTO `installment_plans` (`id`,`name`,`slug`,`description`,`advanced_course_id`,`total_amount`,`deposit_amount`,`installments_count`,`frequency_unit`,`frequency_interval`,`grace_period_days`,`auto_generate_on_enrollment`,`is_active`,`metadata`,`created_at`,`updated_at`) VALUES (1, 'mohamed hany', 'mohamed-hany-isvu', 'لالالالالالالالالالالالالالالالالالالالا', NULL, 1500, 500, 2, 'month', 1, 0, 1, 1, NULL, '2025-11-13 14:40:32', '2025-11-13 14:40:32');
@@ -709,8 +709,8 @@ INSERT INTO `user_permissions` (`id`,`user_id`,`permission_id`,`created_at`,`upd
 INSERT INTO `user_permissions` (`id`,`user_id`,`permission_id`,`created_at`,`updated_at`) VALUES (11, 5, 50, NULL, NULL);
 
 -- Data for table `users`
-INSERT INTO `users` (`id`,`name`,`email`,`phone`,`password`,`role`,`avatar`,`is_active`,`bio`,`parent_id`,`profile_image`,`birth_date`,`address`,`academic_year_id`,`last_login_at`,`remember_token`,`created_at`,`updated_at`) VALUES (1, 'Mohammad Hany', 'admin@techbridge.com', '0500000000', '$2y$12$ZbX7Xe8mT0gNtZ3PCYhAoOjVNOalyvaaMSw56mDqKPlBNK1PM4P46', 'super_admin', NULL, 1, NULL, NULL, 'profile-photos/7dd52445-58f4-4be9-aa36-4d76c99b09be.jpg', NULL, NULL, NULL, '2025-11-15 17:18:08', NULL, '2025-11-01 23:29:48', '2025-11-09 20:28:28');
-INSERT INTO `users` (`id`,`name`,`email`,`phone`,`password`,`role`,`avatar`,`is_active`,`bio`,`parent_id`,`profile_image`,`birth_date`,`address`,`academic_year_id`,`last_login_at`,`remember_token`,`created_at`,`updated_at`) VALUES (5, 'mohamed hany', 'codermohamedhany@gmail.com', '01203679764', '$2y$12$IozkiILUSekgrtBA73HkNej3HAtOTLpGX61gfWuZRK8JURfhXs/0i', 'student', NULL, 1, NULL, NULL, 'profile-photos/29fd3b5f-ba40-4271-96dc-6a1d53be928a.png', NULL, NULL, NULL, '2025-11-14 01:09:49', NULL, '2025-11-09 18:16:45', '2025-11-12 12:33:20');
+INSERT INTO `users` (`id`,`name`,`email`,`phone`,`password`,`role`,`avatar`,`is_active`,`bio`,`parent_id`,`profile_image`,`birth_date`,`address`,`academic_year_id`,`last_login_at`,`remember_token`,`created_at`,`updated_at`) VALUES (1, 'مدير المنصة', 'admin@example.local', '0500000000', '$2y$12$ZbX7Xe8mT0gNtZ3PCYhAoOjVNOalyvaaMSw56mDqKPlBNK1PM4P46', 'super_admin', NULL, 1, NULL, NULL, 'profile-photos/7dd52445-58f4-4be9-aa36-4d76c99b09be.jpg', NULL, NULL, NULL, '2025-11-15 17:18:08', NULL, '2025-11-01 23:29:48', '2025-11-09 20:28:28');
+INSERT INTO `users` (`id`,`name`,`email`,`phone`,`password`,`role`,`avatar`,`is_active`,`bio`,`parent_id`,`profile_image`,`birth_date`,`address`,`academic_year_id`,`last_login_at`,`remember_token`,`created_at`,`updated_at`) VALUES (5, 'طالب تجريبي', 'student@example.local', '01203679764', '$2y$12$IozkiILUSekgrtBA73HkNej3HAtOTLpGX61gfWuZRK8JURfhXs/0i', 'student', NULL, 1, NULL, NULL, 'profile-photos/29fd3b5f-ba40-4271-96dc-6a1d53be928a.png', NULL, NULL, NULL, '2025-11-14 01:09:49', NULL, '2025-11-09 18:16:45', '2025-11-12 12:33:20');
 
 -- Data for table `wallets`
 INSERT INTO `wallets` (`id`,`user_id`,`balance`,`pending_balance`,`currency`,`is_active`,`created_at`,`updated_at`) VALUES (1, 5, 0, 0, 'EGP', 1, '2025-11-14 01:10:47', '2025-11-14 01:10:47');

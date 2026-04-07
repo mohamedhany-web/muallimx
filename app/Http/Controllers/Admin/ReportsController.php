@@ -809,7 +809,7 @@ class ReportsController extends Controller
             };
 
             $excelService->addHeader(
-                'تقرير المستخدمين الشامل - MuallimX',
+                'تقرير المستخدمين الشامل - Muallimx',
                 'من تاريخ: ' . $startDate->format('Y-m-d')
                 . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
                 . ' | الدور: ' . $roleLabel
@@ -913,7 +913,7 @@ class ReportsController extends Controller
             $excelService = new ExcelExportService();
 
             $excelService->addHeader(
-                'تقرير الكورسات الشامل - MuallimX',
+                'تقرير الكورسات الشامل - Muallimx',
                 'من تاريخ: ' . $startDate->format('Y-m-d')
                 . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
                 . ' | الحالة: ' . ($status === 'active' ? 'نشط' : ($status === 'inactive' ? 'غير نشط' : 'كل الحالات'))
@@ -995,7 +995,7 @@ class ReportsController extends Controller
             $excelService = new ExcelExportService();
 
             $excelService->addHeader(
-                'التقارير المالية الشاملة - MuallimX',
+                'التقارير المالية الشاملة - Muallimx',
                 'من تاريخ: ' . $startDate->format('Y-m-d')
                 . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
                 . ' | النوع: ' . match($type) {
@@ -1174,7 +1174,7 @@ class ReportsController extends Controller
 
             $excelService = new ExcelExportService();
             $excelService->addHeader(
-                'التقرير الأكاديمي الشامل - MuallimX',
+                'التقرير الأكاديمي الشامل - Muallimx',
                 'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
             );
 
@@ -1270,7 +1270,7 @@ class ReportsController extends Controller
             $excelService = new ExcelExportService();
 
             $excelService->addHeader(
-                'التقرير الشامل - MuallimX',
+                'التقرير الشامل - Muallimx',
                 'من تاريخ: ' . $startDate->format('Y-m-d') . ' إلى تاريخ: ' . $endDate->format('Y-m-d')
             );
 

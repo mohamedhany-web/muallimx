@@ -1,8 +1,8 @@
-{{-- SEO Meta Tags Component — MuallimX --}}
+{{-- SEO Meta Tags Component — Muallimx --}}
 @php
-    $title       = $title       ?? 'MuallimX — منصة تأهيل المعلمين للعمل أونلاين باحتراف';
-    $description = $description ?? 'MuallimX منصة عربية متخصصة في تأهيل وتطوير المعلمين للعمل أونلاين — تدريب تطبيقي، أدوات AI للتحضير، مناهج جاهزة، وبناء بروفايل يفتح فرص عمل حقيقية.';
-    $keywords    = $keywords    ?? 'تأهيل المعلمين, تدريب المعلمين أونلاين, أدوات AI للمعلم, مولد خطة الدرس, بناء بروفايل المعلم, توظيف المعلمين, دبلومات تعليمية, مناهج تفاعلية, MuallimX';
+    $title       = $title       ?? 'Muallimx — منصة تأهيل المعلمين للعمل أونلاين باحتراف';
+    $description = $description ?? 'Muallimx منصة عربية متخصصة في تأهيل وتطوير المعلمين للعمل أونلاين — تدريب تطبيقي، أدوات AI للتحضير، مناهج جاهزة، وبناء بروفايل يفتح فرص عمل حقيقية.';
+    $keywords    = $keywords    ?? 'تأهيل المعلمين, تدريب المعلمين أونلاين, أدوات AI للمعلم, مولد خطة الدرس, بناء بروفايل المعلم, توظيف المعلمين, دبلومات تعليمية, مناهج تفاعلية, Muallimx';
     $image       = $image       ?? asset('images/og-image.jpg');
     $imageAlt    = $imageAlt    ?? $title;
     $url         = $url         ?? url()->current();
@@ -18,7 +18,7 @@
 <meta name="title"          content="{{ $title }}">
 <meta name="description"    content="{{ $description }}">
 <meta name="keywords"       content="{{ $keywords }}">
-<meta name="author"         content="MuallimX">
+<meta name="author"         content="Muallimx">
 <meta name="robots"         content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="language"       content="{{ $langCode }}">
 <meta name="revisit-after"  content="7 days">
@@ -38,12 +38,12 @@
 <meta property="og:image:height"      content="630">
 <meta property="og:locale"            content="{{ $ogLocale }}">
 <meta property="og:locale:alternate"  content="{{ $ogLocaleAlt }}">
-<meta property="og:site_name"         content="MuallimX">
+<meta property="og:site_name"         content="Muallimx">
 
 <!-- ═══ Twitter / X Card ═══ -->
 <meta name="twitter:card"        content="summary_large_image">
-<meta name="twitter:site"        content="@MuallimX">
-<meta name="twitter:creator"     content="@MuallimX">
+<meta name="twitter:site"        content="@Muallimx">
+<meta name="twitter:creator"     content="@Muallimx">
 <meta name="twitter:url"         content="{{ $url }}">
 <meta name="twitter:title"       content="{{ $title }}">
 <meta name="twitter:description" content="{{ $description }}">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mindlytics Laravel Deployment Guide</title>
+    <title>MuallimX — Laravel Deployment Guide</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -87,7 +87,7 @@
 </head>
 <body>
 
-<h1>Mindlytics Laravel Deployment Guide</h1>
+<h1>MuallimX — Laravel Deployment Guide</h1>
 <p class="subtitle"><strong>Git-based workflow:</strong> Local → GitHub → Server</p>
 <p>This guide covers updating the project locally, pushing to GitHub, and deploying changes on the server.</p>
 
@@ -108,13 +108,13 @@
 
 <h3>2.1 Connect to the server</h3>
 <p>SSH into your server and go to the project directory:</p>
-<code>ssh username@your-server-ip<br>cd /path/to/Mindlytics</code>
+<code>ssh username@your-server-ip<br>cd /path/to/Muallimx</code>
 
 <h3>2.2 Verify Git remote</h3>
 <p>Check that the project is linked to GitHub:</p>
 <code>git remote -v</code>
 <p>If it is not connected, run:</p>
-<code>git init<br>git remote add origin https://github.com/mohamedhany-web/mindlytics.git</code>
+<code>git init<br>git remote add origin https://github.com/your-org/your-repo.git</code>
 
 <h3>2.3 Pull latest code from GitHub</h3>
 <p>Fetch and reset to match the remote branch exactly:</p>

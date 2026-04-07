@@ -95,7 +95,7 @@ while ($table = $tablesStmt->fetchColumn()) {
 
 $header = <<<SQL
 -- ============================================
--- Mindlytics Platform - Complete Database Schema
+-- Muallimx Platform - Complete Database Schema
 -- ============================================
 -- Auto-generated on: %s
 -- ============================================

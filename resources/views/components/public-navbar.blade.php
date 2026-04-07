@@ -10,14 +10,14 @@
                 <a href="{{ route('home') }}" class="flex items-center space-x-4 space-x-reverse">
                     <div class="relative">
                         <div class="w-16 h-16 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 rounded-2xl flex items-center justify-center logo-animation shadow-xl">
-                            <i class="fas fa-code text-white text-2xl rotate-animation"></i>
+                            <i class="fas fa-chalkboard-teacher text-white text-2xl rotate-animation"></i>
                         </div>
                         <div class="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full pulse-animation"></div>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-black text-blue-900 text-glow">Mindlytics</h1>
-                        <p class="text-sm text-blue-700 font-medium">أكاديمية برمجة</p>
-                        <p class="text-xs text-blue-600">تعلم البرمجة من الصفر إلى الاحتراف</p>
+                        <h1 class="text-2xl font-black text-blue-900 text-glow">{{ config('app.name', 'Muallimx') }}</h1>
+                        <p class="text-sm text-blue-700 font-medium">منصة تأهيل المعلّمين</p>
+                        <p class="text-xs text-blue-600">تأهيل المعلمين والتدريس الاحترافي أونلاين</p>
                     </div>
                 </a>
             </div>

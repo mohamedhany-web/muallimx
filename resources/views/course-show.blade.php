@@ -31,14 +31,14 @@
     @php
         $courseOgImg  = $thumbUrl ?? asset('images/og-image.jpg');
         $courseDesc   = Str::limit(strip_tags($course->description ?? ''), 160);
-        $courseTitle  = ($course->title ?? __('public.course_detail_title')) . ' | MuallimX';
+        $courseTitle  = ($course->title ?? __('public.course_detail_title')) . ' | Muallimx';
         $courseUrl    = url('/course/' . ($course->id ?? ''));
     @endphp
     <title>{{ $courseTitle }}</title>
     <meta name="title"       content="{{ $courseTitle }}">
     <meta name="description" content="{{ $courseDesc }}">
-    <meta name="keywords"    content="{{ $course->title ?? 'كورس' }}, تعلم أونلاين, كورسات عربية, MuallimX, {{ $levelLabel ?? '' }}">
-    <meta name="author"      content="{{ ($course->instructor->name ?? null) ?? 'MuallimX' }}">
+    <meta name="keywords"    content="{{ $course->title ?? 'كورس' }}, تعلم أونلاين, كورسات عربية, Muallimx, {{ $levelLabel ?? '' }}">
+    <meta name="author"      content="{{ ($course->instructor->name ?? null) ?? 'Muallimx' }}">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#283593">
     <link rel="canonical"    href="{{ $courseUrl }}">
@@ -55,10 +55,10 @@
     <meta property="og:image:width"      content="1200">
     <meta property="og:image:height"     content="630">
     <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
-    <meta property="og:site_name"        content="MuallimX">
+    <meta property="og:site_name"        content="Muallimx">
     <!-- Twitter Card -->
     <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:site"        content="@MuallimX">
+    <meta name="twitter:site"        content="@Muallimx">
     <meta name="twitter:url"         content="{{ $courseUrl }}">
     <meta name="twitter:title"       content="{{ $courseTitle }}">
     <meta name="twitter:description" content="{{ $courseDesc }}">
@@ -465,41 +465,7 @@
         </section>
     </main>
 
-    <footer style="background:#283593" class="text-white">
-        <div class="container-1200 pt-12 pb-8">
-            <div class="grid md:grid-cols-4 gap-8 pb-8 border-b border-white/15">
-                <div class="md:col-span-2">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="w-11 h-11 rounded-xl bg-mx-orange text-white font-black flex items-center justify-center">M</span>
-                        <div>
-                            <p class="font-heading text-xl font-black">MuallimX</p>
-                            <p class="text-xs text-white/70">منصة تطوير المعلم العربي</p>
-                        </div>
-                    </div>
-                    <p class="text-sm text-white/85 leading-7 max-w-md">تجربة تعليمية عربية تركز على التمكين المهني للمعلم عبر التدريب العملي وأدوات التدريس الحديثة.</p>
-                </div>
-                <div>
-                    <h3 class="font-heading font-bold mb-3 text-white">روابط سريعة</h3>
-                    <ul class="space-y-2 text-sm text-white/85">
-                        <li><a class="hover:text-mx-gold transition-colors" href="{{ route('home') }}">الرئيسية</a></li>
-                        <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.courses') }}">الكورسات</a></li>
-                        <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.instructors.index') }}">المدربون</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="font-heading font-bold mb-3 text-white">تواصل معنا</h3>
-                    <ul class="space-y-2 text-sm text-white/85">
-                        <li><a class="hover:text-mx-gold transition-colors" href="mailto:info@mualimx.com">info@mualimx.com</a></li>
-                        <li><a class="hover:text-mx-gold transition-colors" href="https://wa.me/201044610507" target="_blank">واتساب: 01044610507</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="pt-5 flex flex-col sm:flex-row gap-2 justify-between text-xs text-white/75">
-                <p>&copy; {{ date('Y') }} MuallimX — جميع الحقوق محفوظة</p>
-                <p>تعليم عربي احترافي يركز على النتائج</p>
-            </div>
-        </div>
-    </footer>
+    @include('components.unified-footer')
     <script>
     (function(){
         function p(){var s=window.pageYOffset||document.documentElement.scrollTop,h=document.documentElement.scrollHeight-window.innerHeight,b=document.getElementById('scroll-progress');if(b)b.style.width=(h>0?(s/h)*100:0)+'%';}

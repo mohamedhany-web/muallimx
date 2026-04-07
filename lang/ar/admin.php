@@ -50,6 +50,7 @@ return [
     'assign_instructors_paths' => 'توصيف المدربين للمسارات',
     'skill_groups' => 'مجموعات المهارات',
     'courses_management' => 'إدارة الكورسات',
+    'course_categories' => 'تصنيفات الكورسات',
     'lectures' => 'المحاضرات',
     'groups' => 'المجموعات',
     'assignments_projects' => 'الواجبات والمشاريع',

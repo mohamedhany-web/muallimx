@@ -199,7 +199,7 @@
             <div class="space-y-5">
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">عنوان المحاضرة <span class="text-red-500">*</span></label>
-                    <input type="text" name="title" id="lectureTitle" required placeholder="مثال: مقدمة في JavaScript"
+                    <input type="text" name="title" id="lectureTitle" required placeholder="مثال: مقدمة في التخطيط للحصة الرقمية"
                            class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100">
                 </div>
                 <div>

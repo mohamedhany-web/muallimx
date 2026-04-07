@@ -1,6 +1,6 @@
 ﻿@extends('layouts.admin')
 
-@section('title', 'إعداد تكامل الرسائل الخارجية - MuallimX')
+@section('title', 'إعداد تكامل الرسائل الخارجية - Muallimx')
 @section('header', 'إعدادات تكامل الإرسال الخارجي')
 
 @section('content')
@@ -10,7 +10,7 @@
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">{{ __('إعداد تكامل قنوات الرسائل') }}</h1>
                 <p class="text-gray-600">
-                    {{ __('من هنا يمكنك ربط MuallimX بأي API خارجي لإرسال الرسائل (واتساب أو غيره) بطريقة آمنة ومرنة.') }}
+                    {{ __('من هنا يمكنك ربط Muallimx بأي API خارجي لإرسال الرسائل (واتساب أو غيره) بطريقة آمنة ومرنة.') }}
                 </p>
             </div>
             <a href="{{ route('admin.messages.index') }}" 
@@ -39,7 +39,7 @@
             </div>
             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                 <i class="fas fa-shield-alt ml-1"></i>
-                {{ __('إعدادات متقدمة للمطوّر') }}
+                {{ __('إعدادات تقنية متقدمة') }}
             </span>
         </div>
 
@@ -149,7 +149,7 @@
                             {{ __('رسالة الاختبار') }}
                         </label>
                         <input type="text" id="test_message" 
-                               value="رسالة اختبار من منصة MuallimX 🎓"
+                               value="رسالة اختبار من منصة Muallimx 🎓"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
                     </div>
                 </div>

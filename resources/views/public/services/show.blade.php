@@ -122,7 +122,7 @@
     </section>
 </main>
 
-@include('partials.public-site-footer', ['footerExtraClass' => 'mt-auto'])
+@include('components.unified-footer')
 
 <script>
 (function(){

@@ -8,7 +8,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     @php
-        $instrPageTitle = ($profile->user->name ?? __('public.instructor_fallback')) . ' — ' . ($profile->headline ?? 'مدرب') . ' | MuallimX';
+        $instrPageTitle = ($profile->user->name ?? __('public.instructor_fallback')) . ' — ' . ($profile->headline ?? 'مدرب') . ' | Muallimx';
         $instrPageDesc  = Str::limit(strip_tags($profile->bio ?? $profile->headline ?? ''), 160);
         $instrPageImg   = ($profile->profile_image ?? null) ? asset('storage/' . $profile->profile_image) : asset('images/og-image.jpg');
         $instrPageUrl   = route('public.instructors.show', $profile->user ?? $profile);
@@ -16,8 +16,8 @@
     <title>{{ $instrPageTitle }}</title>
     <meta name="title"       content="{{ $instrPageTitle }}">
     <meta name="description" content="{{ $instrPageDesc }}">
-    <meta name="keywords"    content="{{ ($profile->user->name ?? '') }}, مدرب أونلاين, {{ ($profile->headline ?? '') }}, MuallimX">
-    <meta name="author"      content="{{ $profile->user->name ?? 'MuallimX' }}">
+    <meta name="keywords"    content="{{ ($profile->user->name ?? '') }}, مدرب أونلاين, {{ ($profile->headline ?? '') }}, Muallimx">
+    <meta name="author"      content="{{ $profile->user->name ?? 'Muallimx' }}">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#283593">
     <link rel="canonical"    href="{{ $instrPageUrl }}">
@@ -34,13 +34,13 @@
     <meta property="og:image:width"      content="800">
     <meta property="og:image:height"     content="800">
     <meta property="og:locale"           content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
-    <meta property="og:site_name"        content="MuallimX">
+    <meta property="og:site_name"        content="Muallimx">
     @if($profile->user->name ?? null)
     <meta property="profile:first_name"  content="{{ $profile->user->name }}">
     @endif
     <!-- Twitter Card -->
     <meta name="twitter:card"        content="summary_large_image">
-    <meta name="twitter:site"        content="@MuallimX">
+    <meta name="twitter:site"        content="@Muallimx">
     <meta name="twitter:url"         content="{{ $instrPageUrl }}">
     <meta name="twitter:title"       content="{{ $instrPageTitle }}">
     <meta name="twitter:description" content="{{ $instrPageDesc }}">
@@ -362,7 +362,7 @@
                         <span style="color:#FB5607">رحلتك؟</span>
                     </h2>
                     <p class="text-slate-600 text-base sm:text-lg max-w-3xl mx-auto leading-8 mb-7">
-                        انضم لآلاف المعلمين الذين طوّروا مسيرتهم المهنية مع MuallimX
+                        انضم لآلاف المعلمين الذين طوّروا مسيرتهم المهنية مع Muallimx
                     </p>
                     <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                         <a href="{{ route('public.courses') }}" class="btn-primary inline-flex items-center justify-center gap-3 !bg-[#FB5607] hover:!bg-[#e84d00] text-white font-bold text-base sm:text-lg px-8 py-4 rounded-2xl">
@@ -379,41 +379,7 @@
         </section>
     </main>
 
-<footer style="background:#283593" class="text-white">
-    <div class="container-1200 pt-12 pb-8">
-        <div class="grid md:grid-cols-4 gap-8 pb-8 border-b border-white/15">
-            <div class="md:col-span-2">
-                <div class="flex items-center gap-3 mb-4">
-                    <span class="w-11 h-11 rounded-xl bg-mx-orange text-white font-black flex items-center justify-center">M</span>
-                    <div>
-                        <p class="font-heading text-xl font-black">MuallimX</p>
-                        <p class="text-xs text-white/70">منصة تطوير المعلم العربي</p>
-                    </div>
-                </div>
-                <p class="text-sm text-white/85 leading-7 max-w-md">تجربة تعليمية عربية تركز على التمكين المهني للمعلم عبر التدريب العملي وأدوات التدريس الحديثة.</p>
-            </div>
-            <div>
-                <h3 class="font-heading font-bold mb-3 text-white">روابط سريعة</h3>
-                <ul class="space-y-2 text-sm text-white/85">
-                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('home') }}">الرئيسية</a></li>
-                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.courses') }}">الكورسات</a></li>
-                    <li><a class="hover:text-mx-gold transition-colors" href="{{ route('public.instructors.index') }}">المدربون</a></li>
-                </ul>
-            </div>
-            <div>
-                <h3 class="font-heading font-bold mb-3 text-white">تواصل معنا</h3>
-                <ul class="space-y-2 text-sm text-white/85">
-                    <li><a class="hover:text-mx-gold transition-colors" href="mailto:info@mualimx.com">info@mualimx.com</a></li>
-                    <li><a class="hover:text-mx-gold transition-colors" href="https://wa.me/201044610507" target="_blank">واتساب: 01044610507</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="pt-5 flex flex-col sm:flex-row gap-2 justify-between text-xs text-white/75">
-            <p>&copy; {{ date('Y') }} MuallimX — جميع الحقوق محفوظة</p>
-            <p>تعليم عربي احترافي يركز على النتائج</p>
-        </div>
-    </div>
-</footer>
+    @include('components.unified-footer')
     <script>
     (function(){
         function p(){var s=window.pageYOffset||document.documentElement.scrollTop,h=document.documentElement.scrollHeight-window.innerHeight,b=document.getElementById('scroll-progress');if(b)b.style.width=(h>0?(s/h)*100:0)+'%';}

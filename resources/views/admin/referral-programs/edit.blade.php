@@ -1,6 +1,6 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
-@section('title', 'تعديل برنامج الإحالات - Mindlytics')
+@section('title', 'تعديل برنامج الإحالات - ' . config('app.name', 'Muallimx'))
 @section('header', 'تعديل برنامج الإحالات')
 
 @section('content')

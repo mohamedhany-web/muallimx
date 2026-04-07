@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>إنشاء حساب — MuallimX</title>
+    <title>إنشاء حساب — Muallimx</title>
     <meta name="theme-color" content="#283593">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
@@ -88,7 +88,7 @@
                     <div class="w-12 h-12 rounded-xl bg-[#FB5607] flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-shadow">
                         <span class="text-white font-black text-xl">M</span>
                     </div>
-                    <span class="text-mx-indigo font-extrabold text-2xl">MuallimX</span>
+                    <span class="text-mx-indigo font-extrabold text-2xl">Muallimx</span>
                 </a>
 
                 <h1 class="font-heading text-3xl font-black text-mx-indigo leading-tight mb-5">
@@ -130,7 +130,7 @@
                     <div class="w-10 h-10 rounded-xl bg-[#FB5607] flex items-center justify-center shadow-lg">
                         <span class="text-white font-black text-lg">M</span>
                     </div>
-                    <span class="text-mx-indigo font-extrabold text-xl">MuallimX</span>
+                    <span class="text-mx-indigo font-extrabold text-xl">Muallimx</span>
                 </a>
             </div>
 

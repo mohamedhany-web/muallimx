@@ -236,7 +236,7 @@
                                         <input type="checkbox" name="plans[{{ $key }}][features][]" value="classroom_access"
                                             class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                                             {{ in_array('classroom_access', $planFeatures, true) ? 'checked' : '' }}>
-                                        <span>استخدام MuallimX Classroom للتدريس</span>
+                                        <span>استخدام Muallimx Classroom للتدريس</span>
                                     </label>
                                     <label class="flex items-center">
                                         <input type="checkbox" name="plans[{{ $key }}][features][]" value="support"
@@ -272,7 +272,7 @@
                                         <input type="checkbox" name="plans[{{ $key }}][features][]" value="teacher_evaluation"
                                             class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                                             {{ in_array('teacher_evaluation', $planFeatures, true) ? 'checked' : '' }}>
-                                        <span>تقييم المعلم من فريق MuallimX</span>
+                                        <span>تقييم المعلم من فريق Muallimx</span>
                                     </label>
                                     <label class="flex items-center">
                                         <input type="checkbox" name="plans[{{ $key }}][features][]" value="recommended_to_academies"

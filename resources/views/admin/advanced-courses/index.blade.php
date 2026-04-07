@@ -35,7 +35,7 @@
             <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100">البحث والتصفية</h2>
         </div>
         <div class="p-6">
-            <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <form method="GET" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                     <label for="search" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">البحث</label>
                     <input type="text" name="search" id="search" value="{{ request('search') }}"
@@ -43,21 +43,12 @@
                            class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
                 </div>
                 <div>
-                    <label for="category" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">التصنيف</label>
-                    <select name="category" id="category" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
+                    <label for="course_category_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">تصنيف الكورس</label>
+                    <select name="course_category_id" id="course_category_id" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
                         <option value="">جميع التصنيفات</option>
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                        @foreach($courseCategoryOptions as $cc)
+                            <option value="{{ $cc->id }}" {{ (string) request('course_category_id') === (string) $cc->id ? 'selected' : '' }}>{{ $cc->name }}</option>
                         @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label for="level" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">المستوى</label>
-                    <select name="level" id="level" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
-                        <option value="">جميع المستويات</option>
-                        <option value="beginner" {{ request('level') == 'beginner' ? 'selected' : '' }}>مبتدئ</option>
-                        <option value="intermediate" {{ request('level') == 'intermediate' ? 'selected' : '' }}>متوسط</option>
-                        <option value="advanced" {{ request('level') == 'advanced' ? 'selected' : '' }}>متقدم</option>
                     </select>
                 </div>
                 <div>

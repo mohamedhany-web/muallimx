@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>تسجيل الدخول — MuallimX</title>
+    <title>تسجيل الدخول — Muallimx</title>
     <meta name="theme-color" content="#283593">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
@@ -76,7 +76,7 @@
                     <div class="w-12 h-12 rounded-xl bg-[#FB5607] flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-shadow">
                         <span class="text-white font-black text-xl">M</span>
                     </div>
-                    <span class="text-mx-indigo font-extrabold text-2xl">MuallimX</span>
+                    <span class="text-mx-indigo font-extrabold text-2xl">Muallimx</span>
                 </a>
 
                 <h1 class="font-heading text-3xl xl:text-4xl font-black text-mx-indigo leading-tight mb-5">
@@ -128,7 +128,7 @@
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg">
                         <span class="text-white font-black text-lg">M</span>
                     </div>
-                    <span class="text-navy-950 font-extrabold text-xl" style="font-family:Tajawal,sans-serif">MuallimX</span>
+                    <span class="text-navy-950 font-extrabold text-xl" style="font-family:Tajawal,sans-serif">Muallimx</span>
                 </a>
             </div>
 

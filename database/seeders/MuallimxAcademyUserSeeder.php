@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
 class MuallimxAcademyUserSeeder extends Seeder
 {
     /**
-     * بيانات مستخدمي منصة MuallimX — تأهيل المعلمين للعمل أونلاين
+     * بيانات مستخدمي منصة Muallimx — تأهيل المعلمين للعمل أونلاين
      */
     public function run(): void
     {
@@ -24,9 +24,9 @@ class MuallimxAcademyUserSeeder extends Seeder
 
         // ─── مدير المنصة (Super Admin) ───
         User::firstOrCreate(
-            ['email' => 'admin@mualimx.com'],
+            ['email' => 'admin@Muallimx.com'],
             [
-                'name' => 'مدير منصة MuallimX',
+                'name' => 'مدير منصة Muallimx',
                 'phone' => '0500000000',
                 'password' => $password,
                 'role' => 'super_admin',
@@ -37,7 +37,7 @@ class MuallimxAcademyUserSeeder extends Seeder
 
         // ─── مدير أكاديمي (Super Admin ثاني — صلاحيات إدارية)
         User::firstOrCreate(
-            ['email' => 'academy@mualimx.com'],
+            ['email' => 'academy@Muallimx.com'],
             [
                 'name' => 'سارة المديرة الأكاديمية',
                 'phone' => '0500000001',
@@ -51,25 +51,25 @@ class MuallimxAcademyUserSeeder extends Seeder
         // ─── مدربون (Instructors) ───
         $instructors = [
             [
-                'email' => 'instructor1@mualimx.com',
+                'email' => 'instructor1@Muallimx.com',
                 'phone' => '0500000010',
                 'name' => 'د. أحمد الشمري',
                 'bio' => 'مدرب معتمد في التدريس أونلاين — خبرة 12 سنة. متخصص في تصميم الحصص التفاعلية واستخدام أدوات التعلم الرقمي.',
             ],
             [
-                'email' => 'instructor2@mualimx.com',
+                'email' => 'instructor2@Muallimx.com',
                 'phone' => '0500000011',
                 'name' => 'نورة العتيبي',
                 'bio' => 'معلمة لغة عربية أونلاين — تدريب المعلمين على تقديم حصص افتراضية احترافية وبناء البروفايل المهني.',
             ],
             [
-                'email' => 'instructor3@mualimx.com',
+                'email' => 'instructor3@Muallimx.com',
                 'phone' => '0500000012',
                 'name' => 'محمد المنصوري',
                 'bio' => 'خبير في أدوات الذكاء الاصطناعي للمعلمين — ورش عملية على تحضير الدروس والأنشطة باستخدام AI.',
             ],
             [
-                'email' => 'instructor4@mualimx.com',
+                'email' => 'instructor4@Muallimx.com',
                 'phone' => '0500000013',
                 'name' => 'هدى الكويتية',
                 'bio' => 'مدربة في التسويق للمعلمين والعمل بالدولار — مسارات تعلم للوصول لفرص عمل دولية.',
@@ -108,12 +108,12 @@ class MuallimxAcademyUserSeeder extends Seeder
 
         // ─── طلاب / معلمون متدربون (Students) ───
         $students = [
-            ['email' => 'student1@mualimx.com', 'phone' => '0500000020', 'name' => 'فاطمة الزهراء'],
-            ['email' => 'student2@mualimx.com', 'phone' => '0500000021', 'name' => 'عمر الطالب'],
-            ['email' => 'student3@mualimx.com', 'phone' => '0500000022', 'name' => 'مريم المعلمة المتدربة'],
-            ['email' => 'student4@mualimx.com', 'phone' => '0500000023', 'name' => 'خالد السعيد'],
-            ['email' => 'student5@mualimx.com', 'phone' => '0500000024', 'name' => 'لينا أحمد'],
-            ['email' => 'student6@mualimx.com', 'phone' => '0500000025', 'name' => 'يوسف المعلم'],
+            ['email' => 'student1@Muallimx.com', 'phone' => '0500000020', 'name' => 'فاطمة الزهراء'],
+            ['email' => 'student2@Muallimx.com', 'phone' => '0500000021', 'name' => 'عمر الطالب'],
+            ['email' => 'student3@Muallimx.com', 'phone' => '0500000022', 'name' => 'مريم المعلمة المتدربة'],
+            ['email' => 'student4@Muallimx.com', 'phone' => '0500000023', 'name' => 'خالد السعيد'],
+            ['email' => 'student5@Muallimx.com', 'phone' => '0500000024', 'name' => 'لينا أحمد'],
+            ['email' => 'student6@Muallimx.com', 'phone' => '0500000025', 'name' => 'يوسف المعلم'],
         ];
 
         foreach ($students as $data) {
@@ -129,14 +129,14 @@ class MuallimxAcademyUserSeeder extends Seeder
             );
         }
 
-        $this->command->info('✅ تم إنشاء مستخدمي أكاديمية MuallimX بنجاح.');
+        $this->command->info('✅ تم إنشاء مستخدمي أكاديمية Muallimx بنجاح.');
         $this->command->newLine();
         $this->command->info('📋 بيانات الدخول (كلمة المرور لجميع الحسابات: password123)');
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        $this->command->info('👨‍💼 مدير المنصة:     admin@mualimx.com     — 0500000000');
-        $this->command->info('👩‍💼 مديرة أكاديمية: academy@mualimx.com   — 0500000001');
-        $this->command->info('👨‍🏫 مدربون:          instructor1@mualimx.com … instructor4@mualimx.com');
-        $this->command->info('👩‍🎓 طلاب:            student1@mualimx.com … student6@mualimx.com');
+        $this->command->info('👨‍💼 مدير المنصة:     admin@Muallimx.com     — 0500000000');
+        $this->command->info('👩‍💼 مديرة أكاديمية: academy@Muallimx.com   — 0500000001');
+        $this->command->info('👨‍🏫 مدربون:          instructor1@Muallimx.com … instructor4@Muallimx.com');
+        $this->command->info('👩‍🎓 طلاب:            student1@Muallimx.com … student6@Muallimx.com');
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
 }

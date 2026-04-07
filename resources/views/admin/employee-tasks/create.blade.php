@@ -92,7 +92,7 @@
                         </label>
                         <input type="text" name="title" id="title" value="{{ old('title') }}" required
                                class="w-full rounded-2xl border border-gray-200 bg-white/70 px-4 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition"
-                               placeholder="مثال: إعداد محتوى كورس Laravel">
+                               placeholder="مثال: مراجعة محتوى وحدة تدريبية على المنصة">
                         @error('title')
                             <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
                         @enderror
