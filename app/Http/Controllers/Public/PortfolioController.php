@@ -21,7 +21,7 @@ class PortfolioController extends Controller
         $categoryId = $request->get('path'); // تصفية حسب المسار (academic_year_id)
 
         $query = PortfolioProject::published()
-            ->with(['user:id,name,profile_image', 'academicYear:id,name', 'advancedCourse:id,title']);
+            ->with(['user:id,name,profile_image', 'academicYear:id,name', 'advancedCourse:id,title', 'images']);
 
         if ($categoryId) {
             $query->where('academic_year_id', $categoryId);
@@ -38,13 +38,18 @@ class PortfolioController extends Controller
     public function show($id)
     {
         $project = PortfolioProject::published()
-            ->with(['user:id,name,profile_image,bio', 'academicYear:id,name', 'advancedCourse:id,title'])
+            ->with([
+                'user:id,name,profile_image,bio,portfolio_headline,portfolio_about,portfolio_skills,portfolio_intro_video_url,portfolio_marketing_published,portfolio_profile_status,portfolio_profile_reviewed_at,updated_at',
+                'academicYear:id,name',
+                'advancedCourse:id,title',
+                'images',
+            ])
             ->findOrFail($id);
 
         $related = PortfolioProject::published()
             ->where('id', '!=', $project->id)
             ->where('academic_year_id', $project->academic_year_id)
-            ->with('user:id,name,profile_image')
+            ->with(['user:id,name,profile_image,portfolio_marketing_published,portfolio_profile_status,portfolio_profile_reviewed_at,updated_at', 'images'])
             ->latest('published_at')
             ->take(4)
             ->get();

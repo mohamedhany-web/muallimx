@@ -15,15 +15,15 @@
         <div class="section-card-header">
             <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">{{ __('admin.course_categories') }}</h1>
             <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                التصنيفات التي تظهر في قائمة التصفية بصفحة الكورسات العامة. أضف اسماً لكل مجال ثم اختره عند إنشاء أو تعديل كورس.
+                المسارات التي تظهر في قائمة التصفية بصفحة الكورسات العامة. أضف اسماً لكل مسار ثم اختره عند إنشاء أو تعديل كورس.
             </p>
         </div>
         <div class="p-6 sm:p-8 border-t border-slate-100 dark:border-slate-700">
-            <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">إضافة تصنيف جديد</h2>
+            <h2 class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">إضافة مسار جديد</h2>
             <form method="POST" action="{{ route('admin.course-categories.store') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                 @csrf
                 <div class="md:col-span-5 space-y-2">
-                    <label for="name" class="block text-sm font-medium text-slate-700 dark:text-slate-300">اسم التصنيف *</label>
+                    <label for="name" class="block text-sm font-medium text-slate-700 dark:text-slate-300">اسم المسار *</label>
                     <input type="text" name="name" id="name" value="{{ old('name') }}" required maxlength="255"
                            class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                            placeholder="مثال: التدريس التفاعلي">
@@ -53,7 +53,7 @@
 
     <div class="section-card overflow-hidden">
         <div class="section-card-header">
-            <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100">التصنيفات الحالية</h2>
+            <h2 class="text-base font-semibold text-slate-800 dark:text-slate-100">المسارات الحالية</h2>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
@@ -82,7 +82,7 @@
                                     <a href="{{ route('admin.course-categories.edit', $row) }}" class="inline-flex items-center gap-1 text-sky-600 hover:text-sky-800 text-xs font-semibold">
                                         <i class="fas fa-pen"></i> تعديل
                                     </a>
-                                    <form method="POST" action="{{ route('admin.course-categories.destroy', $row) }}" class="inline" onsubmit="return confirm('حذف هذا التصنيف؟ الكورسات المرتبطة ستُزال تصنيفاتها.');">
+                                    <form method="POST" action="{{ route('admin.course-categories.destroy', $row) }}" class="inline" onsubmit="return confirm('حذف هذا المسار؟ الكورسات المرتبطة ستُزال ربطها بالمسار.');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="inline-flex items-center gap-1 text-rose-600 hover:text-rose-800 text-xs font-semibold">
@@ -94,7 +94,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-10 text-center text-slate-500 dark:text-slate-400">لا توجد تصنيفات بعد. أضف تصنيفاً بالأعلى ليظهر في صفحة الكورسات.</td>
+                            <td colspan="4" class="px-4 py-10 text-center text-slate-500 dark:text-slate-400">لا توجد مسارات بعد. أضف مساراً بالأعلى ليظهر في صفحة الكورسات.</td>
                         </tr>
                     @endforelse
                 </tbody>

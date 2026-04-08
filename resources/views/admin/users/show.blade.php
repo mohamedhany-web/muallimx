@@ -62,7 +62,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                         <div class="flex-shrink-0">
                             @if($user->profile_image)
-                                <img src="{{ asset('storage/' . $user->profile_image) }}" alt="{{ $user->name }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-200">
+                                <img src="{{ $user->profile_image_url }}" alt="{{ $user->name }}" class="w-24 h-24 rounded-2xl object-cover border-2 border-slate-200">
                             @else
                                 <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-3xl font-bold">
                                     {{ mb_substr($user->name, 0, 1, 'UTF-8') }}

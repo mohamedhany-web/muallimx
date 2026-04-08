@@ -13,6 +13,12 @@
     @endif
 
     <p class="text-gray-600">مراجعة مشاريع البورتفوليو من الأدمن فقط — اعتماد أو رفض أو نشر، ثم إظهار/إخفاء من المعرض.</p>
+    @if(Route::has('admin.portfolio-marketing-profiles.index'))
+    <p class="text-sm text-gray-700 mt-2">
+        <a href="{{ route('admin.portfolio-marketing-profiles.index') }}" class="font-bold text-emerald-700 hover:underline"><i class="fas fa-id-card ml-1"></i>مراجعة الملف التعريفي التسويقي للطلاب (صورة ونبذة)</a>
+        — من «التحكم في المزايا» أو مباشرة من هنا.
+    </p>
+    @endif
 
     <div class="flex flex-wrap gap-2 mb-4">
         <a href="{{ route('admin.portfolio.index') }}" class="px-4 py-2 rounded-xl text-sm font-bold {{ !request('status') && !request()->has('visible') ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700' }}">الكل</a>

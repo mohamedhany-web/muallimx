@@ -17,11 +17,7 @@
             $introDirectVideo = $introVideoUrl;
         }
     }
-    $levelLabel = match($course->level ?? 'beginner') {
-        'intermediate' => __('public.level_intermediate'),
-        'advanced' => __('public.level_advanced'),
-        default => __('public.level_beginner'),
-    };
+    $categoryDisplay = $course->courseCategory?->name ?? __('public.course_category_not_set');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
@@ -37,7 +33,7 @@
     <title>{{ $courseTitle }}</title>
     <meta name="title"       content="{{ $courseTitle }}">
     <meta name="description" content="{{ $courseDesc }}">
-    <meta name="keywords"    content="{{ $course->title ?? 'كورس' }}, تعلم أونلاين, كورسات عربية, Muallimx, {{ $levelLabel ?? '' }}">
+    <meta name="keywords"    content="{{ $course->title ?? 'كورس' }}, تعلم أونلاين, كورسات عربية, Muallimx, {{ $categoryDisplay }}">
     <meta name="author"      content="{{ ($course->instructor->name ?? null) ?? 'Muallimx' }}">
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1">
     <meta name="theme-color" content="#283593">
@@ -165,9 +161,9 @@
                         <div class="flex flex-wrap gap-3 mb-8">
                             @php
                             $heroBadges = [
-                                ['icon'=>'fa-play-circle','label'=>($course->lessons_count ?? 0).' '.__('public.lesson_single'),'color'=>'brand'],
+                                ['icon'=>'fa-chalkboard-teacher','label'=>($course->lessons_count ?? 0).' '.__('public.lecture_single'),'color'=>'brand'],
                                 ['icon'=>'fa-clock','label'=>($course->duration_hours ?? 0).' '.__('public.hours'),'color'=>'blue'],
-                                ['icon'=>'fa-signal','label'=>$levelLabel,'color'=>'purple'],
+                                ['icon'=>'fa-folder-open','label'=>$categoryDisplay,'color'=>'purple'],
                             ];
                             @endphp
                             @foreach($heroBadges as $badge)
@@ -270,9 +266,9 @@
                     @php
                     $infoCards = [
                         ['icon'=>'fa-clock','label'=>__('public.duration'),'value'=>($course->duration_hours ?? 0).' '.__('public.hours'),'color'=>'brand'],
-                        ['icon'=>'fa-layer-group','label'=>__('public.lessons_count_label'),'value'=>($course->lessons_count ?? 0).' '.__('public.lesson_single'),'color'=>'blue'],
-                        ['icon'=>'fa-signal','label'=>__('public.level_label'),'value'=>$levelLabel,'color'=>'purple'],
-                        ['icon'=>'fa-book','label'=>'المادة','value'=>$course->academicSubject->name ?? 'غير محدد','color'=>'emerald'],
+                        ['icon'=>'fa-chalkboard-teacher','label'=>__('public.lectures_count_label'),'value'=>($course->lessons_count ?? 0).' '.__('public.lecture_single'),'color'=>'blue'],
+                        ['icon'=>'fa-folder-open','label'=>__('public.course_category_label'),'value'=>$categoryDisplay,'color'=>'purple'],
+                        ['icon'=>'fa-book','label'=>__('public.subject_label'),'value'=>$course->academicSubject->name ?? __('public.course_category_not_set'),'color'=>'emerald'],
                     ];
                     @endphp
                     @foreach($infoCards as $idx => $ic)
@@ -360,12 +356,12 @@
                                             <span class="font-bold text-navy-950">{{ $course->duration_hours ?? 0 }} {{ __('public.hours') }}</span>
                                         </div>
                                         <div class="flex justify-between items-center p-3 bg-slate-50/80 rounded-xl text-sm">
-                                            <span class="text-slate-500 flex items-center gap-2"><i class="fas fa-layer-group text-blue-500"></i> {{ __('public.lessons_count_label') }}</span>
+                                            <span class="text-slate-500 flex items-center gap-2"><i class="fas fa-chalkboard-teacher text-blue-500"></i> {{ __('public.lectures_count_label') }}</span>
                                             <span class="font-bold text-navy-950">{{ $course->lessons_count ?? 0 }}</span>
                                         </div>
                                         <div class="flex justify-between items-center p-3 bg-slate-50/80 rounded-xl text-sm">
-                                            <span class="text-slate-500 flex items-center gap-2"><i class="fas fa-signal text-purple-500"></i> {{ __('public.level_label') }}</span>
-                                            <span class="font-bold text-navy-950">{{ $levelLabel }}</span>
+                                            <span class="text-slate-500 flex items-center gap-2"><i class="fas fa-folder-open text-purple-500"></i> {{ __('public.course_category_label') }}</span>
+                                            <span class="font-bold text-navy-950">{{ $categoryDisplay }}</span>
                                         </div>
                                     </dl>
                                     @auth

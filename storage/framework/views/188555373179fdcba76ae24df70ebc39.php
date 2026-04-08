@@ -62,8 +62,9 @@ if ($_jldType === 'course' && isset($course)) {
         'provider'  => ['@type' => 'EducationalOrganization', '@id' => $_siteUrl . '/#organization', 'name' => $_siteName],
         'hasCourseInstance' => ['@type' => 'CourseInstance', 'courseMode' => 'online', 'inLanguage' => 'ar'],
     ];
-    if (!empty($course->level)) {
-        $_courseData['educationalLevel'] = $course->level;
+    $catName = $course->courseCategory?->name ?? null;
+    if (! empty($catName)) {
+        $_courseData['about'] = ['@type' => 'Thing', 'name' => (string) $catName];
     }
     if (isset($course->price) && $course->price !== null) {
         $_courseData['offers'] = [
@@ -92,7 +93,7 @@ if ($_jldType === 'course' && isset($course)) {
 if ($_jldType === 'instructor' && isset($profile)) {
     $_instrName = (string)($profile->user->name ?? 'مدرب');
     $_instrBio  = \Illuminate\Support\Str::limit(strip_tags((string)($profile->bio ?? $profile->headline ?? '')), 300);
-    $_instrImg  = !empty($profile->profile_image) ? asset('storage/' . $profile->profile_image) : $_logoUrl;
+    $_instrImg  = !empty($profile->user->profile_image ?? null) ? ($profile->user->profile_image_url ?? $_logoUrl) : $_logoUrl;
 
     try {
         $_instrUrl = route('public.instructors.show', $profile->user ?? $profile);

@@ -18,7 +18,7 @@
                     </nav>
                     <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">إنشاء كورس تدريبي جديد</h1>
                     <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                        أضف عنوان الكورس، المدرّس، التصنيف، والمحتوى التدريبي.
+                        أضف عنوان الكورس، المدرّس، المسار، والمحتوى التدريبي.
                     </p>
                 </div>
                 <a href="{{ route('admin.advanced-courses.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
@@ -62,17 +62,17 @@
                                 </div>
 
                                 <div class="space-y-2 md:col-span-2">
-                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">تصنيف الكورس (البحث في صفحة الكورسات العامة)</label>
+                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">مسار الكورس (التصفية في صفحة الكورسات العامة)</label>
                                     <select name="course_category_id"
                                             class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
-                                        <option value="">— بدون تصنيف —</option>
+                                        <option value="">— بدون مسار —</option>
                                         @foreach($courseCategories as $cc)
                                             <option value="{{ $cc->id }}" {{ (string) old('course_category_id') === (string) $cc->id ? 'selected' : '' }}>{{ $cc->name }}</option>
                                         @endforeach
                                     </select>
                                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                        أضف أو عدّل التصنيفات من
-                                        <a href="{{ route('admin.course-categories.index') }}" class="text-sky-600 hover:underline font-semibold">إدارة المحتوى → تصنيفات الكورسات</a>.
+                                        أضف أو عدّل المسارات من
+                                        <a href="{{ route('admin.course-categories.index') }}" class="text-sky-600 hover:underline font-semibold">إدارة المحتوى → مسارات الكورسات</a>.
                                     </p>
                                     @error('course_category_id') <p class="text-xs text-rose-500 mt-1">{{ $message }}</p> @enderror
                                 </div>

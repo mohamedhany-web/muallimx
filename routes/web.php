@@ -318,7 +318,7 @@ Route::get('/instructors/{instructor}', [\App\Http\Controllers\Public\Instructor
 Route::get('/course/{id}', function ($id) {
     $course = \App\Models\AdvancedCourse::where('id', $id)
         ->where('is_active', true)
-        ->with(['academicSubject', 'academicYear', 'instructor'])
+        ->with(['academicSubject', 'academicYear', 'instructor', 'courseCategory'])
         ->withCount('lessons')
         ->firstOrFail();
     
@@ -334,10 +334,12 @@ Route::get('/course/{id}', function ($id) {
     // كورسات ذات صلة
     $relatedCourses = \App\Models\AdvancedCourse::where('is_active', true)
         ->where('id', '!=', $course->id)
-        ->where(function($query) use ($course) {
-            $query->where('level', $course->level)
-                  ->orWhere('academic_subject_id', $course->academic_subject_id)
-                  ->orWhere('is_featured', true);
+        ->where(function ($query) use ($course) {
+            if ($course->course_category_id) {
+                $query->where('course_category_id', $course->course_category_id);
+            }
+            $query->orWhere('academic_subject_id', $course->academic_subject_id)
+                ->orWhere('is_featured', true);
         })
         ->with(['academicSubject'])
         ->withCount('lessons')
@@ -597,14 +599,14 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/notifications/{notification}/go', [\App\Http\Controllers\Student\NotificationController::class, 'go'])
             ->name('notifications.go');
         Route::get('/notifications/{notification}', [\App\Http\Controllers\Student\NotificationController::class, 'show'])
-            ->middleware(['ownership:user,user'])
+            ->middleware(['ownership:notification,notification'])
             ->name('notifications.show');
         Route::post('/notifications/{notification}/mark-read', [\App\Http\Controllers\Student\NotificationController::class, 'markAsRead'])
-            ->middleware(['ownership:user,user'])
+            ->middleware(['ownership:notification,notification'])
             ->name('notifications.mark-read');
         Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Student\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
         Route::delete('/notifications/{notification}', [\App\Http\Controllers\Student\NotificationController::class, 'destroy'])
-            ->middleware(['ownership:user,user'])
+            ->middleware(['ownership:notification,notification'])
             ->name('notifications.destroy');
         Route::post('/notifications/cleanup', [\App\Http\Controllers\Student\NotificationController::class, 'cleanup'])->name('notifications.cleanup');
         Route::get('/api/notifications/unread-count', [\App\Http\Controllers\Student\NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
@@ -792,6 +794,13 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/students-control/paid-features/{featureKey}', [\App\Http\Controllers\Admin\StudentControlController::class, 'featureUsers'])->name('students-control.paid-features.show');
         Route::get('/students-control/consumption', [\App\Http\Controllers\Admin\StudentControlController::class, 'consumption'])->name('students-control.consumption');
         Route::get('/students-control/consumption/user/{user}', [\App\Http\Controllers\Admin\StudentControlController::class, 'userConsumption'])->name('students-control.consumption.user');
+
+        // مراجعة الملف التعريفي التسويقي للطالب (قبل مسارات portfolio/{project} لتفادي أي التباس)
+        Route::get('/portfolio-marketing-profiles', [\App\Http\Controllers\Admin\PortfolioMarketingProfileController::class, 'index'])->name('portfolio-marketing-profiles.index');
+        Route::get('/portfolio-marketing-profiles/{user}', [\App\Http\Controllers\Admin\PortfolioMarketingProfileController::class, 'show'])->name('portfolio-marketing-profiles.show');
+        Route::post('/portfolio-marketing-profiles/{user}/approve', [\App\Http\Controllers\Admin\PortfolioMarketingProfileController::class, 'approve'])->name('portfolio-marketing-profiles.approve');
+        Route::post('/portfolio-marketing-profiles/{user}/reject', [\App\Http\Controllers\Admin\PortfolioMarketingProfileController::class, 'reject'])->name('portfolio-marketing-profiles.reject');
+
         Route::get('/users/create', [\App\Http\Controllers\Admin\AdminController::class, 'createUser'])->name('users.create');
         Route::post('/users', [\App\Http\Controllers\Admin\AdminController::class, 'storeUser'])
             ->middleware('throttle:20,1')
@@ -832,7 +841,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/academic-subjects/{academicSubject}/toggle-status', function () { return redirect()->route('admin.advanced-courses.index', [], 302); })->name('academic-subjects.toggle-status');
         Route::post('/academic-subjects/reorder', function () { return redirect()->route('admin.advanced-courses.index', [], 302); })->name('academic-subjects.reorder');
 
-        // تصنيفات الكورسات (تصفية صفحة /courses العامة)
+        // مسارات الكورسات (تصفية صفحة /courses العامة)
         Route::resource('course-categories', \App\Http\Controllers\Admin\CourseCategoryController::class)->except(['show', 'create']);
 
         // إدارة الكورسات المتطورة

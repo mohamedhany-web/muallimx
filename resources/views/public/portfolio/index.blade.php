@@ -123,8 +123,9 @@
                 @foreach($projects as $idx => $project)
                 <a href="{{ route('public.portfolio.show', $project->id) }}" class="card-base hover-lift reveal s{{ ($idx % 4) + 1 }} p-0 overflow-hidden block group">
                     <div class="relative aspect-video overflow-hidden" style="background:linear-gradient(135deg,#e9edff,#f8f9ff)">
-                        @if($project->image_path)
-                        <img src="{{ asset($project->image_path) }}" alt="{{ $project->title }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
+                        @php $thumb = \App\Services\PortfolioImageStorage::publicUrl($project->preview_image_path); @endphp
+                        @if($thumb)
+                        <img src="{{ $thumb }}" alt="{{ $project->title }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
                         @else
                         <div class="absolute inset-0 flex items-center justify-center text-[#283593]/65">
                             @if($project->content_type === \App\Models\PortfolioProject::CONTENT_VIDEO)
@@ -160,8 +161,8 @@
 
                         <div class="flex items-center justify-between pt-4 border-t border-slate-100">
                             <div class="flex items-center gap-2 min-w-0">
-                                @if($project->user->profile_image ?? null)
-                                <img src="{{ $project->user->profile_image_url }}" alt="" class="w-8 h-8 rounded-lg object-cover flex-shrink-0">
+                                @if($project->user->public_portfolio_marketing_photo_url)
+                                <img src="{{ $project->user->public_portfolio_marketing_photo_url }}" alt="" class="w-8 h-8 rounded-lg object-cover flex-shrink-0">
                                 @else
                                 <div class="w-8 h-8 rounded-lg bg-[#283593] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">{{ mb_substr($project->user->name ?? 'ط', 0, 1) }}</div>
                                 @endif

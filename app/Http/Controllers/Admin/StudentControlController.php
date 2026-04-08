@@ -50,7 +50,12 @@ class StudentControlController extends Controller
             ];
         })->sortByDesc('users_count')->values();
 
-        return view('admin.student-control.paid-features', compact('features', 'stats'));
+        $pendingPortfolioMarketingCount = User::query()
+            ->where('role', 'student')
+            ->where('portfolio_profile_status', User::PORTFOLIO_PROFILE_PENDING)
+            ->count();
+
+        return view('admin.student-control.paid-features', compact('features', 'stats', 'pendingPortfolioMarketingCount'));
     }
 
     public function featureUsers(string $featureKey)

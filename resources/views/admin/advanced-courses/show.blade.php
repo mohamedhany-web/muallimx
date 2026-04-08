@@ -59,7 +59,7 @@
                             <div class="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate" title="{{ $advancedCourse->title }}">{{ Str::limit($advancedCourse->title, 25) }}</div>
                         </div>
                         <div class="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
-                            <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">التصنيف / المدرّس</div>
+                            <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5">المسار / المدرّس</div>
                             <div class="text-sm font-semibold text-slate-800 dark:text-slate-100">{{ $advancedCourse->category ?? '—' }} · {{ $advancedCourse->instructor?->name ?? '—' }}</div>
                         </div>
                         <div class="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">

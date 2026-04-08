@@ -232,7 +232,7 @@
     <section class="py-12 sm:py-14 bg-mx-soft">
         <div class="container-1200">
             <div class="max-w-3xl mb-7 reveal">
-                <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-3">{{ __('public.categories_sidebar') }}</h2>
+                <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-3">{{ __('public.home_categories_title') }}</h2>
                 <p class="text-slate-600 text-sm sm:text-base leading-7">{{ __('public.home_categories_subtitle') }}</p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

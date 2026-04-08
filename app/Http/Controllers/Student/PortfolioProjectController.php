@@ -3,19 +3,21 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\AcademicYear;
+use App\Models\AdvancedCourse;
 use App\Models\PortfolioProject;
 use App\Models\PortfolioProjectImage;
 use App\Models\User;
+use App\Services\PortfolioImageStorage;
 use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class PortfolioProjectController extends Controller
 {
     private function ensureTeacherProfileSubscription(User $user): void
     {
-        abort_unless($user->hasSubscriptionFeature('teacher_profile'), 403, 'ميزة البروفايل والمشاريع للمعلم غير مفعّلة في اشتراكك. يمكنك الترقية من صفحة التسعير.');
+        abort_unless($user->hasSubscriptionFeature('teacher_profile'), 403, 'ميزة التسويق الشخصي ومعرض المحتوى غير مفعّلة في اشتراكك. يمكنك الترقية من صفحة التسعير.');
     }
 
     public function index()
@@ -33,7 +35,11 @@ class PortfolioProjectController extends Controller
     {
         $this->ensureTeacherProfileSubscription(auth()->user());
         $contentTypeLabels = PortfolioProject::contentTypeLabels();
-        return view('student.portfolio.create', compact('contentTypeLabels'));
+        $projectTypeLabels = PortfolioProject::projectTypeLabels();
+        $academicYears = AcademicYear::query()->orderByDesc('id')->get();
+        $advancedCourses = AdvancedCourse::query()->orderBy('title')->limit(500)->get();
+
+        return view('student.portfolio.create', compact('contentTypeLabels', 'projectTypeLabels', 'academicYears', 'advancedCourses'));
     }
 
     public function store(Request $request)
@@ -47,19 +53,27 @@ class PortfolioProjectController extends Controller
             'content_text' => 'nullable|string|max:20000',
             'project_url' => 'nullable|url|max:500',
             'github_url' => 'nullable|url|max:500',
-            'video_url' => 'nullable|url|max:500',
+            'video_url' => ['nullable', 'url', 'max:500', Rule::requiredIf(fn () => $request->input('content_type') === PortfolioProject::CONTENT_VIDEO)],
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'advanced_course_id' => 'nullable|exists:advanced_courses,id',
-            'images' => 'nullable|array|max:5',
+            'images' => [
+                'nullable',
+                'array',
+                'max:5',
+                Rule::requiredIf(fn () => $request->input('content_type') === PortfolioProject::CONTENT_GALLERY),
+            ],
             'images.*' => 'image|max:'.config('upload_limits.max_upload_kb'),
         ], [
-            'title.required' => 'عنوان المشروع مطلوب',
-            'project_url.url' => 'رابط المشروع يجب أن يكون رابطاً صحيحاً',
-            'github_url.url' => 'رابط GitHub يجب أن يكون رابطاً صحيحاً',
-            'video_url.url' => 'رابط الفيديو يجب أن يكون رابطاً صحيحاً',
-            'images.max' => 'حد أقصى 5 صور للمشروع',
-            'images.*.image' => 'يجب أن يكون الملف صورة',
-            'images.*.max' => 'كل صورة حد أقصى 2 ميجابايت',
+            'title.required' => __('student.portfolio_marketing.validation.title_required'),
+            'project_url.url' => __('student.portfolio_marketing.validation.project_url_url'),
+            'github_url.url' => __('student.portfolio_marketing.validation.github_url_url'),
+            'video_url.url' => __('student.portfolio_marketing.validation.video_url_url'),
+            'video_url.required_if' => __('student.portfolio_marketing.validation.video_required_if'),
+            'images.required' => __('student.portfolio_marketing.validation.images_required_gallery'),
+            'images.required_if' => __('student.portfolio_marketing.validation.images_required_gallery'),
+            'images.max' => __('student.portfolio_marketing.validation.images_max'),
+            'images.*.image' => __('student.portfolio_marketing.validation.images_must_be_image'),
+            'images.*.max' => __('student.portfolio_marketing.validation.images_size'),
         ]);
 
         $data = [
@@ -79,18 +93,11 @@ class PortfolioProjectController extends Controller
 
         $project = PortfolioProject::create($data);
 
-        $dir = public_path('portfolio-images');
-        if (!File::isDirectory($dir)) {
-            File::makeDirectory($dir, 0755, true);
-        }
-
         if ($request->content_type === PortfolioProject::CONTENT_GALLERY && $request->hasFile('images')) {
             $sortOrder = 0;
             foreach ($request->file('images') as $file) {
                 if ($file && $file->isValid()) {
-                    $name = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $file->move($dir, $name);
-                    $path = 'portfolio-images/' . $name;
+                    $path = PortfolioImageStorage::store($file);
                     PortfolioProjectImage::create([
                         'portfolio_project_id' => $project->id,
                         'image_path' => $path,
@@ -103,7 +110,7 @@ class PortfolioProjectController extends Controller
             }
         }
 
-        return redirect()->route('student.portfolio.index')->with('success', 'تم رفع المشروع بنجاح. سيتم مراجعته من المدرب ثم النشر في البورتفوليو.');
+        return redirect()->route('student.portfolio.index')->with('success', __('student.portfolio_marketing.flash.store_success'));
     }
 
     public function show(PortfolioProject $project)
@@ -124,13 +131,16 @@ class PortfolioProjectController extends Controller
         abort_unless((int) $project->user_id === (int) $user->id, 403);
 
         if (in_array($project->status, [PortfolioProject::STATUS_APPROVED, PortfolioProject::STATUS_PUBLISHED], true)) {
-            return redirect()->route('student.portfolio.show', $project)->with('error', 'لا يمكن تعديل مشروع معتمد/منشور. يمكنك رفع مشروع جديد.');
+            return redirect()->route('student.portfolio.show', $project)->with('error', __('student.portfolio_marketing.flash.cannot_edit_locked'));
         }
 
         $project->load(['images']);
         $contentTypeLabels = PortfolioProject::contentTypeLabels();
+        $projectTypeLabels = PortfolioProject::projectTypeLabels();
+        $academicYears = AcademicYear::query()->orderByDesc('id')->get();
+        $advancedCourses = AdvancedCourse::query()->orderBy('title')->limit(500)->get();
 
-        return view('student.portfolio.edit', compact('project', 'contentTypeLabels'));
+        return view('student.portfolio.edit', compact('project', 'contentTypeLabels', 'projectTypeLabels', 'academicYears', 'advancedCourses'));
     }
 
     public function update(Request $request, PortfolioProject $project)
@@ -140,7 +150,7 @@ class PortfolioProjectController extends Controller
         abort_unless((int) $project->user_id === (int) $user->id, 403);
 
         if (in_array($project->status, [PortfolioProject::STATUS_APPROVED, PortfolioProject::STATUS_PUBLISHED], true)) {
-            return redirect()->route('student.portfolio.show', $project)->with('error', 'لا يمكن تعديل مشروع معتمد/منشور.');
+            return redirect()->route('student.portfolio.show', $project)->with('error', __('student.portfolio_marketing.flash.cannot_edit_locked'));
         }
 
         $request->validate([
@@ -151,11 +161,20 @@ class PortfolioProjectController extends Controller
             'content_text' => 'nullable|string|max:20000',
             'project_url' => 'nullable|url|max:500',
             'github_url' => 'nullable|url|max:500',
-            'video_url' => 'nullable|url|max:500',
+            'video_url' => ['nullable', 'url', 'max:500', Rule::requiredIf(fn () => $request->input('content_type') === PortfolioProject::CONTENT_VIDEO)],
             'academic_year_id' => 'nullable|exists:academic_years,id',
             'advanced_course_id' => 'nullable|exists:advanced_courses,id',
             'images' => 'nullable|array|max:5',
             'images.*' => 'image|max:'.config('upload_limits.max_upload_kb'),
+        ], [
+            'title.required' => __('student.portfolio_marketing.validation.title_required'),
+            'project_url.url' => __('student.portfolio_marketing.validation.project_url_url'),
+            'github_url.url' => __('student.portfolio_marketing.validation.github_url_url'),
+            'video_url.required_if' => __('student.portfolio_marketing.validation.video_required_if'),
+            'video_url.url' => __('student.portfolio_marketing.validation.video_url_url'),
+            'images.max' => __('student.portfolio_marketing.validation.images_max'),
+            'images.*.image' => __('student.portfolio_marketing.validation.images_must_be_image'),
+            'images.*.max' => __('student.portfolio_marketing.validation.images_size'),
         ]);
 
         $project->update([
@@ -171,7 +190,7 @@ class PortfolioProjectController extends Controller
             'advanced_course_id' => $request->advanced_course_id ?: null,
         ]);
 
-        // إذا كان مرفوضاً، إعادة إرسال للمراجعة
+        // إذا كان مرفوضاً، إعادة إرسال لمراجعة الإدارة
         if ($project->status === PortfolioProject::STATUS_REJECTED) {
             $project->update([
                 'status' => PortfolioProject::STATUS_PENDING_REVIEW,
@@ -181,11 +200,6 @@ class PortfolioProjectController extends Controller
             ]);
         }
 
-        $dir = public_path('portfolio-images');
-        if (!File::isDirectory($dir)) {
-            File::makeDirectory($dir, 0755, true);
-        }
-
         if ($request->content_type === PortfolioProject::CONTENT_GALLERY && $request->hasFile('images')) {
             $currentCount = (int) $project->images()->count();
             $remaining = max(0, 5 - $currentCount);
@@ -193,22 +207,20 @@ class PortfolioProjectController extends Controller
             $sortOrder = (int) ($project->images()->max('sort_order') ?? -1) + 1;
             foreach ($files as $file) {
                 if ($file && $file->isValid()) {
-                    $name = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                    $file->move($dir, $name);
-                    $path = 'portfolio-images/' . $name;
+                    $path = PortfolioImageStorage::store($file);
                     PortfolioProjectImage::create([
                         'portfolio_project_id' => $project->id,
                         'image_path' => $path,
                         'sort_order' => $sortOrder++,
                     ]);
-                    if (!$project->image_path) {
+                    if (! $project->image_path) {
                         $project->update(['image_path' => $path]);
                     }
                 }
             }
         }
 
-        return redirect()->route('student.portfolio.show', $project)->with('success', 'تم حفظ التعديلات.');
+        return redirect()->route('student.portfolio.show', $project)->with('success', __('student.portfolio_marketing.flash.update_success'));
     }
 
     public function destroy(PortfolioProject $project)
@@ -218,26 +230,18 @@ class PortfolioProjectController extends Controller
         abort_unless((int) $project->user_id === (int) $user->id, 403);
 
         if ($project->status === PortfolioProject::STATUS_PUBLISHED) {
-            return back()->with('error', 'لا يمكن حذف مشروع منشور.');
+            return back()->with('error', __('student.portfolio_marketing.flash.cannot_delete_published'));
         }
 
-        // delete images from disk
+        $project->loadMissing('images');
         foreach ($project->images as $img) {
-            $path = public_path($img->image_path);
-            if (File::isFile($path)) {
-                @unlink($path);
-            }
+            PortfolioImageStorage::delete($img->image_path);
         }
-        if ($project->image_path) {
-            $path = public_path($project->image_path);
-            if (File::isFile($path)) {
-                @unlink($path);
-            }
-        }
+        PortfolioImageStorage::delete($project->image_path);
 
         $project->delete();
 
-        return redirect()->route('student.portfolio.index')->with('success', 'تم حذف المشروع.');
+        return redirect()->route('student.portfolio.index')->with('success', __('student.portfolio_marketing.flash.destroy_success'));
     }
 
     public function destroyImage(PortfolioProject $project, PortfolioProjectImage $image)
@@ -248,19 +252,16 @@ class PortfolioProjectController extends Controller
         abort_unless((int) $image->portfolio_project_id === (int) $project->id, 404);
 
         if (in_array($project->status, [PortfolioProject::STATUS_APPROVED, PortfolioProject::STATUS_PUBLISHED], true)) {
-            return back()->with('error', 'لا يمكن تعديل الصور لمشروع معتمد/منشور.');
+            return back()->with('error', __('student.portfolio_marketing.flash.cannot_edit_images_locked'));
         }
 
-        $path = public_path($image->image_path);
-        if (File::isFile($path)) {
-            @unlink($path);
-        }
+        PortfolioImageStorage::delete($image->image_path);
         $image->delete();
 
         // ensure preview image
         $newPreview = $project->fresh()->preview_image_path;
         $project->update(['image_path' => $newPreview]);
 
-        return back()->with('success', 'تم حذف الصورة.');
+        return back()->with('success', __('student.portfolio_marketing.flash.destroy_image_success'));
     }
 }

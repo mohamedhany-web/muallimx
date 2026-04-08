@@ -45,11 +45,22 @@ class PortfolioProject extends Model
     public static function contentTypeLabels(): array
     {
         return [
-            self::CONTENT_GALLERY => 'صور (معرض)',
-            self::CONTENT_VIDEO => 'فيديو',
-            self::CONTENT_TEXT => 'نص/مقال',
-            self::CONTENT_LINK => 'روابط/عرض',
+            self::CONTENT_GALLERY => __('student.portfolio_marketing.content_types.gallery'),
+            self::CONTENT_VIDEO => __('student.portfolio_marketing.content_types.video'),
+            self::CONTENT_TEXT => __('student.portfolio_marketing.content_types.text'),
+            self::CONTENT_LINK => __('student.portfolio_marketing.content_types.link'),
         ];
+    }
+
+    public static function projectTypeLabels(): array
+    {
+        $keys = ['web_app', 'mobile_app', 'api', 'library', 'script', 'design', 'game', 'desktop', 'cli', 'other'];
+        $out = [];
+        foreach ($keys as $key) {
+            $out[$key] = __('student.portfolio_marketing.project_types.'.$key);
+        }
+
+        return $out;
     }
 
     public const STATUS_PENDING_REVIEW = 'pending_review';
@@ -85,7 +96,13 @@ class PortfolioProject extends Model
     /** صورة المعاينة (الأولى من المعرض أو image_path القديم) */
     public function getPreviewImagePathAttribute(): ?string
     {
+        if ($this->relationLoaded('images')) {
+            $first = $this->images->first();
+
+            return $first ? $first->image_path : $this->image_path;
+        }
         $first = $this->images()->first();
+
         return $first ? $first->image_path : $this->image_path;
     }
 

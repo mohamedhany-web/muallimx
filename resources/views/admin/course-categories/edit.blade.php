@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'تعديل تصنيف')
+@section('title', 'تعديل مسار')
 @section('header', __('admin.course_categories'))
 
 @section('content')
@@ -15,7 +15,7 @@
                     <span class="mx-2">/</span>
                     <span class="text-slate-700 dark:text-slate-300">تعديل</span>
                 </nav>
-                <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">تعديل التصنيف</h1>
+                <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">تعديل المسار</h1>
             </div>
             <a href="{{ route('admin.course-categories.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
                 <i class="fas fa-arrow-right"></i>
@@ -27,7 +27,7 @@
                 @csrf
                 @method('PUT')
                 <div class="space-y-2">
-                    <label for="name" class="block text-sm font-semibold text-slate-700 dark:text-slate-300">اسم التصنيف *</label>
+                    <label for="name" class="block text-sm font-semibold text-slate-700 dark:text-slate-300">اسم المسار *</label>
                     <input type="text" name="name" id="name" value="{{ old('name', $category->name) }}" required maxlength="255"
                            class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                     @error('name')<p class="text-xs text-rose-600 mt-1">{{ $message }}</p>@enderror
@@ -41,7 +41,7 @@
                 <label class="flex items-center gap-2">
                     <input type="hidden" name="is_active" value="0">
                     <input type="checkbox" name="is_active" value="1" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500" {{ old('is_active', $category->is_active) ? 'checked' : '' }}>
-                    <span class="text-sm text-slate-700 dark:text-slate-300">تصنيف نشط (يظهر في قائمة التصفية العامة)</span>
+                    <span class="text-sm text-slate-700 dark:text-slate-300">مسار نشط (يظهر في قائمة التصفية العامة)</span>
                 </label>
                 <div class="flex gap-3 pt-2">
                     <button type="submit" class="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-6 py-3 rounded-xl font-semibold transition">

@@ -50,7 +50,7 @@ return [
     'assign_instructors_paths' => 'Assign Instructors to Paths',
     'skill_groups' => 'Skill Groups',
     'courses_management' => 'Courses Management',
-    'course_categories' => 'Course categories',
+    'course_categories' => 'Course paths',
     'lectures' => 'Lectures',
     'groups' => 'Groups',
     'assignments_projects' => 'Assignments and Projects',

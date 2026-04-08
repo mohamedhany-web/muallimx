@@ -692,7 +692,7 @@
                 <div class="relative" x-data="{ open: false }" @click.outside="open = false">
                     <button @click.stop="open = !open" class="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-slate-50 transition-all active:scale-[0.98]" :aria-expanded="open">
                         <?php if(auth()->user()->profile_image): ?>
-                            <img src="<?php echo e(asset('storage/' . auth()->user()->profile_image)); ?>" alt="<?php echo e(auth()->user()->name); ?>" class="w-9 h-9 rounded-xl object-cover ring-2 ring-slate-100" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+                            <img src="<?php echo e(auth()->user()->profile_image_url); ?>" alt="<?php echo e(auth()->user()->name); ?>" class="w-9 h-9 rounded-xl object-cover ring-2 ring-slate-100" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
                             <div class="w-9 h-9 bg-gradient-to-br from-brand to-brand-light rounded-xl hidden flex items-center justify-center text-white font-bold text-sm"><?php echo e(mb_substr(auth()->user()->name, 0, 1)); ?></div>
                         <?php else: ?>
                             <div class="w-9 h-9 bg-gradient-to-br from-brand to-brand-light rounded-xl flex items-center justify-center text-white font-bold text-sm">

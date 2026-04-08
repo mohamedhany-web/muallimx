@@ -34,7 +34,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center gap-5">
                 <div class="flex items-center justify-center h-24 w-24 sm:h-28 sm:w-28 rounded-2xl bg-sky-100 border border-slate-200 dark:border-slate-700 overflow-hidden shrink-0 mx-auto sm:mx-0">
                     @if($user->profile_image)
-                        <img src="{{ asset('storage/' . $user->profile_image) }}" alt="{{ __('instructor.profile_image') }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+                        <img src="{{ $user->profile_image_url }}" alt="{{ __('instructor.profile_image') }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
                         <span class="text-4xl font-bold text-sky-600 hidden">{{ mb_substr($user->name, 0, 1) }}</span>
                     @else
                         <span class="text-4xl font-bold text-sky-600">{{ mb_substr($user->name, 0, 1) }}</span>
@@ -198,7 +198,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                             <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center shrink-0">
                                 @if($user->profile_image)
-                                    <img src="{{ asset('storage/' . $user->profile_image) }}" alt="{{ __('instructor.profile_image') }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+                                    <img src="{{ $user->profile_image_url }}" alt="{{ __('instructor.profile_image') }}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
                                     <i class="fas fa-user text-slate-400 text-2xl hidden"></i>
                                 @else
                                     <i class="fas fa-user text-slate-400 text-2xl"></i>

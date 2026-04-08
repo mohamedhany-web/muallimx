@@ -123,7 +123,9 @@
                     || request()->routeIs('admin.curriculum-library.*')
                     || request()->routeIs('admin.consultations.*')
                     || request()->routeIs('admin.quality-control.students')
-                    || request()->routeIs('admin.reports.users');
+                    || request()->routeIs('admin.reports.users')
+                    || request()->routeIs('admin.portfolio-marketing-profiles.*')
+                    || request()->routeIs('admin.portfolio.*');
             ?>
             <li x-data="{ open: <?php echo e($studentControlOpen ? 'true' : 'false'); ?> }">
                 <button @click="open = !open" class="sidebar-group-btn">
@@ -242,6 +244,20 @@
                     <li>
                         <a href="<?php echo e(route('admin.students-control.paid-features')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.students-control.paid-features*') ? 'active' : ''); ?>">
                             <i class="fas fa-layer-group"></i><span>إدارة المزايا المدفوعة</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(($isFull || $u->hasPermission('manage.subscriptions') || $u->hasPermission('manage.student-control')) && Route::has('admin.portfolio-marketing-profiles.index')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.portfolio-marketing-profiles.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.portfolio-marketing-profiles.*') ? 'active' : ''); ?>">
+                            <i class="fas fa-id-card"></i><span>مراجعة الملف التعريفي (التسويق الشخصي)</span>
+                        </a>
+                    </li>
+                    <?php endif; ?>
+                    <?php if(($isFull || $u->hasPermission('manage.subscriptions') || $u->hasPermission('manage.student-control')) && Route::has('admin.portfolio.index')): ?>
+                    <li>
+                        <a href="<?php echo e(route('admin.portfolio.index')); ?>" class="sidebar-sub-link <?php echo e((request()->routeIs('admin.portfolio.index') || request()->routeIs('admin.portfolio.show')) ? 'active' : ''); ?>">
+                            <i class="fas fa-images"></i><span>مراجعة مشاريع البورتفوليو</span>
                         </a>
                     </li>
                     <?php endif; ?>
@@ -940,7 +956,7 @@
     <div class="px-3 py-3 flex-shrink-0 border-t border-slate-200 dark:border-slate-600">
         <div class="sidebar-user-wrap flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700 transition-colors">
             <?php if(auth()->user()->profile_image): ?>
-                <img src="<?php echo e(asset('storage/' . auth()->user()->profile_image)); ?>" alt="<?php echo e(auth()->user()->name); ?>" class="w-8 h-8 rounded-lg object-cover ring-1 ring-slate-200 flex-shrink-0" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+                <img src="<?php echo e(auth()->user()->profile_image_url); ?>" alt="<?php echo e(auth()->user()->name); ?>" class="w-8 h-8 rounded-lg object-cover ring-1 ring-slate-200 flex-shrink-0" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
                 <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg hidden flex items-center justify-center text-white font-bold text-xs flex-shrink-0"><?php echo e(mb_substr(auth()->user()->name, 0, 1)); ?></div>
             <?php else: ?>
                 <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">

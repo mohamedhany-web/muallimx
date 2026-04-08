@@ -7,6 +7,7 @@
 @php
     $typeOptions = \App\Models\Subscription::typeLabels();
     $cycleOptions = \App\Models\Subscription::billingCycleLabels();
+    $subscriptionFeatureKeys = \App\Models\Subscription::normalizeFeatureKeys($subscription->features ?? []);
 @endphp
 <div class="container mx-auto px-4 py-8 space-y-6">
     @if ($errors->any())
@@ -33,7 +34,7 @@
                 </span>
             </div>
 
-            <form action="{{ route('admin.subscriptions.update', $subscription) }}" method="POST" class="space-y-8" x-data="editTeacherSubscriptionForm(@json($subscription->features ?? []), '{{ $subscription->teacher_plan_key ?? '' }}')">
+            <form action="{{ route('admin.subscriptions.update', $subscription) }}" method="POST" class="space-y-8" x-data="editTeacherSubscriptionForm('{{ $subscription->teacher_plan_key ?? '' }}')">
                 @csrf
                 @method('PUT')
 
@@ -128,52 +129,52 @@
                     </p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[library_access]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>مكتبة المناهج التفاعلية الجاهزة</span>
+                            <input type="checkbox" name="features[library_access]" value="1" data-sub-feature="library_access" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('library_access', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.library_access') }}</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[ai_tools]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>أدوات الذكاء الاصطناعي لإعداد الدروس</span>
+                            <input type="checkbox" name="features[ai_tools]" value="1" data-sub-feature="ai_tools" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('ai_tools', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.ai_tools') }}</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[classroom_access]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>استخدام Muallimx Classroom للتدريس</span>
+                            <input type="checkbox" name="features[classroom_access]" value="1" data-sub-feature="classroom_access" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('classroom_access', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.classroom_access') }}</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[support]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>دعم فني للمعلمين</span>
+                            <input type="checkbox" name="features[support]" value="1" data-sub-feature="support" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('support', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.support') }}</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[teacher_profile]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>إنشاء بروفايل معلم احترافي</span>
+                            <input type="checkbox" name="features[teacher_profile]" value="1" data-sub-feature="teacher_profile" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('teacher_profile', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.teacher_profile') }}</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[visible_to_academies]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>الظهور للأكاديميات داخل المنصة</span>
+                            <input type="checkbox" name="features[visible_to_academies]" value="1" data-sub-feature="visible_to_academies" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('visible_to_academies', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.visible_to_academies') }}</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[can_apply_opportunities]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>التقديم على فرص التدريس</span>
+                            <input type="checkbox" name="features[can_apply_opportunities]" value="1" data-sub-feature="can_apply_opportunities" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('can_apply_opportunities', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.can_apply_opportunities') }}</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[full_ai_suite]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>أدوات AI كاملة</span>
+                            <input type="checkbox" name="features[full_ai_suite]" value="1" data-sub-feature="full_ai_suite" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('full_ai_suite', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.full_ai_suite') }}</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[teacher_evaluation]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>تقييم المعلم من فريق Muallimx</span>
+                            <input type="checkbox" name="features[teacher_evaluation]" value="1" data-sub-feature="teacher_evaluation" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('teacher_evaluation', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.teacher_evaluation') }}</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[recommended_to_academies]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>ترشيح للأكاديميات المناسبة</span>
+                            <input type="checkbox" name="features[recommended_to_academies]" value="1" data-sub-feature="recommended_to_academies" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('recommended_to_academies', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.recommended_to_academies') }}</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[priority_opportunities]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>أولوية في فرص التدريس</span>
+                            <input type="checkbox" name="features[priority_opportunities]" value="1" data-sub-feature="priority_opportunities" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('priority_opportunities', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.priority_opportunities') }}</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="checkbox" name="features[direct_support]" value="1" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" x-model="form.features">
-                            <span>دعم فني مباشر وسريع</span>
+                            <input type="checkbox" name="features[direct_support]" value="1" data-sub-feature="direct_support" class="ml-2 rounded border-gray-300 text-sky-600 focus:ring-sky-500" {{ in_array('direct_support', $subscriptionFeatureKeys, true) ? 'checked' : '' }}>
+                            <span>{{ __('student.subscription_feature.direct_support') }}</span>
                         </label>
                     </div>
                     <p class="text-xs text-gray-400 mt-2">
@@ -234,8 +235,21 @@
     </div>
 </div>
 <script>
-    function editTeacherSubscriptionForm(initialFeatures, initialPlanKey) {
-        const featureKeys = Object.keys(initialFeatures || {}).filter(k => initialFeatures[k]);
+    function editTeacherSubscriptionForm(initialPlanKey) {
+        const PLAN_FEATURES = {
+            teacher_starter: ['library_access', 'ai_tools', 'classroom_access', 'support'],
+            teacher_pro: ['library_access', 'ai_tools', 'classroom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite'],
+            teacher_premium: ['library_access', 'ai_tools', 'classroom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support'],
+        };
+
+        function syncSubscriptionFeatureCheckboxes(featureList) {
+            var set = {};
+            (featureList || []).forEach(function (f) { set[f] = true; });
+            document.querySelectorAll('input[type=checkbox][data-sub-feature]').forEach(function (cb) {
+                var fk = cb.getAttribute('data-sub-feature');
+                cb.checked = !!set[fk];
+            });
+        }
 
         return {
             selectedPlan: initialPlanKey || '',
@@ -244,58 +258,30 @@
                 plan_name: @json($subscription->plan_name),
                 price: @json((float) $subscription->price),
                 billing_cycle: '{{ $subscription->billing_cycle }}',
-                features: featureKeys,
             },
             applyPlan(event) {
-                const key = event.target.value;
-                if (!key) return;
+                var key = event.target.value;
+                if (!key || !PLAN_FEATURES[key]) return;
 
                 if (key === 'teacher_starter') {
                     this.form.subscription_type = 'monthly';
                     this.form.plan_name = 'باقة البداية للمعلمين';
                     this.form.price = 200;
                     this.form.billing_cycle = 'monthly';
-                    this.form.features = [
-                        'library_access',
-                        'ai_tools',
-                        'classroom_access',
-                        'support',
-                    ];
                 } else if (key === 'teacher_pro') {
                     this.form.subscription_type = 'quarterly';
                     this.form.plan_name = 'باقة المعلم المحترف';
                     this.form.price = 600;
                     this.form.billing_cycle = 'quarterly';
-                    this.form.features = [
-                        'library_access',
-                        'ai_tools',
-                        'classroom_access',
-                        'support',
-                        'teacher_profile',
-                        'visible_to_academies',
-                        'can_apply_opportunities',
-                        'full_ai_suite',
-                    ];
                 } else if (key === 'teacher_premium') {
                     this.form.subscription_type = 'yearly';
                     this.form.plan_name = 'باقة المعلم المميز';
                     this.form.price = 1500;
                     this.form.billing_cycle = 'yearly';
-                    this.form.features = [
-                        'library_access',
-                        'ai_tools',
-                        'classroom_access',
-                        'support',
-                        'teacher_profile',
-                        'visible_to_academies',
-                        'can_apply_opportunities',
-                        'full_ai_suite',
-                        'teacher_evaluation',
-                        'recommended_to_academies',
-                        'priority_opportunities',
-                        'direct_support',
-                    ];
                 }
+                this.$nextTick(function () {
+                    syncSubscriptionFeatureCheckboxes(PLAN_FEATURES[key]);
+                });
             },
         };
     }

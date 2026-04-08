@@ -43,9 +43,9 @@
                            class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
                 </div>
                 <div>
-                    <label for="course_category_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">تصنيف الكورس</label>
+                    <label for="course_category_id" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">مسار الكورس</label>
                     <select name="course_category_id" id="course_category_id" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors">
-                        <option value="">جميع التصنيفات</option>
+                        <option value="">جميع المسارات</option>
                         @foreach($courseCategoryOptions as $cc)
                             <option value="{{ $cc->id }}" {{ (string) request('course_category_id') === (string) $cc->id ? 'selected' : '' }}>{{ $cc->name }}</option>
                         @endforeach

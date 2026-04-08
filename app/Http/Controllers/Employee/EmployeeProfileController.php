@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Services\UserProfileImageStorage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class EmployeeProfileController extends Controller
 {
@@ -23,7 +21,7 @@ class EmployeeProfileController extends Controller
             abort(403, 'غير مصرح لك بالوصول إلى هذه الصفحة');
         }
 
-        $profileImageUrl = $user->profile_image ? asset($user->profile_image) : null;
+        $profileImageUrl = $user->profile_image_url;
 
         return view('employee.profile.index', compact('user', 'profileImageUrl'));
     }
@@ -79,15 +77,8 @@ class EmployeeProfileController extends Controller
         }
 
         if ($request->hasFile('profile_image')) {
-            if ($user->profile_image) {
-                if (Storage::disk('public')->exists($user->profile_image)) {
-                    Storage::disk('public')->delete($user->profile_image);
-                }
-                if (File::exists(public_path($user->profile_image))) {
-                    File::delete(public_path($user->profile_image));
-                }
-            }
-            $data['profile_image'] = $request->file('profile_image')->store('profile-photos', 'public');
+            UserProfileImageStorage::delete($user->profile_image);
+            $data['profile_image'] = UserProfileImageStorage::store($request->file('profile_image'));
         }
 
         $user->update($data);

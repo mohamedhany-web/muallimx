@@ -18,13 +18,31 @@
     </div>
     @endif
 
+    @php $u = auth()->user(); @endphp
+    @if($u->portfolio_profile_status === \App\Models\User::PORTFOLIO_PROFILE_PENDING)
+    <div class="rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 px-4 py-3 flex items-start gap-3">
+        <i class="fas fa-hourglass-half text-amber-600 dark:text-amber-400 mt-0.5"></i>
+        <p class="text-sm font-semibold text-amber-900 dark:text-amber-100">{{ __('student.portfolio_marketing.profile_status_pending_banner') }}</p>
+    </div>
+    @elseif($u->portfolio_profile_status === \App\Models\User::PORTFOLIO_PROFILE_REJECTED)
+    <div class="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 px-4 py-3 space-y-2">
+        <div class="flex items-start gap-3">
+            <i class="fas fa-exclamation-circle text-red-600 dark:text-red-400 mt-0.5"></i>
+            <p class="text-sm font-semibold text-red-900 dark:text-red-100">{{ __('student.portfolio_marketing.profile_status_rejected_banner') }}</p>
+        </div>
+        @if($u->portfolio_profile_rejected_reason)
+            <p class="text-sm text-red-800 dark:text-red-200/90 mr-7 whitespace-pre-line"><span class="font-bold">{{ __('student.portfolio_marketing.profile_rejected_reason_label') }}:</span> {{ $u->portfolio_profile_rejected_reason }}</p>
+        @endif
+    </div>
+    @endif
+
     <!-- الهيدر -->
     <div class="bg-white dark:bg-slate-800/95 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
         <div class="flex flex-col gap-3">
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1">التسويق الشخصي للمعلم</h1>
                 <p class="text-sm text-gray-500 dark:text-slate-400">
-                    هذا القسم يبني ملفك التعريفي بشكل احترافي + بورتفوليو (مشاريع، فيديوهات، نصوص، روابط).
+                    {{ __('student.portfolio_marketing.index_intro') }}
                 </p>
             </div>
         </div>
@@ -35,7 +53,7 @@
         <div class="px-5 py-4 border-b border-gray-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 flex items-center justify-between gap-3">
             <div>
                 <h3 class="font-bold text-slate-900 dark:text-slate-100">ملفك التعريفي</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400">اجعل الملف قوي: عنوان تعريفي + نبذة + مهارات + روابط.</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400">اجعل الملف قوياً: عنوان تعريفي + نبذة + مهارات + فيديو تعريفي اختياري.</p>
             </div>
             <a href="{{ route('student.portfolio.profile.edit') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold shadow-sm transition-colors">
                 <i class="fas fa-user-edit"></i>
@@ -43,7 +61,6 @@
             </a>
         </div>
         <div class="p-5">
-            @php $u = auth()->user(); @endphp
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="md:col-span-2 rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
                     <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mb-2">Headline</p>
@@ -76,12 +93,12 @@
     <div class="bg-white dark:bg-slate-800/95 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 flex items-center justify-between gap-3">
             <div>
-                <h3 class="font-bold text-slate-900 dark:text-slate-100">مشاريعي</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400">ارفع مشاريعك وسيتم مراجعتها ثم نشرها في المعرض العام عند الاعتماد.</p>
+                <h3 class="font-bold text-slate-900 dark:text-slate-100">{{ __('student.portfolio_marketing.index_section_title') }}</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">{{ __('student.portfolio_marketing.index_section_hint') }}</p>
             </div>
             <a href="{{ route('student.portfolio.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-sm transition-colors">
                 <i class="fas fa-plus"></i>
-                رفع مشروع
+                {{ __('student.portfolio_marketing.index_add_btn') }}
             </a>
         </div>
 
@@ -91,11 +108,11 @@
                     <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/40 rounded-2xl flex items-center justify-center mx-auto mb-3 text-emerald-600 dark:text-emerald-400">
                         <i class="fas fa-folder-open text-xl"></i>
                     </div>
-                    <p class="font-bold text-slate-900 dark:text-slate-100 mb-1">لا يوجد مشاريع بعد</p>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">ابدأ برفع أول مشروع لك.</p>
+                    <p class="font-bold text-slate-900 dark:text-slate-100 mb-1">{{ __('student.portfolio_marketing.index_empty_title') }}</p>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">{{ __('student.portfolio_marketing.index_empty_hint') }}</p>
                     <a href="{{ route('student.portfolio.create') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-colors">
                         <i class="fas fa-upload"></i>
-                        رفع مشروع
+                        {{ __('student.portfolio_marketing.index_empty_cta') }}
                     </a>
                 </div>
             @else
@@ -103,13 +120,13 @@
                     @foreach($projects as $project)
                         @php
                             $statusMap = [
-                                \App\Models\PortfolioProject::STATUS_PENDING_REVIEW => ['بانتظار المراجعة', 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200', 'fa-hourglass-half'],
-                                \App\Models\PortfolioProject::STATUS_APPROVED => ['معتمد (غير منشور)', 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200', 'fa-check-circle'],
-                                \App\Models\PortfolioProject::STATUS_REJECTED => ['مرفوض', 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200', 'fa-times-circle'],
-                                \App\Models\PortfolioProject::STATUS_PUBLISHED => ['منشور', 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200', 'fa-globe'],
+                                \App\Models\PortfolioProject::STATUS_PENDING_REVIEW => [__('student.portfolio_marketing.status_pending_review'), 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200', 'fa-hourglass-half'],
+                                \App\Models\PortfolioProject::STATUS_APPROVED => [__('student.portfolio_marketing.status_approved'), 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-200', 'fa-check-circle'],
+                                \App\Models\PortfolioProject::STATUS_REJECTED => [__('student.portfolio_marketing.status_rejected'), 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200', 'fa-times-circle'],
+                                \App\Models\PortfolioProject::STATUS_PUBLISHED => [__('student.portfolio_marketing.status_published'), 'bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-200', 'fa-globe'],
                             ];
-                            $meta = $statusMap[$project->status] ?? ['غير معروف', 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200', 'fa-question-circle'];
-                            $preview = $project->preview_image_path ? asset($project->preview_image_path) : null;
+                            $meta = $statusMap[$project->status] ?? [__('student.portfolio_marketing.status_unknown'), 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200', 'fa-question-circle'];
+                            $preview = \App\Services\PortfolioImageStorage::publicUrl($project->preview_image_path);
                         @endphp
                         <div class="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm bg-white dark:bg-slate-900/20">
                             <div class="h-40 bg-slate-100 dark:bg-slate-800/60 relative">
@@ -150,7 +167,7 @@
                                         </a>
                                     @endif
                                     @if($project->status !== \App\Models\PortfolioProject::STATUS_PUBLISHED)
-                                        <form action="{{ route('student.portfolio.destroy', $project) }}" method="POST" onsubmit="return confirm('هل تريد حذف المشروع؟');" class="inline">
+                                        <form action="{{ route('student.portfolio.destroy', $project) }}" method="POST" onsubmit="return confirm(@json(__('student.portfolio_marketing.confirm_delete_item')));" class="inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 dark:border-red-800/60 text-xs font-bold text-red-700 dark:text-red-200 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">

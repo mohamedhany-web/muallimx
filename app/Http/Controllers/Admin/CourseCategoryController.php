@@ -30,7 +30,7 @@ class CourseCategoryController extends Controller
             'sort_order' => 'nullable|integer|min:0|max:99999',
             'is_active' => 'boolean',
         ], [
-            'name.required' => 'اسم التصنيف مطلوب',
+            'name.required' => 'اسم المسار مطلوب',
             'name.unique' => 'هذا الاسم مستخدم بالفعل',
         ]);
 
@@ -41,7 +41,7 @@ class CourseCategoryController extends Controller
         ]);
 
         return redirect()->route('admin.course-categories.index')
-            ->with('success', 'تم إضافة التصنيف بنجاح.');
+            ->with('success', 'تم إضافة المسار بنجاح.');
     }
 
     public function edit(CourseCategory $course_category): View
@@ -61,7 +61,7 @@ class CourseCategoryController extends Controller
             'sort_order' => 'nullable|integer|min:0|max:99999',
             'is_active' => 'boolean',
         ], [
-            'name.required' => 'اسم التصنيف مطلوب',
+            'name.required' => 'اسم المسار مطلوب',
             'name.unique' => 'هذا الاسم مستخدم بالفعل',
         ]);
 
@@ -77,7 +77,7 @@ class CourseCategoryController extends Controller
         }
 
         return redirect()->route('admin.course-categories.index')
-            ->with('success', 'تم تحديث التصنيف بنجاح.');
+            ->with('success', 'تم تحديث المسار بنجاح.');
     }
 
     public function destroy(CourseCategory $course_category): RedirectResponse
@@ -86,6 +86,6 @@ class CourseCategoryController extends Controller
         $course_category->delete();
 
         return redirect()->route('admin.course-categories.index')
-            ->with('success', 'تم حذف التصنيف. الكورسات المرتبطة أصبحت بدون تصنيف.');
+            ->with('success', 'تم حذف المسار. الكورسات المرتبطة أصبحت بدون مسار.');
     }
 }

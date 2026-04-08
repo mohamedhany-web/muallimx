@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Services\UserProfileImageStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
@@ -70,15 +68,8 @@ class ProfileController extends Controller
         }
 
         if ($request->hasFile('profile_image')) {
-            if ($user->profile_image) {
-                if (Storage::disk('public')->exists($user->profile_image)) {
-                    Storage::disk('public')->delete($user->profile_image);
-                }
-                if (File::exists(public_path($user->profile_image))) {
-                    File::delete(public_path($user->profile_image));
-                }
-            }
-            $data['profile_image'] = $request->file('profile_image')->store('profile-photos', 'public');
+            UserProfileImageStorage::delete($user->profile_image);
+            $data['profile_image'] = UserProfileImageStorage::store($request->file('profile_image'));
         }
 
         $user->update($data);

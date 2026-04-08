@@ -127,7 +127,7 @@
             <aside class="lg:col-span-4 xl:col-span-3 lg:sticky lg:top-28 lg:self-start space-y-6">
                 @if(isset($categories) && $categories->isNotEmpty())
                 <div class="rounded-[24px] border border-slate-200 dark:border-slate-700 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-900 p-5 sm:p-6 shadow-[0_16px_40px_-28px_rgba(31,42,122,.2)]">
-                    <p class="text-xs font-bold uppercase tracking-wide text-[#283593] dark:text-indigo-300 mb-3">{{ __('public.categories_sidebar') }}</p>
+                    <p class="text-xs font-bold uppercase tracking-wide text-[#283593] dark:text-indigo-300 mb-3">{{ __('public.faq_sidebar_categories') }}</p>
                     <div class="flex flex-col gap-2">
                         <button type="button" class="filter-btn filter-btn-faq is-active w-full text-start rounded-xl px-4 py-2.5 text-sm font-bold transition-all" data-category="all">
                             {{ __('public.faq_filter_all') }}

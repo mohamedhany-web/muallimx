@@ -156,22 +156,14 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-10 reveal s2">
+      <div class="grid grid-cols-2 gap-3 sm:gap-4 mt-10 max-w-xl mx-auto reveal s2">
         <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
           <p class="text-3xl sm:text-4xl font-black text-mx-indigo" x-text="courses.length">0</p>
-          <p class="text-xs sm:text-sm text-slate-600 mt-1"><?php echo e(__('public.course_available')); ?></p>
-        </article>
-        <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#fff7f2] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-          <p class="text-3xl sm:text-4xl font-black text-[#FB5607]" x-text="courses.filter(c=>!c.price||c.price==0).length">0</p>
-          <p class="text-xs sm:text-sm text-slate-600 mt-1">كورس مجاني</p>
+          <p class="text-xs sm:text-sm text-slate-600 mt-1"><?php echo e(__('public.courses_stats_available')); ?></p>
         </article>
         <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#f8faff] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
           <p class="text-3xl sm:text-4xl font-black text-mx-indigo" x-text="courses.filter(c=>c.is_featured).length">0</p>
-          <p class="text-xs sm:text-sm text-slate-700 mt-1">كورس مميز</p>
-        </article>
-        <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-          <p class="text-3xl sm:text-4xl font-black text-mx-indigo" x-text="courses.filter(c=>c.course_category_id).length">0</p>
-          <p class="text-xs sm:text-sm text-slate-700 mt-1"><?php echo e(__('public.courses_stat_categorized')); ?></p>
+          <p class="text-xs sm:text-sm text-slate-700 mt-1"><?php echo e(__('public.courses_stats_featured')); ?></p>
         </article>
       </div>
     </div>

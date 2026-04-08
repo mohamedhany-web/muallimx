@@ -29,7 +29,7 @@ class AdvancedCourseController extends Controller
         $query = AdvancedCourse::with(['instructor'])
             ->withCount(['lessons', 'enrollments', 'orders']);
 
-        // فلترة حسب تصنيف الكورس (الجدول course_categories)
+        // فلترة حسب مسار الكورس (الجدول course_categories)
         if ($request->filled('course_category_id')) {
             $query->where('course_category_id', (int) $request->course_category_id);
         }

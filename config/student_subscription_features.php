@@ -40,6 +40,8 @@ return [
         'icon_text' => 'text-emerald-600 dark:text-emerald-400',
         'route' => 'student.portfolio.index',
         'route_params' => [],
+        /** مراجعة ملف التسويق الشخصي (الأدمن) */
+        'admin_marketing_review_route' => 'admin.portfolio-marketing-profiles.index',
     ],
     'visible_to_academies' => [
         'icon' => 'fa-building',

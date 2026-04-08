@@ -10,7 +10,7 @@
     @php
         $instrPageTitle = ($profile->user->name ?? __('public.instructor_fallback')) . ' — ' . ($profile->headline ?? 'مدرب') . ' | Muallimx';
         $instrPageDesc  = Str::limit(strip_tags($profile->bio ?? $profile->headline ?? ''), 160);
-        $instrPageImg   = ($profile->profile_image ?? null) ? asset('storage/' . $profile->profile_image) : asset('images/og-image.jpg');
+        $instrPageImg   = ($profile->user->profile_image ?? null) ? $profile->user->profile_image_url : asset('images/og-image.jpg');
         $instrPageUrl   = route('public.instructors.show', $profile->user ?? $profile);
     @endphp
     <title>{{ $instrPageTitle }}</title>

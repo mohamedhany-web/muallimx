@@ -24,9 +24,10 @@
     </a>
 
     <div class="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden shadow-lg">
-        @if($project->image_path)
+        @php $adminThumb = \App\Services\PortfolioImageStorage::publicUrl($project->preview_image_path); @endphp
+        @if($adminThumb)
             <div class="aspect-video bg-gray-100">
-                <img src="{{ asset($project->image_path) }}" alt="{{ $project->title }}" class="w-full h-full object-cover">
+                <img src="{{ $adminThumb }}" alt="{{ $project->title }}" class="w-full h-full object-cover">
             </div>
         @endif
         <div class="p-8">
