@@ -65,6 +65,17 @@ class ClassroomController extends Controller
         ));
     }
 
+    /**
+     * Muallimx Whiteboard — صفحة لوحة كاملة منفصلة (خارج غرفة الاجتماع).
+     */
+    public function whiteboardStandalone()
+    {
+        $user = Auth::user();
+        $this->ensureClassroomAccess($user);
+
+        return view('student.classroom.whiteboard-standalone');
+    }
+
     public function create()
     {
         $user = Auth::user();

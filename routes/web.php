@@ -61,6 +61,61 @@ Route::get('/storage/{path}', function ($path) {
     return response()->file($realPath, $headers);
 })->where('path', '.*')->name('storage.file')->middleware('web');
 
+/*
+|--------------------------------------------------------------------------
+| Muallimx Whiteboard (أصول اللوحة) — تمرير عبر Laravel
+| يعمل عندما لا يُخدم public/vendor مباشرة (جذر الموقع ليس public أو قواعد .htaccess)
+|--------------------------------------------------------------------------
+*/
+Route::get('/mx-vendor/excalidraw/{path}', function (string $path) {
+    $path = rawurldecode($path);
+    $path = str_replace('..', '', $path);
+    $path = ltrim(str_replace('\\', '/', $path), '/');
+
+    $basePath = public_path('vendor/excalidraw');
+    $filePath = $basePath . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $path);
+    $filePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $filePath);
+
+    if (! @file_exists($filePath) || ! @is_file($filePath)) {
+        abort(404, 'Whiteboard asset not found');
+    }
+
+    $realPath = @realpath($filePath) ?: $filePath;
+    $allowedPath = @realpath($basePath) ?: $basePath;
+    $normalizedRealPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $realPath);
+    $normalizedAllowedPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $allowedPath);
+
+    if ($allowedPath === '' || strpos($normalizedRealPath, $normalizedAllowedPath) !== 0) {
+        abort(404, 'Access denied');
+    }
+
+    if (! @is_readable($realPath)) {
+        abort(403, 'File not readable');
+    }
+
+    $extension = strtolower(pathinfo($realPath, PATHINFO_EXTENSION));
+    // أولوية للامتداد: على Windows/بعض الاستضافات يعيد mime_content_type لـ .js قيمة text/plain
+    // ومع X-Content-Type-Options: nosniff لا يُنفَّذ السكربت ويبقى مكتبة اللوحة غير معرّفة.
+    $mimeType = match ($extension) {
+        'js', 'mjs' => 'application/javascript; charset=utf-8',
+        'css' => 'text/css; charset=utf-8',
+        'json' => 'application/json; charset=utf-8',
+        'map' => 'application/json; charset=utf-8',
+        'txt' => 'text/plain; charset=utf-8',
+        'woff2' => 'font/woff2',
+        'woff' => 'font/woff',
+        default => null,
+    };
+    if ($mimeType === null) {
+        $mimeType = @mime_content_type($realPath) ?: 'application/octet-stream';
+    }
+
+    return response()->file($realPath, [
+        'Content-Type' => $mimeType,
+        'Cache-Control' => 'public, max-age=31536000, immutable',
+    ]);
+})->where('path', '.*')->name('mx.vendor.excalidraw')->middleware('web');
+
 // Sitemap Route — Muallimx SEO
 Route::get('/sitemap.xml', function() {
     $xmlEscape = static fn (?string $value): string => htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
@@ -230,6 +285,7 @@ Route::get('/partners', [\App\Http\Controllers\Public\PageController::class, 'pa
 
 // Portfolio (معرض أعمال الطلاب)
 Route::get('/portfolio', [\App\Http\Controllers\Public\PortfolioController::class, 'index'])->name('public.portfolio.index');
+Route::get('/portfolio/teacher/{id}', [\App\Http\Controllers\Public\PortfolioController::class, 'showTeacher'])->name('public.portfolio.teacher')->where('id', '[0-9]+');
 Route::get('/portfolio/{id}', [\App\Http\Controllers\Public\PortfolioController::class, 'show'])->name('public.portfolio.show')->where('id', '[0-9]+');
 
 // صفحة الخدمات (محتوى من لوحة الإدارة)
@@ -643,6 +699,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
         Route::get('/classroom/create', [\App\Http\Controllers\Student\ClassroomController::class, 'create'])->name('student.classroom.create');
         Route::post('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'store'])->name('student.classroom.store');
+        Route::get('/classroom/whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardStandalone'])->name('student.classroom.whiteboard');
         Route::get('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'show'])->name('student.classroom.show');
         Route::get('/classroom/{meeting}/edit', [\App\Http\Controllers\Student\ClassroomController::class, 'edit'])->name('student.classroom.edit');
         Route::put('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'update'])->name('student.classroom.update');

@@ -1,14 +1,18 @@
 @php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
+    $teacherPortfolioLabel = $locale === 'ar' ? 'بورتفوليو المعلّمين' : 'Teachers Portfolio';
+    $teacherPortfolioSubtitle = $locale === 'ar'
+        ? 'استعرض بروفايلات المعلّمين ومشاريعهم المنشورة داخل المنصّة.'
+        : 'Browse teacher profiles and their published portfolio projects.';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>{{ __('public.portfolio_page_title') }} - {{ __('public.site_suffix') }}</title>
-    <meta name="description" content="{{ __('public.portfolio_subtitle') }}">
+    <title>{{ $teacherPortfolioLabel }} - {{ __('public.site_suffix') }}</title>
+    <meta name="description" content="{{ $teacherPortfolioSubtitle }}">
     <meta name="theme-color" content="#283593">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -82,34 +86,58 @@
         <div class="container-1200 relative z-10">
             <div class="max-w-4xl mx-auto text-center reveal">
                 <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-6" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
-                    <i class="fas fa-code"></i> {{ __('public.portfolio_page_title') }}
+                    <i class="fas fa-code"></i> {{ $teacherPortfolioLabel }}
                 </span>
                 <h1 class="font-heading text-[2rem] sm:text-[2.8rem] lg:text-[3.35rem] leading-[1.22] font-black text-mx-indigo mb-5">{{ __('public.portfolio_heading') }}</h1>
-                <p class="text-slate-600 text-base sm:text-lg leading-8 mb-7 max-w-3xl mx-auto">{{ __('public.portfolio_subtitle') }}</p>
+                <p class="text-slate-600 text-base sm:text-lg leading-8 mb-7 max-w-3xl mx-auto">{{ $teacherPortfolioSubtitle }}</p>
             </div>
 
             @if($learningPaths->count() > 0)
             <div class="flex flex-wrap justify-center gap-2 sm:gap-3 reveal s2">
-                <a href="{{ route('public.portfolio.index') }}" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition {{ !$categoryId ? 'bg-[#283593] text-white border-[#283593]' : 'bg-white text-[#1F2A7A] border-slate-200 hover:bg-slate-50' }}">
+                <a href="{{ route('public.portfolio.index', array_filter(['q' => $search, 'sort' => $sort])) }}" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition {{ !$categoryId ? 'bg-[#283593] text-white border-[#283593]' : 'bg-white text-[#1F2A7A] border-slate-200 hover:bg-slate-50' }}">
                     <i class="fas fa-th-large {{ $isRtl ? 'ml-1.5' : 'mr-1.5' }} text-[11px]"></i>{{ __('public.all') }}
                 </a>
                 @foreach($learningPaths as $path)
-                <a href="{{ route('public.portfolio.index', ['path' => $path->id]) }}" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition {{ (string)$categoryId === (string)$path->id ? 'bg-[#283593] text-white border-[#283593]' : 'bg-white text-[#1F2A7A] border-slate-200 hover:bg-slate-50' }}">{{ $path->name }}</a>
+                <a href="{{ route('public.portfolio.index', array_filter(['path' => $path->id, 'q' => $search, 'sort' => $sort])) }}" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition {{ (string)$categoryId === (string)$path->id ? 'bg-[#283593] text-white border-[#283593]' : 'bg-white text-[#1F2A7A] border-slate-200 hover:bg-slate-50' }}">{{ $path->name }}</a>
                 @endforeach
             </div>
             @endif
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-8 reveal s3">
+            <form method="GET" action="{{ route('public.portfolio.index') }}" class="reveal s3 mt-5">
+                @if($categoryId)
+                    <input type="hidden" name="path" value="{{ $categoryId }}">
+                @endif
+                <div class="mx-auto max-w-4xl card-base !p-4 sm:!p-5">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                        <div class="md:col-span-7">
+                            <label for="portfolio-search" class="sr-only">Search</label>
+                            <div class="relative">
+                                <i class="fas fa-search absolute top-1/2 -translate-y-1/2 {{ $isRtl ? 'right-4' : 'left-4' }} text-slate-400 text-xs"></i>
+                                <input id="portfolio-search" type="text" name="q" value="{{ $search }}" placeholder="{{ $isRtl ? 'ابحث باسم المعلّم أو نبذة...' : 'Search by teacher name or bio...' }}" class="w-full rounded-xl border border-slate-200 bg-white py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#283593]/20 {{ $isRtl ? 'pr-10 pl-3' : 'pl-10 pr-3' }}">
+                            </div>
+                        </div>
+                        <div class="md:col-span-3">
+                            <label for="portfolio-sort" class="sr-only">Sort</label>
+                            <select id="portfolio-sort" name="sort" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#283593]/20">
+                                <option value="most_projects" {{ $sort === 'most_projects' ? 'selected' : '' }}>{{ $isRtl ? 'الأكثر مشاريع' : 'Most projects' }}</option>
+                                <option value="recent" {{ $sort === 'recent' ? 'selected' : '' }}>{{ $isRtl ? 'الأحدث' : 'Most recent' }}</option>
+                                <option value="name" {{ $sort === 'name' ? 'selected' : '' }}>{{ $isRtl ? 'الاسم (أ-ي)' : 'Name (A-Z)' }}</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2 flex gap-2">
+                            <button type="submit" class="w-full rounded-xl bg-[#283593] text-white text-sm font-bold py-3 hover:bg-[#1f2a7a] transition">{{ $isRtl ? 'تطبيق' : 'Apply' }}</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-8 reveal s4 max-w-2xl mx-auto">
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo">{{ $projects->total() }}</p>
-                    <p class="text-xs sm:text-sm text-slate-600 mt-1">مشروع منشور</p>
-                </article>
-                <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#FFE5F7] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo">{{ $learningPaths->count() }}</p>
-                    <p class="text-xs sm:text-sm text-slate-600 mt-1">مسار تعليمي</p>
+                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo">{{ $teachersCount }}</p>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-1">{{ $isRtl ? 'معلّم' : 'Teachers' }}</p>
                 </article>
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#fffbea] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                    <p class="text-3xl sm:text-4xl font-black text-[#FB5607]">{{ $projects->count() }}</p>
+                    <p class="text-3xl sm:text-4xl font-black text-[#FB5607]">{{ $teachers->count() }}</p>
                     <p class="text-xs sm:text-sm text-slate-600 mt-1">نتائج هذه الصفحة</p>
                 </article>
             </div>
@@ -118,82 +146,82 @@
 
     <section class="py-14 sm:py-16 bg-white">
         <div class="container-1200">
-            @if($projects->count() > 0)
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                @foreach($projects as $idx => $project)
-                <a href="{{ route('public.portfolio.show', $project->id) }}" class="card-base hover-lift reveal s{{ ($idx % 4) + 1 }} p-0 overflow-hidden block group">
-                    <div class="relative aspect-video overflow-hidden" style="background:linear-gradient(135deg,#e9edff,#f8f9ff)">
-                        @php $thumb = \App\Services\PortfolioImageStorage::publicUrl($project->preview_image_path); @endphp
-                        @if($thumb)
-                        <img src="{{ $thumb }}" alt="{{ $project->title }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
-                        @else
-                        <div class="absolute inset-0 flex items-center justify-center text-[#283593]/65">
-                            @if($project->content_type === \App\Models\PortfolioProject::CONTENT_VIDEO)
-                            <i class="fas fa-video text-4xl"></i>
-                            @elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_TEXT)
-                            <i class="fas fa-align-right text-4xl"></i>
-                            @elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_LINK)
-                            <i class="fas fa-link text-4xl"></i>
+            @if($teachers->count() > 0)
+            <div class="space-y-4 sm:space-y-5">
+                @foreach($teachers as $idx => $teacher)
+                @php
+                    $featuredProject = $teacher->portfolioProjects->first();
+                    $marketing = $teacher->publicPortfolioMarketingFields();
+                    $thumb = $featuredProject ? \App\Services\PortfolioImageStorage::publicUrl($featuredProject->preview_image_path) : null;
+                    $bioSnippet = trim((string) ($marketing['headline'] ?? '')) !== ''
+                        ? $marketing['headline']
+                        : \Illuminate\Support\Str::limit(strip_tags((string) ($marketing['about'] ?? $teacher->bio ?? '')), 90);
+                @endphp
+                <article class="card-base hover-lift reveal s{{ ($idx % 4) + 1 }} !p-0 overflow-hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-0">
+                        <a href="{{ route('public.portfolio.teacher', $teacher->id) }}" class="md:col-span-3 lg:col-span-2 relative min-h-[180px] block" style="background:linear-gradient(135deg,#e9edff,#f8f9ff)">
+                            @if($teacher->public_portfolio_marketing_photo_url)
+                                <img src="{{ $teacher->public_portfolio_marketing_photo_url }}" alt="{{ $teacher->name }}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">
+                            @elseif($thumb)
+                                <img src="{{ $thumb }}" alt="{{ $teacher->name }}" class="absolute inset-0 w-full h-full object-cover" loading="lazy">
                             @else
-                            <i class="fas fa-code text-4xl"></i>
+                                <div class="absolute inset-0 flex items-center justify-center text-[#283593]/65">
+                                    <i class="fas fa-user-graduate text-4xl"></i>
+                                </div>
                             @endif
-                        </div>
-                        @endif
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-                        @if($project->project_type)
-                        <span class="absolute top-3 {{ $isRtl ? 'right' : 'left' }}-3 px-3 py-1 rounded-full text-[11px] font-bold bg-[#283593] text-white">{{ $project->project_type }}</span>
-                        @endif
-                    </div>
+                        </a>
 
-                    <div class="p-5">
-                        @if($project->advancedCourse)
-                        <span class="inline-flex items-center gap-1.5 text-[11px] text-[#FB5607] bg-[#FFF7ED] px-3 py-1 rounded-full font-semibold mb-3">
-                            <i class="fas fa-graduation-cap text-[9px]"></i>{{ $project->advancedCourse->title }}
-                        </span>
-                        @elseif($project->academicYear)
-                        <span class="inline-flex items-center gap-1.5 text-[11px] text-[#283593] bg-[#EFF2FF] px-3 py-1 rounded-full font-semibold mb-3">
-                            <i class="fas fa-bookmark text-[9px]"></i>{{ $project->academicYear->name }}
-                        </span>
-                        @endif
-
-                        <h3 class="font-heading text-lg font-extrabold text-mx-indigo leading-snug mb-2 line-clamp-2">{{ $project->title }}</h3>
-                        <p class="text-sm text-slate-500 leading-7 line-clamp-2 mb-4">{{ Str::limit(strip_tags($project->description ?? ''), 110) }}</p>
-
-                        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-                            <div class="flex items-center gap-2 min-w-0">
-                                @if($project->user->public_portfolio_marketing_photo_url)
-                                <img src="{{ $project->user->public_portfolio_marketing_photo_url }}" alt="" class="w-8 h-8 rounded-lg object-cover flex-shrink-0">
-                                @else
-                                <div class="w-8 h-8 rounded-lg bg-[#283593] text-white flex items-center justify-center text-xs font-bold flex-shrink-0">{{ mb_substr($project->user->name ?? 'ط', 0, 1) }}</div>
+                        <div class="md:col-span-6 lg:col-span-7 p-5 sm:p-6">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <h3 class="font-heading text-xl font-extrabold text-mx-indigo leading-snug">{{ $teacher->name ?? __('public.student_fallback') }}</h3>
+                                @if($featuredProject?->academicYear)
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EFF2FF] text-[#283593]">{{ $featuredProject->academicYear->name }}</span>
                                 @endif
-                                <span class="text-sm font-semibold text-slate-700 truncate">{{ $project->user->name ?? __('public.student_fallback') }}</span>
                             </div>
-                            <span class="text-[#FB5607] text-xs font-bold arrow-link">عرض التفاصيل</span>
+                            @if($featuredProject?->advancedCourse)
+                                <p class="text-xs text-[#FB5607] font-bold mb-3">
+                                    <i class="fas fa-graduation-cap text-[10px] {{ $isRtl ? 'ml-1' : 'mr-1' }}"></i>{{ $featuredProject->advancedCourse->title }}
+                                </p>
+                            @endif
+                            <p class="text-sm text-slate-600 leading-7 mb-4">{{ $bioSnippet }}</p>
+                            <div class="text-xs text-slate-500">
+                                {{ $isRtl ? 'آخر تحديث:' : 'Last update:' }} {{ optional($teacher->updated_at)->translatedFormat('j M Y') }}
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-3 p-5 sm:p-6 border-t md:border-t-0 md:border-s border-slate-100 flex flex-col justify-center gap-3 bg-slate-50/50">
+                            <div class="rounded-xl bg-white border border-slate-200 p-3 text-center">
+                                <p class="text-2xl font-black text-mx-indigo">{{ $teacher->published_projects_count }}</p>
+                                <p class="text-xs text-slate-500">{{ $isRtl ? 'إجمالي المشاريع' : 'Total projects' }}</p>
+                            </div>
+                            <a href="{{ route('public.portfolio.teacher', $teacher->id) }}" class="w-full rounded-xl bg-[#FB5607] text-white text-sm font-bold py-2.5 text-center hover:bg-[#e94f06] transition">
+                                {{ $isRtl ? 'عرض البروفايل' : 'View profile' }}
+                            </a>
                         </div>
                     </div>
-                </a>
+                </article>
                 @endforeach
             </div>
 
-            @if($projects->hasPages())
+            @if($teachers->hasPages())
             <div class="mt-10 flex justify-center">
                 <nav class="flex items-center gap-2">
-                    @if($projects->onFirstPage())
+                    @if($teachers->onFirstPage())
                     <span class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-sm cursor-not-allowed"><i class="fas fa-chevron-{{ $isRtl ? 'right' : 'left' }}"></i></span>
                     @else
-                    <a href="{{ $projects->previousPageUrl() }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-[#1F2A7A] hover:bg-slate-50 flex items-center justify-center text-sm"><i class="fas fa-chevron-{{ $isRtl ? 'right' : 'left' }}"></i></a>
+                    <a href="{{ $teachers->previousPageUrl() }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-[#1F2A7A] hover:bg-slate-50 flex items-center justify-center text-sm"><i class="fas fa-chevron-{{ $isRtl ? 'right' : 'left' }}"></i></a>
                     @endif
 
-                    @foreach($projects->getUrlRange(max(1, $projects->currentPage() - 2), min($projects->lastPage(), $projects->currentPage() + 2)) as $page => $url)
-                        @if($page == $projects->currentPage())
+                    @foreach($teachers->getUrlRange(max(1, $teachers->currentPage() - 2), min($teachers->lastPage(), $teachers->currentPage() + 2)) as $page => $url)
+                        @if($page == $teachers->currentPage())
                         <span class="w-10 h-10 rounded-xl bg-[#283593] text-white flex items-center justify-center text-sm font-bold">{{ $page }}</span>
                         @else
                         <a href="{{ $url }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-[#1F2A7A] flex items-center justify-center text-sm">{{ $page }}</a>
                         @endif
                     @endforeach
 
-                    @if($projects->hasMorePages())
-                    <a href="{{ $projects->nextPageUrl() }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-[#1F2A7A] hover:bg-slate-50 flex items-center justify-center text-sm"><i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}"></i></a>
+                    @if($teachers->hasMorePages())
+                    <a href="{{ $teachers->nextPageUrl() }}" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-[#1F2A7A] hover:bg-slate-50 flex items-center justify-center text-sm"><i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}"></i></a>
                     @else
                     <span class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-sm cursor-not-allowed"><i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }}"></i></span>
                     @endif

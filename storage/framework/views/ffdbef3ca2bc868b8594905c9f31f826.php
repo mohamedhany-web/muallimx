@@ -1,14 +1,18 @@
 <?php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
+    $teacherPortfolioLabel = $locale === 'ar' ? 'بورتفوليو المعلّمين' : 'Teachers Portfolio';
+    $teacherPortfolioSubtitle = $locale === 'ar'
+        ? 'استعرض بروفايلات المعلّمين ومشاريعهم المنشورة داخل المنصّة.'
+        : 'Browse teacher profiles and their published portfolio projects.';
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo e($locale); ?>" dir="<?php echo e($isRtl ? 'rtl' : 'ltr'); ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title><?php echo e(__('public.portfolio_page_title')); ?> - <?php echo e(__('public.site_suffix')); ?></title>
-    <meta name="description" content="<?php echo e(__('public.portfolio_subtitle')); ?>">
+    <title><?php echo e($teacherPortfolioLabel); ?> - <?php echo e(__('public.site_suffix')); ?></title>
+    <meta name="description" content="<?php echo e($teacherPortfolioSubtitle); ?>">
     <meta name="theme-color" content="#283593">
     <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -82,36 +86,60 @@
         <div class="container-1200 relative z-10">
             <div class="max-w-4xl mx-auto text-center reveal">
                 <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-6" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
-                    <i class="fas fa-code"></i> <?php echo e(__('public.portfolio_page_title')); ?>
+                    <i class="fas fa-code"></i> <?php echo e($teacherPortfolioLabel); ?>
 
                 </span>
                 <h1 class="font-heading text-[2rem] sm:text-[2.8rem] lg:text-[3.35rem] leading-[1.22] font-black text-mx-indigo mb-5"><?php echo e(__('public.portfolio_heading')); ?></h1>
-                <p class="text-slate-600 text-base sm:text-lg leading-8 mb-7 max-w-3xl mx-auto"><?php echo e(__('public.portfolio_subtitle')); ?></p>
+                <p class="text-slate-600 text-base sm:text-lg leading-8 mb-7 max-w-3xl mx-auto"><?php echo e($teacherPortfolioSubtitle); ?></p>
             </div>
 
             <?php if($learningPaths->count() > 0): ?>
             <div class="flex flex-wrap justify-center gap-2 sm:gap-3 reveal s2">
-                <a href="<?php echo e(route('public.portfolio.index')); ?>" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition <?php echo e(!$categoryId ? 'bg-[#283593] text-white border-[#283593]' : 'bg-white text-[#1F2A7A] border-slate-200 hover:bg-slate-50'); ?>">
+                <a href="<?php echo e(route('public.portfolio.index', array_filter(['q' => $search, 'sort' => $sort]))); ?>" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition <?php echo e(!$categoryId ? 'bg-[#283593] text-white border-[#283593]' : 'bg-white text-[#1F2A7A] border-slate-200 hover:bg-slate-50'); ?>">
                     <i class="fas fa-th-large <?php echo e($isRtl ? 'ml-1.5' : 'mr-1.5'); ?> text-[11px]"></i><?php echo e(__('public.all')); ?>
 
                 </a>
                 <?php $__currentLoopData = $learningPaths; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $path): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <a href="<?php echo e(route('public.portfolio.index', ['path' => $path->id])); ?>" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition <?php echo e((string)$categoryId === (string)$path->id ? 'bg-[#283593] text-white border-[#283593]' : 'bg-white text-[#1F2A7A] border-slate-200 hover:bg-slate-50'); ?>"><?php echo e($path->name); ?></a>
+                <a href="<?php echo e(route('public.portfolio.index', array_filter(['path' => $path->id, 'q' => $search, 'sort' => $sort]))); ?>" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold border transition <?php echo e((string)$categoryId === (string)$path->id ? 'bg-[#283593] text-white border-[#283593]' : 'bg-white text-[#1F2A7A] border-slate-200 hover:bg-slate-50'); ?>"><?php echo e($path->name); ?></a>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
             <?php endif; ?>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-8 reveal s3">
+            <form method="GET" action="<?php echo e(route('public.portfolio.index')); ?>" class="reveal s3 mt-5">
+                <?php if($categoryId): ?>
+                    <input type="hidden" name="path" value="<?php echo e($categoryId); ?>">
+                <?php endif; ?>
+                <div class="mx-auto max-w-4xl card-base !p-4 sm:!p-5">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                        <div class="md:col-span-7">
+                            <label for="portfolio-search" class="sr-only">Search</label>
+                            <div class="relative">
+                                <i class="fas fa-search absolute top-1/2 -translate-y-1/2 <?php echo e($isRtl ? 'right-4' : 'left-4'); ?> text-slate-400 text-xs"></i>
+                                <input id="portfolio-search" type="text" name="q" value="<?php echo e($search); ?>" placeholder="<?php echo e($isRtl ? 'ابحث باسم المعلّم أو نبذة...' : 'Search by teacher name or bio...'); ?>" class="w-full rounded-xl border border-slate-200 bg-white py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#283593]/20 <?php echo e($isRtl ? 'pr-10 pl-3' : 'pl-10 pr-3'); ?>">
+                            </div>
+                        </div>
+                        <div class="md:col-span-3">
+                            <label for="portfolio-sort" class="sr-only">Sort</label>
+                            <select id="portfolio-sort" name="sort" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#283593]/20">
+                                <option value="most_projects" <?php echo e($sort === 'most_projects' ? 'selected' : ''); ?>><?php echo e($isRtl ? 'الأكثر مشاريع' : 'Most projects'); ?></option>
+                                <option value="recent" <?php echo e($sort === 'recent' ? 'selected' : ''); ?>><?php echo e($isRtl ? 'الأحدث' : 'Most recent'); ?></option>
+                                <option value="name" <?php echo e($sort === 'name' ? 'selected' : ''); ?>><?php echo e($isRtl ? 'الاسم (أ-ي)' : 'Name (A-Z)'); ?></option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2 flex gap-2">
+                            <button type="submit" class="w-full rounded-xl bg-[#283593] text-white text-sm font-bold py-3 hover:bg-[#1f2a7a] transition"><?php echo e($isRtl ? 'تطبيق' : 'Apply'); ?></button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-8 reveal s4 max-w-2xl mx-auto">
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo"><?php echo e($projects->total()); ?></p>
-                    <p class="text-xs sm:text-sm text-slate-600 mt-1">مشروع منشور</p>
-                </article>
-                <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#FFE5F7] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo"><?php echo e($learningPaths->count()); ?></p>
-                    <p class="text-xs sm:text-sm text-slate-600 mt-1">مسار تعليمي</p>
+                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo"><?php echo e($teachersCount); ?></p>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-1"><?php echo e($isRtl ? 'معلّم' : 'Teachers'); ?></p>
                 </article>
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#fffbea] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                    <p class="text-3xl sm:text-4xl font-black text-[#FB5607]"><?php echo e($projects->count()); ?></p>
+                    <p class="text-3xl sm:text-4xl font-black text-[#FB5607]"><?php echo e($teachers->count()); ?></p>
                     <p class="text-xs sm:text-sm text-slate-600 mt-1">نتائج هذه الصفحة</p>
                 </article>
             </div>
@@ -120,84 +148,85 @@
 
     <section class="py-14 sm:py-16 bg-white">
         <div class="container-1200">
-            <?php if($projects->count() > 0): ?>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                <?php $__currentLoopData = $projects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $project): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <a href="<?php echo e(route('public.portfolio.show', $project->id)); ?>" class="card-base hover-lift reveal s<?php echo e(($idx % 4) + 1); ?> p-0 overflow-hidden block group">
-                    <div class="relative aspect-video overflow-hidden" style="background:linear-gradient(135deg,#e9edff,#f8f9ff)">
-                        <?php $thumb = \App\Services\PortfolioImageStorage::publicUrl($project->preview_image_path); ?>
-                        <?php if($thumb): ?>
-                        <img src="<?php echo e($thumb); ?>" alt="<?php echo e($project->title); ?>" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
-                        <?php else: ?>
-                        <div class="absolute inset-0 flex items-center justify-center text-[#283593]/65">
-                            <?php if($project->content_type === \App\Models\PortfolioProject::CONTENT_VIDEO): ?>
-                            <i class="fas fa-video text-4xl"></i>
-                            <?php elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_TEXT): ?>
-                            <i class="fas fa-align-right text-4xl"></i>
-                            <?php elseif($project->content_type === \App\Models\PortfolioProject::CONTENT_LINK): ?>
-                            <i class="fas fa-link text-4xl"></i>
+            <?php if($teachers->count() > 0): ?>
+            <div class="space-y-4 sm:space-y-5">
+                <?php $__currentLoopData = $teachers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $teacher): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <?php
+                    $featuredProject = $teacher->portfolioProjects->first();
+                    $marketing = $teacher->publicPortfolioMarketingFields();
+                    $thumb = $featuredProject ? \App\Services\PortfolioImageStorage::publicUrl($featuredProject->preview_image_path) : null;
+                    $bioSnippet = trim((string) ($marketing['headline'] ?? '')) !== ''
+                        ? $marketing['headline']
+                        : \Illuminate\Support\Str::limit(strip_tags((string) ($marketing['about'] ?? $teacher->bio ?? '')), 90);
+                ?>
+                <article class="card-base hover-lift reveal s<?php echo e(($idx % 4) + 1); ?> !p-0 overflow-hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-0">
+                        <a href="<?php echo e(route('public.portfolio.teacher', $teacher->id)); ?>" class="md:col-span-3 lg:col-span-2 relative min-h-[180px] block" style="background:linear-gradient(135deg,#e9edff,#f8f9ff)">
+                            <?php if($teacher->public_portfolio_marketing_photo_url): ?>
+                                <img src="<?php echo e($teacher->public_portfolio_marketing_photo_url); ?>" alt="<?php echo e($teacher->name); ?>" class="absolute inset-0 w-full h-full object-cover" loading="lazy">
+                            <?php elseif($thumb): ?>
+                                <img src="<?php echo e($thumb); ?>" alt="<?php echo e($teacher->name); ?>" class="absolute inset-0 w-full h-full object-cover" loading="lazy">
                             <?php else: ?>
-                            <i class="fas fa-code text-4xl"></i>
+                                <div class="absolute inset-0 flex items-center justify-center text-[#283593]/65">
+                                    <i class="fas fa-user-graduate text-4xl"></i>
+                                </div>
                             <?php endif; ?>
-                        </div>
-                        <?php endif; ?>
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-                        <?php if($project->project_type): ?>
-                        <span class="absolute top-3 <?php echo e($isRtl ? 'right' : 'left'); ?>-3 px-3 py-1 rounded-full text-[11px] font-bold bg-[#283593] text-white"><?php echo e($project->project_type); ?></span>
-                        <?php endif; ?>
-                    </div>
+                        </a>
 
-                    <div class="p-5">
-                        <?php if($project->advancedCourse): ?>
-                        <span class="inline-flex items-center gap-1.5 text-[11px] text-[#FB5607] bg-[#FFF7ED] px-3 py-1 rounded-full font-semibold mb-3">
-                            <i class="fas fa-graduation-cap text-[9px]"></i><?php echo e($project->advancedCourse->title); ?>
-
-                        </span>
-                        <?php elseif($project->academicYear): ?>
-                        <span class="inline-flex items-center gap-1.5 text-[11px] text-[#283593] bg-[#EFF2FF] px-3 py-1 rounded-full font-semibold mb-3">
-                            <i class="fas fa-bookmark text-[9px]"></i><?php echo e($project->academicYear->name); ?>
-
-                        </span>
-                        <?php endif; ?>
-
-                        <h3 class="font-heading text-lg font-extrabold text-mx-indigo leading-snug mb-2 line-clamp-2"><?php echo e($project->title); ?></h3>
-                        <p class="text-sm text-slate-500 leading-7 line-clamp-2 mb-4"><?php echo e(Str::limit(strip_tags($project->description ?? ''), 110)); ?></p>
-
-                        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <?php if($project->user->public_portfolio_marketing_photo_url): ?>
-                                <img src="<?php echo e($project->user->public_portfolio_marketing_photo_url); ?>" alt="" class="w-8 h-8 rounded-lg object-cover flex-shrink-0">
-                                <?php else: ?>
-                                <div class="w-8 h-8 rounded-lg bg-[#283593] text-white flex items-center justify-center text-xs font-bold flex-shrink-0"><?php echo e(mb_substr($project->user->name ?? 'ط', 0, 1)); ?></div>
+                        <div class="md:col-span-6 lg:col-span-7 p-5 sm:p-6">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <h3 class="font-heading text-xl font-extrabold text-mx-indigo leading-snug"><?php echo e($teacher->name ?? __('public.student_fallback')); ?></h3>
+                                <?php if($featuredProject?->academicYear): ?>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EFF2FF] text-[#283593]"><?php echo e($featuredProject->academicYear->name); ?></span>
                                 <?php endif; ?>
-                                <span class="text-sm font-semibold text-slate-700 truncate"><?php echo e($project->user->name ?? __('public.student_fallback')); ?></span>
                             </div>
-                            <span class="text-[#FB5607] text-xs font-bold arrow-link">عرض التفاصيل</span>
+                            <?php if($featuredProject?->advancedCourse): ?>
+                                <p class="text-xs text-[#FB5607] font-bold mb-3">
+                                    <i class="fas fa-graduation-cap text-[10px] <?php echo e($isRtl ? 'ml-1' : 'mr-1'); ?>"></i><?php echo e($featuredProject->advancedCourse->title); ?>
+
+                                </p>
+                            <?php endif; ?>
+                            <p class="text-sm text-slate-600 leading-7 mb-4"><?php echo e($bioSnippet); ?></p>
+                            <div class="text-xs text-slate-500">
+                                <?php echo e($isRtl ? 'آخر تحديث:' : 'Last update:'); ?> <?php echo e(optional($teacher->updated_at)->translatedFormat('j M Y')); ?>
+
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-3 p-5 sm:p-6 border-t md:border-t-0 md:border-s border-slate-100 flex flex-col justify-center gap-3 bg-slate-50/50">
+                            <div class="rounded-xl bg-white border border-slate-200 p-3 text-center">
+                                <p class="text-2xl font-black text-mx-indigo"><?php echo e($teacher->published_projects_count); ?></p>
+                                <p class="text-xs text-slate-500"><?php echo e($isRtl ? 'إجمالي المشاريع' : 'Total projects'); ?></p>
+                            </div>
+                            <a href="<?php echo e(route('public.portfolio.teacher', $teacher->id)); ?>" class="w-full rounded-xl bg-[#FB5607] text-white text-sm font-bold py-2.5 text-center hover:bg-[#e94f06] transition">
+                                <?php echo e($isRtl ? 'عرض البروفايل' : 'View profile'); ?>
+
+                            </a>
                         </div>
                     </div>
-                </a>
+                </article>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
 
-            <?php if($projects->hasPages()): ?>
+            <?php if($teachers->hasPages()): ?>
             <div class="mt-10 flex justify-center">
                 <nav class="flex items-center gap-2">
-                    <?php if($projects->onFirstPage()): ?>
+                    <?php if($teachers->onFirstPage()): ?>
                     <span class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-sm cursor-not-allowed"><i class="fas fa-chevron-<?php echo e($isRtl ? 'right' : 'left'); ?>"></i></span>
                     <?php else: ?>
-                    <a href="<?php echo e($projects->previousPageUrl()); ?>" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-[#1F2A7A] hover:bg-slate-50 flex items-center justify-center text-sm"><i class="fas fa-chevron-<?php echo e($isRtl ? 'right' : 'left'); ?>"></i></a>
+                    <a href="<?php echo e($teachers->previousPageUrl()); ?>" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-[#1F2A7A] hover:bg-slate-50 flex items-center justify-center text-sm"><i class="fas fa-chevron-<?php echo e($isRtl ? 'right' : 'left'); ?>"></i></a>
                     <?php endif; ?>
 
-                    <?php $__currentLoopData = $projects->getUrlRange(max(1, $projects->currentPage() - 2), min($projects->lastPage(), $projects->currentPage() + 2)); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $page => $url): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <?php if($page == $projects->currentPage()): ?>
+                    <?php $__currentLoopData = $teachers->getUrlRange(max(1, $teachers->currentPage() - 2), min($teachers->lastPage(), $teachers->currentPage() + 2)); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $page => $url): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php if($page == $teachers->currentPage()): ?>
                         <span class="w-10 h-10 rounded-xl bg-[#283593] text-white flex items-center justify-center text-sm font-bold"><?php echo e($page); ?></span>
                         <?php else: ?>
                         <a href="<?php echo e($url); ?>" class="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-[#1F2A7A] flex items-center justify-center text-sm"><?php echo e($page); ?></a>
                         <?php endif; ?>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                    <?php if($projects->hasMorePages()): ?>
-                    <a href="<?php echo e($projects->nextPageUrl()); ?>" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-[#1F2A7A] hover:bg-slate-50 flex items-center justify-center text-sm"><i class="fas fa-chevron-<?php echo e($isRtl ? 'left' : 'right'); ?>"></i></a>
+                    <?php if($teachers->hasMorePages()): ?>
+                    <a href="<?php echo e($teachers->nextPageUrl()); ?>" class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-[#1F2A7A] hover:bg-slate-50 flex items-center justify-center text-sm"><i class="fas fa-chevron-<?php echo e($isRtl ? 'left' : 'right'); ?>"></i></a>
                     <?php else: ?>
                     <span class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center text-sm cursor-not-allowed"><i class="fas fa-chevron-<?php echo e($isRtl ? 'left' : 'right'); ?>"></i></span>
                     <?php endif; ?>
