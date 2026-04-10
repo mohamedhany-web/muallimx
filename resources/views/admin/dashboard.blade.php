@@ -9,11 +9,23 @@
     {{-- Welcome --}}
     <div class="animate-fade-in">
         <h2 class="text-2xl font-heading font-bold text-navy-800">مرحباً، {{ auth()->user()->name }}</h2>
-        <p class="text-slate-500 text-sm mt-1">نظرة عامة على أداء المنصة اليوم</p>
+        <p class="text-slate-500 text-sm mt-1">نظرة عامة على أداء المنصة اليوم — تظهر الأرقام والأقسام حسب صلاحيات دورك</p>
     </div>
+
+    @php
+        $ds = $dashboardShow ?? [];
+        $hasAnyDashboardWidget = collect($ds)->filter(fn ($v) => (bool) $v)->isNotEmpty();
+    @endphp
+    @if(isset($dashboardShow) && ! $hasAnyDashboardWidget)
+        <div class="rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-900">
+            <i class="fas fa-info-circle ml-1"></i>
+            لا توجد بطاقات إحصائية لعرضها حالياً. اطلب من المسؤول إسناد الصلاحيات المناسبة لدورك (مثل الكورسات، الطلبات، الفواتير، …).
+        </div>
+    @endif
 
     {{-- Quick Stats Row 1 --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        @if(!empty($ds['users_metric']))
         @php $usersMetric = $metrics['users'] ?? null; $usersTrend = $usersMetric['trend'] ?? null; @endphp
         <div class="stat-card animate-fade-in animate-fade-in-1" style="--before-bg: #6366f1;">
             <div class="flex items-start justify-between">
@@ -36,7 +48,9 @@
                 @endif
             </div>
         </div>
+        @endif
 
+        @if(!empty($ds['students_metric']))
         @php $studentsMetric = $metrics['students'] ?? null; $studentsTrend = $studentsMetric['trend'] ?? null; @endphp
         <div class="stat-card animate-fade-in animate-fade-in-2">
             <div class="flex items-start justify-between">
@@ -59,7 +73,9 @@
                 @endif
             </div>
         </div>
+        @endif
 
+        @if(!empty($ds['instructors_metric']))
         @php $instructorsMetric = $metrics['instructors'] ?? null; $instructorsTrend = $instructorsMetric['trend'] ?? null; @endphp
         <div class="stat-card animate-fade-in animate-fade-in-3">
             <div class="flex items-start justify-between">
@@ -82,7 +98,9 @@
                 @endif
             </div>
         </div>
+        @endif
 
+        @if(!empty($ds['courses_metric']))
         @php $coursesMetric = $metrics['courses'] ?? null; $coursesTrend = $coursesMetric['trend'] ?? null; @endphp
         <div class="stat-card animate-fade-in animate-fade-in-4">
             <div class="flex items-start justify-between">
@@ -105,11 +123,12 @@
                 @endif
             </div>
         </div>
+        @endif
     </div>
 
     {{-- Financial Stats --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        @php $revenueMetric = $metrics['monthly_revenue'] ?? null; $revenueTrend = $revenueMetric['trend'] ?? null; @endphp
+        @if(!empty($ds['revenue_total']))
         <div class="stat-card animate-fade-in">
             <div class="flex items-start justify-between">
                 <div class="flex-1 min-w-0">
@@ -121,7 +140,10 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if(!empty($ds['monthly_revenue']))
+        @php $revenueMetric = $metrics['monthly_revenue'] ?? null; $revenueTrend = $revenueMetric['trend'] ?? null; @endphp
         <div class="stat-card animate-fade-in">
             <div class="flex items-start justify-between">
                 <div class="flex-1 min-w-0">
@@ -142,7 +164,9 @@
                 </div>
             @endif
         </div>
+        @endif
 
+        @if(!empty($ds['pending_invoices_metric']))
         @php $pendingMetric = $metrics['pending_invoices'] ?? null; $pendingTrend = $pendingMetric['trend'] ?? null; @endphp
         <div class="stat-card animate-fade-in">
             <div class="flex items-start justify-between">
@@ -159,7 +183,9 @@
                 <span class="font-semibold text-slate-700">{{ number_format($pendingMetric['new_this_month'] ?? 0) }}</span>
             </div>
         </div>
+        @endif
 
+        @if(!empty($ds['enrollments_metric']))
         @php $enrollmentsMetric = $metrics['enrollments'] ?? null; $enrollmentsTrend = $enrollmentsMetric['trend'] ?? null; @endphp
         <div class="stat-card animate-fade-in">
             <div class="flex items-start justify-between">
@@ -182,10 +208,13 @@
                 @endif
             </div>
         </div>
+        @endif
     </div>
 
     {{-- Activity & Exams --}}
+    @if(!empty($ds['activity_feed']) || !empty($ds['exam_attempts']))
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        @if(!empty($ds['activity_feed']))
         <div class="section-card animate-fade-in">
             <div class="section-card-header">
                 <h3 class="text-base font-heading font-bold text-slate-800 flex items-center gap-2">
@@ -218,7 +247,9 @@
                 @endif
             </div>
         </div>
+        @endif
 
+        @if(!empty($ds['exam_attempts']))
         <div class="section-card animate-fade-in">
             <div class="section-card-header">
                 <h3 class="text-base font-heading font-bold text-slate-800 flex items-center gap-2">
@@ -247,12 +278,14 @@
                 @endif
             </div>
         </div>
+        @endif
     </div>
+    @endif
 
     {{-- Recent Users & Courses --}}
-    @if(isset($recent_users) || isset($recent_courses))
+    @if((!empty($ds['recent_users']) && isset($recent_users)) || (!empty($ds['recent_courses']) && isset($recent_courses)))
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        @if(isset($recent_users))
+        @if(!empty($ds['recent_users']) && isset($recent_users))
         <div class="section-card animate-fade-in">
             <div class="section-card-header">
                 <h3 class="text-base font-heading font-bold text-slate-800 flex items-center gap-2">
@@ -291,7 +324,7 @@
         </div>
         @endif
 
-        @if(isset($recent_courses))
+        @if(!empty($ds['recent_courses']) && isset($recent_courses))
         <div class="section-card animate-fade-in">
             <div class="section-card-header">
                 <h3 class="text-base font-heading font-bold text-slate-800 flex items-center gap-2">
@@ -333,9 +366,9 @@
     @endif
 
     {{-- قسم المبيعات / قسم الموارد البشرية --}}
-    @if(isset($salesSection) || isset($hrSection))
+    @if(!empty($salesSection) || !empty($hrSection))
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        @if(isset($salesSection))
+        @if(!empty($salesSection))
         <div class="section-card animate-fade-in">
             <div class="section-card-header">
                 <h3 class="text-base font-heading font-bold text-slate-800 flex items-center gap-2">
@@ -386,7 +419,7 @@
         </div>
         @endif
 
-        @if(isset($hrSection))
+        @if(!empty($hrSection))
         <div class="section-card animate-fade-in">
             <div class="section-card-header">
                 <h3 class="text-base font-heading font-bold text-slate-800 flex items-center gap-2">
@@ -454,9 +487,9 @@
     @endif
 
     {{-- Invoices & Payments --}}
-    @if((isset($pending_invoices) && $pending_invoices->count() > 0) || (isset($recent_payments) && $recent_payments->count() > 0))
+    @if((!empty($ds['invoices_panel']) && isset($pending_invoices) && $pending_invoices->count() > 0) || (!empty($ds['payments_panel']) && isset($recent_payments) && $recent_payments->count() > 0))
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        @if(isset($pending_invoices) && $pending_invoices->count() > 0)
+        @if(!empty($ds['invoices_panel']) && isset($pending_invoices) && $pending_invoices->count() > 0)
         <div class="section-card animate-fade-in">
             <div class="section-card-header">
                 <h3 class="text-base font-heading font-bold text-slate-800 flex items-center gap-2">
@@ -484,7 +517,7 @@
         </div>
         @endif
 
-        @if(isset($recent_payments) && $recent_payments->count() > 0)
+        @if(!empty($ds['payments_panel']) && isset($recent_payments) && $recent_payments->count() > 0)
         <div class="section-card animate-fade-in">
             <div class="section-card-header">
                 <h3 class="text-base font-heading font-bold text-slate-800 flex items-center gap-2">
@@ -515,7 +548,7 @@
     @endif
 
     {{-- قسم العناصر المدفوعة: الاشتراكات والباقات --}}
-    @if(isset($subscriptionPackages))
+    @if(!empty($subscriptionPackages))
     <div class="section-card animate-fade-in">
         <div class="section-card-header">
             <h3 class="text-base font-heading font-bold text-slate-800 flex items-center gap-2">

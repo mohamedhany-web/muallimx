@@ -230,6 +230,27 @@ class AdminController extends Controller
             ->whereIn('status', ['pending', 'awaiting_approval'])
             ->first();
 
+        $openSupportTicketsCount = 0;
+        $pendingWithdrawalsCount = 0;
+        $newSalesLeadsCount = 0;
+        $activeCouponsCount = 0;
+        try {
+            $openSupportTicketsCount = \App\Models\SupportTicket::whereIn('status', ['open', 'in_progress'])->count();
+        } catch (\Throwable $e) {
+        }
+        try {
+            $pendingWithdrawalsCount = \App\Models\WithdrawalRequest::where('status', 'pending')->count();
+        } catch (\Throwable $e) {
+        }
+        try {
+            $newSalesLeadsCount = \App\Models\SalesLead::where('status', \App\Models\SalesLead::STATUS_NEW)->count();
+        } catch (\Throwable $e) {
+        }
+        try {
+            $activeCouponsCount = \App\Models\Coupon::where('is_active', true)->count();
+        } catch (\Throwable $e) {
+        }
+
         $communityStats = [
             'competitions_count' => \App\Models\CommunityCompetition::count(),
             'competitions_active' => \App\Models\CommunityCompetition::active()->count(),
@@ -294,6 +315,7 @@ class AdminController extends Controller
                 'meta_class' => 'text-amber-600',
                 'cta' => 'مراجعة الفواتير',
                 'route' => route('admin.invoices.index', ['status' => 'pending']),
+                'permissions' => ['manage.invoices'],
             ],
             [
                 'title' => 'فواتير متأخرة',
@@ -306,6 +328,7 @@ class AdminController extends Controller
                 'meta_class' => 'text-rose-600',
                 'cta' => 'معالجة المتأخرة',
                 'route' => route('admin.invoices.index', ['status' => 'overdue']),
+                'permissions' => ['manage.invoices'],
             ],
             [
                 'title' => 'طلبات في الانتظار',
@@ -318,6 +341,7 @@ class AdminController extends Controller
                 'meta_class' => 'text-sky-600',
                 'cta' => 'مراجعة الطلبات',
                 'route' => route('admin.orders.index', ['status' => 'pending']),
+                'permissions' => ['manage.orders'],
             ],
             [
                 'title' => 'طلاب يحتاجون التفعيل',
@@ -332,6 +356,7 @@ class AdminController extends Controller
                 'meta_class' => 'text-slate-500',
                 'cta' => 'إدارة الطلاب',
                 'route' => route('admin.users.index', ['role' => 'student', 'status' => 0]),
+                'permissions' => ['manage.users', 'manage.students-accounts'],
             ],
             [
                 'title' => 'اتفاقيات تقسيط معلقة',
@@ -344,8 +369,164 @@ class AdminController extends Controller
                 'meta_class' => 'text-emerald-600',
                 'cta' => 'مراجعة الاتفاقيات',
                 'route' => route('admin.installments.agreements.index', ['status' => 'pending']),
+                'permissions' => ['manage.installments'],
+            ],
+            [
+                'title' => 'تذاكر دعم مفتوحة',
+                'count' => (int) $openSupportTicketsCount,
+                'meta' => 'تحتاج متابعة',
+                'icon' => 'fas fa-headset',
+                'background' => 'from-violet-100 to-purple-50',
+                'icon_background' => 'from-violet-500 to-purple-600',
+                'count_class' => 'text-violet-700',
+                'meta_class' => 'text-violet-600',
+                'cta' => 'مركز التذاكر',
+                'route' => route('admin.support-tickets.index'),
+                'permissions' => ['manage.support-tickets'],
+            ],
+            [
+                'title' => 'طلبات سحب معلقة',
+                'count' => (int) $pendingWithdrawalsCount,
+                'meta' => 'في انتظار المراجعة',
+                'icon' => 'fas fa-money-bill-wave',
+                'background' => 'from-orange-100 to-amber-50',
+                'icon_background' => 'from-orange-500 to-amber-600',
+                'count_class' => 'text-orange-700',
+                'meta_class' => 'text-orange-600',
+                'cta' => 'طلبات السحب',
+                'route' => route('admin.withdrawals.index', ['status' => 'pending']),
+                'permissions' => ['manage.withdrawals'],
+            ],
+            [
+                'title' => 'عملاء محتملون جدد',
+                'count' => (int) $newSalesLeadsCount,
+                'meta' => 'Leads بحالة «جديد»',
+                'icon' => 'fas fa-user-plus',
+                'background' => 'from-emerald-100 to-teal-50',
+                'icon_background' => 'from-emerald-500 to-teal-600',
+                'count_class' => 'text-emerald-700',
+                'meta_class' => 'text-emerald-600',
+                'cta' => 'قائمة Leads',
+                'route' => route('admin.sales.leads.index', ['status' => 'new']),
+                'permissions' => ['manage.leads'],
+            ],
+            [
+                'title' => 'كوبونات نشطة',
+                'count' => (int) $activeCouponsCount,
+                'meta' => 'متاحة للاستخدام',
+                'icon' => 'fas fa-ticket-alt',
+                'background' => 'from-pink-100 to-rose-50',
+                'icon_background' => 'from-pink-500 to-rose-600',
+                'count_class' => 'text-pink-700',
+                'meta_class' => 'text-pink-600',
+                'cta' => 'إدارة الكوبونات',
+                'route' => route('admin.coupons.index'),
+                'permissions' => ['manage.coupons'],
             ],
         ];
+
+        $authUser = Auth::user();
+        $dashboardUnrestricted = $authUser->isAdmin() && ! $authUser->roles()->exists();
+        // كل مفتاح يطابق صلاحيات من الدور (مع aliases في User::permissionNamesToCheck)
+        $canDash = function (array $permissions) use ($authUser, $dashboardUnrestricted): bool {
+            if ($dashboardUnrestricted) {
+                return true;
+            }
+            foreach ($permissions as $perm) {
+                if ($authUser->hasPermission($perm)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        $dashboardShow = [
+            'users_metric' => $canDash(['manage.users', 'manage.students-accounts', 'view.statistics', 'view.reports', 'manage.student-control', 'manage.quality-control']),
+            'students_metric' => $canDash(['manage.students-accounts', 'manage.users', 'view.statistics', 'view.reports', 'manage.student-control']),
+            'instructors_metric' => $canDash(['manage.users', 'view.statistics', 'view.reports', 'view.academic-reports']),
+            'courses_metric' => $canDash(['manage.courses', 'view.statistics', 'view.academic-reports', 'manage.lectures', 'manage.enrollments', 'manage.assignments']),
+            'revenue_total' => $canDash(['manage.payments', 'manage.invoices', 'view.financial-reports', 'view.statistics', 'manage.transactions', 'manage.wallets', 'view.wallets', 'manage.orders', 'manage.expenses', 'manage.salaries', 'manage.instructor-accounts']),
+            'monthly_revenue' => $canDash(['manage.payments', 'manage.invoices', 'view.financial-reports', 'view.statistics', 'manage.transactions', 'manage.wallets', 'view.wallets', 'manage.orders', 'manage.expenses', 'manage.salaries', 'manage.instructor-accounts']),
+            'pending_invoices_metric' => $canDash(['manage.invoices', 'view.financial-reports']),
+            'enrollments_metric' => $canDash(['manage.enrollments', 'manage.courses', 'view.statistics', 'view.reports', 'view.academic-reports', 'manage.student-control']),
+            'activity_feed' => $canDash(['view.activity-log', 'view.reports']),
+            'exam_attempts' => $canDash(['manage.exams', 'manage.question-bank']),
+            'recent_users' => $canDash(['manage.users', 'manage.students-accounts', 'manage.student-control', 'view.reports']),
+            'recent_courses' => $canDash(['manage.courses', 'manage.lectures', 'manage.enrollments']),
+            'sales_section' => $canDash(['manage.orders', 'manage.leads', 'view.sales-analytics', 'manage.coupons', 'manage.referrals']),
+            'hr_section' => $canDash(['manage.users', 'manage.leaves', 'manage.employee-agreements', 'manage.instructor-requests']),
+            'subscriptions_section' => $canDash(['manage.subscriptions', 'manage.packages', 'manage.teacher-features', 'manage.curriculum-library']),
+            'invoices_panel' => $canDash(['manage.invoices', 'view.financial-reports']),
+            'payments_panel' => $canDash(['manage.payments', 'view.financial-reports', 'manage.transactions']),
+        ];
+
+        if (! $dashboardShow['users_metric']) {
+            $metrics['users'] = ['total' => 0, 'new_this_month' => 0, 'trend' => null];
+        }
+        if (! $dashboardShow['students_metric']) {
+            $metrics['students'] = ['total' => 0, 'new_this_month' => 0, 'trend' => null];
+        }
+        if (! $dashboardShow['instructors_metric']) {
+            $metrics['instructors'] = ['total' => 0, 'new_this_month' => 0, 'trend' => null];
+        }
+        if (! $dashboardShow['courses_metric']) {
+            $metrics['courses'] = ['total' => 0, 'new_this_month' => 0, 'trend' => null];
+        }
+        if (! $dashboardShow['monthly_revenue']) {
+            $metrics['monthly_revenue'] = ['current' => 0, 'trend' => null];
+            $stats['monthly_revenue'] = 0;
+        }
+        if (! $dashboardShow['pending_invoices_metric']) {
+            $metrics['pending_invoices'] = ['total' => 0, 'new_this_month' => 0, 'trend' => null];
+        }
+        if (! $dashboardShow['enrollments_metric']) {
+            $metrics['enrollments'] = ['total' => 0, 'new_this_month' => 0, 'trend' => null];
+        }
+        if (! $dashboardShow['revenue_total']) {
+            $stats['total_revenue'] = 0;
+        }
+        if (! $dashboardShow['activity_feed']) {
+            $stats['recent_activities'] = collect();
+        }
+        if (! $dashboardShow['exam_attempts']) {
+            $stats['recent_exam_attempts'] = collect();
+        }
+        if (! $dashboardShow['recent_users']) {
+            $recent_users = null;
+        }
+        if (! $dashboardShow['recent_courses']) {
+            $recent_courses = null;
+        }
+        if (! $dashboardShow['sales_section']) {
+            $salesSection = null;
+        }
+        if (! $dashboardShow['hr_section']) {
+            $hrSection = null;
+        }
+        if (! $dashboardShow['subscriptions_section']) {
+            $subscriptionPackages = null;
+        }
+        if (! $dashboardShow['invoices_panel']) {
+            $pending_invoices = collect();
+        }
+        if (! $dashboardShow['payments_panel']) {
+            $recent_payments = collect();
+        }
+
+        $quickActions = collect($quickActions)
+            ->filter(function (array $a) use ($canDash) {
+                $req = $a['permissions'] ?? [];
+
+                return $canDash($req);
+            })
+            ->map(function (array $a) {
+                unset($a['permissions']);
+
+                return $a;
+            })
+            ->values()
+            ->all();
 
         return view('admin.dashboard', compact(
             'stats',
@@ -361,7 +542,8 @@ class AdminController extends Controller
             'communityStats',
             'salesSection',
             'hrSection',
-            'subscriptionPackages'
+            'subscriptionPackages',
+            'dashboardShow'
         ));
     }
 
@@ -718,11 +900,6 @@ class AdminController extends Controller
     {
         // Rate Limiting يتم التعامل معه من خلال middleware throttle:10,1 في routes/web.php
         // لا حاجة لـ Rate Limiting إضافي هنا لتجنب التعقيد والازدواجية
-
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بإنشاء مستخدم جديد');
-        }
 
         // Sanitization - تنقية البيانات من XSS
         $isActiveInput = $request->input('is_active');

@@ -30,6 +30,19 @@ return [
             'route_patterns' => ['employee.dashboard'],
             'active_class' => 'bg-blue-600 shadow-lg',
         ],
+        /*
+         * موظف له دور RBAC: أقسام لوحة الموظف لا تغطي كل صلاحيات admin (شهادات، وسائط، أدوار، …).
+         * يُعرض هذا الرابط عند امتلاك view.dashboard على الدور (يُدمج تلقائياً) أو أي مسار معادل.
+         * السايدبار الكامل للإدارة يقرأ hasPermission() لكل قسم.
+         */
+        'admin_panel' => [
+            'permission' => 'view.dashboard',
+            'label' => 'لوحة تحكم الإدارة',
+            'icon' => 'fas fa-chart-line',
+            'route' => 'admin.dashboard',
+            'route_patterns' => ['admin.dashboard', 'admin.profile*'],
+            'active_class' => 'bg-indigo-600 shadow-lg',
+        ],
         'desk_accountant' => [
             'permission' => 'manage.invoices',
             'label' => 'لوحة المحاسب',
@@ -95,6 +108,8 @@ return [
             'active_class' => 'bg-indigo-600 shadow-lg',
         ],
         'academic_supervision_desk' => [
+            // صلاحية RBAC: إشراف أكاديمي (لوحة الموظف + مسارات admin.academic-supervision)
+            'permission' => 'academic_supervision.manage',
             'label' => 'الإشراف الأكاديمي',
             'icon' => 'fas fa-user-graduate',
             'route' => 'employee.academic-supervision.index',
@@ -230,7 +245,7 @@ return [
          * الموظف المخصص (custom): يظهر كل الأقسام مُرشَّحة بصلاحياته RBAC.
          */
         'custom' => [
-            ['title' => 'القيادة', 'keys' => ['dashboard']],
+            ['title' => 'القيادة', 'keys' => ['dashboard', 'admin_panel']],
             ['title' => 'المبيعات', 'keys' => ['sales_desk', 'sales_orders']],
             ['title' => 'المحاسبة والمالية', 'keys' => ['desk_accountant', 'agreements', 'accounting']],
             ['title' => 'الموارد البشرية', 'keys' => ['hr_desk', 'hr_leave_requests', 'hr_directory', 'hr_recruitment']],

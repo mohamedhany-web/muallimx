@@ -17,10 +17,6 @@ class EmployeeNotificationController extends Controller
      */
     public function index(Request $request)
     {
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         $query = Notification::with(['user', 'sender'])
                             ->where('sender_id', Auth::id())
                             ->where('type', 'employee'); // إشعارات الموظفين فقط
@@ -58,10 +54,6 @@ class EmployeeNotificationController extends Controller
      */
     public function create()
     {
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بإنشاء إشعارات');
-        }
-
         $employees = User::where('is_employee', true)
                         ->where('is_active', true)
                         ->orderBy('name')
@@ -77,10 +69,6 @@ class EmployeeNotificationController extends Controller
      */
     public function store(Request $request)
     {
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بإرسال إشعارات');
-        }
-
         // Rate Limiting
         $key = 'employee_notification_send_' . Auth::id();
         $maxAttempts = 20;
@@ -189,10 +177,6 @@ class EmployeeNotificationController extends Controller
      */
     public function show(Notification $notification)
     {
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         if ($notification->sender_id !== Auth::id() || $notification->type !== 'employee') {
             abort(403, 'غير مصرح لك بعرض هذا الإشعار');
         }

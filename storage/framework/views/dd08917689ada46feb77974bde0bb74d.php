@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title>تسجيل الدخول — Muallimx</title>
     <meta name="theme-color" content="#283593">
-    <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
+    <?php echo $__env->make('partials.favicon-links', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,12 +72,7 @@
             <div class="absolute bottom-[-10%] <?php echo e($isRtl?'right-[-5%]':'left-[-5%]'); ?> w-[400px] h-[400px] rounded-full bg-[#FB5607]/10 blur-[80px] float-delayed"></div>
 
             <div class="relative z-10 max-w-md px-10 text-center">
-                <a href="<?php echo e(route('home')); ?>" class="inline-flex items-center gap-3 mb-10 group">
-                    <div class="w-12 h-12 rounded-xl bg-[#FB5607] flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-shadow">
-                        <span class="text-white font-black text-xl">M</span>
-                    </div>
-                    <span class="text-mx-indigo font-extrabold text-2xl">Muallimx</span>
-                </a>
+                <?php echo $__env->make('partials.auth-brand-link', ['size' => 'lg'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
                 <h1 class="font-heading text-3xl xl:text-4xl font-black text-mx-indigo leading-tight mb-5">
                     مرحبًا بعودتك
@@ -123,13 +118,8 @@
         <div class="flex-1 flex flex-col items-center justify-center px-5 sm:px-8 py-10 lg:py-0 bg-white relative overflow-y-auto">
 
             
-            <div class="lg:hidden w-full max-w-md mb-8">
-                <a href="<?php echo e(route('home')); ?>" class="inline-flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg">
-                        <span class="text-white font-black text-lg">M</span>
-                    </div>
-                    <span class="text-navy-950 font-extrabold text-xl" style="font-family:Tajawal,sans-serif">Muallimx</span>
-                </a>
+            <div class="lg:hidden w-full max-w-md">
+                <?php echo $__env->make('partials.auth-brand-link', ['size' => 'sm', 'fallback' => 'gradient', 'mb' => 'mb-8'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
             </div>
 
             <div class="w-full max-w-md">
@@ -147,6 +137,14 @@
                     <div class="flex items-center gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
                         <i class="fas fa-check-circle text-emerald-500"></i>
                         <?php echo e(session('status')); ?>
+
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if(session('warning')): ?>
+                    <div class="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-sm font-medium">
+                        <i class="fas fa-exclamation-triangle text-amber-500"></i>
+                        <?php echo e(session('warning')); ?>
 
                     </div>
                     <?php endif; ?>

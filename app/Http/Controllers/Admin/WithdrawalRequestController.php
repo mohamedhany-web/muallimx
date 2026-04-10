@@ -15,14 +15,20 @@ use Illuminate\Support\Facades\Validator;
 
 class WithdrawalRequestController extends Controller
 {
+    protected function userCanManageWithdrawals(): bool
+    {
+        $user = Auth::user();
+
+        return $user && ($user->isSuperAdmin() || $user->hasPermission('manage.withdrawals'));
+    }
+
     /**
      * عرض قائمة طلبات السحب
      * محمي من: Unauthorized Access, SQL Injection, XSS
      */
     public function index(Request $request)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+        if (! $this->userCanManageWithdrawals()) {
             abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
         }
 
@@ -72,6 +78,10 @@ class WithdrawalRequestController extends Controller
 
     public function show(WithdrawalRequest $withdrawal)
     {
+        if (! $this->userCanManageWithdrawals()) {
+            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
+        }
+
         $withdrawal->load(['instructor', 'processedBy', 'payment']);
         return view('admin.withdrawals.show', compact('withdrawal'));
     }
@@ -82,8 +92,7 @@ class WithdrawalRequestController extends Controller
      */
     public function approve(Request $request, WithdrawalRequest $withdrawal)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+        if (! $this->userCanManageWithdrawals()) {
             abort(403, 'غير مصرح لك بهذا الإجراء');
         }
 
@@ -147,8 +156,7 @@ class WithdrawalRequestController extends Controller
      */
     public function reject(Request $request, WithdrawalRequest $withdrawal)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+        if (! $this->userCanManageWithdrawals()) {
             abort(403, 'غير مصرح لك بهذا الإجراء');
         }
 
@@ -212,8 +220,7 @@ class WithdrawalRequestController extends Controller
      */
     public function complete(Request $request, WithdrawalRequest $withdrawal)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+        if (! $this->userCanManageWithdrawals()) {
             abort(403, 'غير مصرح لك بهذا الإجراء');
         }
 

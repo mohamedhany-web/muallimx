@@ -46,8 +46,7 @@
     <meta name="twitter:description" content="{{ $instrPageDesc }}">
     <meta name="twitter:image"       content="{{ $instrPageImg }}">
     <meta name="twitter:image:alt"   content="{{ $profile->user->name ?? 'مدرب' }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
+    @include('partials.favicon-links')
     @include('partials.seo-jsonld', ['jsonldType' => 'instructor', 'profile' => $profile])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

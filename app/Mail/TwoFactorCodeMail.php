@@ -13,13 +13,18 @@ class TwoFactorCodeMail extends Mailable
     use Queueable, SerializesModels;
 
     public function __construct(
-        public string $code
+        public string $code,
+        public bool $forSystemSettings = false,
     ) {}
 
     public function envelope(): Envelope
     {
+        $subject = $this->forSystemSettings
+            ? 'رمز تأكيد تفعيل المصادقة الثنائية — ' . config('app.name')
+            : 'رمز الدخول — ' . config('app.name');
+
         return new Envelope(
-            subject: 'رمز الدخول - ' . config('app.name'),
+            subject: $subject,
         );
     }
 

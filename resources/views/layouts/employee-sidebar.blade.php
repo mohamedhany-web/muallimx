@@ -37,7 +37,12 @@
                         $inactiveNav = 'text-slate-300 hover:bg-slate-700/50 hover:text-white dark:text-slate-400';
                         $activeClass = $link['active_class'] ?? 'bg-blue-600 shadow-lg';
                     @endphp
-                    <a href="{{ route($link['route']) }}"
+                    @php
+                        $linkHref = isset($link['route_params'])
+                            ? route($link['route'], $link['route_params'])
+                            : route($link['route']);
+                    @endphp
+                    <a href="{{ $linkHref }}"
                        class="{{ $baseNav }} {{ $isActive ? $activeClass.' text-white' : $inactiveNav }}"
                        @click="if (window.innerWidth < 1024) { $dispatch('close-sidebar'); }">
                         <i class="{{ $link['icon'] }} text-base w-5 text-center shrink-0"></i>

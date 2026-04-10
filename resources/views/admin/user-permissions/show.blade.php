@@ -79,11 +79,18 @@
         </div>
     </div>
 
+    @if($user->roles->isNotEmpty() && ! $user->is_employee)
+        <div class="p-4 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 text-sm">
+            <p class="font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> تنبيه</p>
+            <p class="mt-1">هذا المستخدم مرتبط بأدوار لكنه غير مفعَّل كموظف، ولن تُطبَّق صلاحيات الأدوار في لوحة الإدارة بشكل صحيح. اضغط «حفظ الأدوار» أدناه لتفعيل صفة الموظف تلقائياً.</p>
+        </div>
+    @endif
+
     <!-- إدارة الأدوار -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-200">
         <div class="p-6 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-900">إدارة الأدوار</h3>
-            <p class="text-sm text-gray-500 mt-1">حدد الأدوار المخصصة للمستخدم. صلاحيات الأدوار تُضاف تلقائياً.</p>
+            <p class="text-sm text-gray-500 mt-1">حدد الأدوار المخصصة للمستخدم. صلاحيات الأدوار تُضاف تلقائياً. عند الحفظ مع اختيار دور واحد على الأقل يُفعَّل المستخدم كموظف ليتم تطبيق RBAC في الأدمن.</p>
         </div>
 
         <form action="{{ route('admin.user-permissions.update-roles', $user) }}" method="POST">
@@ -131,131 +138,103 @@
         </form>
     </div>
 
-    <!-- إدارة الصلاحيات المباشرة -->
+    <!-- صلاحيات المستخدم الفعلية (من الأدوار + المباشرة) -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-200">
         <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">إدارة الصلاحيات المباشرة</h3>
-            <p class="text-sm text-gray-500 mt-1">يمكنك إضافة أو إزالة صلاحيات مباشرة للمستخدم (بغض النظر عن الأدوار)</p>
+            <h3 class="text-lg font-semibold text-gray-900">صلاحيات هذا المستخدم</h3>
+            <p class="text-sm text-gray-500 mt-1">يُعرض هنا فقط ما يملكه المستخدم حالياً (من أدواره أو مباشرة). أزل التحديد عن الصلاحية المباشرة ثم احفظ لإزالتها من المستخدم.</p>
         </div>
 
         <form action="{{ route('admin.user-permissions.update', $user) }}" method="POST" id="permissionsForm">
             @csrf
             @method('PUT')
-            
+
             <div class="p-6 space-y-6">
-                @foreach($allPermissions as $group => $permissions)
-                    <div class="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0">
-                        <h4 class="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                            <i class="fas fa-folder text-blue-500"></i>
-                            {{ $group ?: 'عام' }}
-                        </h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            @foreach($permissions as $permission)
-                                @php
-                                    $hasFromRole = $rolePermissions->contains('id', $permission->id);
-                                    $hasDirect = $directPermissions->contains('id', $permission->id);
-                                    $isChecked = $hasDirect;
-                                @endphp
-                                <label class="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors
-                                    {{ $hasFromRole ? 'border-purple-300 bg-purple-50' : 'border-gray-200' }}
-                                    {{ $isChecked ? 'border-blue-500 bg-blue-50' : '' }}">
-                                    <input type="checkbox" 
-                                           name="permissions[]" 
-                                           value="{{ $permission->id }}"
-                                           {{ $isChecked ? 'checked' : '' }}
-                                           class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                           onchange="updatePermission({{ $permission->id }}, this.checked)">
-                                    <div class="mr-3 flex-1">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-sm font-medium text-gray-900">
-                                                {{ $permission->display_name }}
-                                            </span>
-                                            @if($hasFromRole)
-                                                <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800" title="من الأدوار">
-                                                    <i class="fas fa-user-tag"></i>
-                                                </span>
-                                            @endif
+                @if($allUserPermissions->isEmpty())
+                    <p class="text-sm text-gray-600 text-center py-8">
+                        <i class="fas fa-info-circle text-amber-500 ml-2"></i>
+                        لا توجد صلاحيات مرتبطة بهذا المستخدم عبر الأدوار أو التعيين المباشر. اختر أدواراً أعلاه أو أضف صلاحيات مباشرة من
+                        <a href="{{ route('admin.permissions.index') }}" class="text-blue-600 font-semibold underline">قائمة الصلاحيات</a>
+                        إن وُجدت أداة تعيين سريع لديكم.
+                    </p>
+                @else
+                    @foreach($userPermissionsGrouped as $group => $permissions)
+                        <div class="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0">
+                            <h4 class="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <i class="fas fa-folder text-blue-500"></i>
+                                {{ $group ?: 'عام' }}
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                @foreach($permissions as $permission)
+                                    @php
+                                        $hasFromRole = $rolePermissions->contains('id', $permission->id);
+                                        $hasDirect = $directPermissions->contains('id', $permission->id);
+                                    @endphp
+                                    @if($hasDirect)
+                                        <label class="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors
+                                            {{ $hasFromRole ? 'border-purple-300 bg-purple-50' : 'border-gray-200' }}
+                                            border-blue-500 bg-blue-50">
+                                            <input type="checkbox"
+                                                   name="permissions[]"
+                                                   value="{{ $permission->id }}"
+                                                   checked
+                                                   class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                            <div class="mr-3 flex-1">
+                                                <div class="flex items-center justify-between gap-2 flex-wrap">
+                                                    <span class="text-sm font-medium text-gray-900">{{ $permission->display_name }}</span>
+                                                    <div class="flex items-center gap-1 flex-wrap">
+                                                        @if($hasFromRole)
+                                                            <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">من الأدوار</span>
+                                                        @endif
+                                                        <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">مباشرة</span>
+                                                    </div>
+                                                </div>
+                                                <code class="text-[10px] text-gray-400 font-mono block mt-1">{{ $permission->name }}</code>
+                                                @if($permission->description)
+                                                    <p class="text-xs text-gray-500 mt-1">{{ $permission->description }}</p>
+                                                @endif
+                                            </div>
+                                        </label>
+                                    @else
+                                        <div class="flex items-start p-4 border rounded-lg border-purple-200 bg-purple-50/80">
+                                            <div class="mt-1 h-4 w-4 flex-shrink-0 rounded border border-purple-300 bg-purple-100 flex items-center justify-center">
+                                                <i class="fas fa-lock text-[10px] text-purple-600"></i>
+                                            </div>
+                                            <div class="mr-3 flex-1">
+                                                <div class="flex items-center justify-between gap-2 flex-wrap">
+                                                    <span class="text-sm font-medium text-gray-900">{{ $permission->display_name }}</span>
+                                                    <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">من الأدوار فقط</span>
+                                                </div>
+                                                <code class="text-[10px] text-gray-400 font-mono block mt-1">{{ $permission->name }}</code>
+                                                @if($permission->description)
+                                                    <p class="text-xs text-gray-500 mt-1">{{ $permission->description }}</p>
+                                                @endif
+                                            </div>
                                         </div>
-                                        @if($permission->description)
-                                            <p class="text-xs text-gray-500 mt-1">{{ $permission->description }}</p>
-                                        @endif
-                                    </div>
-                                </label>
-                            @endforeach
+                                    @endif
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                @endif
             </div>
 
+            @if($allUserPermissions->isNotEmpty())
             <div class="p-6 border-t border-gray-200 bg-gray-50">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <p class="text-sm text-gray-600">
                         <i class="fas fa-info-circle ml-2"></i>
-                        الصلاحيات المميزة باللون البنفسجي متوفرة من الأدوار. يمكنك إضافة صلاحيات مباشرة إضافية.
+                        الصلاحيات «من الأدوار فقط» تُزال بتعديل الأدوار أعلاه. الصلاحيات «مباشرة» تُحفظ هنا عند إلغاء التحديد والضغط على حفظ.
                     </p>
-                    <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
+                    <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors flex-shrink-0">
                         <i class="fas fa-save ml-2"></i>
-                        حفظ التغييرات
+                        حفظ الصلاحيات المباشرة
                     </button>
                 </div>
             </div>
+            @endif
         </form>
     </div>
 </div>
-
-@push('scripts')
-<script>
-function updatePermission(permissionId, isChecked) {
-    const url = isChecked 
-        ? '{{ route("admin.user-permissions.attach", $user) }}'
-        : '{{ route("admin.user-permissions.detach", $user) }}';
-    
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            permission_id: permissionId
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // إظهار رسالة نجاح
-            showNotification(data.message, 'success');
-        } else {
-            // إظهار رسالة خطأ
-            showNotification(data.message || 'حدث خطأ', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('حدث خطأ أثناء تحديث الصلاحية', 'error');
-    });
-}
-
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `fixed top-4 left-4 z-50 px-6 py-4 rounded-lg shadow-lg ${
-        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-    }`;
-    notification.innerHTML = `
-        <div class="flex items-center gap-3">
-            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-            <span>${message}</span>
-        </div>
-    `;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.opacity = '0';
-        notification.style.transition = 'opacity 0.3s';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
-</script>
-@endpush
 @endsection
 

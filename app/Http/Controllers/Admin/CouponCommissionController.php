@@ -11,10 +11,6 @@ class CouponCommissionController extends Controller
 {
     public function index(Request $request)
     {
-        if (! auth()->user()->can('manage.coupons')) {
-            abort(403);
-        }
-
         $query = CouponCommissionAccrual::with(['coupon', 'beneficiary', 'order', 'expense'])
             ->orderByDesc('created_at');
 
@@ -42,10 +38,6 @@ class CouponCommissionController extends Controller
 
     public function storeExpense(CouponCommissionAccrual $accrual, CouponCommissionService $service)
     {
-        if (! auth()->user()->can('manage.coupons')) {
-            abort(403);
-        }
-
         try {
             $expense = $service->createPendingExpense($accrual);
 

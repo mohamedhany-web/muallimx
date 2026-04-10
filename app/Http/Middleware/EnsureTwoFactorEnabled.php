@@ -17,6 +17,10 @@ class EnsureTwoFactorEnabled
         'two-factor.setup',
         'two-factor.enable',
         'logout',
+        'admin.system-settings.two-factor.confirm',
+        'admin.system-settings.two-factor.confirm.submit',
+        'admin.system-settings.two-factor.resend',
+        'admin.system-settings.two-factor.enable-request',
     ];
 
     public function handle(Request $request, Closure $next): Response
@@ -32,8 +36,8 @@ class EnsureTwoFactorEnabled
 
         $user = auth()->user();
 
-        // إذا كان إلزام 2FA للأدمن معطّلاً من الإعدادات (للمرونة عند فقدان الرمز أو مشكلة)
-        if (!$user->requiresTwoFactor() || !config('app.admin_2fa_required', true)) {
+        // إذا كان إلزام 2FA معطّلاً من إعدادات المنصة أو المستخدم غير مشمول
+        if (! $user->requiresTwoFactor()) {
             return $next($request);
         }
 

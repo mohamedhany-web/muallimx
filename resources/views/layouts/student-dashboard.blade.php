@@ -20,9 +20,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Muallimx') }} - @yield('title', __('auth.dashboard'))</title>
 
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('logo-removebg-preview.png') }}">
+    @include('partials.favicon-links')
 
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -251,7 +249,15 @@
         html.dark .list-item-card,
         html.dark .card-hover-effect,
         html.dark main .bg-white { background: #1e293b !important; border-color: #334155 !important; }
+        html.dark main .bg-gray-50,
+        html.dark main .bg-gray-100 { background-color: #0f172a !important; }
+        html.dark main .min-h-screen.bg-gray-50,
+        html.dark main .min-h-screen.bg-white { background-color: #0f172a !important; }
+        html.dark .focus-within\:bg-white:focus-within { background-color: #1e293b !important; }
         html.dark .bg-slate-50, html.dark .bg-slate-50\/80 { background: rgba(51, 65, 85, 0.45) !important; }
+        html.dark .dropdown-menu [class*="from-brand-50"] {
+            background-image: linear-gradient(to right, rgba(8, 145, 178, 0.22), rgba(30, 41, 59, 0.95)) !important;
+        }
         html.dark .border-slate-100, html.dark .border-slate-200 { border-color: #334155 !important; }
         html.dark [class*="text-slate-8"], html.dark [class*="text-slate-9"], html.dark [class*="text-slate-7"] { color: #e2e8f0 !important; }
         html.dark [class*="text-slate-6"], html.dark [class*="text-slate-5"] { color: #94a3b8 !important; }

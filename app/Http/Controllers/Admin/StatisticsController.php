@@ -24,10 +24,6 @@ class StatisticsController extends Controller
     public function index()
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             // إحصائيات عامة - استخدام Eloquent للحماية من SQL Injection
             $totalUsers = User::count();
@@ -133,10 +129,6 @@ class StatisticsController extends Controller
     public function users()
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             $driver = DB::getDriverName();
             if ($driver === 'sqlite') {
@@ -186,10 +178,6 @@ class StatisticsController extends Controller
     public function courses()
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             $coursesStats = AdvancedCourse::withCount('enrollments')
                 ->with(['academicSubject', 'academicYear'])

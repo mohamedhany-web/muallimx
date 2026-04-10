@@ -22,11 +22,6 @@ class PaymentController extends Controller
     public function index(Request $request)
     {
         try {
-            // التحقق من الصلاحيات
-            if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-                abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-            }
-
             $query = Payment::with(['user', 'invoice', 'wallet', 'installmentPayment', 'transactions'])
                 ->orderBy('created_at', 'desc');
 

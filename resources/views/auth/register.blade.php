@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>إنشاء حساب — Muallimx</title>
     <meta name="theme-color" content="#283593">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    @include('partials.favicon-links')
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -84,12 +84,7 @@
             <div class="absolute bottom-[-10%] {{ $isRtl?'right-[-5%]':'left-[-5%]' }} w-[350px] h-[350px] rounded-full bg-[#FB5607]/10 blur-[80px] float-delayed"></div>
 
             <div class="relative z-10 max-w-sm px-10 text-center">
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-3 mb-10 group">
-                    <div class="w-12 h-12 rounded-xl bg-[#FB5607] flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-shadow">
-                        <span class="text-white font-black text-xl">M</span>
-                    </div>
-                    <span class="text-mx-indigo font-extrabold text-2xl">Muallimx</span>
-                </a>
+                @include('partials.auth-brand-link', ['size' => 'lg'])
 
                 <h1 class="font-heading text-3xl font-black text-mx-indigo leading-tight mb-5">
                     انضم لآلاف المعلمين
@@ -125,13 +120,8 @@
         <div class="flex-1 flex flex-col items-center px-5 sm:px-8 py-8 lg:py-10 bg-white overflow-y-auto">
 
             {{-- Mobile Logo --}}
-            <div class="lg:hidden w-full max-w-lg mb-6">
-                <a href="{{ route('home') }}" class="inline-flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-[#FB5607] flex items-center justify-center shadow-lg">
-                        <span class="text-white font-black text-lg">M</span>
-                    </div>
-                    <span class="text-mx-indigo font-extrabold text-xl">Muallimx</span>
-                </a>
+            <div class="lg:hidden w-full max-w-lg">
+                @include('partials.auth-brand-link', ['size' => 'sm', 'fallback' => 'orange', 'mb' => 'mb-6'])
             </div>
 
             <div class="w-full max-w-lg">

@@ -240,13 +240,16 @@ class User extends Authenticatable
     }
 
     /**
-     * هل هذا المستخدم مطلوب له تفعيل المصادقة الثنائية (أدمن ومدير عام والمدربين فقط).
-     * حالياً معطّلة من النظام — تُرجع false دائماً.
+     * هل هذا المستخدم مشمول بإلزام المصادقة الثنائية عند تفعيل الخيار من إعدادات النظام (.env أو لوحة التحكم).
+     * يقتصر على المدير العام والأدمن فقط — لا يشمل المدربين ولا بقية الأدوار.
      */
     public function requiresTwoFactor(): bool
     {
-        return false; // المصادقة الثنائية معطّلة حالياً
-        // return in_array($this->role, ['super_admin', 'admin', 'instructor'], true);
+        if (! \App\Services\PlatformSecuritySettings::isAdminTwoFactorRequired()) {
+            return false;
+        }
+
+        return in_array((string) $this->role, ['super_admin', 'admin'], true);
     }
 
     /**
@@ -647,6 +650,61 @@ class User extends Authenticatable
     }
 
     /**
+     * كل أسماء الصلاحيات في الجدول التي تُعدّ مطابقة للاسم المطلوب (حديث + قديم).
+     *
+     * @return list<string>
+     */
+    public static function permissionNamesToCheck(string $permissionName): array
+    {
+        $legacy = config('permission_aliases.legacy_names_for_canonical.'.$permissionName, []);
+
+        return array_values(array_unique(array_merge([$permissionName], $legacy)));
+    }
+
+    /**
+     * هل يمكن للمستخدم الدخول إلى لوحة الإدارة (صلاحية admin.access أو سوبر أدمن بدون أدوار).
+     */
+    public function userHasAdminAccessCapability(): bool
+    {
+        if ($this->isAdmin() && ! $this->roles()->exists()) {
+            return true;
+        }
+
+        // يتماشى مع EnsurePermission لـ permission:admin.access: موظف له دور RBAC يُسمح له بمجموعة admin ثم يُقيَّد لاحقاً
+        if ($this->is_employee && $this->roles()->exists()) {
+            return true;
+        }
+
+        $names = self::permissionNamesToCheck('admin.access');
+
+        if ($this->directPermissions()->whereIn('name', $names)->exists()) {
+            return true;
+        }
+
+        return $this->roles()->whereHas('permissions', function ($query) use ($names) {
+            $query->whereIn('name', $names);
+        })->exists();
+    }
+
+    /**
+     * Gate:: و can('manage.orders') يعتمدان على الصلاحيات المخزّنة للأدوار/المباشرة (مثل hasPermission).
+     * بدون هذا، الموظف ذو الدور يمرّ بوسيط RBAC ثم يُرفض داخل المتحكم.
+     *
+     * @param  string|iterable  $abilities
+     * @param  mixed  $arguments
+     */
+    public function can($abilities, $arguments = [])
+    {
+        if (is_string($abilities) && $arguments === [] && str_contains($abilities, '.')) {
+            if ($this->hasPermission($abilities)) {
+                return true;
+            }
+        }
+
+        return parent::can($abilities, $arguments);
+    }
+
+    /**
      * التحقق من وجود صلاحية معينة (من الأدوار أو المباشرة)
      */
     public function hasPermission($permissionName)
@@ -659,14 +717,22 @@ class User extends Authenticatable
             }
         }
 
+        // لوحة التحكم: من يملك دخول الأدمن يُعتبر لديه view.dashboard تلقائياً (باقي الصلاحيات تُحدَّد لاحقاً)
+        if ($permissionName === 'view.dashboard' && $this->userHasAdminAccessCapability()) {
+            return true;
+        }
+
+        // أسماء حديثة (manage.*) + أسماء قديمة من permission_aliases — مطلوبة لسايدبار الأدمن وRBAC مع أدوار قديمة
+        $names = self::permissionNamesToCheck($permissionName);
+
         // التحقق من الصلاحيات المباشرة
-        if ($this->directPermissions()->where('name', $permissionName)->exists()) {
+        if ($this->directPermissions()->whereIn('name', $names)->exists()) {
             return true;
         }
 
         // التحقق من الصلاحيات من الأدوار
-        return $this->roles()->whereHas('permissions', function($query) use ($permissionName) {
-            $query->where('name', $permissionName);
+        return $this->roles()->whereHas('permissions', function ($query) use ($names) {
+            $query->whereIn('name', $names);
         })->exists();
     }
 
@@ -847,6 +913,21 @@ class User extends Authenticatable
     }
 
     /**
+     * تحويل مفتاح عنصر قائمة الموظف (مثل desk_accountant) إلى اسم صلاحية RBAC في جدول permissions
+     * (مثل manage.invoices)، بنفس منطق config/employee_sidebar.php.
+     */
+    public static function rbacPermissionForEmployeeMenuKey(string $key): string
+    {
+        $items = config('employee_sidebar.items', []);
+        $meta = $items[$key] ?? null;
+        if (is_array($meta) && array_key_exists('permission', $meta) && $meta['permission'] !== null) {
+            return $meta['permission'];
+        }
+
+        return $key;
+    }
+
+    /**
      * هل الموظف يملك صلاحية عرض خانة في السايدبار.
      *
      * الأولوية:
@@ -868,7 +949,19 @@ class User extends Authenticatable
 
         // إذا كان للمستخدم أدوار RBAC مخصصة → اعتمد عليها فقط
         if ($this->roles()->exists()) {
-            return $this->hasPermission($permission);
+            if ($permission === 'tasks') {
+                return $this->hasPermission('manage.tasks') || $this->hasPermission('view.tasks');
+            }
+            if ($permission === 'reports') {
+                return $this->hasPermission('view.statistics')
+                    || $this->hasPermission('view.reports')
+                    || $this->hasPermission('view.financial-reports')
+                    || $this->hasPermission('view.academic-reports');
+            }
+
+            $rbacName = self::rbacPermissionForEmployeeMenuKey($permission);
+
+            return $this->hasPermission($rbacName);
         }
 
         // لا يوجد دور RBAC → اعتمد على صلاحيات وظيفة الموظف (النظام القديم)
@@ -901,14 +994,20 @@ class User extends Authenticatable
             }
         }
 
+        if ($permissionName === 'view.dashboard' && $this->userHasAdminAccessCapability()) {
+            return true;
+        }
+
+        $names = self::permissionNamesToCheck($permissionName);
+
         // التحقق من الصلاحيات المباشرة
-        if ($this->directPermissions()->where('name', $permissionName)->exists()) {
+        if ($this->directPermissions()->whereIn('name', $names)->exists()) {
             return true;
         }
 
         // التحقق من الصلاحيات من الأدوار
-        return $this->roles()->whereHas('permissions', function($query) use ($permissionName) {
-            $query->where('name', $permissionName);
+        return $this->roles()->whereHas('permissions', function ($query) use ($names) {
+            $query->whereIn('name', $names);
         })->exists();
     }
 

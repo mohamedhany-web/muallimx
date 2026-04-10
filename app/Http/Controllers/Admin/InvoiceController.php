@@ -22,11 +22,6 @@ class InvoiceController extends Controller
     public function index(Request $request)
     {
         try {
-            // التحقق من الصلاحيات
-            if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-                abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-            }
-
             $query = Invoice::with('user')
                 ->orderBy('created_at', 'desc');
 
@@ -83,11 +78,6 @@ class InvoiceController extends Controller
      */
     public function store(Request $request)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         // Rate Limiting - حماية من Brute Force
         $key = 'create-invoice:' . Auth::id();
         if (RateLimiter::tooManyAttempts($key, 10)) {
@@ -179,11 +169,6 @@ class InvoiceController extends Controller
      */
     public function show(Invoice $invoice)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             $invoice->load('user', 'payments', 'transactions', 'order', 'subscription', 'expense');
             return view('admin.invoices.show', compact('invoice'));
@@ -205,11 +190,6 @@ class InvoiceController extends Controller
      */
     public function update(Request $request, Invoice $invoice)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         // Rate Limiting
         $key = 'update-invoice:' . Auth::id();
         if (RateLimiter::tooManyAttempts($key, 10)) {
@@ -298,11 +278,6 @@ class InvoiceController extends Controller
      */
     public function destroy(Invoice $invoice)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         // Rate Limiting
         $key = 'delete-invoice:' . Auth::id();
         if (RateLimiter::tooManyAttempts($key, 5)) {

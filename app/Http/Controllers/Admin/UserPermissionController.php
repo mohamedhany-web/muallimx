@@ -32,6 +32,8 @@ class UserPermissionController extends Controller
      */
     public function show(User $user)
     {
+        $user->loadMissing(['roles']);
+
         // الحصول على جميع الصلاحيات (من الأدوار + المباشرة)
         $rolePermissions = $user->roles()->with('permissions')->get()
             ->pluck('permissions')->flatten()->unique('id');
@@ -39,18 +41,24 @@ class UserPermissionController extends Controller
         $directPermissions = $user->directPermissions()->get();
         
         // دمج الصلاحيات مع إزالة التكرار
-        $allUserPermissions = $rolePermissions->merge($directPermissions)->unique('id');
-        
-        $allPermissions = Permission::orderBy('group')
-            ->orderBy('display_name')
-            ->get()
-            ->groupBy('group');
+        $allUserPermissions = $rolePermissions->merge($directPermissions)->unique('id')->sortBy(function ($p) {
+            return ($p->group ?? '') . '|' . ($p->display_name ?? '');
+        })->values();
+
+        $userPermissionsGrouped = $allUserPermissions->groupBy('group');
 
         $allRoles = Role::orderBy('is_system', 'desc')
             ->orderBy('display_name')
             ->get();
-        
-        return view('admin.user-permissions.show', compact('user', 'allUserPermissions', 'allPermissions', 'rolePermissions', 'directPermissions', 'allRoles'));
+
+        return view('admin.user-permissions.show', compact(
+            'user',
+            'allUserPermissions',
+            'userPermissionsGrouped',
+            'rolePermissions',
+            'directPermissions',
+            'allRoles',
+        ));
     }
 
     /**
@@ -63,7 +71,13 @@ class UserPermissionController extends Controller
             'roles.*' => 'integer|exists:roles,id',
         ]);
 
-        $user->roles()->sync($request->roles ?? []);
+        $roleIds = array_values(array_unique(array_map('intval', $request->roles ?? [])));
+        $user->roles()->sync($roleIds);
+
+        // صلاحيات الدور تُفعَّل لمسارات الأدمن عندما يكون المستخدم موظفاً (RBAC + وسيط rbac.strict)
+        if ($roleIds !== [] && ! $user->is_employee) {
+            $user->forceFill(['is_employee' => true])->save();
+        }
 
         return redirect()
             ->route('admin.user-permissions.show', $user)

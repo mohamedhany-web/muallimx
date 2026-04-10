@@ -16,7 +16,7 @@ class SalesAnalyticsController extends Controller
     {
         $u = Auth::user();
         abort_unless(
-            $u && ($u->isSuperAdmin() || $u->can('manage.orders')),
+            $u && ($u->isSuperAdmin() || $u->hasPermission('manage.orders') || $u->hasPermission('view.sales-analytics') || $u->hasPermission('manage.leads')),
             403,
             'غير مصرح لك بعرض تحليلات المبيعات.'
         );

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Auth;
 use App\Services\AdminPanelBranding;
 use App\Services\PublicFooterSettings;
 use App\Support\ErrorPageContext;
@@ -57,13 +58,14 @@ class AppServiceProvider extends ServiceProvider
         }
 
         // صورة خلفية صفحات تسجيل الدخول وإنشاء الحساب: دائماً من التخزين (نفس عرض صور المسارات)
-        View::composer(['auth.login', 'auth.register'], function ($view) {
+        View::composer(['auth.login', 'auth.register', 'auth.forgot-password'], function ($view) {
             $path = self::AUTH_BACKGROUND_STORAGE_PATH;
             if (Storage::disk('public')->exists($path)) {
                 $view->with('authBackgroundUrl', asset('storage/' . $path));
             } else {
                 $view->with('authBackgroundUrl', asset('images/brainstorm-meeting.jpg'));
             }
+            $view->with('adminPanelLogoUrl', AdminPanelBranding::logoPublicUrl());
         });
 
         // لوجو المنصة: نسخ إلى التخزين إن لم يكن موجوداً (نفس أسلوب صورة تسجيل الدخول)
@@ -155,6 +157,13 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('layouts.admin', function ($view) {
             $view->with('adminPanelLogoUrl', AdminPanelBranding::logoPublicUrl());
+        });
+
+        // تحميل أدوار الموظف وصلاحياتها مرة واحدة لعرض السايدبار (موظف + أدمن) بشكل موثوق بعد تعديل الدور
+        View::composer(['layouts.admin', 'layouts.employee'], function () {
+            if (Auth::check()) {
+                Auth::user()->loadMissing(['roles.permissions']);
+            }
         });
 
         View::composer('components.unified-navbar', function ($view) {

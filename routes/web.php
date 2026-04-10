@@ -474,12 +474,13 @@ Route::middleware(['guest', 'guest-only'])->group(function () {
     Route::post('/forgot-password', [\App\Http\Controllers\Auth\ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:5,1')->name('password.email');
     Route::get('/reset-password/{token}', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'showResetForm'])->name('password.reset');
     Route::post('/reset-password', [\App\Http\Controllers\Auth\ResetPasswordController::class, 'reset'])->middleware('throttle:5,1')->name('password.update');
-});
-
-// المصادقة الثنائية (2FA) - بعد إدخال البريد وكلمة المرور للمدربين/الإدمن/الموظفين
-Route::middleware(['web', 'throttle:60,5'])->group(function () {
-    Route::get('/2fa/challenge', [\App\Http\Controllers\Auth\TwoFactorController::class, 'showChallenge'])->name('two-factor.challenge');
-    Route::post('/2fa/verify', [\App\Http\Controllers\Auth\TwoFactorController::class, 'verifyChallenge'])->name('two-factor.verify');
+    // نفس جلسة «ضيف» مثل الدخول حتى لا تُفقد بيانات خطوة 2FA بعد إعادة التوجيه
+    Route::get('/2fa/challenge', [\App\Http\Controllers\Auth\TwoFactorController::class, 'showChallenge'])
+        ->middleware('throttle:60,1')
+        ->name('two-factor.challenge');
+    Route::post('/2fa/verify', [\App\Http\Controllers\Auth\TwoFactorController::class, 'verifyChallenge'])
+        ->middleware('throttle:30,1')
+        ->name('two-factor.verify');
 });
 
 // تسجيل الخروج - يجب أن يكون المستخدم مسجل دخول
@@ -487,7 +488,7 @@ Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
-// إعداد المصادقة الثنائية (للإدمن / المدربين / الموظفين)
+// إعداد المصادقة الثنائية (TOTP) — يظهر فمن يُشمَّل بـ requiresTwoFactor (حالياً أدمن عند تفعيل الإلزام)
 Route::middleware(['auth'])->prefix('2fa')->name('two-factor.')->group(function () {
     Route::get('/setup', [\App\Http\Controllers\Auth\TwoFactorController::class, 'showSetup'])->name('setup');
     Route::post('/enable', [\App\Http\Controllers\Auth\TwoFactorController::class, 'enable'])->name('enable');
@@ -833,7 +834,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
     });
 
     // مسارات الإدارة - محمية بصلاحية admin.access (مع تجاوز super_admin داخل EnsurePermission)
-    Route::prefix('admin')->name('admin.')->middleware(['auth', 'permission:admin.access'])->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware(['auth', 'permission:admin.access', 'rbac.strict.admin'])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('dashboard');
 
         Route::get('/api/nav-notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'navPoll'])
@@ -1067,11 +1068,27 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/contact-messages/{contactMessage}/mark-as-read', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markAsRead'])->name('contact-messages.mark-as-read');
         Route::post('/contact-messages/{contactMessage}/mark-as-unread', [\App\Http\Controllers\Admin\ContactMessageController::class, 'markAsUnread'])->name('contact-messages.mark-as-unread');
 
+        Route::resource('faq', \App\Http\Controllers\Admin\FAQController::class);
+
         Route::resource('site-services', \App\Http\Controllers\Admin\SiteServiceController::class)->except(['show']);
         Route::resource('site-testimonials', \App\Http\Controllers\Admin\SiteTestimonialController::class)->except(['show']);
 
         Route::get('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'edit'])->name('system-settings.edit');
         Route::put('/system-settings', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'update'])->name('system-settings.update');
+        Route::post('/system-settings/two-factor/enable-request', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'requestTwoFactorEnable'])
+            ->middleware('throttle:10,1')
+            ->name('system-settings.two-factor.enable-request');
+        Route::get('/system-settings/two-factor/confirm', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'showTwoFactorConfirm'])
+            ->name('system-settings.two-factor.confirm');
+        Route::post('/system-settings/two-factor/confirm', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'confirmTwoFactorEnable'])
+            ->middleware('throttle:20,1')
+            ->name('system-settings.two-factor.confirm.submit');
+        Route::post('/system-settings/two-factor/resend', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'resendTwoFactorEnableCode'])
+            ->middleware('throttle:5,1')
+            ->name('system-settings.two-factor.resend');
+        Route::post('/system-settings/two-factor/disable', [\App\Http\Controllers\Admin\SystemSettingsController::class, 'disablePlatformTwoFactor'])
+            ->middleware('throttle:10,1')
+            ->name('system-settings.two-factor.disable');
         
         // إدارة الأسعار والباقات
         Route::resource('packages', \App\Http\Controllers\Admin\PackageController::class);

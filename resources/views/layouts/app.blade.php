@@ -11,9 +11,7 @@
 
     <title>{{ config('app.name', 'Muallimx') }} - @yield('title', __('auth.dashboard'))</title>
 
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ $platformLogoUrl ?? asset('logo-removebg-preview.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ $platformLogoUrl ?? asset('logo-removebg-preview.png') }}">
+    @include('partials.favicon-links')
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -284,6 +282,11 @@
         .dark .list-item-card,
         .dark .card-hover-effect,
         .dark .bg-white { background: #1e293b !important; border-color: #334155 !important; }
+        .dark main .bg-gray-50,
+        .dark main .bg-gray-100 { background-color: #0c1222 !important; }
+        .dark main .min-h-screen.bg-gray-50,
+        .dark main .min-h-screen.bg-white { background-color: #0c1222 !important; }
+        .dark .focus-within\:bg-white:focus-within { background-color: #1e293b !important; }
         .dark .stat-card:hover,
         .dark .section-card:hover { box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.3); border-color: #475569 !important; }
         .dark .stat-card::after { background: linear-gradient(135deg, transparent 60%, rgba(59, 130, 246, 0.05) 100%); }

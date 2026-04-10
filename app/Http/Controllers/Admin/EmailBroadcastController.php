@@ -16,7 +16,11 @@ class EmailBroadcastController extends Controller
 {
     private function gate(): void
     {
-        abort_unless(Auth::check() && Auth::user()->isSuperAdmin(), 403);
+        $u = Auth::user();
+        abort_unless(
+            $u && ($u->isSuperAdmin() || $u->hasPermission('manage.email-broadcasts')),
+            403
+        );
     }
 
     public function index(string $audience)

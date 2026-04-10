@@ -46,7 +46,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center gap-5">
                     <div class="profile-avatar flex items-center justify-center h-24 w-24 sm:h-28 sm:w-28 rounded-2xl bg-gradient-to-br <?php echo e($roleMeta['color']); ?> text-white overflow-hidden shadow-xl ring-4 ring-white/20 flex-shrink-0 mx-auto sm:mx-0">
                         <?php if($user->profile_image): ?>
-                            <img src="<?php echo e(asset('storage/' . $user->profile_image)); ?>" alt="صورة الملف الشخصي" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+                            <img src="<?php echo e($user->profile_image_url); ?>" alt="صورة الملف الشخصي" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
                             <span class="text-4xl sm:text-5xl font-heading font-black leading-none hidden"><?php echo e(mb_substr($user->name, 0, 1)); ?></span>
                         <?php else: ?>
                             <span class="text-4xl sm:text-5xl font-heading font-black leading-none"><?php echo e(mb_substr($user->name, 0, 1)); ?></span>
@@ -259,7 +259,7 @@ unset($__errorArgs, $__bag); ?>
                         <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                             <div class="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center flex-shrink-0">
                                 <?php if($user->profile_image): ?>
-                                    <img src="<?php echo e(asset('storage/' . $user->profile_image)); ?>" alt="صورة الملف الشخصي" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
+                                    <img src="<?php echo e($user->profile_image_url); ?>" alt="صورة الملف الشخصي" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
                                     <i class="fas fa-camera text-slate-400 text-3xl hidden"></i>
                                 <?php else: ?>
                                     <i class="fas fa-camera text-slate-400 text-3xl"></i>

@@ -61,8 +61,7 @@
     <meta name="twitter:image"       content="{{ $courseOgImg }}">
     <meta name="twitter:image:alt"   content="{{ $course->title ?? 'كورس' }}">
     @include('partials.seo-jsonld', ['jsonldType' => 'course', 'course' => $course])
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
+    @include('partials.favicon-links')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">

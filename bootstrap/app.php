@@ -72,7 +72,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // إضافة Middleware للتحقق من حالة المستخدم لجميع الطلبات المصادقة عليها
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckActiveStatus::class);
 
-        // إلزام الإدمن والمدربين بتفعيل المصادقة الثنائية (2FA) — معطّل حالياً
+        // إلزام الأدمن بتفعيل المصادقة الثنائية (2FA) عند تفعيل الإعداد — معطّل حالياً
         // $middleware->appendToGroup('web', \App\Http\Middleware\EnsureTwoFactorEnabled::class);
         
         // تسجيل Middlewares للأدوار والصلاحيات
@@ -85,6 +85,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'landing.locale' => \App\Http\Middleware\SetLandingLocale::class,
             'community.contributor' => \App\Http\Middleware\EnsureCommunityContributor::class,
             'employee.can' => \App\Http\Middleware\EnsureEmployeeCan::class,
+            'rbac.strict.admin' => \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

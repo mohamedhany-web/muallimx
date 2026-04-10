@@ -22,11 +22,6 @@ class ExpenseController extends Controller
     public function index(Request $request)
     {
         try {
-            // التحقق من الصلاحيات
-            if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-                abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-            }
-
             $query = Expense::with(['wallet', 'approvedBy', 'createdBy'])
                 ->orderBy('created_at', 'desc');
 

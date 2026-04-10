@@ -41,9 +41,7 @@
     <meta name="twitter:description" content="<?php echo e(__('landing.meta.og_description')); ?>">
     <meta name="twitter:image"       content="<?php echo e(asset('images/og-image.jpg')); ?>">
     <meta name="twitter:image:alt"   content="<?php echo e(__('landing.meta.og_title')); ?>">
-    <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicon.ico')); ?>">
-    <link rel="apple-touch-icon" sizes="180x180" href="<?php echo e(asset('logo-removebg-preview.png')); ?>">
-    <link rel="icon" type="image/png" sizes="32x32" href="<?php echo e(asset('logo-removebg-preview.png')); ?>">
+    <?php echo $__env->make('partials.favicon-links', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <?php echo $__env->make('partials.seo-jsonld', ['jsonldType' => 'website'], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">

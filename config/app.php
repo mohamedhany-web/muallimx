@@ -124,8 +124,8 @@ return [
     ],
 
     /*
-    | إلزام الإدمن بالمصادقة الثنائية (2FA). عند false يمكن للأدمن الدخول دون 2FA.
-    | القيمة الافتراضية false = غير مطلوبة. لتفعيلها ضع ADMIN_2FA_REQUIRED=true في .env
+    | إلزام المصادقة الثنائية (2FA) لحسابات الأدمن فقط (super_admin / admin). القيمة الافتراضية عند عدم وجود سجل في جدول settings.
+    | يمكن التحكم من لوحة التحكم: /admin/system-settings (يُخزَّن في settings.admin_2fa_required).
     */
     'admin_2fa_required' => env('ADMIN_2FA_REQUIRED', false),
 

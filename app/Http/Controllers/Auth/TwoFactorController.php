@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\TwoFactorLog;
 use App\Models\User;
+use App\Support\RbacAdminRouteAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -20,15 +21,17 @@ class TwoFactorController extends Controller
     public function showChallenge(Request $request)
     {
         if (!$request->session()->has('login.id')) {
-            return redirect()->route('login');
+            return redirect()->route('login')
+                ->with('warning', 'انتهت خطوة التحقق أو الجلسة. أدخل البريد وكلمة المرور من جديد.');
         }
         $userId = $request->session()->get('login.id');
         $user = User::find($userId);
         if (!$user || !$user->requiresTwoFactor()) {
             $request->session()->forget(['login.id', 'login.remember']);
-            return redirect()->route('login');
+            return redirect()->route('login')
+                ->with('warning', 'لا يمكن متابعة التحقق الثنائي لهذا الحساب. سجّل الدخول من جديد.');
         }
-        // 2FA للأدمن والمدربين عبر البريد فقط
+        // 2FA عبر البريد عند تفعيل الإلزام من إعدادات النظام (حالياً للأدمن فقط)
         $useEmail = true;
         return view('auth.two-factor.challenge', compact('useEmail'));
     }
@@ -100,7 +103,7 @@ class TwoFactorController extends Controller
         Cache::put($cacheKey, $sessionId, now()->addDays(7));
 
         if ($user->isEmployee()) {
-            return redirect()->intended(route('employee.dashboard'));
+            return redirect()->intended(route($this->getDashboardRoute($user)));
         }
         if ($user->role === 'super_admin' || $user->role === 'admin') {
             return redirect()->intended(route('admin.dashboard'));
@@ -112,7 +115,7 @@ class TwoFactorController extends Controller
     }
 
     /**
-     * عرض صفحة إعداد المصادقة الثنائية (للمدربين/الإدمن/الموظفين)
+     * عرض صفحة إعداد المصادقة الثنائية (TOTP) — لمن يُشمَّل بـ requiresTwoFactor
      */
     public function showSetup(Request $request)
     {
@@ -207,6 +210,13 @@ class TwoFactorController extends Controller
     protected function getDashboardRoute(User $user): string
     {
         if ($user->isEmployee()) {
+            if ($user->roles()->exists()) {
+                $adminRoute = RbacAdminRouteAccess::firstPostLoginAdminRouteName($user);
+                if ($adminRoute !== null) {
+                    return $adminRoute;
+                }
+            }
+
             return 'employee.dashboard';
         }
         if ($user->role === 'super_admin' || $user->role === 'admin') {

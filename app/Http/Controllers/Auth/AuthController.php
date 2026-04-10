@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\TwoFactorCodeMail;
+use App\Support\RbacAdminRouteAccess;
 use App\Models\TwoFactorLog;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -191,7 +192,7 @@ class AuthController extends Controller
             \Illuminate\Support\Facades\RateLimiter::clear($key);
 
             // إذا كان المستخدم مطلوب له 2FA (أدمن/مدرب) → إرسال رمز عبر البريد فقط ثم طلب التحدي
-            if (config('app.admin_2fa_required', true) && $user->requiresTwoFactor()) {
+            if ($user->requiresTwoFactor()) {
                 $request->session()->put('login.id', $user->id);
                 $request->session()->put('login.remember', $request->boolean('remember'));
                 $request->session()->save();
@@ -236,6 +237,15 @@ class AuthController extends Controller
             
             // إرجاع المستخدم للصفحة التي حاول الوصول إليها أو للـ dashboard
             if ($user->isEmployee()) {
+                if ($user->roles()->exists()) {
+                    $adminRoute = RbacAdminRouteAccess::firstPostLoginAdminRouteName($user);
+                    if ($adminRoute !== null) {
+                        return redirect()->intended(route($adminRoute));
+                    }
+
+                    return redirect()->intended(route('employee.dashboard'));
+                }
+
                 return redirect()->intended(route('employee.dashboard'));
             }
             

@@ -36,8 +36,7 @@
     <meta name="twitter:title"       content="{{ __('public.instructors_page_title') }} - Muallimx">
     <meta name="twitter:description" content="{{ __('public.instructors_subtitle') }}">
     <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
+    @include('partials.favicon-links')
     <!-- BreadcrumbList JSON-LD -->
     <script type="application/ld+json">
     {"@@context":"https://schema.org","@@type":"BreadcrumbList","itemListElement":[{"@@type":"ListItem","position":1,"name":"الرئيسية","item":"{{ url('/') }}"},{"@@type":"ListItem","position":2,"name":"المدربون","item":"{{ url('/instructors') }}"}]}

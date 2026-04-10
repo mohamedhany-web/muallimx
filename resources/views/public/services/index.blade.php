@@ -10,7 +10,7 @@
     <title>{{ __('public.services_page_title') }} - {{ __('public.site_suffix') }}</title>
     <meta name="description" content="{{ __('public.services_subtitle') }}">
     <meta name="theme-color" content="#283593">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    @include('partials.favicon-links')
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">

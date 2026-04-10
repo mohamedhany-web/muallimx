@@ -55,11 +55,12 @@ class PermissionsSeeder extends Seeder
             ['name' => 'manage.assignments', 'display_name' => 'إدارة الواجبات', 'description' => 'إدارة الواجبات والمشاريع', 'group' => 'إدارة المحتوى'],
             ['name' => 'manage.exams', 'display_name' => 'إدارة الامتحانات', 'description' => 'إدارة الامتحانات', 'group' => 'إدارة المحتوى'],
             ['name' => 'manage.question-bank', 'display_name' => 'إدارة بنك الأسئلة', 'description' => 'إدارة بنك الأسئلة', 'group' => 'إدارة المحتوى'],
+            ['name' => 'manage.attendance', 'display_name' => 'إدارة الحضور (لوحة الأدمن)', 'description' => 'عرض وإدارة الحضور والربط مع Teams من لوحة التحكم', 'group' => 'إدارة المحتوى'],
 
             // إدارة الصفحات الخارجية
+            ['name' => 'manage.about-page', 'display_name' => 'إدارة صفحة «من نحن»', 'description' => 'تعديل محتوى صفحة من نحن (الإدارة العليا) من لوحة الأدمن', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.faq', 'display_name' => 'إدارة الأسئلة الشائعة', 'description' => 'إدارة الأسئلة الشائعة', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.contact-messages', 'display_name' => 'إدارة رسائل التواصل', 'description' => 'إدارة رسائل التواصل', 'group' => 'إدارة الصفحات الخارجية'],
-            ['name' => 'manage.media', 'display_name' => 'إدارة معرض الصور', 'description' => 'إدارة معرض الصور والفيديوهات', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.site-services', 'display_name' => 'إدارة خدمات الموقع', 'description' => 'إدارة صفحة الخدمات ومحتوى كل خدمة في الواجهة العامة', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.site-testimonials', 'display_name' => 'إدارة آراء الموقع (الرئيسية)', 'description' => 'إدارة شهادات المعلمين الظاهرة في الصفحة الرئيسية وصفحة الآراء', 'group' => 'إدارة الصفحات الخارجية'],
             ['name' => 'manage.system-settings', 'display_name' => 'إعدادات النظام (الفوتر والتواصل)', 'description' => 'تعديل بيانات الفوتر والهاتف وروابط السوشيال في الواجهة العامة', 'group' => 'إدارة الصفحات الخارجية'],
@@ -113,6 +114,7 @@ class PermissionsSeeder extends Seeder
             // الموارد البشرية التفصيلية
             ['name' => 'manage.leaves',              'display_name' => 'إدارة طلبات الإجازة',             'description' => 'إدارة ومراجعة طلبات إجازة الموظفين',         'group' => 'الموارد البشرية'],
             ['name' => 'manage.instructor-requests', 'display_name' => 'إدارة طلبات انضمام المدربين',     'description' => 'مراجعة والبت في طلبات انضمام المدربين',       'group' => 'الموارد البشرية'],
+            ['name' => 'academic_supervision.manage', 'display_name' => 'إدارة الإشراف الأكاديمي',         'description' => 'تعيين المشرفين ومتابعة الإشراف الأكاديمي من لوحة الإدارة', 'group' => 'الموارد البشرية'],
 
             // التقارير
             ['name' => 'view.reports',               'display_name' => 'عرض التقارير الشاملة',            'description' => 'الوصول إلى جميع صفحات التقارير',             'group' => 'التقارير'],

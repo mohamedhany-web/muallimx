@@ -7,19 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', __('auth.dashboard')) - {{ config('app.name') }}</title>
     
-    @php $adminFavicon = ! empty($adminPanelLogoUrl) ? $adminPanelLogoUrl : null; @endphp
-    @if($adminFavicon)
-    <link rel="icon" type="image/png" href="{{ $adminFavicon }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ $adminFavicon }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ $adminFavicon }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ $adminFavicon }}">
-    @else
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('logo-removebg-preview.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('logo-removebg-preview.png') }}">
-    @endif
-    
+    @include('partials.favicon-links')
+
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -358,6 +347,13 @@
         }
         .dark main .bg-gray-50,
         .dark .content-wrapper .bg-gray-50 { background-color: #0f172a !important; }
+        .dark main .bg-gray-100,
+        .dark .content-wrapper .bg-gray-100 { background-color: #1e293b !important; }
+        .dark main .min-h-screen.bg-white,
+        .dark .content-wrapper .min-h-screen.bg-white { background-color: #0f172a !important; }
+        /* شريط البحث والحقول: Tailwind focus-within:bg-white يبقى أبيضاً في الوضع الداكن */
+        .dark .focus-within\:bg-white:focus-within { background-color: #1e293b !important; }
+        .dark .hover\:bg-white:hover { background-color: #334155 !important; }
         .dark main [class*="bg-slate-200"],
         .dark .content-wrapper [class*="bg-slate-200"] { background-color: #475569 !important; }
         .dark .stat-card:hover,
@@ -492,17 +488,16 @@
       x-data="{ 
           sidebarOpen: false,
           sidebarCollapsed: localStorage.getItem('sidebar_collapsed') === 'true',
-          darkMode: localStorage.getItem('theme') === 'dark'
+          darkMode: document.documentElement.classList.contains('dark')
       }" 
       x-init="
           $watch('sidebarCollapsed', v => localStorage.setItem('sidebar_collapsed', v));
-          function applyTheme(isDark) {
-              if (isDark) { document.documentElement.classList.add('dark'); }
-              else { document.documentElement.classList.remove('dark'); }
+          function persistTheme(isDark) {
+              if (isDark) { document.documentElement.classList.add('dark'); document.documentElement.classList.remove('light'); }
+              else { document.documentElement.classList.remove('dark'); document.documentElement.classList.add('light'); }
               localStorage.setItem('theme', isDark ? 'dark' : 'light');
           }
-          applyTheme(darkMode);
-          $watch('darkMode', v => applyTheme(v));
+          $watch('darkMode', v => persistTheme(v));
           window.addEventListener('close-sidebar', () => sidebarOpen = false);
           window.addEventListener('resize', () => { if (window.innerWidth >= 1024) sidebarOpen = false; });
       "
@@ -547,7 +542,7 @@
         <!-- Top Navbar -->
         <header class="top-navbar sticky top-0 z-40 flex items-center px-5 lg:px-8 gap-4">
             <!-- Mobile hamburger -->
-            <button @click="sidebarOpen = true" class="lg:hidden w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-all active:scale-95">
+            <button @click="sidebarOpen = true" class="lg:hidden w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-300 transition-all active:scale-95">
                 <i class="fas fa-bars text-sm"></i>
             </button>
 
@@ -571,9 +566,9 @@
             <!-- Right actions -->
             <div class="flex items-center gap-2">
                 <!-- Search -->
-                <div class="hidden md:flex items-center bg-slate-50 rounded-xl px-3.5 h-10 gap-2.5 w-60 border border-transparent focus-within:border-brand/20 focus-within:bg-white focus-within:shadow-sm transition-all">
-                    <i class="fas fa-search text-slate-300 text-xs"></i>
-                    <input type="text" placeholder="بحث سريع..." class="bg-transparent border-none outline-none text-sm text-slate-700 w-full placeholder-slate-400">
+                <div class="hidden md:flex items-center bg-slate-50 dark:bg-slate-800 rounded-xl px-3.5 h-10 gap-2.5 w-60 border border-transparent focus-within:border-brand/20 focus-within:bg-white dark:focus-within:bg-slate-700 focus-within:shadow-sm transition-all">
+                    <i class="fas fa-search text-slate-300 dark:text-slate-500 text-xs"></i>
+                    <input type="text" placeholder="بحث سريع..." class="bg-transparent border-none outline-none text-sm text-slate-700 dark:text-slate-200 w-full placeholder-slate-400 dark:placeholder-slate-500">
                 </div>
 
                 <!-- تبديل الوضع الليلي / النهاري (الافتراضي: نهاري) -->
@@ -688,7 +683,7 @@
 
                 <!-- Profile dropdown -->
                 <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                    <button @click.stop="open = !open" class="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-slate-50 transition-all active:scale-[0.98]" :aria-expanded="open">
+                    <button @click.stop="open = !open" class="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-all active:scale-[0.98]" :aria-expanded="open">
                         @if(auth()->user()->profile_image)
                             <img src="{{ auth()->user()->profile_image_url }}" alt="{{ auth()->user()->name }}" class="w-9 h-9 rounded-xl object-cover ring-2 ring-slate-100" onerror="this.style.display='none'; this.nextElementSibling?.classList.remove('hidden');">
                             <div class="w-9 h-9 bg-gradient-to-br from-brand to-brand-light rounded-xl hidden flex items-center justify-center text-white font-bold text-sm">{{ mb_substr(auth()->user()->name, 0, 1) }}</div>
@@ -698,8 +693,8 @@
                             </div>
                         @endif
                         <div class="hidden lg:block text-right">
-                            <p class="text-[13px] font-semibold text-slate-700 max-w-[100px] truncate leading-tight">{{ auth()->user()->name }}</p>
-                            <p class="text-[11px] text-slate-400 leading-tight">مدير</p>
+                            <p class="text-[13px] font-semibold text-slate-700 dark:text-slate-200 max-w-[100px] truncate leading-tight">{{ auth()->user()->name }}</p>
+                            <p class="text-[11px] text-slate-400 dark:text-slate-500 leading-tight">مدير</p>
                         </div>
                         <i class="fas fa-chevron-down text-slate-300 text-[9px] transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
                     </button>
@@ -711,26 +706,26 @@
                          x-transition:leave="transition ease-in duration-100"
                          x-transition:leave-start="opacity-100 scale-100"
                          x-transition:leave-end="opacity-0 scale-95"
-                         class="absolute left-0 mt-2 w-56 rounded-2xl bg-white shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden" style="z-index: 9999;">
-                        <div class="px-4 py-3 bg-slate-50/80 border-b border-slate-100">
-                            <p class="text-sm font-bold text-slate-800 truncate">{{ auth()->user()->name }}</p>
-                            <p class="text-xs text-slate-400 truncate mt-0.5">{{ auth()->user()->email ?? auth()->user()->phone }}</p>
+                         class="absolute left-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-black/40 border border-slate-100 dark:border-slate-600 overflow-hidden" style="z-index: 9999;">
+                        <div class="px-4 py-3 bg-slate-50/80 dark:bg-slate-700/50 border-b border-slate-100 dark:border-slate-600">
+                            <p class="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{{ auth()->user()->name }}</p>
+                            <p class="text-xs text-slate-400 dark:text-slate-400 truncate mt-0.5">{{ auth()->user()->email ?? auth()->user()->phone }}</p>
                         </div>
                         <div class="py-1.5">
-                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors">
+                            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-800 dark:hover:text-slate-100 transition-colors">
                                 <i class="fas fa-home w-4 text-slate-400 text-xs"></i> لوحة التحكم
                             </a>
-                            <a href="{{ route('admin.profile') }}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors">
+                            <a href="{{ route('admin.profile') }}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-800 dark:hover:text-slate-100 transition-colors">
                                 <i class="fas fa-user w-4 text-slate-400 text-xs"></i> الملف الشخصي
                             </a>
-                            <a href="{{ $adminNavSettingsUrl }}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 hover:bg-slate-50 hover:text-slate-800 dark:hover:bg-slate-700/50 dark:text-slate-300 transition-colors">
+                            <a href="{{ $adminNavSettingsUrl }}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:text-slate-800 dark:hover:text-slate-100 transition-colors">
                                 <i class="fas fa-cog w-4 text-slate-400 text-xs"></i> إعدادات النظام
                             </a>
                         </div>
-                        <div class="border-t border-slate-100 py-1.5">
+                        <div class="border-t border-slate-100 dark:border-slate-600 py-1.5">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="flex items-center gap-3 w-full text-right px-4 py-2.5 text-[13px] text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-colors">
+                                <button type="submit" class="flex items-center gap-3 w-full text-right px-4 py-2.5 text-[13px] text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600 dark:hover:text-rose-400 transition-colors">
                                     <i class="fas fa-sign-out-alt w-4 text-slate-400 text-xs"></i> تسجيل الخروج
                                 </button>
                             </form>

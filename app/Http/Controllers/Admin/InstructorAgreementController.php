@@ -23,11 +23,6 @@ class InstructorAgreementController extends Controller
      */
     public function index(Request $request)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             // Sanitization
             $instructorId = filter_var($request->input('instructor_id'), FILTER_VALIDATE_INT);

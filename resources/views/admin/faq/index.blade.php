@@ -83,8 +83,7 @@
                                 {{ $faq->order ?? 0 }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                                    {{ $faq->is_active ? 'bg-green-100 text-green-800 ': ''bg-red-100 text-red-800 }}">']
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $faq->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                     {{ $faq->is_active ? 'نشط' : 'غير نشط' }}
                                 </span>
                             </td>

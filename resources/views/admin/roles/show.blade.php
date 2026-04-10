@@ -13,6 +13,17 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 text-sm space-y-1">
+            <p class="font-bold"><i class="fas fa-exclamation-circle mr-1"></i> لم يُحفَظ التعديل</p>
+            <ul class="list-disc list-inside text-xs">
+                @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     {{-- Header --}}
     <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between flex-wrap gap-3">
         <div class="flex items-center gap-3">
@@ -44,100 +55,20 @@
         </div>
     </div>
 
-    {{-- دليل الأقسام --}}
-    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-        <p class="text-xs font-bold text-indigo-700 mb-3">
-            <i class="fas fa-lightbulb mr-1"></i>
-            كل صلاحية تُفعّل قسماً في سايدبار لوحة التحكم — الصلاحيات المُفعَّلة تظهر باللون الأزرق
+    {{-- توضيح --}}
+    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-2">
+        @foreach(\App\Support\AdminSidebarRoleMap::introLines() as $line)
+            <p class="text-xs text-indigo-900 leading-relaxed">{{ $line }}</p>
+        @endforeach
+        <p class="text-xs text-indigo-800 leading-relaxed">
+            <i class="fas fa-user-shield mr-1"></i>
+            للموظف (<code class="text-[10px] bg-white/80 px-1 rounded">is_employee</code> + دور RBAC): فتح الصفحات يخضع أيضاً لـ
+            <code class="text-[10px] bg-white/80 px-1 rounded">config/rbac_admin_route_access.php</code>.
         </p>
-        @php
-        $sidebarGuide = [
-            // ── الطلاب والمستخدمون ──
-            ['perm'=>'manage.users',              'icon'=>'fa-users',              'color'=>'text-rose-600',    'section'=>'الطلاب والتسجيلات (إدارة كاملة)'],
-            ['perm'=>'manage.students-accounts',  'icon'=>'fa-user-circle',        'color'=>'text-rose-500',    'section'=>'إدارة حسابات الطلاب'],
-            ['perm'=>'manage.enrollments',        'icon'=>'fa-user-graduate',      'color'=>'text-teal-600',    'section'=>'تسجيلات الطلاب'],
-            ['perm'=>'manage.subscriptions',      'icon'=>'fa-calendar-check',     'color'=>'text-cyan-600',    'section'=>'الاشتراكات + العناصر المدفوعة'],
-            ['perm'=>'manage.student-control',    'icon'=>'fa-eye',                'color'=>'text-rose-500',    'section'=>'رقابة الطلاب واستهلاكهم'],
-            ['perm'=>'manage.support-tickets',    'icon'=>'fa-headset',            'color'=>'text-rose-400',    'section'=>'الدعم الفني (التذاكر + التصنيفات)'],
-            ['perm'=>'manage.consultations',      'icon'=>'fa-comments-dollar',    'color'=>'text-teal-500',    'section'=>'استشارات المدربين'],
-            ['perm'=>'manage.hiring-academies',   'icon'=>'fa-school',             'color'=>'text-teal-500',    'section'=>'الأكاديميات + فرص العمل'],
-            // ── المبيعات ──
-            ['perm'=>'manage.orders',             'icon'=>'fa-shopping-bag',       'color'=>'text-emerald-600', 'section'=>'قسم المبيعات (الطلبات)'],
-            ['perm'=>'manage.leads',              'icon'=>'fa-user-plus',          'color'=>'text-emerald-500', 'section'=>'قسم المبيعات (Leads)'],
-            ['perm'=>'view.sales-analytics',      'icon'=>'fa-chart-line',         'color'=>'text-emerald-500', 'section'=>'قسم المبيعات (التحليلات)'],
-            // ── التسويق ──
-            ['perm'=>'manage.coupons',            'icon'=>'fa-ticket-alt',         'color'=>'text-pink-600',    'section'=>'التسويق (الكوبونات)'],
-            ['perm'=>'manage.referrals',          'icon'=>'fa-gift',               'color'=>'text-pink-600',    'section'=>'التسويق (الإحالات)'],
-            ['perm'=>'manage.loyalty',            'icon'=>'fa-star',               'color'=>'text-pink-600',    'section'=>'التسويق (الولاء)'],
-            ['perm'=>'manage.popup-ads',          'icon'=>'fa-bullhorn',           'color'=>'text-pink-500',    'section'=>'التسويق (الإعلانات المنبثقة)'],
-            ['perm'=>'manage.personal-branding',  'icon'=>'fa-user-tie',           'color'=>'text-pink-500',    'section'=>'التسويق (العلامة الشخصية)'],
-            ['perm'=>'manage.site-services',       'icon'=>'fa-concierge-bell',    'color'=>'text-sky-500',     'section'=>'صفحة الخدمات (الواجهة العامة)'],
-            ['perm'=>'manage.site-testimonials',   'icon'=>'fa-quote-right',       'color'=>'text-violet-500',  'section'=>'آراء الموقع (الرئيسية والصفحة العامة)'],
-            ['perm'=>'manage.system-settings',     'icon'=>'fa-sliders-h',         'color'=>'text-slate-600',   'section'=>'إعدادات النظام والفوتر'],
-            // ── الموارد البشرية ──
-            ['perm'=>'manage.leaves',             'icon'=>'fa-calendar-alt',       'color'=>'text-cyan-500',    'section'=>'الموارد البشرية (الإجازات)'],
-            ['perm'=>'manage.employee-agreements','icon'=>'fa-file-contract',      'color'=>'text-cyan-600',    'section'=>'الموارد البشرية (اتفاقيات الموظفين)'],
-            ['perm'=>'manage.instructor-requests','icon'=>'fa-inbox',              'color'=>'text-cyan-500',    'section'=>'الموارد البشرية (طلبات المدربين)'],
-            // ── المحاسبة ──
-            ['perm'=>'manage.invoices',           'icon'=>'fa-file-invoice',       'color'=>'text-amber-600',   'section'=>'المحاسبة + الاتفاقيات + المالية'],
-            ['perm'=>'manage.payments',           'icon'=>'fa-credit-card',        'color'=>'text-amber-600',   'section'=>'المدفوعات'],
-            ['perm'=>'manage.transactions',       'icon'=>'fa-exchange-alt',       'color'=>'text-amber-600',   'section'=>'المعاملات المالية'],
-            ['perm'=>'manage.wallets',            'icon'=>'fa-wallet',             'color'=>'text-amber-600',   'section'=>'المحافظ'],
-            ['perm'=>'manage.installments',       'icon'=>'fa-calendar-check',     'color'=>'text-amber-500',   'section'=>'خطط التقسيط'],
-            ['perm'=>'manage.salaries',           'icon'=>'fa-money-check-alt',    'color'=>'text-amber-500',   'section'=>'رواتب المدربين'],
-            ['perm'=>'manage.expenses',           'icon'=>'fa-receipt',            'color'=>'text-amber-500',   'section'=>'المصروفات'],
-            ['perm'=>'manage.instructor-accounts','icon'=>'fa-user-tie',           'color'=>'text-amber-500',   'section'=>'حسابات المدربين'],
-            // ── الاتفاقيات والسحب ──
-            ['perm'=>'manage.agreements',         'icon'=>'fa-handshake',          'color'=>'text-orange-500',  'section'=>'اتفاقيات المدربين'],
-            ['perm'=>'manage.withdrawals',        'icon'=>'fa-money-bill-wave',    'color'=>'text-orange-500',  'section'=>'طلبات السحب'],
-            // ── المحتوى والتعليم ──
-            ['perm'=>'manage.courses',            'icon'=>'fa-graduation-cap',     'color'=>'text-violet-600',  'section'=>'إدارة الكورسات + العناصر المدفوعة'],
-            ['perm'=>'manage.lectures',           'icon'=>'fa-video',              'color'=>'text-violet-600',  'section'=>'المحاضرات'],
-            ['perm'=>'manage.assignments',        'icon'=>'fa-tasks',              'color'=>'text-violet-500',  'section'=>'الواجبات والمشاريع'],
-            ['perm'=>'manage.exams',              'icon'=>'fa-clipboard-check',    'color'=>'text-violet-500',  'section'=>'الامتحانات'],
-            ['perm'=>'manage.question-bank',      'icon'=>'fa-database',           'color'=>'text-violet-500',  'section'=>'بنك الأسئلة'],
-            ['perm'=>'manage.video-providers',    'icon'=>'fa-server',             'color'=>'text-sky-600',     'section'=>'مصادر الفيديو'],
-            // ── العناصر المدفوعة ──
-            ['perm'=>'manage.packages',           'icon'=>'fa-tags',               'color'=>'text-cyan-600',    'section'=>'الباقات والأسعار'],
-            ['perm'=>'manage.teacher-features',   'icon'=>'fa-chalkboard-teacher', 'color'=>'text-cyan-500',    'section'=>'مزايا اشتراك المدربين'],
-            ['perm'=>'manage.curriculum-library', 'icon'=>'fa-book-open',          'color'=>'text-cyan-500',    'section'=>'مكتبة المناهج'],
-            // ── البث المباشر ──
-            ['perm'=>'manage.live-sessions',      'icon'=>'fa-broadcast-tower',    'color'=>'text-red-500',     'section'=>'جلسات البث المباشر'],
-            ['perm'=>'manage.live-servers',       'icon'=>'fa-server',             'color'=>'text-red-400',     'section'=>'سيرفرات البث (VPS)'],
-            // ── الرقابة والجودة ──
-            ['perm'=>'manage.quality-control',    'icon'=>'fa-shield-alt',         'color'=>'text-rose-500',    'section'=>'الرقابة والجودة'],
-            ['perm'=>'view.statistics',           'icon'=>'fa-chart-bar',          'color'=>'text-purple-600',  'section'=>'الإحصائيات + التقارير'],
-            // ── التقارير ──
-            ['perm'=>'view.reports',              'icon'=>'fa-file-excel',         'color'=>'text-green-600',   'section'=>'التقارير الشاملة'],
-            ['perm'=>'view.financial-reports',    'icon'=>'fa-file-invoice-dollar','color'=>'text-green-500',   'section'=>'التقارير المالية'],
-            ['perm'=>'view.academic-reports',     'icon'=>'fa-book',               'color'=>'text-green-500',   'section'=>'التقارير الأكاديمية'],
-            // ── إدارة النظام ──
-            ['perm'=>'manage.notifications',      'icon'=>'fa-bell',               'color'=>'text-blue-600',    'section'=>'الإشعارات'],
-            ['perm'=>'manage.email-broadcasts',   'icon'=>'fa-envelope',           'color'=>'text-blue-500',    'section'=>'البريد الجماعي (Gmail)'],
-            ['perm'=>'view.activity-log',         'icon'=>'fa-history',            'color'=>'text-slate-600',   'section'=>'سجل النشاطات'],
-            ['perm'=>'manage.performance',        'icon'=>'fa-tachometer-alt',     'color'=>'text-slate-500',   'section'=>'مراقبة الأداء'],
-            ['perm'=>'manage.two-factor-logs',    'icon'=>'fa-lock',               'color'=>'text-slate-500',   'section'=>'سجلات المصادقة الثنائية'],
-            // ── المهام والرسائل ──
-            ['perm'=>'manage.tasks',              'icon'=>'fa-list-check',         'color'=>'text-sky-600',     'section'=>'إدارة المهام + الفريق'],
-            ['perm'=>'manage.messages',           'icon'=>'fa-envelope-open-text', 'color'=>'text-blue-600',    'section'=>'الرسائل'],
-            // ── متقدم ──
-            ['perm'=>'manage.certificates',       'icon'=>'fa-certificate',        'color'=>'text-yellow-600',  'section'=>'الشهادات'],
-            ['perm'=>'manage.roles',              'icon'=>'fa-user-tag',           'color'=>'text-indigo-600',  'section'=>'الأدوار والصلاحيات'],
-            ['perm'=>'manage.permissions',        'icon'=>'fa-key',                'color'=>'text-indigo-500',  'section'=>'إدارة الصلاحيات'],
-            ['perm'=>'manage.user-permissions',   'icon'=>'fa-user-shield',        'color'=>'text-indigo-500',  'section'=>'صلاحيات المستخدمين'],
-        ];
-        $activePermNames = $role->permissions->pluck('name')->toArray();
-        @endphp
-        <div class="flex flex-wrap gap-1">
-            @foreach($sidebarGuide as $g)
-            @php $active = in_array($g['perm'], $activePermNames); @endphp
-            <span title="{{ $g['section'] }}" class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border font-medium cursor-help
-                         {{ $active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-400 border-gray-200' }}">
-                <i class="fas {{ $g['icon'] }}"></i>
-                {{ $g['perm'] }}
-            </span>
-            @endforeach
-        </div>
+        <p class="text-xs text-gray-600">
+            <i class="fas fa-code-branch mr-1 text-indigo-500"></i>
+            الخريطة مأخوذة من <code class="text-[10px] bg-white px-1 rounded border">config/admin_sidebar_role_map.php</code> وتطابق ترتيب سايدبار الإدارة في <code class="text-[10px] bg-white px-1 rounded border">layouts/admin-sidebar.blade.php</code>.
+        </p>
     </div>
 
     {{-- نموذج الصلاحيات --}}
@@ -147,8 +78,8 @@
 
             <div class="px-5 py-3 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2">
                 <h3 class="text-sm font-bold text-gray-800">
-                    <i class="fas fa-key text-amber-500 mr-1"></i>
-                    جميع صلاحيات النظام — اختر ما تريد منحه لهذا الدور
+                    <i class="fas fa-bars text-indigo-500 mr-1"></i>
+                    صلاحيات الدور — مطابقة سايدبار لوحة الإدارة + صلاحيات أخرى
                 </h3>
                 <div class="flex items-center gap-2">
                     <button type="button" onclick="toggleAll(true)"
@@ -167,43 +98,130 @@
 
             <div class="p-4">
                 @php $rolePermIds = $role->permissions->pluck('id')->toArray(); @endphp
-                <div class="space-y-5">
-                    @foreach($permissions as $group => $groupPermissions)
-                    <div>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="w-1.5 h-4 bg-indigo-400 rounded-full flex-shrink-0"></span>
-                            <h4 class="text-xs font-bold text-gray-600 uppercase tracking-wide">{{ $group ?? 'عام' }}</h4>
-                            <div class="flex-1 h-px bg-gray-100"></div>
-                            <button type="button" data-group="g{{ $loop->index }}" onclick="toggleGroup(this)"
-                                    class="text-xs text-indigo-500 hover:text-indigo-700 font-medium flex-shrink-0">
-                                تحديد
-                            </button>
-                        </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5" id="g{{ $loop->index }}">
-                            @foreach($groupPermissions as $permission)
-                            @php $isChecked = in_array($permission->id, $rolePermIds); @endphp
-                            <label class="perm-card flex items-center gap-2 px-2.5 py-2 rounded-lg border cursor-pointer transition-all select-none text-xs
-                                          {{ $isChecked ? 'bg-indigo-50 border-indigo-400' : 'bg-gray-50 border-gray-200 hover:border-indigo-300' }}">
-                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}"
-                                       {{ $isChecked ? 'checked' : '' }}
-                                       onchange="onPermChange(this)"
-                                       class="w-3.5 h-3.5 text-indigo-600 border-gray-300 rounded flex-shrink-0">
-                                <div class="min-w-0">
-                                    <span class="font-semibold text-gray-800 block truncate leading-tight">{{ $permission->display_name }}</span>
-                                    <code class="text-[10px] text-gray-400 font-mono truncate block">{{ $permission->name }}</code>
+
+                {{-- 1) خريطة السايدبار --}}
+                <div class="mb-8">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-1.5 h-5 bg-indigo-600 rounded-full flex-shrink-0"></span>
+                        <h4 class="text-sm font-bold text-gray-800">خريطة سايدبار الإدارة — فعّل الصلاحية ليظهر العنصر (أي صلاحية من المذكورة تكفي لظهور الرابط)</h4>
+                    </div>
+                    <div class="space-y-4">
+                        @foreach($adminSidebarBlocks as $block)
+                            <div class="rounded-xl border border-indigo-100 bg-white overflow-hidden shadow-sm">
+                                <div class="px-4 py-3 bg-indigo-50/90 border-b border-indigo-100 flex items-center justify-between gap-2 flex-wrap">
+                                    <div class="min-w-0">
+                                        <h5 class="text-xs font-bold text-indigo-900">{{ $block['section']['title'] ?? '' }}</h5>
+                                        @if(!empty($block['section']['note']))
+                                            <p class="text-[10px] text-amber-900 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1 mt-1.5 leading-relaxed">{{ $block['section']['note'] }}</p>
+                                        @endif
+                                    </div>
+                                    <button type="button" data-group="sidebarBlock{{ $loop->index }}" onclick="toggleGroup(this)"
+                                            class="text-[10px] px-2 py-1 text-indigo-600 hover:bg-indigo-100 rounded-lg font-medium border border-indigo-200 flex-shrink-0">
+                                        تحديد القسم
+                                    </button>
                                 </div>
-                            </label>
+                                <div id="sidebarBlock{{ $loop->index }}">
+                                    @foreach($block['rows'] as $row)
+                                        @if(($row['type'] ?? '') === 'group')
+                                            <div class="px-4 py-2 bg-slate-50 border-b border-gray-100">
+                                                <span class="text-xs font-bold text-slate-700" style="padding-right: {{ (int)($row['depth'] ?? 0) * 12 }}px">{{ $row['label'] ?? '' }}</span>
+                                                @if(!empty($row['note']))
+                                                    <p class="text-[10px] text-gray-500 mt-0.5">{{ $row['note'] }}</p>
+                                                @endif
+                                            </div>
+                                        @elseif(($row['type'] ?? '') === 'item')
+                                            <div class="flex flex-wrap items-start gap-2 px-4 py-2.5 border-b border-gray-100 hover:bg-gray-50/80 transition-colors">
+                                                <div class="flex-1 min-w-[180px]" style="padding-right: {{ (int)($row['depth'] ?? 0) * 12 }}px">
+                                                    <span class="text-xs font-semibold text-gray-800">{{ $row['label'] ?? '' }}</span>
+                                                    @if(!empty($row['note']))
+                                                        <p class="text-[10px] text-gray-500 mt-0.5">{{ $row['note'] }}</p>
+                                                    @endif
+                                                </div>
+                                                <div class="flex flex-wrap gap-1.5 justify-end max-w-full">
+                                                    @foreach($row['permissions'] ?? [] as $meta)
+                                                        @if(!empty($meta['missing']))
+                                                            <span class="text-[10px] text-red-600 bg-red-50 border border-red-100 px-2 py-1 rounded-lg font-mono">{{ $meta['name'] }} غير موجودة في الجدول</span>
+                                                        @elseif(!empty($meta['first']))
+                                                            @php $isChecked = in_array($meta['id'], $rolePermIds); @endphp
+                                                            <label class="perm-card inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border cursor-pointer transition-all select-none text-xs max-w-[220px]
+                                                                {{ $isChecked ? 'bg-indigo-50 border-indigo-400' : 'bg-white border-gray-200 hover:border-indigo-300' }}">
+                                                                <input type="checkbox" name="permissions[]" value="{{ $meta['id'] }}"
+                                                                       {{ $isChecked ? 'checked' : '' }}
+                                                                       onchange="onPermChange(this)"
+                                                                       class="w-3.5 h-3.5 text-indigo-600 border-gray-300 rounded flex-shrink-0">
+                                                                <div class="min-w-0">
+                                                                    <span class="font-semibold text-gray-800 block truncate leading-tight">{{ $meta['display_name'] }}</span>
+                                                                    <code class="text-[9px] text-gray-400 font-mono truncate block">{{ $meta['name'] }}</code>
+                                                                </div>
+                                                            </label>
+                                                        @else
+                                                            <span class="text-[10px] text-gray-500 bg-gray-100 border border-gray-200 px-2 py-1 rounded-lg font-mono" title="راجع مربع نفس الصلاحية أعلى في الخريطة">
+                                                                {{ $meta['name'] }} <span class="text-gray-400">(مكررة)</span>
+                                                            </span>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- 2) صلاحيات لا تظهر في سايدبار الإدارة --}}
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-1.5 h-5 bg-slate-400 rounded-full flex-shrink-0"></span>
+                        <h4 class="text-sm font-bold text-gray-700">صلاحيات أخرى (طالب، مدرب، تقويم، … — لا تظهر في سايدبار الإدارة)</h4>
+                    </div>
+                    @if($otherPermissions->flatten()->isEmpty())
+                        <p class="text-xs text-gray-500 py-3">لا توجد صلاحيات خارج خريطة السايدبار.</p>
+                    @else
+                        <div class="space-y-5">
+                            @foreach($otherPermissions as $group => $groupPermissions)
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="w-1.5 h-4 bg-slate-300 rounded-full flex-shrink-0"></span>
+                                    <h4 class="text-xs font-bold text-gray-600 uppercase tracking-wide">{{ $group ?? 'عام' }}</h4>
+                                    <div class="flex-1 h-px bg-gray-100"></div>
+                                    <button type="button" data-group="other{{ $loop->index }}" onclick="toggleGroup(this)"
+                                            class="text-xs text-slate-500 hover:text-slate-700 font-medium flex-shrink-0">
+                                        تحديد
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1.5" id="other{{ $loop->index }}">
+                                    @foreach($groupPermissions as $permission)
+                                    @php $isChecked = in_array($permission->id, $rolePermIds); @endphp
+                                    <label class="perm-card flex items-center gap-2 px-2.5 py-2 rounded-lg border cursor-pointer transition-all select-none text-xs
+                                                  {{ $isChecked ? 'bg-indigo-50 border-indigo-400' : 'bg-gray-50 border-gray-200 hover:border-indigo-300' }}">
+                                        <input type="checkbox" name="permissions[]" value="{{ $permission->id }}"
+                                               {{ $isChecked ? 'checked' : '' }}
+                                               onchange="onPermChange(this)"
+                                               class="w-3.5 h-3.5 text-indigo-600 border-gray-300 rounded flex-shrink-0">
+                                        <div class="min-w-0">
+                                            <span class="font-semibold text-gray-800 block truncate leading-tight">{{ $permission->display_name }}</span>
+                                            <code class="text-[10px] text-gray-400 font-mono truncate block">{{ $permission->name }}</code>
+                                        </div>
+                                    </label>
+                                    @endforeach
+                                </div>
+                            </div>
                             @endforeach
                         </div>
-                    </div>
-                    @endforeach
+                    @endif
                 </div>
             </div>
 
             <div class="px-5 py-3 bg-gray-50 rounded-b-xl border-t border-gray-100 flex items-center justify-between">
-                <p class="text-xs text-gray-400">
-                    <i class="fas fa-info-circle mr-1"></i>
-                    التغييرات تُطبَّق فوراً على الموظفين الذين يحملون هذا الدور
+                <p class="text-xs text-gray-600 max-w-xl space-y-1">
+                    <span class="block"><i class="fas fa-database mr-1 text-indigo-500"></i>
+                    الصلاحيات المحددة تُخزَّن في جدول الربط <code class="text-[10px] bg-white px-1 rounded">role_permissions</code> مع الدور؛ المستخدم يحصل عليها عبر جدول <code class="text-[10px] bg-white px-1 rounded">user_roles</code> عند ربطه بالدور من
+                    <a href="{{ route('admin.user-permissions.index') }}" class="text-indigo-600 font-semibold underline">صلاحيات المستخدمين</a>
+                    (يُفعَّل <code class="text-[10px] bg-white px-1 rounded">is_employee</code> تلقائياً عند الحاجة).</span>
+                    <span class="block font-semibold text-indigo-800"><i class="fas fa-bars mr-1"></i>
+                    في واجهة الموظف: تظهر أقسام القائمة المخصصة ثم مجموعات بعنوان مجموعة الصلاحية من قاعدة البيانات، وكل صلاحية مفعّلة لها رابط يطابق صفحة الإدارة/الموظف (حسب <code class="text-[10px]">config/rbac_permission_sidebar.php</code>).</span>
                 </p>
                 <button type="submit" class="inline-flex items-center gap-2 px-5 py-2 text-white rounded-xl font-bold text-sm shadow-sm"
                         style="background-color:#16a34a;">

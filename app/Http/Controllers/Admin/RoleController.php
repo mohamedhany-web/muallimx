@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
+use App\Support\AdminSidebarRoleMap;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
@@ -53,7 +54,7 @@ class RoleController extends Controller
             'display_name' => ['required', 'string', 'max:191'],
             'description' => ['nullable', 'string', 'max:1000'],
             'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['integer', 'exists:permissions,id'],
+            'permissions.*' => ['numeric', 'exists:permissions,id'],
         ]);
 
         $role = Role::create([
@@ -63,7 +64,8 @@ class RoleController extends Controller
             'is_system' => false,
         ]);
 
-        $role->permissions()->sync($validated['permissions'] ?? []);
+        $permIds = array_map('intval', $validated['permissions'] ?? []);
+        $role->permissions()->sync($this->permissionIdsAlwaysIncludeDashboard($permIds));
 
         return redirect()
             ->route('admin.roles.index')
@@ -82,7 +84,20 @@ class RoleController extends Controller
             ->get()
             ->groupBy('group');
 
-        return view('admin.roles.show', compact('role', 'permissions'));
+        $adminSidebarBlocks = AdminSidebarRoleMap::blocksForView();
+        $sidebarMapPermissionIds = AdminSidebarRoleMap::permissionIdsInSidebarMap();
+        $otherPermissions = Permission::orderBy('group')
+            ->orderBy('display_name')
+            ->get()
+            ->filter(static fn (Permission $p) => ! in_array($p->id, $sidebarMapPermissionIds, true))
+            ->groupBy('group');
+
+        return view('admin.roles.show', compact(
+            'role',
+            'permissions',
+            'adminSidebarBlocks',
+            'otherPermissions',
+        ));
     }
 
     /**
@@ -116,7 +131,7 @@ class RoleController extends Controller
             'display_name' => ['required', 'string', 'max:191'],
             'description' => ['nullable', 'string', 'max:1000'],
             'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['integer', 'exists:permissions,id'],
+            'permissions.*' => ['numeric', 'exists:permissions,id'],
         ]);
 
         // Protect system roles from name change
@@ -130,7 +145,8 @@ class RoleController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        $role->permissions()->sync($validated['permissions'] ?? []);
+        $permIds = array_map('intval', $validated['permissions'] ?? []);
+        $role->permissions()->sync($this->permissionIdsAlwaysIncludeDashboard($permIds));
 
         return redirect()
             ->route('admin.roles.index')
@@ -163,13 +179,32 @@ class RoleController extends Controller
     {
         $validated = $request->validate([
             'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['integer', 'exists:permissions,id'],
+            'permissions.*' => ['numeric', 'exists:permissions,id'],
         ]);
 
-        $role->permissions()->sync($validated['permissions'] ?? []);
+        $ids = array_map('intval', $validated['permissions'] ?? []);
+        $role->permissions()->sync($this->permissionIdsAlwaysIncludeDashboard($ids));
 
         return redirect()
             ->route('admin.roles.show', $role)
             ->with('success', 'تم تحديث صلاحيات الدور "' . $role->display_name . '" بنجاح');
+    }
+
+    /**
+     * صلاحية لوحة التحكم (view.dashboard) تُربَط تلقائياً بكل دور؛ باقي الصلاحيات تُحدَّد يدوياً.
+     *
+     * @param  array<int, int|string>  $ids
+     * @return array<int, int>
+     */
+    private function permissionIdsAlwaysIncludeDashboard(array $ids): array
+    {
+        $dashboardId = Permission::where('name', 'view.dashboard')->value('id');
+        $ids = array_map('intval', array_filter($ids, static fn ($v) => $v !== null && $v !== ''));
+
+        if ($dashboardId) {
+            $ids[] = (int) $dashboardId;
+        }
+
+        return array_values(array_unique($ids));
     }
 }

@@ -51,8 +51,7 @@
                     <div>
                         <p class="text-sm text-gray-500">الحالة</p>
                         <p class="text-sm font-medium text-gray-900">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                                {{ $faq->is_active ? 'bg-green-100 text-green-800 ': ''bg-red-100 text-red-800 }}">']
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $faq->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                 {{ $faq->is_active ? 'نشط' : 'غير نشط' }}
                             </span>
                         </p>

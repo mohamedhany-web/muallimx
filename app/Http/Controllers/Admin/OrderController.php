@@ -28,11 +28,6 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        // التحقق من الصلاحيات (مدير عام أو من لديه صلاحية إدارة الطلبات)
-        if (!Auth::check() || !(Auth::user()->isSuperAdmin() || Auth::user()->can('manage.orders'))) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         $query = Order::with(['user', 'course.academicSubject', 'course.academicYear', 'learningPath', 'salesOwner']);
 
         // فلترة حسب مندوب المبيعات
@@ -106,11 +101,6 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !(Auth::user()->isSuperAdmin() || Auth::user()->can('manage.orders'))) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         $order->load([
             'user',
             'course.academicSubject',
@@ -143,10 +133,6 @@ class OrderController extends Controller
      */
     public function updateReceivingWallet(Request $request, Order $order)
     {
-        if (!Auth::check() || !(Auth::user()->isSuperAdmin() || Auth::user()->can('manage.orders'))) {
-            abort(403, 'غير مصرح لك بتعديل هذا الطلب');
-        }
-
         if ($order->status !== Order::STATUS_PENDING) {
             return back()->with('error', 'يمكن تعديل حساب الاستلام للطلبات قيد الانتظار فقط.');
         }
@@ -180,15 +166,6 @@ class OrderController extends Controller
         Log::info('Order approve: start', ['order_id' => $order->id, 'status' => $order->status, 'academic_year_id' => $order->academic_year_id, 'advanced_course_id' => $order->advanced_course_id]);
 
         try {
-            // التحقق من الصلاحيات
-            if (!Auth::check() || !(Auth::user()->isSuperAdmin() || Auth::user()->can('manage.orders'))) {
-                $msg = 'غير مصرح لك بالموافقة على الطلبات';
-                if ($isAjax) {
-                    return response()->json(['success' => false, 'error' => $msg], 403);
-                }
-                abort(403, $msg);
-            }
-
             // Rate Limiting - حماية من Brute Force
             $key = 'order_approve_' . Auth::id();
         $maxAttempts = 10;
@@ -685,15 +662,6 @@ class OrderController extends Controller
     {
         $isAjax = $request->wantsJson() || $request->ajax();
 
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !(Auth::user()->isSuperAdmin() || Auth::user()->can('manage.orders'))) {
-            $msg = 'غير مصرح لك برفض الطلبات';
-            if ($isAjax) {
-                return response()->json(['success' => false, 'error' => $msg], 403);
-            }
-            abort(403, $msg);
-        }
-
         // Rate Limiting - حماية من Brute Force
         $key = 'order_reject_' . Auth::id();
         $maxAttempts = 10;
@@ -876,10 +844,6 @@ class OrderController extends Controller
 
     public function assignSalesOwner(Request $request, Order $order)
     {
-        if (! Auth::check() || ! (Auth::user()->isSuperAdmin() || Auth::user()->can('manage.orders'))) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'sales_owner_id' => 'nullable|exists:users,id',
         ]);
@@ -898,10 +862,6 @@ class OrderController extends Controller
 
     public function storeSalesNote(Request $request, Order $order)
     {
-        if (! Auth::check() || ! (Auth::user()->isSuperAdmin() || Auth::user()->can('manage.orders'))) {
-            abort(403);
-        }
-
         $validated = $request->validate([
             'body' => 'required|string|max:5000',
         ]);

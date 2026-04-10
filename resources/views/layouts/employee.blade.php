@@ -21,8 +21,7 @@
     </script>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
+    @include('partials.favicon-links')
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -140,6 +139,11 @@
             background: #1e293b !important;
             border-color: #475569 !important;
         }
+        html.dark main .bg-gray-50,
+        html.dark main .bg-gray-100 { background-color: #0f172a !important; }
+        html.dark main .min-h-screen.bg-gray-50,
+        html.dark main .min-h-screen.bg-white { background-color: #0f172a !important; }
+        html.dark .focus-within\:bg-white:focus-within { background-color: #1e293b !important; }
         html.dark [class*="text-slate-8"], html.dark [class*="text-slate-9"], html.dark [class*="text-slate-7"],
         html.dark [class*="text-gray-8"], html.dark [class*="text-gray-9"], html.dark [class*="text-gray-7"] { color: #e2e8f0 !important; }
         html.dark [class*="text-slate-6"], html.dark [class*="text-slate-5"],

@@ -25,11 +25,6 @@ class NotificationController extends Controller
      */
     public function index(Request $request)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         $query = Notification::with(['user', 'sender'])
                             ->where('sender_id', Auth::id());
 
@@ -88,11 +83,6 @@ class NotificationController extends Controller
      */
     public function create()
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بإنشاء إشعارات');
-        }
-
         $notificationTypes = Notification::getTypes();
         $priorities = Notification::getPriorities();
         $targetTypes = Notification::getTargetTypes();
@@ -114,11 +104,6 @@ class NotificationController extends Controller
      */
     public function store(Request $request)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بإرسال إشعارات');
-        }
-
         // Rate Limiting - حماية من Brute Force
         $key = 'notification_send_' . Auth::id();
         $maxAttempts = 20;
@@ -444,11 +429,6 @@ class NotificationController extends Controller
      */
     public function destroy(Notification $notification)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بحذف الإشعارات');
-        }
-
         // التحقق من ملكية الإشعار
         if ($notification->sender_id !== Auth::id()) {
             abort(403, 'غير مصرح لك بحذف هذا الإشعار');
@@ -557,14 +537,6 @@ class NotificationController extends Controller
      */
     public function quickSend(Request $request)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح لك بإرسال إشعارات',
-            ], 403);
-        }
-
         // Rate Limiting - حماية من Brute Force
         $key = 'notification_quick_send_' . Auth::id();
         $maxAttempts = 30;
@@ -697,11 +669,6 @@ class NotificationController extends Controller
      */
     public function getTargetCount(Request $request)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            return response()->json(['count' => 0], 403);
-        }
-
         // Sanitization - تنقية البيانات
         $targetType = strip_tags(trim($request->input('target_type', '')));
         $targetId = filter_var($request->input('target_id'), FILTER_VALIDATE_INT) ?: null;
@@ -771,14 +738,6 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(Request $request)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح لك بتنفيذ هذا الإجراء',
-            ], 403);
-        }
-
         // Rate Limiting
         $key = 'notification_mark_read_' . Auth::id();
         $maxAttempts = 10;
@@ -834,14 +793,6 @@ class NotificationController extends Controller
      */
     public function cleanup(Request $request)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح لك بتنفيذ هذا الإجراء',
-            ], 403);
-        }
-
         // Rate Limiting
         $key = 'notification_cleanup_' . Auth::id();
         $maxAttempts = 5;
@@ -904,11 +855,6 @@ class NotificationController extends Controller
      */
     public function statistics()
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         $stats = [
             'overview' => [
                 'total_sent' => Notification::where('sender_id', Auth::id())->count(),

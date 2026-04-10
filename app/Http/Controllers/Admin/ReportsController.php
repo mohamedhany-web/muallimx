@@ -51,10 +51,6 @@ class ReportsController extends Controller
     public function index()
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             // إحصائيات سريعة
             $quickStats = [
@@ -170,10 +166,6 @@ class ReportsController extends Controller
     public function users(Request $request)
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             // Sanitization
             $period = strip_tags(trim($request->input('period', 'all')));
@@ -287,10 +279,6 @@ class ReportsController extends Controller
     public function courses(Request $request)
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             // Sanitization
             $period = strip_tags(trim($request->input('period', 'all')));
@@ -384,10 +372,6 @@ class ReportsController extends Controller
     public function financial(Request $request)
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             // Sanitization
             $period = strip_tags(trim($request->input('period', 'all')));
@@ -474,10 +458,6 @@ class ReportsController extends Controller
     public function academic(Request $request)
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             // Sanitization
             $period = strip_tags(trim($request->input('period', 'all')));
@@ -561,10 +541,6 @@ class ReportsController extends Controller
     public function activities(Request $request)
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             // Sanitization
             $period = strip_tags(trim($request->input('period', 'all')));
@@ -669,10 +645,6 @@ class ReportsController extends Controller
     public function comprehensive(Request $request)
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             // Sanitization
             $period = strip_tags(trim($request->input('period', 'month')));
@@ -749,10 +721,6 @@ class ReportsController extends Controller
     public function exportUsers(Request $request)
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بتصدير التقارير');
-        }
-
         // Rate Limiting
         $key = 'report_export_' . Auth::id();
         if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, 10)) {
@@ -873,10 +841,6 @@ class ReportsController extends Controller
     public function exportCourses(Request $request)
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بتصدير التقارير');
-        }
-
         // Rate Limiting
         $key = 'report_export_' . Auth::id();
         if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, 10)) {
@@ -967,10 +931,6 @@ class ReportsController extends Controller
     public function exportFinancial(Request $request)
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بتصدير التقارير');
-        }
-
         // Rate Limiting
         $key = 'report_export_' . Auth::id();
         if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, 10)) {
@@ -1152,10 +1112,6 @@ class ReportsController extends Controller
      */
     public function exportAcademic(Request $request)
     {
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بتصدير التقارير');
-        }
-
         $key = 'report_export_' . Auth::id();
         if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, 10)) {
             $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($key);
@@ -1243,10 +1199,6 @@ class ReportsController extends Controller
     public function exportComprehensive(Request $request)
     {
         // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بتصدير التقارير');
-        }
-
         // Rate Limiting
         $key = 'report_export_' . Auth::id();
         if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($key, 5)) {

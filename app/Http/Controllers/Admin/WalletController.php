@@ -25,11 +25,6 @@ class WalletController extends Controller
     public function index(Request $request)
     {
         try {
-            // التحقق من الصلاحيات
-            if (!\Illuminate\Support\Facades\Auth::check() || !\Illuminate\Support\Facades\Auth::user()->isSuperAdmin()) {
-                abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-            }
-
             $query = Wallet::with('user')
                 ->orderBy('created_at', 'desc');
 

@@ -21,11 +21,6 @@ class PerformanceController extends Controller
      */
     public function index()
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            abort(403, 'غير مصرح لك بالوصول لهذه الصفحة');
-        }
-
         try {
             // معلومات النظام
             $systemInfo = $this->getSystemInfo();
@@ -49,14 +44,6 @@ class PerformanceController extends Controller
      */
     public function clearCache(Request $request)
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح لك بهذا الإجراء'
-            ], 403);
-        }
-
         // Rate Limiting
         $key = 'clear_cache_' . Auth::id();
         if (RateLimiter::tooManyAttempts($key, 10)) {
@@ -131,14 +118,6 @@ class PerformanceController extends Controller
      */
     public function optimizeCache()
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح لك بهذا الإجراء'
-            ], 403);
-        }
-
         // Rate Limiting
         $key = 'optimize_cache_' . Auth::id();
         if (RateLimiter::tooManyAttempts($key, 5)) {
@@ -184,14 +163,6 @@ class PerformanceController extends Controller
      */
     public function clearTempFiles()
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح لك بهذا الإجراء'
-            ], 403);
-        }
-
         // Rate Limiting
         $key = 'clear_temp_' . Auth::id();
         if (RateLimiter::tooManyAttempts($key, 5)) {
@@ -243,14 +214,6 @@ class PerformanceController extends Controller
      */
     public function optimizeDatabase()
     {
-        // التحقق من الصلاحيات
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'غير مصرح لك بهذا الإجراء'
-            ], 403);
-        }
-
         // Rate Limiting
         $key = 'optimize_db_' . Auth::id();
         if (RateLimiter::tooManyAttempts($key, 3)) {

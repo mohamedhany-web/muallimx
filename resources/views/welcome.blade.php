@@ -41,9 +41,7 @@
     <meta name="twitter:description" content="{{ __('landing.meta.og_description') }}">
     <meta name="twitter:image"       content="{{ asset('images/og-image.jpg') }}">
     <meta name="twitter:image:alt"   content="{{ __('landing.meta.og_title') }}">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('logo-removebg-preview.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('logo-removebg-preview.png') }}">
+    @include('partials.favicon-links')
     @include('partials.seo-jsonld', ['jsonldType' => 'website'])
 
     <link rel="preconnect" href="https://fonts.googleapis.com">

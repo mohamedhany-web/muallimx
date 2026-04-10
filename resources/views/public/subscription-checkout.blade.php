@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>دفع اشتراك الباقة - {{ $plan['label'] ?? 'الباقة' }} - {{ config('app.name') }}</title>
     <meta name="theme-color" content="#283593">
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    @include('partials.favicon-links')
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>

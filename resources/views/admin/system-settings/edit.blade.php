@@ -14,8 +14,8 @@
             <div class="flex-1 min-w-0 space-y-3">
                 <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 leading-tight">مركز إعدادات المنصة</h2>
                 <p class="text-sm sm:text-[15px] text-slate-600 dark:text-slate-300 leading-7 max-w-3xl">
-                    من هنا تضبط ما يظهر للزوار في الفوتر (تواصل وسوشيال)، وشعار لوحة التحكم في الشريط الجانبي وأيقونة المتصفح.
-                    يمكن لاحقاً إضافة أقسام أخرى في هذه الصفحة (مثل بريد التنبيهات، نصوص قانونية، إلخ) دون تغيير عنوان واحد.
+                    من هنا تضبط ما يظهر للزوار في الفوتر (تواصل وسوشيال)، وشعار لوحة التحكم، و<strong class="text-slate-800 dark:text-slate-200">المصادقة الثنائية لحسابات الأدمن</strong> فقط.
+                    يمكن لاحقاً إضافة أقسام أخرى في هذه الصفحة دون تغيير عنوان واحد.
                 </p>
                 <ul class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 space-y-1.5 list-disc list-inside max-w-3xl">
                     <li><strong class="text-slate-700 dark:text-slate-300">الشعار:</strong> يُفضّل صورة مربعة أو شبه مربعة بخلفية شفافة أو فاتحة، بحد أقصى 2 ميغابايت.</li>
@@ -29,6 +29,12 @@
         <div class="flex items-center gap-3 px-5 py-3 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-sm font-semibold">
             <i class="fas fa-check-circle"></i>
             {{ session('success') }}
+        </div>
+    @endif
+    @if(session('info'))
+        <div class="flex items-center gap-3 px-5 py-3 rounded-2xl bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800 text-sky-800 dark:text-sky-200 text-sm font-semibold">
+            <i class="fas fa-info-circle"></i>
+            {{ session('info') }}
         </div>
     @endif
     @if($errors->any())
@@ -164,14 +170,7 @@
             </div>
         </div>
 
-        {{-- 3) قسم احتياطي للتوثيق المستقبلي --}}
-        <div class="rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-800/40 p-5 text-center">
-            <p class="text-sm text-slate-500 dark:text-slate-400">
-                <i class="fas fa-plus-circle text-slate-400 ml-1"></i>
-                يمكن إضافة أقسام جديدة هنا لاحقاً (إعدادات البريد، SEO، نصوص الصفحات الثابتة، …) مع الحفاظ على نفس عنوان الصفحة <code class="text-xs bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600">/admin/system-settings</code>.
-            </p>
-        </div>
-
+        {{-- أزرار الحفظ داخل نموذج الإعدادات فقط — لا يُسمح بتداخل &lt;form&gt; داخل &lt;form&gt; (كان يكسر زر تفعيل 2FA) --}}
         <div class="flex flex-wrap items-center gap-3 sticky bottom-4 z-10">
             <button type="submit" class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 text-white text-sm font-black shadow-lg shadow-sky-500/25 hover:from-sky-700 hover:to-blue-700 transition-colors">
                 <i class="fas fa-save"></i>
@@ -183,5 +182,77 @@
             </a>
         </div>
     </form>
+
+    {{-- 3) الأمان — خارج النموذج الرئيسي حتى يعمل POST لتفعيل/تعطيل 2FA --}}
+    <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-600 bg-slate-50/80 dark:bg-slate-700/30 flex flex-wrap items-center gap-3">
+            <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 text-sm font-black">3</span>
+            <div class="flex-1 min-w-0">
+                <h3 class="text-base font-black text-slate-900 dark:text-slate-100">المصادقة الثنائية للمنصة</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">عند التفعيل، يُطلب من حسابات <strong>المدير العام والأدمن</strong> فقط إدخال رمز يُرسل إلى البريد بعد كلمة المرور عند تسجيل الدخول. لا يؤثر على المدربين ولا الطلاب ولا الموظفين.</p>
+            </div>
+            @if($adminTwoFactorRequired)
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-700">
+                    <i class="fas fa-shield-alt"></i> مفعّل
+                </span>
+            @else
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                    غير مفعّل
+                </span>
+            @endif
+        </div>
+        <div class="p-6 space-y-5">
+            @if($errors->has('two_factor'))
+                <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 text-sm font-medium">
+                    {{ $errors->first('two_factor') }}
+                </div>
+            @endif
+            <div class="rounded-xl bg-amber-50/80 dark:bg-amber-900/15 border border-amber-100 dark:border-amber-800/50 px-4 py-3 text-sm text-amber-900 dark:text-amber-100 leading-7">
+                <i class="fas fa-exclamation-triangle ml-1"></i>
+                تأكد أن إعدادات البريد في السيرفر تعمل قبل التفعيل. يمكنك أيضاً ضبط القيمة الافتراضية من ملف البيئة <code class="text-[11px] bg-white/80 dark:bg-slate-800 px-1 rounded" dir="ltr">ADMIN_2FA_REQUIRED</code> عند أول تشغيل قبل حفظ أي شيء من هنا.
+            </div>
+            <div class="rounded-xl bg-sky-50/80 dark:bg-sky-900/15 border border-sky-100 dark:border-sky-800/50 px-4 py-3 text-sm text-sky-900 dark:text-sky-100 leading-7">
+                <i class="fas fa-info-circle ml-1"></i>
+                لا يُفعّل الإلزام على الخادم إلا بعد الضغط على الزر أدناه، ثم إدخال الرمز في صفحة التأكيد. إن ظهر «مفعّل» هنا فقط بعد ذلك، سيُطلب رمز البريد عند الدخول.
+            </div>
+            @if(!$admin2faAppliesToCurrentUserRole)
+            <div class="rounded-xl bg-violet-50/90 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 px-4 py-3 text-sm text-violet-900 dark:text-violet-100 leading-7">
+                <i class="fas fa-user-shield ml-1"></i>
+                دور حسابك الحالي (<strong class="font-black">{{ auth()->user()->role }}</strong>) ليس من ضمن «المدير العام والأدمن» في النظام؛ حتى مع تفعيل الإلزام لن يُطلب منك رمز بريد عند تسجيل الدخول. الإلزام ينطبق فقط على المستخدمين ذوي الدور <code class="text-[11px] bg-white/80 dark:bg-slate-800 px-1 rounded" dir="ltr">super_admin</code> أو <code class="text-[11px] bg-white/80 dark:bg-slate-800 px-1 rounded" dir="ltr">admin</code>.
+            </div>
+            @endif
+            @if(!$adminTwoFactorRequired)
+                <p class="text-sm text-slate-600 dark:text-slate-300 leading-7">
+                    اضغط الزر أدناه لإرسال رمز تحقق إلى بريدك، ثم ستُفتح صفحة لإدخال الرمز وتأكيد التفعيل.
+                </p>
+                <form method="post" action="{{ route('admin.system-settings.two-factor.enable-request') }}" class="inline">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-black shadow-lg shadow-violet-500/25 hover:from-violet-700 hover:to-indigo-700 transition-colors">
+                        <i class="fas fa-paper-plane"></i>
+                        تفعيل إلزام المصادقة الثنائية (إرسال الرمز بالبريد)
+                    </button>
+                </form>
+            @else
+                <p class="text-sm text-slate-600 dark:text-slate-300 leading-7">
+                    الإلزام مفعّل حالياً. لتعطيله على مستوى المنصة، أدخل كلمة مرور حسابك للتأكيد.
+                </p>
+                <form method="post" action="{{ route('admin.system-settings.two-factor.disable') }}" class="max-w-md space-y-4">
+                    @csrf
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">كلمة المرور</label>
+                        <input type="password" name="password" required autocomplete="current-password"
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm">
+                        @error('password')
+                            <p class="text-xs text-rose-600 dark:text-rose-400 mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm font-black hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
+                        <i class="fas fa-power-off"></i>
+                        تعطيل إلزام المصادقة الثنائية
+                    </button>
+                </form>
+            @endif
+        </div>
+    </div>
 </div>
 @endsection
