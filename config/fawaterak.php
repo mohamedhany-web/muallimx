@@ -3,6 +3,26 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | وضع التكامل: iframe (الإضافة + HMAC) أو api (Bearer + REST كما في وثائق Gateway)
+    |--------------------------------------------------------------------------
+    */
+    'integration' => env('FAWATERAK_INTEGRATION', 'iframe'), // iframe | api
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fawaterak API (Gateway) — عند FAWATERAK_INTEGRATION=api
+    |--------------------------------------------------------------------------
+    | نفس رمز Bearer من لوحة فواتيرك (مثال الوثائق: Authorization: Bearer ...).
+    | يمكن ضبط FAWATERAK_API_BASE_URL يدوياً؛ وإلا يُبنى من FAWATERAK_ENV (staging / app).
+    */
+    'api' => [
+        'token' => env('FAWATERAK_API_TOKEN', ''),
+        'base_url' => env('FAWATERAK_API_BASE_URL', ''),
+        'timeout' => (int) env('FAWATERAK_API_TIMEOUT', 45),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Fawaterak IFrame
     |--------------------------------------------------------------------------
     | مفاتيح من لوحة فواتيرك: Integrations → Fawaterak (API Key = Vendor، Provider Key).

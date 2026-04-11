@@ -16,6 +16,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>إتمام الطلب - {{ $itemTitle }} - {{ config('app.name') }}</title>
     <meta name="theme-color" content="#283593">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @include('partials.favicon-links')
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -287,6 +288,7 @@
                             @php
                                 $fawaterakActive = !empty($fawaterakUseGateway) && isset($course);
                                 $fawaterakMis = !empty($fawaterakMisconfigured) && isset($course);
+                                $fawaterakIntegration = $fawaterakIntegration ?? 'iframe';
                             @endphp
 
                             @if($fawaterakMis)
@@ -296,11 +298,21 @@
                                         إعدادات الدفع غير مكتملة
                                     </p>
                                     <p class="text-sm text-rose-800 leading-7">
-                                        تم تفعيل بوابة فواتيرك من إعدادات النظام، لكن مفاتيح API غير مضبوطة في ملف البيئة على الخادم. يرجى إضافة
-                                        <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">FAWATERAK_VENDOR_KEY</code>
-                                        و
-                                        <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">FAWATERAK_PROVIDER_KEY</code>
-                                        ثم تشغيل
+                                        تم تفعيل بوابة فواتيرك من إعدادات النظام، لكن إعدادات الربط غير مكتملة على الخادم.
+                                        @if($fawaterakIntegration === 'api')
+                                            أضف
+                                            <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">FAWATERAK_API_TOKEN</code>
+                                            (Bearer من لوحة فواتيرك) واختيارياً
+                                            <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">FAWATERAK_API_BASE_URL</code>
+                                            إن اختلف عن العنوان الافتراضي للبيئة.
+                                        @else
+                                            أضف
+                                            <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">FAWATERAK_VENDOR_KEY</code>
+                                            و
+                                            <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">FAWATERAK_PROVIDER_KEY</code>
+                                            لوضع الإطار (IFrame).
+                                        @endif
+                                        ثم شغّل
                                         <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">php artisan config:clear</code>.
                                     </p>
                                 </div>
@@ -308,6 +320,36 @@
                                     <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }} text-sm"></i>
                                     رجوع
                                 </a>
+                            @elseif($fawaterakActive && $fawaterakIntegration === 'api')
+                                <div class="mb-6 rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white px-5 py-4 shadow-sm">
+                                    <p class="text-sm font-bold text-sky-900 mb-1 flex items-center gap-2">
+                                        <i class="fas fa-lock text-sky-600"></i>
+                                        الدفع الإلكتروني عبر فواتيرك (API)
+                                    </p>
+                                    <p class="text-sm text-sky-800/90 leading-relaxed">
+                                        اختر وسيلة الدفع من القائمة ثم تابع؛ قد يُطلب التحويل لصفحة فواتيرك أو عرض رمز (فوري / محفظة) حسب الوسيلة.
+                                    </p>
+                                </div>
+                                <div id="fawaterk-api-error" class="hidden mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-red-800 text-sm font-medium"></div>
+                                <div id="fawaterk-api-loading" class="mb-6 flex items-center gap-3 text-slate-600 text-sm">
+                                    <i class="fas fa-spinner fa-spin text-mx-navy"></i>
+                                    جاري تحميل وسائل الدفع...
+                                </div>
+                                <div id="fawaterk-api-methods" class="hidden mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                                <div id="fawaterk-api-wallet-wrap" class="hidden mb-6">
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">رقم المحفظة (ميزا / محافظ — عند الحاجة)</label>
+                                    <input type="text" id="fawaterk-api-wallet" dir="ltr" class="input-checkout" placeholder="01xxxxxxxxx" autocomplete="tel">
+                                </div>
+                                <div id="fawaterk-api-result" class="hidden mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-800 space-y-2"></div>
+                                <button type="button" id="fawaterk-api-pay-btn" disabled
+                                        class="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-brand-600/25 disabled:opacity-50 disabled:cursor-not-allowed mb-6">
+                                    <i class="fas fa-arrow-left text-sm"></i>
+                                    متابعة الدفع
+                                </button>
+                                <p class="text-xs text-slate-500 text-center mb-6 flex items-center justify-center gap-2">
+                                    <i class="fas fa-shield-halved text-mx-navy"></i>
+                                    الاتصال بفواتيرك من خادم المنصة — لا حاجة لتحميل سكربت خارجي على هذه الصفحة
+                                </p>
                             @elseif($fawaterakActive)
                                 <div class="mb-6 rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white px-5 py-4 shadow-sm">
                                     <p class="text-sm font-bold text-sky-900 mb-1 flex items-center gap-2">
@@ -426,11 +468,12 @@
         else{scrollProgress();initReveal();}
     })();
     </script>
-    @if(!empty($fawaterakUseGateway) && isset($course) && empty($fawaterakMisconfigured))
+    @if(!empty($fawaterakUseGateway) && isset($course) && empty($fawaterakMisconfigured) && ($fawaterakIntegration ?? 'iframe') === 'iframe')
     <script>
     (function(){
         var prepareUrl = @json(route('public.course.checkout.fawaterak.prepare', $course->id));
-        var token = @json(csrf_token());
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        var token = (meta && meta.getAttribute('content')) || @json(csrf_token());
         var errEl = document.getElementById('fawaterk-checkout-error');
         function showErr(msg) {
             if (!errEl) { alert(msg); return; }
@@ -447,6 +490,9 @@
                 document.head.appendChild(s);
             });
         }
+        function parseJsonSafe(text) {
+            try { return JSON.parse(text); } catch (e) { return null; }
+        }
         function run() {
             fetch(prepareUrl, {
                 method: 'POST',
@@ -457,25 +503,231 @@
                 },
                 credentials: 'same-origin'
             })
-            .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, status: r.status, data: data }; }); })
-            .then(function(res) {
-                if (!res.ok) {
-                    showErr(res.data.message || 'تعذّر تجهيز الدفع.');
-                    return;
-                }
-                if (!res.data.pluginScriptUrl || !res.data.pluginConfig) {
-                    showErr('استجابة غير صالحة من الخادم.');
-                    return;
-                }
-                return loadScript(res.data.pluginScriptUrl).then(function() {
-                    if (typeof fawaterkCheckout !== 'function') {
-                        showErr('تعذّر تحميل واجهة فواتيرك.');
-                        return;
-                    }
-                    fawaterkCheckout(res.data.pluginConfig);
+            .then(function(r) {
+                return r.text().then(function(text) {
+                    var data = parseJsonSafe(text);
+                    return { ok: r.ok, status: r.status, data: data, raw: text };
                 });
             })
-            .catch(function() { showErr('تعذّر الاتصال بالخادم.'); });
+            .then(function(res) {
+                if (res.status === 401) {
+                    showErr('انتهت الجلسة أو لم يُعاد تسجيل الدخول. حدّث الصفحة وسجّل الدخول ثم أعد المحاولة.');
+                    return;
+                }
+                if (res.status === 419) {
+                    showErr('انتهت صلاحية الجلسة الأمنية (CSRF). حدّث الصفحة بالكامل (F5) ثم أعد المحاولة.');
+                    return;
+                }
+                if (!res.data) {
+                    var rawLower = (res.raw || '').toLowerCase();
+                    if (rawLower.indexOf('csrf') !== -1 || rawLower.indexOf('login') !== -1 || rawLower.indexOf('تسجيل الدخول') !== -1 || rawLower.indexOf('<!doctype') !== -1) {
+                        showErr('انتهت جلسة تسجيل الدخول أو أُعيد توجيهك لصفحة أخرى. حدّث الصفحة (F5) وسجّل الدخول من جديد ثم افتح صفحة الدفع.');
+                        return;
+                    }
+                    showErr('استجابة غير متوقعة من الخادم (رمز HTTP ' + res.status + '). راجع سجلات الخادم (laravel.log) أو إعدادات الجلسة على الإنتاج.');
+                    return;
+                }
+                if (!res.ok) {
+                    showErr(res.data.message || ('تعذّر تجهيز الدفع (رمز ' + res.status + ').'));
+                    return;
+                }
+                if ((res.data.mode && res.data.mode !== 'iframe') || !res.data.pluginScriptUrl || !res.data.pluginConfig) {
+                    showErr('استجابة غير صالحة من الخادم (تأكد أن FAWATERAK_INTEGRATION=iframe).');
+                    return;
+                }
+                return loadScript(res.data.pluginScriptUrl)
+                    .then(function() {
+                        if (typeof fawaterkCheckout !== 'function') {
+                            showErr('تعذّر تحميل واجهة فواتيرك: السكربت وصل لكن الدالة fawaterkCheckout غير معرّفة. تحقق من سياسة أمان المحتوى (CSP) على الخادم لنطاقات *.fawaterk.com.');
+                            return;
+                        }
+                        fawaterkCheckout(res.data.pluginConfig);
+                    })
+                    .catch(function() {
+                        showErr('تعذّر تحميل سكربت فواتيرك من الخادم الخارجي. غالباً سياسة CSP على الموقع تحجب script-src أو frame-src لنطاق app.fawaterk.com — تم توسيع القائمة في التطبيق؛ نفّذ php artisan config:clear بعد النشر. أو راجع وحدة تحكم المتصفح (F12 → Console) لرسالة «violates Content Security Policy».');
+                    });
+            })
+            .catch(function() {
+                showErr('تعذّر إكمال الطلب مع الخادم (انقطاع الشبكة أو خطأ غير متوقع). حدّث الصفحة (F5) أو راجع تبويب Network في أدوات المطوّر.');
+            });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+        else run();
+    })();
+    </script>
+    @endif
+
+    @if(!empty($fawaterakUseGateway) && isset($course) && empty($fawaterakMisconfigured) && ($fawaterakIntegration ?? 'iframe') === 'api')
+    <script>
+    (function(){
+        var prepareUrl = @json(route('public.course.checkout.fawaterak.prepare', $course->id));
+        var methodsUrl = @json(route('public.course.checkout.fawaterak.methods', $course->id));
+        var payUrl = @json(route('public.course.checkout.fawaterak.pay', $course->id));
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        var token = (meta && meta.getAttribute('content')) || @json(csrf_token());
+        var errEl = document.getElementById('fawaterk-api-error');
+        var loadEl = document.getElementById('fawaterk-api-loading');
+        var methodsEl = document.getElementById('fawaterk-api-methods');
+        var payBtn = document.getElementById('fawaterk-api-pay-btn');
+        var resultEl = document.getElementById('fawaterk-api-result');
+        var walletWrap = document.getElementById('fawaterk-api-wallet-wrap');
+        var walletInput = document.getElementById('fawaterk-api-wallet');
+        var selectedId = null;
+
+        function showErr(msg) {
+            if (!errEl) { alert(msg); return; }
+            errEl.textContent = msg;
+            errEl.classList.remove('hidden');
+        }
+        function parseJsonSafe(text) {
+            try { return JSON.parse(text); } catch (e) { return null; }
+        }
+        function renderMethods(list) {
+            if (!methodsEl) return;
+            methodsEl.innerHTML = '';
+            list.forEach(function(m) {
+                var id = m.paymentId;
+                var name = (document.documentElement.getAttribute('dir') === 'rtl' && m.name_ar) ? m.name_ar : (m.name_en || m.name_ar || ('#' + id));
+                var card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-200 bg-white text-start hover:border-mx-navy/40 transition-colors ring-1 ring-slate-100';
+                card.setAttribute('data-pid', String(id));
+                if (m.logo && typeof m.logo === 'string') {
+                    var img = document.createElement('img');
+                    img.src = m.logo;
+                    img.alt = '';
+                    img.className = 'h-10 w-auto object-contain shrink-0';
+                    img.loading = 'lazy';
+                    card.appendChild(img);
+                } else {
+                    var ph = document.createElement('span');
+                    ph.className = 'w-10 h-10 rounded-xl bg-mx-soft flex items-center justify-center text-mx-navy shrink-0';
+                    ph.innerHTML = '<i class="fas fa-credit-card"></i>';
+                    card.appendChild(ph);
+                }
+                var title = document.createElement('span');
+                title.className = 'font-bold text-navy-950 flex-1 min-w-0';
+                title.textContent = name;
+                card.appendChild(title);
+                card.addEventListener('click', function() {
+                    methodsEl.querySelectorAll('button').forEach(function(b) {
+                        b.classList.remove('border-mx-navy', 'ring-2', 'ring-mx-navy/25');
+                        b.classList.add('border-slate-200');
+                    });
+                    card.classList.remove('border-slate-200');
+                    card.classList.add('border-mx-navy', 'ring-2', 'ring-mx-navy/25');
+                    selectedId = id;
+                    if (payBtn) payBtn.disabled = false;
+                });
+                methodsEl.appendChild(card);
+            });
+            methodsEl.classList.remove('hidden');
+            if (walletWrap) walletWrap.classList.remove('hidden');
+        }
+        function showPaymentResult(pd) {
+            if (!resultEl || !pd) return;
+            resultEl.classList.remove('hidden');
+            var html = '';
+            if (pd.redirectTo) {
+                window.location.href = pd.redirectTo;
+                return;
+            }
+            if (pd.fawryCode) html += '<p><strong>رمز فوري:</strong> <span dir="ltr">' + pd.fawryCode + '</span></p>';
+            if (pd.expireDate) html += '<p class="text-slate-600 text-xs">ينتهي: ' + pd.expireDate + '</p>';
+            if (pd.meezaReference != null) html += '<p><strong>مرجع ميزا:</strong> ' + pd.meezaReference + '</p>';
+            if (pd.meezaQrCode) html += '<p class="break-all text-xs" dir="ltr">' + pd.meezaQrCode + '</p>';
+            if (pd.amanCode) html += '<p><strong>أمان:</strong> ' + pd.amanCode + '</p>';
+            if (pd.masaryCode) html += '<p><strong>مصاري:</strong> ' + pd.masaryCode + '</p>';
+            if (!html) html = '<pre class="text-xs whitespace-pre-wrap break-all" dir="ltr">' + JSON.stringify(pd, null, 2) + '</pre>';
+            resultEl.innerHTML = '<p class="font-bold text-mx-indigo mb-2">أكمل الدفع حسب التعليمات:</p>' + html +
+                '<p class="text-xs text-slate-500 mt-3">بعد الدفع قد تُعاد إلى الموقع تلقائياً؛ إن لم يحدث ذلك حدّث صفحة الطلبات.</p>';
+        }
+        function run() {
+            fetch(prepareUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(function(r) { return r.text().then(function(t) { return { ok: r.ok, status: r.status, data: parseJsonSafe(t), raw: t }; }); })
+            .then(function(res) {
+                if (res.status === 401) { showErr('انتهت الجلسة. سجّل الدخول ثم أعد فتح الصفحة.'); return; }
+                if (res.status === 419) { showErr('انتهت صلاحية الجلسة (CSRF). حدّث الصفحة (F5).'); return; }
+                if (!res.data || !res.ok) {
+                    showErr((res.data && res.data.message) || 'تعذّر تجهيز الطلب.');
+                    return;
+                }
+                if (res.data.mode !== 'api') {
+                    showErr('الخادم ليس في وضع API. ضبط FAWATERAK_INTEGRATION=api في .env');
+                    return;
+                }
+                return fetch(methodsUrl, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                });
+            })
+            .then(function(r) {
+                if (!r) return;
+                return r.text().then(function(t) { return { ok: r.ok, status: r.status, data: parseJsonSafe(t), raw: t }; });
+            })
+            .then(function(res) {
+                if (!res) return;
+                if (loadEl) loadEl.classList.add('hidden');
+                if (!res.ok || !res.data || res.data.status !== 'success' || !Array.isArray(res.data.data)) {
+                    showErr((res.data && res.data.message) || 'تعذّر جلب وسائل الدفع.');
+                    return;
+                }
+                renderMethods(res.data.data);
+            })
+            .catch(function() {
+                if (loadEl) loadEl.classList.add('hidden');
+                showErr('تعذّر الاتصال بالخادم.');
+            });
+
+            if (payBtn) {
+                payBtn.addEventListener('click', function() {
+                    if (!selectedId) return;
+                    errEl && errEl.classList.add('hidden');
+                    payBtn.disabled = true;
+                    var body = { payment_method_id: selectedId };
+                    var w = walletInput && walletInput.value ? walletInput.value.trim() : '';
+                    if (w) body.mobile_wallet_number = w;
+                    fetch(payUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': token,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(body)
+                    })
+                    .then(function(r) { return r.text().then(function(t) { return { ok: r.ok, status: r.status, data: parseJsonSafe(t), raw: t }; }); })
+                    .then(function(res) {
+                        payBtn.disabled = false;
+                        if (res.status === 401 || res.status === 419) {
+                            showErr('انتهت الجلسة. حدّث الصفحة وسجّل الدخول.');
+                            return;
+                        }
+                        if (!res.data) { showErr('استجابة غير متوقعة من الخادم.'); return; }
+                        if (!res.ok) {
+                            showErr(res.data.message || 'تعذّر بدء الدفع.');
+                            return;
+                        }
+                        var pd = res.data.data && res.data.data.payment_data;
+                        showPaymentResult(pd);
+                    })
+                    .catch(function() {
+                        payBtn.disabled = false;
+                        showErr('تعذّر إكمال الطلب.');
+                    });
+                });
+            }
         }
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
         else run();

@@ -423,6 +423,14 @@ Route::post('/course/{courseId}/checkout/fawaterak/prepare', [\App\Http\Controll
     ->middleware('auth')
     ->name('public.course.checkout.fawaterak.prepare');
 
+Route::get('/course/{courseId}/checkout/fawaterak/methods', [\App\Http\Controllers\Public\CheckoutController::class, 'fawaterakPaymentMethods'])
+    ->middleware('auth')
+    ->name('public.course.checkout.fawaterak.methods');
+
+Route::post('/course/{courseId}/checkout/fawaterak/pay', [\App\Http\Controllers\Public\CheckoutController::class, 'fawaterakPay'])
+    ->middleware('auth')
+    ->name('public.course.checkout.fawaterak.pay');
+
 // تسجيل مجاني للكورسات المجانية
 Route::post('/course/{courseId}/enroll-free', [\App\Http\Controllers\Public\CheckoutController::class, 'enrollFree'])
     ->middleware('auth')

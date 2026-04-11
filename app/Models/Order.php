@@ -22,6 +22,7 @@ class Order extends Model
         'payment_proof',
         'invoice_id',
         'payment_id',
+        'fawaterak_invoice_id',
         'status',
         'notes',
         'approved_at',

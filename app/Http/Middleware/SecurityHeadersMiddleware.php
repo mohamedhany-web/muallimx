@@ -27,10 +27,15 @@ class SecurityHeadersMiddleware
             $response->headers->set('Permissions-Policy', 'geolocation=()');
 
             // Content Security Policy - محسّن للواجهة الأمامية
-            // تعطيل CSP مؤقتاً في بيئة التطوير لتجنب مشاكل الواجهة
-            if (!config('app.debug') || !env('DISABLE_CSP', true)) {
+            // تعطيل CSP عند APP_DEBUG=true و DISABLE_CSP=true (الافتراضي) لتسهيل التطوير المحلي
+            $disableCsp = filter_var(env('DISABLE_CSP', true), FILTER_VALIDATE_BOOLEAN);
+            if (! config('app.debug') || ! $disableCsp) {
                 $jitsiDomain = LiveSetting::getJitsiDomain();
-                $jitsiOrigin = $jitsiDomain !== '' ? ' https://' . $jitsiDomain : '';
+                $jitsiOrigin = $jitsiDomain !== '' ? ' https://'.$jitsiDomain : '';
+
+                // فواتيرك: سكربت الإضافة، iframes، وربما تحويل النماذج — نطاقات صريحة + *.fawaterk.com
+                // (بعض عمليات الدفع تستخدم نطاقات فرعية مثل link. / pay. غير مذكورة في الوثائق القصيرة)
+                $fawaterkCsp = ' https://app.fawaterk.com https://staging.fawaterk.com https://*.fawaterk.com https://fawaterk.com https://www.fawaterk.com https://*.fawaterak.xyz';
 
                 $csp = "default-src 'self'; " .
                     "script-src 'self' 'unsafe-inline' 'unsafe-eval' " .
@@ -38,8 +43,9 @@ class SecurityHeadersMiddleware
                     "https://cdn.jsdelivr.net " .
                     "https://cdnjs.cloudflare.com " .
                     "https://unpkg.com " .
-                    "https://fonts.googleapis.com" .
-                    $jitsiOrigin . "; " .
+                    "https://fonts.googleapis.com".
+                    $jitsiOrigin.
+                    $fawaterkCsp.'; '.
                     "style-src 'self' 'unsafe-inline' " .
                     "https://fonts.googleapis.com " .
                     "https://cdnjs.cloudflare.com " .
@@ -53,11 +59,13 @@ class SecurityHeadersMiddleware
                     "connect-src 'self' https: ws: wss:; " .
                     "frame-src 'self' " .
                     "https://iframe.mediadelivery.net " .
-                    "https://player.mediadelivery.net " .
-                    $jitsiOrigin . "; " .
+                    "https://player.mediadelivery.net ".
+                    $jitsiOrigin.
+                    $fawaterkCsp.'; '.
                     "object-src 'none'; " .
                     "base-uri 'self'; " .
-                    "form-action 'self'; " .
+                    "form-action 'self'".
+                    $fawaterkCsp.'; '.
                     "worker-src 'self' blob:; " .
                     "manifest-src 'self';";
 
