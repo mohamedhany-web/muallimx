@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
-use App\Models\AdvancedCourse;
 use App\Models\AcademicYear;
-use App\Models\StudentCourseEnrollment;
-use App\Models\LearningPathEnrollment;
-use App\Services\InstructorCoursePercentageService;
+use App\Models\AdvancedCourse;
 use App\Models\Invoice;
+use App\Models\LearningPathEnrollment;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\StudentCourseEnrollment;
 use App\Models\Transaction;
 use App\Services\AdminPanelBranding;
 use App\Services\FawaterakApiService;
 use App\Services\FawaterakService;
+use App\Services\InstructorCoursePercentageService;
 use App\Services\KashierService;
 use App\Services\PaymentGatewaySettings;
 use Illuminate\Http\JsonResponse;
@@ -34,7 +34,7 @@ class CheckoutController extends Controller
     public function show($courseId)
     {
         // التحقق من تسجيل الدخول - سيتم حفظ URL الحالي تلقائياً
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->guest(route('login'))->with('info', 'يرجى تسجيل الدخول أولاً لإتمام عملية الشراء');
         }
 
@@ -73,9 +73,9 @@ class CheckoutController extends Controller
         $wallets = \App\Models\Wallet::where('is_active', true)
             ->whereNotNull('type')
             ->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer'])
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNotNull('account_number')
-                      ->orWhereNotNull('name');
+                    ->orWhereNotNull('name');
             })
             ->orderBy('type')
             ->orderBy('name')
@@ -126,9 +126,10 @@ class CheckoutController extends Controller
     private function getKashierCallbackUrl(): string
     {
         $configured = config('kashier.merchant_redirect_url');
-        if (!empty($configured)) {
+        if (! empty($configured)) {
             return rtrim($configured, '/');
         }
+
         return url()->route('public.checkout.kashier.callback');
     }
 
@@ -143,46 +144,51 @@ class CheckoutController extends Controller
         $kashier = app(KashierService::class);
         $query = $request->query();
 
-        if (!$kashier->validateCallback($query)) {
+        if (! $kashier->validateCallback($query)) {
             Log::warning('Kashier callback: invalid signature', ['query_keys' => array_keys($query)]);
+
             return redirect()->route('public.courses')->with('error', 'فشل التحقق من الدفع. يرجى التواصل مع الدعم.');
         }
 
         $merchantOrderId = $query['merchantOrderId'] ?? null;
-        if (!$merchantOrderId || !ctype_digit((string) $merchantOrderId)) {
+        if (! $merchantOrderId || ! ctype_digit((string) $merchantOrderId)) {
             Log::warning('Kashier callback: invalid merchantOrderId', ['merchantOrderId' => $merchantOrderId]);
+
             return redirect()->route('public.courses')->with('error', 'بيانات الطلب غير صحيحة.');
         }
 
         $order = Order::with(['course', 'learningPath'])->find($merchantOrderId);
-        if (!$order || $order->status !== Order::STATUS_PENDING) {
+        if (! $order || $order->status !== Order::STATUS_PENDING) {
             Log::warning('Kashier callback: order not found or not pending', ['order_id' => $merchantOrderId]);
+
             return redirect()->route('public.courses')->with('error', 'الطلب غير موجود أو تم معالجته مسبقاً.');
         }
 
-        if (!$kashier->isPaymentSuccess($query)) {
+        if (! $kashier->isPaymentSuccess($query)) {
             if ($order->academic_year_id) {
                 $slug = Str::slug($order->learningPath->name ?? '');
+
                 return redirect()->route('public.learning-path.show', $slug)
                     ->with('error', 'لم يتم إتمام الدفع. يمكنك المحاولة مرة أخرى.');
             }
+
             return redirect()->route('public.course.show', $order->advanced_course_id)
                 ->with('error', 'لم يتم إتمام الدفع. يمكنك المحاولة مرة أخرى.');
         }
 
         DB::beginTransaction();
         try {
-            $isLearningPath = !empty($order->academic_year_id);
+            $isLearningPath = ! empty($order->academic_year_id);
             $orderTitle = $isLearningPath
                 ? ($order->learningPath->name ?? 'مسار تعليمي')
                 : ($order->course->title ?? 'كورس');
 
-            $invoiceNumber = 'INV-' . str_pad(Invoice::count() + 1, 8, '0', STR_PAD_LEFT);
+            $invoiceNumber = 'INV-'.str_pad(Invoice::count() + 1, 8, '0', STR_PAD_LEFT);
             $invoice = Invoice::create([
                 'invoice_number' => $invoiceNumber,
                 'user_id' => $order->user_id,
                 'type' => $isLearningPath ? 'learning_path' : 'course',
-                'description' => $isLearningPath ? 'تسجيل في المسار: ' . $orderTitle : 'تسجيل في الكورس: ' . $orderTitle,
+                'description' => $isLearningPath ? 'تسجيل في المسار: '.$orderTitle : 'تسجيل في الكورس: '.$orderTitle,
                 'subtotal' => $order->amount,
                 'tax_amount' => 0,
                 'discount_amount' => 0,
@@ -190,10 +196,10 @@ class CheckoutController extends Controller
                 'status' => 'paid',
                 'due_date' => now(),
                 'paid_at' => now(),
-                'notes' => 'دفع عبر كاشير - طلب #' . $order->id,
+                'notes' => 'دفع عبر كاشير - طلب #'.$order->id,
                 'items' => [
                     [
-                        'description' => $isLearningPath ? 'المسار: ' . $orderTitle : 'الكورس: ' . $orderTitle,
+                        'description' => $isLearningPath ? 'المسار: '.$orderTitle : 'الكورس: '.$orderTitle,
                         'quantity' => 1,
                         'price' => $order->amount,
                         'total' => $order->amount,
@@ -201,7 +207,7 @@ class CheckoutController extends Controller
                 ],
             ]);
 
-            $paymentNumber = 'PAY-' . str_pad(Payment::count() + 1, 8, '0', STR_PAD_LEFT);
+            $paymentNumber = 'PAY-'.str_pad(Payment::count() + 1, 8, '0', STR_PAD_LEFT);
             $payment = Payment::create([
                 'payment_number' => $paymentNumber,
                 'invoice_id' => $invoice->id,
@@ -214,10 +220,10 @@ class CheckoutController extends Controller
                 'transaction_id' => $query['transactionId'] ?? null,
                 'gateway_response' => $query,
                 'paid_at' => now(),
-                'notes' => 'دفع عبر كاشير - طلب #' . $order->id,
+                'notes' => 'دفع عبر كاشير - طلب #'.$order->id,
             ]);
 
-            $transactionNumber = 'TXN-' . str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT);
+            $transactionNumber = 'TXN-'.str_pad(Transaction::count() + 1, 8, '0', STR_PAD_LEFT);
             Transaction::create([
                 'transaction_number' => $transactionNumber,
                 'user_id' => $order->user_id,
@@ -229,7 +235,7 @@ class CheckoutController extends Controller
                 'category' => 'course_payment',
                 'amount' => $order->amount,
                 'currency' => 'EGP',
-                'description' => ($isLearningPath ? 'دفع مسار: ' : 'دفع كورس: ') . $orderTitle . ' - طلب #' . $order->id,
+                'description' => ($isLearningPath ? 'دفع مسار: ' : 'دفع كورس: ').$orderTitle.' - طلب #'.$order->id,
                 'status' => 'completed',
                 'metadata' => [
                     'order_id' => $order->id,
@@ -252,7 +258,7 @@ class CheckoutController extends Controller
                 $existingPath = LearningPathEnrollment::where('user_id', $order->user_id)
                     ->where('academic_year_id', $order->academic_year_id)
                     ->first();
-                if (!$existingPath) {
+                if (! $existingPath) {
                     $pathEnrollment = LearningPathEnrollment::create([
                         'user_id' => $order->user_id,
                         'academic_year_id' => $order->academic_year_id,
@@ -279,7 +285,7 @@ class CheckoutController extends Controller
                 $existingEnrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
                     ->where('advanced_course_id', $order->advanced_course_id)
                     ->first();
-                if (!$existingEnrollment) {
+                if (! $existingEnrollment) {
                     StudentCourseEnrollment::create([
                         'user_id' => $order->user_id,
                         'advanced_course_id' => $order->advanced_course_id,
@@ -320,11 +326,13 @@ class CheckoutController extends Controller
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return redirect()->route('public.courses')->with('error', 'حدث خطأ أثناء تفعيل الطلب. يرجى التواصل مع الدعم.');
         }
 
         if ($order->academic_year_id) {
             $slug = Str::slug($order->learningPath->name ?? '');
+
             return redirect()->route('public.learning-path.show', $slug)
                 ->with('success', 'تم الدفع بنجاح! تم تفعيل المسار التعليمي على حسابك.');
         }
@@ -478,7 +486,7 @@ class CheckoutController extends Controller
 
         return response()->json([
             'mode' => 'iframe',
-            'pluginScriptUrl' => $iframe->pluginScriptUrl(),
+            'pluginScriptUrl' => route('public.fawaterk.plugin', [], true),
             'pluginConfig' => $pluginConfig,
         ]);
     }
@@ -782,7 +790,7 @@ class CheckoutController extends Controller
 
         $currency = (string) config('fawaterak.currency', 'EGP');
 
-        $invoiceNumber = 'INV-' . str_pad((string) (Invoice::count() + 1), 8, '0', STR_PAD_LEFT);
+        $invoiceNumber = 'INV-'.str_pad((string) (Invoice::count() + 1), 8, '0', STR_PAD_LEFT);
         $invoice = Invoice::create([
             'invoice_number' => $invoiceNumber,
             'user_id' => $order->user_id,
@@ -806,7 +814,7 @@ class CheckoutController extends Controller
             ],
         ]);
 
-        $paymentNumber = 'PAY-' . str_pad((string) (Payment::count() + 1), 8, '0', STR_PAD_LEFT);
+        $paymentNumber = 'PAY-'.str_pad((string) (Payment::count() + 1), 8, '0', STR_PAD_LEFT);
         $payment = Payment::create([
             'payment_number' => $paymentNumber,
             'invoice_id' => $invoice->id,
@@ -822,7 +830,7 @@ class CheckoutController extends Controller
             'notes' => 'دفع عبر '.$gatewayDisplayName.' - طلب #'.$order->id,
         ]);
 
-        $transactionNumber = 'TXN-' . str_pad((string) (Transaction::count() + 1), 8, '0', STR_PAD_LEFT);
+        $transactionNumber = 'TXN-'.str_pad((string) (Transaction::count() + 1), 8, '0', STR_PAD_LEFT);
         Transaction::create([
             'transaction_number' => $transactionNumber,
             'user_id' => $order->user_id,
@@ -926,7 +934,7 @@ class CheckoutController extends Controller
     private function enrollInPathCourses(LearningPathEnrollment $enrollment): void
     {
         $learningPath = $enrollment->learningPath()->with(['academicSubjects'])->first();
-        if (!$learningPath) {
+        if (! $learningPath) {
             return;
         }
         $courses = collect();
@@ -979,7 +987,7 @@ class CheckoutController extends Controller
     public function complete(Request $request, $courseId)
     {
         // التحقق من تسجيل الدخول
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
         }
 
@@ -1068,14 +1076,16 @@ class CheckoutController extends Controller
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
+
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Checkout complete error: ' . $e->getMessage(), [
+            Log::error('Checkout complete error: '.$e->getMessage(), [
                 'user_id' => Auth::id(),
                 'course_id' => $courseId,
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return back()->with('error', 'حدث خطأ أثناء إتمام الطلب. يرجى المحاولة مرة أخرى.')
                 ->withInput();
         }
@@ -1087,7 +1097,7 @@ class CheckoutController extends Controller
     public function enrollFree($courseId)
     {
         // التحقق من تسجيل الدخول
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
         }
 
@@ -1096,7 +1106,7 @@ class CheckoutController extends Controller
             ->firstOrFail();
 
         // التحقق من أن الكورس مجاني
-        if (($course->price ?? 0) > 0 && !($course->is_free ?? false)) {
+        if (($course->price ?? 0) > 0 && ! ($course->is_free ?? false)) {
             return redirect()->route('public.course.show', $course->id)
                 ->with('error', 'هذا الكورس ليس مجانياً');
         }
@@ -1144,6 +1154,7 @@ class CheckoutController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return redirect()->route('public.course.show', $course->id)
                 ->with('error', 'حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.');
         }
@@ -1155,18 +1166,18 @@ class CheckoutController extends Controller
     public function showLearningPath($slug)
     {
         // التحقق من تسجيل الدخول
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->guest(route('login'))->with('info', 'يرجى تسجيل الدخول أولاً لإتمام عملية الشراء');
         }
 
         // البحث عن AcademicYear بالاسم (slug)
         $learningPath = AcademicYear::active()
             ->get()
-            ->first(function($year) use ($slug) {
+            ->first(function ($year) use ($slug) {
                 return Str::slug($year->name) === $slug;
             });
-        
-        if (!$learningPath) {
+
+        if (! $learningPath) {
             abort(404, 'المسار التعليمي غير موجود');
         }
 
@@ -1196,9 +1207,9 @@ class CheckoutController extends Controller
         $wallets = \App\Models\Wallet::where('is_active', true)
             ->whereNotNull('type')
             ->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer'])
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNotNull('account_number')
-                      ->orWhereNotNull('name');
+                    ->orWhereNotNull('name');
             })
             ->orderBy('type')
             ->orderBy('name')
@@ -1218,7 +1229,7 @@ class CheckoutController extends Controller
     public function completeLearningPath(Request $request, $slug)
     {
         // التحقق من تسجيل الدخول
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
         }
 
@@ -1229,11 +1240,11 @@ class CheckoutController extends Controller
         // البحث عن AcademicYear بالاسم (slug)
         $learningPath = AcademicYear::active()
             ->get()
-            ->first(function($year) use ($slug) {
+            ->first(function ($year) use ($slug) {
                 return Str::slug($year->name) === $slug;
             });
-        
-        if (!$learningPath) {
+
+        if (! $learningPath) {
             abort(404, 'المسار التعليمي غير موجود');
         }
 
@@ -1290,7 +1301,7 @@ class CheckoutController extends Controller
             $discountAmount = 0;
 
             // رفع صورة الإيصال
-            if (!$request->hasFile('payment_proof')) {
+            if (! $request->hasFile('payment_proof')) {
                 throw new \Exception('صورة الإيصال مطلوبة');
             }
 
@@ -1329,15 +1340,17 @@ class CheckoutController extends Controller
                 'errors' => $e->errors(),
                 'user_id' => Auth::id(),
             ]);
+
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Error in completeLearningPath: ' . $e->getMessage(), [
+            \Log::error('Error in completeLearningPath: '.$e->getMessage(), [
                 'user_id' => Auth::id(),
                 'learning_path_id' => $learningPath->id ?? null,
                 'trace' => $e->getTraceAsString(),
             ]);
-            return back()->with('error', 'حدث خطأ أثناء إتمام الطلب: ' . $e->getMessage())
+
+            return back()->with('error', 'حدث خطأ أثناء إتمام الطلب: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -1348,18 +1361,18 @@ class CheckoutController extends Controller
     public function enrollFreeLearningPath($slug)
     {
         // التحقق من تسجيل الدخول
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
         }
 
         // البحث عن AcademicYear بالاسم (slug)
         $learningPath = AcademicYear::active()
             ->get()
-            ->first(function($year) use ($slug) {
+            ->first(function ($year) use ($slug) {
                 return Str::slug($year->name) === $slug;
             });
-        
-        if (!$learningPath) {
+
+        if (! $learningPath) {
             abort(404, 'المسار التعليمي غير موجود');
         }
 
@@ -1413,9 +1426,9 @@ class CheckoutController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return redirect()->route('public.learning-path.show', $slug)
                 ->with('error', 'حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.');
         }
     }
 }
-

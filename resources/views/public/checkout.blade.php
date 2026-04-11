@@ -481,12 +481,28 @@
             errEl.classList.remove('hidden');
         }
         function loadScript(src) {
+            var sep = src.indexOf('?') >= 0 ? '&' : '?';
+            var url = src + sep + '_fk=' + Date.now();
             return new Promise(function(resolve, reject) {
                 var s = document.createElement('script');
-                s.src = src;
+                s.src = url;
                 s.async = true;
-                s.onload = resolve;
-                s.onerror = function() { reject(new Error('load')); };
+                s.onload = function() {
+                    window.requestAnimationFrame(function() {
+                        if (typeof fawaterkCheckout === 'function') {
+                            resolve();
+                        } else {
+                            setTimeout(function() {
+                                if (typeof fawaterkCheckout === 'function') {
+                                    resolve();
+                                } else {
+                                    reject(new Error('no_fn'));
+                                }
+                            }, 50);
+                        }
+                    });
+                };
+                s.onerror = function() { reject(new Error('network')); };
                 document.head.appendChild(s);
             });
         }
@@ -537,14 +553,16 @@
                 }
                 return loadScript(res.data.pluginScriptUrl)
                     .then(function() {
-                        if (typeof fawaterkCheckout !== 'function') {
-                            showErr('تعذّر تحميل واجهة فواتيرك: السكربت وصل لكن الدالة fawaterkCheckout غير معرّفة. تحقق من سياسة أمان المحتوى (CSP) على الخادم لنطاقات *.fawaterk.com.');
-                            return;
-                        }
                         fawaterkCheckout(res.data.pluginConfig);
                     })
-                    .catch(function() {
-                        showErr('تعذّر تحميل سكربت فواتيرك من الخادم الخارجي. غالباً سياسة CSP على الموقع تحجب script-src أو frame-src لنطاق app.fawaterk.com — تم توسيع القائمة في التطبيق؛ نفّذ php artisan config:clear بعد النشر. أو راجع وحدة تحكم المتصفح (F12 → Console) لرسالة «violates Content Security Policy».');
+                    .catch(function(err) {
+                        var msg;
+                        if (err && err.message === 'no_fn') {
+                            msg = 'وصل ملف فواتيرك لكن لم تُعرَّف الدالة fawaterkCheckout (غالباً حظر تنفيذ السكربت بسبب Content-Security-Policy). افتح F12 → Console وابحث عن رسالة CSP، وراجع ترويسة Content-Security-Policy في استجابة صفحة الدفع.';
+                        } else {
+                            msg = 'تعذّر تحميل سكربت فواتيرك. جرّب تعطيل الكاش (Network → Disable cache) أو تحديث الصفحة. إن استمر الخطأ راجع Console وNetwork لطلب fawaterkPlugin.min.js.';
+                        }
+                        showErr(msg);
                     });
             })
             .catch(function() {

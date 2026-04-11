@@ -26,61 +26,66 @@ class SecurityHeadersMiddleware
             // لا تضبط microphone=/camera=() — ذلك يمنع المتصفح من منح الإذن حتى داخل iframe جيتسي (يظهر خطأ Jitsi «Error obtaining microphone permission»).
             $response->headers->set('Permissions-Policy', 'geolocation=()');
 
-            // Content Security Policy - محسّن للواجهة الأمامية
-            // تعطيل CSP عند APP_DEBUG=true و DISABLE_CSP=true (الافتراضي) لتسهيل التطوير المحلي
-            $disableCsp = filter_var(env('DISABLE_CSP', true), FILTER_VALIDATE_BOOLEAN);
-            if (! config('app.debug') || ! $disableCsp) {
-                $jitsiDomain = LiveSetting::getJitsiDomain();
-                $jitsiOrigin = $jitsiDomain !== '' ? ' https://'.$jitsiDomain : '';
-
-                // فواتيرك: سكربت الإضافة، iframes، وربما تحويل النماذج — نطاقات صريحة + *.fawaterk.com
-                // (بعض عمليات الدفع تستخدم نطاقات فرعية مثل link. / pay. غير مذكورة في الوثائق القصيرة)
-                $fawaterkCsp = ' https://app.fawaterk.com https://staging.fawaterk.com https://*.fawaterk.com https://fawaterk.com https://www.fawaterk.com https://*.fawaterak.xyz';
-
-                $csp = "default-src 'self'; " .
-                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' " .
-                    "https://cdn.tailwindcss.com " .
-                    "https://cdn.jsdelivr.net " .
-                    "https://cdnjs.cloudflare.com " .
-                    "https://unpkg.com " .
-                    "https://fonts.googleapis.com".
-                    $jitsiOrigin.
-                    $fawaterkCsp.'; '.
-                    "style-src 'self' 'unsafe-inline' " .
-                    "https://fonts.googleapis.com " .
-                    "https://cdnjs.cloudflare.com " .
-                    "https://cdn.jsdelivr.net " .
-                    "https://cdn.tailwindcss.com; " .
-                    "font-src 'self' data: " .
-                    "https://fonts.gstatic.com " .
-                    "https://cdnjs.cloudflare.com " .
-                    "https://cdn.jsdelivr.net; " .
-                    "img-src 'self' data: https: blob:; " .
-                    "connect-src 'self' https: ws: wss:; " .
-                    "frame-src 'self' " .
-                    "https://iframe.mediadelivery.net " .
-                    "https://player.mediadelivery.net ".
-                    $jitsiOrigin.
-                    $fawaterkCsp.'; '.
-                    "object-src 'none'; " .
-                    "base-uri 'self'; " .
-                    "form-action 'self'".
-                    $fawaterkCsp.'; '.
-                    "worker-src 'self' blob:; " .
-                    "manifest-src 'self';";
-
-                $response->headers->set('Content-Security-Policy', $csp);
-            }
+            $this->applyContentSecurityPolicy($response, $request);
         } catch (\Throwable $e) {
             // لا نكسر الطلب بالكامل بسبب تعذر إنشاء/تطبيق بعض ترويسات الأمان.
-            logger()->warning('SecurityHeadersMiddleware fallback: ' . $e->getMessage());
+            logger()->warning('SecurityHeadersMiddleware fallback: '.$e->getMessage());
         }
-        
+
         // Strict Transport Security (HTTPS only)
         if ($request->secure()) {
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
         }
 
         return $response;
+    }
+
+    private function applyContentSecurityPolicy(Response $response, Request $request): void
+    {
+        // تعطيل CSP عند APP_DEBUG=true و DISABLE_CSP=true (الافتراضي) لتسهيل التطوير المحلي
+        $disableCsp = filter_var(env('DISABLE_CSP', true), FILTER_VALIDATE_BOOLEAN);
+        if (config('app.debug') && $disableCsp) {
+            return;
+        }
+
+        $jitsiDomain = LiveSetting::getJitsiDomain();
+        $jitsiOrigin = $jitsiDomain !== '' ? ' https://'.$jitsiDomain : '';
+
+        // فواتيرك: الإطارات والنماذج والسكربتات الديناميكية من نطاقهم (سكربت الإضافة الرئيسي يُقدَّم عبر /fawaterk/plugin.min.js من نفس النطاق)
+        $fawaterkCsp = ' https://app.fawaterk.com https://staging.fawaterk.com https://*.fawaterk.com https://fawaterk.com https://www.fawaterk.com https://*.fawaterak.xyz';
+
+        $csp = "default-src 'self'; ".
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' ".
+            'https://cdn.tailwindcss.com '.
+            'https://cdn.jsdelivr.net '.
+            'https://cdnjs.cloudflare.com '.
+            'https://unpkg.com '.
+            'https://fonts.googleapis.com'.
+            $jitsiOrigin.
+            $fawaterkCsp.'; '.
+            "style-src 'self' 'unsafe-inline' ".
+            'https://fonts.googleapis.com '.
+            'https://cdnjs.cloudflare.com '.
+            'https://cdn.jsdelivr.net '.
+            'https://cdn.tailwindcss.com; '.
+            "font-src 'self' data: ".
+            'https://fonts.gstatic.com '.
+            'https://cdnjs.cloudflare.com '.
+            'https://cdn.jsdelivr.net; '.
+            "img-src 'self' data: https: blob:; ".
+            "connect-src 'self' https: ws: wss:; ".
+            "frame-src 'self' ".
+            'https://iframe.mediadelivery.net '.
+            'https://player.mediadelivery.net '.
+            $jitsiOrigin.
+            $fawaterkCsp.'; '.
+            "object-src 'none'; ".
+            "base-uri 'self'; ".
+            "form-action 'self'".
+            $fawaterkCsp.'; '.
+            "worker-src 'self' blob:; ".
+            "manifest-src 'self';";
+
+        $response->headers->set('Content-Security-Policy', $csp);
     }
 }
