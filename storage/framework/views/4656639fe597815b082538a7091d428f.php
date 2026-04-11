@@ -485,30 +485,65 @@
             errEl.textContent = msg;
             errEl.classList.remove('hidden');
         }
-        function loadScript(src) {
-            var sep = src.indexOf('?') >= 0 ? '&' : '?';
-            var url = src + sep + '_fk=' + Date.now();
+        function waitForFawaterkFn(resolve, reject) {
+            window.requestAnimationFrame(function() {
+                if (typeof fawaterkCheckout === 'function') {
+                    resolve();
+                } else {
+                    setTimeout(function() {
+                        if (typeof fawaterkCheckout === 'function') {
+                            resolve();
+                        } else {
+                            reject(new Error('no_fn'));
+                        }
+                    }, 80);
+                }
+            });
+        }
+        function loadScriptTag(url) {
             return new Promise(function(resolve, reject) {
                 var s = document.createElement('script');
                 s.src = url;
                 s.async = true;
-                s.onload = function() {
-                    window.requestAnimationFrame(function() {
-                        if (typeof fawaterkCheckout === 'function') {
-                            resolve();
-                        } else {
-                            setTimeout(function() {
-                                if (typeof fawaterkCheckout === 'function') {
-                                    resolve();
-                                } else {
-                                    reject(new Error('no_fn'));
-                                }
-                            }, 50);
-                        }
-                    });
-                };
+                s.onload = function() { waitForFawaterkFn(resolve, reject); };
                 s.onerror = function() { reject(new Error('network')); };
                 document.head.appendChild(s);
+            });
+        }
+        function loadScriptViaBlob(url) {
+            return fetch(url, { credentials: 'same-origin', cache: 'no-store' })
+                .then(function(r) {
+                    if (!r.ok) {
+                        throw new Error('fetch ' + r.status);
+                    }
+                    return r.text();
+                })
+                .then(function(code) {
+                    if (!code || code.trim().indexOf('<') === 0) {
+                        throw new Error('not_js');
+                    }
+                    var blob = new Blob([code], { type: 'application/javascript' });
+                    var blobUrl = URL.createObjectURL(blob);
+                    return new Promise(function(resolve, reject) {
+                        var s = document.createElement('script');
+                        s.onload = function() {
+                            URL.revokeObjectURL(blobUrl);
+                            waitForFawaterkFn(resolve, reject);
+                        };
+                        s.onerror = function() {
+                            URL.revokeObjectURL(blobUrl);
+                            reject(new Error('blob_load'));
+                        };
+                        s.src = blobUrl;
+                        document.head.appendChild(s);
+                    });
+                });
+        }
+        function loadScript(src) {
+            var sep = src.indexOf('?') >= 0 ? '&' : '?';
+            var url = src + sep + '_fk=' + Date.now();
+            return loadScriptTag(url).catch(function() {
+                return loadScriptViaBlob(url);
             });
         }
         function parseJsonSafe(text) {
@@ -558,14 +593,21 @@
                 }
                 return loadScript(res.data.pluginScriptUrl)
                     .then(function() {
-                        fawaterkCheckout(res.data.pluginConfig);
+                        // إلزامي: سكربت فواتيرك يستدعي getEnvUrl() وhandlePaymentProcess() ويعتمد على المتغير العام pluginConfig (ليس الوسيط فقط)
+                        var cfg = res.data.pluginConfig;
+                        window.pluginConfig = cfg;
+                        fawaterkCheckout(cfg);
                     })
                     .catch(function(err) {
                         var msg;
                         if (err && err.message === 'no_fn') {
-                            msg = 'وصل ملف فواتيرك لكن لم تُعرَّف الدالة fawaterkCheckout (غالباً حظر تنفيذ السكربت بسبب Content-Security-Policy). افتح F12 → Console وابحث عن رسالة CSP، وراجع ترويسة Content-Security-Policy في استجابة صفحة الدفع.';
+                            msg = 'وصل ملف فواتيرك لكن لم تُعرَّف الدالة fawaterkCheckout. راجع Console (CSP أو حظر إضافة).';
+                        } else if (err && (err.name === 'ReferenceError' || (err.message && err.message.indexOf('pluginConfig') !== -1))) {
+                            msg = 'خطأ في تهيئة فواتيرك: ' + (err.message || err.name) + '. إن ظهر بعد تحديث اليوم أبلغ الدعم.';
+                        } else if (err && err.message && err.message.indexOf('network') === -1) {
+                            msg = 'تعذّر تشغيل الدفع: ' + err.message;
                         } else {
-                            msg = 'تعذّر تحميل سكربت فواتيرك. جرّب تعطيل الكاش (Network → Disable cache) أو تحديث الصفحة. إن استمر الخطأ راجع Console وNetwork لطلب fawaterkPlugin.min.js.';
+                            msg = 'تعذّر تحميل ملف الدفع. جرّب بدون إضافات حجب، أو تعطيل الكاش في Network. المسار: /js/checkout-pay-widget.v1.js';
                         }
                         showErr(msg);
                     });

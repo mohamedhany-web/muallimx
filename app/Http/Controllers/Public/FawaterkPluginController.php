@@ -52,7 +52,22 @@ class FawaterkPluginController extends Controller
                 return $this->jsErrorResponse(502, 'Fawaterk plugin: empty response');
             }
 
+            if (! $this->bodyLooksLikeJavaScript($body)) {
+                Log::warning('Fawaterk plugin proxy: upstream body is not JavaScript', [
+                    'upstream' => $upstream,
+                    'preview' => substr($body, 0, 120),
+                ]);
+
+                return $this->jsErrorResponse(502, 'Fawaterk plugin: invalid body from upstream');
+            }
+
             Cache::put($cacheKey, $body, now()->addHours(6));
+        }
+
+        if (! $this->bodyLooksLikeJavaScript($body)) {
+            Cache::forget($cacheKey);
+
+            return $this->jsErrorResponse(502, 'Fawaterk plugin: cached invalid body');
         }
 
         return response($body, 200)
@@ -67,5 +82,23 @@ class FawaterkPluginController extends Controller
 
         return response("console.error('{$safe}');", $status)
             ->header('Content-Type', 'application/javascript; charset=UTF-8');
+    }
+
+    private function bodyLooksLikeJavaScript(string $body): bool
+    {
+        $trimmed = ltrim($body, " \t\n\r\0\x0B\xEF\xBB\xBF");
+        if ($trimmed === '') {
+            return false;
+        }
+
+        $lower = strtolower(substr($trimmed, 0, 32));
+        if (str_starts_with($lower, '<!doctype') || str_starts_with($lower, '<html') || str_starts_with($lower, '<!--')) {
+            return false;
+        }
+        if (str_starts_with($lower, '<?php') || str_starts_with($lower, '<%')) {
+            return false;
+        }
+
+        return true;
     }
 }

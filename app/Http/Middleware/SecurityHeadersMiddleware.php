@@ -51,11 +51,11 @@ class SecurityHeadersMiddleware
         $jitsiDomain = LiveSetting::getJitsiDomain();
         $jitsiOrigin = $jitsiDomain !== '' ? ' https://'.$jitsiDomain : '';
 
-        // فواتيرك: الإطارات والنماذج والسكربتات الديناميكية من نطاقهم (سكربت الإضافة الرئيسي يُقدَّم عبر /fawaterk/plugin.min.js من نفس النطاق)
+        // فواتيرك: الإطارات والنماذج والسكربتات الديناميكية من نطاقهم (blob: لمسار احتياطي fetch→Blob على صفحة الدفع)
         $fawaterkCsp = ' https://app.fawaterk.com https://staging.fawaterk.com https://*.fawaterk.com https://fawaterk.com https://www.fawaterk.com https://*.fawaterak.xyz';
 
         $csp = "default-src 'self'; ".
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' ".
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: ".
             'https://cdn.tailwindcss.com '.
             'https://cdn.jsdelivr.net '.
             'https://cdnjs.cloudflare.com '.

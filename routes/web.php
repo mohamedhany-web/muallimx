@@ -409,9 +409,14 @@ Route::get('/course/{id}', function ($id) {
     return view('course-show', compact('course', 'relatedCourses', 'isEnrolled'));
 })->name('public.course.show');
 
-// سكربت فواتيرك عبر نطاق الموقع (يتفادى CSP على السكربت الخارجي)
-Route::get('/fawaterk/plugin.min.js', \App\Http\Controllers\Public\FawaterkPluginController::class)
-    ->middleware('throttle:120,1')
+// سكربت الدفع عبر نطاق الموقع — مسار محايد (قوائم الحجب تعرّف غالباً /fawaterk/)
+Route::redirect('/fawaterk/plugin.min.js', '/js/checkout-pay-widget.v1.js', 301);
+Route::get('/js/checkout-pay-widget.v1.js', \App\Http\Controllers\Public\FawaterkPluginController::class)
+    ->middleware('throttle:240,1')
+    ->withoutMiddleware([
+        \App\Http\Middleware\CheckActiveStatus::class,
+        \App\Http\Middleware\SetLocale::class,
+    ])
     ->name('public.fawaterk.plugin');
 
 // صفحة إتمام الطلب (Checkout)

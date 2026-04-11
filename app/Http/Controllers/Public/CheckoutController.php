@@ -441,9 +441,11 @@ class CheckoutController extends Controller
         $cartTotal = number_format($amount, 2, '.', '');
         $itemPrice = $cartTotal;
 
+        // token: السكربت الرسمي يبني Authorization: Bearer + token؛ وضع الـ iframe يعتمد على FAWATERAK-HASH-KEY ويُترك Bearer فارغاً
         $pluginConfig = [
             'envType' => $iframe->envType(),
             'hashKey' => $iframe->generateHashKey(),
+            'token' => '',
             'style' => [
                 'listing' => 'horizontal',
             ],
