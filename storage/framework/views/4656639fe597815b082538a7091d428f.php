@@ -1,4 +1,4 @@
-@php
+<?php
     $locale = app()->getLocale();
     $isRtl = $locale === 'ar';
     $itemTitle = isset($course) ? ($course->title ?? 'الكورس') : (isset($learningPath) ? ($learningPath->name ?? 'الطلب') : 'الطلب');
@@ -8,16 +8,16 @@
     }
     $platformLogoUrl = $platformLogoUrl ?? \App\Services\AdminPanelBranding::logoPublicUrl();
     $appName = config('app.name', 'Muallimx');
-@endphp
+?>
 <!DOCTYPE html>
-<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
+<html lang="<?php echo e($locale); ?>" dir="<?php echo e($isRtl ? 'rtl' : 'ltr'); ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
-    <title>إتمام الطلب - {{ $itemTitle }} - {{ config('app.name') }}</title>
+    <title>إتمام الطلب - <?php echo e($itemTitle); ?> - <?php echo e(config('app.name')); ?></title>
     <meta name="theme-color" content="#283593">
 
-    @include('partials.favicon-links')
+    <?php echo $__env->make('partials.favicon-links', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
@@ -64,69 +64,69 @@
 </head>
 <body class="bg-white text-slate-800 antialiased font-body" x-data="{ isSubmitting: false }">
     <div id="scroll-progress"></div>
-    @include('components.unified-navbar')
+    <?php echo $__env->make('components.unified-navbar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <main class="flex-1">
-        {{-- هيرو بنفس أسلوب صفحة الكورس والرئيسية --}}
+        
         <section class="pt-10 sm:pt-14 lg:pt-16 pb-10 sm:pb-12 overflow-hidden relative" style="background:radial-gradient(circle at 12% 80%,rgba(255,229,247,.65),transparent 28%),radial-gradient(circle at 88% 20%,rgba(40,53,147,.10),transparent 30%),linear-gradient(180deg,#f4f6ff 0%,#fbfbff 55%,#ffffff 100%)">
             <div class="absolute inset-0 pointer-events-none opacity-40" style="background-image:radial-gradient(circle at 1px 1px,rgba(40,53,147,.08) 1px,transparent 0);background-size:30px 30px"></div>
             <div class="container-1200 relative z-10">
-                {{-- شريط العلامة: لوجو إعدادات النظام --}}
+                
                 <div class="reveal flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 mb-6 border-b border-slate-200/70">
                     <div class="flex items-center gap-4 min-w-0">
-                        @if($platformLogoUrl)
-                            <a href="{{ url('/') }}" class="shrink-0 rounded-xl bg-white/90 p-2 ring-1 ring-slate-200/80 shadow-sm hover:ring-mx-navy/20 transition-shadow" title="{{ $appName }}">
-                                <img src="{{ $platformLogoUrl }}" alt="{{ $appName }}" class="h-10 sm:h-11 w-auto max-w-[200px] object-contain object-center" width="200" height="44" loading="eager" decoding="async">
+                        <?php if($platformLogoUrl): ?>
+                            <a href="<?php echo e(url('/')); ?>" class="shrink-0 rounded-xl bg-white/90 p-2 ring-1 ring-slate-200/80 shadow-sm hover:ring-mx-navy/20 transition-shadow" title="<?php echo e($appName); ?>">
+                                <img src="<?php echo e($platformLogoUrl); ?>" alt="<?php echo e($appName); ?>" class="h-10 sm:h-11 w-auto max-w-[200px] object-contain object-center" width="200" height="44" loading="eager" decoding="async">
                             </a>
-                        @else
-                            <a href="{{ url('/') }}" class="shrink-0 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-mx-navy to-mx-indigo text-white font-black text-lg shadow-md ring-1 ring-white/20" title="{{ $appName }}">{{ Str::substr($appName, 0, 1) }}</a>
-                        @endif
+                        <?php else: ?>
+                            <a href="<?php echo e(url('/')); ?>" class="shrink-0 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-mx-navy to-mx-indigo text-white font-black text-lg shadow-md ring-1 ring-white/20" title="<?php echo e($appName); ?>"><?php echo e(Str::substr($appName, 0, 1)); ?></a>
+                        <?php endif; ?>
                         <div class="min-w-0 border-slate-200 sm:border-s sm:ps-4">
-                            <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold">{{ __('public.checkout_brand_kicker') }}</p>
-                            <p class="font-heading text-lg sm:text-xl font-black text-mx-indigo truncate">{{ $appName }}</p>
+                            <p class="text-[11px] uppercase tracking-wider text-slate-500 font-bold"><?php echo e(__('public.checkout_brand_kicker')); ?></p>
+                            <p class="font-heading text-lg sm:text-xl font-black text-mx-indigo truncate"><?php echo e($appName); ?></p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 text-sm text-slate-600 shrink-0">
                         <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white border border-slate-200 text-mx-navy"><i class="fas fa-bag-shopping"></i></span>
-                        <span class="font-semibold text-navy-950">{{ __('public.checkout_page_label') }}</span>
+                        <span class="font-semibold text-navy-950"><?php echo e(__('public.checkout_page_label')); ?></span>
                     </div>
                 </div>
 
                 <nav class="reveal text-sm text-slate-500 mb-8 flex items-center gap-2 flex-wrap" aria-label="مسار التنقل">
-                    <a href="{{ url('/') }}" class="hover:text-mx-indigo transition-colors">{{ __('public.home') }}</a>
-                    <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] text-slate-400"></i>
-                    <a href="{{ route('public.courses') }}" class="hover:text-mx-indigo transition-colors">{{ __('public.courses') }}</a>
-                    @if(isset($course))
-                        <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] text-slate-400"></i>
-                        <a href="{{ route('public.course.show', $course->id) }}" class="hover:text-mx-indigo transition-colors">{{ Str::limit($course->title ?? '', 36) }}</a>
-                    @endif
-                    <i class="fas fa-chevron-{{ $isRtl ? 'left' : 'right' }} text-[8px] text-slate-400"></i>
-                    <span class="text-mx-indigo font-semibold">{{ __('public.checkout_breadcrumb_current') }}</span>
+                    <a href="<?php echo e(url('/')); ?>" class="hover:text-mx-indigo transition-colors"><?php echo e(__('public.home')); ?></a>
+                    <i class="fas fa-chevron-<?php echo e($isRtl ? 'left' : 'right'); ?> text-[8px] text-slate-400"></i>
+                    <a href="<?php echo e(route('public.courses')); ?>" class="hover:text-mx-indigo transition-colors"><?php echo e(__('public.courses')); ?></a>
+                    <?php if(isset($course)): ?>
+                        <i class="fas fa-chevron-<?php echo e($isRtl ? 'left' : 'right'); ?> text-[8px] text-slate-400"></i>
+                        <a href="<?php echo e(route('public.course.show', $course->id)); ?>" class="hover:text-mx-indigo transition-colors"><?php echo e(Str::limit($course->title ?? '', 36)); ?></a>
+                    <?php endif; ?>
+                    <i class="fas fa-chevron-<?php echo e($isRtl ? 'left' : 'right'); ?> text-[8px] text-slate-400"></i>
+                    <span class="text-mx-indigo font-semibold"><?php echo e(__('public.checkout_breadcrumb_current')); ?></span>
                 </nav>
 
-                {{-- خطوات إتمام الشراء --}}
-                <div class="checkout-steps reveal mb-10 lg:mb-12" aria-label="{{ __('public.checkout_steps_label') }}">
+                
+                <div class="checkout-steps reveal mb-10 lg:mb-12" aria-label="<?php echo e(__('public.checkout_steps_label')); ?>">
                     <div class="flex items-center gap-3 shrink-0">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white text-sm font-black shadow-sm ring-2 ring-emerald-200">1</span>
                         <div class="min-w-0">
-                            <p class="text-xs font-bold text-emerald-700">{{ __('public.checkout_step_1_title') }}</p>
-                            <p class="text-[11px] text-slate-500 leading-snug">{{ __('public.checkout_step_1_desc') }}</p>
+                            <p class="text-xs font-bold text-emerald-700"><?php echo e(__('public.checkout_step_1_title')); ?></p>
+                            <p class="text-[11px] text-slate-500 leading-snug"><?php echo e(__('public.checkout_step_1_desc')); ?></p>
                         </div>
                     </div>
                     <span class="checkout-step-connector mx-2 sm:mx-3" aria-hidden="true"></span>
                     <div class="flex items-center gap-3 shrink-0">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 text-white text-sm font-black shadow-md ring-2 ring-orange-200">2</span>
                         <div class="min-w-0">
-                            <p class="text-xs font-bold text-brand-700">{{ __('public.checkout_step_2_title') }}</p>
-                            <p class="text-[11px] text-slate-500 leading-snug">{{ __('public.checkout_step_2_desc') }}</p>
+                            <p class="text-xs font-bold text-brand-700"><?php echo e(__('public.checkout_step_2_title')); ?></p>
+                            <p class="text-[11px] text-slate-500 leading-snug"><?php echo e(__('public.checkout_step_2_desc')); ?></p>
                         </div>
                     </div>
                     <span class="checkout-step-connector mx-2 sm:mx-3" aria-hidden="true"></span>
                     <div class="flex items-center gap-3 shrink-0">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-600 text-sm font-black">3</span>
                         <div class="min-w-0">
-                            <p class="text-xs font-bold text-slate-600">{{ __('public.checkout_step_3_title') }}</p>
-                            <p class="text-[11px] text-slate-500 leading-snug">{{ __('public.checkout_step_3_desc') }}</p>
+                            <p class="text-xs font-bold text-slate-600"><?php echo e(__('public.checkout_step_3_title')); ?></p>
+                            <p class="text-[11px] text-slate-500 leading-snug"><?php echo e(__('public.checkout_step_3_desc')); ?></p>
                         </div>
                     </div>
                 </div>
@@ -135,14 +135,15 @@
                     <div class="lg:col-span-3 reveal">
                         <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-5 shadow-sm" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
                             <i class="fas fa-credit-card"></i>
-                            {{ isset($course) ? __('public.secure_checkout_badge') : 'صفحة الدفع' }}
+                            <?php echo e(isset($course) ? __('public.secure_checkout_badge') : 'صفحة الدفع'); ?>
+
                         </span>
                         <h1 class="font-heading text-3xl sm:text-4xl lg:text-[2.75rem] font-black text-mx-indigo leading-[1.15] mb-4">
                             إتمام الطلب
                         </h1>
                         <p class="text-slate-600 text-base sm:text-lg leading-relaxed max-w-2xl mb-6">
                             خطوة أخيرة لشراء
-                            <span class="font-bold text-mx-indigo">{{ $itemTitle }}</span>
+                            <span class="font-bold text-mx-indigo"><?php echo e($itemTitle); ?></span>
                             — نفس تجربة المنصة الآمنة والواضحة.
                         </p>
                         <div class="flex flex-wrap gap-3">
@@ -157,62 +158,63 @@
                         </div>
                     </div>
                     <div class="lg:col-span-2 reveal stagger-2">
-                        @if($thumbUrl)
+                        <?php if($thumbUrl): ?>
                             <div class="card-checkout rounded-3xl overflow-hidden border border-slate-200 shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)] ring-1 ring-slate-200/80 aspect-[4/3] bg-slate-100">
-                                <img src="{{ $thumbUrl }}" alt="" class="w-full h-full object-cover">
+                                <img src="<?php echo e($thumbUrl); ?>" alt="" class="w-full h-full object-cover">
                             </div>
-                        @else
+                        <?php else: ?>
                             <div class="card-checkout rounded-3xl border border-slate-200 shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)] ring-1 ring-slate-200/80 p-8 flex flex-col justify-center min-h-[220px]" style="background:linear-gradient(145deg,#fff 0%,#f4f6ff 50%,#fff5f0 100%)">
                                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-mx-navy flex items-center justify-center text-white text-2xl shadow-lg mb-4">
                                     <i class="fas fa-graduation-cap"></i>
                                 </div>
-                                <p class="font-heading text-xl font-black text-mx-indigo leading-snug">{{ Str::limit($itemTitle, 80) }}</p>
-                                <p class="text-sm text-slate-500 mt-2">{{ isset($course) ? ($course->academicSubject->name ?? '') : '' }}</p>
+                                <p class="font-heading text-xl font-black text-mx-indigo leading-snug"><?php echo e(Str::limit($itemTitle, 80)); ?></p>
+                                <p class="text-sm text-slate-500 mt-2"><?php echo e(isset($course) ? ($course->academicSubject->name ?? '') : ''); ?></p>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
         </section>
 
-        {{-- محتوى الدفع --}}
+        
         <section class="py-12 md:py-20 bg-mx-soft">
             <div class="container-1200">
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-12">
-                    {{-- ملخص الطلب --}}
+                    
                     <aside class="lg:col-span-4 xl:col-span-4 order-2 lg:order-1">
                         <div class="reveal card-checkout sticky top-24 rounded-3xl bg-white border border-slate-200 p-6 sm:p-8 shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)] ring-1 ring-slate-200/80">
                             <div class="flex items-center justify-between gap-3 mb-5 pb-5 border-b border-slate-100">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    @if($platformLogoUrl)
-                                        <img src="{{ $platformLogoUrl }}" alt="" class="h-8 sm:h-9 w-auto max-w-[120px] object-contain opacity-95 shrink-0" loading="lazy" decoding="async">
-                                    @else
-                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mx-soft text-mx-navy font-black text-sm">{{ Str::substr($appName, 0, 1) }}</span>
-                                    @endif
+                                    <?php if($platformLogoUrl): ?>
+                                        <img src="<?php echo e($platformLogoUrl); ?>" alt="" class="h-8 sm:h-9 w-auto max-w-[120px] object-contain opacity-95 shrink-0" loading="lazy" decoding="async">
+                                    <?php else: ?>
+                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mx-soft text-mx-navy font-black text-sm"><?php echo e(Str::substr($appName, 0, 1)); ?></span>
+                                    <?php endif; ?>
                                     <div class="min-w-0">
-                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{{ $appName }}</p>
-                                        <p class="text-xs text-slate-500 truncate">{{ __('public.checkout_summary_subtitle') }}</p>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide"><?php echo e($appName); ?></p>
+                                        <p class="text-xs text-slate-500 truncate"><?php echo e(__('public.checkout_summary_subtitle')); ?></p>
                                     </div>
                                 </div>
                                 <span class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center text-brand-500 shrink-0"><i class="fas fa-receipt"></i></span>
                             </div>
                             <h3 class="font-heading text-lg font-black text-navy-950 mb-6">
-                                {{ __('public.checkout_order_summary_title') }}
+                                <?php echo e(__('public.checkout_order_summary_title')); ?>
+
                             </h3>
                             <div class="flex items-start gap-4 mb-6 pb-6 border-b border-slate-100">
                                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-mx-navy flex items-center justify-center flex-shrink-0 shadow-lg shadow-brand-600/20">
-                                    @if(isset($course))
+                                    <?php if(isset($course)): ?>
                                         <i class="fas fa-graduation-cap text-white text-xl"></i>
-                                    @else
+                                    <?php else: ?>
                                         <i class="fas fa-route text-white text-xl"></i>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <h4 class="font-bold text-navy-950 text-base line-clamp-2 leading-snug">
-                                        @if(isset($course)){{ $course->title }}@elseif(isset($learningPath)){{ $learningPath->name }}@else الطلب @endif
+                                        <?php if(isset($course)): ?><?php echo e($course->title); ?><?php elseif(isset($learningPath)): ?><?php echo e($learningPath->name); ?><?php else: ?> الطلب <?php endif; ?>
                                     </h4>
                                     <p class="text-sm text-slate-500 mt-1">
-                                        @if(isset($course)){{ $course->academicSubject->name ?? 'غير محدد' }}@else مسار تعليمي شامل @endif
+                                        <?php if(isset($course)): ?><?php echo e($course->academicSubject->name ?? 'غير محدد'); ?><?php else: ?> مسار تعليمي شامل <?php endif; ?>
                                     </p>
                                 </div>
                             </div>
@@ -220,15 +222,17 @@
                                 <div class="flex justify-between items-center text-sm">
                                     <span class="text-slate-600">السعر</span>
                                     <span class="font-bold text-brand-600 text-lg">
-                                        {{ number_format(isset($course) ? $course->price : (isset($learningPath) ? ($learningPath->price ?? 0) : 0), 0) }}
-                                        <span class="text-slate-500 text-sm font-medium">{{ __('public.currency_egp') }}</span>
+                                        <?php echo e(number_format(isset($course) ? $course->price : (isset($learningPath) ? ($learningPath->price ?? 0) : 0), 0)); ?>
+
+                                        <span class="text-slate-500 text-sm font-medium"><?php echo e(__('public.currency_egp')); ?></span>
                                     </span>
                                 </div>
                                 <div class="flex justify-between items-center pt-4 border-t-2 border-slate-100">
                                     <span class="font-bold text-navy-950">الإجمالي</span>
                                     <span class="text-2xl font-black text-brand-600">
-                                        {{ number_format(isset($course) ? $course->price : (isset($learningPath) ? ($learningPath->price ?? 0) : 0), 0) }}
-                                        <span class="text-slate-500 text-base font-medium">{{ __('public.currency_egp') }}</span>
+                                        <?php echo e(number_format(isset($course) ? $course->price : (isset($learningPath) ? ($learningPath->price ?? 0) : 0), 0)); ?>
+
+                                        <span class="text-slate-500 text-base font-medium"><?php echo e(__('public.currency_egp')); ?></span>
                                     </span>
                                 </div>
                             </div>
@@ -240,56 +244,56 @@
                         </div>
                     </aside>
 
-                    {{-- طرق الدفع --}}
+                    
                     <div class="lg:col-span-8 xl:col-span-8 order-1 lg:order-2">
                         <div class="reveal card-checkout rounded-3xl bg-white border border-slate-200 p-6 sm:p-8 lg:p-10 shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)] ring-1 ring-slate-200/80">
                             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8 pb-6 border-b border-slate-100">
                                 <div class="flex items-start gap-4">
                                     <span class="w-12 h-12 rounded-2xl bg-mx-navy/10 flex items-center justify-center text-mx-navy text-xl shrink-0"><i class="fas fa-wallet"></i></span>
                                     <div>
-                                        <h2 class="font-heading text-2xl sm:text-3xl font-black text-navy-950 leading-tight">{{ __('public.checkout_payment_section_title') }}</h2>
-                                        <p class="text-slate-500 text-sm mt-2 max-w-xl leading-relaxed">{{ __('public.checkout_payment_section_desc') }}</p>
+                                        <h2 class="font-heading text-2xl sm:text-3xl font-black text-navy-950 leading-tight"><?php echo e(__('public.checkout_payment_section_title')); ?></h2>
+                                        <p class="text-slate-500 text-sm mt-2 max-w-xl leading-relaxed"><?php echo e(__('public.checkout_payment_section_desc')); ?></p>
                                     </div>
                                 </div>
-                                @if($platformLogoUrl)
+                                <?php if($platformLogoUrl): ?>
                                     <div class="hidden sm:flex items-center justify-center rounded-2xl bg-mx-soft px-4 py-3 ring-1 ring-slate-200/60 shrink-0">
-                                        <img src="{{ $platformLogoUrl }}" alt="" class="h-7 w-auto max-w-[100px] object-contain opacity-90" loading="lazy">
+                                        <img src="<?php echo e($platformLogoUrl); ?>" alt="" class="h-7 w-auto max-w-[100px] object-contain opacity-90" loading="lazy">
                                     </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
 
-                            @if(session('error'))
+                            <?php if(session('error')): ?>
                                 <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 flex items-start gap-3 shadow-sm">
                                     <i class="fas fa-exclamation-circle text-red-600 mt-0.5"></i>
-                                    <p class="text-red-800 text-sm font-semibold flex-1">{{ session('error') }}</p>
+                                    <p class="text-red-800 text-sm font-semibold flex-1"><?php echo e(session('error')); ?></p>
                                 </div>
-                            @endif
-                            @if($errors->any())
+                            <?php endif; ?>
+                            <?php if($errors->any()): ?>
                                 <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 shadow-sm">
                                     <ul class="list-disc list-inside space-y-1 text-red-800 text-sm font-medium">
-                                        @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+                                        <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><li><?php echo e($error); ?></li><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </ul>
                                 </div>
-                            @endif
-                            @if(session('success'))
+                            <?php endif; ?>
+                            <?php if(session('success')): ?>
                                 <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 flex items-center gap-3 shadow-sm">
                                     <i class="fas fa-check-circle text-emerald-600"></i>
-                                    <p class="text-emerald-800 text-sm font-semibold">{{ session('success') }}</p>
+                                    <p class="text-emerald-800 text-sm font-semibold"><?php echo e(session('success')); ?></p>
                                 </div>
-                            @endif
-                            @if(session('info'))
+                            <?php endif; ?>
+                            <?php if(session('info')): ?>
                                 <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-center gap-3 shadow-sm">
                                     <i class="fas fa-info-circle text-amber-600"></i>
-                                    <p class="text-amber-900 text-sm font-semibold">{{ session('info') }}</p>
+                                    <p class="text-amber-900 text-sm font-semibold"><?php echo e(session('info')); ?></p>
                                 </div>
-                            @endif
+                            <?php endif; ?>
 
-                            @php
+                            <?php
                                 $fawaterakActive = !empty($fawaterakUseGateway) && isset($course);
                                 $fawaterakMis = !empty($fawaterakMisconfigured) && isset($course);
-                            @endphp
+                            ?>
 
-                            @if($fawaterakMis)
+                            <?php if($fawaterakMis): ?>
                                 <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 shadow-sm">
                                     <p class="text-sm font-bold text-rose-900 mb-2 flex items-center gap-2">
                                         <i class="fas fa-exclamation-triangle"></i>
@@ -304,11 +308,11 @@
                                         <code class="text-xs bg-white/80 px-1 rounded" dir="ltr">php artisan config:clear</code>.
                                     </p>
                                 </div>
-                                <a href="{{ route('orders.index') }}" class="btn-outline inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-mx-indigo px-6 py-3.5 rounded-2xl font-bold">
-                                    <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }} text-sm"></i>
+                                <a href="<?php echo e(route('orders.index')); ?>" class="btn-outline inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-mx-indigo px-6 py-3.5 rounded-2xl font-bold">
+                                    <i class="fas fa-arrow-<?php echo e($isRtl ? 'right' : 'left'); ?> text-sm"></i>
                                     رجوع
                                 </a>
-                            @elseif($fawaterakActive)
+                            <?php elseif($fawaterakActive): ?>
                                 <div class="mb-6 rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white px-5 py-4 shadow-sm">
                                     <p class="text-sm font-bold text-sky-900 mb-1 flex items-center gap-2">
                                         <i class="fas fa-lock text-sky-600"></i>
@@ -324,11 +328,11 @@
                                     <i class="fas fa-shield-halved text-mx-navy"></i>
                                     معالجة الدفع تتم عبر بوابة فواتيرك المعتمدة
                                 </p>
-                                <a href="{{ route('orders.index') }}" class="btn-outline inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-mx-indigo px-6 py-3.5 rounded-2xl font-bold hover:border-slate-300">
-                                    <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }} text-sm"></i>
+                                <a href="<?php echo e(route('orders.index')); ?>" class="btn-outline inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-mx-indigo px-6 py-3.5 rounded-2xl font-bold hover:border-slate-300">
+                                    <i class="fas fa-arrow-<?php echo e($isRtl ? 'right' : 'left'); ?> text-sm"></i>
                                     رجوع
                                 </a>
-                            @else
+                            <?php else: ?>
                                 <div class="mb-6 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white px-5 py-4 shadow-sm">
                                     <p class="text-sm font-bold text-amber-900 mb-1 flex items-center gap-2">
                                         <i class="fas fa-circle-info"></i>
@@ -339,8 +343,8 @@
                                     </p>
                                 </div>
 
-                                <form action="{{ isset($course) ? route('public.course.checkout.complete', $course->id) : (isset($learningPath) ? route('public.learning-path.checkout.complete', Str::slug($learningPath->name)) : '#') }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true" x-data="{paymentMethod:'bank_transfer'}">
-                                    @csrf
+                                <form action="<?php echo e(isset($course) ? route('public.course.checkout.complete', $course->id) : (isset($learningPath) ? route('public.learning-path.checkout.complete', Str::slug($learningPath->name)) : '#')); ?>" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true" x-data="{paymentMethod:'bank_transfer'}">
+                                    <?php echo csrf_field(); ?>
                                     <div class="space-y-5 mb-8">
                                         <div>
                                             <label class="block text-sm font-bold text-slate-700 mb-2">طريقة الدفع</label>
@@ -355,11 +359,12 @@
                                             <label class="block text-sm font-bold text-slate-700 mb-2">اختر حساب التحويل</label>
                                             <select name="wallet_id" class="input-checkout" :required="paymentMethod === 'bank_transfer'">
                                                 <option value="">اختر الحساب</option>
-                                                @foreach(($wallets ?? []) as $wallet)
-                                                    <option value="{{ $wallet->id }}">
-                                                        {{ $wallet->name ?? 'حساب منصة' }} — {{ $wallet->account_number ?? $wallet->phone ?? 'بدون رقم' }}
+                                                <?php $__currentLoopData = ($wallets ?? []); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $wallet): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <option value="<?php echo e($wallet->id); ?>">
+                                                        <?php echo e($wallet->name ?? 'حساب منصة'); ?> — <?php echo e($wallet->account_number ?? $wallet->phone ?? 'بدون رقم'); ?>
+
                                                     </option>
-                                                @endforeach
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </select>
                                         </div>
 
@@ -383,10 +388,10 @@
                                             <i class="fas fa-spinner fa-spin" x-show="isSubmitting" x-cloak></i>
                                             <span x-text="isSubmitting ? 'جاري إرسال الطلب...' : 'إرسال الطلب ورفع الإيصال'"></span>
                                         </button>
-                                        <a href="{{ route('orders.index') }}"
+                                        <a href="<?php echo e(route('orders.index')); ?>"
                                            :class="{ 'pointer-events-none opacity-50': isSubmitting }"
                                            class="btn-outline inline-flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-mx-indigo px-8 py-4 rounded-2xl font-bold hover:bg-slate-50">
-                                            <i class="fas fa-arrow-{{ $isRtl ? 'right' : 'left' }}"></i>
+                                            <i class="fas fa-arrow-<?php echo e($isRtl ? 'right' : 'left'); ?>"></i>
                                             إلغاء
                                         </a>
                                     </div>
@@ -395,7 +400,7 @@
                                         يظهر الطلب في صفحة الطلبات ويتم التفعيل بعد الموافقة
                                     </p>
                                 </form>
-                            @endif
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -403,7 +408,7 @@
         </section>
     </main>
 
-    @include('components.unified-footer')
+    <?php echo $__env->make('components.unified-footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
     <script>
     (function(){
@@ -426,11 +431,11 @@
         else{scrollProgress();initReveal();}
     })();
     </script>
-    @if(!empty($fawaterakUseGateway) && isset($course) && empty($fawaterakMisconfigured))
+    <?php if(!empty($fawaterakUseGateway) && isset($course) && empty($fawaterakMisconfigured)): ?>
     <script>
     (function(){
-        var prepareUrl = @json(route('public.course.checkout.fawaterak.prepare', $course->id));
-        var token = @json(csrf_token());
+        var prepareUrl = <?php echo json_encode(route('public.course.checkout.fawaterak.prepare', $course->id), 512) ?>;
+        var token = <?php echo json_encode(csrf_token(), 15, 512) ?>;
         var errEl = document.getElementById('fawaterk-checkout-error');
         function showErr(msg) {
             if (!errEl) { alert(msg); return; }
@@ -481,6 +486,7 @@
         else run();
     })();
     </script>
-    @endif
+    <?php endif; ?>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/public/checkout.blade.php ENDPATH**/ ?>

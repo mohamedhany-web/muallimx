@@ -419,6 +419,10 @@ Route::post('/course/{courseId}/checkout/kashier', [\App\Http\Controllers\Public
     ->middleware('auth')
     ->name('public.course.checkout.kashier');
 
+Route::post('/course/{courseId}/checkout/fawaterak/prepare', [\App\Http\Controllers\Public\CheckoutController::class, 'fawaterakPrepare'])
+    ->middleware('auth')
+    ->name('public.course.checkout.fawaterak.prepare');
+
 // تسجيل مجاني للكورسات المجانية
 Route::post('/course/{courseId}/enroll-free', [\App\Http\Controllers\Public\CheckoutController::class, 'enrollFree'])
     ->middleware('auth')
@@ -437,6 +441,11 @@ Route::post('/learning-path/{slug}/checkout/kashier', function () { return redir
 
 Route::get('/checkout/kashier/callback', [\App\Http\Controllers\Public\CheckoutController::class, 'kashierCallback'])
     ->name('public.checkout.kashier.callback');
+
+Route::get('/checkout/fawaterak/{status}', [\App\Http\Controllers\Public\CheckoutController::class, 'fawaterakReturn'])
+    ->middleware('auth')
+    ->where('status', 'success|fail|pending')
+    ->name('public.checkout.fawaterak.return');
 
 Route::post('/learning-path/{slug}/enroll-free', function () { return redirect('/courses', 302); })->name('public.learning-path.enroll.free');
 Route::post('/learning-path/{slug}/enroll', function () { return redirect('/courses', 302); })->name('public.learning-path.enroll');

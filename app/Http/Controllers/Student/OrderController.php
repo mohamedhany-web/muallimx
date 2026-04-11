@@ -171,7 +171,14 @@ class OrderController extends Controller
             abort(403);
         }
 
-        $order->load(['course.academicSubject', 'course.academicYear', 'learningPath', 'approver']);
+        $order->load([
+            'course.academicSubject',
+            'course.academicYear',
+            'learningPath',
+            'approver',
+            'invoice',
+            'payment',
+        ]);
 
         return view('student.orders.show', compact('order'));
     }

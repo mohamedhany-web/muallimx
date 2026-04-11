@@ -316,6 +316,20 @@
                                 <span>تمت الموافقة على طلبك! يمكنك الآن الدخول للكورس.</span>
                             </p>
                         </div>
+                        @if($order->invoice_id && $order->invoice)
+                        <div class="bg-sky-50 border border-sky-200 rounded-lg p-4 mb-4">
+                            <h3 class="text-sm font-bold text-sky-900 flex items-center gap-2 mb-2">
+                                <i class="fas fa-file-invoice text-sky-600"></i>
+                                الفاتورة
+                            </h3>
+                            <p class="text-sm text-sky-800 mb-3">رقم الفاتورة: <strong class="font-mono" dir="ltr">{{ $order->invoice->invoice_number }}</strong></p>
+                            <a href="{{ route('student.invoices.show', $order->invoice) }}"
+                               class="inline-flex items-center gap-2 w-full justify-center px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-semibold transition-colors">
+                                <i class="fas fa-external-link-alt text-xs"></i>
+                                عرض الفاتورة والتفاصيل
+                            </a>
+                        </div>
+                        @endif
                         @if($order->course)
                         <a href="{{ route('courses.show', $order->course) }}" 
                            class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-3 px-4 rounded-lg font-medium transition-colors text-center block shadow-lg shadow-emerald-500/30">

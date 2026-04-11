@@ -8,11 +8,16 @@ use App\Models\AcademicYear;
 use App\Models\StudentCourseEnrollment;
 use App\Models\LearningPathEnrollment;
 use App\Services\InstructorCoursePercentageService;
-use App\Models\Order;
 use App\Models\Invoice;
+use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Transaction;
+use App\Services\AdminPanelBranding;
+use App\Services\FawaterakService;
 use App\Services\KashierService;
+use App\Services\PaymentGatewaySettings;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -48,15 +53,19 @@ class CheckoutController extends Controller
                 ->with('info', 'أنت مسجل بالفعل في هذا الكورس');
         }
 
-        // التحقق من وجود طلب قيد الانتظار
+        // التحقق من وجود طلب قيد الانتظار (يُستثنى طلب دفع أونلاين قيد إكمال فواتيرك)
         $existingOrder = Order::where('user_id', Auth::id())
             ->where('advanced_course_id', $course->id)
             ->where('status', Order::STATUS_PENDING)
             ->first();
 
         if ($existingOrder) {
-            return redirect()->route('public.course.show', $course->id)
-                ->with('info', 'لديك طلب قيد الانتظار لهذا الكورس');
+            $fawaterakRetry = $existingOrder->payment_method === 'online'
+                && $existingOrder->payment_proof === null;
+            if (! $fawaterakRetry) {
+                return redirect()->route('public.course.show', $course->id)
+                    ->with('info', 'لديك طلب قيد الانتظار لهذا الكورس');
+            }
         }
 
         // جلب المحافظ الإلكترونية النشطة
@@ -71,7 +80,13 @@ class CheckoutController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('public.checkout', compact('course', 'wallets'));
+        $fawaterakGatewayOn = PaymentGatewaySettings::isFawaterakEnabled();
+        $fawaterakConfigured = app(FawaterakService::class)->isConfigured();
+        $fawaterakUseGateway = $fawaterakGatewayOn && $fawaterakConfigured;
+        $fawaterakMisconfigured = $fawaterakGatewayOn && ! $fawaterakConfigured;
+        $platformLogoUrl = AdminPanelBranding::logoPublicUrl();
+
+        return view('public.checkout', compact('course', 'wallets', 'fawaterakUseGateway', 'fawaterakMisconfigured', 'platformLogoUrl'));
     }
 
     /**
@@ -306,6 +321,386 @@ class CheckoutController extends Controller
     }
 
     /**
+     * تجهيز جلسة دفع فواتيرك (IFrame): إنشاء طلب معلّق وإرجاع إعدادات الإضافة.
+     */
+    public function fawaterakPrepare(Request $request, int $courseId): JsonResponse
+    {
+        if (! PaymentGatewaySettings::isFawaterakEnabled()) {
+            return response()->json(['message' => 'بوابة الدفع الإلكترونية غير مفعّلة.'], 403);
+        }
+
+        $fawaterak = app(FawaterakService::class);
+        if (! $fawaterak->isConfigured()) {
+            return response()->json(['message' => 'مفاتيح فواتيرك غير مضبوطة في ملف البيئة.'], 503);
+        }
+
+        if (! Auth::check()) {
+            return response()->json(['message' => 'يجب تسجيل الدخول.'], 401);
+        }
+
+        $course = AdvancedCourse::where('id', $courseId)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $isEnrolled = StudentCourseEnrollment::where('user_id', Auth::id())
+            ->where('advanced_course_id', $course->id)
+            ->where('status', 'active')
+            ->exists();
+        if ($isEnrolled) {
+            return response()->json(['message' => 'أنت مسجل بالفعل في هذا الكورس.'], 422);
+        }
+
+        $amount = (float) ($course->price ?? 0);
+        if ($amount <= 0) {
+            return response()->json(['message' => 'هذا الكورس لا يتطلب دفعاً عبر البوابة.'], 422);
+        }
+
+        $existingOrder = Order::where('user_id', Auth::id())
+            ->where('advanced_course_id', $course->id)
+            ->where('status', Order::STATUS_PENDING)
+            ->first();
+
+        if ($existingOrder) {
+            if ($existingOrder->payment_method !== 'online' || $existingOrder->payment_proof !== null) {
+                return response()->json(['message' => 'لديك طلب قيد المراجعة لهذا الكورس.'], 409);
+            }
+            $order = $existingOrder;
+        } else {
+            $order = Order::create([
+                'user_id' => Auth::id(),
+                'advanced_course_id' => $course->id,
+                'original_amount' => $amount,
+                'discount_amount' => 0,
+                'amount' => $amount,
+                'payment_method' => 'online',
+                'payment_proof' => null,
+                'wallet_id' => null,
+                'notes' => '',
+                'status' => Order::STATUS_PENDING,
+            ]);
+        }
+
+        $request->session()->put('fawaterak_order_id', $order->id);
+
+        $user = Auth::user();
+        $fullName = trim((string) ($user->name ?? ''));
+        $nameParts = preg_split('/\s+/u', $fullName, 2, PREG_SPLIT_NO_EMPTY) ?: [];
+        $firstName = $nameParts[0] ?? 'Customer';
+        $lastName = $nameParts[1] ?? $firstName;
+        $email = trim((string) ($user->email ?? ''));
+        if ($email === '' || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return response()->json(['message' => 'يرجى إضافة بريد إلكتروني صالح في ملفك الشخصي قبل الدفع.'], 422);
+        }
+
+        $phone = preg_replace('/\D/', '', (string) ($user->phone ?? ''));
+        if ($phone === '') {
+            $phone = '0000000000';
+        }
+
+        $currency = (string) config('fawaterak.currency', 'EGP');
+        $cartTotal = number_format($amount, 2, '.', '');
+        $itemPrice = $cartTotal;
+
+        $pluginConfig = [
+            'envType' => $fawaterak->envType(),
+            'hashKey' => $fawaterak->generateHashKey(),
+            'style' => [
+                'listing' => 'horizontal',
+            ],
+            'requestBody' => [
+                'cartTotal' => $cartTotal,
+                'currency' => $currency,
+                'redirectOutIframe' => true,
+                'customer' => [
+                    'customer_unique_id' => (string) $user->id,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'email' => $email,
+                    'phone' => $phone,
+                    'address' => '',
+                ],
+                'redirectionUrls' => [
+                    'successUrl' => route('public.checkout.fawaterak.return', ['status' => 'success']),
+                    'failUrl' => route('public.checkout.fawaterak.return', ['status' => 'fail']),
+                    'pendingUrl' => route('public.checkout.fawaterak.return', ['status' => 'pending']),
+                ],
+                'cartItems' => [
+                    [
+                        'name' => Str::limit($course->title ?? 'كورس', 120),
+                        'price' => $itemPrice,
+                        'quantity' => '1',
+                    ],
+                ],
+                'payLoad' => [
+                    'order_id' => (string) $order->id,
+                    'user_id' => (string) $user->id,
+                    'course_id' => (string) $course->id,
+                ],
+            ],
+        ];
+
+        $version = $fawaterak->versionString();
+        if ($version !== '' && $version !== '0') {
+            $pluginConfig['version'] = $version;
+        }
+
+        return response()->json([
+            'pluginScriptUrl' => $fawaterak->pluginScriptUrl(),
+            'pluginConfig' => $pluginConfig,
+        ]);
+    }
+
+    /**
+     * عودة المستخدم من فواتيرك بعد الدفع (داخل نفس الجلسة).
+     */
+    public function fawaterakReturn(Request $request, string $status): RedirectResponse
+    {
+        $orderId = (int) $request->session()->get('fawaterak_order_id');
+        if ($orderId < 1) {
+            return redirect()->route('orders.index')
+                ->with('error', 'انتهت جلسة الدفع. إن اكتمل الدفع لدى فواتيرك ولم يُفعَّل الكورس، تواصل مع الدعم برقم الطلب.');
+        }
+
+        $order = Order::with(['course', 'learningPath'])->find($orderId);
+        if (! $order || $order->user_id !== Auth::id()) {
+            $request->session()->forget('fawaterak_order_id');
+
+            return redirect()->route('orders.index')->with('error', 'طلب غير صالح.');
+        }
+
+        if ($status === 'fail') {
+            $request->session()->forget('fawaterak_order_id');
+
+            return redirect()->route('public.course.checkout', $order->advanced_course_id)
+                ->with('error', 'لم يتم إتمام الدفع. يمكنك المحاولة مرة أخرى.');
+        }
+
+        if ($status === 'pending') {
+            return redirect()->route('public.course.checkout', $order->advanced_course_id)
+                ->with('info', 'دفعتك قيد المعالجة لدى فواتيرك. عند اكتمالها سيُفعَّل الكورس تلقائياً أو يمكنك تحديث الصفحة لاحقاً.');
+        }
+
+        $lockedOrder = null;
+        DB::beginTransaction();
+        try {
+            $lockedOrder = Order::whereKey($orderId)
+                ->lockForUpdate()
+                ->with(['course', 'learningPath'])
+                ->first();
+
+            if (! $lockedOrder || $lockedOrder->user_id !== Auth::id()) {
+                DB::rollBack();
+                $request->session()->forget('fawaterak_order_id');
+
+                return redirect()->route('orders.index')->with('error', 'طلب غير صالح.');
+            }
+
+            if ($lockedOrder->status !== Order::STATUS_PENDING) {
+                DB::rollBack();
+                $request->session()->forget('fawaterak_order_id');
+
+                return redirect()->route('public.course.show', $lockedOrder->advanced_course_id)
+                    ->with('info', 'تمت معالجة هذا الطلب مسبقاً.');
+            }
+
+            $invoice = $this->approveOrderAfterOnlinePayment(
+                $lockedOrder,
+                'other',
+                $request->query('transactionId') ?? $request->query('invoice_id'),
+                $request->query(),
+                'فواتيرك (Fawaterak)'
+            );
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Fawaterak return: approval failed', [
+                'order_id' => $orderId,
+                'message' => $e->getMessage(),
+            ]);
+
+            $courseIdForCheckout = $lockedOrder?->advanced_course_id
+                ?? Order::query()->whereKey($orderId)->value('advanced_course_id');
+            if ($courseIdForCheckout) {
+                return redirect()->route('public.course.checkout', $courseIdForCheckout)
+                    ->with('error', 'تعذّر تفعيل الطلب بعد الدفع. يرجى التواصل مع الدعم مع رقم الطلب.');
+            }
+
+            return redirect()->route('orders.index')
+                ->with('error', 'تعذّر تفعيل الطلب بعد الدفع. يرجى التواصل مع الدعم.');
+        }
+
+        $request->session()->forget('fawaterak_order_id');
+
+        $courseId = $lockedOrder->advanced_course_id;
+        $successMsg = __('public.checkout_payment_success_with_invoice', [
+            'invoice' => $invoice->invoice_number,
+        ]);
+
+        return redirect()->route('public.course.show', $courseId)
+            ->with('success', $successMsg);
+    }
+
+    /**
+     * إتمام الفوترة والتسجيل بعد دفع أونلاين (داخل معاملة قاعدة بيانات مفتوحة).
+     * يُنشئ فاتورة مدفوعة، وسجل دفع، ومعاملة محاسبية، ويحدّث الطلب إلى مقبول، ويُفعّل التسجيل في الكورس.
+     *
+     * @param  'kashier'|'other'  $paymentGateway
+     */
+    private function approveOrderAfterOnlinePayment(
+        Order $order,
+        string $paymentGateway,
+        ?string $transactionId,
+        array $gatewayResponse,
+        string $gatewayDisplayName
+    ): Invoice {
+        $order->loadMissing(['course', 'learningPath']);
+
+        $isLearningPath = ! empty($order->academic_year_id);
+        $orderTitle = $isLearningPath
+            ? ($order->learningPath->name ?? 'مسار تعليمي')
+            : ($order->course->title ?? 'كورس');
+
+        $currency = (string) config('fawaterak.currency', 'EGP');
+
+        $invoiceNumber = 'INV-' . str_pad((string) (Invoice::count() + 1), 8, '0', STR_PAD_LEFT);
+        $invoice = Invoice::create([
+            'invoice_number' => $invoiceNumber,
+            'user_id' => $order->user_id,
+            'type' => $isLearningPath ? 'learning_path' : 'course',
+            'description' => $isLearningPath ? 'تسجيل في المسار: '.$orderTitle : 'تسجيل في الكورس: '.$orderTitle,
+            'subtotal' => $order->amount,
+            'tax_amount' => 0,
+            'discount_amount' => 0,
+            'total_amount' => $order->amount,
+            'status' => 'paid',
+            'due_date' => now(),
+            'paid_at' => now(),
+            'notes' => 'دفع عبر '.$gatewayDisplayName.' - طلب #'.$order->id,
+            'items' => [
+                [
+                    'description' => $isLearningPath ? 'المسار: '.$orderTitle : 'الكورس: '.$orderTitle,
+                    'quantity' => 1,
+                    'price' => $order->amount,
+                    'total' => $order->amount,
+                ],
+            ],
+        ]);
+
+        $paymentNumber = 'PAY-' . str_pad((string) (Payment::count() + 1), 8, '0', STR_PAD_LEFT);
+        $payment = Payment::create([
+            'payment_number' => $paymentNumber,
+            'invoice_id' => $invoice->id,
+            'user_id' => $order->user_id,
+            'payment_method' => 'online',
+            'payment_gateway' => $paymentGateway,
+            'amount' => $order->amount,
+            'currency' => $currency,
+            'status' => 'completed',
+            'transaction_id' => $transactionId,
+            'gateway_response' => $gatewayResponse,
+            'paid_at' => now(),
+            'notes' => 'دفع عبر '.$gatewayDisplayName.' - طلب #'.$order->id,
+        ]);
+
+        $transactionNumber = 'TXN-' . str_pad((string) (Transaction::count() + 1), 8, '0', STR_PAD_LEFT);
+        Transaction::create([
+            'transaction_number' => $transactionNumber,
+            'user_id' => $order->user_id,
+            'payment_id' => $payment->id,
+            'invoice_id' => $invoice->id,
+            'expense_id' => null,
+            'subscription_id' => null,
+            'type' => 'credit',
+            'category' => 'course_payment',
+            'amount' => $order->amount,
+            'currency' => $currency,
+            'description' => ($isLearningPath ? 'دفع مسار: ' : 'دفع كورس: ').$orderTitle.' - طلب #'.$order->id,
+            'status' => 'completed',
+            'metadata' => [
+                'order_id' => $order->id,
+                'invoice_id' => $invoice->id,
+                'payment_id' => $payment->id,
+                'course_id' => $order->advanced_course_id,
+                'academic_year_id' => $order->academic_year_id,
+            ],
+        ]);
+
+        $order->update([
+            'status' => Order::STATUS_APPROVED,
+            'approved_at' => now(),
+            'approved_by' => null,
+            'invoice_id' => $invoice->id,
+            'payment_id' => $payment->id,
+        ]);
+
+        if ($order->academic_year_id) {
+            $existingPath = LearningPathEnrollment::where('user_id', $order->user_id)
+                ->where('academic_year_id', $order->academic_year_id)
+                ->first();
+            if (! $existingPath) {
+                $pathEnrollment = LearningPathEnrollment::create([
+                    'user_id' => $order->user_id,
+                    'academic_year_id' => $order->academic_year_id,
+                    'status' => 'active',
+                    'enrolled_at' => now(),
+                    'activated_at' => now(),
+                    'activated_by' => $order->user_id,
+                    'progress' => 0,
+                ]);
+                $this->enrollInPathCourses($pathEnrollment);
+            } else {
+                if ($existingPath->status !== 'active') {
+                    $existingPath->update([
+                        'status' => 'active',
+                        'activated_at' => now(),
+                        'activated_by' => $order->user_id,
+                    ]);
+                    $this->enrollInPathCourses($existingPath);
+                }
+            }
+        }
+
+        if ($order->advanced_course_id) {
+            $existingEnrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
+                ->where('advanced_course_id', $order->advanced_course_id)
+                ->first();
+            if (! $existingEnrollment) {
+                StudentCourseEnrollment::create([
+                    'user_id' => $order->user_id,
+                    'advanced_course_id' => $order->advanced_course_id,
+                    'enrolled_at' => now(),
+                    'activated_at' => now(),
+                    'activated_by' => $order->user_id,
+                    'status' => 'active',
+                    'progress' => 0,
+                    'invoice_id' => $invoice->id,
+                    'payment_id' => $payment->id,
+                    'payment_method' => 'online',
+                    'final_price' => $order->amount,
+                ]);
+            } else {
+                $existingEnrollment->update([
+                    'status' => 'active',
+                    'activated_at' => now(),
+                    'activated_by' => $order->user_id,
+                    'invoice_id' => $invoice->id,
+                    'payment_id' => $payment->id,
+                    'payment_method' => 'online',
+                    'final_price' => $order->amount,
+                ]);
+            }
+            $enrollment = StudentCourseEnrollment::where('user_id', $order->user_id)
+                ->where('advanced_course_id', $order->advanced_course_id)
+                ->first();
+            if ($enrollment) {
+                InstructorCoursePercentageService::processEnrollmentActivation($enrollment);
+            }
+        }
+
+        return $invoice;
+    }
+
+    /**
      * تسجيل الطالب في كورسات المسار (للاستخدام من callback كاشير)
      */
     private function enrollInPathCourses(LearningPathEnrollment $enrollment): void
@@ -366,6 +761,10 @@ class CheckoutController extends Controller
         // التحقق من تسجيل الدخول
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
+        }
+
+        if (PaymentGatewaySettings::isFawaterakEnabled()) {
+            return back()->with('error', 'الدفع اليدوي غير متاح حين تكون بوابة الدفع الإلكترونية (فواتيرك) مفعّلة من إعدادات النظام.');
         }
 
         $course = AdvancedCourse::where('id', $courseId)
@@ -585,7 +984,11 @@ class CheckoutController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('public.checkout', compact('learningPath', 'wallets'));
+        $fawaterakUseGateway = false;
+        $fawaterakMisconfigured = false;
+        $platformLogoUrl = AdminPanelBranding::logoPublicUrl();
+
+        return view('public.checkout', compact('learningPath', 'wallets', 'fawaterakUseGateway', 'fawaterakMisconfigured', 'platformLogoUrl'));
     }
 
     /**
@@ -596,6 +999,10 @@ class CheckoutController extends Controller
         // التحقق من تسجيل الدخول
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'يجب تسجيل الدخول أولاً');
+        }
+
+        if (PaymentGatewaySettings::isFawaterakEnabled()) {
+            return back()->with('error', 'الدفع اليدوي غير متاح حين تكون بوابة الدفع الإلكترونية (فواتيرك) مفعّلة من إعدادات النظام.');
         }
 
         // البحث عن AcademicYear بالاسم (slug)
