@@ -34,10 +34,16 @@ return [
     'provider_key' => env('FAWATERAK_PROVIDER_KEY', ''),
 
     /**
-     * قيمة حقل Domain في سلسلة الـ HMAC (مثال: https://muallimx.com أو النطاق كما في لوحة فواتيرك).
-     * إن تركتها فارغة يُستخرج host من APP_URL.
+     * قيمة حقل Domain في HMAC = نفس FAWATERAK-DOMAIN التي يرسلها المتصفح (https://النطاق).
+     * إن تركتها فارغة: يُبنى https:// + host من APP_URL.
+     * إن زار المستخدم www والموقع بدون www (أو العكس) عيّن القيمة يدوياً لتطابق ما في لوحة فواتيرك.
      */
     'iframe_domain' => env('FAWATERAK_IFRAME_DOMAIN', ''),
+
+    /*
+    | رمز Bearer لطلبات الإضافة (getPaymentmethods…) إن كان مختلفاً عن API Key — وإلا يُستخدم vendor_key
+    */
+    'plugin_bearer_token' => env('FAWATERAK_PLUGIN_BEARER_TOKEN', ''),
 
     'version' => env('FAWATERAK_VERSION', '0'),
 

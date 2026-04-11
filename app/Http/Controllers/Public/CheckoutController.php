@@ -441,11 +441,16 @@ class CheckoutController extends Controller
         $cartTotal = number_format($amount, 2, '.', '');
         $itemPrice = $cartTotal;
 
-        // token: السكربت الرسمي يبني Authorization: Bearer + token؛ وضع الـ iframe يعتمد على FAWATERAK-HASH-KEY ويُترك Bearer فارغاً
+        $bearer = trim((string) config('fawaterak.plugin_bearer_token', ''));
+        if ($bearer === '') {
+            $bearer = trim((string) config('fawaterak.vendor_key', ''));
+        }
+
+        // token: Bearer لطلبات الإضافة؛ الـ HMAC يعتمد على domainForHash() مطابقاً لترويسة FAWATERAK-DOMAIN
         $pluginConfig = [
             'envType' => $iframe->envType(),
             'hashKey' => $iframe->generateHashKey(),
-            'token' => '',
+            'token' => $bearer,
             'style' => [
                 'listing' => 'horizontal',
             ],
