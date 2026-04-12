@@ -3,6 +3,12 @@
 @section('header', 'التسويق الشخصي (المدربين)')
 @section('content')
 <div class="w-full space-y-6">
+    @if(session('success'))
+        <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 text-sm font-medium">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="rounded-xl bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 text-sm font-medium">{{ session('error') }}</div>
+    @endif
     <div class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
         <div class="px-5 py-6 sm:px-8 border-b border-slate-200">
             <h1 class="text-2xl font-bold text-slate-900">مراجعة ملفات المدربين التعريفية</h1>
@@ -47,7 +53,17 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3">{{ $p->submitted_at ? $p->submitted_at->format('Y-m-d') : '—' }}</td>
-                            <td class="px-4 py-3"><a href="{{ route('admin.personal-branding.show', $p) }}" class="text-sky-600 hover:text-sky-700 font-medium">عرض / مراجعة</a></td>
+                            <td class="px-4 py-3">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <a href="{{ route('admin.personal-branding.show', $p) }}" class="inline-flex items-center rounded-lg bg-slate-100 text-slate-800 px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-200">عرض</a>
+                                    <a href="{{ route('admin.personal-branding.edit', $p) }}" class="inline-flex items-center rounded-lg bg-sky-50 text-sky-700 px-2.5 py-1.5 text-xs font-semibold hover:bg-sky-100 border border-sky-200/80">تعديل</a>
+                                    <form method="POST" action="{{ route('admin.personal-branding.destroy', $p) }}" class="inline" onsubmit="return confirm('حذف الملف التعريفي بالكامل لهذا المدرب؟ سيُزال من الموقع ويمكنه إنشاء ملف جديد لاحقاً.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center rounded-lg bg-rose-50 text-rose-700 px-2.5 py-1.5 text-xs font-semibold hover:bg-rose-100 border border-rose-200/80">حذف</button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                         @empty
                         <tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">لا توجد ملفات تعريفية.</td></tr>

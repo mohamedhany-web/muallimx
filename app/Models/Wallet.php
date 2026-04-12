@@ -133,22 +133,44 @@ class Wallet extends Model
      */
     public function withdraw($amount, $notes = null)
     {
-        if ($this->balance < $amount) {
+        $amount = round((float) $amount, 2);
+        if ($amount <= 0) {
+            return null;
+        }
+
+        if ((float) $this->balance < $amount) {
             throw new \Exception('رصيد المحفظة غير كافي');
         }
 
-        $balanceBefore = $this->balance;
+        $balanceBefore = (float) $this->balance;
         $this->decrement('balance', $amount);
         $this->refresh();
+        $balanceAfter = (float) $this->balance;
 
-        return WalletTransaction::create([
+        $table = (new WalletTransaction)->getTable();
+        $data = [
             'wallet_id' => $this->id,
             'type' => 'withdrawal',
             'amount' => $amount,
-            'balance_after' => $this->balance,
-            'notes' => $notes,
-            'created_by' => auth()->id(),
-        ]);
+            'balance_after' => $balanceAfter,
+        ];
+        if (\Illuminate\Support\Facades\Schema::hasColumn($table, 'balance_before')) {
+            $data['balance_before'] = $balanceBefore;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn($table, 'description')) {
+            $data['description'] = $notes ?? 'سحب من المحفظة';
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn($table, 'notes')) {
+            $data['notes'] = $notes;
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn($table, 'status')) {
+            $data['status'] = 'completed';
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn($table, 'created_by')) {
+            $data['created_by'] = auth()->id();
+        }
+
+        return WalletTransaction::create($data);
     }
 
     /**

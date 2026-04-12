@@ -219,19 +219,34 @@
                                     </p>
                                 </div>
                             </div>
-                            <div class="space-y-3 mb-6">
+                            <?php
+                                $baseCoursePrice = isset($course) ? (float) ($course->price ?? 0) : (float) (isset($learningPath) ? ($learningPath->price ?? 0) : 0);
+                                $studentBal = isset($studentWalletBalance) ? (float) $studentWalletBalance : 0;
+                            ?>
+                            <div class="space-y-3 mb-6" id="checkout-pricing-summary"
+                                 data-base-price="<?php echo e($baseCoursePrice); ?>"
+                                 data-student-balance="<?php echo e($studentBal); ?>"
+                                 data-has-course="<?php echo e(isset($course) ? '1' : '0'); ?>">
                                 <div class="flex justify-between items-center text-sm">
-                                    <span class="text-slate-600">السعر</span>
-                                    <span class="font-bold text-brand-600 text-lg">
-                                        <?php echo e(number_format(isset($course) ? $course->price : (isset($learningPath) ? ($learningPath->price ?? 0) : 0), 0)); ?>
+                                    <span class="text-slate-600">السعر الأساسي</span>
+                                    <span class="font-bold text-brand-600 text-lg" id="sum-original">
+                                        <?php echo e(number_format($baseCoursePrice, 2)); ?>
 
                                         <span class="text-slate-500 text-sm font-medium"><?php echo e(__('public.currency_egp')); ?></span>
                                     </span>
                                 </div>
+                                <div class="hidden flex justify-between items-center text-sm text-emerald-700" id="sum-coupon-row">
+                                    <span>خصم الكوبون</span>
+                                    <span class="font-bold" id="sum-coupon">—</span>
+                                </div>
+                                <div class="hidden flex justify-between items-center text-sm text-sky-700" id="sum-wallet-row">
+                                    <span>رصيد المحفظة</span>
+                                    <span class="font-bold" id="sum-wallet">—</span>
+                                </div>
                                 <div class="flex justify-between items-center pt-4 border-t-2 border-slate-100">
-                                    <span class="font-bold text-navy-950">الإجمالي</span>
-                                    <span class="text-2xl font-black text-brand-600">
-                                        <?php echo e(number_format(isset($course) ? $course->price : (isset($learningPath) ? ($learningPath->price ?? 0) : 0), 0)); ?>
+                                    <span class="font-bold text-navy-950">المستحق للدفع</span>
+                                    <span class="text-2xl font-black text-brand-600" id="sum-final">
+                                        <?php echo e(number_format($baseCoursePrice, 2)); ?>
 
                                         <span class="text-slate-500 text-base font-medium"><?php echo e(__('public.currency_egp')); ?></span>
                                     </span>
@@ -286,6 +301,59 @@
                                 <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 flex items-center gap-3 shadow-sm">
                                     <i class="fas fa-info-circle text-amber-600"></i>
                                     <p class="text-amber-900 text-sm font-semibold"><?php echo e(session('info')); ?></p>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if(isset($course)): ?>
+                                <?php
+                                    $checkoutHasWalletBalance = isset($studentWalletBalance) && (float) $studentWalletBalance > 0;
+                                ?>
+                                <div class="mb-8 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-5 sm:p-6 shadow-sm space-y-4"
+                                     id="checkout-discount-panel"
+                                     data-quote-url="<?php echo e(route('public.course.checkout.quote', $course->id)); ?>"
+                                     data-has-wallet="<?php echo e($checkoutHasWalletBalance ? '1' : '0'); ?>">
+                                    <h3 class="font-heading text-lg font-black text-navy-950 flex items-center gap-2">
+                                        <i class="fas fa-tags text-brand-500"></i>
+                                        <?php if($checkoutHasWalletBalance): ?>
+                                            كوبون الخصم ورصيد المحفظة
+                                        <?php else: ?>
+                                            كوبون الخصم
+                                        <?php endif; ?>
+                                    </h3>
+                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                        <?php if($checkoutHasWalletBalance): ?>
+                                            أضف كوبوناً صالحاً (من التسويق) و/أو استخدم رصيد محفظتك على المنصة. يُخصم الكوبون أولاً ثم رصيد المحفظة من المبلغ المتبقي.
+                                        <?php else: ?>
+                                            أدخل كوبوناً صالحاً من التسويق إن وُجد، ثم اضغط «تحديث السعر».
+                                        <?php endif; ?>
+                                    </p>
+                                    <?php if($checkoutHasWalletBalance): ?>
+                                        <p class="text-xs font-semibold text-sky-700">رصيد محفظتك الحالي: <?php echo e(number_format($studentWalletBalance, 2)); ?> <?php echo e(__('public.currency_egp')); ?></p>
+                                    <?php endif; ?>
+                                    <div class="grid grid-cols-1 <?php echo e($checkoutHasWalletBalance ? 'sm:grid-cols-2' : ''); ?> gap-4">
+                                        <div>
+                                            <label class="block text-sm font-bold text-slate-700 mb-1">كود الكوبون</label>
+                                            <input type="text" id="checkout_coupon_code" dir="ltr" autocomplete="off"
+                                                   class="input-checkout uppercase font-mono text-sm"
+                                                   placeholder="مثال: SAVE10">
+                                        </div>
+                                        <?php if($checkoutHasWalletBalance): ?>
+                                            <div>
+                                                <label class="block text-sm font-bold text-slate-700 mb-1">مبلغ من المحفظة (ج.م)</label>
+                                                <input type="number" id="checkout_wallet_credit" step="0.01" min="0"
+                                                       value="0"
+                                                       max="<?php echo e(max(0, $studentWalletBalance ?? 0)); ?>"
+                                                       class="input-checkout">
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-3">
+                                        <button type="button" id="checkout_apply_pricing"
+                                                class="inline-flex items-center gap-2 rounded-xl bg-mx-navy text-white px-5 py-2.5 text-sm font-bold hover:opacity-95 transition-opacity">
+                                            <i class="fas fa-rotate"></i> تحديث السعر
+                                        </button>
+                                        <span id="checkout_pricing_msg" class="text-sm font-medium text-slate-600 hidden"></span>
+                                    </div>
                                 </div>
                             <?php endif; ?>
 
@@ -385,8 +453,12 @@
                                     </p>
                                 </div>
 
-                                <form action="<?php echo e(isset($course) ? route('public.course.checkout.complete', $course->id) : (isset($learningPath) ? route('public.learning-path.checkout.complete', Str::slug($learningPath->name)) : '#')); ?>" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true" x-data="{paymentMethod:'bank_transfer'}">
+                                <form action="<?php echo e(isset($course) ? route('public.course.checkout.complete', $course->id) : (isset($learningPath) ? route('public.learning-path.checkout.complete', Str::slug($learningPath->name)) : '#')); ?>" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true" x-data="{paymentMethod:'bank_transfer'}" id="manual-checkout-form">
                                     <?php echo csrf_field(); ?>
+                                    <?php if(isset($course)): ?>
+                                        <input type="hidden" name="coupon_code" id="form_coupon_code" value="<?php echo e(old('coupon_code', '')); ?>">
+                                        <input type="hidden" name="wallet_credit" id="form_wallet_credit" value="<?php echo e(old('wallet_credit', '0')); ?>">
+                                    <?php endif; ?>
                                     <div class="space-y-5 mb-8">
                                         <div>
                                             <label class="block text-sm font-bold text-slate-700 mb-2">طريقة الدفع</label>
@@ -473,6 +545,110 @@
         else{scrollProgress();initReveal();}
     })();
     </script>
+    <?php if(isset($course)): ?>
+    <script>
+    (function(){
+        var panel = document.getElementById('checkout-discount-panel');
+        var summary = document.getElementById('checkout-pricing-summary');
+        if (!panel || !summary) return;
+        var quoteUrl = panel.getAttribute('data-quote-url');
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        var csrf = (meta && meta.getAttribute('content')) || '';
+        function el(id){ return document.getElementById(id); }
+        function fmt(n){
+            var x = parseFloat(n);
+            if (isNaN(x)) x = 0;
+            return x.toLocaleString('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        function setMsg(text, isErr) {
+            var m = el('checkout_pricing_msg');
+            if (!m) return;
+            m.textContent = text || '';
+            m.classList.toggle('hidden', !text);
+            m.classList.toggle('text-red-600', !!isErr);
+            m.classList.toggle('text-emerald-700', !isErr && !!text);
+        }
+        function updateSummary(data) {
+            var base = parseFloat(summary.getAttribute('data-base-price')) || 0;
+            if (!data || !data.ok) {
+                el('sum-original').innerHTML = fmt(base) + ' <span class="text-slate-500 text-sm font-medium"><?php echo e(__('public.currency_egp')); ?></span>';
+                el('sum-final').innerHTML = fmt(base) + ' <span class="text-slate-500 text-base font-medium"><?php echo e(__('public.currency_egp')); ?></span>';
+                el('sum-coupon-row').classList.add('hidden');
+                el('sum-wallet-row').classList.add('hidden');
+                return;
+            }
+            el('sum-original').innerHTML = fmt(data.original_amount) + ' <span class="text-slate-500 text-sm font-medium"><?php echo e(__('public.currency_egp')); ?></span>';
+            if (data.discount_amount > 0) {
+                el('sum-coupon-row').classList.remove('hidden');
+                el('sum-coupon').textContent = '− ' + fmt(data.discount_amount) + ' <?php echo e(__('public.currency_egp')); ?>';
+            } else {
+                el('sum-coupon-row').classList.add('hidden');
+            }
+            if (data.wallet_credit_amount > 0) {
+                el('sum-wallet-row').classList.remove('hidden');
+                el('sum-wallet').textContent = '− ' + fmt(data.wallet_credit_amount) + ' <?php echo e(__('public.currency_egp')); ?>';
+            } else {
+                el('sum-wallet-row').classList.add('hidden');
+            }
+            el('sum-final').innerHTML = fmt(data.final_amount) + ' <span class="text-slate-500 text-base font-medium"><?php echo e(__('public.currency_egp')); ?></span>';
+        }
+        function quote() {
+            setMsg('', false);
+            var fd = new FormData();
+            fd.append('_token', csrf);
+            var c = el('checkout_coupon_code');
+            var w = el('checkout_wallet_credit');
+            fd.append('coupon_code', c ? (c.value || '').trim() : '');
+            fd.append('wallet_credit', w && w.value !== '' ? w.value : '0');
+            return fetch(quoteUrl, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: fd,
+                credentials: 'same-origin'
+            }).then(function(r){
+                return r.json().then(function(j){ return { ok: r.ok, status: r.status, data: j }; });
+            }).then(function(res){
+                if (res.ok && res.data && res.data.ok) {
+                    updateSummary(res.data);
+                    setMsg('تم تحديث السعر.', false);
+                    var hfC = el('form_coupon_code');
+                    var hfW = el('form_wallet_credit');
+                    if (hfC) hfC.value = (el('checkout_coupon_code').value || '').trim();
+                    if (hfW) {
+                        var wIn = el('checkout_wallet_credit');
+                        hfW.value = wIn && wIn.value !== '' ? wIn.value : '0';
+                    }
+                    return res.data;
+                }
+                var msg = (res.data && res.data.message) ? res.data.message : 'تعذّر حساب السعر.';
+                setMsg(msg, true);
+                updateSummary(null);
+                return null;
+            }).catch(function(){
+                setMsg('خطأ في الاتصال.', true);
+                updateSummary(null);
+                return null;
+            });
+        }
+        var btn = el('checkout_apply_pricing');
+        if (btn) btn.addEventListener('click', function(e){ e.preventDefault(); quote(); });
+        var form = el('manual-checkout-form');
+        if (form) {
+            form.addEventListener('submit', function(){
+                var c = el('checkout_coupon_code');
+                var w = el('checkout_wallet_credit');
+                if (el('form_coupon_code')) el('form_coupon_code').value = c ? (c.value || '').trim() : '';
+                if (el('form_wallet_credit')) el('form_wallet_credit').value = w && w.value !== '' ? w.value : '0';
+            });
+        }
+        var oc = el('checkout_coupon_code');
+        var ow = el('checkout_wallet_credit');
+        if (el('form_coupon_code') && el('form_coupon_code').value && oc) oc.value = el('form_coupon_code').value;
+        if (ow && el('form_wallet_credit') && el('form_wallet_credit').value) ow.value = el('form_wallet_credit').value;
+        quote();
+    })();
+    </script>
+    <?php endif; ?>
     <?php if(!empty($fawaterakUseGateway) && isset($course) && empty($fawaterakMisconfigured) && ($fawaterakIntegration ?? 'iframe') === 'iframe'): ?>
     <script>
     (function(){
@@ -550,6 +726,12 @@
             try { return JSON.parse(text); } catch (e) { return null; }
         }
         function run() {
+            var fd = new FormData();
+            fd.append('_token', token);
+            var cEl = document.getElementById('checkout_coupon_code');
+            var wEl = document.getElementById('checkout_wallet_credit');
+            fd.append('coupon_code', cEl ? (cEl.value || '').trim() : '');
+            fd.append('wallet_credit', wEl && wEl.value !== '' ? wEl.value : '0');
             fetch(prepareUrl, {
                 method: 'POST',
                 headers: {
@@ -557,6 +739,7 @@
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
+                body: fd,
                 credentials: 'same-origin'
             })
             .then(function(r) {
@@ -585,6 +768,10 @@
                 }
                 if (!res.ok) {
                     showErr(res.data.message || ('تعذّر تجهيز الدفع (رمز ' + res.status + ').'));
+                    return;
+                }
+                if (res.data.mode === 'completed' && res.data.redirect) {
+                    window.location.href = res.data.redirect;
                     return;
                 }
                 if ((res.data.mode && res.data.mode !== 'iframe') || !res.data.pluginScriptUrl || !res.data.pluginConfig) {

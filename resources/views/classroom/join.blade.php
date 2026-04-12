@@ -13,9 +13,21 @@
     <style>
         * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
         body { margin: 0; padding: 0; background: #0c1222; min-height: 100vh; }
-        .room-body { display: flex; flex-direction: column; height: calc(100vh - 72px); }
+        .room-body { position: relative; display: flex; flex-direction: column; height: calc(100vh - 72px); }
         #jitsi-container { width: 100%; flex: 1; min-height: 0; background: #0f172a; }
         #jitsi-container iframe { width: 100% !important; height: 100% !important; border: none; }
+        .jitsi-brand-mask {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: min(240px, 46vw);
+            height: 96px;
+            z-index: 11;
+            pointer-events: none;
+            background: #0f172a;
+            border-bottom-right-radius: 12px;
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.5);
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-white">
@@ -82,6 +94,7 @@
         </header>
         <div class="room-body">
             <main id="jitsi-container" role="application" aria-label="غرفة الاجتماع"></main>
+            <div class="jitsi-brand-mask" aria-hidden="true"></div>
         </div>
     </div>
 
@@ -166,6 +179,7 @@
                     SHOW_JITSI_WATERMARK: false,
                     SHOW_WATERMARK_FOR_GUESTS: false,
                     SHOW_BRAND_WATERMARK: false,
+                    SHOW_POWERED_BY: false,
                     MOBILE_APP_PROMO: false,
                     DEFAULT_BACKGROUND: '#0f172a',
                     FILM_STRIP_MAX_HEIGHT: 100,

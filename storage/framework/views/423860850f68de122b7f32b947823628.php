@@ -97,9 +97,14 @@
                                 </div>
                             <?php endif; ?>
                             <div class="flex items-center text-sm text-slate-600 dark:text-slate-400">
-                                <?php if($course->price && $course->price > 0): ?>
+                                <?php if(!$course->is_free && $course->effectivePurchasePrice() > 0): ?>
                                     <i class="fas fa-money-bill-wave text-slate-400 dark:text-slate-500 w-5 ml-2 flex-shrink-0"></i>
-                                    <span class="text-slate-700 dark:text-slate-300 font-medium"><?php echo e(number_format($course->price)); ?> ج.م</span>
+                                    <span class="text-slate-700 dark:text-slate-300 font-medium flex flex-col tabular-nums">
+                                        <?php if($course->hasPromotionalPrice()): ?>
+                                            <span class="text-xs text-slate-400 line-through"><?php echo e(number_format($course->listPriceAmount())); ?> ج.م</span>
+                                        <?php endif; ?>
+                                        <span><?php echo e(number_format($course->effectivePurchasePrice())); ?> ج.م</span>
+                                    </span>
                                 <?php else: ?>
                                     <i class="fas fa-gift text-emerald-500 w-5 ml-2 flex-shrink-0"></i>
                                     <span class="text-emerald-600 dark:text-emerald-400 font-semibold">مجاني</span>

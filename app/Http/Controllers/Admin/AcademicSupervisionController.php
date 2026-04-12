@@ -216,6 +216,8 @@ class AcademicSupervisionController extends Controller
         $academicObserverMode = true;
         $academicObserverExitUrl = route('admin.academic-supervision.supervisors.students.show', [$supervisor, $student]);
         $jitsiDisplayName = 'إدارة: '.$admin->name;
+        $subscriptionFeatureMenuItems = [];
+        $subscriptionPackageLabel = null;
 
         return view('student.classroom.room', compact(
             'meeting',
@@ -228,7 +230,9 @@ class AcademicSupervisionController extends Controller
             'useInstructorRoutes',
             'academicObserverMode',
             'academicObserverExitUrl',
-            'jitsiDisplayName'
+            'jitsiDisplayName',
+            'subscriptionFeatureMenuItems',
+            'subscriptionPackageLabel'
         ));
     }
 }

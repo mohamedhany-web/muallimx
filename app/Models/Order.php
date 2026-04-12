@@ -16,6 +16,7 @@ class Order extends Model
         'coupon_id',
         'original_amount',
         'discount_amount',
+        'wallet_credit_amount',
         'amount',
         'payment_method',
         'wallet_id',
@@ -35,11 +36,14 @@ class Order extends Model
         'amount' => 'decimal:2',
         'original_amount' => 'decimal:2',
         'discount_amount' => 'decimal:2',
+        'wallet_credit_amount' => 'decimal:2',
         'approved_at' => 'datetime',
     ];
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
 
     public function user()

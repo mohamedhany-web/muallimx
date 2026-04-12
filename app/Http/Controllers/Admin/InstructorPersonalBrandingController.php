@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\InstructorProfile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class InstructorPersonalBrandingController extends Controller
 {
@@ -19,7 +20,7 @@ class InstructorPersonalBrandingController extends Controller
             $search = $request->search;
             $query->whereHas('user', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -38,7 +39,73 @@ class InstructorPersonalBrandingController extends Controller
     public function show(InstructorProfile $personal_branding)
     {
         $personal_branding->load(['user', 'reviewedByUser']);
+
         return view('admin.marketing.personal-branding.show', compact('personal_branding'));
+    }
+
+    public function edit(InstructorProfile $personal_branding)
+    {
+        $personal_branding->load('user');
+
+        return view('admin.marketing.personal-branding.edit', compact('personal_branding'));
+    }
+
+    public function update(Request $request, InstructorProfile $personal_branding)
+    {
+        $data = $request->validate([
+            'headline' => 'nullable|string|max:255',
+            'bio' => 'nullable|string|max:5000',
+            'experience' => 'nullable|string|max:50000',
+            'skills' => 'nullable|string|max:5000',
+            'consultation_price_egp' => 'nullable|numeric|min:0|max:999999.99',
+            'consultation_duration_minutes' => 'nullable|integer|min:15|max:480',
+            'photo' => 'nullable|image|max:'.config('upload_limits.max_upload_kb'),
+        ], [
+            'experience.max' => 'الخبرات في المجال يجب ألا تتجاوز 50 ألف حرف.',
+            'skills.max' => 'المهارات يجب ألا تتجاوز 5 آلاف حرف.',
+            'photo.image' => 'الملف المرفوع يجب أن يكون صورة.',
+            'photo.max' => 'حجم الصورة يتجاوز الحد المسموح.',
+        ]);
+
+        if ($request->hasFile('photo')) {
+            if ($personal_branding->photo_path && Storage::disk('public')->exists($personal_branding->photo_path)) {
+                Storage::disk('public')->delete($personal_branding->photo_path);
+            }
+            $data['photo_path'] = $request->file('photo')->store('instructor-profiles', 'public');
+        }
+
+        unset($data['photo']);
+        $data['social_links'] = $personal_branding->social_links ?? [];
+
+        foreach (['consultation_price_egp', 'consultation_duration_minutes'] as $k) {
+            if (! array_key_exists($k, $data)) {
+                continue;
+            }
+            if ($data[$k] === '' || $data[$k] === null) {
+                $data[$k] = null;
+            }
+        }
+
+        $personal_branding->update($data);
+
+        return redirect()
+            ->route('admin.personal-branding.show', $personal_branding)
+            ->with('success', 'تم تحديث الملف التعريفي للمدرب.');
+    }
+
+    public function destroy(InstructorProfile $personal_branding)
+    {
+        $userName = $personal_branding->user?->name ?? 'المدرب';
+
+        if ($personal_branding->photo_path && Storage::disk('public')->exists($personal_branding->photo_path)) {
+            Storage::disk('public')->delete($personal_branding->photo_path);
+        }
+
+        $personal_branding->delete();
+
+        return redirect()
+            ->route('admin.personal-branding.index')
+            ->with('success', 'تم حذف الملف التعريفي لـ '.$userName.'. يمكن للمدرب إنشاء ملف جديد من لوحته.');
     }
 
     public function approve(InstructorProfile $personal_branding)
@@ -52,6 +119,7 @@ class InstructorPersonalBrandingController extends Controller
             'reviewed_by' => auth()->id(),
             'rejection_reason' => null,
         ]);
+
         return back()->with('success', 'تمت الموافقة على الملف التعريفي للمدرب ونشره على الموقع.');
     }
 
@@ -66,6 +134,7 @@ class InstructorPersonalBrandingController extends Controller
             'reviewed_by' => auth()->id(),
             'rejection_reason' => $request->input('rejection_reason'),
         ]);
+
         return back()->with('success', 'تم رفض الملف التعريفي. يمكن للمدرب تعديله وإعادة الإرسال.');
     }
 
@@ -74,7 +143,7 @@ class InstructorPersonalBrandingController extends Controller
      */
     public function sendBackForReview(InstructorProfile $personal_branding)
     {
-        if (!in_array($personal_branding->status, [InstructorProfile::STATUS_APPROVED, InstructorProfile::STATUS_REJECTED])) {
+        if (! in_array($personal_branding->status, [InstructorProfile::STATUS_APPROVED, InstructorProfile::STATUS_REJECTED])) {
             return back()->with('error', 'يمكن إعادة المراجعة فقط للملفات المعتمدة أو المرفوضة.');
         }
         $personal_branding->update([
@@ -83,6 +152,7 @@ class InstructorPersonalBrandingController extends Controller
             'reviewed_by' => null,
             'rejection_reason' => null,
         ]);
+
         return back()->with('success', 'تم إعادة الملف التعريفي إلى قيد المراجعة.');
     }
 

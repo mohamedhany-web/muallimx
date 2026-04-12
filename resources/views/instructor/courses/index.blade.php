@@ -169,13 +169,18 @@
                             </span>
                         </div>
                         @endif
-                        @if($course->price && $course->price > 0)
+                        @if(!$course->is_free && $course->effectivePurchasePrice() > 0)
                         <div class="flex items-center gap-2 text-sm">
                             <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
                                 <i class="fas fa-money-bill-wave text-amber-600 text-xs"></i>
                             </div>
                             <span class="text-slate-500 dark:text-slate-400">{{ __('instructor.price') }}:</span>
-                            <span class="text-slate-800 dark:text-slate-100 font-semibold">{{ number_format($course->price, 2) }} ج.م</span>
+                            <span class="text-slate-800 dark:text-slate-100 font-semibold flex flex-col items-start tabular-nums">
+                                @if($course->hasPromotionalPrice())
+                                    <span class="text-xs text-slate-400 line-through">{{ number_format($course->listPriceAmount(), 2) }} ج.م</span>
+                                @endif
+                                <span>{{ number_format($course->effectivePurchasePrice(), 2) }} ج.م</span>
+                            </span>
                         </div>
                         @else
                         <div class="flex items-center gap-2 text-sm">

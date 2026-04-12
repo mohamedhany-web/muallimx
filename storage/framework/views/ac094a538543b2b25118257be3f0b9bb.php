@@ -109,9 +109,24 @@ unset($__errorArgs, $__bag); ?>
                                 </div>
 
                                 <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">سعر الكورس (جنيه)</label>
+                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">سعر الكورس الأساسي (قبل الخصم — جنيه)</label>
                                     <input type="number" name="price" value="<?php echo e(old('price', $advancedCourse->price ?? 0)); ?>" min="0" step="0.01"
                                            class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition">
+                                </div>
+                                <div class="space-y-2 md:col-span-2">
+                                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">سعر بعد الخصم (اختياري)</label>
+                                    <input type="number" name="price_after_discount" value="<?php echo e(old('price_after_discount', $advancedCourse->price_after_discount)); ?>" min="0" step="0.01"
+                                           class="w-full rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-3 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"
+                                           placeholder="فارغ = بدون عرض ترويجي على البطاقة">
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">يجب أن يكون أقل من السعر الأساسي. الدفع والكوبونات على سعر «بعد الخصم».</p>
+                                    <?php $__errorArgs = ['price_after_discount'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> <p class="text-xs text-rose-500 mt-1"><?php echo e($message); ?></p> <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
 

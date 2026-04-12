@@ -110,7 +110,7 @@ return [
             'route' => 'admin.coupons.index',
             'icon' => 'fas fa-ticket-alt',
             'dedupe_key' => 'admin.coupons.hub',
-            'route_patterns' => ['admin.coupons.*', 'admin.coupon-commissions.*'],
+            'route_patterns' => ['admin.coupons.*', 'admin.coupon-commissions.*', 'admin.marketing.student-wallet-credit.*'],
         ],
         'manage.referrals' => [
             'route' => 'admin.referrals.index',

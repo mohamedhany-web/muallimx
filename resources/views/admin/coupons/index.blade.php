@@ -13,9 +13,14 @@
             </h1>
             <p class="text-sm text-slate-500 mt-1">إدارة أكواد الخصم والاستخدامات</p>
         </div>
-        <a href="{{ route('admin.coupons.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold shadow-lg shadow-violet-500/25 transition-all">
-            <i class="fas fa-plus"></i> إضافة كوبون جديد
-        </a>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.marketing.student-wallet-credit.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold text-sm transition-all">
+                <i class="fas fa-wallet"></i> رصيد محفظة طالب
+            </a>
+            <a href="{{ route('admin.coupons.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-semibold shadow-lg shadow-violet-500/25 transition-all">
+                <i class="fas fa-plus"></i> إضافة كوبون جديد
+            </a>
+        </div>
     </div>
 
     @if(session('success'))

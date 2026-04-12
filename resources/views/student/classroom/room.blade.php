@@ -21,11 +21,32 @@
         .room-body { display: flex; flex-direction: column; height: calc(100vh - 72px); }
         #jitsi-container iframe { width: 100% !important; height: 100% !important; border: none; }
         #meeting-stage { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; width: 100%; }
-        #wb-canvas { position: absolute; inset: 0; z-index: 12; pointer-events: none; touch-action: none; }
-        #wb-canvas.wb-active { pointer-events: auto; cursor: crosshair; }
-        #wb-toolbar { display: none; }
-        #wb-toolbar.wb-visible { display: flex; }
+        /* شعار Jitsi: الخوادم الحديثة لا تطبّق SHOW_JITSI_WATERMARK من الـ iframe API — تغطية زاوية بلا اعتراض النقرات */
+        .jitsi-brand-mask {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: min(240px, 46vw);
+            height: 96px;
+            z-index: 11;
+            pointer-events: none;
+            background: #0f172a;
+            border-bottom-right-radius: 12px;
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.5);
+        }
         #wb-popup { z-index: 140; }
+        /* عدم خلط display مع Tailwind: عند الإغلاق لا يبقى flex يتعارض مع hidden */
+        #wb-popup.is-open {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #pkg-features-dd-panel { z-index: 130; }
+        .pkg-features-dd-panel-inner { box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(34, 211, 238, 0.06); }
+        #pkg-features-dd-btn:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9), 0 0 0 4px rgba(34, 211, 238, 0.35);
+        }
         #wb-popup-stage { min-height: 50vh; }
         .classroom-excalidraw-host {
             position: absolute;
@@ -155,10 +176,46 @@
             </span>
             <span class="hidden text-sky-200 text-xs px-2 py-1 rounded-md bg-sky-500/20 border border-sky-500/30" id="record-status-chip"></span>
             @unless($academicObserverMode)
-            <button type="button" id="btn-wb-toggle" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors border border-slate-600" title="تفعيل القلم والرسم على الشاشة فوق الاجتماع">
-                <i class="fas fa-pen-nib text-amber-400" id="wb-toggle-icon"></i>
-                <span id="wb-toggle-label" class="hidden sm:inline">لوحة فوق الفيديو</span>
-            </button>
+            @if(!empty($subscriptionFeatureMenuItems))
+            <div class="relative shrink-0" id="pkg-features-dd-wrap">
+                <button type="button" id="pkg-features-dd-btn" class="inline-flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600/90 text-slate-100 text-sm font-medium transition-colors border border-slate-600 hover:border-cyan-500/35 max-w-[11rem] sm:max-w-none" aria-expanded="false" aria-haspopup="true" title="مزايا اشتراكك — تفتح في تاب جديد">
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-400 border border-cyan-500/20">
+                        <i class="fas fa-layer-group text-sm"></i>
+                    </span>
+                    <span class="flex min-w-0 flex-1 flex-col items-stretch text-right leading-tight">
+                        <span class="truncate font-semibold text-slate-100">مزايا الباقة</span>
+                        @if(!empty($subscriptionPackageLabel))
+                        <span class="truncate text-[10px] font-normal text-slate-400">{{ $subscriptionPackageLabel }}</span>
+                        @else
+                        <span class="text-[10px] font-normal text-slate-500">اشتراكك النشط</span>
+                        @endif
+                    </span>
+                    <i class="fas fa-chevron-down text-[10px] text-slate-400 shrink-0 transition-transform duration-200" id="pkg-features-dd-chevron" aria-hidden="true"></i>
+                </button>
+                <div id="pkg-features-dd-panel" class="pkg-features-dd-panel-inner hidden absolute top-[calc(100%+0.5rem)] end-0 w-[min(100vw-2rem,19.5rem)] rounded-xl border border-slate-600 bg-slate-900/98 backdrop-blur-md overflow-hidden" role="menu">
+                    <div class="px-3 py-2.5 border-b border-slate-700/90 bg-slate-800/70 flex items-start gap-2">
+                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-cyan-500/10 text-cyan-400">
+                            <i class="fas fa-arrow-up-left-from-square text-[10px]"></i>
+                        </span>
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold text-slate-200 m-0 leading-snug">روابط سريعة</p>
+                            <p class="text-[11px] text-slate-500 m-0 mt-0.5 leading-relaxed">كل رابط يُفتح في نافذة جديدة دون إغلاق الاجتماع.</p>
+                        </div>
+                    </div>
+                    <div class="max-h-[min(58vh,20rem)] overflow-y-auto py-1.5 px-1">
+                        @foreach($subscriptionFeatureMenuItems as $item)
+                        <a href="{{ $item['url'] }}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex items-center gap-3 px-2.5 py-2 mx-0.5 rounded-lg text-slate-200 hover:bg-slate-700/70 transition-colors border border-transparent hover:border-slate-600/80">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $item['icon_bg'] }} {{ $item['icon_text'] }} ring-1 ring-white/5 group-hover:ring-cyan-500/15 transition-[box-shadow]">
+                                <i class="fas {{ $item['icon'] }} text-sm"></i>
+                            </span>
+                            <span class="min-w-0 flex-1 text-sm font-medium leading-snug text-right group-hover:text-white">{{ $item['label'] }}</span>
+                            <i class="fas fa-arrow-up-left-from-square text-slate-500 group-hover:text-cyan-400/90 text-[11px] shrink-0 transition-colors"></i>
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
             <button type="button" id="btn-wb-popup-open" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 text-sm font-medium transition-colors border border-amber-500/40" title="فتح لوحة بيضاء كبيرة في نافذة منبثقة">
                 <i class="fas fa-expand text-amber-300"></i>
                 <span class="hidden sm:inline">لوحة كبيرة</span>
@@ -224,13 +281,7 @@
     </div>
     @endif
 
-    {{-- تذكير بصلاحيات الميكروفون/الكاميرا — يقلل التباس "Error obtaining microphone permission" --}}
-    <div id="media-tip" class="bg-slate-700/80 border-b border-slate-600 px-4 py-2 text-slate-300 text-xs flex items-center justify-between gap-2 flex-shrink-0">
-        <span><i class="fas fa-info-circle text-cyan-400 ml-1"></i> عند طلب المتصفح استخدام <strong>الميكروفون أو الكاميرا</strong> اختر «السماح». يمكنك تفعيل الصوت والفيديو من الشريط بعد الدخول.</span>
-        <button type="button" onclick="document.getElementById('media-tip').remove()" class="text-slate-400 hover:text-white p-1" aria-label="إغلاق"><i class="fas fa-times"></i></button>
-    </div>
-
-    {{-- منطقة الاجتماع + طبقة رسم (لوحة بيضاء محلية فوق الفيديو) --}}
+    {{-- منطقة الاجتماع --}}
     <div id="meeting-stage" class="flex-1 min-h-0 relative w-full">
         <main id="jitsi-container" class="flex-1 min-h-0 relative w-full" role="application" aria-label="غرفة الاجتماع">
             <div id="jitsi-loading" class="flex flex-col items-center justify-center h-full text-slate-400 text-sm gap-3">
@@ -251,24 +302,12 @@
                 </a>
             </div>
         </main>
-        <canvas id="wb-canvas" aria-hidden="true"></canvas>
-        <div id="wb-toolbar" class="absolute bottom-3 left-1/2 -translate-x-1/2 z-[13] items-center gap-2 flex-wrap justify-center px-3 py-2 rounded-xl bg-slate-900/95 border border-slate-600 shadow-xl max-w-[95vw]">
-            <label class="flex items-center gap-1.5 text-slate-300 text-xs">
-                <span>لون</span>
-                <input type="color" id="wb-color" value="#fbbf24" class="h-8 w-10 rounded border border-slate-500 cursor-pointer bg-slate-800 p-0.5" title="لون القلم">
-            </label>
-            <label class="flex items-center gap-1.5 text-slate-300 text-xs">
-                <span>سمك</span>
-                <input type="range" id="wb-width" min="1" max="16" value="4" class="w-24 align-middle" title="سمك الخط">
-            </label>
-            <button type="button" id="wb-clear" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-100 text-xs font-medium border border-slate-500">مسح اللوحة</button>
-            <span class="text-slate-500 text-[10px] max-w-[200px] leading-tight hidden md:inline">الرسم يظهر على جهازك فقط؛ عطّل «لوحة بيضاء» للنقر داخل الاجتماع.</span>
-        </div>
+        <div class="jitsi-brand-mask" aria-hidden="true"></div>
     </div>
     </div>
 
     {{-- لوحة بيضاء منبثقة بشاشة كبيرة --}}
-    <div id="wb-popup" class="hidden fixed inset-0 flex items-center justify-center p-2 sm:p-4" aria-hidden="true" role="dialog" aria-labelledby="wb-popup-title">
+    <div id="wb-popup" class="hidden fixed inset-0 p-2 sm:p-4" inert aria-hidden="true" role="dialog" aria-labelledby="wb-popup-title" aria-modal="true">
         <div id="wb-popup-backdrop" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm cursor-pointer" aria-hidden="true"></div>
         <div id="wb-popup-panel" class="relative z-[141] flex flex-col w-full max-w-[min(1680px,99vw)] h-[min(92vh,calc(100dvh-1rem))] rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl overflow-hidden">
             <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-700 bg-slate-800/95 shrink-0">
@@ -290,8 +329,7 @@
             </div>
             <div id="wb-popup-toolbar" class="flex flex-wrap items-center justify-center gap-2 px-4 py-2.5 border-t border-slate-700 bg-slate-800/95 shrink-0">
                 <span class="text-slate-400 text-[11px] leading-relaxed text-center max-w-3xl">
-                    <strong class="text-slate-200">Muallimx Whiteboard</strong> — أدوات رسم كاملة (أشكال، نص، تصدير PNG/SVG من القائمة).
-                    عند الإغلاق تُحدَّث معاينة على «لوحة فوق الفيديو». الرسم محلي على جهازك فقط.
+                    <strong class="text-slate-200">Muallimx Whiteboard</strong> — أدوات رسم كاملة (أشكال، نص، تصدير PNG/SVG من القائمة). الرسم محلي على جهازك فقط.
                 </span>
             </div>
         </div>
@@ -348,15 +386,8 @@
             var micStream = null;
             var audioOnlyStream = null;
 
-            var wbCanvas = document.getElementById('wb-canvas');
-            var wbToolbar = document.getElementById('wb-toolbar');
-            var wbToggle = document.getElementById('btn-wb-toggle');
-            var wbCtx = wbCanvas && wbCanvas.getContext ? wbCanvas.getContext('2d') : null;
-            var wbDrawing = false;
-            var wbMode = false;
-            var wbLast = null;
-            var wbCssW = 0;
-            var wbCssH = 0;
+            var wbCanvas = null;
+            var wbCtx = null;
 
             var wbPopup = document.getElementById('wb-popup');
             var wbPopupStage = document.getElementById('wb-popup-stage');
@@ -589,8 +620,9 @@
 
             function openWbPopup() {
                 if (!wbPopup) return;
+                wbPopup.removeAttribute('inert');
                 wbPopup.classList.remove('hidden');
-                wbPopup.classList.add('flex');
+                wbPopup.classList.add('is-open');
                 wbPopup.setAttribute('aria-hidden', 'false');
                 document.body.style.overflow = 'hidden';
                 mountClassroomExcalidrawOnce().then(function() {
@@ -603,120 +635,59 @@
                 if (wbPopupClosing) return;
                 if (!wbPopup || wbPopup.classList.contains('hidden')) return;
                 wbPopupClosing = true;
-                mergeExcalidrawToMain(function() {
-                    wbPopupClosing = false;
-                    wbPopup.classList.add('hidden');
-                    wbPopup.classList.remove('flex');
-                    wbPopup.setAttribute('aria-hidden', 'true');
-                    document.body.style.overflow = '';
+
+                function detachWhiteboardFromMeetingUi() {
+                    var ae = document.activeElement;
+                    if (ae && typeof ae.blur === 'function' && wbPopup.contains(ae)) {
+                        ae.blur();
+                    }
                     try {
-                        if (document.fullscreenElement) document.exitFullscreen();
-                    } catch (fe) {}
-                });
-            }
+                        var sel = window.getSelection && window.getSelection();
+                        if (sel && typeof sel.removeAllRanges === 'function') {
+                            sel.removeAllRanges();
+                        }
+                    } catch (eSel) {}
 
-            function resizeWbCanvas() {
-                if (!wbCanvas || !wbCtx) return;
-                var stage = document.getElementById('meeting-stage');
-                if (!stage) return;
-                var rect = stage.getBoundingClientRect();
-                var w = Math.max(1, Math.floor(rect.width));
-                var h = Math.max(1, Math.floor(rect.height));
-                if (w === wbCssW && h === wbCssH && wbCanvas.width > 0) return;
-                wbCssW = w;
-                wbCssH = h;
-                var dpr = window.devicePixelRatio || 1;
-                wbCanvas.width = Math.floor(w * dpr);
-                wbCanvas.height = Math.floor(h * dpr);
-                wbCanvas.style.width = w + 'px';
-                wbCanvas.style.height = h + 'px';
-                wbCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-                wbCtx.lineCap = 'round';
-                wbCtx.lineJoin = 'round';
-            }
+                    wbPopup.classList.add('hidden');
+                    wbPopup.classList.remove('is-open');
+                    wbPopup.setAttribute('aria-hidden', 'true');
+                    wbPopup.setAttribute('inert', '');
+                    document.body.style.overflow = '';
 
-            function getWbPos(ev) {
-                var rect = wbCanvas.getBoundingClientRect();
-                var cx = ev.clientX;
-                var cy = ev.clientY;
-                if (ev.touches && ev.touches[0]) {
-                    cx = ev.touches[0].clientX;
-                    cy = ev.touches[0].clientY;
+                    var reopenBtn = document.getElementById('btn-wb-popup-open');
+                    if (reopenBtn && typeof reopenBtn.focus === 'function') {
+                        try {
+                            reopenBtn.focus({ preventScroll: true });
+                        } catch (eF) {
+                            try { reopenBtn.focus(); } catch (eF2) {}
+                        }
+                    }
+
+                    wbPopupClosing = false;
                 }
-                return { x: cx - rect.left, y: cy - rect.top };
-            }
 
-            function wbStart(ev) {
-                if (!wbMode) return;
-                wbDrawing = true;
-                wbLast = getWbPos(ev);
-                if (ev.preventDefault) ev.preventDefault();
-            }
-
-            function wbMove(ev) {
-                if (!wbDrawing || wbLast === null || !wbCtx) return;
-                var p = getWbPos(ev);
-                var colorEl = document.getElementById('wb-color');
-                var widthEl = document.getElementById('wb-width');
-                wbCtx.strokeStyle = colorEl ? colorEl.value : '#fbbf24';
-                wbCtx.lineWidth = widthEl ? parseInt(widthEl.value, 10) || 4 : 4;
-                wbCtx.beginPath();
-                wbCtx.moveTo(wbLast.x, wbLast.y);
-                wbCtx.lineTo(p.x, p.y);
-                wbCtx.stroke();
-                wbLast = p;
-                if (ev.preventDefault) ev.preventDefault();
-            }
-
-            function wbEnd(ev) {
-                wbDrawing = false;
-                wbLast = null;
-                if (ev && ev.preventDefault) ev.preventDefault();
-            }
-
-            function setWbMode(on) {
-                wbMode = on;
-                if (wbCanvas) wbCanvas.classList.toggle('wb-active', on);
-                if (wbToolbar) wbToolbar.classList.toggle('wb-visible', on);
-                if (wbToggle) {
-                    wbToggle.classList.toggle('ring-2', on);
-                    wbToggle.classList.toggle('ring-amber-400', on);
-                    wbToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
-                }
-            }
-
-            if (wbToggle && wbCanvas && wbCtx) {
-                wbToggle.addEventListener('click', function() {
-                    setWbMode(!wbMode);
-                    resizeWbCanvas();
-                });
-                var wbClearBtn = document.getElementById('wb-clear');
-                if (wbClearBtn) {
-                    wbClearBtn.addEventListener('click', function() {
-                        if (!wbCtx || !wbCanvas) return;
-                        wbCtx.setTransform(1, 0, 0, 1, 0, 0);
-                        wbCtx.clearRect(0, 0, wbCanvas.width, wbCanvas.height);
-                        var dpr = window.devicePixelRatio || 1;
-                        wbCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-                        wbCtx.lineCap = 'round';
-                        wbCtx.lineJoin = 'round';
+                function runClosePipeline() {
+                    mergeExcalidrawToMain(function() {
+                        detachWhiteboardFromMeetingUi();
                     });
                 }
-                wbCanvas.addEventListener('mousedown', wbStart);
-                wbCanvas.addEventListener('mousemove', wbMove);
-                wbCanvas.addEventListener('mouseup', wbEnd);
-                wbCanvas.addEventListener('mouseleave', wbEnd);
-                wbCanvas.addEventListener('touchstart', wbStart, { passive: false });
-                wbCanvas.addEventListener('touchmove', wbMove, { passive: false });
-                wbCanvas.addEventListener('touchend', wbEnd);
-                wbCanvas.addEventListener('touchcancel', wbEnd);
-                window.addEventListener('resize', resizeWbCanvas);
-                var meetingStageEl = document.getElementById('meeting-stage');
-                if (meetingStageEl && typeof ResizeObserver !== 'undefined') {
-                    new ResizeObserver(resizeWbCanvas).observe(meetingStageEl);
-                }
-                resizeWbCanvas();
 
+                var fsEl = document.fullscreenElement;
+                if (fsEl && wbPopup.contains(fsEl)) {
+                    var p = document.exitFullscreen && document.exitFullscreen();
+                    if (p && typeof p.then === 'function') {
+                        p.then(runClosePipeline).catch(runClosePipeline);
+                    } else {
+                        runClosePipeline();
+                    }
+                } else {
+                    runClosePipeline();
+                }
+            }
+
+            function resizeWbCanvas() {}
+
+            if (wbPopup) {
                 var wbOpenPopupBtn = document.getElementById('btn-wb-popup-open');
                 if (wbOpenPopupBtn) wbOpenPopupBtn.addEventListener('click', openWbPopup);
                 var wbClosePopupBtn = document.getElementById('wb-popup-close');
@@ -1385,6 +1356,7 @@
                             SHOW_JITSI_WATERMARK: false,
                             SHOW_WATERMARK_FOR_GUESTS: false,
                             SHOW_BRAND_WATERMARK: false,
+                            SHOW_POWERED_BY: false,
                             MOBILE_APP_PROMO: false,
                             DEFAULT_BACKGROUND: '#0f172a',
                             DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
@@ -1453,6 +1425,33 @@
                 showError();
             };
             document.head.appendChild(script);
+        })();
+    </script>
+    <script>
+        (function () {
+            var wrap = document.getElementById('pkg-features-dd-wrap');
+            var btn = document.getElementById('pkg-features-dd-btn');
+            var panel = document.getElementById('pkg-features-dd-panel');
+            var chev = document.getElementById('pkg-features-dd-chevron');
+            if (!wrap || !btn || !panel) return;
+            function setOpen(open) {
+                panel.classList.toggle('hidden', !open);
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
+            }
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                setOpen(panel.classList.contains('hidden'));
+            });
+            wrap.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
+            document.addEventListener('click', function () {
+                setOpen(false);
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') setOpen(false);
+            });
         })();
     </script>
 </body>

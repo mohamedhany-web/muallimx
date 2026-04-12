@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdvancedCourse;
-use App\Models\Order;
 use App\Models\Coupon;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Models\Order;
 use App\Services\ReferralService;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
@@ -74,7 +73,7 @@ class OrderController extends Controller
         $paymentProofPath = $request->file('payment_proof')->store('payment-proofs', 'public');
 
         // حساب السعر النهائي (بعد خصم الإحالة إذا كان موجوداً)
-        $originalAmount = $advancedCourse->price ?? 0;
+        $originalAmount = $advancedCourse->effectivePurchasePrice();
         $finalAmount = $originalAmount;
         $discountAmount = 0;
         $referralCoupon = null;
@@ -86,7 +85,7 @@ class OrderController extends Controller
         if ($referralCoupon) {
             $discountAmount = $referralCoupon->calculateDiscount($originalAmount);
             $finalAmount = $originalAmount - $discountAmount;
-            
+
             // زيادة عدد مرات استخدام الخصم
             $referral = \App\Models\Referral::where('auto_coupon_id', $referralCoupon->id)->first();
             if ($referral) {
@@ -133,14 +132,14 @@ class OrderController extends Controller
         if ($referralCoupon && isset($discountAmount)) {
             $referralDiscountAmount = $discountAmount - $couponDiscountAmount;
             if ($referralDiscountAmount > 0) {
-                $discountNotes[] = "خصم الإحالة: " . number_format($referralDiscountAmount, 2) . " ج.م";
+                $discountNotes[] = 'خصم الإحالة: '.number_format($referralDiscountAmount, 2).' ج.م';
             }
         }
         if ($couponDiscountAmount > 0) {
-            $discountNotes[] = 'خصم الكوبون (' . ($appliedCoupon->code ?? '') . '): ' . number_format($couponDiscountAmount, 2) . ' ج.م';
+            $discountNotes[] = 'خصم الكوبون ('.($appliedCoupon->code ?? '').'): '.number_format($couponDiscountAmount, 2).' ج.م';
         }
-        if (!empty($discountNotes)) {
-            $orderData['notes'] .= (!empty($orderData['notes']) ? "\n" : '') . implode("\n", $discountNotes);
+        if (! empty($discountNotes)) {
+            $orderData['notes'] .= (! empty($orderData['notes']) ? "\n" : '').implode("\n", $discountNotes);
         }
 
         $orderData['wallet_id'] = $request->payment_method === 'bank_transfer' ? $request->wallet_id : null;

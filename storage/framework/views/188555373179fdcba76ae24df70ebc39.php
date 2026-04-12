@@ -66,9 +66,9 @@ if ($_jldType === 'course' && isset($course)) {
     if (! empty($catName)) {
         $_courseData['about'] = ['@type' => 'Thing', 'name' => (string) $catName];
     }
-    if (isset($course->price) && $course->price !== null) {
+    if (isset($course->price) && $course->effectivePurchasePrice() > 0) {
         $_courseData['offers'] = [
-            '@type' => 'Offer', 'price' => (string)$course->price,
+            '@type' => 'Offer', 'price' => (string) $course->effectivePurchasePrice(),
             'priceCurrency' => 'USD', 'availability' => 'https://schema.org/InStock',
         ];
     }

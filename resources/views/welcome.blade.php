@@ -191,9 +191,7 @@
                         $thumbPath = $course->thumbnail ? str_replace('\\', '/', $course->thumbnail) : null;
                         $thumbUrl = $thumbPath ? asset('storage/' . $thumbPath) : null;
                         $instName = $course->instructor->name ?? __('public.instructor_fallback');
-                        $priceLabel = ($course->is_free ?? false) || (float)($course->price ?? 0) <= 0
-                            ? __('public.free_price')
-                            : number_format((float) $course->price, 0) . ' ' . __('public.currency_egp');
+                        $isFreeCard = ($course->is_free ?? false) || ($course->listPriceAmount() <= 0 && $course->effectivePurchasePrice() <= 0);
                         $rating = $course->rating !== null ? number_format((float) $course->rating, 1) : null;
                     @endphp
                     <a href="{{ route('public.course.show', $course->id) }}" class="card-base hover-lift w-[280px] {{ $idx % 2 === 1 ? 'sm:w-[300px]' : '' }} block shrink-0">
@@ -215,7 +213,16 @@
                                     <span class="text-slate-400 text-xs">{{ __('public.no_rating_yet') }}</span>
                                 @endif
                             </span>
-                            <span class="font-bold text-mx-orange">{{ $priceLabel }}</span>
+                            @if($isFreeCard)
+                                <span class="font-bold text-emerald-600">{{ __('public.free_price') }}</span>
+                            @elseif($course->hasPromotionalPrice())
+                                <span class="flex flex-col items-end gap-0.5">
+                                    <span class="text-[10px] text-slate-400 line-through tabular-nums">{{ number_format($course->listPriceAmount(), 0) }} {{ __('public.currency_egp') }}</span>
+                                    <span class="font-bold text-mx-orange tabular-nums">{{ number_format($course->effectivePurchasePrice(), 0) }} {{ __('public.currency_egp') }}</span>
+                                </span>
+                            @else
+                                <span class="font-bold text-mx-orange tabular-nums">{{ number_format($course->effectivePurchasePrice(), 0) }} {{ __('public.currency_egp') }}</span>
+                            @endif
                         </div>
                     </a>
                     @empty

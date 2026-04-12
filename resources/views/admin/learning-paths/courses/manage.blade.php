@@ -63,9 +63,17 @@
                                         <i class="fas fa-clock"></i>
                                         {{ $course->duration_hours ?? 0 }} ساعة
                                     </span>
-                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full {{ $course->price > 0 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }}">
-                                        <i class="fas fa-money-bill"></i>
-                                        {{ $course->price > 0 ? number_format($course->price) . ' ج.م' : 'مجاني' }}
+                                    <span class="inline-flex flex-col items-start gap-0.5 px-2 py-1 rounded-full {{ (!$course->is_free && $course->effectivePurchasePrice() > 0) ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }}">
+                                        <span class="inline-flex items-center gap-1"><i class="fas fa-money-bill"></i>
+                                        @if(!$course->is_free && $course->effectivePurchasePrice() > 0)
+                                            @if($course->hasPromotionalPrice())
+                                                <span class="text-[10px] line-through opacity-80">{{ number_format($course->listPriceAmount()) }} ج.م</span>
+                                            @endif
+                                            <span class="text-xs font-bold">{{ number_format($course->effectivePurchasePrice()) }} ج.م</span>
+                                        @else
+                                            <span class="text-xs font-bold">مجاني</span>
+                                        @endif
+                                        </span>
                                     </span>
                                     @if($course->pivot->is_required)
                                         <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 text-red-700">
@@ -128,8 +136,8 @@
                                 @if($course->instructor)
                                     - {{ $course->instructor->name }}
                                 @endif
-                                @if($course->price > 0)
-                                    ({{ number_format($course->price) }} ج.م)
+                                @if(!$course->is_free && $course->effectivePurchasePrice() > 0)
+                                    ({{ $course->hasPromotionalPrice() ? number_format($course->listPriceAmount()).'→' : '' }}{{ number_format($course->effectivePurchasePrice()) }} ج.م)
                                 @else
                                     (مجاني)
                                 @endif

@@ -7,7 +7,6 @@ use App\Models\ClassroomMeeting;
 use App\Models\LiveSetting;
 use App\Models\User;
 use App\Services\SubscriptionLimitService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AcademicSupervisionController extends Controller
@@ -136,6 +135,8 @@ class AcademicSupervisionController extends Controller
         $academicObserverMode = true;
         $academicObserverExitUrl = route('employee.academic-supervision.show', $student);
         $jitsiDisplayName = 'مشرف: '.$supervisor->name;
+        $subscriptionFeatureMenuItems = [];
+        $subscriptionPackageLabel = null;
 
         return view('student.classroom.room', compact(
             'meeting',
@@ -148,7 +149,9 @@ class AcademicSupervisionController extends Controller
             'useInstructorRoutes',
             'academicObserverMode',
             'academicObserverExitUrl',
-            'jitsiDisplayName'
+            'jitsiDisplayName',
+            'subscriptionFeatureMenuItems',
+            'subscriptionPackageLabel'
         ));
     }
 

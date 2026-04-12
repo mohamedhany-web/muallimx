@@ -20,14 +20,28 @@
     <div class="rounded-3xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
         <div class="px-5 py-6 sm:px-8 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
             <h1 class="text-xl font-bold text-slate-900">الملف التعريفي — {{ $personal_branding->user->name }}</h1>
-            <span class="rounded-full px-3 py-1 text-sm font-semibold
-                @if($personal_branding->status == 'approved') bg-emerald-100 text-emerald-700
-                @elseif($personal_branding->status == 'pending_review') bg-amber-100 text-amber-700
-                @elseif($personal_branding->status == 'rejected') bg-rose-100 text-rose-700
-                @else bg-slate-100 text-slate-600
-                @endif">
-                {{ \App\Models\InstructorProfile::statusLabel($personal_branding->status) }}
-            </span>
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('admin.personal-branding.edit', $personal_branding) }}" class="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 text-white px-4 py-2 text-sm font-bold hover:bg-sky-700 shadow-sm">
+                    <i class="fas fa-pen text-xs"></i>
+                    تعديل الملف
+                </a>
+                <form method="POST" action="{{ route('admin.personal-branding.destroy', $personal_branding) }}" class="inline" onsubmit="return confirm('حذف الملف التعريفي بالكامل؟ سيُزال من الموقع ويمكن للمدرب إنشاء ملف جديد لاحقاً.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 px-4 py-2 text-sm font-bold hover:bg-rose-100">
+                        <i class="fas fa-trash text-xs"></i>
+                        حذف الملف
+                    </button>
+                </form>
+                <span class="rounded-full px-3 py-1 text-sm font-semibold
+                    @if($personal_branding->status == 'approved') bg-emerald-100 text-emerald-700
+                    @elseif($personal_branding->status == 'pending_review') bg-amber-100 text-amber-700
+                    @elseif($personal_branding->status == 'rejected') bg-rose-100 text-rose-700
+                    @else bg-slate-100 text-slate-600
+                    @endif">
+                    {{ \App\Models\InstructorProfile::statusLabel($personal_branding->status) }}
+                </span>
+            </div>
         </div>
         <div class="p-5 sm:p-8 space-y-6">
             <div class="flex flex-wrap gap-4 items-start">

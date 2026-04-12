@@ -205,11 +205,17 @@
 
               <div class="flex items-center justify-between pt-3 border-t border-slate-100">
                 <div>
-                  <template x-if="course.price && course.price > 0">
-                    <div><span class="text-xl font-black text-mx-orange" x-text="course.price"></span> <span class="text-xs text-slate-400"><?php echo e(__('public.currency_egp')); ?></span></div>
-                  </template>
-                  <template x-if="!course.price || course.price == 0">
+                  <template x-if="course.is_free || (!course.price || course.price <= 0)">
                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-600 font-bold text-sm"><?php echo e(__('public.free_price')); ?></span>
+                  </template>
+                  <template x-if="!course.is_free && course.price > 0 && course.has_promo_price && course.sale_price < course.price">
+                    <div class="flex flex-col gap-0.5">
+                      <span class="text-xs text-slate-400 line-through tabular-nums"><span x-text="course.price"></span> <?php echo e(__('public.currency_egp')); ?></span>
+                      <div><span class="text-xl font-black text-mx-orange tabular-nums" x-text="course.sale_price"></span> <span class="text-xs text-slate-400"><?php echo e(__('public.currency_egp')); ?></span></div>
+                    </div>
+                  </template>
+                  <template x-if="!course.is_free && course.price > 0 && (!course.has_promo_price || course.sale_price >= course.price)">
+                    <div><span class="text-xl font-black text-mx-orange tabular-nums" x-text="course.sale_price != null ? course.sale_price : course.price"></span> <span class="text-xs text-slate-400"><?php echo e(__('public.currency_egp')); ?></span></div>
                   </template>
                 </div>
                 <span class="btn-secondary !py-2 !px-4 !text-sm"><?php echo e(__('public.view_details')); ?></span>

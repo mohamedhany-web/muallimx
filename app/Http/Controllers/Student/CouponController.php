@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use App\Models\Coupon;
 use App\Models\AdvancedCourse;
+use App\Models\Coupon;
 use Illuminate\Http\Request;
 
 class CouponController extends Controller
@@ -21,12 +21,12 @@ class CouponController extends Controller
 
         $couponCode = strtoupper(trim($request->coupon_code));
         $course = AdvancedCourse::findOrFail($request->course_id);
-        $coursePrice = $course->price ?? 0;
+        $coursePrice = $course->effectivePurchasePrice();
 
         // البحث عن الكوبون
         $coupon = Coupon::where('code', $couponCode)->first();
 
-        if (!$coupon) {
+        if (! $coupon) {
             return response()->json([
                 'valid' => false,
                 'message' => 'الكوبون غير صحيح',
@@ -34,7 +34,7 @@ class CouponController extends Controller
         }
 
         // التحقق من صلاحية الكوبون
-        if (!$coupon->isValid()) {
+        if (! $coupon->isValid()) {
             return response()->json([
                 'valid' => false,
                 'message' => 'الكوبون منتهي الصلاحية أو غير نشط',
@@ -42,7 +42,7 @@ class CouponController extends Controller
         }
 
         // التحقق من صلاحية الكوبون للمستخدم
-        if (!$coupon->canBeUsedByUser(auth()->id())) {
+        if (! $coupon->canBeUsedByUser(auth()->id())) {
             return response()->json([
                 'valid' => false,
                 'message' => 'لا يمكنك استخدام هذا الكوبون',
@@ -62,7 +62,7 @@ class CouponController extends Controller
         if ($coupon->minimum_amount && $coursePrice < $coupon->minimum_amount) {
             return response()->json([
                 'valid' => false,
-                'message' => 'الحد الأدنى لاستخدام هذا الكوبون هو ' . number_format($coupon->minimum_amount, 2) . ' ج.م',
+                'message' => 'الحد الأدنى لاستخدام هذا الكوبون هو '.number_format($coupon->minimum_amount, 2).' ج.م',
             ], 400);
         }
 

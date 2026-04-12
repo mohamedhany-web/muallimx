@@ -11,11 +11,14 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\StudentCourseEnrollment;
 use App\Models\Transaction;
+use App\Models\Wallet;
 use App\Services\AdminPanelBranding;
+use App\Services\CourseCheckoutPricingService;
 use App\Services\FawaterakApiService;
 use App\Services\FawaterakService;
 use App\Services\InstructorCoursePercentageService;
 use App\Services\KashierService;
+use App\Services\OrderWalletAndCouponFinalizer;
 use App\Services\PaymentGatewaySettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -92,14 +95,54 @@ class CheckoutController extends Controller
         $fawaterakMisconfigured = $fawaterakGatewayOn && ! $fawaterakReady;
         $platformLogoUrl = AdminPanelBranding::logoPublicUrl();
 
+        $studentWallet = Wallet::where('user_id', Auth::id())->first();
+        $studentWalletBalance = $studentWallet ? (float) $studentWallet->balance : 0.0;
+
         return view('public.checkout', compact(
             'course',
             'wallets',
             'fawaterakUseGateway',
             'fawaterakMisconfigured',
             'fawaterakIntegration',
-            'platformLogoUrl'
+            'platformLogoUrl',
+            'studentWalletBalance'
         ));
+    }
+
+    /**
+     * معاينة السعر: كوبون + رصيد محفظة الطالب (JSON).
+     */
+    public function quoteCourseCheckout(Request $request, int $courseId): JsonResponse
+    {
+        $request->validate([
+            'coupon_code' => 'nullable|string|max:64',
+            'wallet_credit' => 'nullable|numeric|min:0',
+        ]);
+
+        $course = AdvancedCourse::where('id', $courseId)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $pricing = CourseCheckoutPricingService::resolve(
+            Auth::user(),
+            $course,
+            $request->input('coupon_code'),
+            (float) $request->input('wallet_credit', 0)
+        );
+
+        if (! $pricing['ok']) {
+            return response()->json(['ok' => false, 'message' => $pricing['message']], 422);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'original_amount' => $pricing['original_amount'],
+            'discount_amount' => $pricing['discount_amount'],
+            'wallet_credit_amount' => $pricing['wallet_credit_amount'],
+            'final_amount' => $pricing['final_amount'],
+            'coupon_id' => $pricing['coupon_id'],
+            'student_wallet_balance' => $pricing['student_wallet_balance'],
+        ]);
     }
 
     /**
@@ -381,9 +424,101 @@ class CheckoutController extends Controller
             return response()->json(['message' => 'أنت مسجل بالفعل في هذا الكورس.'], 422);
         }
 
-        $amount = (float) ($course->price ?? 0);
-        if ($amount <= 0) {
+        $request->validate([
+            'coupon_code' => 'nullable|string|max:64',
+            'wallet_credit' => 'nullable|numeric|min:0',
+        ]);
+
+        $pricing = CourseCheckoutPricingService::resolve(
+            Auth::user(),
+            $course,
+            $request->input('coupon_code'),
+            (float) $request->input('wallet_credit', 0)
+        );
+
+        if (! $pricing['ok']) {
+            return response()->json(['message' => $pricing['message']], 422);
+        }
+
+        if ($pricing['original_amount'] <= 0) {
             return response()->json(['message' => 'هذا الكورس لا يتطلب دفعاً عبر البوابة.'], 422);
+        }
+
+        $amount = (float) $pricing['final_amount'];
+
+        $orderPayloadBase = [
+            'coupon_id' => $pricing['coupon_id'],
+            'original_amount' => $pricing['original_amount'],
+            'discount_amount' => $pricing['discount_amount'],
+            'wallet_credit_amount' => $pricing['wallet_credit_amount'],
+            'amount' => $pricing['final_amount'],
+            'payment_method' => 'online',
+            'payment_proof' => null,
+            'wallet_id' => null,
+            'notes' => '',
+            'status' => Order::STATUS_PENDING,
+        ];
+
+        if ($amount < 0.01) {
+            $userZero = Auth::user();
+            $emailZero = trim((string) ($userZero->email ?? ''));
+            if ($emailZero === '' || ! filter_var($emailZero, FILTER_VALIDATE_EMAIL)) {
+                return response()->json(['message' => 'يرجى إضافة بريد إلكتروني صالح في ملفك الشخصي قبل إتمام الشراء.'], 422);
+            }
+
+            DB::beginTransaction();
+            try {
+                $existingOrder = Order::where('user_id', Auth::id())
+                    ->where('advanced_course_id', $course->id)
+                    ->where('status', Order::STATUS_PENDING)
+                    ->first();
+
+                if ($existingOrder) {
+                    if ($existingOrder->payment_method !== 'online' || $existingOrder->payment_proof !== null) {
+                        DB::rollBack();
+
+                        return response()->json(['message' => 'لديك طلب قيد المراجعة لهذا الكورس.'], 409);
+                    }
+                    $existingOrder->update(array_merge($orderPayloadBase, [
+                        'notes' => 'دفع بالكامل عبر رصيد المحفظة/الكوبون',
+                    ]));
+                    $order = $existingOrder->fresh();
+                } else {
+                    $order = Order::create(array_merge($orderPayloadBase, [
+                        'user_id' => Auth::id(),
+                        'advanced_course_id' => $course->id,
+                        'notes' => 'دفع بالكامل عبر رصيد المحفظة/الكوبون',
+                    ]));
+                }
+
+                $invoice = $this->approveOrderAfterOnlinePayment(
+                    $order,
+                    'other',
+                    'WALLET_COUPON_FULL',
+                    ['checkout' => 'zero_remainder'],
+                    'رصيد المحفظة والكوبون'
+                );
+                DB::commit();
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                Log::error('Fawaterak prepare zero-remainder checkout failed', [
+                    'course_id' => $course->id,
+                    'user_id' => Auth::id(),
+                    'message' => $e->getMessage(),
+                ]);
+
+                return response()->json(['message' => 'تعذّر إتمام الطلب بالرصيد. راجع السجلات أو تواصل مع الدعم.'], 500);
+            }
+
+            $request->session()->forget('fawaterak_order_id');
+
+            return response()->json([
+                'mode' => 'completed',
+                'redirect' => route('public.course.show', $course->id),
+                'message' => __('public.checkout_payment_success_with_invoice', [
+                    'invoice' => $invoice->invoice_number,
+                ]),
+            ]);
         }
 
         $existingOrder = Order::where('user_id', Auth::id())
@@ -395,20 +530,13 @@ class CheckoutController extends Controller
             if ($existingOrder->payment_method !== 'online' || $existingOrder->payment_proof !== null) {
                 return response()->json(['message' => 'لديك طلب قيد المراجعة لهذا الكورس.'], 409);
             }
-            $order = $existingOrder;
+            $existingOrder->update($orderPayloadBase);
+            $order = $existingOrder->fresh();
         } else {
-            $order = Order::create([
+            $order = Order::create(array_merge($orderPayloadBase, [
                 'user_id' => Auth::id(),
                 'advanced_course_id' => $course->id,
-                'original_amount' => $amount,
-                'discount_amount' => 0,
-                'amount' => $amount,
-                'payment_method' => 'online',
-                'payment_proof' => null,
-                'wallet_id' => null,
-                'notes' => '',
-                'status' => Order::STATUS_PENDING,
-            ]);
+            ]));
         }
 
         $request->session()->put('fawaterak_order_id', $order->id);
@@ -797,15 +925,20 @@ class CheckoutController extends Controller
 
         $currency = (string) config('fawaterak.currency', 'EGP');
 
+        $orig = (float) ($order->original_amount ?? $order->amount);
+        $couponDisc = (float) ($order->discount_amount ?? 0);
+        $walletDisc = (float) ($order->wallet_credit_amount ?? 0);
+        $invDiscount = round($couponDisc + $walletDisc, 2);
+
         $invoiceNumber = 'INV-'.str_pad((string) (Invoice::count() + 1), 8, '0', STR_PAD_LEFT);
         $invoice = Invoice::create([
             'invoice_number' => $invoiceNumber,
             'user_id' => $order->user_id,
             'type' => $isLearningPath ? 'learning_path' : 'course',
             'description' => $isLearningPath ? 'تسجيل في المسار: '.$orderTitle : 'تسجيل في الكورس: '.$orderTitle,
-            'subtotal' => $order->amount,
+            'subtotal' => $orig,
             'tax_amount' => 0,
-            'discount_amount' => 0,
+            'discount_amount' => $invDiscount,
             'total_amount' => $order->amount,
             'status' => 'paid',
             'due_date' => now(),
@@ -815,8 +948,8 @@ class CheckoutController extends Controller
                 [
                     'description' => $isLearningPath ? 'المسار: '.$orderTitle : 'الكورس: '.$orderTitle,
                     'quantity' => 1,
-                    'price' => $order->amount,
-                    'total' => $order->amount,
+                    'price' => $orig,
+                    'total' => $orig,
                 ],
             ],
         ]);
@@ -932,6 +1065,8 @@ class CheckoutController extends Controller
             }
         }
 
+        OrderWalletAndCouponFinalizer::run($order->fresh());
+
         return $invoice;
     }
 
@@ -1027,6 +1162,24 @@ class CheckoutController extends Controller
                 ->with('info', 'لديك طلب قيد الانتظار لهذا الكورس. يرجى انتظار المراجعة.');
         }
 
+        $request->validate([
+            'coupon_code' => 'nullable|string|max:64',
+            'wallet_credit' => 'nullable|numeric|min:0',
+        ]);
+
+        $pricing = CourseCheckoutPricingService::resolve(
+            Auth::user(),
+            $course,
+            $request->input('coupon_code'),
+            (float) $request->input('wallet_credit', 0)
+        );
+
+        if (! $pricing['ok']) {
+            return back()->withErrors(['coupon_code' => $pricing['message']])->withInput();
+        }
+
+        $proofRequired = $pricing['final_amount'] > 0.009;
+
         // التحقق من صحة البيانات (حساب الاستلام على المنصة إلزامي للتحويل حتى يُسجَّل الإيداع عند الموافقة)
         $validated = $request->validate([
             'payment_method' => 'required|in:bank_transfer,wallet,cash,other',
@@ -1036,7 +1189,7 @@ class CheckoutController extends Controller
                 'required_if:payment_method,wallet',
                 Rule::exists('wallets', 'id')->where('is_active', true)->whereIn('type', ['vodafone_cash', 'instapay', 'bank_transfer']),
             ],
-            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:'.config('upload_limits.max_upload_kb'),
+            'payment_proof' => ($proofRequired ? 'required|' : 'nullable|').'image|mimes:jpeg,png,jpg|max:'.config('upload_limits.max_upload_kb'),
             'notes' => 'nullable|string|max:1000',
         ], [
             'payment_method.required' => 'طريقة الدفع مطلوبة',
@@ -1052,27 +1205,38 @@ class CheckoutController extends Controller
 
         DB::beginTransaction();
         try {
-            // حساب السعر النهائي
-            $originalAmount = $course->price ?? 0;
-            $finalAmount = $originalAmount;
-            $discountAmount = 0;
+            $paymentProofPath = null;
+            if ($request->hasFile('payment_proof')) {
+                $paymentProofPath = $request->file('payment_proof')->store('payment-proofs', 'public');
+            }
 
-            // رفع صورة الإيصال
-            $paymentProofPath = $request->file('payment_proof')->store('payment-proofs', 'public');
+            $extraNotes = [];
+            if ($pricing['discount_amount'] > 0) {
+                $extraNotes[] = 'خصم كوبون: '.number_format($pricing['discount_amount'], 2).' ج.م';
+            }
+            if ($pricing['wallet_credit_amount'] > 0) {
+                $extraNotes[] = 'خصم من رصيد المحفظة: '.number_format($pricing['wallet_credit_amount'], 2).' ج.م';
+            }
+            $notes = trim((string) ($request->notes ?? ''));
+            if ($extraNotes !== []) {
+                $notes .= ($notes !== '' ? "\n" : '').implode("\n", $extraNotes);
+            }
 
             // إنشاء الطلب
             $order = Order::create([
                 'user_id' => Auth::id(),
                 'advanced_course_id' => $course->id,
-                'original_amount' => $originalAmount,
-                'discount_amount' => $discountAmount,
-                'amount' => $finalAmount,
+                'coupon_id' => $pricing['coupon_id'],
+                'original_amount' => $pricing['original_amount'],
+                'discount_amount' => $pricing['discount_amount'],
+                'wallet_credit_amount' => $pricing['wallet_credit_amount'],
+                'amount' => $pricing['final_amount'],
                 'payment_method' => $request->payment_method === 'wallet' ? 'bank_transfer' : $request->payment_method,
                 'payment_proof' => $paymentProofPath,
                 'wallet_id' => $request->payment_method === 'bank_transfer' || $request->payment_method === 'wallet'
                     ? ($request->wallet_id ?: null)
                     : null,
-                'notes' => $request->notes ?? '',
+                'notes' => $notes,
                 'status' => Order::STATUS_PENDING,
             ]);
 
@@ -1113,7 +1277,7 @@ class CheckoutController extends Controller
             ->firstOrFail();
 
         // التحقق من أن الكورس مجاني
-        if (($course->price ?? 0) > 0 && ! ($course->is_free ?? false)) {
+        if ($course->effectivePurchasePrice() > 0 && ! ($course->is_free ?? false)) {
             return redirect()->route('public.course.show', $course->id)
                 ->with('error', 'هذا الكورس ليس مجانياً');
         }

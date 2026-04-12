@@ -80,10 +80,17 @@
                             </span>
                         </div>
                         <div class="absolute top-4 right-4 space-y-2 text-right">
-                            @if(!empty($course->price) && !$course->is_free)
-                                <span class="inline-flex items-center px-3 py-1 rounded-lg bg-emerald-500 text-white text-sm font-bold shadow-lg">
-                                    {{ number_format($course->price, 0) }} ج.م
-                                </span>
+                            @if(!$course->is_free && $course->effectivePurchasePrice() > 0)
+                                @if($course->hasPromotionalPrice())
+                                    <span class="inline-flex flex-col items-end gap-0.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-bold shadow-lg tabular-nums">
+                                        <span class="line-through opacity-85 text-[10px]">{{ number_format($course->listPriceAmount(), 0) }} ج.م</span>
+                                        <span class="text-sm">{{ number_format($course->effectivePurchasePrice(), 0) }} ج.م</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-3 py-1 rounded-lg bg-emerald-500 text-white text-sm font-bold shadow-lg tabular-nums">
+                                        {{ number_format($course->effectivePurchasePrice(), 0) }} ج.م
+                                    </span>
+                                @endif
                             @else
                                 <span class="inline-flex items-center px-3 py-1 rounded-lg bg-white/90 text-emerald-600 text-sm font-bold shadow-lg">
                                     مجاني

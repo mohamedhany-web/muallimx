@@ -83,6 +83,7 @@ class AdvancedCourse extends Model
         'duration_hours',
         'duration_minutes',
         'price',
+        'price_after_discount',
         'thumbnail',
         'requirements',
         'prerequisites',
@@ -106,6 +107,7 @@ class AdvancedCourse extends Model
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
         'price' => 'decimal:2',
+        'price_after_discount' => 'decimal:2',
         'rating' => 'decimal:2',
         'skills' => 'array',
     ];
@@ -207,7 +209,7 @@ class AdvancedCourse extends Model
     public function enrolledStudents()
     {
         return $this->belongsToMany(User::class, 'student_course_enrollments', 'advanced_course_id', 'user_id')
-                    ->withPivot(['status', 'progress', 'enrolled_at', 'activated_at']);
+            ->withPivot(['status', 'progress', 'enrolled_at', 'activated_at']);
     }
 
     /**
@@ -216,8 +218,8 @@ class AdvancedCourse extends Model
     public function activeStudents()
     {
         return $this->belongsToMany(User::class, 'student_course_enrollments', 'advanced_course_id', 'user_id')
-                    ->wherePivot('status', 'active')
-                    ->withPivot(['status', 'progress', 'enrolled_at', 'activated_at']);
+            ->wherePivot('status', 'active')
+            ->withPivot(['status', 'progress', 'enrolled_at', 'activated_at']);
     }
 
     public function scopeActive($query)
@@ -260,7 +262,9 @@ class AdvancedCourse extends Model
     public function getProgressForUser($userId)
     {
         $totalLessons = $this->lessons()->count();
-        if ($totalLessons === 0) return 0;
+        if ($totalLessons === 0) {
+            return 0;
+        }
 
         $completedLessons = LessonProgress::where('user_id', $userId)
             ->whereIn('course_lesson_id', $this->lessons()->pluck('id'))
@@ -279,5 +283,52 @@ class AdvancedCourse extends Model
         ];
 
         return $badges[$this->level] ?? $badges['beginner'];
+    }
+
+    /**
+     * السعر الأساسي المعروض كـ «قبل الخصم» على البطاقات (حقل price).
+     */
+    public function listPriceAmount(): float
+    {
+        return round(max(0, (float) ($this->price ?? 0)), 2);
+    }
+
+    /**
+     * السعر الفعلي للشراء قبل كوبون المنصة/المحفظة: بعد الخصم الترويجي إن وُجد، وإلا السعر الأساسي.
+     */
+    public function effectivePurchasePrice(): float
+    {
+        $list = $this->listPriceAmount();
+        if ($list <= 0) {
+            return 0.0;
+        }
+        $sale = $this->price_after_discount;
+        if ($sale === null || $sale === '') {
+            return $list;
+        }
+        $s = round((float) $sale, 2);
+        if ($s <= 0 || $s >= $list) {
+            return $list;
+        }
+
+        return $s;
+    }
+
+    /**
+     * هل يُعرض على البطاقة سعران (قبل وبعد خصم ترويجي)؟
+     */
+    public function hasPromotionalPrice(): bool
+    {
+        $list = $this->listPriceAmount();
+        if ($list <= 0) {
+            return false;
+        }
+        $sale = $this->price_after_discount;
+        if ($sale === null || $sale === '') {
+            return false;
+        }
+        $s = round((float) $sale, 2);
+
+        return $s > 0 && $s < $list;
     }
 }

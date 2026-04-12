@@ -196,7 +196,7 @@
                                     <a href="{{ route('my-courses.show', $course) }}" class="btn-primary inline-flex items-center gap-2.5 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-7 py-3.5 rounded-2xl font-bold shadow-xl shadow-brand-600/25 text-base">
                                         <i class="fas fa-play-circle"></i> {{ __('public.start_learning_now') }}
                                     </a>
-                                @elseif(($course->price ?? 0) > 0 && !($course->is_free ?? false))
+                                @elseif($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false))
                                     <a href="{{ route('public.course.checkout', $course->id) }}" class="btn-primary inline-flex items-center gap-2.5 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-7 py-3.5 rounded-2xl font-bold shadow-xl shadow-brand-600/25 text-base">
                                         <i class="fas fa-shopping-cart"></i> {{ __('public.buy_now') }}
                                     </a>
@@ -210,7 +210,7 @@
                                 @endif
                             @endauth
                             @guest
-                                @if(($course->price ?? 0) > 0 && !($course->is_free ?? false))
+                                @if($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false))
                                     <a href="{{ route('register', ['redirect' => route('public.course.checkout', $course->id)]) }}" class="btn-primary inline-flex items-center gap-2.5 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-7 py-3.5 rounded-2xl font-bold shadow-xl shadow-brand-600/25 text-base">
                                         <i class="fas fa-shopping-cart"></i> {{ __('public.buy_now') }}
                                     </a>
@@ -342,8 +342,13 @@
                             <div class="card-hover rounded-3xl bg-white border border-slate-100 shadow-lg overflow-hidden">
                                 {{-- Colored header --}}
                                 <div class="bg-gradient-to-l from-brand-500 to-brand-600 p-5 text-center">
-                                    @if(($course->price ?? 0) > 0)
-                                        <div class="text-3xl font-black text-white">{{ number_format($course->price, 0) }} <span class="text-lg font-medium text-white/80">{{ __('public.currency_egp') }}</span></div>
+                                    @if($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false))
+                                        @if($course->hasPromotionalPrice())
+                                            <div class="text-sm text-white/80 line-through mb-1 tabular-nums">{{ number_format($course->listPriceAmount(), 0) }} {{ __('public.currency_egp') }}</div>
+                                            <div class="text-3xl font-black text-white tabular-nums">{{ number_format($course->effectivePurchasePrice(), 0) }} <span class="text-lg font-medium text-white/80">{{ __('public.currency_egp') }}</span></div>
+                                        @else
+                                            <div class="text-3xl font-black text-white tabular-nums">{{ number_format($course->effectivePurchasePrice(), 0) }} <span class="text-lg font-medium text-white/80">{{ __('public.currency_egp') }}</span></div>
+                                        @endif
                                     @else
                                         <div class="text-2xl font-black text-white flex items-center justify-center gap-2"><i class="fas fa-gift text-xl"></i>{{ __('public.free_price') }}</div>
                                     @endif
@@ -368,7 +373,7 @@
                                             <a href="{{ route('my-courses.show', $course) }}" class="btn-primary block w-full text-center py-3.5 rounded-2xl bg-gradient-to-l from-brand-500 to-brand-600 text-white font-bold shadow-lg">
                                                 <i class="fas fa-play-circle {{ $isRtl?'ml-2':'mr-2' }}"></i>{{ __('public.start_learning_now') }}
                                             </a>
-                                        @elseif(($course->price ?? 0) > 0 && !($course->is_free ?? false))
+                                        @elseif($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false))
                                             <a href="{{ route('public.course.checkout', $course->id) }}" class="btn-primary block w-full text-center py-3.5 rounded-2xl bg-gradient-to-l from-brand-500 to-brand-600 text-white font-bold shadow-lg">
                                                 <i class="fas fa-shopping-cart {{ $isRtl?'ml-2':'mr-2' }}"></i>{{ __('public.buy_now') }}
                                             </a>
@@ -382,7 +387,7 @@
                                         @endif
                                     @endauth
                                     @guest
-                                        @if(($course->price ?? 0) > 0 && !($course->is_free ?? false))
+                                        @if($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false))
                                             <a href="{{ route('register', ['redirect' => route('public.course.checkout', $course->id)]) }}" class="btn-primary block w-full text-center py-3.5 rounded-2xl bg-gradient-to-l from-brand-500 to-brand-600 text-white font-bold shadow-lg">
                                                 <i class="fas fa-shopping-cart {{ $isRtl?'ml-2':'mr-2' }}"></i>{{ __('public.buy_now') }}
                                             </a>
@@ -415,11 +420,9 @@
                                             </div>
                                             <div class="flex-1 min-w-0">
                                                 <h4 class="font-bold text-navy-950 text-sm group-hover:text-brand-600 transition-colors line-clamp-2 leading-snug">{{ $related->title }}</h4>
-                                                @if(($related->price ?? 0) > 0)
-                                                    <span class="text-xs font-bold text-brand-600 mt-1 block">{{ number_format($related->price, 0) }} {{ __('public.currency_egp') }}</span>
-                                                @else
-                                                    <span class="text-xs font-bold text-emerald-600 mt-1 block">{{ __('public.free_price') }}</span>
-                                                @endif
+                                                <div class="mt-1 block text-start">
+                                                    <x-advanced-course-card-price :course="$related" size="sm" class="!items-start" />
+                                                </div>
                                             </div>
                                         </a>
                                     @endforeach

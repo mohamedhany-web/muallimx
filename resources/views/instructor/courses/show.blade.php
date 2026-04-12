@@ -191,9 +191,12 @@
                                 <div>
                                     <div class="mb-3">
                                         <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1 uppercase tracking-wide">{{ __('instructor.price') }}</label>
-                                        <div class="text-slate-800 dark:text-slate-100 font-black text-lg">
-                                            @if($course->price && $course->price > 0)
-                                                {{ number_format($course->price, 2) }} ج.م
+                                        <div class="text-slate-800 dark:text-slate-100 font-black text-lg tabular-nums">
+                                            @if(!$course->is_free && $course->effectivePurchasePrice() > 0)
+                                                @if($course->hasPromotionalPrice())
+                                                    <span class="block text-sm text-slate-400 line-through font-semibold">{{ number_format($course->listPriceAmount(), 2) }} ج.م</span>
+                                                @endif
+                                                {{ number_format($course->effectivePurchasePrice(), 2) }} ج.م
                                             @else
                                                 <span class="text-green-600">{{ __('instructor.free') }}</span>
                                     @endif

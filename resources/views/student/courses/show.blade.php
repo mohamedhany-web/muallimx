@@ -290,18 +290,23 @@
                 <div class="sticky-purchase-card bg-white rounded-3xl shadow-2xl border-2 border-gray-100 p-6 sm:p-8 hover:shadow-3xl transition-all duration-300">
                     <!-- السعر -->
                     <div class="text-center mb-6 pb-6 border-b-2 border-gray-100" id="priceDisplay">
-                        @if($advancedCourse->price && $advancedCourse->price > 0)
+                        @if(!$advancedCourse->is_free && $advancedCourse->effectivePurchasePrice() > 0)
                             <div class="original-price">
-                                <div class="text-5xl sm:text-6xl font-black text-[#1C2C39] mb-2" id="coursePrice" data-price="{{ $advancedCourse->price }}">{{ number_format($advancedCourse->price) }}</div>
+                                @if($advancedCourse->hasPromotionalPrice())
+                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">قبل الخصم</p>
+                                    <div class="text-2xl text-gray-400 line-through mb-3 tabular-nums">{{ number_format($advancedCourse->listPriceAmount()) }} <span class="text-base">ج.م</span></div>
+                                    <p class="text-xs font-bold text-emerald-600 uppercase tracking-wide mb-1">بعد الخصم</p>
+                                @endif
+                                <div class="text-5xl sm:text-6xl font-black text-[#1C2C39] mb-2 tabular-nums" id="coursePrice" data-price="{{ $advancedCourse->effectivePurchasePrice() }}">{{ number_format($advancedCourse->effectivePurchasePrice()) }}</div>
                                 <div class="text-lg font-semibold text-[#1F3A56]">ج.م</div>
                             </div>
-                            <!-- عرض السعر بعد الخصم (مخفي بشكل افتراضي) -->
+                            <!-- عرض السعر بعد كوبون إضافي (مخفي افتراضياً) -->
                             <div class="discount-price hidden mt-4 pt-4 border-t-2 border-gray-200">
                                 <div class="flex items-center justify-center gap-2 mb-3">
-                                    <span class="text-sm text-gray-400 line-through font-medium" id="originalPriceDisplay">{{ number_format($advancedCourse->price) }} ج.م</span>
+                                    <span class="text-sm text-gray-400 line-through font-medium" id="originalPriceDisplay">{{ number_format($advancedCourse->effectivePurchasePrice()) }} ج.م</span>
                                     <span class="text-xs bg-gradient-to-r from-emerald-500 to-green-500 text-white px-3 py-1 rounded-full font-bold shadow-md" id="discountPercentage"></span>
                                 </div>
-                                <div class="text-5xl sm:text-6xl font-black text-emerald-600 mb-2" id="finalPriceDisplay">{{ number_format($advancedCourse->price) }}</div>
+                                <div class="text-5xl sm:text-6xl font-black text-emerald-600 mb-2 tabular-nums" id="finalPriceDisplay">{{ number_format($advancedCourse->effectivePurchasePrice()) }}</div>
                                 <div class="text-lg font-semibold text-emerald-600">ج.م</div>
                                 <p class="text-sm text-emerald-600 mt-2 font-medium" id="discountAmountText"></p>
                             </div>
@@ -358,7 +363,7 @@
                     @else
                         <button onclick="toggleOrderForm()" class="w-full bg-gradient-to-r from-[#2CA9BD] via-[#65DBE4] to-[#2CA9BD] hover:from-[#1F3A56] hover:via-[#2CA9BD] hover:to-[#1F3A56] text-white py-4 px-6 rounded-2xl font-black text-lg transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 flex items-center justify-center gap-2 transform">
                             <i class="fas fa-shopping-cart"></i>
-                            @if($advancedCourse->price && $advancedCourse->price > 0)
+                            @if(!$advancedCourse->is_free && $advancedCourse->effectivePurchasePrice() > 0)
                                 اشتري الآن
                             @else
                                 سجل مجاناً
@@ -373,7 +378,7 @@
                                 @csrf
                                 
                                 <!-- حقل كوبون الخصم -->
-                                @if($advancedCourse->price && $advancedCourse->price > 0)
+                                @if(!$advancedCourse->is_free && $advancedCourse->effectivePurchasePrice() > 0)
                                 <div class="bg-gradient-to-br from-[#2CA9BD]/10 to-[#65DBE4]/10 rounded-2xl p-5 border-2 border-[#2CA9BD]/20">
                                     <label class="block text-sm font-black text-[#1C2C39] mb-3 flex items-center gap-2">
                                         <div class="w-8 h-8 bg-gradient-to-br from-[#2CA9BD] to-[#65DBE4] rounded-lg flex items-center justify-center shadow-md">

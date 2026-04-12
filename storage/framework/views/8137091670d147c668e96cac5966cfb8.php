@@ -200,7 +200,7 @@
                                         <i class="fas fa-play-circle"></i> <?php echo e(__('public.start_learning_now')); ?>
 
                                     </a>
-                                <?php elseif(($course->price ?? 0) > 0 && !($course->is_free ?? false)): ?>
+                                <?php elseif($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false)): ?>
                                     <a href="<?php echo e(route('public.course.checkout', $course->id)); ?>" class="btn-primary inline-flex items-center gap-2.5 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-7 py-3.5 rounded-2xl font-bold shadow-xl shadow-brand-600/25 text-base">
                                         <i class="fas fa-shopping-cart"></i> <?php echo e(__('public.buy_now')); ?>
 
@@ -216,7 +216,7 @@
                                 <?php endif; ?>
                             <?php endif; ?>
                             <?php if(auth()->guard()->guest()): ?>
-                                <?php if(($course->price ?? 0) > 0 && !($course->is_free ?? false)): ?>
+                                <?php if($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false)): ?>
                                     <a href="<?php echo e(route('register', ['redirect' => route('public.course.checkout', $course->id)])); ?>" class="btn-primary inline-flex items-center gap-2.5 bg-gradient-to-l from-brand-500 to-brand-600 text-white px-7 py-3.5 rounded-2xl font-bold shadow-xl shadow-brand-600/25 text-base">
                                         <i class="fas fa-shopping-cart"></i> <?php echo e(__('public.buy_now')); ?>
 
@@ -352,8 +352,13 @@
                             <div class="card-hover rounded-3xl bg-white border border-slate-100 shadow-lg overflow-hidden">
                                 
                                 <div class="bg-gradient-to-l from-brand-500 to-brand-600 p-5 text-center">
-                                    <?php if(($course->price ?? 0) > 0): ?>
-                                        <div class="text-3xl font-black text-white"><?php echo e(number_format($course->price, 0)); ?> <span class="text-lg font-medium text-white/80"><?php echo e(__('public.currency_egp')); ?></span></div>
+                                    <?php if($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false)): ?>
+                                        <?php if($course->hasPromotionalPrice()): ?>
+                                            <div class="text-sm text-white/80 line-through mb-1 tabular-nums"><?php echo e(number_format($course->listPriceAmount(), 0)); ?> <?php echo e(__('public.currency_egp')); ?></div>
+                                            <div class="text-3xl font-black text-white tabular-nums"><?php echo e(number_format($course->effectivePurchasePrice(), 0)); ?> <span class="text-lg font-medium text-white/80"><?php echo e(__('public.currency_egp')); ?></span></div>
+                                        <?php else: ?>
+                                            <div class="text-3xl font-black text-white tabular-nums"><?php echo e(number_format($course->effectivePurchasePrice(), 0)); ?> <span class="text-lg font-medium text-white/80"><?php echo e(__('public.currency_egp')); ?></span></div>
+                                        <?php endif; ?>
                                     <?php else: ?>
                                         <div class="text-2xl font-black text-white flex items-center justify-center gap-2"><i class="fas fa-gift text-xl"></i><?php echo e(__('public.free_price')); ?></div>
                                     <?php endif; ?>
@@ -379,7 +384,7 @@
                                                 <i class="fas fa-play-circle <?php echo e($isRtl?'ml-2':'mr-2'); ?>"></i><?php echo e(__('public.start_learning_now')); ?>
 
                                             </a>
-                                        <?php elseif(($course->price ?? 0) > 0 && !($course->is_free ?? false)): ?>
+                                        <?php elseif($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false)): ?>
                                             <a href="<?php echo e(route('public.course.checkout', $course->id)); ?>" class="btn-primary block w-full text-center py-3.5 rounded-2xl bg-gradient-to-l from-brand-500 to-brand-600 text-white font-bold shadow-lg">
                                                 <i class="fas fa-shopping-cart <?php echo e($isRtl?'ml-2':'mr-2'); ?>"></i><?php echo e(__('public.buy_now')); ?>
 
@@ -395,7 +400,7 @@
                                         <?php endif; ?>
                                     <?php endif; ?>
                                     <?php if(auth()->guard()->guest()): ?>
-                                        <?php if(($course->price ?? 0) > 0 && !($course->is_free ?? false)): ?>
+                                        <?php if($course->effectivePurchasePrice() > 0 && !($course->is_free ?? false)): ?>
                                             <a href="<?php echo e(route('register', ['redirect' => route('public.course.checkout', $course->id)])); ?>" class="btn-primary block w-full text-center py-3.5 rounded-2xl bg-gradient-to-l from-brand-500 to-brand-600 text-white font-bold shadow-lg">
                                                 <i class="fas fa-shopping-cart <?php echo e($isRtl?'ml-2':'mr-2'); ?>"></i><?php echo e(__('public.buy_now')); ?>
 
@@ -430,11 +435,28 @@
                                             </div>
                                             <div class="flex-1 min-w-0">
                                                 <h4 class="font-bold text-navy-950 text-sm group-hover:text-brand-600 transition-colors line-clamp-2 leading-snug"><?php echo e($related->title); ?></h4>
-                                                <?php if(($related->price ?? 0) > 0): ?>
-                                                    <span class="text-xs font-bold text-brand-600 mt-1 block"><?php echo e(number_format($related->price, 0)); ?> <?php echo e(__('public.currency_egp')); ?></span>
-                                                <?php else: ?>
-                                                    <span class="text-xs font-bold text-emerald-600 mt-1 block"><?php echo e(__('public.free_price')); ?></span>
-                                                <?php endif; ?>
+                                                <div class="mt-1 block text-start">
+                                                    <?php if (isset($component)) { $__componentOriginal9ce3c0e6a304a546d78b53c70e0ef542 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ce3c0e6a304a546d78b53c70e0ef542 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.advanced-course-card-price','data' => ['course' => $related,'size' => 'sm','class' => '!items-start']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('advanced-course-card-price'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['course' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($related),'size' => 'sm','class' => '!items-start']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ce3c0e6a304a546d78b53c70e0ef542)): ?>
+<?php $attributes = $__attributesOriginal9ce3c0e6a304a546d78b53c70e0ef542; ?>
+<?php unset($__attributesOriginal9ce3c0e6a304a546d78b53c70e0ef542); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ce3c0e6a304a546d78b53c70e0ef542)): ?>
+<?php $component = $__componentOriginal9ce3c0e6a304a546d78b53c70e0ef542; ?>
+<?php unset($__componentOriginal9ce3c0e6a304a546d78b53c70e0ef542); ?>
+<?php endif; ?>
+                                                </div>
                                             </div>
                                         </a>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>

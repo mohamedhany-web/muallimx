@@ -337,6 +337,8 @@ Route::get('/courses', function (\Illuminate\Http\Request $request) {
             'description' => $course->description ?? '',
             'level' => $course->level ?? 'beginner',
             'price' => (float) ($course->price ?? 0),
+            'sale_price' => $course->effectivePurchasePrice(),
+            'has_promo_price' => $course->hasPromotionalPrice(),
             'duration_hours' => (int) ($course->duration_hours ?? 0),
             'is_featured' => (bool) ($course->is_featured ?? false),
             'is_free' => (bool) ($course->is_free ?? false),
@@ -427,6 +429,10 @@ Route::get('/course/{courseId}/checkout', [\App\Http\Controllers\Public\Checkout
 Route::post('/course/{courseId}/checkout/complete', [\App\Http\Controllers\Public\CheckoutController::class, 'complete'])
     ->middleware('auth')
     ->name('public.course.checkout.complete');
+
+Route::post('/course/{courseId}/checkout/quote', [\App\Http\Controllers\Public\CheckoutController::class, 'quoteCourseCheckout'])
+    ->middleware('auth')
+    ->name('public.course.checkout.quote');
 
 // التوجيه لبوابة الدفع كاشير (كورس)
 Route::post('/course/{courseId}/checkout/kashier', [\App\Http\Controllers\Public\CheckoutController::class, 'redirectToKashier'])
@@ -761,24 +767,23 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/recording-audio/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignAudioUpload'])->name('student.classroom.recording-audio.presign');
         Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('student.classroom.recording-audio.upload');
         Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('student.classroom.recording-audio.complete');
-        // الدعم الفني (ميزة من الباقة)
+    });
+
+    // مزايا اشتراك Muallimx (دعم، مكتبة، صفحات المزايا، …) — للطالب والمدرب حسب التحقق داخل المتحكم
+    Route::middleware(['role:student|instructor|teacher'])->group(function () {
         Route::get('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'index'])->name('student.support.index');
         Route::post('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'store'])->name('student.support.store');
         Route::get('/support/{ticket}', [\App\Http\Controllers\Student\SupportTicketController::class, 'show'])->name('student.support.show');
         Route::post('/support/{ticket}/reply', [\App\Http\Controllers\Student\SupportTicketController::class, 'reply'])->name('student.support.reply');
-        // الظهور للأكاديميات والفرص
         Route::get('/academies/visibility', [\App\Http\Controllers\Student\AcademiesVisibilityController::class, 'index'])->name('student.academies.visibility');
         Route::post('/academies/opportunities/{opportunity}/apply', [\App\Http\Controllers\Student\AcademiesVisibilityController::class, 'apply'])->name('student.academies.opportunities.apply');
-        // التقديم على فرص التدريس (ميزة مستقلة)
         Route::get('/teaching-opportunities', [\App\Http\Controllers\Student\TeachingOpportunityController::class, 'index'])->name('student.opportunities.index');
         Route::post('/teaching-opportunities/{opportunity}/apply', [\App\Http\Controllers\Student\TeachingOpportunityController::class, 'apply'])->name('student.opportunities.apply');
-        // صفحات المزايا المرتبطة بالاشتراك (كل ميزة لها صفحة)
         Route::get('/features/{feature}', [\App\Http\Controllers\Student\SubscriptionFeatureController::class, 'show'])
             ->name('student.features.show')
             ->where('feature', 'library_access|ai_tools|classroom_access|support|visible_to_academies|can_apply_opportunities|full_ai_suite|teacher_evaluation|recommended_to_academies|priority_opportunities|direct_support');
         Route::post('/features/full-ai-suite/preview', [\App\Http\Controllers\Student\SubscriptionFeatureController::class, 'previewFullAiSuite'])
             ->name('student.features.full-ai-suite.preview');
-        // مكتبة المناهج التفاعلية (مناهج أكس — معاينة ملف واحد مجاناً ثم اشتراك)
         Route::get('/curriculum-library', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
         Route::get('/curriculum-library/{item:slug}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'show'])->name('curriculum-library.show');
         Route::get('/curriculum-library/{item:slug}/m/{material}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'downloadMaterial'])->name('curriculum-library.material.download');
@@ -1554,12 +1559,24 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // إدارة التسويق
         Route::get('/personal-branding', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'index'])->name('personal-branding.index');
         Route::resource('popup-ads', \App\Http\Controllers\Admin\PopupAdController::class)->except(['show']);
+        Route::get('/personal-branding/{personal_branding}/edit', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'edit'])->name('personal-branding.edit');
+        Route::put('/personal-branding/{personal_branding}', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'update'])
+            ->middleware('throttle:30,1')
+            ->name('personal-branding.update');
+        Route::delete('/personal-branding/{personal_branding}', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'destroy'])
+            ->middleware('throttle:20,1')
+            ->name('personal-branding.destroy');
         Route::get('/personal-branding/{personal_branding}', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'show'])->name('personal-branding.show');
         Route::post('/personal-branding/{personal_branding}/approve', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'approve'])->name('personal-branding.approve');
         Route::post('/personal-branding/{personal_branding}/reject', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'reject'])->name('personal-branding.reject');
         Route::post('/personal-branding/{personal_branding}/send-back', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'sendBackForReview'])->name('personal-branding.send-back');
         Route::post('/personal-branding/{personal_branding}/consultation-pricing', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'updateConsultationPricing'])->name('personal-branding.consultation-pricing');
         Route::resource('coupons', \App\Http\Controllers\Admin\CouponController::class);
+        Route::get('/marketing/student-wallet-credit', [\App\Http\Controllers\Admin\StudentWalletCreditController::class, 'create'])
+            ->name('marketing.student-wallet-credit.create');
+        Route::post('/marketing/student-wallet-credit', [\App\Http\Controllers\Admin\StudentWalletCreditController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('marketing.student-wallet-credit.store');
         Route::get('/coupon-commissions', [\App\Http\Controllers\Admin\CouponCommissionController::class, 'index'])->name('coupon-commissions.index');
         Route::post('/coupon-commissions/{accrual}/expense', [\App\Http\Controllers\Admin\CouponCommissionController::class, 'storeExpense'])
             ->middleware('throttle:20,1')

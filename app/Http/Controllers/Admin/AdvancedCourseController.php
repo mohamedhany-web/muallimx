@@ -3,22 +3,39 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AdvancedCourse;
-use App\Models\AcademicYear;
 use App\Models\AcademicSubject;
+use App\Models\AdvancedCourse;
 use App\Models\CourseCategory;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 
 class AdvancedCourseController extends Controller
 {
     public function __construct()
     {
         $this->middleware('can:manage.courses');
+    }
+
+    /**
+     * سعر العرض الاختياري: يُخزَّن فقط إذا كان أقل من السعر الأساسي وبشكل صالح.
+     */
+    private function normalizeOptionalSalePrice(mixed $raw, float $listPrice): ?float
+    {
+        if ($listPrice <= 0) {
+            return null;
+        }
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+        $s = round((float) $raw, 2);
+        if ($s <= 0 || $s >= $listPrice) {
+            return null;
+        }
+
+        return $s;
     }
 
     /**
@@ -41,9 +58,9 @@ class AdvancedCourseController extends Controller
 
         // البحث في العنوان والوصف
         if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('title', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%'.$request->search.'%')
+                    ->orWhere('description', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -88,6 +105,7 @@ class AdvancedCourseController extends Controller
             ->filter()
             ->flatMap(function ($json) {
                 $decoded = json_decode($json, true);
+
                 return is_array($decoded) ? $decoded : [$json];
             })
             ->unique()
@@ -140,6 +158,7 @@ class AdvancedCourseController extends Controller
             'duration_hours' => 'nullable|numeric|min:0',
             'duration_minutes' => 'nullable|integer|min:0|max:59',
             'price' => 'nullable|numeric|min:0',
+            'price_after_discount' => 'nullable|numeric|min:0',
             'requirements' => 'nullable|string',
             'prerequisites' => 'nullable|string',
             'what_you_learn' => 'nullable|string',
@@ -163,6 +182,8 @@ class AdvancedCourseController extends Controller
             'duration_minutes.max' => 'الدقائق يجب ألا تتجاوز 59 دقيقة',
             'price.numeric' => 'السعر يجب أن يكون رقم',
             'price.min' => 'السعر لا يمكن أن يكون أقل من صفر',
+            'price_after_discount.numeric' => 'سعر بعد الخصم يجب أن يكون رقماً',
+            'price_after_discount.min' => 'سعر بعد الخصم لا يمكن أن يكون سالباً',
             'thumbnail.image' => 'يجب أن تكون صورة صحيحة',
             'thumbnail.mimes' => 'يجب أن تكون الصورة بصيغة jpeg, png أو jpg',
             'thumbnail.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
@@ -212,6 +233,16 @@ class AdvancedCourseController extends Controller
 
         $data['level'] = 'beginner';
         $data['price'] = $data['price'] ?? 0;
+        $list = (float) $data['price'];
+        if ($list > 0
+            && $request->filled('price_after_discount')
+            && (float) $request->input('price_after_discount') >= $list) {
+            return back()->withErrors(['price_after_discount' => 'سعر بعد الخصم يجب أن يكون أقل من السعر الأساسي.'])->withInput();
+        }
+        if ($list <= 0 && $request->filled('price_after_discount')) {
+            return back()->withErrors(['price_after_discount' => 'لا يُستخدم سعر بعد الخصم للكورس المجاني.'])->withInput();
+        }
+        $data['price_after_discount'] = $this->normalizeOptionalSalePrice($request->input('price_after_discount'), $list);
         $data['duration_hours'] = $data['duration_hours'] ?? 0;
         $data['duration_minutes'] = $data['duration_minutes'] ?? 0;
         $data['language'] = $data['language'] ?? 'ar';
@@ -246,13 +277,13 @@ class AdvancedCourseController extends Controller
     {
         $advancedCourse->load([
             'instructor',
-            'lessons' => function($query) {
+            'lessons' => function ($query) {
                 $query->ordered();
             },
             'enrollments.student',
-            'orders' => function($query) {
+            'orders' => function ($query) {
                 $query->with(['user'])->orderBy('created_at', 'desc');
-            }
+            },
         ]);
 
         // إحصائيات
@@ -330,6 +361,7 @@ class AdvancedCourseController extends Controller
             'duration_hours' => 'nullable|numeric|min:0',
             'duration_minutes' => 'nullable|integer|min:0|max:59',
             'price' => 'nullable|numeric|min:0',
+            'price_after_discount' => 'nullable|numeric|min:0',
             'requirements' => 'nullable|string',
             'prerequisites' => 'nullable|string',
             'what_you_learn' => 'nullable|string',
@@ -348,6 +380,8 @@ class AdvancedCourseController extends Controller
             'course_category_id.exists' => 'التصنيف المحدد غير موجود',
             'instructor_id.exists' => 'المدرب المحدد غير موجود',
             'duration_minutes.max' => 'الدقائق يجب ألا تتجاوز 59 دقيقة',
+            'price_after_discount.numeric' => 'سعر بعد الخصم يجب أن يكون رقماً',
+            'price_after_discount.min' => 'سعر بعد الخصم لا يمكن أن يكون سالباً',
             'thumbnail.max' => 'حجم الصورة يجب ألا يتجاوز 2 ميجابايت',
             'ends_at.after_or_equal' => 'تاريخ النهاية يجب أن يكون بعد أو يساوي تاريخ البداية',
         ]);
@@ -376,6 +410,16 @@ class AdvancedCourseController extends Controller
 
         $data['level'] = 'beginner';
         $data['price'] = $data['price'] ?? 0;
+        $list = (float) $data['price'];
+        if ($list > 0
+            && $request->filled('price_after_discount')
+            && (float) $request->input('price_after_discount') >= $list) {
+            return back()->withErrors(['price_after_discount' => 'سعر بعد الخصم يجب أن يكون أقل من السعر الأساسي.'])->withInput();
+        }
+        if ($list <= 0 && $request->filled('price_after_discount')) {
+            return back()->withErrors(['price_after_discount' => 'لا يُستخدم سعر بعد الخصم للكورس المجاني.'])->withInput();
+        }
+        $data['price_after_discount'] = $this->normalizeOptionalSalePrice($request->input('price_after_discount'), $list);
         $data['duration_hours'] = $data['duration_hours'] ?? 0;
         $data['duration_minutes'] = $data['duration_minutes'] ?? 0;
         $data['language'] = $data['language'] ?? 'ar';
@@ -423,6 +467,7 @@ class AdvancedCourseController extends Controller
             });
 
             Log::info('تم حذف الكورس بنجاح', ['course_id' => $courseId]);
+
             return redirect()->route('admin.advanced-courses.index')
                 ->with('success', 'تم حذف الكورس بنجاح');
         } catch (\Throwable $e) {
@@ -433,6 +478,7 @@ class AdvancedCourseController extends Controller
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return redirect()->route('admin.advanced-courses.index')
                 ->with('error', 'حدث خطأ أثناء حذف الكورس. قد يكون الكورس مرتبطاً ببيانات أخرى.');
         }
@@ -474,22 +520,21 @@ class AdvancedCourseController extends Controller
         return view('admin.advanced-courses.students', compact('advancedCourse', 'availableStudents'));
     }
 
-
     /**
      * تغيير حالة الكورس (تفعيل/إلغاء تفعيل)
      */
     public function toggleStatus(AdvancedCourse $advancedCourse)
     {
         $advancedCourse->update([
-            'is_active' => !$advancedCourse->is_active
+            'is_active' => ! $advancedCourse->is_active,
         ]);
 
         $status = $advancedCourse->is_active ? 'تم تفعيل' : 'تم إيقاف';
 
         return response()->json([
             'success' => true,
-            'message' => $status . ' الكورس بنجاح',
-            'is_active' => $advancedCourse->is_active
+            'message' => $status.' الكورس بنجاح',
+            'is_active' => $advancedCourse->is_active,
         ]);
     }
 
@@ -499,15 +544,15 @@ class AdvancedCourseController extends Controller
     public function toggleFeatured(AdvancedCourse $advancedCourse)
     {
         $advancedCourse->update([
-            'is_featured' => !$advancedCourse->is_featured
+            'is_featured' => ! $advancedCourse->is_featured,
         ]);
 
         $status = $advancedCourse->is_featured ? 'تم ترشيح' : 'تم إلغاء ترشيح';
 
         return response()->json([
             'success' => true,
-            'message' => $status . ' الكورس بنجاح',
-            'is_featured' => $advancedCourse->is_featured
+            'message' => $status.' الكورس بنجاح',
+            'is_featured' => $advancedCourse->is_featured,
         ]);
     }
 
@@ -537,7 +582,7 @@ class AdvancedCourseController extends Controller
                 'completed' => $advancedCourse->enrollments->where('status', 'completed')->count(),
                 'pending' => $advancedCourse->enrollments->where('status', 'pending')->count(),
             ],
-            
+
             // إحصائيات الدروس
             'lessons' => [
                 'total' => $advancedCourse->lessons->count(),
@@ -547,7 +592,7 @@ class AdvancedCourseController extends Controller
                 'quiz' => $advancedCourse->lessons->where('type', 'quiz')->count(),
                 'total_duration' => $advancedCourse->lessons->sum('duration_minutes'),
             ],
-            
+
             // إحصائيات الطلبات
             'orders' => [
                 'total' => $advancedCourse->orders->count(),
@@ -555,14 +600,14 @@ class AdvancedCourseController extends Controller
                 'approved' => $advancedCourse->orders->where('status', 'approved')->count(),
                 'rejected' => $advancedCourse->orders->where('status', 'rejected')->count(),
             ],
-            
+
             // التقدم العام
             'progress' => [
                 'average' => $advancedCourse->enrollments->where('status', 'active')->avg('progress') ?? 0,
-                'completion_rate' => $advancedCourse->enrollments->count() > 0 
-                    ? ($advancedCourse->enrollments->where('status', 'completed')->count() / $advancedCourse->enrollments->count()) * 100 
+                'completion_rate' => $advancedCourse->enrollments->count() > 0
+                    ? ($advancedCourse->enrollments->where('status', 'completed')->count() / $advancedCourse->enrollments->count()) * 100
                     : 0,
-            ]
+            ],
         ];
 
         return view('admin.advanced-courses.statistics', compact('advancedCourse', 'stats'));
@@ -575,7 +620,7 @@ class AdvancedCourseController extends Controller
     {
         // يمكن تطوير هذه الوظيفة لتصدير بيانات الكورس إلى Excel أو PDF
         return response()->json([
-            'message' => 'سيتم تطوير وظيفة التصدير قريباً'
+            'message' => 'سيتم تطوير وظيفة التصدير قريباً',
         ]);
     }
 
@@ -585,7 +630,7 @@ class AdvancedCourseController extends Controller
     public function duplicate(AdvancedCourse $advancedCourse)
     {
         $newCourse = $advancedCourse->replicate();
-        $newCourse->title = $advancedCourse->title . ' - نسخة';
+        $newCourse->title = $advancedCourse->title.' - نسخة';
         $newCourse->is_active = false;
         $newCourse->is_featured = false;
         $newCourse->save();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\ClassroomMeeting;
 use App\Models\LiveSetting;
+use App\Services\ClassroomSubscriptionFeatureMenuService;
 use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ class ClassroomController extends Controller
         $this->ensureClassroomAccess($user);
 
         $status = (string) $request->get('status', 'all');
-        if (!in_array($status, ['all', 'live', 'scheduled', 'ended'], true)) {
+        if (! in_array($status, ['all', 'live', 'scheduled', 'ended'], true)) {
             $status = 'all';
         }
 
@@ -102,14 +103,14 @@ class ClassroomController extends Controller
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
-            'max_participants' => ['required', 'integer', 'min:2', 'max:' . $limits['classroom_max_participants']],
+            'max_participants' => ['required', 'integer', 'min:2', 'max:'.$limits['classroom_max_participants']],
             'start_now' => ['nullable', Rule::in(['0', '1'])],
             'scheduled_for' => ['nullable', 'date'],
-            'planned_duration_minutes' => ['nullable', 'integer', 'min:15', 'max:' . $limits['classroom_max_duration_minutes']],
+            'planned_duration_minutes' => ['nullable', 'integer', 'min:15', 'max:'.$limits['classroom_max_duration_minutes']],
         ]);
 
         $code = ClassroomMeeting::generateCode();
-        $roomName = 'Muallimx-' . $code;
+        $roomName = 'Muallimx-'.$code;
         $startNow = (string) ($data['start_now'] ?? '1') === '1';
 
         $meeting = ClassroomMeeting::create([
@@ -134,7 +135,7 @@ class ClassroomController extends Controller
     public function start(Request $request)
     {
         $request->merge([
-            'title' => $request->input('title') ?: 'غرفة Muallimx - ' . now()->format('H:i'),
+            'title' => $request->input('title') ?: 'غرفة Muallimx - '.now()->format('H:i'),
             'max_participants' => (string) (SubscriptionLimitService::limitsForUser(Auth::user())['classroom_max_participants'] ?? 25),
             'planned_duration_minutes' => (string) (SubscriptionLimitService::limitsForUser(Auth::user())['classroom_default_duration_minutes'] ?? 60),
             'start_now' => '1',
@@ -150,7 +151,7 @@ class ClassroomController extends Controller
         $this->ensureClassroomAccess($user, $meeting);
 
         $meeting->loadCount('participants');
-        $joinUrl = url('classroom/join/' . $meeting->code);
+        $joinUrl = url('classroom/join/'.$meeting->code);
         $limits = SubscriptionLimitService::limitsForUser($user);
         $useInstructorRoutes = request()->routeIs('instructor.*');
 
@@ -176,9 +177,9 @@ class ClassroomController extends Controller
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:180'],
-            'max_participants' => ['required', 'integer', 'min:2', 'max:' . $limits['classroom_max_participants']],
+            'max_participants' => ['required', 'integer', 'min:2', 'max:'.$limits['classroom_max_participants']],
             'scheduled_for' => ['nullable', 'date'],
-            'planned_duration_minutes' => ['nullable', 'integer', 'min:15', 'max:' . $limits['classroom_max_duration_minutes']],
+            'planned_duration_minutes' => ['nullable', 'integer', 'min:15', 'max:'.$limits['classroom_max_duration_minutes']],
         ]);
 
         $meeting->update([
@@ -200,7 +201,7 @@ class ClassroomController extends Controller
         if ($meeting->ended_at) {
             return back()->with('error', 'لا يمكن بدء اجتماع منتهي.');
         }
-        if (!$meeting->started_at) {
+        if (! $meeting->started_at) {
             $meeting->update(['started_at' => now()]);
         }
 
@@ -240,7 +241,7 @@ class ClassroomController extends Controller
             }
         }
         if ($meeting->started_at && $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes)->isPast()) {
-            if (!$meeting->ended_at) {
+            if (! $meeting->ended_at) {
                 $meeting->update(['ended_at' => now()]);
             }
             $back = request()->routeIs('instructor.*')
@@ -257,8 +258,21 @@ class ClassroomController extends Controller
         $isDemoJitsi = (strpos($jitsiDomain, 'meet.jit.si') !== false);
         $meetingEndsAt = $meeting->started_at ? $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes) : null;
         $useInstructorRoutes = request()->routeIs('instructor.*');
+        $subscriptionFeatureMenuItems = ClassroomSubscriptionFeatureMenuService::menuItemsForUser($user, $useInstructorRoutes);
+        $subscriptionPackageLabel = $user->activeSubscription()?->plan_name;
 
-        return view('student.classroom.room', compact('meeting', 'jitsiDomain', 'user', 'isDemoJitsi', 'maxDurationMinutes', 'effectiveDurationMinutes', 'meetingEndsAt', 'useInstructorRoutes'));
+        return view('student.classroom.room', compact(
+            'meeting',
+            'jitsiDomain',
+            'user',
+            'isDemoJitsi',
+            'maxDurationMinutes',
+            'effectiveDurationMinutes',
+            'meetingEndsAt',
+            'useInstructorRoutes',
+            'subscriptionFeatureMenuItems',
+            'subscriptionPackageLabel'
+        ));
     }
 
     public function end(ClassroomMeeting $meeting)
@@ -288,7 +302,7 @@ class ClassroomController extends Controller
         $this->ensureMeetingOwnership($meeting, $user);
         $this->ensureClassroomAccess($user, $meeting);
 
-        if (!$meeting->started_at) {
+        if (! $meeting->started_at) {
             return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
         }
 
@@ -804,7 +818,7 @@ class ClassroomController extends Controller
         if ($meeting && $meeting->consultation_request_id && (int) $meeting->user_id === (int) $user->id) {
             return;
         }
-        if (!$user->hasSubscriptionFeature('classroom_access')) {
+        if (! $user->hasSubscriptionFeature('classroom_access')) {
             abort(403, 'ميزة Muallimx Classroom غير مفعلة في اشتراكك. يمكنك ترقية الباقة من صفحة التسعير.');
         }
     }

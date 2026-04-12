@@ -271,11 +271,7 @@
                                     <div class="flex-1 min-w-0 flex flex-col justify-center">
                                         <h4 class="font-bold text-mx-indigo group-hover:text-[#FB5607] transition-colors line-clamp-2 leading-snug text-sm mb-1.5">{{ $c->title }}</h4>
                                         <div class="flex items-center gap-3 text-xs text-slate-500">
-                                            @if($c->price > 0)
-                                                <span class="font-bold" style="color:#FB5607">{{ number_format($c->price, 0) }} {{ __('public.currency_egp') }}</span>
-                                            @else
-                                                <span class="font-bold text-emerald-600 flex items-center gap-1"><i class="fas fa-gift text-[10px]"></i> {{ __('public.free_price') }}</span>
-                                            @endif
+                                            <x-advanced-course-card-price :course="$c" size="sm" class="!items-start" />
                                             @if($c->lessons_count ?? 0)
                                             <span class="flex items-center gap-1"><i class="fas fa-play-circle text-slate-400"></i> {{ $c->lessons_count }} {{ __('public.lesson_single') }}</span>
                                             @endif

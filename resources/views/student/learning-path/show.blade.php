@@ -187,10 +187,13 @@
                                     {{ $course->instructor->name }}
                                 </span>
                             @endif
-                            @if(($course->price ?? 0) > 0)
-                                <span class="flex items-center gap-1 font-bold text-blue-600">
+                            @if(!$course->is_free && $course->effectivePurchasePrice() > 0)
+                                <span class="flex items-center gap-2 flex-wrap font-bold text-blue-600">
                                     <i class="fas fa-tag"></i>
-                                    {{ number_format($course->price, 0) }} ج.م
+                                    @if($course->hasPromotionalPrice())
+                                        <span class="text-xs text-slate-500 line-through font-semibold tabular-nums">{{ number_format($course->listPriceAmount(), 0) }} ج.م</span>
+                                    @endif
+                                    <span class="tabular-nums">{{ number_format($course->effectivePurchasePrice(), 0) }} ج.م</span>
                                 </span>
                             @else
                                 <span class="flex items-center gap-1 font-bold text-green-600">

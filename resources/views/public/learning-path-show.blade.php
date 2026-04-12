@@ -555,10 +555,13 @@
                                             <span>{{ $course->academicSubject->name }}</span>
                                         </div>
                                         @endif
-                                        @if(($course->price ?? 0) > 0)
-                                        <div class="flex items-center gap-2 text-sm font-bold text-blue-600">
+                                        @if(!$course->is_free && $course->effectivePurchasePrice() > 0)
+                                        <div class="flex items-center gap-2 text-sm font-bold text-blue-600 flex-wrap">
                                             <i class="fas fa-tag"></i>
-                                            <span>{{ number_format($course->price, 0) }} {{ __('public.currency_egp') }}</span>
+                                            @if($course->hasPromotionalPrice())
+                                                <span class="text-xs text-slate-500 line-through font-semibold tabular-nums">{{ number_format($course->listPriceAmount(), 0) }} {{ __('public.currency_egp') }}</span>
+                                            @endif
+                                            <span class="tabular-nums">{{ number_format($course->effectivePurchasePrice(), 0) }} {{ __('public.currency_egp') }}</span>
                                         </div>
                                         @else
                                         <div class="flex items-center gap-2 text-sm font-bold text-green-600">
@@ -603,11 +606,11 @@
                                     </div>
                                     
                                     @php
-                                        $freeCourses = ($learningPath->courses ?? collect())->filter(function($course) {
-                                            return ($course->price ?? 0) == 0;
+                                        $freeCourses = ($learningPath->courses ?? collect())->filter(function ($course) {
+                                            return ($course->is_free ?? false) || $course->effectivePurchasePrice() <= 0;
                                         })->count();
-                                        $paidCourses = ($learningPath->courses ?? collect())->filter(function($course) {
-                                            return ($course->price ?? 0) > 0;
+                                        $paidCourses = ($learningPath->courses ?? collect())->filter(function ($course) {
+                                            return ! ($course->is_free ?? false) && $course->effectivePurchasePrice() > 0;
                                         })->count();
                                     @endphp
                                     

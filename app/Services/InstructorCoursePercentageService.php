@@ -18,12 +18,12 @@ class InstructorCoursePercentageService
      */
     public static function processEnrollmentActivation(StudentCourseEnrollment $enrollment): ?AgreementPayment
     {
-        if ($enrollment->status !== 'active' || !$enrollment->advanced_course_id) {
+        if ($enrollment->status !== 'active' || ! $enrollment->advanced_course_id) {
             return null;
         }
 
         $course = $enrollment->course;
-        if (!$course || !$course->instructor_id) {
+        if (! $course || ! $course->instructor_id) {
             return null;
         }
 
@@ -34,11 +34,12 @@ class InstructorCoursePercentageService
             ->whereNotNull('course_percentage')
             ->first();
 
-        if (!$agreement) {
+        if (! $agreement) {
             Log::debug('InstructorCoursePercentageService: no active agreement for course', [
                 'course_id' => $enrollment->advanced_course_id,
                 'instructor_id' => $course->instructor_id,
             ]);
+
             return null;
         }
 
@@ -54,8 +55,8 @@ class InstructorCoursePercentageService
 
         // مبلغ التفعيل: من التسجيل أو سعر الكورس كبديل عند التفعيل اليدوي من الأدمن
         $finalPrice = (float) ($enrollment->final_price ?? 0);
-        if ($finalPrice <= 0 && $course->price) {
-            $finalPrice = (float) $course->price;
+        if ($finalPrice <= 0 && $course->effectivePurchasePrice() > 0) {
+            $finalPrice = (float) $course->effectivePurchasePrice();
         }
         $percentage = (float) $agreement->course_percentage;
         $instructorAmount = round($finalPrice * ($percentage / 100), 2);
@@ -68,7 +69,7 @@ class InstructorCoursePercentageService
                     'type' => AgreementPayment::TYPE_COURSE_ACTIVATION,
                     'amount' => $instructorAmount,
                     'status' => AgreementPayment::STATUS_APPROVED,
-                    'description' => 'نسبة من تفعيل الطالب للكورس: ' . ($enrollment->course->title ?? ''),
+                    'description' => 'نسبة من تفعيل الطالب للكورس: '.($enrollment->course->title ?? ''),
                     'related_course_id' => $enrollment->advanced_course_id,
                     'student_course_enrollment_id' => $enrollment->id,
                     'payment_date' => now(),
@@ -79,6 +80,7 @@ class InstructorCoursePercentageService
                     'enrollment_id' => $enrollment->id,
                     'amount' => $instructorAmount,
                 ]);
+
                 return $payment;
             });
         } catch (\Throwable $e) {
@@ -86,6 +88,7 @@ class InstructorCoursePercentageService
                 'enrollment_id' => $enrollment->id,
                 'message' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
