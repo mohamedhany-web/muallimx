@@ -613,6 +613,9 @@
                         var wIn = el('checkout_wallet_credit');
                         hfW.value = wIn && wIn.value !== '' ? wIn.value : '0';
                     }
+                    if (typeof window.muallimxOnCheckoutPricingUpdated === 'function') {
+                        try { window.muallimxOnCheckoutPricingUpdated(res.data); } catch (e) {}
+                    }
                     return res.data;
                 }
                 var msg = (res.data && res.data.message) ? res.data.message : 'تعذّر حساب السعر.';
@@ -798,6 +801,7 @@
                 showErr('تعذّر إكمال الطلب مع الخادم (انقطاع الشبكة أو خطأ غير متوقع). حدّث الصفحة (F5) أو راجع تبويب Network في أدوات المطوّر.');
             });
         }
+        window.muallimxOnCheckoutPricingUpdated = run;
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
         else run();
     })();
@@ -890,6 +894,12 @@
                 '<p class="text-xs text-slate-500 mt-3">بعد الدفع قد تُعاد إلى الموقع تلقائياً؛ إن لم يحدث ذلك حدّث صفحة الطلبات.</p>';
         }
         function run() {
+            var fd = new FormData();
+            fd.append('_token', token);
+            var cEl = document.getElementById('checkout_coupon_code');
+            var wEl = document.getElementById('checkout_wallet_credit');
+            fd.append('coupon_code', cEl ? (cEl.value || '').trim() : '');
+            fd.append('wallet_credit', wEl && wEl.value !== '' ? wEl.value : '0');
             fetch(prepareUrl, {
                 method: 'POST',
                 headers: {
@@ -897,6 +907,7 @@
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
+                body: fd,
                 credentials: 'same-origin'
             })
             .then(function(r) { return r.text().then(function(t) { return { ok: r.ok, status: r.status, data: parseJsonSafe(t), raw: t }; }); })
@@ -934,48 +945,68 @@
                 if (loadEl) loadEl.classList.add('hidden');
                 showErr('تعذّر الاتصال بالخادم.');
             });
-
-            if (payBtn) {
-                payBtn.addEventListener('click', function() {
-                    if (!selectedId) return;
-                    errEl && errEl.classList.add('hidden');
-                    payBtn.disabled = true;
-                    var body = { payment_method_id: selectedId };
-                    var w = walletInput && walletInput.value ? walletInput.value.trim() : '';
-                    if (w) body.mobile_wallet_number = w;
-                    fetch(payUrl, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': token,
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        credentials: 'same-origin',
-                        body: JSON.stringify(body)
-                    })
-                    .then(function(r) { return r.text().then(function(t) { return { ok: r.ok, status: r.status, data: parseJsonSafe(t), raw: t }; }); })
-                    .then(function(res) {
-                        payBtn.disabled = false;
-                        if (res.status === 401 || res.status === 419) {
-                            showErr('انتهت الجلسة. حدّث الصفحة وسجّل الدخول.');
-                            return;
-                        }
-                        if (!res.data) { showErr('استجابة غير متوقعة من الخادم.'); return; }
-                        if (!res.ok) {
-                            showErr(res.data.message || 'تعذّر بدء الدفع.');
-                            return;
-                        }
-                        var pd = res.data.data && res.data.data.payment_data;
-                        showPaymentResult(pd);
-                    })
-                    .catch(function() {
-                        payBtn.disabled = false;
-                        showErr('تعذّر إكمال الطلب.');
-                    });
-                });
-            }
         }
+
+        window.muallimxOnCheckoutPricingUpdated = function () {
+            if (loadEl) loadEl.classList.remove('hidden');
+            if (methodsEl) {
+                methodsEl.classList.add('hidden');
+                methodsEl.innerHTML = '';
+            }
+            if (walletWrap) walletWrap.classList.add('hidden');
+            if (resultEl) {
+                resultEl.classList.add('hidden');
+                resultEl.innerHTML = '';
+            }
+            if (payBtn) {
+                payBtn.disabled = true;
+            }
+            selectedId = null;
+            if (errEl) errEl.classList.add('hidden');
+            run();
+        };
+
+        if (payBtn) {
+            payBtn.addEventListener('click', function() {
+                if (!selectedId) return;
+                errEl && errEl.classList.add('hidden');
+                payBtn.disabled = true;
+                var body = { payment_method_id: selectedId };
+                var w = walletInput && walletInput.value ? walletInput.value.trim() : '';
+                if (w) body.mobile_wallet_number = w;
+                fetch(payUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(body)
+                })
+                .then(function(r) { return r.text().then(function(t) { return { ok: r.ok, status: r.status, data: parseJsonSafe(t), raw: t }; }); })
+                .then(function(res) {
+                    payBtn.disabled = false;
+                    if (res.status === 401 || res.status === 419) {
+                        showErr('انتهت الجلسة. حدّث الصفحة وسجّل الدخول.');
+                        return;
+                    }
+                    if (!res.data) { showErr('استجابة غير متوقعة من الخادم.'); return; }
+                    if (!res.ok) {
+                        showErr(res.data.message || 'تعذّر بدء الدفع.');
+                        return;
+                    }
+                    var pd = res.data.data && res.data.data.payment_data;
+                    showPaymentResult(pd);
+                })
+                .catch(function() {
+                    payBtn.disabled = false;
+                    showErr('تعذّر إكمال الطلب.');
+                });
+            });
+        }
+
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
         else run();
     })();
