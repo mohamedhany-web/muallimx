@@ -77,7 +77,7 @@
                     <p class="text-sm font-bold text-slate-800 dark:text-slate-100">تسجيل المحاضرة</p>
                     @if($meeting->recording_path)
                         <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                            تم حفظ التسجيل على Cloudflare.
+                            تم حفظ التسجيل بنجاح.
                             @if($meeting->recording_uploaded_at)
                                 وقت الرفع: {{ $meeting->recording_uploaded_at->format('Y-m-d H:i') }}
                             @endif

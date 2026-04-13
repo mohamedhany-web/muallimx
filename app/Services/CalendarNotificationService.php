@@ -2,12 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Notification;
-use App\Models\Lecture;
-use App\Models\Exam;
 use App\Models\Assignment;
+use App\Models\Exam;
+use App\Models\Lecture;
 use App\Models\LectureAssignment;
-use App\Models\CalendarEvent;
+use App\Models\Notification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -20,7 +19,7 @@ class CalendarNotificationService
     {
         try {
             $course = $lecture->course;
-            if (!$course) {
+            if (! $course) {
                 return;
             }
 
@@ -37,13 +36,13 @@ class CalendarNotificationService
                 Notification::create([
                     'user_id' => $student->id,
                     'sender_id' => $lecture->instructor_id,
-                    'title' => 'محاضرة جديدة: ' . $lecture->title,
-                    'message' => 'تم جدولة محاضرة جديدة في كورس "' . $course->title . '" بتاريخ ' . $lecture->scheduled_at->format('d/m/Y h:i A'),
+                    'title' => 'محاضرة جديدة: '.$lecture->title,
+                    'message' => 'تم جدولة محاضرة جديدة في كورس "'.$course->title.'" بتاريخ '.$lecture->scheduled_at->format('d/m/Y h:i A'),
                     'type' => 'reminder',
                     'priority' => 'normal',
                     'audience' => 'student',
-                    'action_url' => route('my-courses.show', $course->id) . '#lectures',
-                    'action_text' => 'عرض المحاضرة',
+                    'action_url' => route('my-courses.learn', $course->id),
+                    'action_text' => 'فتح التعلّم',
                     'data' => [
                         'lecture_id' => $lecture->id,
                         'course_id' => $course->id,
@@ -54,19 +53,19 @@ class CalendarNotificationService
                 // تذكير قبل المحاضرة بـ 24 ساعة
                 if ($lecture->scheduled_at->isFuture() && $lecture->scheduled_at->diffInHours(now()) >= 24) {
                     $reminderTime = $lecture->scheduled_at->copy()->subHours(24);
-                    
+
                     // يمكن استخدام Queue أو Cron job لإرسال التذكير في الوقت المحدد
                     // هنا ننشئ إشعاراً مع expires_at
                     Notification::create([
                         'user_id' => $student->id,
                         'sender_id' => $lecture->instructor_id,
-                        'title' => 'تذكير: محاضرة غداً - ' . $lecture->title,
-                        'message' => 'تذكير: لديك محاضرة غداً في كورس "' . $course->title . '" في الساعة ' . $lecture->scheduled_at->format('h:i A'),
+                        'title' => 'تذكير: محاضرة غداً - '.$lecture->title,
+                        'message' => 'تذكير: لديك محاضرة غداً في كورس "'.$course->title.'" في الساعة '.$lecture->scheduled_at->format('h:i A'),
                         'type' => 'reminder',
                         'priority' => 'high',
                         'audience' => 'student',
-                        'action_url' => route('my-courses.show', $course->id) . '#lectures',
-                        'action_text' => 'عرض المحاضرة',
+                        'action_url' => route('my-courses.learn', $course->id),
+                        'action_text' => 'فتح التعلّم',
                         'expires_at' => $lecture->scheduled_at,
                         'data' => [
                             'lecture_id' => $lecture->id,
@@ -82,12 +81,12 @@ class CalendarNotificationService
                     Notification::create([
                         'user_id' => $student->id,
                         'sender_id' => $lecture->instructor_id,
-                        'title' => 'تذكير: محاضرة قريباً - ' . $lecture->title,
-                        'message' => 'تذكير: لديك محاضرة خلال ساعة في كورس "' . $course->title . '"',
+                        'title' => 'تذكير: محاضرة قريباً - '.$lecture->title,
+                        'message' => 'تذكير: لديك محاضرة خلال ساعة في كورس "'.$course->title.'"',
                         'type' => 'reminder',
                         'priority' => 'urgent',
                         'audience' => 'student',
-                        'action_url' => $lecture->teams_meeting_link ?? route('my-courses.show', $course->id) . '#lectures',
+                        'action_url' => $lecture->teams_meeting_link ?? route('my-courses.learn', $course->id),
                         'action_text' => 'انضم للمحاضرة',
                         'expires_at' => $lecture->scheduled_at,
                         'data' => [
@@ -101,7 +100,7 @@ class CalendarNotificationService
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error creating lecture notifications: ' . $e->getMessage());
+            Log::error('Error creating lecture notifications: '.$e->getMessage());
         }
     }
 
@@ -112,7 +111,7 @@ class CalendarNotificationService
     {
         try {
             $course = $exam->course;
-            if (!$course) {
+            if (! $course) {
                 return;
             }
 
@@ -124,7 +123,7 @@ class CalendarNotificationService
                 ->filter();
 
             $examStart = $exam->start_time ?? ($exam->start_date ? Carbon::parse($exam->start_date) : null);
-            if (!$examStart || !$examStart->isFuture()) {
+            if (! $examStart || ! $examStart->isFuture()) {
                 return;
             }
 
@@ -133,8 +132,8 @@ class CalendarNotificationService
                 Notification::create([
                     'user_id' => $student->id,
                     'sender_id' => $exam->created_by,
-                    'title' => 'امتحان جديد: ' . $exam->title,
-                    'message' => 'تم جدولة امتحان جديد في كورس "' . $course->title . '" بتاريخ ' . $examStart->format('d/m/Y h:i A'),
+                    'title' => 'امتحان جديد: '.$exam->title,
+                    'message' => 'تم جدولة امتحان جديد في كورس "'.$course->title.'" بتاريخ '.$examStart->format('d/m/Y h:i A'),
                     'type' => 'exam',
                     'priority' => 'high',
                     'audience' => 'student',
@@ -152,8 +151,8 @@ class CalendarNotificationService
                     Notification::create([
                         'user_id' => $student->id,
                         'sender_id' => $exam->created_by,
-                        'title' => 'تذكير: امتحان بعد 3 أيام - ' . $exam->title,
-                        'message' => 'تذكير: لديك امتحان في كورس "' . $course->title . '" بعد 3 أيام في ' . $examStart->format('d/m/Y h:i A'),
+                        'title' => 'تذكير: امتحان بعد 3 أيام - '.$exam->title,
+                        'message' => 'تذكير: لديك امتحان في كورس "'.$course->title.'" بعد 3 أيام في '.$examStart->format('d/m/Y h:i A'),
                         'type' => 'reminder',
                         'priority' => 'high',
                         'audience' => 'student',
@@ -174,8 +173,8 @@ class CalendarNotificationService
                     Notification::create([
                         'user_id' => $student->id,
                         'sender_id' => $exam->created_by,
-                        'title' => 'تذكير: امتحان غداً - ' . $exam->title,
-                        'message' => 'تذكير: لديك امتحان غداً في كورس "' . $course->title . '" في الساعة ' . $examStart->format('h:i A'),
+                        'title' => 'تذكير: امتحان غداً - '.$exam->title,
+                        'message' => 'تذكير: لديك امتحان غداً في كورس "'.$course->title.'" في الساعة '.$examStart->format('h:i A'),
                         'type' => 'reminder',
                         'priority' => 'urgent',
                         'audience' => 'student',
@@ -192,7 +191,7 @@ class CalendarNotificationService
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error creating exam notifications: ' . $e->getMessage());
+            Log::error('Error creating exam notifications: '.$e->getMessage());
         }
     }
 
@@ -230,12 +229,12 @@ class CalendarNotificationService
                 }
             }
 
-            if (!$course || $students->isEmpty()) {
+            if (! $course || $students->isEmpty()) {
                 return;
             }
 
             $dueDate = $assignment->due_date;
-            if (!$dueDate || !$dueDate->isFuture()) {
+            if (! $dueDate || ! $dueDate->isFuture()) {
                 return;
             }
 
@@ -244,12 +243,12 @@ class CalendarNotificationService
                 Notification::create([
                     'user_id' => $student->id,
                     'sender_id' => $assignment->teacher_id ?? ($assignment->lecture->instructor_id ?? null),
-                    'title' => 'واجب جديد: ' . $assignment->title,
-                    'message' => 'تم إضافة واجب جديد في كورس "' . $course->title . '" - موعد التسليم: ' . $dueDate->format('d/m/Y'),
+                    'title' => 'واجب جديد: '.$assignment->title,
+                    'message' => 'تم إضافة واجب جديد في كورس "'.$course->title.'" - موعد التسليم: '.$dueDate->format('d/m/Y'),
                     'type' => 'assignment',
                     'priority' => 'high',
                     'audience' => 'student',
-                    'action_url' => route('my-courses.show', $course->id) . '#assignments',
+                    'action_url' => route('my-courses.show', $course->id).'#assignments',
                     'action_text' => 'عرض الواجب',
                     'data' => [
                         'assignment_id' => $assignment->id,
@@ -263,12 +262,12 @@ class CalendarNotificationService
                     Notification::create([
                         'user_id' => $student->id,
                         'sender_id' => $assignment->teacher_id ?? ($assignment->lecture->instructor_id ?? null),
-                        'title' => 'تذكير: واجب - ' . $assignment->title,
-                        'message' => 'تذكير: موعد تسليم واجب "' . $assignment->title . '" بعد 3 أيام في ' . $dueDate->format('d/m/Y'),
+                        'title' => 'تذكير: واجب - '.$assignment->title,
+                        'message' => 'تذكير: موعد تسليم واجب "'.$assignment->title.'" بعد 3 أيام في '.$dueDate->format('d/m/Y'),
                         'type' => 'reminder',
                         'priority' => 'high',
                         'audience' => 'student',
-                        'action_url' => route('my-courses.show', $course->id) . '#assignments',
+                        'action_url' => route('my-courses.show', $course->id).'#assignments',
                         'action_text' => 'عرض الواجب',
                         'expires_at' => $dueDate,
                         'data' => [
@@ -285,12 +284,12 @@ class CalendarNotificationService
                     Notification::create([
                         'user_id' => $student->id,
                         'sender_id' => $assignment->teacher_id ?? ($assignment->lecture->instructor_id ?? null),
-                        'title' => 'تذكير عاجل: واجب - ' . $assignment->title,
-                        'message' => 'تذكير عاجل: موعد تسليم واجب "' . $assignment->title . '" غداً في ' . $dueDate->format('d/m/Y'),
+                        'title' => 'تذكير عاجل: واجب - '.$assignment->title,
+                        'message' => 'تذكير عاجل: موعد تسليم واجب "'.$assignment->title.'" غداً في '.$dueDate->format('d/m/Y'),
                         'type' => 'reminder',
                         'priority' => 'urgent',
                         'audience' => 'student',
-                        'action_url' => route('my-courses.show', $course->id) . '#assignments',
+                        'action_url' => route('my-courses.show', $course->id).'#assignments',
                         'action_text' => 'تسليم الواجب',
                         'expires_at' => $dueDate,
                         'data' => [
@@ -303,7 +302,7 @@ class CalendarNotificationService
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error creating assignment notifications: ' . $e->getMessage());
+            Log::error('Error creating assignment notifications: '.$e->getMessage());
         }
     }
 
@@ -314,12 +313,12 @@ class CalendarNotificationService
     {
         try {
             $now = now();
-            
+
             // تذكيرات المحاضرات (قبل 24 ساعة)
             $lectures = Lecture::where('status', 'scheduled')
                 ->whereBetween('scheduled_at', [
                     $now->copy()->addHours(24)->subMinutes(30),
-                    $now->copy()->addHours(24)->addMinutes(30)
+                    $now->copy()->addHours(24)->addMinutes(30),
                 ])
                 ->with(['course.enrollments.student'])
                 ->get();
@@ -331,15 +330,15 @@ class CalendarNotificationService
             // تذكيرات الامتحانات (قبل 3 أيام و 1 يوم)
             $exams = Exam::where('is_active', true)
                 ->where('is_published', true)
-                ->where(function($q) use ($now) {
+                ->where(function ($q) use ($now) {
                     $q->whereBetween('start_time', [
                         $now->copy()->addDays(3)->startOfDay(),
-                        $now->copy()->addDays(3)->endOfDay()
+                        $now->copy()->addDays(3)->endOfDay(),
                     ])
-                    ->orWhereBetween('start_time', [
-                        $now->copy()->addDay()->startOfDay(),
-                        $now->copy()->addDay()->endOfDay()
-                    ]);
+                        ->orWhereBetween('start_time', [
+                            $now->copy()->addDay()->startOfDay(),
+                            $now->copy()->addDay()->endOfDay(),
+                        ]);
                 })
                 ->with(['course.enrollments.student'])
                 ->get();
@@ -352,11 +351,11 @@ class CalendarNotificationService
             $assignments = Assignment::where('status', 'published')
                 ->whereBetween('due_date', [
                     $now->copy()->addDays(3)->startOfDay(),
-                    $now->copy()->addDays(3)->endOfDay()
+                    $now->copy()->addDays(3)->endOfDay(),
                 ])
                 ->orWhereBetween('due_date', [
                     $now->copy()->addDay()->startOfDay(),
-                    $now->copy()->addDay()->endOfDay()
+                    $now->copy()->addDay()->endOfDay(),
                 ])
                 ->with(['course.enrollments.student'])
                 ->get();
@@ -369,11 +368,11 @@ class CalendarNotificationService
             $lectureAssignments = LectureAssignment::where('status', 'published')
                 ->whereBetween('due_date', [
                     $now->copy()->addDays(3)->startOfDay(),
-                    $now->copy()->addDays(3)->endOfDay()
+                    $now->copy()->addDays(3)->endOfDay(),
                 ])
                 ->orWhereBetween('due_date', [
                     $now->copy()->addDay()->startOfDay(),
-                    $now->copy()->addDay()->endOfDay()
+                    $now->copy()->addDay()->endOfDay(),
                 ])
                 ->with(['lecture.course.enrollments.student'])
                 ->get();
@@ -383,7 +382,7 @@ class CalendarNotificationService
             }
 
         } catch (\Exception $e) {
-            Log::error('Error processing daily reminders: ' . $e->getMessage());
+            Log::error('Error processing daily reminders: '.$e->getMessage());
         }
     }
 }

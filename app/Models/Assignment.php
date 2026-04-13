@@ -17,6 +17,7 @@ class Assignment extends Model
         'title',
         'description',
         'instructions',
+        'resource_attachments',
         'due_date',
         'max_score',
         'allow_late_submission',
@@ -27,6 +28,7 @@ class Assignment extends Model
         'due_date' => 'datetime',
         'allow_late_submission' => 'boolean',
         'max_score' => 'integer',
+        'resource_attachments' => 'array',
     ];
 
     public function course()
@@ -35,6 +37,7 @@ class Assignment extends Model
         if ($this->advanced_course_id) {
             return $this->belongsTo(AdvancedCourse::class, 'advanced_course_id');
         }
+
         return $this->belongsTo(AdvancedCourse::class, 'course_id');
     }
 
@@ -68,4 +71,3 @@ class Assignment extends Model
         return $query->where('status', 'draft');
     }
 }
-

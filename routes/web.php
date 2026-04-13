@@ -303,6 +303,10 @@ Route::get('/classroom/join/{code}', [\App\Http\Controllers\ClassroomJoinControl
 Route::post('/classroom/join/{code}/enter', [\App\Http\Controllers\ClassroomJoinController::class, 'enter'])->name('classroom.join.enter')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/heartbeat', [\App\Http\Controllers\ClassroomJoinController::class, 'heartbeat'])->name('classroom.join.heartbeat')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/leave', [\App\Http\Controllers\ClassroomJoinController::class, 'leave'])->name('classroom.join.leave')->where('code', '[A-Za-z0-9]+');
+Route::post('/classroom/join/{code}/share-annotation', [\App\Http\Controllers\ClassroomJoinController::class, 'pushShareAnnotation'])
+    ->middleware('throttle:90,1')
+    ->name('classroom.join.share-annotation')
+    ->where('code', '[A-Za-z0-9]+');
 
 // التواصل
 Route::get('/contact', [\App\Http\Controllers\Public\ContactController::class, 'index'])->name('public.contact');
@@ -760,6 +764,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/start', [\App\Http\Controllers\Student\ClassroomController::class, 'start'])->name('student.classroom.start');
         Route::post('/classroom/{meeting}/start', [\App\Http\Controllers\Student\ClassroomController::class, 'startMeeting'])->name('student.classroom.start-meeting');
         Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
+        Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('student.classroom.recording.upload-tab');
+        Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('student.classroom.participant-whiteboard');
+        Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('student.classroom.share-annotations');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('student.classroom.end');
         Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('student.classroom.recording.upload');
         Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('student.classroom.recording.presign');
@@ -1703,6 +1710,18 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/assignments/{assignment}/submit', [\App\Http\Controllers\Student\AssignmentController::class, 'submit'])
             ->middleware(['ownership:assignment,assignment'])
             ->name('assignments.submit');
+        Route::post('/assignments/{assignment}/submission/presign-upload', [\App\Http\Controllers\Student\AssignmentController::class, 'presignSubmissionUpload'])
+            ->middleware(['ownership:assignment,assignment', 'throttle:45,1'])
+            ->name('assignments.submission.presign-upload');
+        Route::post('/assignments/{assignment}/submission/complete-upload', [\App\Http\Controllers\Student\AssignmentController::class, 'completeSubmissionDirectUpload'])
+            ->middleware(['ownership:assignment,assignment', 'throttle:90,1'])
+            ->name('assignments.submission.complete-upload');
+        Route::post('/assignments/{assignment}/submission/abandon-upload', [\App\Http\Controllers\Student\AssignmentController::class, 'abandonSubmissionDirectUpload'])
+            ->middleware(['ownership:assignment,assignment', 'throttle:60,1'])
+            ->name('assignments.submission.abandon-upload');
+        Route::delete('/assignments/{assignment}/submission', [\App\Http\Controllers\Student\AssignmentController::class, 'destroySubmission'])
+            ->middleware(['ownership:assignment,assignment'])
+            ->name('assignments.submission.destroy');
         Route::resource('tasks', \App\Http\Controllers\Student\TaskController::class);
 
         // ===== البث المباشر (Student) =====
@@ -1712,6 +1731,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/{liveSession}/join', [\App\Http\Controllers\Student\LiveSessionController::class, 'join'])->name('join');
             Route::post('/{liveSession}/leave', [\App\Http\Controllers\Student\LiveSessionController::class, 'leave'])->name('leave');
             Route::get('/{liveSession}/status', [\App\Http\Controllers\Student\LiveSessionController::class, 'status'])->name('status');
+            Route::post('/{liveSession}/share-annotation', [\App\Http\Controllers\Student\LiveSessionController::class, 'pushShareAnnotation'])
+                ->middleware('throttle:90,1')
+                ->name('share-annotation');
         });
         // تسجيلات الجلسات (R2 — عرض للمنشور فقط)
         Route::get('/live-recordings', [\App\Http\Controllers\Student\LiveRecordingController::class, 'index'])->name('live-recordings.index');
@@ -1727,6 +1749,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'show'])->name('classroom.show');
         Route::post('/classroom/{meeting}/start', [\App\Http\Controllers\Student\ClassroomController::class, 'startMeeting'])->name('classroom.start-meeting');
         Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('classroom.room');
+        Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('classroom.recording.upload-tab');
+        Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('classroom.participant-whiteboard');
+        Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('classroom.share-annotations');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('classroom.end');
         Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('classroom.recording.upload');
         Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('classroom.recording.presign');
@@ -1846,6 +1871,8 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/{liveSession}', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'show'])->name('show');
             Route::post('/{liveSession}/start', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'start'])->name('start');
             Route::get('/{liveSession}/room', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'room'])->name('room');
+            Route::post('/{liveSession}/student-whiteboard', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'updateStudentWhiteboard'])->name('student-whiteboard');
+            Route::get('/{liveSession}/share-annotations', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'shareAnnotations'])->name('share-annotations');
             Route::post('/{liveSession}/audio/presign', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'presignAudioUpload'])->name('audio.presign');
             Route::post('/{liveSession}/audio/complete', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'completeAudioUpload'])->name('audio.complete');
             Route::post('/{liveSession}/end', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'end'])->name('end');

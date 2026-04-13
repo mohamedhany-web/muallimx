@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdvancedCourse;
+use App\Models\LiveRecording;
+use App\Models\LiveServer;
 use App\Models\LiveSession;
 use App\Models\LiveSetting;
-use App\Models\LiveServer;
 use App\Models\SessionAttendance;
-use App\Models\AdvancedCourse;
+use App\Services\ClassroomSubscriptionFeatureMenuService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Models\LiveRecording;
 
 class LiveSessionController extends Controller
 {
@@ -31,10 +32,10 @@ class LiveSessionController extends Controller
         $sessions = $query->latest('scheduled_at')->paginate(15)->withQueryString();
 
         $stats = [
-            'total'     => LiveSession::forInstructor($instructorId)->count(),
-            'live'      => LiveSession::forInstructor($instructorId)->where('status', 'live')->count(),
+            'total' => LiveSession::forInstructor($instructorId)->count(),
+            'live' => LiveSession::forInstructor($instructorId)->where('status', 'live')->count(),
             'scheduled' => LiveSession::forInstructor($instructorId)->where('status', 'scheduled')->count(),
-            'ended'     => LiveSession::forInstructor($instructorId)->where('status', 'ended')->count(),
+            'ended' => LiveSession::forInstructor($instructorId)->where('status', 'ended')->count(),
         ];
 
         return view('instructor.live-sessions.index', compact('sessions', 'stats'));
@@ -43,8 +44,8 @@ class LiveSessionController extends Controller
     public function create()
     {
         $courses = AdvancedCourse::whereHas('enrollments', function ($q) {
-                $q->where('user_id', auth()->id());
-            })
+            $q->where('user_id', auth()->id());
+        })
             ->orWhere('instructor_id', auth()->id())
             ->select('id', 'title')
             ->orderBy('title')
@@ -60,14 +61,14 @@ class LiveSessionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title'            => 'required|string|max:255',
-            'description'      => 'nullable|string',
-            'course_id'        => 'nullable|exists:advanced_courses,id',
-            'scheduled_at'     => 'required|date|after:now',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'course_id' => 'nullable|exists:advanced_courses,id',
+            'scheduled_at' => 'required|date|after:now',
             'max_participants' => 'nullable|integer|min:2|max:500',
-            'is_recorded'      => 'boolean',
-            'allow_chat'       => 'boolean',
-            'password'         => 'nullable|string|max:50',
+            'is_recorded' => 'boolean',
+            'allow_chat' => 'boolean',
+            'password' => 'nullable|string|max:50',
         ]);
 
         $validated['instructor_id'] = auth()->id();
@@ -107,19 +108,19 @@ class LiveSessionController extends Controller
         if ($liveSession->instructor_id !== auth()->id()) {
             abort(403);
         }
-        if (!$liveSession->isScheduled()) {
-            return back()->with('error', 'لا يمكن بدء هذه الجلسة — الحالة الحالية: ' . $liveSession->status);
+        if (! $liveSession->isScheduled()) {
+            return back()->with('error', 'لا يمكن بدء هذه الجلسة — الحالة الحالية: '.$liveSession->status);
         }
 
         $liveSession->start();
 
         SessionAttendance::create([
-            'session_id'      => $liveSession->id,
-            'user_id'         => auth()->id(),
-            'joined_at'       => now(),
-            'ip_address'      => request()->ip(),
-            'user_agent'      => request()->userAgent(),
-            'role_in_session'  => 'instructor',
+            'session_id' => $liveSession->id,
+            'user_id' => auth()->id(),
+            'joined_at' => now(),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'role_in_session' => 'instructor',
         ]);
 
         return redirect()->route('instructor.live-sessions.room', $liveSession);
@@ -130,15 +131,61 @@ class LiveSessionController extends Controller
         if ($liveSession->instructor_id !== auth()->id()) {
             abort(403);
         }
-        if (!$liveSession->isLive()) {
+        if (! $liveSession->isLive()) {
             return redirect()->route('instructor.live-sessions.show', $liveSession)
                 ->with('info', 'الجلسة ليست في وضع البث');
         }
 
         $jitsiDomain = $liveSession->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
         $user = auth()->user();
+        $subscriptionFeatureMenuItems = ClassroomSubscriptionFeatureMenuService::menuItemsForUser($user, true);
+        $subscriptionPackageLabel = $user->activeSubscription()?->plan_name;
 
-        return view('instructor.live-sessions.room', compact('liveSession', 'jitsiDomain', 'user'));
+        return view('instructor.live-sessions.room', compact(
+            'liveSession',
+            'jitsiDomain',
+            'user',
+            'subscriptionFeatureMenuItems',
+            'subscriptionPackageLabel'
+        ));
+    }
+
+    public function updateStudentWhiteboard(Request $request, LiveSession $liveSession)
+    {
+        if ($liveSession->instructor_id !== auth()->id()) {
+            abort(403);
+        }
+        if (! $liveSession->isLive()) {
+            return response()->json(['message' => 'الجلسة ليست في وضع البث حالياً.'], 422);
+        }
+
+        $validated = $request->validate([
+            'allow' => ['required', 'boolean'],
+        ]);
+
+        $settings = $liveSession->settings ?? [];
+        $settings['allow_student_whiteboard'] = $validated['allow'];
+        $liveSession->update(['settings' => $settings]);
+        $liveSession->refresh();
+
+        return response()->json([
+            'ok' => true,
+            'allow_student_whiteboard' => $liveSession->allowsStudentWhiteboard(),
+        ]);
+    }
+
+    public function shareAnnotations(LiveSession $liveSession)
+    {
+        if ($liveSession->instructor_id !== auth()->id()) {
+            abort(403);
+        }
+        if (! $liveSession->isLive()) {
+            return response()->json(['layers' => []]);
+        }
+
+        $layers = Cache::get('mx_share_ann_live_'.$liveSession->id, []);
+
+        return response()->json(['layers' => $layers]);
     }
 
     public function end(LiveSession $liveSession)

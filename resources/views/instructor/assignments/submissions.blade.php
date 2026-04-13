@@ -81,8 +81,8 @@
                                                     @foreach($sub->attachments as $att)
                                                         @php
                                                             $path = is_string($att) ? $att : ($att['path'] ?? $att['url'] ?? null);
-                                                            $url = $path ? (str_starts_with($path, 'http') ? $path : url('storage/' . $path)) : '#';
-                                                            $label = is_array($att) ? ($att['name'] ?? basename($path ?? __('instructor.attachment_fallback'))) : basename($att);
+                                                            $url = $path ? (\App\Services\AssignmentFileStorage::publicUrl($path) ?? (str_starts_with((string) $path, 'http') ? $path : url('storage/'.$path))) : '#';
+                                                            $label = is_array($att) ? ($att['original_name'] ?? $att['name'] ?? basename($path ?? __('instructor.attachment_fallback'))) : basename($att);
                                                         @endphp
                                                         <li>
                                                             <a href="{{ $url }}" target="_blank" rel="noopener" class="text-sky-600 hover:underline">

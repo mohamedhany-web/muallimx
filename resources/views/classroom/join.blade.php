@@ -80,24 +80,41 @@
 
     {{-- شاشة الاجتماع بعد الانضمام --}}
     <div id="meeting-screen" class="hidden h-screen flex flex-col">
-        <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg flex-shrink-0">
-            <div class="flex items-center gap-3">
-                <span class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
+        <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg flex-shrink-0 gap-2">
+            <div class="flex items-center gap-3 min-w-0">
+                <span class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
                     <i class="fas fa-video text-lg"></i>
                 </span>
-                <span class="font-bold text-white">Muallimx Classroom</span>
-                <span class="text-slate-400 text-sm">— {{ $code }}</span>
+                <span class="font-bold text-white truncate">Muallimx Classroom</span>
+                <span class="text-slate-400 text-sm shrink-0">— {{ $code }}</span>
             </div>
-            <button type="button" id="btn-leave" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-rose-500/20">
-                <i class="fas fa-sign-out-alt"></i> مغادرة
-            </button>
+            <div class="flex items-center gap-2 shrink-0">
+                <div id="mx-guest-wb-wrap" class="hidden">
+                    <button type="button" id="btn-mx-share-draw-guest"
+                            class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 text-sm font-semibold transition-colors border border-amber-500/40"
+                            title="رسم فوق ما يظهر في الاجتماع (يُرى لدى المنظم فوق نفس العرض)">
+                        <i class="fas fa-pen-fancy text-amber-300"></i>
+                        <span class="hidden sm:inline">رسم فوق العرض</span>
+                    </button>
+                </div>
+                <button type="button" id="btn-leave" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-rose-500/20">
+                    <i class="fas fa-sign-out-alt"></i> مغادرة
+                </button>
+            </div>
         </header>
         <div class="room-body">
-            <main id="jitsi-container" role="application" aria-label="غرفة الاجتماع"></main>
-            <div class="jitsi-brand-mask" aria-hidden="true"></div>
+            <div id="mx-video-stack" class="relative flex-1 min-h-0 flex flex-col">
+                <main id="jitsi-container" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة الاجتماع"></main>
+                <div class="jitsi-brand-mask absolute left-0 top-0 pointer-events-none" aria-hidden="true"></div>
+                @include('partials.mx-share-annotation-overlay', [
+                    'mxAnnRole' => 'classroom_guest_emit',
+                    'mxAnnPostUrl' => route('classroom.join.share-annotation', $code),
+                ])
+            </div>
         </div>
     </div>
 
+    @if(empty($meetingEnded))
     @include('partials.jitsi-iframe-media-allow')
     @if(empty($meetingEnded))
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
@@ -109,6 +126,16 @@
         let api = null;
         let joinToken = null;
         let heartbeatTimer = null;
+
+        function applyGuestWhiteboardAllowed(on) {
+            if (typeof window.__mxShareAnnSetAllowed === 'function') {
+                window.__mxShareAnnSetAllowed(!!on);
+            }
+            var wrap = document.getElementById('mx-guest-wb-wrap');
+            if (!wrap) return;
+            if (on) wrap.classList.remove('hidden');
+            else wrap.classList.add('hidden');
+        }
 
         document.getElementById('btn-join').addEventListener('click', async function() {
             const name = document.getElementById('guest-name').value.trim() || 'ضيف';
@@ -134,6 +161,10 @@
                     return;
                 }
                 joinToken = enterData.token;
+                if (typeof window.__mxShareAnnSetGuestToken === 'function') {
+                    window.__mxShareAnnSetGuestToken(joinToken);
+                }
+                applyGuestWhiteboardAllowed(!!enterData.allow_participant_whiteboard);
             } catch (e) {
                 alert('تعذر الاتصال بالخادم. حاول مرة أخرى.');
                 btn.disabled = false;
@@ -186,10 +217,14 @@
                 }
             };
             api = new JitsiMeetExternalAPI(domain, options);
+            var drawGuestBtn = document.getElementById('btn-mx-share-draw-guest');
+            if (drawGuestBtn && typeof window.__mxShareAnnOpenToolbar === 'function') {
+                drawGuestBtn.addEventListener('click', function () { window.__mxShareAnnOpenToolbar(); });
+            }
             heartbeatTimer = setInterval(async function() {
                 if (!joinToken) return;
                 try {
-                    await fetch(`/classroom/join/${code}/heartbeat`, {
+                    const hbRes = await fetch(`/classroom/join/${code}/heartbeat`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -198,6 +233,12 @@
                         },
                         body: JSON.stringify({ token: joinToken })
                     });
+                    if (hbRes.ok) {
+                        const hbData = await hbRes.json();
+                        if (typeof hbData.allow_participant_whiteboard !== 'undefined') {
+                            applyGuestWhiteboardAllowed(!!hbData.allow_participant_whiteboard);
+                        }
+                    }
                 } catch (e) {}
             }, 30000);
 

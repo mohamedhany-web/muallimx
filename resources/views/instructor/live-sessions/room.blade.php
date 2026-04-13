@@ -12,9 +12,22 @@
     <style>
         * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
         body { margin: 0; padding: 0; background: #0c1222; overflow: hidden; height: 100vh; }
-        #jitsi-container { width: 100%; flex: 1; min-height: 0; background: #0f172a; }
-        .room-body { display: flex; flex-direction: column; height: calc(100vh - 72px); }
-        #jitsi-container iframe { width: 100% !important; height: 100% !important; border: none; }
+        #mx-live-broadcast-root { width: 100%; flex: 1; min-height: 0; background: #0f172a; position: relative; }
+        .room-body { position: relative; display: flex; flex-direction: column; height: calc(100vh - 72px); }
+        #mx-live-broadcast-root iframe { width: 100% !important; height: 100% !important; border: none; }
+        /* مثل Classroom: تغطية زاوية لشعار قد يظهر رغم إعدادات واجهة الـ API */
+        .jitsi-brand-mask {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: min(240px, 46vw);
+            height: 96px;
+            z-index: 11;
+            pointer-events: none;
+            background: #0f172a;
+            border-bottom-right-radius: 12px;
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.5);
+        }
 
         /* Recording pulse */
         @keyframes recPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
@@ -61,14 +74,60 @@
             </div>
             <span class="text-slate-400 text-xs font-mono hidden md:inline" id="timer">00:00:00</span>
         </div>
-        <div class="flex items-center gap-2">
-            {{-- زر مكتبة المناهج --}}
-            <a href="{{ url('/admin/curriculum-library') }}" target="_blank"
-               class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-violet-600/20 hover:bg-violet-600/40 text-violet-300 hover:text-white text-sm font-medium transition-colors border border-violet-500/30 hover:border-violet-400/50"
-               title="فتح مكتبة المناهج">
-                <i class="fas fa-book-open"></i>
-                <span class="hidden sm:inline">مكتبة المناهج</span>
-            </a>
+        <div class="flex items-center gap-2 flex-wrap justify-end">
+            @if(!empty($subscriptionFeatureMenuItems))
+            <div class="relative shrink-0" id="pkg-features-dd-wrap">
+                <button type="button" id="pkg-features-dd-btn" class="inline-flex items-center gap-2 px-2.5 sm:px-3 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600/90 text-slate-100 text-sm font-medium transition-colors border border-slate-600 hover:border-cyan-500/35 max-w-[11rem] sm:max-w-none" aria-expanded="false" aria-haspopup="true" title="مزايا اشتراكك — تفتح في تاب جديد">
+                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-400 border border-cyan-500/20">
+                        <i class="fas fa-layer-group text-sm"></i>
+                    </span>
+                    <span class="flex min-w-0 flex-1 flex-col items-stretch text-right leading-tight">
+                        <span class="truncate font-semibold text-slate-100">مزايا الباقة</span>
+                        @if(!empty($subscriptionPackageLabel))
+                        <span class="truncate text-[10px] font-normal text-slate-400">{{ $subscriptionPackageLabel }}</span>
+                        @else
+                        <span class="text-[10px] font-normal text-slate-500">اشتراكك النشط</span>
+                        @endif
+                    </span>
+                    <i class="fas fa-chevron-down text-[10px] text-slate-400 shrink-0 transition-transform duration-200" id="pkg-features-dd-chevron" aria-hidden="true"></i>
+                </button>
+                <div id="pkg-features-dd-panel" class="pkg-features-dd-panel-inner hidden absolute top-[calc(100%+0.5rem)] end-0 w-[min(100vw-2rem,19.5rem)] rounded-xl border border-slate-600 bg-slate-900/98 backdrop-blur-md overflow-hidden" role="menu">
+                    <div class="px-3 py-2.5 border-b border-slate-700/90 bg-slate-800/70 flex items-start gap-2">
+                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-cyan-500/10 text-cyan-400">
+                            <i class="fas fa-arrow-up-left-from-square text-[10px]"></i>
+                        </span>
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold text-slate-200 m-0 leading-snug">روابط سريعة</p>
+                            <p class="text-[11px] text-slate-500 m-0 mt-0.5 leading-relaxed">كل رابط يُفتح في نافذة جديدة دون إغلاق البث.</p>
+                        </div>
+                    </div>
+                    <div class="max-h-[min(58vh,20rem)] overflow-y-auto py-1.5 px-1">
+                        @foreach($subscriptionFeatureMenuItems as $item)
+                        <a href="{{ $item['url'] }}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex items-center gap-3 px-2.5 py-2 mx-0.5 rounded-lg text-slate-200 hover:bg-slate-700/70 transition-colors border border-transparent hover:border-slate-600/80">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $item['icon_bg'] }} {{ $item['icon_text'] }} ring-1 ring-white/5 group-hover:ring-cyan-500/15 transition-[box-shadow]">
+                                <i class="fas {{ $item['icon'] }} text-sm"></i>
+                            </span>
+                            <span class="min-w-0 flex-1 text-sm font-medium leading-snug text-right group-hover:text-white">{{ $item['label'] }}</span>
+                            <i class="fas fa-arrow-up-left-from-square text-slate-500 group-hover:text-cyan-400/90 text-[11px] shrink-0 transition-colors"></i>
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
+            {{-- نفس سبورة Muallimx Classroom (Excalidraw) --}}
+            <button type="button" id="btn-wb-popup-open"
+                    class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 text-sm font-semibold transition-colors border border-amber-500/40"
+                    title="فتح السبورة التفاعلية (Muallimx Classroom)">
+                <i class="fas fa-chalkboard text-amber-300"></i>
+                <span class="hidden sm:inline">السبورة التفاعلية</span>
+            </button>
+            <label class="inline-flex items-center gap-2 px-2.5 py-2 rounded-xl bg-slate-700/50 border border-slate-600 cursor-pointer select-none text-slate-200 text-xs sm:text-sm shrink-0"
+                   title="الطلاب يرسمون قلم/ممحاة فوق البث؛ يظهر عندك فوق نفس منطقة العرض">
+                <input type="checkbox" id="mx-toggle-student-wb" class="rounded border-slate-500 text-amber-500 focus:ring-amber-500 shrink-0"
+                       {{ $liveSession->allowsStudentWhiteboard() ? 'checked' : '' }}>
+                <span class="font-medium whitespace-nowrap"><span class="hidden sm:inline">رسم الطلاب فوق البث</span><span class="sm:hidden">رسم</span></span>
+            </label>
 
             {{-- زر التسجيل --}}
             <button type="button" id="btn-record"
@@ -95,19 +154,25 @@
     </div>
 
     <div class="room-body">
-        <main id="jitsi-container" role="application" aria-label="غرفة البث المباشر"></main>
+        <div id="mx-video-stack" class="relative flex-1 min-h-0 flex flex-col">
+            <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Muallimx"></main>
+            <div class="jitsi-brand-mask absolute left-0 top-0 pointer-events-none" aria-hidden="true"></div>
+            @include('partials.mx-share-annotation-overlay', [
+                'mxAnnRole' => 'viewer_poll',
+                'mxAnnPollUrl' => route('instructor.live-sessions.share-annotations', $liveSession),
+            ])
+        </div>
     </div>
 
-    @php $whiteboardRole = 'instructor'; @endphp
-    @include('partials.live-whiteboard')
+    @include('partials.mx-muallimx-excalidraw-popup')
     @include('partials.jitsi-iframe-media-allow')
     <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
     <script>
         /* ══════════════════════════════════════════════
-           JITSI SETUP
+           غرفة البث (Muallimx)
         ══════════════════════════════════════════════ */
         const domain   = '{{ $jitsiDomain }}';
-        const jitsiRoot = document.querySelector('#jitsi-container');
+        const jitsiRoot = document.querySelector('#mx-live-broadcast-root');
         if (typeof muallimxEnsureJitsiIframeMediaAllow === 'function') {
             muallimxEnsureJitsiIframeMediaAllow(jitsiRoot);
         }
@@ -136,14 +201,19 @@
             },
             interfaceConfigOverwrite: {
                 APP_NAME: 'Muallimx',
+                NATIVE_APP_NAME: 'Muallimx',
+                PROVIDER_NAME: 'Muallimx',
                 TOOLBAR_BUTTONS: [
                     'microphone', 'camera', 'desktop', 'chat',
                     'raisehand', 'participants-pane', 'tileview',
                     'fullscreen', 'hangup', 'settings',
-                    'select-background', 'whiteboard',
+                    'select-background',
                 ],
                 SHOW_JITSI_WATERMARK: false,
                 SHOW_WATERMARK_FOR_GUESTS: false,
+                SHOW_BRAND_WATERMARK: false,
+                SHOW_POWERED_BY: false,
+                MOBILE_APP_PROMO: false,
                 DEFAULT_BACKGROUND: '#0f172a',
                 DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
                 FILM_STRIP_MAX_HEIGHT: 120,
@@ -278,6 +348,28 @@
            AUTO AUDIO RECORDING (في الخلفية دائماً)
         ══════════════════════════════════════════════ */
         const csrfToken       = '{{ csrf_token() }}';
+        const studentWbUrl    = '{{ route("instructor.live-sessions.student-whiteboard", $liveSession) }}';
+        const mxStudentWbToggle = document.getElementById('mx-toggle-student-wb');
+        let mxStudentWbSaving = false;
+        if (mxStudentWbToggle) {
+            mxStudentWbToggle.addEventListener('change', async function () {
+                if (mxStudentWbSaving) return;
+                mxStudentWbSaving = true;
+                const want = mxStudentWbToggle.checked;
+                try {
+                    const r = await fetch(studentWbUrl, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ allow: want }),
+                    });
+                    if (!r.ok) mxStudentWbToggle.checked = !want;
+                } catch (e) {
+                    mxStudentWbToggle.checked = !want;
+                } finally {
+                    mxStudentWbSaving = false;
+                }
+            });
+        }
         const audioPresignUrl = '{{ route("instructor.live-sessions.audio.presign", $liveSession) }}';
         const audioCompleteUrl= '{{ route("instructor.live-sessions.audio.complete", $liveSession) }}';
         let audioRecorder = null, audioStream = null, audioChunks = [];
@@ -351,7 +443,7 @@
             startAutoAudioRecording();
         });
 
-        // لو انقطع الاتصال أو أنهى المعلم الجلسة من Jitsi مباشرةً
+        // لو انقطع الاتصال أو أُنهيت الجلسة من واجهة البث
         api.addEventListener('videoConferenceLeft', function() {
             stopLocalRecording();
             stopAndUploadAutoAudio();
@@ -393,5 +485,30 @@
             }
         });
     </script>
+    @if(!empty($subscriptionFeatureMenuItems))
+    <script>
+        (function () {
+            var wrap = document.getElementById('pkg-features-dd-wrap');
+            var btn = document.getElementById('pkg-features-dd-btn');
+            var panel = document.getElementById('pkg-features-dd-panel');
+            var chev = document.getElementById('pkg-features-dd-chevron');
+            if (!wrap || !btn || !panel) return;
+            function setOpen(open) {
+                panel.classList.toggle('hidden', !open);
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
+            }
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                setOpen(panel.classList.contains('hidden'));
+            });
+            wrap.addEventListener('click', function (e) { e.stopPropagation(); });
+            document.addEventListener('click', function () { setOpen(false); });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') setOpen(false);
+            });
+        })();
+    </script>
+    @endif
 </body>
 </html>

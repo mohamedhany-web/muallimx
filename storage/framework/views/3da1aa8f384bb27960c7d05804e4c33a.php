@@ -150,6 +150,16 @@
             </a>
             <?php endif; ?>
 
+            <?php if($isStudent): ?>
+            <a href="<?php echo e(route('student.assignments.index')); ?>" @click="if(window.innerWidth<1024) sidebarOpen=false"
+               class="ins-nav <?php echo e(request()->routeIs('student.assignments.*') ? 'active' : ''); ?>">
+                <span class="ins-icon bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+                    <i class="fas fa-tasks text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">واجباتي</span>
+            </a>
+            <?php endif; ?>
+
             <?php if($isStudent || $user->hasPermission('student.view.certificates')): ?>
             <a href="<?php echo e(route('student.certificates.index')); ?>" @click="if(window.innerWidth<1024) sidebarOpen=false"
                class="ins-nav <?php echo e(request()->routeIs('student.certificates.*') ? 'active' : ''); ?>">

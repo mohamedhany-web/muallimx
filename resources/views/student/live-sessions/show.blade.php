@@ -1,47 +1,99 @@
 @extends('layouts.app')
+
 @section('title', $liveSession->title)
+@section('header', $liveSession->title)
 
 @section('content')
-<div class="max-w-3xl mx-auto space-y-6">
-    <div class="flex items-center gap-3">
-        <a href="{{ route('student.live-sessions.index') }}" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 transition-colors"><i class="fas fa-arrow-right"></i></a>
-        <h1 class="text-2xl font-bold text-slate-800 dark:text-white">{{ $liveSession->title }}</h1>
+<div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6 max-w-4xl mx-auto">
+    {{-- مسار تنقل --}}
+    <div class="flex flex-wrap items-center gap-2 text-sm">
+        <a href="{{ route('student.live-sessions.index') }}" class="text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300 font-medium inline-flex items-center gap-1">
+            <i class="fas fa-arrow-right"></i>
+            جلسات البث
+        </a>
+        <span class="text-gray-300 dark:text-slate-600">|</span>
+        <span class="text-gray-600 dark:text-slate-400 truncate max-w-[200px] sm:max-w-md">{{ $liveSession->title }}</span>
     </div>
 
-    @if($liveSession->isLive())
-    <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
-        <span class="w-4 h-4 bg-red-500 rounded-full animate-pulse inline-block mb-3"></span>
-        <p class="text-lg font-bold text-red-700 dark:text-red-400 mb-3">البث مباشر الآن!</p>
-        <form method="POST" action="{{ route('student.live-sessions.join', $liveSession) }}">
-            @csrf
-            <button class="px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/25 transition-all text-lg">
-                <i class="fas fa-video ml-2"></i> انضم الآن
-            </button>
-        </form>
-    </div>
+    @if(session('success'))
+        <div class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 px-4 py-3 text-sm font-medium">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-900 dark:text-red-200 px-4 py-3 text-sm font-medium">{{ session('error') }}</div>
     @endif
 
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
-        <div class="grid sm:grid-cols-2 gap-4 text-sm">
-            <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                <i class="fas fa-chalkboard-teacher text-blue-500"></i>
-                <div><p class="text-[11px] text-slate-400">المدرب</p><p class="font-semibold text-slate-800 dark:text-white">{{ $liveSession->instructor?->name }}</p></div>
+    {{-- عنوان الجلسة --}}
+    <div class="bg-white dark:bg-slate-800/95 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm p-5 sm:p-6">
+        <div class="flex flex-wrap items-start gap-3">
+            <div class="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                <i class="fas fa-broadcast-tower text-lg"></i>
             </div>
-            <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                <i class="fas fa-graduation-cap text-emerald-500"></i>
-                <div><p class="text-[11px] text-slate-400">الكورس</p><p class="font-semibold text-slate-800 dark:text-white">{{ $liveSession->course?->title ?? 'جلسة عامة' }}</p></div>
+            <div class="min-w-0 flex-1">
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100">{{ $liveSession->title }}</h1>
+                <p class="text-sm text-gray-500 dark:text-slate-400 mt-1">
+                    @if($liveSession->isLive())
+                        <span class="inline-flex items-center gap-1.5 text-red-600 dark:text-red-400 font-semibold">
+                            <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                            بث مباشر الآن
+                        </span>
+                    @elseif($liveSession->isScheduled())
+                        مجدولة — {{ $liveSession->scheduled_at?->diffForHumans() }}
+                    @else
+                        <span class="text-gray-600 dark:text-slate-400">منتهية</span>
+                    @endif
+                </p>
             </div>
-            <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                <i class="fas fa-calendar text-amber-500"></i>
-                <div><p class="text-[11px] text-slate-400">الموعد</p><p class="font-semibold text-slate-800 dark:text-white">{{ $liveSession->scheduled_at?->format('Y/m/d — H:i') }}</p></div>
+        </div>
+
+        @if($liveSession->isLive())
+        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-slate-700">
+            <form method="POST" action="{{ route('student.live-sessions.join', $liveSession) }}">
+                @csrf
+                <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-md shadow-red-500/20 transition-colors text-base">
+                    <i class="fas fa-video"></i>
+                    انضم إلى البث الآن
+                </button>
+            </form>
+        </div>
+        @endif
+    </div>
+
+    {{-- تفاصيل --}}
+    <div class="bg-white dark:bg-slate-800/95 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm p-5 sm:p-6 space-y-4">
+        <h2 class="text-sm font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide">تفاصيل الجلسة</h2>
+        <div class="grid sm:grid-cols-2 gap-4">
+            <div class="flex items-start gap-3 p-4 rounded-xl bg-gray-50 dark:bg-slate-700/40 border border-gray-100 dark:border-slate-600">
+                <i class="fas fa-chalkboard-teacher text-sky-600 mt-0.5"></i>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-0.5">المدرب</p>
+                    <p class="font-semibold text-gray-900 dark:text-slate-100">{{ $liveSession->instructor?->name ?? '—' }}</p>
+                </div>
             </div>
-            <div class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                <i class="fas fa-clock text-violet-500"></i>
-                <div><p class="text-[11px] text-slate-400">الحالة</p>
+            <div class="flex items-start gap-3 p-4 rounded-xl bg-gray-50 dark:bg-slate-700/40 border border-gray-100 dark:border-slate-600">
+                <i class="fas fa-graduation-cap text-emerald-600 mt-0.5"></i>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-0.5">الكورس</p>
+                    <p class="font-semibold text-gray-900 dark:text-slate-100">{{ $liveSession->course?->title ?? 'جلسة عامة' }}</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-3 p-4 rounded-xl bg-gray-50 dark:bg-slate-700/40 border border-gray-100 dark:border-slate-600">
+                <i class="fas fa-calendar text-amber-600 mt-0.5"></i>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-0.5">الموعد المجدول</p>
+                    <p class="font-semibold text-gray-900 dark:text-slate-100">{{ $liveSession->scheduled_at?->format('Y/m/d — H:i') ?? '—' }}</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-3 p-4 rounded-xl bg-gray-50 dark:bg-slate-700/40 border border-gray-100 dark:border-slate-600">
+                <i class="fas fa-info-circle text-violet-600 mt-0.5"></i>
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 dark:text-slate-400 mb-0.5">الحالة</p>
                     <p class="font-semibold">
-                        @if($liveSession->isLive()) <span class="text-red-600">مباشر</span>
-                        @elseif($liveSession->isScheduled()) <span class="text-blue-600">{{ $liveSession->scheduled_at?->diffForHumans() }}</span>
-                        @else <span class="text-slate-500">منتهية</span>
+                        @if($liveSession->isLive())
+                            <span class="text-red-600 dark:text-red-400">مباشر</span>
+                        @elseif($liveSession->isScheduled())
+                            <span class="text-sky-600 dark:text-sky-400">مجدولة</span>
+                        @else
+                            <span class="text-gray-600 dark:text-slate-400">منتهية</span>
                         @endif
                     </p>
                 </div>
@@ -49,36 +101,53 @@
         </div>
 
         @if($liveSession->description)
-        <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
-            <h3 class="font-semibold text-slate-700 dark:text-slate-200 mb-2 text-sm">وصف الجلسة</h3>
-            <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{{ $liveSession->description }}</p>
+        <div class="pt-4 border-t border-gray-200 dark:border-slate-700">
+            <h3 class="text-sm font-bold text-gray-700 dark:text-slate-200 mb-2">وصف الجلسة</h3>
+            <div class="text-sm text-gray-600 dark:text-slate-400 leading-relaxed whitespace-pre-wrap">{{ $liveSession->description }}</div>
         </div>
         @endif
     </div>
 
     @if($liveSession->isScheduled())
-    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5 text-center">
-        <i class="fas fa-clock text-3xl text-blue-400 mb-2"></i>
-        <p class="font-semibold text-blue-700 dark:text-blue-400">الجلسة ستبدأ {{ $liveSession->scheduled_at?->diffForHumans() }}</p>
-        <p class="text-sm text-blue-600/70 mt-1">عند بدء البث ستظهر لك زر الانضمام</p>
+    <div class="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-900/20 p-5 sm:p-6">
+        <div class="flex gap-4">
+            <div class="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 border border-sky-200 dark:border-sky-700 flex items-center justify-center shrink-0 text-sky-600">
+                <i class="fas fa-clock text-lg"></i>
+            </div>
+            <div>
+                <p class="font-bold text-sky-900 dark:text-sky-100">لم يبدأ البث بعد</p>
+                <p class="text-sm text-sky-800/90 dark:text-sky-200/90 mt-1">الجلسة ستبدأ {{ $liveSession->scheduled_at?->diffForHumans() }}. عند بدء المدرب ستجد زر الانضمام في هذه الصفحة أو من قائمة «مباشر الآن».</p>
+            </div>
+        </div>
     </div>
     @endif
 
     @if($liveSession->status === 'ended' && $liveSession->recordings && $liveSession->recordings->count() > 0)
-    <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-5">
-        <h3 class="font-bold text-emerald-800 dark:text-emerald-200 mb-3"><i class="fas fa-play-circle ml-1"></i> تسجيلات الجلسة</h3>
+    <div class="bg-white dark:bg-slate-800/95 rounded-xl border border-emerald-200 dark:border-emerald-900/50 shadow-sm p-5 sm:p-6">
+        <h3 class="font-bold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+            <i class="fas fa-play-circle text-emerald-600"></i>
+            تسجيلات الجلسة
+        </h3>
         <ul class="space-y-2">
             @foreach($liveSession->recordings as $rec)
             <li>
-                <a href="{{ route('student.live-recordings.show', $rec) }}" class="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-slate-800 border border-emerald-100 dark:border-emerald-800 hover:border-emerald-300 transition-colors">
-                    <span class="font-medium text-slate-800 dark:text-white">{{ $rec->title ?? 'تسجيل #' . $rec->id }}</span>
-                    <span class="text-xs text-slate-500">{{ $rec->duration_for_humans }}</span>
+                <a href="{{ route('student.live-recordings.show', $rec) }}" class="flex items-center justify-between gap-3 p-4 rounded-xl bg-gray-50 dark:bg-slate-700/40 border border-gray-200 dark:border-slate-600 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors">
+                    <span class="font-medium text-gray-900 dark:text-slate-100">{{ $rec->title ?? 'تسجيل #' . $rec->id }}</span>
+                    <span class="text-xs text-gray-500 dark:text-slate-400 shrink-0">{{ $rec->duration_for_humans }}</span>
                 </a>
             </li>
             @endforeach
         </ul>
-        <a href="{{ route('student.live-recordings.index') }}" class="inline-block mt-3 text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">كل التسجيلات</a>
+        <a href="{{ route('student.live-recordings.index') }}" class="inline-flex items-center gap-2 mt-4 text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700">
+            كل التسجيلات
+            <i class="fas fa-chevron-left text-xs"></i>
+        </a>
     </div>
     @endif
+
+    <a href="{{ route('student.live-sessions.index') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 text-sm font-semibold hover:border-sky-300 dark:hover:border-sky-600 transition-colors">
+        <i class="fas fa-list"></i>
+        العودة لقائمة الجلسات
+    </a>
 </div>
 @endsection

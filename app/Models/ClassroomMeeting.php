@@ -31,6 +31,7 @@ class ClassroomMeeting extends Model
         'recording_duration_seconds',
         'recording_audio_duration_seconds',
         'recording_uploaded_at',
+        'settings',
     ];
 
     protected $casts = [
@@ -45,6 +46,7 @@ class ClassroomMeeting extends Model
         'recording_duration_seconds' => 'integer',
         'recording_audio_duration_seconds' => 'integer',
         'recording_uploaded_at' => 'datetime',
+        'settings' => 'array',
     ];
 
     public function user(): BelongsTo
@@ -64,7 +66,13 @@ class ClassroomMeeting extends Model
 
     public function isLive(): bool
     {
-        return $this->started_at && !$this->ended_at;
+        return $this->started_at && ! $this->ended_at;
+    }
+
+    /** سبورة الضيوف: قلم + ممحاة عند تفعيل منظم الاجتماع */
+    public function allowsParticipantWhiteboard(): bool
+    {
+        return (bool) data_get($this->settings, 'allow_participant_whiteboard', false);
     }
 
     public static function generateCode(): string
@@ -78,12 +86,12 @@ class ClassroomMeeting extends Model
 
     public function hasBrowserRecording(): bool
     {
-        return !empty($this->recording_path) && ($this->recording_disk === 'live_recordings_r2');
+        return ! empty($this->recording_path) && ($this->recording_disk === 'live_recordings_r2');
     }
 
     public function getRecordingDownloadUrlAttribute(): ?string
     {
-        if (!$this->hasBrowserRecording()) {
+        if (! $this->hasBrowserRecording()) {
             return null;
         }
 
@@ -99,7 +107,7 @@ class ClassroomMeeting extends Model
 
     public function getRecordingAudioDownloadUrlAttribute(): ?string
     {
-        if (!$this->hasBrowserRecording() || empty($this->recording_audio_path)) {
+        if (! $this->hasBrowserRecording() || empty($this->recording_audio_path)) {
             return null;
         }
 

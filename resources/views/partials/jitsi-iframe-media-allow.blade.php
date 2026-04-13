@@ -1,4 +1,4 @@
-{{-- JitsiMeetExternalAPI ينشئ iframe داخلياً؛ المتصفحات الحديثة تحتاج allow على iframe لتفويض الكاميرا/الميكروفون/مشاركة الشاشة --}}
+{{-- واجهة البث المضمّنة: iframe يحتاج سمة allow للكاميرا/الميكروفون/مشاركة الشاشة --}}
 <script>
 (function (w) {
     var ALLOW = 'camera; microphone; fullscreen; display-capture; autoplay; clipboard-write';

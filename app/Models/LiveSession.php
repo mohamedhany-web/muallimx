@@ -16,18 +16,18 @@ class LiveSession extends Model
     ];
 
     protected $casts = [
-        'scheduled_at'       => 'datetime',
-        'started_at'         => 'datetime',
-        'ended_at'           => 'datetime',
-        'is_recorded'        => 'boolean',
-        'allow_chat'         => 'boolean',
+        'scheduled_at' => 'datetime',
+        'started_at' => 'datetime',
+        'ended_at' => 'datetime',
+        'is_recorded' => 'boolean',
+        'allow_chat' => 'boolean',
         'allow_screen_share' => 'boolean',
         'require_enrollment' => 'boolean',
-        'mute_on_join'       => 'boolean',
-        'video_off_on_join'  => 'boolean',
-        'settings'           => 'array',
-        'max_participants'   => 'integer',
-        'duration_minutes'   => 'integer',
+        'mute_on_join' => 'boolean',
+        'video_off_on_join' => 'boolean',
+        'settings' => 'array',
+        'max_participants' => 'integer',
+        'duration_minutes' => 'integer',
     ];
 
     protected static function booted(): void
@@ -42,7 +42,8 @@ class LiveSession extends Model
     public static function generateRoomName(?string $title = null): string
     {
         $slug = $title ? Str::slug($title, '-') : 'session';
-        return Str::limit($slug, 30, '') . '-' . Str::random(8);
+
+        return Str::limit($slug, 30, '').'-'.Str::random(8);
     }
 
     // ======================== Relationships ========================
@@ -119,7 +120,7 @@ class LiveSession extends Model
     public function start(): void
     {
         $this->update([
-            'status'     => 'live',
+            'status' => 'live',
             'started_at' => now(),
         ]);
     }
@@ -135,8 +136,8 @@ class LiveSession extends Model
         }
 
         $this->update([
-            'status'           => 'ended',
-            'ended_at'         => now(),
+            'status' => 'ended',
+            'ended_at' => now(),
             'duration_minutes' => $duration,
         ]);
     }
@@ -149,6 +150,7 @@ class LiveSession extends Model
     public function getJitsiUrl(): string
     {
         $domain = $this->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
+
         return "https://{$domain}/{$this->room_name}";
     }
 
@@ -159,21 +161,34 @@ class LiveSession extends Model
 
     public function getDurationForHumansAttribute(): string
     {
-        if (!$this->duration_minutes) return '—';
+        if (! $this->duration_minutes) {
+            return '—';
+        }
         $h = intdiv($this->duration_minutes, 60);
         $m = $this->duration_minutes % 60;
-        return ($h > 0 ? "{$h} ساعة " : '') . ($m > 0 ? "{$m} دقيقة" : '');
+
+        return ($h > 0 ? "{$h} ساعة " : '').($m > 0 ? "{$m} دقيقة" : '');
     }
 
     public function canUserJoin(User $user): bool
     {
-        if ($user->id === $this->instructor_id) return true;
-        if (!$this->require_enrollment || !$this->course_id) return true;
+        if ($user->id === $this->instructor_id) {
+            return true;
+        }
+        if (! $this->require_enrollment || ! $this->course_id) {
+            return true;
+        }
 
         return $this->course
             ->enrollments()
             ->where('user_id', $user->id)
-            ->where('is_active', true)
+            ->where('status', 'active')
             ->exists();
+    }
+
+    /** سبورة الطلاب في البث: قلم + ممحاة (ويد للتحريك) عند تفعيل المدرب */
+    public function allowsStudentWhiteboard(): bool
+    {
+        return (bool) data_get($this->settings, 'allow_student_whiteboard', false);
     }
 }

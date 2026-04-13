@@ -275,6 +275,66 @@ class ClassroomController extends Controller
         ));
     }
 
+    /**
+     * تاب منفصل لرفع التسجيل إلى R2 (نفس أصل الغرفة — يقرأ المهمة من IndexedDB).
+     */
+    public function recordingUploadTab(Request $request, ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        $jobId = (string) $request->query('job', '');
+        $useInstructorRoutes = request()->routeIs('instructor.*');
+        $rp = $useInstructorRoutes ? 'instructor.' : 'student.';
+
+        return view('student.classroom.recording-upload-tab', [
+            'meeting' => $meeting,
+            'jobId' => $jobId,
+            'rp' => $rp,
+        ]);
+    }
+
+    public function updateParticipantWhiteboard(Request $request, ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if ($meeting->ended_at || ! $meeting->started_at) {
+            return response()->json(['message' => 'الاجتماع غير نشط حالياً.'], 422);
+        }
+
+        $validated = $request->validate([
+            'allow' => ['required', 'boolean'],
+        ]);
+
+        $settings = $meeting->settings ?? [];
+        $settings['allow_participant_whiteboard'] = $validated['allow'];
+        $meeting->update(['settings' => $settings]);
+        $meeting->refresh();
+
+        return response()->json([
+            'ok' => true,
+            'allow_participant_whiteboard' => $meeting->allowsParticipantWhiteboard(),
+        ]);
+    }
+
+    public function shareAnnotations(ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if (! $meeting->started_at || $meeting->ended_at) {
+            return response()->json(['layers' => []]);
+        }
+
+        $layers = Cache::get('mx_share_ann_classroom_'.$meeting->id, []);
+
+        return response()->json(['layers' => $layers]);
+    }
+
     public function end(ClassroomMeeting $meeting)
     {
         $user = Auth::user();
@@ -364,7 +424,7 @@ class ClassroomController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'تعذر حفظ التسجيل على التخزين السحابي. تحقق من إعدادات R2 أو حاول لاحقاً.',
+                'message' => 'تعذر حفظ التسجيل على التخزين السحابي. حاول لاحقاً أو تواصل مع الدعم.',
             ], 500);
         }
 
@@ -386,7 +446,7 @@ class ClassroomController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'تم رفع تسجيل المحاضرة إلى Cloudflare بنجاح.',
+            'message' => 'تم رفع وحفظ تسجيل المحاضرة بنجاح.',
             'download_url' => $meeting->fresh()->recording_download_url,
         ]);
     }
@@ -460,7 +520,7 @@ class ClassroomController extends Controller
 
             return response()->json([
                 'direct_upload' => false,
-                'message' => 'تعذر تجهيز رابط الرفع إلى التخزين السحابي. تحقق من إعدادات R2 في .env.',
+                'message' => 'تعذر تجهيز رابط الرفع إلى التخزين السحابي. تحقق من إعدادات الموقع.',
             ], 503);
         }
 
@@ -551,7 +611,7 @@ class ClassroomController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'تم رفع تسجيل المحاضرة إلى Cloudflare بنجاح.',
+            'message' => 'تم رفع وحفظ تسجيل المحاضرة بنجاح.',
             'download_url' => $meeting->fresh()->recording_download_url,
         ]);
     }
@@ -713,7 +773,7 @@ class ClassroomController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'تم رفع التسجيل الصوتي بنجاح.',
+            'message' => 'تم رفع وحفظ التسجيل الصوتي بنجاح.',
             'audio_download_url' => $meeting->fresh()->recording_audio_download_url,
         ]);
     }
@@ -793,7 +853,7 @@ class ClassroomController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'تم رفع التسجيل الصوتي إلى Cloudflare بنجاح.',
+            'message' => 'تم رفع وحفظ التسجيل الصوتي بنجاح.',
             'audio_download_url' => $meeting->fresh()->recording_audio_download_url,
         ]);
     }

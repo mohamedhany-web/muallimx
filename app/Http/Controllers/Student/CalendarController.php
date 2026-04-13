@@ -3,16 +3,15 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\Assignment;
 use App\Models\CalendarEvent;
 use App\Models\ConsultationRequest;
-use App\Models\Lecture;
 use App\Models\Exam;
-use App\Models\Assignment;
+use App\Models\Lecture;
 use App\Models\LectureAssignment;
-use App\Models\Notification;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class CalendarController extends Controller
 {
@@ -22,10 +21,10 @@ class CalendarController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
+
         // جلب جميع الأحداث للطالب
         $events = $this->getStudentEvents($user);
-        
+
         // إحصائيات
         $stats = [
             'total' => $events->count(),
@@ -49,9 +48,9 @@ class CalendarController extends Controller
         $end = $request->get('end');
 
         $events = $this->getStudentEvents($user, $start, $end);
-        
+
         // تحويل الأحداث إلى صيغة FullCalendar
-        $calendarEvents = $events->map(function($event) {
+        $calendarEvents = $events->map(function ($event) {
             return [
                 'id' => $event->id ?? $event->calendar_id,
                 'title' => $event->title,
@@ -65,7 +64,7 @@ class CalendarController extends Controller
                 'extendedProps' => [
                     'priority' => $event->priority ?? 'medium',
                     'location' => $event->location ?? null,
-                ]
+                ],
             ];
         });
 
@@ -80,24 +79,24 @@ class CalendarController extends Controller
         $events = collect();
 
         // 1. المحاضرات (Lectures)
-        $lectures = Lecture::whereHas('course', function($q) use ($user) {
-            $q->whereHas('enrollments', function($q2) use ($user) {
+        $lectures = Lecture::whereHas('course', function ($q) use ($user) {
+            $q->whereHas('enrollments', function ($q2) use ($user) {
                 $q2->where('user_id', $user->id)
-                   ->where('status', 'active');
+                    ->where('status', 'active');
             });
         })
-        ->where('status', 'scheduled')
-        ->where('scheduled_at', '>=', $startDate ?? now()->subMonths(1))
-        ->where('scheduled_at', '<=', $endDate ?? now()->addMonths(3))
-        ->with(['course', 'instructor'])
-        ->get();
+            ->where('status', 'scheduled')
+            ->where('scheduled_at', '>=', $startDate ?? now()->subMonths(1))
+            ->where('scheduled_at', '<=', $endDate ?? now()->addMonths(3))
+            ->with(['course', 'instructor'])
+            ->get();
 
         foreach ($lectures as $lecture) {
             $endTime = $lecture->scheduled_at->copy()->addMinutes($lecture->duration_minutes ?? 60);
-            $events->push((object)[
-                'calendar_id' => 'lecture_' . $lecture->id,
+            $events->push((object) [
+                'calendar_id' => 'lecture_'.$lecture->id,
                 'id' => $lecture->id,
-                'title' => $lecture->title . ' - ' . ($lecture->course->title ?? ''),
+                'title' => $lecture->title.' - '.($lecture->course->title ?? ''),
                 'description' => $lecture->description,
                 'start_date' => $lecture->scheduled_at,
                 'end_date' => $endTime,
@@ -105,49 +104,49 @@ class CalendarController extends Controller
                 'type' => 'lecture',
                 'color' => '#3B82F6',
                 'priority' => 'medium',
-                'url' => route('my-courses.show', $lecture->course_id) . '#lectures',
+                'url' => route('my-courses.learn', $lecture->course_id),
                 'location' => $lecture->teams_meeting_link,
             ]);
         }
 
         // 2. الامتحانات (Exams)
-        $exams = Exam::whereHas('course', function($q) use ($user) {
-            $q->whereHas('enrollments', function($q2) use ($user) {
+        $exams = Exam::whereHas('course', function ($q) use ($user) {
+            $q->whereHas('enrollments', function ($q2) use ($user) {
                 $q2->where('user_id', $user->id)
-                   ->where('status', 'active');
+                    ->where('status', 'active');
             });
         })
-        ->where('is_active', true)
-        ->where('is_published', true)
-        ->where(function($q) use ($startDate, $endDate) {
-            $q->where(function($q2) use ($startDate, $endDate) {
-                if ($startDate) {
-                    $q2->where('start_time', '>=', $startDate);
-                }
-                if ($endDate) {
-                    $q2->where('start_time', '<=', $endDate);
-                }
+            ->where('is_active', true)
+            ->where('is_published', true)
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->where(function ($q2) use ($startDate, $endDate) {
+                    if ($startDate) {
+                        $q2->where('start_time', '>=', $startDate);
+                    }
+                    if ($endDate) {
+                        $q2->where('start_time', '<=', $endDate);
+                    }
+                })
+                    ->orWhere(function ($q2) use ($startDate, $endDate) {
+                        if ($startDate) {
+                            $q2->where('start_date', '>=', $startDate);
+                        }
+                        if ($endDate) {
+                            $q2->where('start_date', '<=', $endDate);
+                        }
+                    });
             })
-            ->orWhere(function($q2) use ($startDate, $endDate) {
-                if ($startDate) {
-                    $q2->where('start_date', '>=', $startDate);
-                }
-                if ($endDate) {
-                    $q2->where('start_date', '<=', $endDate);
-                }
-            });
-        })
-        ->with(['course'])
-        ->get();
+            ->with(['course'])
+            ->get();
 
         foreach ($exams as $exam) {
             $startDate = $exam->start_time ?? ($exam->start_date ? Carbon::parse($exam->start_date) : now());
             $endDate = $exam->end_time ?? ($exam->end_date ? Carbon::parse($exam->end_date) : $startDate->copy()->addMinutes($exam->duration_minutes ?? 60));
-            
-            $events->push((object)[
-                'calendar_id' => 'exam_' . $exam->id,
+
+            $events->push((object) [
+                'calendar_id' => 'exam_'.$exam->id,
                 'id' => $exam->id,
-                'title' => 'امتحان: ' . $exam->title . ' - ' . ($exam->course->title ?? ''),
+                'title' => 'امتحان: '.$exam->title.' - '.($exam->course->title ?? ''),
                 'description' => $exam->description ?? $exam->instructions,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
@@ -160,23 +159,23 @@ class CalendarController extends Controller
         }
 
         // 3. الواجبات (Assignments)
-        $assignments = Assignment::whereHas('course', function($q) use ($user) {
-            $q->whereHas('enrollments', function($q2) use ($user) {
+        $assignments = Assignment::whereHas('course', function ($q) use ($user) {
+            $q->whereHas('enrollments', function ($q2) use ($user) {
                 $q2->where('user_id', $user->id)
-                   ->where('status', 'active');
+                    ->where('status', 'active');
             });
         })
-        ->where('status', 'published')
-        ->where('due_date', '>=', $startDate ?? now()->subMonths(1))
-        ->where('due_date', '<=', $endDate ?? now()->addMonths(3))
-        ->with(['course'])
-        ->get();
+            ->where('status', 'published')
+            ->where('due_date', '>=', $startDate ?? now()->subMonths(1))
+            ->where('due_date', '<=', $endDate ?? now()->addMonths(3))
+            ->with(['course'])
+            ->get();
 
         foreach ($assignments as $assignment) {
-            $events->push((object)[
-                'calendar_id' => 'assignment_' . $assignment->id,
+            $events->push((object) [
+                'calendar_id' => 'assignment_'.$assignment->id,
                 'id' => $assignment->id,
-                'title' => 'واجب: ' . $assignment->title . ' - ' . ($assignment->course->title ?? ''),
+                'title' => 'واجب: '.$assignment->title.' - '.($assignment->course->title ?? ''),
                 'description' => $assignment->description ?? $assignment->instructions,
                 'start_date' => $assignment->due_date,
                 'end_date' => $assignment->due_date,
@@ -184,28 +183,28 @@ class CalendarController extends Controller
                 'type' => 'assignment',
                 'color' => '#F59E0B',
                 'priority' => 'high',
-                'url' => route('my-courses.show', $assignment->advanced_course_id ?? $assignment->course_id) . '#assignments',
+                'url' => route('my-courses.show', $assignment->advanced_course_id ?? $assignment->course_id).'#assignments',
             ]);
         }
 
         // 4. واجبات المحاضرات (Lecture Assignments)
-        $lectureAssignments = LectureAssignment::whereHas('lecture.course', function($q) use ($user) {
-            $q->whereHas('enrollments', function($q2) use ($user) {
+        $lectureAssignments = LectureAssignment::whereHas('lecture.course', function ($q) use ($user) {
+            $q->whereHas('enrollments', function ($q2) use ($user) {
                 $q2->where('user_id', $user->id)
-                   ->where('status', 'active');
+                    ->where('status', 'active');
             });
         })
-        ->where('status', 'published')
-        ->where('due_date', '>=', $startDate ?? now()->subMonths(1))
-        ->where('due_date', '<=', $endDate ?? now()->addMonths(3))
-        ->with(['lecture.course'])
-        ->get();
+            ->where('status', 'published')
+            ->where('due_date', '>=', $startDate ?? now()->subMonths(1))
+            ->where('due_date', '<=', $endDate ?? now()->addMonths(3))
+            ->with(['lecture.course'])
+            ->get();
 
         foreach ($lectureAssignments as $assignment) {
-            $events->push((object)[
-                'calendar_id' => 'lecture_assignment_' . $assignment->id,
+            $events->push((object) [
+                'calendar_id' => 'lecture_assignment_'.$assignment->id,
                 'id' => $assignment->id,
-                'title' => 'واجب محاضرة: ' . $assignment->title,
+                'title' => 'واجب محاضرة: '.$assignment->title,
                 'description' => $assignment->description ?? $assignment->instructions,
                 'start_date' => $assignment->due_date,
                 'end_date' => $assignment->due_date,
@@ -213,7 +212,7 @@ class CalendarController extends Controller
                 'type' => 'assignment',
                 'color' => '#F59E0B',
                 'priority' => 'high',
-                'url' => route('my-courses.show', $assignment->lecture->course_id) . '#lectures',
+                'url' => route('my-courses.learn', $assignment->lecture->course_id),
             ]);
         }
 
@@ -225,8 +224,8 @@ class CalendarController extends Controller
         );
 
         foreach ($calendarEvents as $event) {
-            $events->push((object)[
-                'calendar_id' => 'calendar_' . $event->id,
+            $events->push((object) [
+                'calendar_id' => 'calendar_'.$event->id,
                 'id' => $event->id,
                 'title' => $event->title,
                 'description' => $event->description,
@@ -259,7 +258,7 @@ class CalendarController extends Controller
      */
     private function getEventColor($type)
     {
-        return match($type) {
+        return match ($type) {
             'exam' => '#EF4444',
             'lecture' => '#3B82F6',
             'assignment' => '#F59E0B',

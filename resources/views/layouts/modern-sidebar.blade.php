@@ -80,6 +80,15 @@
             </a>
             @endif
 
+            @if(auth()->check() && auth()->user()->isStudent())
+            <a href="{{ route('student.assignments.index') }}" 
+               @click="if (window.innerWidth < 1024) sidebarOpen = false"
+               class="sidebar-nav-item flex items-center gap-3 {{ request()->routeIs('student.assignments.*') ? 'active' : '' }}">
+                <i class="fas fa-tasks"></i>
+                <span>واجباتي</span>
+            </a>
+            @endif
+
             <!-- Certificates -->
             @if(auth()->check() && auth()->user()->hasPermission('student.view.certificates'))
             <a href="{{ route('student.certificates.index') }}" 

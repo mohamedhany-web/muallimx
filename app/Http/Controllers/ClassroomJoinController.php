@@ -6,7 +6,9 @@ use App\Models\ClassroomMeeting;
 use App\Models\ClassroomMeetingParticipant;
 use App\Models\LiveSetting;
 use App\Services\SubscriptionLimitService;
+use App\Support\ShareAnnotationSanitizer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class ClassroomJoinController extends Controller
@@ -22,10 +24,10 @@ class ClassroomJoinController extends Controller
             abort(404, 'كود الغرفة غير صالح.');
         }
 
-        $roomName = 'Muallimx-' . $code;
+        $roomName = 'Muallimx-'.$code;
         $meeting = ClassroomMeeting::where('code', $code)->first();
         $jitsiDomain = LiveSetting::getJitsiDomain();
-        $joinUrl = url('classroom/join/' . $code);
+        $joinUrl = url('classroom/join/'.$code);
         $maxParticipants = (int) ($meeting?->max_participants ?? 25);
         $meetingEnded = (bool) ($meeting && $meeting->ended_at);
 
@@ -55,6 +57,7 @@ class ClassroomJoinController extends Controller
             $expiresAt = $meeting->started_at->copy()->addMinutes($effectiveDuration);
             if ($expiresAt->isPast()) {
                 $meeting->update(['ended_at' => now()]);
+
                 return response()->json([
                     'ok' => false,
                     'message' => 'انتهت مدة هذا الاجتماع حسب قيود الباقة.',
@@ -98,6 +101,7 @@ class ClassroomJoinController extends Controller
             'token' => $token,
             'active_participants' => $newCount,
             'max_participants' => $maxParticipants,
+            'allow_participant_whiteboard' => $meeting->allowsParticipantWhiteboard(),
         ]);
     }
 
@@ -114,16 +118,18 @@ class ClassroomJoinController extends Controller
             ->where('token', $token)
             ->first();
 
-        if (!$participant || $participant->left_at) {
+        if (! $participant || $participant->left_at) {
             return response()->json(['ok' => false], 404);
         }
 
         $participant->update(['last_seen_at' => now()]);
+        $meeting->refresh();
 
         return response()->json([
             'ok' => true,
             'active_participants' => $this->activeParticipantsCount($meeting->id),
             'max_participants' => (int) ($meeting->max_participants ?: 25),
+            'allow_participant_whiteboard' => $meeting->allowsParticipantWhiteboard(),
         ]);
     }
 
@@ -140,6 +146,43 @@ class ClassroomJoinController extends Controller
             ->where('token', $token)
             ->whereNull('left_at')
             ->update(['left_at' => now(), 'last_seen_at' => now()]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function pushShareAnnotation(Request $request, string $code)
+    {
+        $code = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
+        $meeting = ClassroomMeeting::where('code', $code)->firstOrFail();
+
+        if (! $meeting->allowsParticipantWhiteboard() || ! $meeting->started_at || $meeting->ended_at) {
+            return response()->json(['message' => 'غير مسموح'], 422);
+        }
+
+        $token = (string) $request->input('token');
+        if ($token === '') {
+            return response()->json(['message' => 'رمز غير صالح'], 422);
+        }
+
+        $participant = ClassroomMeetingParticipant::where('classroom_meeting_id', $meeting->id)
+            ->where('token', $token)
+            ->whereNull('left_at')
+            ->first();
+
+        if (! $participant) {
+            return response()->json(['message' => 'غير مصرح'], 403);
+        }
+
+        $clean = ShareAnnotationSanitizer::polylines($request->input('polylines'));
+        $key = 'mx_share_ann_classroom_'.$meeting->id;
+        $all = Cache::get($key, []);
+        $layerKey = 'g_'.substr(hash('sha256', $token), 0, 24);
+        $all[$layerKey] = [
+            'name' => $participant->display_name,
+            'polylines' => $clean,
+            'ts' => now()->timestamp,
+        ];
+        Cache::put($key, $all, now()->addHours(6));
 
         return response()->json(['ok' => true]);
     }

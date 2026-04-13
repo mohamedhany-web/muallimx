@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\LiveSession;
 use App\Models\LiveSetting;
 use App\Models\SessionAttendance;
+use App\Support\ShareAnnotationSanitizer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -38,8 +40,8 @@ class LiveSessionController extends Controller
         $query = LiveSession::with(['course', 'instructor'])
             ->where(function ($q) use ($enrolledCourseIds) {
                 $q->whereIn('course_id', $enrolledCourseIds)
-                  ->orWhere('require_enrollment', false)
-                  ->orWhereNull('course_id');
+                    ->orWhere('require_enrollment', false)
+                    ->orWhereNull('course_id');
             })
             ->whereIn('status', ['scheduled', 'live']);
 
@@ -55,8 +57,8 @@ class LiveSessionController extends Controller
         $liveSessions = LiveSession::where('status', 'live')
             ->where(function ($q) use ($enrolledCourseIds) {
                 $q->whereIn('course_id', $enrolledCourseIds)
-                  ->orWhere('require_enrollment', false)
-                  ->orWhereNull('course_id');
+                    ->orWhere('require_enrollment', false)
+                    ->orWhereNull('course_id');
             })
             ->with(['instructor', 'course'])
             ->get();
@@ -66,7 +68,7 @@ class LiveSessionController extends Controller
 
     public function show(LiveSession $liveSession)
     {
-        if (!$liveSession->canUserJoin(auth()->user())) {
+        if (! $liveSession->canUserJoin(auth()->user())) {
             abort(403, 'ليس لديك صلاحية دخول هذه الجلسة');
         }
 
@@ -79,10 +81,10 @@ class LiveSessionController extends Controller
     {
         $user = auth()->user();
 
-        if (!$liveSession->canUserJoin($user)) {
+        if (! $liveSession->canUserJoin($user)) {
             return back()->with('error', 'ليس لديك صلاحية دخول هذه الجلسة — تأكد من تسجيلك في الكورس');
         }
-        if (!$liveSession->isLive()) {
+        if (! $liveSession->isLive()) {
             return back()->with('error', 'الجلسة ليست في وضع البث حالياً');
         }
 
@@ -91,20 +93,21 @@ class LiveSessionController extends Controller
             ->whereNull('left_at')
             ->first();
 
-        if (!$existing) {
+        if (! $existing) {
             SessionAttendance::create([
-                'session_id'      => $liveSession->id,
-                'user_id'         => $user->id,
-                'joined_at'       => now(),
-                'ip_address'      => request()->ip(),
-                'user_agent'      => request()->userAgent(),
+                'session_id' => $liveSession->id,
+                'user_id' => $user->id,
+                'joined_at' => now(),
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
                 'role_in_session' => 'student',
             ]);
         }
 
         $jitsiDomain = $liveSession->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
+        $allowStudentWhiteboard = $liveSession->allowsStudentWhiteboard();
 
-        return view('student.live-sessions.room', compact('liveSession', 'jitsiDomain', 'user'));
+        return view('student.live-sessions.room', compact('liveSession', 'jitsiDomain', 'user', 'allowStudentWhiteboard'));
     }
 
     public function leave(LiveSession $liveSession)
@@ -125,9 +128,42 @@ class LiveSessionController extends Controller
      */
     public function status(LiveSession $liveSession)
     {
+        if (! $liveSession->canUserJoin(auth()->user())) {
+            abort(403);
+        }
+
+        $liveSession->refresh();
+
         return response()->json([
             'status' => $liveSession->status,
-            'ended'  => in_array($liveSession->status, ['ended', 'cancelled']),
+            'ended' => in_array($liveSession->status, ['ended', 'cancelled']),
+            'allow_student_whiteboard' => $liveSession->allowsStudentWhiteboard(),
         ]);
+    }
+
+    /**
+     * مزامنة رسم الطالب فوق منطقة البث (إحداثيات معيّرة) ليظهر لدى المدرب.
+     */
+    public function pushShareAnnotation(Request $request, LiveSession $liveSession)
+    {
+        $user = auth()->user();
+        if ($user->id === $liveSession->instructor_id) {
+            abort(403);
+        }
+        if (! $liveSession->canUserJoin($user) || ! $liveSession->isLive() || ! $liveSession->allowsStudentWhiteboard()) {
+            return response()->json(['message' => 'غير مسموح'], 422);
+        }
+
+        $clean = ShareAnnotationSanitizer::polylines($request->input('polylines'));
+        $key = 'mx_share_ann_live_'.$liveSession->id;
+        $all = Cache::get($key, []);
+        $all[(string) $user->id] = [
+            'name' => $user->name,
+            'polylines' => $clean,
+            'ts' => now()->timestamp,
+        ];
+        Cache::put($key, $all, now()->addHours(6));
+
+        return response()->json(['ok' => true]);
     }
 }

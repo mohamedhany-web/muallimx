@@ -34,6 +34,25 @@
         </div>
     @endif
 
+    @php
+        $instrRes = is_array($assignment->resource_attachments) ? $assignment->resource_attachments : [];
+    @endphp
+    @if(count($instrRes) > 0)
+        <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-5 mb-6">
+            <h3 class="font-bold text-slate-800 dark:text-slate-100 mb-3">مرفقات الواجب (يستطيع الطلاب رؤيتها)</h3>
+            <ul class="space-y-2 text-sm">
+                @foreach($instrRes as $att)
+                    @php
+                        $p = is_array($att) ? ($att['path'] ?? '') : '';
+                        $u = $p ? (\App\Services\AssignmentFileStorage::publicUrl($p) ?? '#') : '#';
+                        $lb = is_array($att) ? ($att['original_name'] ?? basename($p)) : '';
+                    @endphp
+                    <li><a href="{{ $u }}" target="_blank" rel="noopener" class="text-sky-600 hover:underline">{{ $lb }}</a></li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 font-bold text-slate-800 dark:text-slate-100">{{ __('instructor.last_submissions') }}</div>
         <div class="overflow-x-auto">

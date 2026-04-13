@@ -1,4 +1,4 @@
-@php $isInstructor = ($whiteboardRole ?? 'student') === 'instructor'; @endphp
+﻿@php $isInstructor = ($whiteboardRole ?? 'student') === 'instructor'; @endphp
 <style>
     /* ─── Floating Tools Dropdown ─────────────────────────── */
     #mx-tools-fab {
@@ -385,12 +385,12 @@
             <span class="mx-menu-icon" style="background:rgba(14,165,233,0.15); color:#38bdf8;">
                 <i class="fas fa-chalkboard"></i>
             </span>
-            <span>السبورة البيضاء</span>
+            <span>السبورة التفاعلية</span>
         </button>
     </div>
     <button id="mx-fab-main" type="button">
         <i class="fas fa-paintbrush"></i>
-        <span>أدوات</span>
+        <span>سبورة ورسم</span>
         <i class="fas fa-chevron-up" id="mx-fab-chevron"></i>
     </button>
 </div>

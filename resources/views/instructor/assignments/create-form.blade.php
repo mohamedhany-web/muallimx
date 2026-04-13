@@ -2,7 +2,7 @@
     $courses = $courses ?? [];
 @endphp
 
-<form action="{{ route('instructor.assignments.store') }}" method="POST" id="assignmentForm" class="space-y-5">
+<form action="{{ route('instructor.assignments.store') }}" method="POST" enctype="multipart/form-data" id="assignmentForm" class="space-y-5">
     @csrf
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -58,6 +58,19 @@
                       class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800/95 resize-none"
                       placeholder="{{ __('instructor.instructions_label') }}...">{{ old('instructions') }}</textarea>
             @error('instructions')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+            @enderror
+        </div>
+
+        <div class="md:col-span-2">
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">مرفقات الواجب للطلاب (اختياري)</label>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-2">PDF، Word، صور، عروض، أرشيف — تُحفظ على نفس تخزين المنصة (محلي أو Cloudflare R2 حسب إعدادات السيرفر).</p>
+            <input type="file" name="resource_files[]" multiple accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png,.gif,.webp,.ppt,.pptx,.txt"
+                   class="block w-full text-sm text-slate-600 dark:text-slate-300 file:me-3 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-100">
+            @error('resource_files')
+                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+            @enderror
+            @error('resource_files.*')
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
             @enderror
         </div>

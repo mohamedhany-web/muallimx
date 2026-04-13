@@ -14,7 +14,7 @@
         <h1 class="text-xl font-bold text-slate-800 dark:text-slate-100">{{ __('instructor.edit_assignment_title') }}: {{ $assignment->title }}</h1>
     </div>
 
-    <form action="{{ route('instructor.assignments.update', $assignment) }}" method="POST" class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-5">
+    <form action="{{ route('instructor.assignments.update', $assignment) }}" method="POST" enctype="multipart/form-data" class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-5">
         @csrf
         @method('PUT')
         <input type="hidden" name="advanced_course_id" value="{{ $assignment->advanced_course_id ?? $assignment->course_id }}">
@@ -34,6 +34,36 @@
                 <label for="instructions" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.instructions_label') }}</label>
                 <textarea name="instructions" id="instructions" rows="4" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-800/95 resize-none">{{ old('instructions', $assignment->instructions) }}</textarea>
                 @error('instructions')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+            </div>
+            @php
+                $resAtt = is_array($assignment->resource_attachments) ? $assignment->resource_attachments : [];
+            @endphp
+            @if(count($resAtt) > 0)
+                <div class="md:col-span-2 rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-2">
+                    <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">المرفقات الحالية — اختر «حذف» لإزالة ملف من الواجب</p>
+                    <ul class="space-y-2 text-sm">
+                        @foreach($resAtt as $idx => $att)
+                            @php
+                                $p = is_array($att) ? ($att['path'] ?? '') : '';
+                                $url = $p ? (\App\Services\AssignmentFileStorage::publicUrl($p) ?? '#') : '#';
+                                $on = is_array($att) ? ($att['original_name'] ?? basename($p)) : '';
+                            @endphp
+                            <li class="flex flex-wrap items-center gap-3 justify-between border border-slate-100 dark:border-slate-700 rounded-lg px-3 py-2">
+                                <a href="{{ $url }}" target="_blank" rel="noopener" class="text-sky-600 hover:underline truncate max-w-[70%]">{{ $on }}</a>
+                                <label class="inline-flex items-center gap-2 text-red-600 cursor-pointer text-xs font-semibold">
+                                    <input type="checkbox" name="remove_resource_indices[]" value="{{ $idx }}"> حذف
+                                </label>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">إضافة مرفقات جديدة للطلاب</label>
+                <input type="file" name="resource_files[]" multiple accept=".pdf,.doc,.docx,.zip,.rar,.jpg,.jpeg,.png,.gif,.webp,.ppt,.pptx,.txt"
+                       class="block w-full text-sm text-slate-600 dark:text-slate-300 file:me-3 file:rounded-lg file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700">
+                @error('resource_files')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                @error('resource_files.*')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
             </div>
             <div>
                 <label for="due_date" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ __('instructor.due_date') }}</label>

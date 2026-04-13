@@ -22,7 +22,7 @@ class EnsureOwnership
      */
     public function handle(Request $request, Closure $next, string $resource = 'user', string $parameter = 'id'): Response
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect('/login')->with('error', 'يجب تسجيل الدخول أولاً');
         }
 
@@ -63,14 +63,16 @@ class EnsureOwnership
                 $assignment = $param instanceof \App\Models\Assignment ? $param : \App\Models\Assignment::findOrFail($resourceId);
                 // التحقق من أن المستخدم هو الطالب أو المدرب
                 if ($user->isStudent()) {
-                    // للطلاب: التحقق من التسجيل في الكورس
-                    if (!$user->isEnrolledIn($assignment->advanced_course_id)) {
+                    // للطلاب: التحقق من التسجيل في الكورس (يدعم advanced_course_id أو course_id القديم)
+                    $courseId = $assignment->advanced_course_id ?? $assignment->course_id;
+                    if (! $courseId || ! $user->isEnrolledIn($courseId)) {
                         abort(403, 'غير مسموح لك بالوصول إلى هذا الواجب');
                     }
                 } elseif ($user->isInstructor()) {
                     // للمدربين: التحقق من أن الواجب يخص الكورس الذي يدرسه
-                    $course = \App\Models\AdvancedCourse::find($assignment->advanced_course_id);
-                    if (!$course || $course->instructor_id != $user->id) {
+                    $cid = $assignment->advanced_course_id ?? $assignment->course_id;
+                    $course = $cid ? \App\Models\AdvancedCourse::find($cid) : null;
+                    if (! $course || $course->instructor_id != $user->id) {
                         abort(403, 'غير مسموح لك بالوصول إلى هذا الواجب');
                     }
                 } else {
@@ -82,7 +84,7 @@ class EnsureOwnership
                 $course = $param instanceof \App\Models\AdvancedCourse ? $param : \App\Models\AdvancedCourse::findOrFail($resourceId);
                 if ($user->isStudent()) {
                     // للطلاب: التحقق من التسجيل
-                    if (!$user->isEnrolledIn($resourceId)) {
+                    if (! $user->isEnrolledIn($resourceId)) {
                         abort(403, 'غير مسموح لك بالوصول إلى هذا الكورس');
                     }
                 } elseif ($user->isInstructor()) {
@@ -103,7 +105,7 @@ class EnsureOwnership
                     }
                 } elseif ($user->isInstructor()) {
                     $course = $enrollment->course;
-                    if (!$course || $course->instructor_id != $user->id) {
+                    if (! $course || $course->instructor_id != $user->id) {
                         abort(403, 'غير مسموح لك بالوصول إلى هذه التسجيلات');
                     }
                 } else {
