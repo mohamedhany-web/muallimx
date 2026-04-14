@@ -753,6 +753,13 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         });
         // صفحة اشتراكي (عرض الباقة الحالية ومدة التفاعيل والانتهاء)
         Route::get('/my-subscription', [\App\Http\Controllers\Student\MySubscriptionController::class, 'show'])->name('student.my-subscription');
+        Route::get('/ai-usages', [\App\Http\Controllers\Student\StudentAiUsageController::class, 'index'])->name('student.ai-usages.index');
+        Route::post('/ai-usages/saved-games', [\App\Http\Controllers\Student\StudentAiUsageController::class, 'store'])
+            ->middleware('throttle:30,1')
+            ->name('student.ai-usages.saved-games.store');
+        Route::delete('/ai-usages/saved-games/{game}', [\App\Http\Controllers\Student\StudentAiUsageController::class, 'destroy'])
+            ->whereNumber('game')
+            ->name('student.ai-usages.saved-games.destroy');
         // Muallimx Classroom — بديل Zoom للمعلم (رابط/كود للضيوف بدون اشتراك)
         Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
         Route::get('/classroom/create', [\App\Http\Controllers\Student\ClassroomController::class, 'create'])->name('student.classroom.create');
@@ -791,6 +798,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->name('student.features.show')
             ->where('feature', 'library_access|ai_tools|classroom_access|support|visible_to_academies|can_apply_opportunities|full_ai_suite|teacher_evaluation|recommended_to_academies|priority_opportunities|direct_support');
         Route::post('/features/full-ai-suite/preview', [\App\Http\Controllers\Student\SubscriptionFeatureController::class, 'previewFullAiSuite'])
+            ->middleware('throttle:20,1')
             ->name('student.features.full-ai-suite.preview');
         Route::get('/curriculum-library', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
         Route::get('/curriculum-library/{item:slug}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'show'])->name('curriculum-library.show');

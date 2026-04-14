@@ -116,6 +116,7 @@ class User extends Authenticatable
 
     /** مساهم في مجتمع البيانات فقط */
     public const COMMUNITY_CONTRIBUTOR_TYPE_DATA = 'data';
+
     /** مساهم في الذكاء الاصطناعي (Model Zoo، نماذج، إلخ) */
     public const COMMUNITY_CONTRIBUTOR_TYPE_AI = 'ai';
 
@@ -257,7 +258,7 @@ class User extends Authenticatable
      */
     public function usesEmailTwoFactor(): bool
     {
-        return $this->requiresTwoFactor() && !$this->hasTwoFactorEnabled();
+        return $this->requiresTwoFactor() && ! $this->hasTwoFactorEnabled();
     }
 
     /**
@@ -265,7 +266,7 @@ class User extends Authenticatable
      */
     public function hasTwoFactorEnabled(): bool
     {
-        return !empty($this->two_factor_secret) && $this->two_factor_confirmed_at !== null;
+        return ! empty($this->two_factor_secret) && $this->two_factor_confirmed_at !== null;
     }
 
     /**
@@ -359,7 +360,7 @@ class User extends Authenticatable
     public function hasSubscriptionFeature(string $featureKey): bool
     {
         $sub = $this->activeSubscription();
-        if (!$sub || !is_array($sub->features)) {
+        if (! $sub || ! is_array($sub->features)) {
             return false;
         }
         $features = array_values(array_filter(
@@ -376,6 +377,12 @@ class User extends Authenticatable
     public function portfolioProjects()
     {
         return $this->hasMany(PortfolioProject::class, 'user_id');
+    }
+
+    /** ألعاب HTML المحفوظة من Muallimx AI */
+    public function savedAiGames()
+    {
+        return $this->hasMany(StudentSavedAiGame::class, 'user_id');
     }
 
     /**
@@ -564,10 +571,10 @@ class User extends Authenticatable
     public function activeCourses()
     {
         return $this->belongsToMany(AdvancedCourse::class, 'student_course_enrollments', 'user_id', 'advanced_course_id')
-                    ->withPivot(['status', 'progress', 'enrolled_at', 'activated_at'])
-                    ->where('student_course_enrollments.status', 'active')
-                    ->orderByDesc('student_course_enrollments.activated_at')
-                    ->orderByDesc('student_course_enrollments.created_at');
+            ->withPivot(['status', 'progress', 'enrolled_at', 'activated_at'])
+            ->where('student_course_enrollments.status', 'active')
+            ->orderByDesc('student_course_enrollments.activated_at')
+            ->orderByDesc('student_course_enrollments.created_at');
     }
 
     /**
@@ -576,9 +583,9 @@ class User extends Authenticatable
     public function isEnrolledIn($courseId): bool
     {
         return $this->courseEnrollments()
-                    ->where('advanced_course_id', $courseId)
-                    ->where('status', 'active')
-                    ->exists();
+            ->where('advanced_course_id', $courseId)
+            ->where('status', 'active')
+            ->exists();
     }
 
     /**
@@ -587,8 +594,8 @@ class User extends Authenticatable
     public function getCourseEnrollment($courseId)
     {
         return $this->courseEnrollments()
-                    ->where('advanced_course_id', $courseId)
-                    ->first();
+            ->where('advanced_course_id', $courseId)
+            ->first();
     }
 
     /**
@@ -597,9 +604,9 @@ class User extends Authenticatable
     public function getLastMonthlyReport()
     {
         return $this->studentReports()
-                    ->where('report_type', 'monthly')
-                    ->latest()
-                    ->first();
+            ->where('report_type', 'monthly')
+            ->latest()
+            ->first();
     }
 
     /**
@@ -608,8 +615,8 @@ class User extends Authenticatable
     public function getAverageScore()
     {
         return $this->examAttempts()
-                    ->where('status', 'completed')
-                    ->avg('percentage') ?? 0;
+            ->where('status', 'completed')
+            ->avg('percentage') ?? 0;
     }
 
     /**
@@ -618,8 +625,8 @@ class User extends Authenticatable
     public function getCompletedExamsCount()
     {
         return $this->examAttempts()
-                    ->where('status', 'completed')
-                    ->count();
+            ->where('status', 'completed')
+            ->count();
     }
 
     /**
@@ -712,7 +719,7 @@ class User extends Authenticatable
         // إذا كان admin (Super Admin) لكن تم ربطه بأدوار RBAC مخصّصة،
         // عندها لا نتجاوز الصلاحيات تلقائياً بل نعتمد على صلاحيات الدور.
         if ($this->isAdmin()) {
-            if (!$this->roles()->exists()) {
+            if (! $this->roles()->exists()) {
                 return true;
             }
         }
@@ -772,8 +779,8 @@ class User extends Authenticatable
         if (is_string($role)) {
             $role = Role::where('name', $role)->first();
         }
-        
-        if ($role && !$this->hasRole($role->name)) {
+
+        if ($role && ! $this->hasRole($role->name)) {
             $this->roles()->attach($role->id);
         }
     }
@@ -786,7 +793,7 @@ class User extends Authenticatable
         if (is_string($role)) {
             $role = Role::where('name', $role)->first();
         }
-        
+
         if ($role) {
             $this->roles()->detach($role->id);
         }
@@ -807,9 +814,9 @@ class User extends Authenticatable
     {
         $rolePermissions = $this->roles()->with('permissions')->get()
             ->pluck('permissions')->flatten()->unique('id');
-        
+
         $directPermissions = $this->directPermissions;
-        
+
         return $rolePermissions->merge($directPermissions)->unique('id');
     }
 
@@ -906,9 +913,10 @@ class User extends Authenticatable
      */
     public function employeeJobCode(): ?string
     {
-        if (!$this->is_employee || !$this->relationLoaded('employeeJob')) {
+        if (! $this->is_employee || ! $this->relationLoaded('employeeJob')) {
             $this->load('employeeJob');
         }
+
         return $this->employeeJob?->code;
     }
 
@@ -937,7 +945,7 @@ class User extends Authenticatable
      */
     public function employeeCan(string $permission): bool
     {
-        if (!$this->is_employee) {
+        if (! $this->is_employee) {
             return false;
         }
 
@@ -965,19 +973,20 @@ class User extends Authenticatable
         }
 
         // لا يوجد دور RBAC → اعتمد على صلاحيات وظيفة الموظف (النظام القديم)
-        if (!$this->relationLoaded('employeeJob')) {
+        if (! $this->relationLoaded('employeeJob')) {
             $this->load('employeeJob');
         }
         $job = $this->employeeJob;
-        if (!$job) {
+        if (! $job) {
             // بدون وظيفة ولا RBAC: اعرض كل شيء (مدير يدوي)
             return true;
         }
         $jobPermissions = $job->permissions;
-        if (!is_array($jobPermissions) || empty($jobPermissions)) {
+        if (! is_array($jobPermissions) || empty($jobPermissions)) {
             // وظيفة بدون صلاحيات محددة → لا تُعرَض الأقسام الإضافية
             return false;
         }
+
         return in_array($permission, $jobPermissions, true);
     }
 
@@ -989,7 +998,7 @@ class User extends Authenticatable
         // إذا كان admin (Super Admin) لكن تم ربطه بأدوار RBAC مخصّصة،
         // عندها لا نتجاوز الصلاحيات تلقائياً.
         if ($this->isAdmin()) {
-            if (!$this->roles()->exists()) {
+            if (! $this->roles()->exists()) {
                 return true;
             }
         }

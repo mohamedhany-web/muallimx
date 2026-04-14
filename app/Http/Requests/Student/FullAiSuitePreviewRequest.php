@@ -10,7 +10,12 @@ class FullAiSuitePreviewRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null && $this->user()->hasSubscriptionFeature('full_ai_suite');
+        $user = $this->user();
+
+        return $user !== null && (
+            $user->hasSubscriptionFeature('full_ai_suite')
+            || $user->hasSubscriptionFeature('ai_tools')
+        );
     }
 
     /**
@@ -18,8 +23,15 @@ class FullAiSuitePreviewRequest extends FormRequest
      */
     public function rules(): array
     {
+        $user = $this->user();
+        $needsCourse = $user !== null && $user->hasSubscriptionFeature('full_ai_suite');
+
+        $courseRules = $needsCourse
+            ? ['required', 'integer', Rule::exists('advanced_courses', 'id')]
+            : ['sometimes', 'nullable', 'integer', Rule::exists('advanced_courses', 'id')];
+
         return [
-            'advanced_course_id' => ['required', 'integer', Rule::exists('advanced_courses', 'id')],
+            'advanced_course_id' => $courseRules,
             'question_type' => ['required', 'string', Rule::in(FullAiSuiteContextService::questionTypeKeys())],
             'question' => ['required', 'string', 'min:10', 'max:4000'],
         ];

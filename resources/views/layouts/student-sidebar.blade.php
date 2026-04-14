@@ -63,7 +63,7 @@
                 </span>
             </div>
 
-            <a href="{{ route('dashboard') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('dashboard') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <span class="ins-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
                     <i class="fas fa-th-large text-sm"></i>
@@ -73,7 +73,7 @@
 
             @hasPermission('student.view.courses')
             @php $catalogActive = request()->routeIs('public.courses', 'public.course.*') || request()->routeIs('academic-years*') || request()->routeIs('subjects.*') || request()->routeIs('courses.show'); @endphp
-            <a href="{{ route('public.courses') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('public.courses') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ $catalogActive ? 'active' : '' }}">
                 <span class="ins-icon bg-[#FFE5F7] dark:bg-indigo-900/40 text-[#283593] dark:text-indigo-400">
                     <i class="fas fa-search text-sm"></i>
@@ -83,7 +83,7 @@
             @endif
 
             @if($isStudent || $user->hasPermission('student.view.my-courses'))
-            <a href="{{ route('my-courses.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('my-courses.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('my-courses.*') ? 'active' : '' }}">
                 <span class="ins-icon bg-[#eef2ff] dark:bg-violet-900/40 text-[#283593] dark:text-violet-400">
                     <i class="fas fa-book-open text-sm"></i>
@@ -96,7 +96,7 @@
             @endif
 
             @if(Route::has('student.live-sessions.index'))
-            <a href="{{ route('student.live-sessions.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('student.live-sessions.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('student.live-sessions.*') ? 'active' : '' }}">
                 <span class="ins-icon bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400">
                     <i class="fas fa-broadcast-tower text-sm"></i>
@@ -112,7 +112,7 @@
             @endif
 
             @if(Route::has('student.live-recordings.index'))
-            <a href="{{ route('student.live-recordings.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('student.live-recordings.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('student.live-recordings.*') ? 'active' : '' }}">
                 <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
                     <i class="fas fa-play-circle text-sm"></i>
@@ -130,7 +130,7 @@
             </div>
 
             @if($isStudent || $user->hasPermission('student.view.orders'))
-            <a href="{{ route('orders.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('orders.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('orders.*') ? 'active' : '' }}">
                 <span class="ins-icon bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">
                     <i class="fas fa-shopping-bag text-sm"></i>
@@ -140,7 +140,7 @@
             @endif
 
             @if($isStudent || $user->hasPermission('student.view.exams'))
-            <a href="{{ route('student.exams.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('student.exams.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('student.exams.*') ? 'active' : '' }}">
                 <span class="ins-icon bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400">
                     <i class="fas fa-clipboard-check text-sm"></i>
@@ -150,7 +150,7 @@
             @endif
 
             @if($isStudent)
-            <a href="{{ route('student.assignments.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('student.assignments.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('student.assignments.*') ? 'active' : '' }}">
                 <span class="ins-icon bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
                     <i class="fas fa-tasks text-sm"></i>
@@ -160,7 +160,7 @@
             @endif
 
             @if($isStudent || $user->hasPermission('student.view.certificates'))
-            <a href="{{ route('student.certificates.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('student.certificates.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('student.certificates.*') ? 'active' : '' }}">
                 <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
                     <i class="fas fa-award text-sm"></i>
@@ -170,7 +170,7 @@
             @endif
 
             @if($isStudent || $user->hasPermission('student.view.wallet'))
-            <a href="{{ route('student.wallet.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('student.wallet.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('student.wallet.*') ? 'active' : '' }}">
                 <span class="ins-icon bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400">
                     <i class="fas fa-wallet text-sm"></i>
@@ -180,7 +180,7 @@
             @endif
 
             @if($isStudent && Route::has('referrals.index'))
-            <a href="{{ route('referrals.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('referrals.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('referrals.*') ? 'active' : '' }}">
                 <span class="ins-icon bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400">
                     <i class="fas fa-user-friends text-sm"></i>
@@ -208,7 +208,7 @@
                     })->where('status', 'published')->where('due_date', '>=', now())->count();
                 } catch (\Exception $e) {}
             @endphp
-            <a href="{{ route('calendar') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('calendar') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('calendar') ? 'active' : '' }}">
                 <span class="ins-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 relative">
                     <i class="fas fa-calendar-alt text-sm"></i>
@@ -224,7 +224,7 @@
             @endif
 
             @if(Route::has('consultations.index') && $isStudent)
-            <a href="{{ route('consultations.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('consultations.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('consultations.*') ? 'active' : '' }}">
                 <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
                     <i class="fas fa-comments-dollar text-sm"></i>
@@ -234,13 +234,23 @@
             @endif
 
             @if($isStudent || $user->hasPermission('student.view.notifications'))
-            <a href="{{ route('notifications') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('notifications') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('notifications') ? 'active' : '' }}">
                 <span class="ins-icon bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 relative">
                     <i class="fas fa-bell text-sm"></i>
                     <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse"></span>
                 </span>
                 <span class="flex-1 truncate">{{ __('student.notifications') }}</span>
+            </a>
+            @endif
+
+            @if($isStudent && Route::has('student.ai-usages.index'))
+            <a href="{{ route('student.ai-usages.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+               class="ins-nav {{ request()->routeIs('student.ai-usages.*') ? 'active' : '' }}">
+                <span class="ins-icon bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-400">
+                    <i class="fas fa-flask text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">{{ __('student.ai_usages.nav') }}</span>
             </a>
             @endif
 
@@ -259,7 +269,7 @@
             </div>
 
             @if(Route::has('student.my-subscription'))
-            <a href="{{ route('student.my-subscription') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('student.my-subscription') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('student.my-subscription') ? 'active' : '' }}">
                 <span class="ins-icon bg-[#FFE5F7] dark:bg-sky-900/40 text-[#283593] dark:text-sky-400">
                     <i class="fas fa-gem text-sm"></i>
@@ -276,6 +286,9 @@
                 @php
                     $routeName = $cfg['route'] ?? 'student.features.show';
                     $params = $cfg['route_params'] ?? [];
+                    if ($routeName === 'student.features.show') {
+                        $params = array_merge($params, ['feature' => $featureKey]);
+                    }
                     $url = $routeName === 'student.features.show' ? route('student.features.show', $params) : route($routeName, $params);
                     if ($routeName === 'student.portfolio.index') $isActive = request()->routeIs('student.portfolio.*');
                     elseif ($routeName === 'curriculum-library.index') $isActive = request()->routeIs('curriculum-library.*');
@@ -286,7 +299,7 @@
                     else $isActive = request()->routeIs('student.features.show') && request()->route('feature') === $featureKey;
                 @endphp
                 @if(($routeName === 'student.features.show' && Route::has('student.features.show')) || ($routeName !== 'student.features.show' && Route::has($routeName)))
-                <a href="{{ $url }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+                <a href="{{ $url }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                    class="ins-nav {{ $isActive ? 'active' : '' }}">
                     <span class="ins-icon {{ $cfg['icon_bg'] ?? 'bg-slate-100 dark:bg-slate-700/70' }} {{ $cfg['icon_text'] ?? 'text-slate-600 dark:text-slate-300' }}">
                         <i class="fas {{ $cfg['icon'] ?? 'fa-star' }} text-sm"></i>
@@ -306,7 +319,7 @@
             </div>
 
             @if($isStudent || $user->hasPermission('student.view.profile'))
-            <a href="{{ route('profile') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('profile') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('profile') ? 'active' : '' }}">
                 <span class="ins-icon bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400">
                     <i class="fas fa-user text-sm"></i>
@@ -316,7 +329,7 @@
             @endif
 
             @if($isStudent || $user->hasPermission('student.view.settings'))
-            <a href="{{ route('settings') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+            <a href="{{ route('settings') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('settings') ? 'active' : '' }}">
                 <span class="ins-icon bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400">
                     <i class="fas fa-cog text-sm"></i>
@@ -334,7 +347,7 @@
                 </span>
             </div>
             @if(auth()->user()->isAdmin())
-                <a href="{{ route('admin.dashboard') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+                <a href="{{ route('admin.dashboard') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                    class="ins-nav {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <span class="ins-icon bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400">
                         <i class="fas fa-shield-alt text-sm"></i>
@@ -343,7 +356,7 @@
                 </a>
             @endif
             @if(auth()->user()->isInstructor())
-                <a href="{{ route('dashboard') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+                <a href="{{ route('dashboard') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                    class="ins-nav">
                 <span class="ins-icon bg-[#FFE5F7] dark:bg-sky-900/40 text-[#283593] dark:text-sky-400">
                         <i class="fas fa-chalkboard-teacher text-sm"></i>
