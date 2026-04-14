@@ -281,6 +281,7 @@ return [
         'untitled_game' => 'Untitled game',
         'invalid_path' => 'Invalid file path or not owned by your account.',
         'file_missing' => 'File not found. Generate a new preview, then save immediately.',
+        'open_saved_page' => 'AI usages — saved files',
     ],
 
     'order_details_title' => 'Order details',

@@ -41,6 +41,15 @@
         </div>
     </div>
 
+    @if(in_array(($feature ?? ''), ['ai_tools', 'full_ai_suite'], true) && Route::has('student.ai-usages.index'))
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end">
+            <a href="{{ route('student.ai-usages.index') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-sky-200 dark:border-sky-700 bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-100 text-sm font-semibold shadow-sm hover:bg-sky-100 dark:hover:bg-sky-900/55 transition-colors">
+                <i class="fas fa-folder-open text-sky-600 dark:text-sky-400"></i>
+                {{ __('student.ai_usages.open_saved_page') }}
+            </a>
+        </div>
+    @endif
+
     @if ($errors->any())
         <div class="rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-800 dark:text-red-200 space-y-1">
             @foreach ($errors->all() as $err)
