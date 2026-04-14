@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\DashboardController;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -884,7 +885,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::put('/settings', [\App\Http\Controllers\Employee\EmployeeSettingsController::class, 'update'])->middleware('employee.can:settings')->name('settings.update');
 
         Route::get('/api/nav-notifications', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'navPoll'])
-            ->middleware('throttle:90,1')
+            ->middleware(ThrottleRequests::using('employee-nav-poll'))
             ->name('api.nav-notifications');
 
         Route::get('/api/notifications/unread', [\App\Http\Controllers\Employee\EmployeeNotificationController::class, 'getUnread'])->middleware('employee.can:notifications')->name('notifications.unread');
@@ -896,7 +897,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('dashboard');
 
         Route::get('/api/nav-notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'navPoll'])
-            ->middleware('throttle:90,1')
+            ->middleware(ThrottleRequests::using('admin-nav-poll'))
             ->name('api.nav-notifications');
 
         // بروفايل الأدمن
@@ -1241,7 +1242,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\EmployeeNotificationController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\Admin\EmployeeNotificationController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\Admin\EmployeeNotificationController::class, 'store'])
-                ->middleware('throttle:10,1')
+                ->middleware(ThrottleRequests::using('admin-employee-notification-store'))
                 ->name('store');
             Route::get('/{notification}', [\App\Http\Controllers\Admin\EmployeeNotificationController::class, 'show'])->name('show');
         });

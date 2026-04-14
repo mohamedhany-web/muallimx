@@ -11,7 +11,7 @@ use App\Models\Classroom;
 use App\Models\Order;
 use App\Models\AdvancedCourse;
 use App\Models\ContactMessage;
-use App\Models\LectureAssignment;
+use App\Models\Assignment;
 use App\Models\Exam;
 use App\Models\Certificate;
 use App\Models\LectureVideoQuestionAnswer;
@@ -232,13 +232,11 @@ class DashboardController extends Controller
             'completed_exams' => $user->getCompletedExamsCount(),
         ];
 
-        $upcomingAssignments = LectureAssignment::with(['lecture.course.academicSubject'])
-            ->whereHas('lecture', function ($query) use ($activeCourseIds) {
-                $query->whereIn('course_id', $activeCourseIds);
-            })
-            ->where(function ($query) {
-                $query->whereNull('status')
-                    ->orWhereNotIn('status', ['archived']);
+        $upcomingAssignments = Assignment::with(['course', 'lesson'])
+            ->where('status', 'published')
+            ->where(function ($query) use ($activeCourseIds) {
+                $query->whereIn('advanced_course_id', $activeCourseIds)
+                    ->orWhereIn('course_id', $activeCourseIds);
             })
             ->where(function ($query) {
                 $query->whereNull('due_date')

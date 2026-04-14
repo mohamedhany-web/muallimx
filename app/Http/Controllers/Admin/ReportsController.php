@@ -494,7 +494,7 @@ class ReportsController extends Controller
                 ->paginate(50);
 
             // الواجبات
-            $assignments = Assignment::with(['course', 'lecture'])
+            $assignments = Assignment::with(['course', 'lesson'])
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->orderBy('created_at', 'desc')
                 ->paginate(30);

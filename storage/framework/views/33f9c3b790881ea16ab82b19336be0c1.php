@@ -325,8 +325,8 @@
                 <div class="p-4 space-y-2">
                     <?php $__empty_1 = true; $__currentLoopData = $upcomingAssignments->take(3); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $assignment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <?php
-                            $lecture = $assignment->lecture;
-                            $course = optional($lecture)->course;
+                            $lecture = $assignment->lecture ?? null;
+                            $course = $assignment->course ?? optional($lecture)->course;
                             $dueDate = optional($assignment->due_date);
                             $isOverdue = $dueDate && $dueDate->isPast();
                         ?>

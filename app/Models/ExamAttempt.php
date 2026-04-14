@@ -142,7 +142,7 @@ class ExamAttempt extends Model
             return 'غير مكتمل';
         }
 
-        if ($this->score >= $this->exam->passing_marks) {
+        if ((float) $this->score >= $this->effective_passing_marks) {
             return 'ناجح';
         }
 
@@ -158,11 +158,43 @@ class ExamAttempt extends Model
             return 'gray';
         }
 
-        if ($this->score >= $this->exam->passing_marks) {
+        if ((float) $this->score >= $this->effective_passing_marks) {
             return 'green';
         }
 
         return 'red';
+    }
+
+    /**
+     * إجمالي درجات الامتحان الفعلي حسب الأسئلة المرتبطة.
+     */
+    public function getEffectiveTotalMarksAttribute()
+    {
+        $questionsTotal = (float) $this->exam->examQuestions()->sum('marks');
+        if ($questionsTotal > 0) {
+            return $questionsTotal;
+        }
+
+        return (float) ($this->exam->total_marks ?? 0);
+    }
+
+    /**
+     * درجة النجاح الفعلية (مع حماية من عدم تزامن إعدادات الامتحان).
+     */
+    public function getEffectivePassingMarksAttribute()
+    {
+        $configuredPassing = (float) ($this->exam->passing_marks ?? 0);
+        $effectiveTotal = $this->effective_total_marks;
+
+        if ($effectiveTotal <= 0) {
+            return $configuredPassing;
+        }
+
+        if ($configuredPassing <= 0) {
+            return $effectiveTotal;
+        }
+
+        return min($configuredPassing, $effectiveTotal);
     }
 
     /**

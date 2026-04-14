@@ -24,11 +24,17 @@ class ExamQuestionController extends Controller
         }
         
         $exam->load('questions');
+        $existingQuestionIds = $exam->questions->pluck('id')->all();
         
         // جلب بنوك الأسئلة الخاصة بالمدرب
-        $questionBanks = QuestionBank::where('instructor_id', $instructor->id)
-            ->orWhere('created_by', $instructor->id)
-            ->where('is_active', true)
+        $questionBanks = QuestionBank::where(function ($query) use ($instructor) {
+                $query->where('instructor_id', $instructor->id)
+                      ->orWhere('created_by', $instructor->id)
+                      ->orWhere(function ($publicBank) {
+                          $publicBank->whereNull('instructor_id')
+                                     ->whereNull('created_by');
+                      });
+            })
             ->withCount('questions')
             ->get();
         
@@ -41,11 +47,16 @@ class ExamQuestionController extends Controller
         $availableQuestions = Question::whereHas('questionBank', function($q) use ($instructor) {
                 $q->where(function($query) use ($instructor) {
                     $query->where('instructor_id', $instructor->id)
-                          ->orWhere('created_by', $instructor->id);
+                          ->orWhere('created_by', $instructor->id)
+                          ->orWhere(function ($publicBank) {
+                              $publicBank->whereNull('instructor_id')
+                                         ->whereNull('created_by');
+                          });
                 });
             })
-            ->where('is_active', true)
+            ->whereNotIn('id', $existingQuestionIds)
             ->with(['questionBank', 'category'])
+            ->orderByDesc('is_active')
             ->orderBy('question')
             ->get();
         
@@ -65,7 +76,7 @@ class ExamQuestionController extends Controller
         
         $validated = $request->validate([
             'question_id' => 'required|exists:questions,id',
-            'marks' => 'required|numeric|min:0.5',
+            'marks' => 'nullable|numeric|min:0.5',
             'order' => 'nullable|integer|min:1',
         ]);
         
@@ -73,7 +84,11 @@ class ExamQuestionController extends Controller
         $question = Question::whereHas('questionBank', function($q) use ($instructor) {
                 $q->where(function($query) use ($instructor) {
                     $query->where('instructor_id', $instructor->id)
-                          ->orWhere('created_by', $instructor->id);
+                          ->orWhere('created_by', $instructor->id)
+                          ->orWhere(function ($publicBank) {
+                              $publicBank->whereNull('instructor_id')
+                                         ->whereNull('created_by');
+                          });
                 });
             })
             ->findOrFail($validated['question_id']);
@@ -84,7 +99,15 @@ class ExamQuestionController extends Controller
             ->exists();
         
         if ($exists) {
-            return back()->with('error', 'هذا السؤال موجود بالفعل في الاختبار');
+            \App\Models\ExamQuestion::where('exam_id', $exam->id)
+                ->where('question_id', $question->id)
+                ->update([
+                    'marks' => $validated['marks'] ?? ($question->points ?: 1),
+                ]);
+
+            $this->syncExamMarks($exam);
+
+            return back()->with('success', 'السؤال موجود مسبقاً، وتم تحديث الدرجة بنجاح');
         }
         
         // تحديد الترتيب
@@ -94,8 +117,10 @@ class ExamQuestionController extends Controller
             'exam_id' => $exam->id,
             'question_id' => $question->id,
             'order' => $order,
-            'marks' => $validated['marks'],
+            'marks' => $validated['marks'] ?? ($question->points ?: 1),
         ]);
+
+        $this->syncExamMarks($exam);
         
         return back()->with('success', 'تم إضافة السؤال بنجاح');
     }
@@ -114,7 +139,7 @@ class ExamQuestionController extends Controller
         $validated = $request->validate([
             'question_bank_id' => 'required|exists:question_banks,id',
             'question' => 'required|string',
-            'type' => 'required|in:multiple_choice,true_false,fill_blank,short_answer,essay',
+            'type' => 'required|in:multiple_choice,true_false',
             'options_text' => 'nullable|string',
             'correct_answer' => 'required|string',
             'explanation' => 'nullable|string',
@@ -135,7 +160,11 @@ class ExamQuestionController extends Controller
         // التحقق من أن بنك الأسئلة يخص المدرب
         $questionBank = QuestionBank::where(function($q) use ($instructor) {
                 $q->where('instructor_id', $instructor->id)
-                  ->orWhere('created_by', $instructor->id);
+                  ->orWhere('created_by', $instructor->id)
+                  ->orWhere(function ($publicBank) {
+                      $publicBank->whereNull('instructor_id')
+                                 ->whereNull('created_by');
+                  });
             })
             ->findOrFail($validated['question_bank_id']);
         
@@ -162,6 +191,8 @@ class ExamQuestionController extends Controller
             'order' => $order,
             'marks' => $validated['marks'],
         ]);
+
+        $this->syncExamMarks($exam);
         
         return back()->with('success', 'تم إنشاء السؤال وإضافته للاختبار بنجاح');
     }
@@ -180,6 +211,8 @@ class ExamQuestionController extends Controller
         \App\Models\ExamQuestion::where('exam_id', $exam->id)
             ->where('question_id', $questionId)
             ->delete();
+
+        $this->syncExamMarks($exam);
         
         return back()->with('success', 'تم حذف السؤال من الاختبار بنجاح');
     }
@@ -208,5 +241,20 @@ class ExamQuestionController extends Controller
         }
         
         return response()->json(['success' => true, 'message' => 'تم إعادة ترتيب الأسئلة بنجاح']);
+    }
+
+    /**
+     * مزامنة إجمالي درجات الامتحان وحد النجاح مع الأسئلة الفعلية.
+     */
+    private function syncExamMarks(AdvancedExam $exam): void
+    {
+        $totalMarks = (float) \App\Models\ExamQuestion::where('exam_id', $exam->id)->sum('marks');
+        $exam->total_marks = $totalMarks;
+
+        if ($totalMarks > 0 && ((float) $exam->passing_marks <= 0 || (float) $exam->passing_marks > $totalMarks)) {
+            $exam->passing_marks = $totalMarks;
+        }
+
+        $exam->save();
     }
 }

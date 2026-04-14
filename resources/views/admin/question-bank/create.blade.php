@@ -126,7 +126,7 @@
                             <div class="space-y-4">
                                 @for($i = 1; $i <= 5; $i++)
                                     <div class="flex items-center gap-3">
-                                        <input type="radio" name="correct_option" value="{{ $i }}" id="correct_{{ $i }}"
+                                        <input type="radio" name="correct_option" value="{{ $i - 1 }}" id="correct_{{ $i }}"
                                                class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500">
                                         <label for="option_{{ $i }}" class="text-sm font-medium text-gray-700">الخيار {{ $i }}:</label>
                                         <input type="text" name="option_{{ $i }}" id="option_{{ $i }}" 

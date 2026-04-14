@@ -133,11 +133,14 @@
                     <div class="p-6">
                         <!-- اختيار متعدد -->
                         <div id="multiple-choice-options" style="display: none;">
+                            @php
+                                $normalizedCorrectAnswers = $question->normalizeMultipleChoiceCorrectAnswers();
+                            @endphp
                             <div class="space-y-4">
                                 @for($i = 0; $i < 5; $i++)
                                     <div class="flex items-center gap-3">
                                         <input type="radio" name="correct_option" value="{{ $i }}" id="correct_{{ $i }}"
-                                               {{ (is_array($question->correct_answer) && in_array((string)$i, $question->correct_answer)) ? 'checked' : '' }}
+                                               {{ in_array((int)$i, $normalizedCorrectAnswers, true) ? 'checked' : '' }}
                                                class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500">
                                         <label for="option_{{ $i + 1 }}" class="text-sm font-medium text-gray-700">الخيار {{ $i + 1 }}:</label>
                                         <input type="text" name="option_{{ $i + 1 }}" id="option_{{ $i + 1 }}" 

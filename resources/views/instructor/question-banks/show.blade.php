@@ -125,10 +125,14 @@
                                     </div>
                                 </div>
                                 @if($question->type == 'multiple_choice' && $question->options && is_array($question->options))
+                                    @php
+                                        $normalizedCorrectAnswers = $question->normalizeMultipleChoiceCorrectAnswers();
+                                    @endphp
                                     <div class="mt-2 flex flex-wrap gap-2">
-                                        @foreach($question->options as $opt)
-                                            <span class="px-2 py-1 rounded-lg text-sm bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 {{ (!is_array($question->correct_answer) && $opt == $question->correct_answer) || (is_array($question->correct_answer) && in_array($opt, $question->correct_answer)) ? 'ring-2 ring-green-500 bg-green-50 text-green-800' : '' }}">
-                                                {{ $opt }} @if((!is_array($question->correct_answer) && $opt == $question->correct_answer) || (is_array($question->correct_answer) && in_array($opt, $question->correct_answer))) <i class="fas fa-check text-green-600 mr-1"></i> @endif
+                                        @foreach($question->options as $optIndex => $opt)
+                                            @php $isCorrect = in_array((int)$optIndex, $normalizedCorrectAnswers, true); @endphp
+                                            <span class="px-2 py-1 rounded-lg text-sm bg-slate-100 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 {{ $isCorrect ? 'ring-2 ring-green-500 bg-green-50 text-green-800' : '' }}">
+                                                {{ $opt }} @if($isCorrect) <i class="fas fa-check text-green-600 mr-1"></i> @endif
                                             </span>
                                         @endforeach
                                     </div>
@@ -193,9 +197,6 @@
                             <option value="">اختر نوع السؤال</option>
                             <option value="multiple_choice">اختيار متعدد</option>
                             <option value="true_false">صح أو خطأ</option>
-                            <option value="fill_blank">املأ الفراغ</option>
-                            <option value="short_answer">إجابة قصيرة</option>
-                            <option value="essay">مقالي</option>
                         </select>
                     </div>
                     <div>
@@ -219,15 +220,6 @@
                                 <option value="صح">صح</option>
                                 <option value="خطأ">خطأ</option>
                             </select>
-                        </div>
-                        <div id="correct_answer_fill_blank" style="display: none;">
-                            <textarea name="correct_answer" rows="2" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100" placeholder="إجابة في كل سطر"></textarea>
-                        </div>
-                        <div id="correct_answer_short_answer" style="display: none;">
-                            <input type="text" name="correct_answer" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100" placeholder="الإجابة الصحيحة">
-                        </div>
-                        <div id="correct_answer_essay" style="display: none;">
-                            <textarea name="correct_answer" rows="4" class="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-sky-500/20 text-slate-800 dark:text-slate-100" placeholder="نموذج الإجابة..."></textarea>
                         </div>
                     </div>
                     <div>
@@ -280,7 +272,7 @@
 function updateQuestionForm() {
     var type = document.getElementById('question_type').value;
     var optionsField = document.getElementById('options_field');
-    var ids = ['correct_answer_multiple_choice', 'correct_answer_true_false', 'correct_answer_fill_blank', 'correct_answer_short_answer', 'correct_answer_essay'];
+    var ids = ['correct_answer_multiple_choice', 'correct_answer_true_false'];
     ids.forEach(function(id) {
         var el = document.getElementById(id);
         if (el) {
@@ -297,15 +289,6 @@ function updateQuestionForm() {
     } else if (type === 'true_false') {
         var f = document.getElementById('correct_answer_true_false');
         if (f) { f.style.display = 'block'; var s = f.querySelector('select[name="correct_answer"]'); if (s) s.setAttribute('required', 'required'); }
-    } else if (type === 'fill_blank') {
-        var f = document.getElementById('correct_answer_fill_blank');
-        if (f) { f.style.display = 'block'; var t = f.querySelector('textarea[name="correct_answer"]'); if (t) t.setAttribute('required', 'required'); }
-    } else if (type === 'short_answer') {
-        var f = document.getElementById('correct_answer_short_answer');
-        if (f) { f.style.display = 'block'; var i = f.querySelector('input[name="correct_answer"]'); if (i) i.setAttribute('required', 'required'); }
-    } else if (type === 'essay') {
-        var f = document.getElementById('correct_answer_essay');
-        if (f) { f.style.display = 'block'; var t = f.querySelector('textarea[name="correct_answer"]'); if (t) t.setAttribute('required', 'required'); }
     }
 }
 function updateMultipleChoiceOptions() {
@@ -330,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function() {
             var type = document.getElementById('question_type').value;
             if (type === 'multiple_choice') {
-                var ids = ['correct_answer_true_false', 'correct_answer_fill_blank', 'correct_answer_short_answer', 'correct_answer_essay'];
+                var ids = ['correct_answer_true_false'];
                 ids.forEach(function(id) {
                     var el = document.getElementById(id);
                     if (el) {

@@ -66,7 +66,7 @@
                         <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
                             <span class="text-slate-600">{{ __('النقاط المحصل عليها') }}</span>
                             <span class="font-semibold text-slate-900">
-                                {{ $attempt->score ?? 0 }} / {{ $exam->total_marks ?? $exam->calculateTotalMarks() }}
+                                {{ $attempt->score ?? 0 }} / {{ number_format($attempt->effective_total_marks, 2) }}
                             </span>
                         </div>
                         
@@ -202,8 +202,10 @@
                                         @foreach($question->options as $optionIndex => $option)
                                             @php
                                                 $optionLetter = chr(65 + $optionIndex);
-                                                $isUserAnswer = $userAnswer == $optionIndex;
-                                                $isCorrectAnswer = in_array($optionIndex, (array)$question->correct_answer);
+                                                $normalizedUserAnswer = $question->normalizeMultipleChoiceValue($userAnswer);
+                                                $normalizedCorrectAnswers = $question->normalizeMultipleChoiceCorrectAnswers();
+                                                $isUserAnswer = $normalizedUserAnswer === (int)$optionIndex;
+                                                $isCorrectAnswer = in_array((int)$optionIndex, $normalizedCorrectAnswers, true);
                                             @endphp
                                             
                                             @php
@@ -246,10 +248,12 @@
                                     </div>
                                 @elseif($question->type === 'true_false')
                                     <div class="space-y-2">
-                                        @foreach(['true' => 'صحيح', 'false' => 'خطأ'] as $value => $label)
+                                        @foreach(['صح' => 'صح', 'خطأ' => 'خطأ'] as $value => $label)
                                             @php
-                                                $isUserAnswer = $userAnswer === $value;
-                                                $isCorrectAnswer = $question->correct_answer === $value;
+                                                $normalizedUserAnswer = $userAnswer !== null ? $question->normalizeTrueFalseValue($userAnswer) : null;
+                                                $normalizedCorrectAnswers = array_map(fn ($answer) => $question->normalizeTrueFalseValue($answer), (array)$question->correct_answer);
+                                                $isUserAnswer = $normalizedUserAnswer === $value;
+                                                $isCorrectAnswer = in_array($value, $normalizedCorrectAnswers, true);
                                             @endphp
                                             
                                             @php

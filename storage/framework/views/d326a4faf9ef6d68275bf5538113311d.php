@@ -428,21 +428,82 @@ function themeManager() {
                             </button>
                         </div>
 
+                        <?php
+                            $currentUser = auth()->user();
+                            $isInstructorLike = $currentUser && ($currentUser->isInstructor() || $currentUser->isTeacher());
+                            $audiences = $isInstructorLike
+                                ? [null, 'instructor', 'teacher']
+                                : [null, 'student'];
+
+                            $navNotificationsQuery = $currentUser
+                                ? $currentUser->customNotifications()
+                                    ->with('sender')
+                                    ->whereIn('audience', $audiences)
+                                    ->where(function ($q) {
+                                        $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+                                    })
+                                : null;
+
+                            $navUnreadCount = $navNotificationsQuery
+                                ? (clone $navNotificationsQuery)->where('is_read', false)->count()
+                                : 0;
+
+                            $navRecentNotifications = $navNotificationsQuery
+                                ? (clone $navNotificationsQuery)->orderBy('created_at', 'desc')->limit(8)->get()
+                                : collect();
+                        ?>
+
                         
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" class="h-btn relative">
                                 <i class="fas fa-bell text-sm"></i>
-                                <span class="n-badge">3</span>
+                                <?php if($navUnreadCount > 0): ?>
+                                    <span class="n-badge"><?php echo e($navUnreadCount > 99 ? '99+' : $navUnreadCount); ?></span>
+                                <?php endif; ?>
                             </button>
                             <div x-show="open" @click.away="open = false" x-transition
                                  class="absolute left-0 mt-2 w-80 dd-menu z-50">
-                                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2">
                                     <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100"><?php echo e($appRtl ? 'الإشعارات' : 'Notifications'); ?></h3>
+                                    <?php if(Route::has('notifications')): ?>
+                                        <a href="<?php echo e(route('notifications')); ?>" class="text-xs font-semibold text-blue-600 hover:text-blue-700">
+                                            <?php echo e($appRtl ? 'عرض الكل' : 'View all'); ?>
+
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
-                                <div class="p-6 text-center text-gray-400 dark:text-gray-500 text-sm">
-                                    <i class="fas fa-bell-slash text-xl mb-2 block"></i>
-                                    <p><?php echo e($appRtl ? 'لا توجد إشعارات جديدة' : 'No new notifications'); ?></p>
-                                </div>
+                                <?php if($navRecentNotifications->isNotEmpty()): ?>
+                                    <div class="max-h-96 overflow-y-auto">
+                                        <?php $__currentLoopData = $navRecentNotifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <?php
+                                                $notificationUrl = $notification->action_url ?: (Route::has('notifications.show') ? route('notifications.show', $notification) : '#');
+                                            ?>
+                                            <a href="<?php echo e($notificationUrl); ?>"
+                                               class="block px-4 py-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                                <div class="flex items-start gap-3">
+                                                    <div class="mt-0.5">
+                                                        <i class="<?php echo e($notification->type_icon); ?> text-blue-500 text-sm"></i>
+                                                    </div>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div class="flex items-center justify-between gap-2">
+                                                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate"><?php echo e($notification->title); ?></p>
+                                                            <?php if(!$notification->is_read): ?>
+                                                                <span class="w-2 h-2 rounded-full bg-rose-500 flex-shrink-0"></span>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2"><?php echo e($notification->message); ?></p>
+                                                        <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1"><?php echo e(optional($notification->created_at)->diffForHumans()); ?></p>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="p-6 text-center text-gray-400 dark:text-gray-500 text-sm">
+                                        <i class="fas fa-bell-slash text-xl mb-2 block"></i>
+                                        <p><?php echo e($appRtl ? 'لا توجد إشعارات جديدة' : 'No new notifications'); ?></p>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
 

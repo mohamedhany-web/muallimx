@@ -68,9 +68,6 @@
                                     class="form-input w-full px-4 py-3 rounded-xl focus:outline-none">
                                 <option value="multiple_choice" {{ $question->type == 'multiple_choice' ? 'selected' : '' }}>اختيار متعدد</option>
                                 <option value="true_false" {{ $question->type == 'true_false' ? 'selected' : '' }}>صح أو خطأ</option>
-                                <option value="fill_blank" {{ $question->type == 'fill_blank' ? 'selected' : '' }}>املأ الفراغ</option>
-                                <option value="short_answer" {{ $question->type == 'short_answer' ? 'selected' : '' }}>إجابة قصيرة</option>
-                                <option value="essay" {{ $question->type == 'essay' ? 'selected' : '' }}>مقالي</option>
                             </select>
                         </div>
 
@@ -106,6 +103,7 @@
                             @php
                                 $correctAnswer = is_array($question->correct_answer) ? $question->correct_answer : [$question->correct_answer];
                                 $correctAnswerValue = is_array($question->correct_answer) ? implode("\n", $question->correct_answer) : $question->correct_answer;
+                                $normalizedCorrectAnswers = $question->normalizeMultipleChoiceCorrectAnswers();
                             @endphp
                             
                             <!-- لاختيار متعدد -->
@@ -113,8 +111,8 @@
                                 <select name="correct_answer" class="form-input w-full px-4 py-3 rounded-xl focus:outline-none">
                                     <option value="">اختر الإجابة الصحيحة</option>
                                     @if($question->options && is_array($question->options))
-                                        @foreach($question->options as $option)
-                                            <option value="{{ $option }}" {{ in_array($option, $correctAnswer) ? 'selected' : '' }}>{{ $option }}</option>
+                                        @foreach($question->options as $optionIndex => $option)
+                                            <option value="{{ $option }}" {{ in_array((int)$optionIndex, $normalizedCorrectAnswers, true) ? 'selected' : '' }}>{{ $option }}</option>
                                         @endforeach
                                     @endif
                                 </select>
@@ -128,29 +126,6 @@
                                     <option value="صح" {{ in_array('صح', $correctAnswer) ? 'selected' : '' }}>صح</option>
                                     <option value="خطأ" {{ in_array('خطأ', $correctAnswer) ? 'selected' : '' }}>خطأ</option>
                                 </select>
-                            </div>
-                            
-                            <!-- لاملأ الفراغ -->
-                            <div id="correct_answer_fill_blank" style="display: {{ $question->type == 'fill_blank' ? 'block' : 'none' }};">
-                                <textarea name="correct_answer" rows="3"
-                                          class="form-input w-full px-4 py-3 rounded-xl focus:outline-none"
-                                          placeholder="أدخل الإجابات الصحيحة (كل إجابة في سطر)">{{ $correctAnswerValue }}</textarea>
-                                <p class="mt-1 text-xs text-gray-500">يمكن إدخال عدة إجابات صحيحة، كل إجابة في سطر منفصل</p>
-                            </div>
-                            
-                            <!-- لإجابة قصيرة -->
-                            <div id="correct_answer_short_answer" style="display: {{ $question->type == 'short_answer' ? 'block' : 'none' }};">
-                                <input type="text" name="correct_answer" value="{{ $correctAnswer[0] ?? '' }}"
-                                       class="form-input w-full px-4 py-3 rounded-xl focus:outline-none"
-                                       placeholder="الإجابة الصحيحة (كلمة أو جملة قصيرة)">
-                            </div>
-                            
-                            <!-- لمقالي -->
-                            <div id="correct_answer_essay" style="display: {{ $question->type == 'essay' ? 'block' : 'none' }};">
-                                <textarea name="correct_answer" rows="5"
-                                          class="form-input w-full px-4 py-3 rounded-xl focus:outline-none"
-                                          placeholder="نموذج الإجابة المثالية أو النقاط الرئيسية للإجابة...">{{ $correctAnswerValue }}</textarea>
-                                <p class="mt-1 text-xs text-gray-500">هذا السؤال يحتاج تقييم يدوي من المدرب</p>
                             </div>
                             
                             @error('correct_answer')
@@ -282,8 +257,7 @@ function updateQuestionForm() {
     const optionsField = document.getElementById('options_field');
     
     // إخفاء جميع حقول الإجابة الصحيحة
-    const answerFields = ['correct_answer_multiple_choice', 'correct_answer_true_false', 
-                         'correct_answer_fill_blank', 'correct_answer_short_answer', 'correct_answer_essay'];
+    const answerFields = ['correct_answer_multiple_choice', 'correct_answer_true_false'];
     answerFields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
         if (field) field.style.display = 'none';
@@ -316,30 +290,6 @@ function updateQuestionForm() {
             field.style.display = 'block';
             const select = field.querySelector('select[name="correct_answer"]');
             if (select) select.setAttribute('required', 'required');
-        }
-    } else if (type === 'fill_blank') {
-        if (optionsField) optionsField.style.display = 'none';
-        const field = document.getElementById('correct_answer_fill_blank');
-        if (field) {
-            field.style.display = 'block';
-            const textarea = field.querySelector('textarea[name="correct_answer"]');
-            if (textarea) textarea.setAttribute('required', 'required');
-        }
-    } else if (type === 'short_answer') {
-        if (optionsField) optionsField.style.display = 'none';
-        const field = document.getElementById('correct_answer_short_answer');
-        if (field) {
-            field.style.display = 'block';
-            const input = field.querySelector('input[name="correct_answer"]');
-            if (input) input.setAttribute('required', 'required');
-        }
-    } else if (type === 'essay') {
-        if (optionsField) optionsField.style.display = 'none';
-        const field = document.getElementById('correct_answer_essay');
-        if (field) {
-            field.style.display = 'block';
-            const textarea = field.querySelector('textarea[name="correct_answer"]');
-            if (textarea) textarea.setAttribute('required', 'required');
         }
     } else {
         if (optionsField) optionsField.style.display = 'none';

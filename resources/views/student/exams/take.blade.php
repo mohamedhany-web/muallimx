@@ -133,14 +133,21 @@
                             <!-- خيارات الإجابة -->
                             <div class="space-y-3" id="answer-options-{{ $index }}">
                                 @if($examQuestion->question->type == 'multiple_choice')
-                                    @foreach($exam->randomize_options ? $examQuestion->question->shuffled_options : $examQuestion->question->options as $optionIndex => $option)
+                                    @php
+                                        $optionsWithIndexes = collect($examQuestion->question->options ?? [])
+                                            ->map(fn($option, $optionIndex) => ['index' => $optionIndex, 'text' => $option]);
+                                        if ($exam->randomize_options) {
+                                            $optionsWithIndexes = $optionsWithIndexes->shuffle();
+                                        }
+                                    @endphp
+                                    @foreach($optionsWithIndexes as $optionData)
                                         <label class="flex items-center p-4 bg-slate-700 hover:bg-slate-600 rounded-xl cursor-pointer transition-colors">
                                             <input type="radio" 
                                                    name="answer_{{ $examQuestion->question->id }}" 
-                                                   value="{{ $option }}"
+                                                   value="{{ $optionData['index'] }}"
                                                    class="w-5 h-5 text-sky-600 bg-slate-600 border-slate-500 focus:ring-sky-500"
-                                                   onchange="saveAnswer({{ $examQuestion->question->id }}, '{{ $option }}')">
-                                            <span class="mr-3 text-white">{{ $option }}</span>
+                                                   onchange="saveAnswer({{ $examQuestion->question->id }}, {{ $optionData['index'] }})">
+                                            <span class="mr-3 text-white">{{ $optionData['text'] }}</span>
                                         </label>
                                     @endforeach
 

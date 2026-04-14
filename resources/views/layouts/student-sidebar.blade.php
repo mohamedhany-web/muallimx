@@ -179,6 +179,16 @@
             </a>
             @endif
 
+            @if($isStudent && Route::has('referrals.index'))
+            <a href="{{ route('referrals.index') }}" @click="if(window.innerWidth<1024) sidebarOpen=false"
+               class="ins-nav {{ request()->routeIs('referrals.*') ? 'active' : '' }}">
+                <span class="ins-icon bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400">
+                    <i class="fas fa-user-friends text-sm"></i>
+                </span>
+                <span class="flex-1 truncate">برنامج الإحالات</span>
+            </a>
+            @endif
+
             @if($isStudent || $user->hasPermission('student.view.calendar'))
             @php
                 $upcomingEventsCount = 0;

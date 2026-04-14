@@ -4,105 +4,33 @@
 @section('header', __('student.referrals_title'))
 
 @section('content')
-<div class="p-6 bg-gray-50 min-h-screen">
-    <!-- Header Section -->
-    <div class="mb-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                    <i class="fas fa-users text-sky-600 ml-3"></i>
-                    {{ __('student.referrals_title') }}
-                </h1>
-                <p class="text-gray-600">{{ __('student.referrals_subtitle') }}</p>
-            </div>
-        </div>
+<div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div class="bg-white dark:bg-slate-800 rounded-xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm">
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1">{{ __('student.referrals_title') }}</h1>
+        <p class="text-sm text-gray-500 dark:text-slate-300">{{ __('student.referrals_subtitle') }}</p>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- إجمالي الإحالات -->
-        <div class="bg-gradient-to-br from-sky-50 to-slate-50 rounded-2xl shadow-xl p-6 border border-sky-200 hover:shadow-2xl transition-all duration-300 card-hover-effect relative overflow-hidden group">
-            <div class="absolute inset-0 bg-gradient-to-br from-sky-100/50 to-slate-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-600 mb-1">{{ __('student.total_referrals') }}</p>
-                        <p class="text-4xl font-black bg-gradient-to-r from-sky-600 via-sky-700 to-slate-600 bg-clip-text text-transparent">{{ number_format($stats['total_referrals']) }}</p>
-                    </div>
-                    <div class="w-14 h-14 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <i class="fas fa-user-plus text-white text-xl"></i>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center text-sm">
-                    <i class="fas fa-users text-sky-500 ml-2"></i>
-                    <span class="text-gray-600 font-medium">{{ __('student.all_referrals_registered') }}</span>
-                </div>
-            </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <p class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">{{ __('student.total_referrals') }}</p>
+            <p class="text-2xl font-bold text-sky-600 mt-1">{{ number_format($stats['total_referrals']) }}</p>
         </div>
-
-        <!-- إحالات مكتملة -->
-        <div class="bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl shadow-xl p-6 border border-emerald-200 hover:shadow-2xl transition-all duration-300 card-hover-effect relative overflow-hidden group">
-            <div class="absolute inset-0 bg-gradient-to-br from-emerald-100/50 to-green-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-600 mb-1">{{ __('student.completed_referrals') }}</p>
-                        <p class="text-4xl font-black text-emerald-600">{{ number_format($stats['completed_referrals']) }}</p>
-                    </div>
-                    <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <i class="fas fa-check-circle text-white text-xl"></i>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center text-sm">
-                    <i class="fas fa-gift text-emerald-500 ml-2"></i>
-                    <span class="text-gray-600 font-medium">{{ __('student.reward_earned') }}</span>
-                </div>
-            </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <p class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">{{ __('student.completed_referrals') }}</p>
+            <p class="text-2xl font-bold text-emerald-600 mt-1">{{ number_format($stats['completed_referrals']) }}</p>
         </div>
-
-        <!-- إحالات قيد الانتظار -->
-        <div class="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-2xl shadow-xl p-6 border border-amber-200 hover:shadow-2xl transition-all duration-300 card-hover-effect relative overflow-hidden group">
-            <div class="absolute inset-0 bg-gradient-to-br from-amber-100/50 to-yellow-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-600 mb-1">{{ __('student.pending_referrals') }}</p>
-                        <p class="text-4xl font-black text-amber-600">{{ number_format($stats['pending_referrals']) }}</p>
-                    </div>
-                    <div class="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <i class="fas fa-hourglass-half text-white text-xl"></i>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center text-sm">
-                    <i class="fas fa-clock text-amber-500 ml-2"></i>
-                    <span class="text-gray-600 font-medium">{{ __('student.waiting_purchase') }}</span>
-                </div>
-            </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <p class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">{{ __('student.pending_referrals') }}</p>
+            <p class="text-2xl font-bold text-amber-600 mt-1">{{ number_format($stats['pending_referrals']) }}</p>
         </div>
-
-        <!-- إجمالي المكافآت -->
-        <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-xl p-6 border border-purple-200 hover:shadow-2xl transition-all duration-300 card-hover-effect relative overflow-hidden group">
-            <div class="absolute inset-0 bg-gradient-to-br from-purple-100/50 to-pink-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex-1">
-                        <p class="text-sm font-semibold text-gray-600 mb-1">إجمالي المكافآت</p>
-                        <p class="text-3xl font-black text-purple-600">{{ number_format($stats['total_rewards'], 2) }} ج.م</p>
-                    </div>
-                    <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <i class="fas fa-gift text-white text-xl"></i>
-                    </div>
-                </div>
-                <div class="mt-4 flex items-center text-sm">
-                    <i class="fas fa-coins text-purple-500 ml-2"></i>
-                    <span class="text-gray-600 font-medium">مكافآت من الإحالات</span>
-                </div>
-            </div>
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <p class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">إجمالي المكافآت</p>
+            <p class="text-2xl font-bold text-purple-600 mt-1">{{ number_format($stats['total_rewards'], 2) }} ج.م</p>
         </div>
     </div>
 
     @if($activeProgram)
-    <div class="mb-8 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-800 p-6 shadow-lg">
+    <div class="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-800 p-5 shadow-sm">
         <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
             <i class="fas fa-gift text-emerald-600"></i>
             القواعد الحالية (برنامج: {{ $activeProgram->name }})
@@ -137,14 +65,14 @@
         </ul>
     </div>
     @else
-    <div class="mb-8 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900 text-sm">
+    <div class="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-5 text-amber-900 dark:text-amber-200 text-sm">
         <i class="fas fa-exclamation-triangle ml-2"></i>
         لا يوجد برنامج إحالات نشط حالياً. يمكنك نسخ رابطك، لكن لن تُسجَّل إحالات أو مكافآت حتى يفعّل المشرف برنامجاً من لوحة الإدارة.
     </div>
     @endif
 
     <!-- Referral Code Card -->
-    <div class="bg-gradient-to-br from-sky-500 via-sky-600 to-purple-600 rounded-2xl shadow-2xl p-8 mb-8 text-white relative overflow-hidden border border-sky-400/30 hover:shadow-2xl transition-all duration-300 card-hover-effect group">
+    <div class="bg-gradient-to-br from-sky-500 via-sky-600 to-indigo-600 rounded-xl shadow-sm p-5 sm:p-6 text-white relative overflow-hidden border border-sky-400/30">
         <div class="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full -mr-40 -mt-40 blur-3xl group-hover:bg-white/15 transition-all duration-500"></div>
         <div class="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full -ml-32 -mb-32 blur-3xl group-hover:bg-white/15 transition-all duration-500"></div>
         <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
@@ -157,7 +85,7 @@
                             <i class="fas fa-link text-2xl text-white"></i>
                         </div>
                         <div>
-                            <h2 class="text-2xl font-black mb-1 flex items-center gap-2">
+                            <h2 class="text-xl font-bold mb-1 flex items-center gap-2">
                                 كود الإحالة الخاص بك
                             </h2>
                             <p class="text-sky-100 text-sm">شارك هذا الكود واحصل على مكافآت</p>
@@ -171,7 +99,7 @@
                                     <i class="fas fa-tag"></i>
                                     كود الإحالة
                                 </p>
-                                <p class="text-3xl font-black tracking-wider bg-white/10 px-4 py-2 rounded-lg inline-block">{{ $referralCode }}</p>
+                                <p class="text-2xl font-bold tracking-wider bg-white/10 px-4 py-2 rounded-lg inline-block">{{ $referralCode }}</p>
                             </div>
                             <button type="button" onclick="copyReferralCode('{{ $referralCode }}')" 
                                     class="bg-white text-sky-600 px-6 py-3 rounded-xl font-bold hover:bg-sky-50 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg transform hover:scale-105">
@@ -217,36 +145,32 @@
     </div>
 
     <!-- How It Works -->
-    <div class="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-200 hover:shadow-2xl transition-all duration-300 card-hover-effect">
-        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50 -m-6 p-6 rounded-t-2xl">
-            <h3 class="text-xl font-black text-gray-900 flex items-center gap-2">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm">
+        <div class="px-4 sm:px-5 py-4 border-b border-gray-100 dark:border-slate-700">
+            <h3 class="text-base font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
                 <i class="fas fa-info-circle text-sky-600 ml-2"></i>
                 كيف يعمل برنامج الإحالات؟
             </h3>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="text-center p-6 bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl border border-sky-200 hover:shadow-lg transition-all duration-300 group">
-                <div class="w-20 h-20 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">1</div>
-                <h4 class="font-bold text-gray-900 mb-2 text-lg">شارك كود الإحالة</h4>
-                <p class="text-sm text-gray-600">انسخ كود الإحالة أو الرابط وشاركه مع أصدقائك</p>
+        <div class="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="p-4 rounded-lg border border-sky-100 dark:border-sky-900/50 bg-sky-50 dark:bg-sky-900/20">
+                <h4 class="font-bold text-gray-900 dark:text-slate-100 mb-2">1) شارك كود الإحالة</h4>
+                <p class="text-sm text-gray-600 dark:text-slate-300">انسخ كود الإحالة أو الرابط وشاركه مع أصدقائك.</p>
             </div>
-            <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-300 group">
-                <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">2</div>
-                <h4 class="font-bold text-gray-900 mb-2 text-lg">صديقك يسجّل بالرابط</h4>
-                <p class="text-sm text-gray-600">يفتح <span class="font-mono text-xs bg-white/80 px-1 rounded">/register?ref=كودك</span> ويكمل التسجيل — يُربط تلقائياً بك</p>
+            <div class="p-4 rounded-lg border border-purple-100 dark:border-purple-900/50 bg-purple-50 dark:bg-purple-900/20">
+                <h4 class="font-bold text-gray-900 dark:text-slate-100 mb-2">2) صديقك يسجّل بالرابط</h4>
+                <p class="text-sm text-gray-600 dark:text-slate-300">يفتح <span class="font-mono text-xs bg-white/80 dark:bg-slate-700 px-1 rounded">/register?ref=كودك</span> ويكمل التسجيل.</p>
             </div>
-            <div class="text-center p-6 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl border border-emerald-200 hover:shadow-lg transition-all duration-300 group">
-                <div class="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">3</div>
-                <h4 class="font-bold text-gray-900 mb-2 text-lg">اكتمال الإحالة</h4>
-                <p class="text-sm text-gray-600">عندما يشتري صديقك كورساً ويُعتمد الطلب، تُسجَّل إحالتك «مكتملة» وتظهر مكافأتك حسب البرنامج</p>
+            <div class="p-4 rounded-lg border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-900/20">
+                <h4 class="font-bold text-gray-900 dark:text-slate-100 mb-2">3) اكتمال الإحالة</h4>
+                <p class="text-sm text-gray-600 dark:text-slate-300">عند اعتماد أول طلب شراء للمدعو، تُسجَّل الإحالة «مكتملة» وتظهر مكافأتك.</p>
             </div>
         </div>
     </div>
 
-    <!-- Referrals List -->
-    <div class="bg-white rounded-2xl shadow-xl p-6 border border-gray-200 hover:shadow-2xl transition-all duration-300 card-hover-effect">
-        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 bg-gradient-to-r from-sky-50 to-slate-50 -m-6 p-6 rounded-t-2xl">
-            <h3 class="text-xl font-black text-gray-900 flex items-center gap-2">
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-4 border-b border-gray-100 dark:border-slate-700">
+            <h3 class="text-base font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
                 <i class="fas fa-list text-sky-600 ml-2"></i>
                 قائمة الإحالات
             </h3>
@@ -254,20 +178,20 @@
 
         @if($referrals->count() > 0)
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                <thead class="bg-gray-50 dark:bg-slate-900/40">
                     <tr>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المستخدم المحال</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ الإحالة</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الخصم المطبق</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المكافأة</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">المستخدم المحال</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">تاريخ الإحالة</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">الحالة</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">الخصم</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider">المكافأة</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
                     @foreach($referrals as $referral)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-700/40">
+                        <td class="px-4 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
                                     <div class="h-10 w-10 rounded-full bg-gradient-to-br from-sky-500 to-purple-600 flex items-center justify-center text-white font-bold">
@@ -275,15 +199,15 @@
                                     </div>
                                 </div>
                                 <div class="mr-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ $referral->referred->name ?? 'غير معروف' }}</div>
-                                    <div class="text-sm text-gray-500">{{ $referral->referred->phone ?? 'N/A' }}</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-slate-100">{{ $referral->referred->name ?? 'غير معروف' }}</div>
+                                    <div class="text-sm text-gray-500 dark:text-slate-400">{{ $referral->referred->phone ?? 'N/A' }}</div>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">
                             {{ $referral->created_at->format('d/m/Y') }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-4 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                 @if($referral->status == 'completed') bg-emerald-100 text-emerald-800
                                 @elseif($referral->status == 'pending') bg-amber-100 text-amber-800
@@ -295,10 +219,10 @@
                                 @endif
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-slate-100">
                             {{ number_format($referral->discount_amount ?? 0, 2) }} ج.م
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-emerald-600">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-emerald-600">
                             {{ number_format($referral->reward_amount ?? 0, 2) }} ج.م
                         </td>
                     </tr>
@@ -306,17 +230,17 @@
                 </tbody>
             </table>
         </div>
-        <div class="mt-6">{{ $referrals->links() }}</div>
+        <div class="p-4 border-t border-gray-100 dark:border-slate-700">{{ $referrals->links() }}</div>
         @else
-        <div class="text-center py-16">
-            <div class="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <i class="fas fa-user-friends text-5xl text-gray-400"></i>
+        <div class="p-10 sm:p-12 text-center">
+            <div class="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4 text-gray-400">
+                <i class="fas fa-user-friends text-2xl"></i>
             </div>
-            <p class="text-gray-600 text-xl font-semibold mb-2">لا توجد إحالات حتى الآن</p>
-            <p class="text-gray-500 text-sm mb-6">ابدأ بمشاركة كود الإحالة مع أصدقائك واحصل على مكافآت</p>
-            <div class="inline-flex items-center gap-2 px-4 py-2 bg-sky-50 border border-sky-200 rounded-lg">
+            <p class="text-gray-700 dark:text-slate-200 text-base font-semibold mb-1">لا توجد إحالات حتى الآن</p>
+            <p class="text-gray-500 dark:text-slate-400 text-sm mb-5">ابدأ بمشاركة كود الإحالة مع أصدقائك واحصل على مكافآت.</p>
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-lg">
                 <i class="fas fa-info-circle text-sky-600"></i>
-                <span class="text-sm text-gray-700">كلما زادت الإحالات، زادت المكافآت!</span>
+                <span class="text-sm text-gray-700 dark:text-slate-300">كلما زادت الإحالات، زادت المكافآت.</span>
             </div>
         </div>
         @endif

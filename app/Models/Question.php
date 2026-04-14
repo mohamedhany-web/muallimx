@@ -76,11 +76,22 @@ class Question extends Model
     public function isCorrectAnswer($answer)
     {
         if ($this->type === 'multiple_choice') {
-            return $answer === $this->correct_answer;
+            $normalizedAnswer = $this->normalizeMultipleChoiceValue($answer);
+            $correctAnswers = $this->normalizeMultipleChoiceCorrectAnswers();
+
+            return in_array($normalizedAnswer, $correctAnswers, true);
         }
         
         if ($this->type === 'true_false') {
-            return strtolower($answer) === strtolower($this->correct_answer);
+            if ($answer === null) {
+                return false;
+            }
+
+            $normalizedAnswer = $this->normalizeTrueFalseValue($answer);
+            $correctAnswers = (array) $this->correct_answer;
+            $normalizedCorrectAnswers = array_map(fn ($value) => $this->normalizeTrueFalseValue($value), $correctAnswers);
+
+            return in_array($normalizedAnswer, $normalizedCorrectAnswers, true);
         }
         
         if ($this->type === 'fill_blank') {
@@ -93,6 +104,68 @@ class Question extends Model
         
         // للأسئلة المقالية، نحتاج تقييم يدوي
         return null;
+    }
+
+    /**
+     * توحيد قيمة إجابة الاختيار المتعدد.
+     */
+    public function normalizeMultipleChoiceValue($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = is_string($value) ? trim($value) : $value;
+        $options = is_array($this->options) ? array_values($this->options) : [];
+
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        if (is_string($value)) {
+            $index = array_search($value, $options, true);
+            if ($index !== false) {
+                return (int) $index;
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * استخراج الإجابات الصحيحة للاختيار المتعدد كفهرس موحد.
+     */
+    public function normalizeMultipleChoiceCorrectAnswers()
+    {
+        $rawCorrectAnswers = (array) $this->correct_answer;
+        $normalized = [];
+
+        foreach ($rawCorrectAnswers as $correctAnswer) {
+            $normalizedValue = $this->normalizeMultipleChoiceValue($correctAnswer);
+            if ($normalizedValue !== null) {
+                $normalized[] = $normalizedValue;
+            }
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * توحيد قيم صح/خطأ (العربية/الإنجليزية).
+     */
+    public function normalizeTrueFalseValue($value)
+    {
+        $normalized = mb_strtolower(trim((string) $value));
+
+        if (in_array($normalized, ['صح', 'صحيح', 'true', '1', 'yes'], true)) {
+            return 'صح';
+        }
+
+        if (in_array($normalized, ['خطأ', 'خطا', 'false', '0', 'no'], true)) {
+            return 'خطأ';
+        }
+
+        return trim((string) $value);
     }
 
     /**
@@ -125,9 +198,6 @@ class Question extends Model
         return [
             'multiple_choice' => 'اختيار متعدد',
             'true_false' => 'صح أو خطأ',
-            'fill_blank' => 'املأ الفراغ',
-            'short_answer' => 'إجابة قصيرة',
-            'essay' => 'مقالي',
             'matching' => 'مطابقة',
             'ordering' => 'ترتيب',
         ];

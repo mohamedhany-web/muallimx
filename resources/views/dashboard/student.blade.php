@@ -321,8 +321,8 @@
                 <div class="p-4 space-y-2">
                     @forelse($upcomingAssignments->take(3) as $assignment)
                         @php
-                            $lecture = $assignment->lecture;
-                            $course = optional($lecture)->course;
+                            $lecture = $assignment->lecture ?? null;
+                            $course = $assignment->course ?? optional($lecture)->course;
                             $dueDate = optional($assignment->due_date);
                             $isOverdue = $dueDate && $dueDate->isPast();
                         @endphp

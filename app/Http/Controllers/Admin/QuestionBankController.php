@@ -237,14 +237,27 @@ class QuestionBankController extends Controller
     {
         switch ($data['type']) {
             case 'multiple_choice':
-                $data['options'] = array_filter([
+                $data['options'] = array_values(array_filter([
                     $request->input('option_1'),
                     $request->input('option_2'),
                     $request->input('option_3'),
                     $request->input('option_4'),
                     $request->input('option_5'),
-                ]);
-                $data['correct_answer'] = [$request->input('correct_option')];
+                ], fn($option) => $option !== null && trim($option) !== ''));
+
+                $selectedOption = $request->input('correct_option');
+                $selectedIndex = null;
+                if (is_numeric($selectedOption)) {
+                    $selectedIndex = (int) $selectedOption;
+                    // دعم النماذج القديمة (1-based) إذا لم يوجد الفهرس المباشر
+                    if (!array_key_exists($selectedIndex, $data['options']) && array_key_exists($selectedIndex - 1, $data['options'])) {
+                        $selectedIndex--;
+                    }
+                }
+                if ($selectedIndex === null || !array_key_exists($selectedIndex, $data['options'])) {
+                    $selectedIndex = 0;
+                }
+                $data['correct_answer'] = [$selectedIndex];
                 break;
 
             case 'true_false':

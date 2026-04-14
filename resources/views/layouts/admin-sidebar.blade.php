@@ -21,6 +21,8 @@
     @php
         $u = auth()->user();
         $u->loadMissing(['roles.permissions', 'directPermissions']);
+        // إخفاء روابط (الإنجازات/الشارات/التقييمات) من السايدبار فقط بدون حذف الصفحات.
+        $hideEducationExtrasInSidebar = true;
         // هل المستخدم super_admin بدون RBAC مخصص؟ → يرى كل شيء
         $isFull = $u->isAdmin() && !$u->roles()->exists();
         $rbacStrictEmployee = $u->is_employee && $u->roles()->exists();
@@ -691,13 +693,13 @@
                     @if($isFull || $u->hasPermission('manage.attendance'))
                     <li><a href="{{ route('admin.attendance.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}"><i class="fas fa-user-check"></i><span>الحضور والانصراف</span></a></li>
                     @endif
-                    @if($isFull || $u->hasPermission('manage.achievements'))
+                    @if(($isFull || $u->hasPermission('manage.achievements')) && !$hideEducationExtrasInSidebar)
                     <li><a href="{{ route('admin.achievements.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.achievements.*') ? 'active' : '' }}"><i class="fas fa-trophy"></i><span>الإنجازات</span></a></li>
                     @endif
-                    @if($isFull || $u->hasPermission('manage.badges'))
+                    @if(($isFull || $u->hasPermission('manage.badges')) && !$hideEducationExtrasInSidebar)
                     <li><a href="{{ route('admin.badges.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.badges.*') ? 'active' : '' }}"><i class="fas fa-medal"></i><span>الشارات</span></a></li>
                     @endif
-                    @if($isFull || $u->hasPermission('manage.reviews'))
+                    @if(($isFull || $u->hasPermission('manage.reviews')) && !$hideEducationExtrasInSidebar)
                     <li><a href="{{ route('admin.reviews.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}"><i class="fas fa-star-half-alt"></i><span>التقييمات والمراجعات</span></a></li>
                     @endif
                 </ul>

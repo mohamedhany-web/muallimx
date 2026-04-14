@@ -193,8 +193,31 @@ class ExamController extends Controller
             return response()->json(['error' => 'انتهى الوقت المحدد'], 410);
         }
 
+        $validated = $request->validate([
+            'question_id' => 'required|integer',
+            'answer' => 'nullable',
+        ]);
+
+        $examQuestion = $exam->examQuestions()
+            ->with('question')
+            ->where('question_id', $validated['question_id'])
+            ->first();
+
+        if (!$examQuestion || !$examQuestion->question) {
+            return response()->json(['error' => 'السؤال غير موجود في هذا الامتحان'], 422);
+        }
+
+        $question = $examQuestion->question;
+        $answer = $validated['answer'];
+
+        if ($question->type === 'multiple_choice') {
+            $answer = $question->normalizeMultipleChoiceValue($answer);
+        } elseif ($question->type === 'true_false') {
+            $answer = $question->normalizeTrueFalseValue($answer);
+        }
+
         $answers = $attempt->answers ?? [];
-        $answers[$request->question_id] = $request->answer;
+        $answers[$validated['question_id']] = $answer;
 
         $attempt->update(['answers' => $answers]);
 
@@ -229,6 +252,8 @@ class ExamController extends Controller
      */
     private function completeAttempt(Exam $exam, ExamAttempt $attempt, $autoSubmitted = false)
     {
+        $user = Auth::user();
+
         // الوقت المستغرق بالثواني (دائماً غير سالب، صحيح)
         $timeTaken = (int) max(0, now()->diffInSeconds($attempt->started_at, true));
 

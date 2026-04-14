@@ -75,7 +75,8 @@
                             </span>
 
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                {{ $question->is_active ? 'bg-green-100 text-green-800 ': ''bg-red-100 text-red-800 }}">']
+                                {{ $question->is_active ? 'bg-green-100 text-green-800 ': ''bg-red-100 text-red-800 }}">
+']
                                 {{ $question->is_active ? 'نشط' : 'غير نشط' }}
                             </span>
                         </div>
@@ -170,17 +171,20 @@
                     </div>
                     <div class="p-6">
                         @if($question->options && is_array($question->options))
+                            @php
+                                $normalizedCorrectAnswers = $question->normalizeMultipleChoiceCorrectAnswers();
+                            @endphp
                             <div class="space-y-3">
                                 @foreach($question->options as $index => $option)
                                     <div class="flex items-center p-3 rounded-lg border
-                                        @if($question->correct_answer && in_array((string)$index, $question->correct_answer))
+                                        @if(in_array((int)$index, $normalizedCorrectAnswers, true))
                                             border-green-300 bg-green-50
                                         @else
                                             border-gray-200 bg-gray-50
                                         @endif">
                                         
                                         <span class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                                            @if($question->correct_answer && in_array((string)$index, $question->correct_answer))
+                                            @if(in_array((int)$index, $normalizedCorrectAnswers, true))
                                                 bg-green-100 text-green-800
                                             @else
                                                 bg-gray-200 text-gray-700
@@ -190,7 +194,7 @@
                                         
                                         <span class="mr-3 flex-1 text-gray-900">{{ $option }}</span>
                                         
-                                        @if($question->correct_answer && in_array((string)$index, $question->correct_answer))
+                                        @if(in_array((int)$index, $normalizedCorrectAnswers, true))
                                             <i class="fas fa-check text-green-600"></i>
                                         @endif
                                     </div>

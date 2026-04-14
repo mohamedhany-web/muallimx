@@ -64,7 +64,7 @@ class QuestionController extends Controller
         
         $validated = $request->validate([
             'question' => 'required|string',
-            'type' => 'required|in:multiple_choice,true_false,fill_blank,short_answer,essay',
+            'type' => 'required|in:multiple_choice,true_false',
             'options_text' => 'nullable|string',
             'correct_answer' => 'required|string',
             'explanation' => 'nullable|string',
@@ -87,12 +87,16 @@ class QuestionController extends Controller
             // لاملأ الفراغ، يمكن أن تكون عدة إجابات صحيحة
             $correctAnswer = array_filter(array_map('trim', explode("\n", $correctAnswer)));
             $correctAnswer = array_values($correctAnswer);
+        } elseif ($validated['type'] === 'multiple_choice') {
+            $selectedOptionText = trim($correctAnswer);
+            $selectedIndex = array_search($selectedOptionText, $options ?? [], true);
+            $correctAnswer = [$selectedIndex !== false ? (int) $selectedIndex : 0];
+        } elseif ($validated['type'] === 'true_false') {
+            $normalized = trim($correctAnswer);
+            $correctAnswer = [in_array($normalized, ['صح', 'true', '1', 'yes'], true) ? 'صح' : 'خطأ'];
         } elseif ($validated['type'] === 'essay' || $validated['type'] === 'short_answer') {
             // للإجابة القصيرة والمقالية، نحفظ كسلسلة نصية
-            $correctAnswer = trim($correctAnswer);
-        } else {
-            // للاختيار المتعدد وصح/خطأ، نحفظ كسلسلة نصية
-            $correctAnswer = trim($correctAnswer);
+            $correctAnswer = [trim($correctAnswer)];
         }
         
         $question = Question::create([
@@ -162,7 +166,7 @@ class QuestionController extends Controller
         
         $validated = $request->validate([
             'question' => 'required|string',
-            'type' => 'required|in:multiple_choice,true_false,fill_blank,short_answer,essay',
+            'type' => 'required|in:multiple_choice,true_false',
             'options_text' => 'nullable|string',
             'correct_answer' => 'required|string',
             'explanation' => 'nullable|string',
@@ -189,12 +193,16 @@ class QuestionController extends Controller
             // لاملأ الفراغ، يمكن أن تكون عدة إجابات صحيحة
             $correctAnswer = array_filter(array_map('trim', explode("\n", $correctAnswer)));
             $correctAnswer = array_values($correctAnswer);
+        } elseif ($validated['type'] === 'multiple_choice') {
+            $selectedOptionText = trim($correctAnswer);
+            $selectedIndex = array_search($selectedOptionText, $options ?? [], true);
+            $correctAnswer = [$selectedIndex !== false ? (int) $selectedIndex : 0];
+        } elseif ($validated['type'] === 'true_false') {
+            $normalized = trim($correctAnswer);
+            $correctAnswer = [in_array($normalized, ['صح', 'true', '1', 'yes'], true) ? 'صح' : 'خطأ'];
         } elseif ($validated['type'] === 'essay' || $validated['type'] === 'short_answer') {
             // للإجابة القصيرة والمقالية، نحفظ كسلسلة نصية
-            $correctAnswer = trim($correctAnswer);
-        } else {
-            // للاختيار المتعدد وصح/خطأ، نحفظ كسلسلة نصية
-            $correctAnswer = trim($correctAnswer);
+            $correctAnswer = [trim($correctAnswer)];
         }
         
         $question->update([

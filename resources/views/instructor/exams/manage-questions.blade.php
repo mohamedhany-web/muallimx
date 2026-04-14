@@ -142,6 +142,9 @@
                                 <div class="flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-400 mb-3">
                                     <span>{{ $question->getTypeLabel() }}</span>
                                     <span>{{ $question->getDifficultyLabel() }}</span>
+                                    @if(!$question->is_active)
+                                        <span class="text-amber-700 bg-amber-100 px-2 py-0.5 rounded">غير نشط</span>
+                                    @endif
                                     @if($question->questionBank)
                                         <span><i class="fas fa-database text-sky-500 ml-1"></i> {{ $question->questionBank->title }}</span>
                                     @endif
@@ -149,7 +152,7 @@
                                 <form action="{{ route('instructor.exams.questions.add-from-bank', $exam) }}" method="POST" class="flex items-center gap-2">
                                     @csrf
                                     <input type="hidden" name="question_id" value="{{ $question->id }}">
-                                    <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5"
+                                    <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5" required
                                            class="w-20 px-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-center focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
                                     <button type="submit" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-lg text-sm font-semibold transition-colors">
                                         <i class="fas fa-plus"></i> إضافة
@@ -214,9 +217,6 @@
                         <option value="">اختر النوع</option>
                         <option value="multiple_choice">اختيار متعدد</option>
                         <option value="true_false">صح أو خطأ</option>
-                        <option value="fill_blank">املأ الفراغ</option>
-                        <option value="short_answer">إجابة قصيرة</option>
-                        <option value="essay">مقالي</option>
                     </select>
                 </div>
                 <div>
@@ -302,9 +302,12 @@
                             <div class="flex gap-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                                 <span>{{ $question->getTypeLabel() }}</span>
                                 <span>{{ $question->getDifficultyLabel() }}</span>
+                                @if(!$question->is_active)
+                                    <span class="text-amber-700 bg-amber-100 px-2 py-0.5 rounded">غير نشط</span>
+                                @endif
                             </div>
                         </div>
-                        <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5" class="w-16 px-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-center">
+                        <input type="number" name="marks" value="{{ $question->points ?? 1 }}" min="0.5" step="0.5" required class="w-16 px-2 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-center">
                         <button type="submit" class="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 text-white rounded-lg text-sm font-semibold transition-colors">
                             <i class="fas fa-plus"></i> إضافة
                         </button>

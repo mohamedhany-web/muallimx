@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\LiveRecording;
 use App\Models\LiveSession;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class LiveRecordingController extends Controller
 {
     public function index(Request $request)
     {
+        $this->syncCloudflareR2Recordings();
+
         $query = LiveRecording::with(['session.course', 'session.instructor']);
 
         if ($request->filled('status')) {
@@ -32,6 +35,77 @@ class LiveRecordingController extends Controller
         $sessions = LiveSession::select('id', 'title')->orderByDesc('scheduled_at')->limit(200)->get();
 
         return view('admin.live-recordings.index', compact('recordings', 'sessions'));
+    }
+
+    /**
+     * مزامنة التسجيلات المرفوعة مباشرة إلى Cloudflare R2
+     * وإدراجها في جدول live_recordings إن لم تكن مسجلة بعد.
+     */
+    private function syncCloudflareR2Recordings(): void
+    {
+        try {
+            $disk = Storage::disk('live_recordings_r2');
+            $paths = $disk->allFiles('live-session-audio');
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        if (empty($paths)) {
+            return;
+        }
+
+        $allowedExtensions = ['webm', 'ogg', 'm4a', 'mp3', 'mp4'];
+
+        foreach ($paths as $path) {
+            if (!is_string($path) || $path === '' || str_contains($path, '..')) {
+                continue;
+            }
+
+            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowedExtensions, true)) {
+                continue;
+            }
+
+            if (!preg_match('/session-(\d+)-audio-/i', basename($path), $matches)) {
+                continue;
+            }
+
+            $sessionId = (int) ($matches[1] ?? 0);
+            if ($sessionId <= 0) {
+                continue;
+            }
+
+            $session = LiveSession::find($sessionId);
+            if (!$session) {
+                continue;
+            }
+
+            $recording = LiveRecording::firstOrNew([
+                'session_id' => $sessionId,
+                'file_path' => $path,
+                'storage_disk' => 'r2',
+            ]);
+
+            if (!$recording->exists) {
+                $recording->title = 'تسجيل صوتي منفصل - ' . $session->title;
+                $recording->status = 'ready';
+                $recording->is_published = false;
+            }
+
+            if ((int) $recording->file_size <= 0) {
+                try {
+                    $recording->file_size = (int) $disk->size($path);
+                } catch (\Throwable $e) {
+                    $recording->file_size = 0;
+                }
+            }
+
+            if ($recording->duration_seconds === null) {
+                $recording->duration_seconds = 0;
+            }
+
+            $recording->save();
+        }
     }
 
     public function create()
