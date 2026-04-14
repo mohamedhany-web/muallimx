@@ -324,6 +324,7 @@ return [
         'layer2_title' => 'Context & filtering (server)',
         'layer2_hint' => 'Course and request type are validated; a safe context object is built for a future AI model call.',
         'form_subtitle_full' => 'Pick your active course, then the request type, then your description to build a safe context for a future AI model call.',
+        'form_subtitle_full_no_active_course' => 'You have no course enrollment marked active on the platform yet; you can still use the tools with general context (no course). After you enroll and your enrollment is active, a course selector will appear here to tie requests to that course.',
         'form_subtitle_ai_tools' => 'Pick one of the three options, write your custom description, then view the result (Muallimx AI when enabled in settings).',
         'form_card_title' => 'Build your request',
         'result_title' => 'Result',

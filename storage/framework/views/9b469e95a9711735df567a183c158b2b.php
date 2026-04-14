@@ -16,7 +16,7 @@
     $muallimxAiError = $preview && is_array($preview)
         ? (string) ($preview['muallimx_ai_error'] ?? $preview['gemini_error'] ?? '')
         : '';
-    $requiresCourseSelection = $requiresCourseSelection ?? true;
+    $requiresCourseSelection = $requiresCourseSelection ?? false;
     $pageHint = $pageHint ?? __('student.full_ai_suite.layer2_hint');
 ?>
 

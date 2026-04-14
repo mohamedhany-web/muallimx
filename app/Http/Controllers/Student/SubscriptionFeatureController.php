@@ -68,12 +68,19 @@ class SubscriptionFeatureController extends Controller
         $description = __('student.subscription_feature_desc.'.$feature);
 
         if (in_array($feature, ['full_ai_suite', 'ai_tools'], true)) {
-            $requiresCourseSelection = $feature === 'full_ai_suite';
-            $courses = $requiresCourseSelection
+            // يُعرض اختيار الكورس فقط عند وجود تسجيلات نشطة؛ وإلا يُسمح بالمعاينة بدون كورس (سياق عام)
+            $courses = $feature === 'full_ai_suite'
                 ? $user->activeCourses()
                     ->select('advanced_courses.id', 'advanced_courses.title', 'advanced_courses.category')
                     ->get()
                 : collect();
+            $requiresCourseSelection = $feature === 'full_ai_suite' && $courses->isNotEmpty();
+
+            $pageHint = $feature === 'ai_tools'
+                ? __('student.full_ai_suite.form_subtitle_ai_tools')
+                : ($requiresCourseSelection
+                    ? __('student.full_ai_suite.form_subtitle_full')
+                    : __('student.full_ai_suite.form_subtitle_full_no_active_course'));
 
             return view('student.features.full-ai-suite', [
                 'feature' => $feature,
@@ -82,9 +89,7 @@ class SubscriptionFeatureController extends Controller
                 'featureConfig' => $featureConfig,
                 'courses' => $courses,
                 'requiresCourseSelection' => $requiresCourseSelection,
-                'pageHint' => $requiresCourseSelection
-                    ? __('student.full_ai_suite.form_subtitle_full')
-                    : __('student.full_ai_suite.form_subtitle_ai_tools'),
+                'pageHint' => $pageHint,
             ]);
         }
 

@@ -8,6 +8,13 @@ use Illuminate\Validation\Rule;
 
 class FullAiSuitePreviewRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('advanced_course_id') === '' || $this->input('advanced_course_id') === null) {
+            $this->merge(['advanced_course_id' => null]);
+        }
+    }
+
     public function authorize(): bool
     {
         $user = $this->user();
@@ -24,11 +31,13 @@ class FullAiSuitePreviewRequest extends FormRequest
     public function rules(): array
     {
         $user = $this->user();
-        $needsCourse = $user !== null && $user->hasSubscriptionFeature('full_ai_suite');
+        $needsCourse = $user !== null
+            && $user->hasSubscriptionFeature('full_ai_suite')
+            && $user->activeCourses()->exists();
 
         $courseRules = $needsCourse
             ? ['required', 'integer', Rule::exists('advanced_courses', 'id')]
-            : ['sometimes', 'nullable', 'integer', Rule::exists('advanced_courses', 'id')];
+            : ['nullable', 'integer', Rule::exists('advanced_courses', 'id')];
 
         return [
             'advanced_course_id' => $courseRules,
