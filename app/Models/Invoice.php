@@ -4,10 +4,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Invoice extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::creating(function (Invoice $invoice) {
+            // Prevent duplicate invoice numbers from legacy count-based generators.
+            if (empty($invoice->invoice_number) || self::where('invoice_number', $invoice->invoice_number)->exists()) {
+                $invoice->invoice_number = self::generateUniqueInvoiceNumber();
+            }
+        });
+    }
+
+    public static function generateUniqueInvoiceNumber(): string
+    {
+        do {
+            $candidate = 'INV-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(4));
+        } while (self::where('invoice_number', $candidate)->exists());
+
+        return $candidate;
+    }
 
     protected $fillable = [
         'invoice_number',
