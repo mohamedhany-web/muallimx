@@ -713,7 +713,9 @@
                     || request()->routeIs('admin.live-recordings.*')
                     || request()->routeIs('admin.classroom-recordings.*')
                     || request()->routeIs('admin.live-servers.*')
-                    || request()->routeIs('admin.live-settings.*');
+                    || request()->routeIs('admin.live-settings.*')
+                    || request()->routeIs('admin.n8n.live-session-reports.*')
+                    || request()->routeIs('admin.n8n.settings');
             @endphp
             <li x-data="{ open: {{ $liveOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
@@ -738,6 +740,23 @@
                             </a>
                         </li>
                     @endif
+
+                    @if(($isFull || $u->hasPermission('manage.live-sessions')) && Route::has('admin.n8n.live-session-reports.index'))
+                        <li>
+                            <a href="{{ route('admin.n8n.live-session-reports.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.n8n.live-session-reports.*') ? 'active' : '' }}">
+                                <i class="fas fa-robot"></i><span>تقارير n8n</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    @if(($isFull || $u->hasPermission('manage.live-servers')) && Route::has('admin.n8n.settings'))
+                        <li>
+                            <a href="{{ route('admin.n8n.settings') }}" class="sidebar-sub-link {{ request()->routeIs('admin.n8n.settings') ? 'active' : '' }}">
+                                <i class="fas fa-plug"></i><span>إعداد تكامل n8n</span>
+                            </a>
+                        </li>
+                    @endif
+
                     @if(($isFull || $u->hasPermission('manage.live-sessions')) && Route::has('admin.classroom-recordings.index'))
                         <li>
                             <a href="{{ route('admin.classroom-recordings.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.classroom-recordings.*') ? 'active' : '' }}">

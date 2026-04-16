@@ -713,7 +713,9 @@
                     || request()->routeIs('admin.live-recordings.*')
                     || request()->routeIs('admin.classroom-recordings.*')
                     || request()->routeIs('admin.live-servers.*')
-                    || request()->routeIs('admin.live-settings.*');
+                    || request()->routeIs('admin.live-settings.*')
+                    || request()->routeIs('admin.n8n.live-session-reports.*')
+                    || request()->routeIs('admin.n8n.settings');
             ?>
             <li x-data="{ open: <?php echo e($liveOpen ? 'true' : 'false'); ?> }">
                 <button @click="open = !open" class="sidebar-group-btn">
@@ -738,6 +740,23 @@
                             </a>
                         </li>
                     <?php endif; ?>
+
+                    <?php if(($isFull || $u->hasPermission('manage.live-sessions')) && Route::has('admin.n8n.live-session-reports.index')): ?>
+                        <li>
+                            <a href="<?php echo e(route('admin.n8n.live-session-reports.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.n8n.live-session-reports.*') ? 'active' : ''); ?>">
+                                <i class="fas fa-robot"></i><span>تقارير n8n</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+
+                    <?php if(($isFull || $u->hasPermission('manage.live-servers')) && Route::has('admin.n8n.settings')): ?>
+                        <li>
+                            <a href="<?php echo e(route('admin.n8n.settings')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.n8n.settings') ? 'active' : ''); ?>">
+                                <i class="fas fa-plug"></i><span>إعداد تكامل n8n</span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+
                     <?php if(($isFull || $u->hasPermission('manage.live-sessions')) && Route::has('admin.classroom-recordings.index')): ?>
                         <li>
                             <a href="<?php echo e(route('admin.classroom-recordings.index')); ?>" class="sidebar-sub-link <?php echo e(request()->routeIs('admin.classroom-recordings.*') ? 'active' : ''); ?>">

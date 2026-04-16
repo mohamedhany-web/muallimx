@@ -561,6 +561,19 @@ Route::middleware(['auth'])->prefix('2fa')->name('two-factor.')->group(function 
     Route::post('/disable', [\App\Http\Controllers\Auth\TwoFactorController::class, 'disable'])->name('disable');
 });
 
+// =========================
+// Public Webhooks / API callbacks (no auth, no CSRF)
+// =========================
+// ويب هوك تسجيل جلسات البث (Jibri يرفع إلى R2 ثم يستدعي هذا الرابط مع X-Webhook-Token)
+Route::post('/api/live-recordings/register', [\App\Http\Controllers\Api\LiveRecordingWebhookController::class, 'register'])
+    ->name('api.live-recordings.register');
+
+// Callback من n8n لتحديث تقرير الجلسة (يتطلب X-N8N-Token)
+Route::patch('/api/n8n/live-session-reports/{report}', [\App\Http\Controllers\Api\N8nLiveSessionReportController::class, 'update'])
+    ->name('api.n8n.live-session-reports.update');
+Route::post('/api/n8n/live-session-reports/{report}', [\App\Http\Controllers\Api\N8nLiveSessionReportController::class, 'update'])
+    ->name('api.n8n.live-session-reports.update.post');
+
 // مسارات لوحة التحكم - محمية بالتأكد من تسجيل الدخول ومنع الجلسات المتزامنة
 Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -617,9 +630,6 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
     // API لمعلومات الفيديو
     Route::post('/api/video/info', [\App\Http\Controllers\Api\VideoInfoController::class, 'getInfo'])->name('api.video.info');
-
-    // ويب هوك تسجيل جلسات البث (Jibri يرفع إلى R2 ثم يستدعي هذا الرابط مع X-Webhook-Token)
-    Route::post('/api/live-recordings/register', [\App\Http\Controllers\Api\LiveRecordingWebhookController::class, 'register'])->name('api.live-recordings.register');
 
     // API للدروس - محمية بالتأكد من التسجيل
     Route::get('/api/lessons/{lesson}', function (\App\Models\CourseLesson $lesson) {
@@ -1529,6 +1539,16 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 ->middleware('throttle:5,10')
                 ->name('export.comprehensive');
         });
+
+        // تقارير n8n للبث المباشر
+        Route::prefix('n8n')->name('n8n.')->group(function () {
+            Route::get('/live-session-reports', [\App\Http\Controllers\Admin\N8nLiveReportsController::class, 'index'])
+                ->name('live-session-reports.index');
+            Route::get('/settings', [\App\Http\Controllers\Admin\N8nSettingsController::class, 'index'])
+                ->name('settings');
+            Route::post('/settings', [\App\Http\Controllers\Admin\N8nSettingsController::class, 'update'])
+                ->name('settings.update');
+        });
         Route::prefix('installments')->name('installments.')->group(function () {
             Route::resource('plans', \App\Http\Controllers\Admin\InstallmentPlanController::class);
             Route::resource('agreements', \App\Http\Controllers\Admin\InstallmentAgreementController::class);
@@ -1899,6 +1919,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/{liveSession}/share-annotations', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'shareAnnotations'])->name('share-annotations');
             Route::post('/{liveSession}/audio/presign', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'presignAudioUpload'])->name('audio.presign');
             Route::post('/{liveSession}/audio/complete', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'completeAudioUpload'])->name('audio.complete');
+            Route::post('/{liveSession}/ai-report', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'generateAiReport'])->name('ai-report');
             Route::post('/{liveSession}/end', [\App\Http\Controllers\Instructor\LiveSessionController::class, 'end'])->name('end');
         });
 

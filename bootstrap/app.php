@@ -56,6 +56,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Security Headers - يجب أن يكون أول middleware
         $middleware->append(\App\Http\Middleware\SecurityHeadersMiddleware::class);
+
+        // Webhooks / API callbacks (from external systems) should not require CSRF.
+        $middleware->validateCsrfTokens(except: [
+            'api/n8n/*',
+            'api/live-recordings/register',
+        ]);
         
         // تحديد لغة الموقع من ?lang= أو الجلسة (لجميع الصفحات)
         $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);

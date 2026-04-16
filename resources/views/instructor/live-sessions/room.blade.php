@@ -129,6 +129,17 @@
                 <span class="font-medium whitespace-nowrap"><span class="hidden sm:inline">رسم الطلاب فوق البث</span><span class="sm:hidden">رسم</span></span>
             </label>
 
+            {{-- زر إنشاء تقرير الذكاء الاصطناعي (n8n) --}}
+            <form method="POST" action="{{ route('instructor.live-sessions.ai-report', $liveSession) }}" class="inline" onsubmit="return confirm('سيتم إرسال تسجيل الجلسة (إن وجد) إلى نظام التقارير الذكي لإنشاء تقرير. هل أنت متأكد؟');">
+                @csrf
+                <button type="submit"
+                        class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-emerald-600/70 hover:bg-emerald-600 text-emerald-50 text-xs sm:text-sm font-semibold transition-colors border border-emerald-400/60 shadow-sm shadow-emerald-500/20">
+                    <i class="fas fa-robot"></i>
+                    <span class="hidden sm:inline">تقرير ذكي للجلسة</span>
+                    <span class="sm:hidden">تقرير AI</span>
+                </button>
+            </form>
+
             {{-- زر التسجيل --}}
             <button type="button" id="btn-record"
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 text-sm font-medium transition-colors border border-slate-600"

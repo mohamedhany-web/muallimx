@@ -7,11 +7,14 @@ use App\Models\AdvancedCourse;
 use App\Models\LiveRecording;
 use App\Models\LiveServer;
 use App\Models\LiveSession;
+use App\Models\LiveSessionReport;
+use App\Models\IntegrationSetting;
 use App\Models\LiveSetting;
 use App\Models\SessionAttendance;
 use App\Services\ClassroomSubscriptionFeatureMenuService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -204,6 +207,84 @@ class LiveSessionController extends Controller
 
         return redirect()->route('instructor.live-sessions.show', $liveSession)
             ->with('success', 'تم إنهاء جلسة البث');
+    }
+
+    /**
+     * يطلق إنشاء تقرير ذكاء اصطناعي للجلسة الحالية عبر n8n.
+     * يُستدعى من واجهة المعلم داخل غرفة البث أو صفحة الجلسة.
+     */
+    public function generateAiReport(Request $request, LiveSession $liveSession)
+    {
+        if ($liveSession->instructor_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if (! $liveSession->isEnded() && ! $liveSession->isLive()) {
+            return back()->with('error', 'لا يمكن إنشاء تقرير لهذه الجلسة في وضعها الحالي.');
+        }
+
+        $existing = LiveSessionReport::where('live_session_id', $liveSession->id)
+            ->whereIn('status', ['pending', 'processing'])
+            ->first();
+
+        if ($existing) {
+            return back()->with('info', 'هناك طلب تقرير قيد المعالجة بالفعل لهذه الجلسة.');
+        }
+
+        $recording = LiveRecording::where('session_id', $liveSession->id)
+            ->whereIn('status', ['ready', 'processing'])
+            ->latest('id')
+            ->first();
+
+        $report = LiveSessionReport::create([
+            'live_session_id' => $liveSession->id,
+            'instructor_id' => auth()->id(),
+            'live_recording_id' => $recording?->id,
+            'title' => 'تقرير الجلسة - '.$liveSession->title,
+            'status' => 'pending',
+        ]);
+
+        $webhookUrl = IntegrationSetting::get('n8n_live_session_report_webhook', config('services.n8n.live_session_report_webhook'));
+        $token = IntegrationSetting::get('n8n_token', config('services.n8n.token'));
+
+        if (! $webhookUrl || ! $token) {
+            return back()->with('error', 'إعدادات تكامل n8n غير مكتملة. تواصل مع مدير النظام.');
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'X-N8N-Token' => $token,
+                'Accept' => 'application/json',
+            ])->post($webhookUrl, [
+                'report_id' => $report->id,
+                'live_session_id' => $liveSession->id,
+                'instructor_id' => auth()->id(),
+                'live_recording_id' => $recording?->id,
+                'title' => $report->title,
+            ]);
+
+            if ($response->successful()) {
+                $executionId = $response->json('execution_id');
+                if ($executionId) {
+                    $report->update([
+                        'n8n_execution_id' => $executionId,
+                        'status' => 'processing',
+                    ]);
+                } else {
+                    $report->update(['status' => 'processing']);
+                }
+            } else {
+                $report->update(['status' => 'failed']);
+
+                return back()->with('error', 'تعذر إرسال الطلب إلى n8n. الرجاء المحاولة لاحقاً.');
+            }
+        } catch (\Throwable $e) {
+            $report->update(['status' => 'failed']);
+
+            return back()->with('error', 'حدث خطأ أثناء الاتصال بخدمة التقارير. الرجاء المحاولة لاحقاً.');
+        }
+
+        return back()->with('success', 'تم إرسال طلب إنشاء التقرير، جاري المعالجة عبر n8n.');
     }
 
     /**

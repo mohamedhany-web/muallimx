@@ -91,4 +91,9 @@ return [
         'token' => env('LIVE_RECORDINGS_WEBHOOK_TOKEN'),
     ],
 
+    'n8n' => [
+        'token' => env('N8N_WEBHOOK_TOKEN'),
+        'live_session_report_webhook' => env('N8N_LIVE_SESSION_REPORT_WEBHOOK'),
+    ],
+
 ];
