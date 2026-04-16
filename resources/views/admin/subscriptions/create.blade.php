@@ -177,16 +177,23 @@
         </form>
     </div>
 </div>
+@php
+    $planFeatures = [
+        'teacher_starter' => $teacherPlans['teacher_starter']['features'] ?? [
+            'library_access','ai_tools','support','teacher_profile','visible_to_academies','can_apply_opportunities','full_ai_suite','teacher_evaluation','recommended_to_academies','priority_opportunities','direct_support',
+        ],
+        'teacher_pro' => $teacherPlans['teacher_pro']['features'] ?? [
+            'library_access','ai_tools','classroom_access','support','teacher_profile','visible_to_academies','can_apply_opportunities','full_ai_suite','teacher_evaluation','recommended_to_academies','priority_opportunities','direct_support',
+        ],
+    ];
+    $starterLabel = $teacherPlans['teacher_starter']['label'] ?? 'الباقة الأساسية';
+    $starterPrice = (float) ($teacherPlans['teacher_starter']['price'] ?? 200);
+    $proLabel = $teacherPlans['teacher_pro']['label'] ?? 'الباقة الشاملة';
+    $proPrice = (float) ($teacherPlans['teacher_pro']['price'] ?? 600);
+@endphp
 <script>
     function teacherSubscriptionForm() {
-        var PLAN_FEATURES = @json([
-            'teacher_starter' => ($teacherPlans['teacher_starter']['features'] ?? [
-                'library_access','ai_tools','support','teacher_profile','visible_to_academies','can_apply_opportunities','full_ai_suite','teacher_evaluation','recommended_to_academies','priority_opportunities','direct_support',
-            ]),
-            'teacher_pro' => ($teacherPlans['teacher_pro']['features'] ?? [
-                'library_access','ai_tools','classroom_access','support','teacher_profile','visible_to_academies','can_apply_opportunities','full_ai_suite','teacher_evaluation','recommended_to_academies','priority_opportunities','direct_support',
-            ]),
-        ]);
+        var PLAN_FEATURES = @json($planFeatures);
 
         function syncSubscriptionFeatureCheckboxes(featureList) {
             var set = {};
@@ -211,13 +218,13 @@
 
                 if (key === 'teacher_starter') {
                     this.form.subscription_type = 'monthly';
-                    this.form.plan_name = @json(($teacherPlans['teacher_starter']['label'] ?? 'الباقة الأساسية'));
-                    this.form.price = @json((float) ($teacherPlans['teacher_starter']['price'] ?? 200));
+                    this.form.plan_name = @json($starterLabel);
+                    this.form.price = @json($starterPrice);
                     this.form.billing_cycle = 'monthly';
                 } else if (key === 'teacher_pro') {
                     this.form.subscription_type = 'monthly';
-                    this.form.plan_name = @json(($teacherPlans['teacher_pro']['label'] ?? 'الباقة الشاملة'));
-                    this.form.price = @json((float) ($teacherPlans['teacher_pro']['price'] ?? 600));
+                    this.form.plan_name = @json($proLabel);
+                    this.form.price = @json($proPrice);
                     this.form.billing_cycle = 'monthly';
                 }
                 this.$nextTick(function () {
