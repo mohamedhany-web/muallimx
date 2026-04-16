@@ -8,6 +8,7 @@ use App\Models\AdvancedCourse;
 use App\Models\Certificate;
 use App\Models\PopupAd;
 use App\Models\SiteTestimonial;
+use App\Models\SiteService;
 use App\Models\User;
 use App\Services\InstructorMarketingRankingService;
 use Illuminate\Support\Str;
@@ -66,7 +67,7 @@ class LandingController extends Controller
                     $q->where('status', 'issued')->orWhere('is_verified', true);
                 })
                 ->count(),
-            'learning_paths' => AcademicYear::query()->where('is_active', true)->count(),
+            'services' => SiteService::active()->count(),
         ];
 
         return view('welcome', compact(

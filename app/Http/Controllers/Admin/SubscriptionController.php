@@ -168,8 +168,13 @@ class SubscriptionController extends Controller
 
     public function create()
     {
-        $users = User::where('role', 'student')->where('is_active', true)->get();
-        return view('admin.subscriptions.create', compact('users'));
+        $users = User::where('role', 'student')->where('is_active', true)->orderBy('name')->get();
+
+        // قراءة إعدادات باقات المعلمين (الأسعار والأسماء الفعلية) من لوحة TeacherFeatures
+        $featuresController = new TeacherFeaturesController();
+        $teacherPlans = $featuresController->getSettings();
+
+        return view('admin.subscriptions.create', compact('users', 'teacherPlans'));
     }
 
     public function edit(Subscription $subscription)

@@ -155,7 +155,7 @@
             </div>
 
             @php
-                $hs = $homeStats ?? ['learners' => 0, 'courses' => 0, 'certificates' => 0, 'learning_paths' => 0];
+                $hs = $homeStats ?? ['learners' => 0, 'courses' => 0, 'certificates' => 0, 'services' => 0];
                 $fmt = fn (int $n) => number_format($n, 0, '.', ',');
             @endphp
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-10 reveal s2">
@@ -172,7 +172,7 @@
                     <p class="text-xs sm:text-sm text-slate-600 mt-1">شهادة</p>
                 </article>
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#fffbea] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
-                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo" dir="ltr">{{ $fmt((int) ($hs['learning_paths'] ?? 0)) }}</p>
+                    <p class="text-3xl sm:text-4xl font-black text-mx-indigo" dir="ltr">{{ $fmt((int) ($hs['services'] ?? 0)) }}</p>
                     <p class="text-xs sm:text-sm text-slate-600 mt-1">الخدمات المتوفرة</p>
                 </article>
             </div>
