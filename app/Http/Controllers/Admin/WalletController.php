@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Wallet;
-use App\Models\User;
 use App\Models\WalletReport;
 use App\Models\WalletTransaction;
 use App\Models\ActivityLog;
@@ -18,6 +17,18 @@ use Illuminate\Support\Facades\DB;
 
 class WalletController extends Controller
 {
+    private function ownedWalletsQuery()
+    {
+        return Wallet::query()->where('user_id', Auth::id());
+    }
+
+    private function ensureWalletOwnership(Wallet $wallet): void
+    {
+        if ((int) $wallet->user_id !== (int) Auth::id()) {
+            abort(403, 'غير مصرح لك بالوصول إلى هذه المحفظة');
+        }
+    }
+
     /**
      * عرض قائمة المحافظ
      * محمي من: XSS, SQL Injection, Brute Force
@@ -25,7 +36,8 @@ class WalletController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Wallet::with('user')
+            $query = $this->ownedWalletsQuery()
+                ->with('user')
                 ->orderBy('created_at', 'desc');
 
             // فلترة حسب الحالة - حماية من SQL Injection
@@ -42,24 +54,27 @@ class WalletController extends Controller
                 $search = strip_tags(trim($request->search));
                 $search = preg_replace('/[^a-zA-Z0-9\u0600-\u06FF\s@.-]/', '', $search);
                 if (strlen($search) > 0 && strlen($search) <= 255) {
-                    $query->whereHas('user', function($uq) use ($search) {
-                        $uq->where('name', 'like', "%{$search}%")
-                          ->orWhere('phone', 'like', "%{$search}%");
+                    $query->where(function ($walletQuery) use ($search) {
+                        $walletQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('account_number', 'like', "%{$search}%")
+                            ->orWhere('account_holder', 'like', "%{$search}%");
                     });
                 }
             }
 
             $wallets = $query->paginate(12);
 
+            $baseOwnedWallets = $this->ownedWalletsQuery();
             $stats = [
-                'total' => Wallet::count(),
-                'active' => Wallet::where('is_active', true)->count(),
-                'inactive' => Wallet::where('is_active', false)->count(),
-                'total_balance' => (float) Wallet::sum('balance'),
-                'pending_balance' => (float) Wallet::sum('pending_balance'),
+                'total' => (clone $baseOwnedWallets)->count(),
+                'active' => (clone $baseOwnedWallets)->where('is_active', true)->count(),
+                'inactive' => (clone $baseOwnedWallets)->where('is_active', false)->count(),
+                'total_balance' => (float) (clone $baseOwnedWallets)->sum('balance'),
+                'pending_balance' => (float) (clone $baseOwnedWallets)->sum('pending_balance'),
             ];
 
-            $totalTransactions = WalletTransaction::count();
+            $ownedWalletIds = (clone $baseOwnedWallets)->pluck('id');
+            $totalTransactions = WalletTransaction::whereIn('wallet_id', $ownedWalletIds)->count();
 
             $currentMonthRange = [
                 Carbon::now()->startOfMonth(),
@@ -67,16 +82,19 @@ class WalletController extends Controller
             ];
 
             $currentMonthDeposits = WalletTransaction::where('type', 'deposit')
+                ->whereIn('wallet_id', $ownedWalletIds)
                 ->whereBetween('created_at', $currentMonthRange)
                 ->sum('amount');
 
             $currentMonthWithdrawals = WalletTransaction::where('type', 'withdrawal')
+                ->whereIn('wallet_id', $ownedWalletIds)
                 ->whereBetween('created_at', $currentMonthRange)
                 ->sum('amount');
 
             $typeDistribution = collect();
             if (Schema::hasColumn('wallets', 'type')) {
-                $typeDistribution = Wallet::selectRaw('type, COUNT(*) as wallets_count, SUM(balance) as total_balance')
+                $typeDistribution = (clone $baseOwnedWallets)
+                    ->selectRaw('type, COUNT(*) as wallets_count, SUM(balance) as total_balance')
                     ->groupBy('type')
                     ->get()
                     ->map(function ($row) {
@@ -89,10 +107,16 @@ class WalletController extends Controller
                     });
             }
 
-            $recentWallets = Wallet::with('user')
+            $recentWallets = $this->ownedWalletsQuery()
+                ->with('user')
                 ->latest()
                 ->take(5)
                 ->get();
+
+            $transferWallets = $this->ownedWalletsQuery()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'balance', 'currency']);
 
             return view('admin.wallets.index', compact(
                 'wallets',
@@ -101,7 +125,8 @@ class WalletController extends Controller
                 'currentMonthDeposits',
                 'currentMonthWithdrawals',
                 'typeDistribution',
-                'recentWallets'
+                'recentWallets',
+                'transferWallets'
             ));
         } catch (\Exception $e) {
             Log::error('Error in WalletController@index: ' . $e->getMessage());
@@ -111,6 +136,7 @@ class WalletController extends Controller
 
     public function show(Wallet $wallet)
     {
+        $this->ensureWalletOwnership($wallet);
         $wallet->load(['user']);
 
         $transactionsQuery = $wallet->transactions();
@@ -169,6 +195,7 @@ class WalletController extends Controller
 
     public function transactions(Wallet $wallet)
     {
+        $this->ensureWalletOwnership($wallet);
         $wallet->load(['user', 'transactions' => function ($query) {
             $query->latest();
         }]);
@@ -181,6 +208,7 @@ class WalletController extends Controller
 
     public function reports(Wallet $wallet)
     {
+        $this->ensureWalletOwnership($wallet);
         $wallet->load(['user', 'reports' => function ($query) {
             $query->latest();
         }]);
@@ -193,6 +221,7 @@ class WalletController extends Controller
 
     public function generateReport(Request $request, Wallet $wallet)
     {
+        $this->ensureWalletOwnership($wallet);
         $data = $request->validate([
             'from' => 'nullable|date',
             'to' => 'nullable|date|after_or_equal:from',
@@ -277,10 +306,7 @@ class WalletController extends Controller
 
     public function create()
     {
-        $users = User::where('role', 'student')->where('is_active', true)
-            ->whereDoesntHave('wallet')
-            ->get();
-        return view('admin.wallets.create', compact('users'));
+        return view('admin.wallets.create');
     }
 
     public function store(Request $request)
@@ -300,7 +326,7 @@ class WalletController extends Controller
         ]);
 
         Wallet::create([
-            'user_id' => null,
+            'user_id' => Auth::id(),
             'name' => $validated['name'],
             'type' => $validated['type'],
             'account_number' => $validated['account_number'] ?? null,
@@ -319,11 +345,13 @@ class WalletController extends Controller
 
     public function edit(Wallet $wallet)
     {
+        $this->ensureWalletOwnership($wallet);
         return view('admin.wallets.edit', compact('wallet'));
     }
 
     public function update(Request $request, Wallet $wallet)
     {
+        $this->ensureWalletOwnership($wallet);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|in:vodafone_cash,instapay,bank_transfer,cash,other',
@@ -350,8 +378,70 @@ class WalletController extends Controller
 
     public function destroy(Wallet $wallet)
     {
+        $this->ensureWalletOwnership($wallet);
         $wallet->delete();
         return redirect()->route('admin.wallets.index')
             ->with('success', 'تم حذف المحفظة بنجاح');
+    }
+
+    public function transfer(Request $request)
+    {
+        $validated = $request->validate([
+            'from_wallet_id' => 'required|integer|different:to_wallet_id',
+            'to_wallet_id' => 'required|integer|different:from_wallet_id',
+            'amount' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:1000',
+        ], [
+            'from_wallet_id.required' => 'اختر المحفظة المحوّل منها',
+            'to_wallet_id.required' => 'اختر المحفظة المحوّل إليها',
+            'from_wallet_id.different' => 'لا يمكن التحويل لنفس المحفظة',
+            'to_wallet_id.different' => 'لا يمكن التحويل لنفس المحفظة',
+            'amount.required' => 'المبلغ مطلوب',
+            'amount.min' => 'المبلغ يجب أن يكون أكبر من صفر',
+        ]);
+
+        $amount = round((float) $validated['amount'], 2);
+
+        try {
+            DB::transaction(function () use ($validated, $amount) {
+                $fromWallet = $this->ownedWalletsQuery()
+                    ->where('id', $validated['from_wallet_id'])
+                    ->lockForUpdate()
+                    ->first();
+
+                $toWallet = $this->ownedWalletsQuery()
+                    ->where('id', $validated['to_wallet_id'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$fromWallet || !$toWallet) {
+                    throw new \Exception('المحفظة غير موجودة أو لا تملك صلاحية الوصول إليها');
+                }
+
+                if (!$fromWallet->is_active || !$toWallet->is_active) {
+                    throw new \Exception('يجب أن تكون المحافظتان نشطتين لإتمام التحويل');
+                }
+
+                if ((float) $fromWallet->balance < $amount) {
+                    throw new \Exception('الرصيد غير كافٍ في المحفظة المحوّل منها');
+                }
+
+                $baseNote = 'تحويل بين المحافظ';
+                if (!empty($validated['notes'])) {
+                    $baseNote .= ' - ' . $validated['notes'];
+                }
+
+                $fromWallet->withdraw($amount, $baseNote . ' (إلى: ' . ($toWallet->name ?? ('#' . $toWallet->id)) . ')');
+                $toWallet->deposit($amount, null, null, $baseNote . ' (من: ' . ($fromWallet->name ?? ('#' . $fromWallet->id)) . ')');
+            });
+
+            return redirect()
+                ->route('admin.wallets.index')
+                ->with('success', 'تم التحويل بين المحافظ بنجاح');
+        } catch (\Exception $e) {
+            return back()
+                ->with('error', 'تعذر تنفيذ التحويل: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 }

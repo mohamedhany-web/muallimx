@@ -83,6 +83,12 @@
         .teacher-spotlight-ring{box-shadow:0 0 0 4px rgba(255,255,255,.35),0 24px 56px -16px rgba(0,0,0,.45)}
         .teacher-panel-pattern{background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.12) 1px,transparent 0);background-size:22px 22px}
         .teacher-glow{position:absolute;border-radius:50%;filter:blur(80px);opacity:.45;pointer-events:none}
+        /* عربي: لا تستخدم letter-spacing أو uppercase على عناوين المهارات — تسبب فصل الحروف في بعض المتصفحات */
+        .portfolio-skill-chip{
+            word-break:normal;
+            overflow-wrap:break-word;
+            line-height:1.5;
+        }
     </style>
 </head>
 <body class="font-body text-slate-800 bg-white">
@@ -183,10 +189,10 @@
                             @endif
                             @if($skillItems->isNotEmpty())
                                 <div class="mt-8">
-                                    <p class="text-xs font-black text-mx-indigo uppercase tracking-wide mb-3 opacity-80">{{ $isEn ? 'Skills & focus' : 'المهارات والمجالات' }}</p>
+                                    <p class="text-xs font-black text-mx-indigo mb-3 opacity-80 {{ $isEn ? 'uppercase tracking-wide' : 'normal-case tracking-normal' }}">{{ $isEn ? 'Skills & focus' : 'المهارات والمجالات' }}</p>
                                     <div class="flex flex-wrap gap-2 w-full {{ $isRtl ? 'justify-end' : 'justify-start' }}">
                                         @foreach($skillItems as $sk)
-                                            <span class="inline-flex items-center rounded-2xl bg-white border-2 border-slate-200/90 px-4 py-2 text-sm font-bold text-mx-indigo shadow-sm">{{ $sk }}</span>
+                                            <span class="portfolio-skill-chip inline-block align-middle rounded-2xl bg-white border-2 border-slate-200/90 px-4 py-2 text-sm font-bold text-mx-indigo shadow-sm max-w-full">{{ $sk }}</span>
                                         @endforeach
                                     </div>
                                 </div>

@@ -68,6 +68,25 @@
                                 {{ number_format($payment->amount, 2) }} ج.م
                             </span>
                         </div>
+                        @if(($payment->gateway_fee_amount ?? 0) > 0 || $payment->net_after_gateway_fee !== null)
+                        <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-600">
+                            <span class="text-sm text-slate-500 dark:text-slate-400">عمولة البوابة (تقدير)</span>
+                            <span class="text-sm font-semibold text-amber-700 dark:text-amber-300">
+                                {{ number_format((float) ($payment->gateway_fee_amount ?? 0), 2) }} ج.م
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-600">
+                            <span class="text-sm text-slate-500 dark:text-slate-400">صافي بعد العمولة</span>
+                            <span class="text-sm font-semibold text-violet-800 dark:text-violet-300">
+                                @php
+                                    $netShow = $payment->net_after_gateway_fee !== null
+                                        ? (float) $payment->net_after_gateway_fee
+                                        : round((float) $payment->amount - (float) ($payment->gateway_fee_amount ?? 0), 2);
+                                @endphp
+                                {{ number_format($netShow, 2) }} ج.م
+                            </span>
+                        </div>
+                        @endif
                         <div class="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-600">
                             <span class="text-sm text-slate-500 dark:text-slate-400">العملة</span>
                             <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">{{ $payment->currency ?? 'EGP' }}</span>

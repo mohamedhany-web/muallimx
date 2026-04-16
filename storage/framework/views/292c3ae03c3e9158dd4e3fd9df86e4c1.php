@@ -1,13 +1,11 @@
-@extends('layouts.admin')
+<?php $__env->startSection('title', 'المحافظ الذكية'); ?>
+<?php $__env->startSection('header', 'المحافظ الذكية'); ?>
 
-@section('title', 'المحافظ الذكية')
-@section('header', 'المحافظ الذكية')
-
-@section('content')
-@php
+<?php $__env->startSection('content'); ?>
+<?php
     $recentWallet = ($recentWallets ?? collect())->first();
     $netMonth = ($currentMonthDeposits ?? 0) - ($currentMonthWithdrawals ?? 0);
-@endphp
+?>
 <div class="space-y-6">
     <!-- الهيدر -->
     <section class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden">
@@ -22,31 +20,34 @@
                 </div>
             </div>
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('admin.wallets.create') }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl shadow hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+                <a href="<?php echo e(route('admin.wallets.create')); ?>" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl shadow hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
                     <i class="fas fa-plus"></i>
                     إضافة محفظة جديدة
                 </a>
-                @if($recentWallet)
-                    <a href="{{ route('admin.wallets.reports', $recentWallet) }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all duration-200">
+                <?php if($recentWallet): ?>
+                    <a href="<?php echo e(route('admin.wallets.reports', $recentWallet)); ?>" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all duration-200">
                         <i class="fas fa-chart-pie"></i>
                         تقارير سريعة
                     </a>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
         <div class="px-6 py-5">
             <div class="flex flex-wrap items-center gap-3 text-xs font-semibold">
                 <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    نشطة: {{ htmlspecialchars($stats['active'] ?? 0) }}
+                    نشطة: <?php echo e(htmlspecialchars($stats['active'] ?? 0)); ?>
+
                 </span>
                 <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
                     <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                    غير نشطة: {{ htmlspecialchars($stats['inactive'] ?? 0) }}
+                    غير نشطة: <?php echo e(htmlspecialchars($stats['inactive'] ?? 0)); ?>
+
                 </span>
                 <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
                     <i class="fas fa-chart-line text-xs"></i>
-                    المعاملات المسجلة: {{ number_format($totalTransactions ?? 0) }}
+                    المعاملات المسجلة: <?php echo e(number_format($totalTransactions ?? 0)); ?>
+
                 </span>
             </div>
         </div>
@@ -62,7 +63,7 @@
                     <h1 class="text-3xl font-black tracking-tight">المحافظ الذكية</h1>
                     <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/20">
                         <i class="fas fa-layer-group text-xs"></i>
-                        إجمالي {{ $stats['total'] ?? 0 }} محفظة
+                        إجمالي <?php echo e($stats['total'] ?? 0); ?> محفظة
                     </span>
                 </div>
                 <p class="mt-3 text-white/70 max-w-xl">
@@ -71,21 +72,24 @@
                 <div class="mt-6 flex flex-wrap items-center gap-3 text-xs font-semibold">
                     <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15">
                         <span class="w-2 h-2 rounded-full bg-emerald-300"></span>
-                        نشطة: {{ $stats['active'] ?? 0 }}
+                        نشطة: <?php echo e($stats['active'] ?? 0); ?>
+
                     </span>
                     <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15">
                         <span class="w-2 h-2 rounded-full bg-rose-300"></span>
-                        غير نشطة: {{ $stats['inactive'] ?? 0 }}
+                        غير نشطة: <?php echo e($stats['inactive'] ?? 0); ?>
+
                     </span>
                     <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15">
                         <i class="fas fa-chart-line text-xs"></i>
-                        المعاملات المسجلة: {{ number_format($totalTransactions ?? 0) }}
+                        المعاملات المسجلة: <?php echo e(number_format($totalTransactions ?? 0)); ?>
+
                     </span>
                 </div>
             </div>
             <div class="flex flex-wrap gap-3 justify-end">
-                <a href="{{ $recentWallet ? route('admin.wallets.reports', $recentWallet) : '#' }}"
-                   class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/20 text-white font-semibold border border-white/30 hover:bg-white/30 transition-all {{ $recentWallet ? '' : 'opacity-60 pointer-events-none' }}">
+                <a href="<?php echo e($recentWallet ? route('admin.wallets.reports', $recentWallet) : '#'); ?>"
+                   class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/20 text-white font-semibold border border-white/30 hover:bg-white/30 transition-all <?php echo e($recentWallet ? '' : 'opacity-60 pointer-events-none'); ?>">
                     <i class="fas fa-chart-pie"></i>
                     تقارير سريعة
                 </a>
@@ -93,134 +97,54 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h3 class="text-lg font-black text-gray-900">تحويل بين المحافظ</h3>
-                <p class="text-sm text-gray-500 mt-1">يمكنك تحويل رصيد من محفظة إلى أخرى من محافظك الشخصية فقط.</p>
-            </div>
-            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
-                <i class="fas fa-exchange-alt"></i>
-                {{ ($transferWallets ?? collect())->count() }} محافظ متاحة
-            </span>
-        </div>
-
-        @if(($transferWallets ?? collect())->count() >= 2)
-            <form method="POST" action="{{ route('admin.wallets.transfer') }}" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
-                @csrf
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">من محفظة</label>
-                    <select name="from_wallet_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                        <option value="">اختر محفظة المصدر</option>
-                        @foreach(($transferWallets ?? collect()) as $walletOption)
-                            <option value="{{ $walletOption->id }}" {{ (string) old('from_wallet_id') === (string) $walletOption->id ? 'selected' : '' }}>
-                                {{ $walletOption->name }} ({{ number_format($walletOption->balance, 2) }} {{ $walletOption->currency ?? 'EGP' }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('from_wallet_id')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">إلى محفظة</label>
-                    <select name="to_wallet_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
-                        <option value="">اختر محفظة الوجهة</option>
-                        @foreach(($transferWallets ?? collect()) as $walletOption)
-                            <option value="{{ $walletOption->id }}" {{ (string) old('to_wallet_id') === (string) $walletOption->id ? 'selected' : '' }}>
-                                {{ $walletOption->name }} ({{ number_format($walletOption->balance, 2) }} {{ $walletOption->currency ?? 'EGP' }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('to_wallet_id')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">المبلغ</label>
-                    <input type="number" step="0.01" min="0.01" name="amount" value="{{ old('amount') }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="0.00" required>
-                    @error('amount')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ملاحظات (اختياري)</label>
-                    <input type="text" name="notes" value="{{ old('notes') }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           placeholder="سبب التحويل أو مرجع العملية">
-                    @error('notes')
-                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="flex items-end">
-                    <button type="submit"
-                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg hover:from-indigo-700 hover:to-blue-700 transition-all">
-                        <i class="fas fa-paper-plane"></i>
-                        تنفيذ التحويل
-                    </button>
-                </div>
-            </form>
-        @else
-            <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 text-sm">
-                تحتاج إلى محفظتين نشطتين على الأقل لتنفيذ التحويل.
-            </div>
-        @endif
-    </div>
-
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <div class="rounded-xl bg-white shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between mb-3">
                 <div>
-                    <p class="text-xs font-semibold text-slate-600 mb-1">{{ htmlspecialchars('إجمالي المحافظ') }}</p>
-                    <p class="text-2xl font-black text-slate-900">{{ number_format($stats['total'] ?? 0) }}</p>
+                    <p class="text-xs font-semibold text-slate-600 mb-1"><?php echo e(htmlspecialchars('إجمالي المحافظ')); ?></p>
+                    <p class="text-2xl font-black text-slate-900"><?php echo e(number_format($stats['total'] ?? 0)); ?></p>
                 </div>
                 <span class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 text-blue-600 shadow-sm">
                     <i class="fas fa-wallet text-lg"></i>
                 </span>
             </div>
-            <p class="text-xs text-slate-600">{{ htmlspecialchars('يشمل كل المحافظ المربوطة بالطلاب.') }}</p>
+            <p class="text-xs text-slate-600"><?php echo e(htmlspecialchars('يشمل كل المحافظ المربوطة بالطلاب.')); ?></p>
         </div>
         <div class="rounded-xl bg-white shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between mb-3">
                 <div>
-                    <p class="text-xs font-semibold text-slate-600 mb-1">{{ htmlspecialchars('الرصيد المتاح') }}</p>
-                    <p class="text-2xl font-black text-slate-900">{{ number_format($stats['total_balance'] ?? 0, 2) }} ج.م</p>
+                    <p class="text-xs font-semibold text-slate-600 mb-1"><?php echo e(htmlspecialchars('الرصيد المتاح')); ?></p>
+                    <p class="text-2xl font-black text-slate-900"><?php echo e(number_format($stats['total_balance'] ?? 0, 2)); ?> ج.م</p>
                 </div>
                 <span class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-emerald-100 text-emerald-600 shadow-sm">
                     <i class="fas fa-coins text-lg"></i>
                 </span>
             </div>
-            <p class="text-xs text-slate-600">{{ htmlspecialchars('إجمالي الأرصدة الحالية بكل المحافظ.') }}</p>
+            <p class="text-xs text-slate-600"><?php echo e(htmlspecialchars('إجمالي الأرصدة الحالية بكل المحافظ.')); ?></p>
         </div>
         <div class="rounded-xl bg-white shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between mb-3">
                 <div>
-                    <p class="text-xs font-semibold text-slate-600 mb-1">{{ htmlspecialchars('الرصيد المعلّق') }}</p>
-                    <p class="text-2xl font-black text-slate-900">{{ number_format($stats['pending_balance'] ?? 0, 2) }} ج.م</p>
+                    <p class="text-xs font-semibold text-slate-600 mb-1"><?php echo e(htmlspecialchars('الرصيد المعلّق')); ?></p>
+                    <p class="text-2xl font-black text-slate-900"><?php echo e(number_format($stats['pending_balance'] ?? 0, 2)); ?> ج.م</p>
                 </div>
                 <span class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-amber-100 text-amber-600 shadow-sm">
                     <i class="fas fa-hourglass-half text-lg"></i>
                 </span>
             </div>
-            <p class="text-xs text-slate-600">{{ htmlspecialchars('المبالغ المعلّقة أو قيد المراجعة.') }}</p>
+            <p class="text-xs text-slate-600"><?php echo e(htmlspecialchars('المبالغ المعلّقة أو قيد المراجعة.')); ?></p>
         </div>
         <div class="rounded-xl bg-white shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between mb-3">
                 <div>
-                    <p class="text-xs font-semibold text-slate-600 mb-1">{{ htmlspecialchars('صافي تدفقات الشهر') }}</p>
-                    <p class="text-2xl font-black text-slate-900">{{ number_format($netMonth, 2) }} ج.م</p>
+                    <p class="text-xs font-semibold text-slate-600 mb-1"><?php echo e(htmlspecialchars('صافي تدفقات الشهر')); ?></p>
+                    <p class="text-2xl font-black text-slate-900"><?php echo e(number_format($netMonth, 2)); ?> ج.م</p>
                 </div>
                 <span class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-purple-100 text-purple-600 shadow-sm">
                     <i class="fas fa-wave-square text-lg"></i>
                 </span>
             </div>
-            <p class="text-xs text-slate-600">{{ htmlspecialchars('الإيداعات ناقص السحوبات خلال ' . \Carbon\Carbon::now()->translatedFormat('F')) }}.</p>
+            <p class="text-xs text-slate-600"><?php echo e(htmlspecialchars('الإيداعات ناقص السحوبات خلال ' . \Carbon\Carbon::now()->translatedFormat('F'))); ?>.</p>
         </div>
     </div>
 
@@ -231,7 +155,8 @@
                     <h2 class="text-lg font-black text-gray-900">نشاط الشهر الحالي</h2>
                     <span class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200">
                         <i class="fas fa-calendar-alt text-xs"></i>
-                        {{ \Carbon\Carbon::now()->translatedFormat('F Y') }}
+                        <?php echo e(\Carbon\Carbon::now()->translatedFormat('F Y')); ?>
+
                     </span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -241,7 +166,7 @@
                             <i class="fas fa-arrow-down text-emerald-500"></i>
                         </div>
                         <p class="mt-3 text-2xl font-black text-gray-900">
-                            {{ number_format($currentMonthDeposits ?? 0, 2) }} ج.م
+                            <?php echo e(number_format($currentMonthDeposits ?? 0, 2)); ?> ج.م
                         </p>
                     </div>
                     <div class="p-4 rounded-2xl border border-rose-100 bg-rose-50/80">
@@ -250,7 +175,7 @@
                             <i class="fas fa-arrow-up text-rose-500"></i>
                         </div>
                         <p class="mt-3 text-2xl font-black text-gray-900">
-                            {{ number_format($currentMonthWithdrawals ?? 0, 2) }} ج.م
+                            <?php echo e(number_format($currentMonthWithdrawals ?? 0, 2)); ?> ج.م
                         </p>
                     </div>
                 </div>
@@ -259,24 +184,24 @@
             <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                 <h2 class="text-lg font-black text-gray-900 mb-4">توزيع حسب النوع</h2>
                 <div class="space-y-4">
-                    @forelse($typeDistribution as $type)
+                    <?php $__empty_1 = true; $__currentLoopData = $typeDistribution; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $type): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-sky-100 text-sky-600">
                                     <i class="fas fa-signal"></i>
                                 </span>
                                 <div>
-                                    <p class="text-sm font-semibold text-gray-900">{{ $type['label'] }}</p>
-                                    <p class="text-xs text-gray-500">{{ number_format($type['wallets_count']) }} محفظة</p>
+                                    <p class="text-sm font-semibold text-gray-900"><?php echo e($type['label']); ?></p>
+                                    <p class="text-xs text-gray-500"><?php echo e(number_format($type['wallets_count'])); ?> محفظة</p>
                                 </div>
                             </div>
                             <p class="text-sm font-semibold text-sky-600">
-                                {{ number_format($type['total_balance'], 2) }} ج.م
+                                <?php echo e(number_format($type['total_balance'], 2)); ?> ج.م
                             </p>
                         </div>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <p class="text-sm text-gray-500">لا توجد بيانات كافية حالياً.</p>
-                    @endforelse
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -284,28 +209,29 @@
         <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
             <h2 class="text-lg font-black text-gray-900 mb-4">أحدث المحافظ المضافة</h2>
             <div class="space-y-4">
-                @forelse($recentWallets as $recent)
+                <?php $__empty_1 = true; $__currentLoopData = $recentWallets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $recent): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <div class="p-4 rounded-2xl border border-gray-100 bg-gray-50/70">
                         <div class="flex items-center justify-between">
-                            <p class="text-sm font-semibold text-gray-900">{{ $recent->name ?? 'محفظة بدون اسم' }}</p>
-                            <span class="text-xs text-gray-500">{{ optional($recent->created_at)->diffForHumans() }}</span>
+                            <p class="text-sm font-semibold text-gray-900"><?php echo e($recent->name ?? 'محفظة بدون اسم'); ?></p>
+                            <span class="text-xs text-gray-500"><?php echo e(optional($recent->created_at)->diffForHumans()); ?></span>
                         </div>
-                        <p class="text-xs text-sky-600 mt-1">{{ $recent->type_name }}</p>
+                        <p class="text-xs text-sky-600 mt-1"><?php echo e($recent->type_name); ?></p>
                         <p class="text-xs text-gray-500 mt-1">
-                            {{ $recent->user?->name ?? 'غير مرتبط' }} · {{ $recent->user?->phone ?? 'بدون رقم' }}
+                            <?php echo e($recent->user?->name ?? 'غير مرتبط'); ?> · <?php echo e($recent->user?->phone ?? 'بدون رقم'); ?>
+
                         </p>
                         <div class="mt-3 flex items-center justify-between">
                             <span class="text-sm font-semibold text-gray-900">
-                                {{ number_format($recent->balance, 2) }} ج.م
+                                <?php echo e(number_format($recent->balance, 2)); ?> ج.م
                             </span>
-                            <a href="{{ route('admin.wallets.show', $recent) }}" class="text-xs font-semibold text-sky-600 hover:text-sky-800">
+                            <a href="<?php echo e(route('admin.wallets.show', $recent)); ?>" class="text-xs font-semibold text-sky-600 hover:text-sky-800">
                                 تفاصيل <i class="fas fa-arrow-left text-[10px]"></i>
                             </a>
                         </div>
                     </div>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <div class="text-sm text-gray-500">لا توجد محافظ حديثة.</div>
-                @endforelse
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -318,25 +244,27 @@
             </div>
         </div>
 
-        @if($wallets->count())
+        <?php if($wallets->count()): ?>
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                @foreach($wallets as $wallet)
+                <?php $__currentLoopData = $wallets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $wallet): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="rounded-3xl border border-gray-100 bg-white shadow-lg hover:shadow-xl transition-all p-6 flex flex-col gap-5">
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <h3 class="text-lg font-black text-gray-900">{{ $wallet->name ?? 'محفظة بدون اسم' }}</h3>
+                                    <h3 class="text-lg font-black text-gray-900"><?php echo e($wallet->name ?? 'محفظة بدون اسم'); ?></h3>
                                     <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold 
-                                        @if($wallet->is_active) bg-emerald-100 text-emerald-600
-                                        @else bg-rose-100 text-rose-600
-                                        @endif">
-                                        <span class="w-2 h-2 rounded-full {{ $wallet->is_active ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
-                                        {{ $wallet->is_active ? 'نشطة' : 'غير نشطة' }}
+                                        <?php if($wallet->is_active): ?> bg-emerald-100 text-emerald-600
+                                        <?php else: ?> bg-rose-100 text-rose-600
+                                        <?php endif; ?>">
+                                        <span class="w-2 h-2 rounded-full <?php echo e($wallet->is_active ? 'bg-emerald-500' : 'bg-rose-500'); ?>"></span>
+                                        <?php echo e($wallet->is_active ? 'نشطة' : 'غير نشطة'); ?>
+
                                     </span>
                                 </div>
-                                <p class="text-xs text-sky-600 mt-2">{{ $wallet->type_name }}</p>
+                                <p class="text-xs text-sky-600 mt-2"><?php echo e($wallet->type_name); ?></p>
                                 <p class="text-xs text-gray-500 mt-1">
-                                    {{ $wallet->user?->name ?? $wallet->account_holder ?? 'غير محدد' }} · {{ $wallet->user?->phone ?? 'بدون رقم' }}
+                                    <?php echo e($wallet->user?->name ?? $wallet->account_holder ?? 'غير محدد'); ?> · <?php echo e($wallet->user?->phone ?? 'بدون رقم'); ?>
+
                                 </p>
                             </div>
                             <span class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-sky-100 text-sky-600">
@@ -347,45 +275,45 @@
                         <div class="grid grid-cols-2 gap-4 text-sm">
                             <div>
                                 <p class="text-xs text-gray-500 uppercase">الرصيد الحالي</p>
-                                <p class="mt-1 text-base font-black text-gray-900">{{ number_format($wallet->balance, 2) }} ج.م</p>
+                                <p class="mt-1 text-base font-black text-gray-900"><?php echo e(number_format($wallet->balance, 2)); ?> ج.م</p>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 uppercase">الرصيد المعلّق</p>
-                                <p class="mt-1 text-base font-semibold text-gray-900">{{ number_format($wallet->pending_balance ?? 0, 2) }} ج.م</p>
+                                <p class="mt-1 text-base font-semibold text-gray-900"><?php echo e(number_format($wallet->pending_balance ?? 0, 2)); ?> ج.م</p>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 uppercase">رقم الحساب</p>
-                                <p class="mt-1 font-semibold text-gray-900">{{ $wallet->account_number ?? 'غير متوفر' }}</p>
+                                <p class="mt-1 font-semibold text-gray-900"><?php echo e($wallet->account_number ?? 'غير متوفر'); ?></p>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 uppercase">البنك / القناة</p>
-                                <p class="mt-1 font-semibold text-gray-900">{{ $wallet->bank_name ?? 'غير محدد' }}</p>
+                                <p class="mt-1 font-semibold text-gray-900"><?php echo e($wallet->bank_name ?? 'غير محدد'); ?></p>
                             </div>
                         </div>
 
                         <div class="flex items-center justify-between text-xs text-gray-500">
-                            <span>أضيفت {{ optional($wallet->created_at)->diffForHumans() }}</span>
-                            <span>آخر تحديث {{ optional($wallet->updated_at)->diffForHumans() }}</span>
+                            <span>أضيفت <?php echo e(optional($wallet->created_at)->diffForHumans()); ?></span>
+                            <span>آخر تحديث <?php echo e(optional($wallet->updated_at)->diffForHumans()); ?></span>
                         </div>
 
                         <div class="flex flex-wrap items-center gap-3">
-                            <a href="{{ route('admin.wallets.show', $wallet) }}" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-sky-100 text-sky-600 font-semibold hover:bg-sky-200 transition-all">
+                            <a href="<?php echo e(route('admin.wallets.show', $wallet)); ?>" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-sky-100 text-sky-600 font-semibold hover:bg-sky-200 transition-all">
                                 <i class="fas fa-eye"></i>
                                 عرض التفاصيل
                             </a>
                             <div class="flex items-center gap-2">
-                                <a href="{{ route('admin.wallets.transactions', $wallet) }}" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all" title="سجل المعاملات">
+                                <a href="<?php echo e(route('admin.wallets.transactions', $wallet)); ?>" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all" title="سجل المعاملات">
                                     <i class="fas fa-receipt"></i>
                                 </a>
-                                <a href="{{ route('admin.wallets.reports', $wallet) }}" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all" title="التقارير">
+                                <a href="<?php echo e(route('admin.wallets.reports', $wallet)); ?>" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all" title="التقارير">
                                     <i class="fas fa-chart-bar"></i>
                                 </a>
-                                <a href="{{ route('admin.wallets.edit', $wallet) }}" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all" title="تعديل">
+                                <a href="<?php echo e(route('admin.wallets.edit', $wallet)); ?>" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all" title="تعديل">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <form action="{{ route('admin.wallets.destroy', $wallet) }}" method="POST" class="inline" onsubmit="return confirm('هل أنت متأكد من إزالة هذه المحفظة؟ سيتم حذف المحفظة نهائياً.');">
-                                    @csrf
-                                    @method('DELETE')
+                                <form action="<?php echo e(route('admin.wallets.destroy', $wallet)); ?>" method="POST" class="inline" onsubmit="return confirm('هل أنت متأكد من إزالة هذه المحفظة؟ سيتم حذف المحفظة نهائياً.');">
+                                    <?php echo csrf_field(); ?>
+                                    <?php echo method_field('DELETE'); ?>
                                     <button type="submit" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-red-100 text-red-600 hover:bg-red-200 transition-all" title="إزالة المحفظة">
                                         <i class="fas fa-trash"></i>
                                     </button>
@@ -393,18 +321,21 @@
                             </div>
                         </div>
                     </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
 
             <div>
-                {{ $wallets->withQueryString()->links() }}
+                <?php echo e($wallets->withQueryString()->links()); ?>
+
             </div>
-        @else
+        <?php else: ?>
             <div class="bg-white rounded-3xl border border-gray-100 shadow-lg p-12 text-center text-gray-500">
                 <i class="fas fa-inbox text-4xl mb-4"></i>
                 <p>لا توجد محافظ حتى الآن. يمكنك إنشاء محفظة جديدة من خلال الزر العلوي.</p>
             </div>
-        @endif
+        <?php endif; ?>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/admin/wallets/index.blade.php ENDPATH**/ ?>

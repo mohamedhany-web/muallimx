@@ -278,6 +278,18 @@ Route::get('/privacy', [\App\Http\Controllers\Public\PageController::class, 'pri
 Route::get('/pricing', [\App\Http\Controllers\Public\PageController::class, 'pricing'])->name('public.pricing');
 Route::get('/pricing/checkout/{plan}', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'show'])->name('public.subscription.checkout')->where('plan', 'teacher_starter|teacher_pro|teacher_premium');
 Route::post('/pricing/checkout', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'store'])->name('public.subscription.checkout.store');
+Route::post('/pricing/checkout/{plan}/fawaterak/prepare', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPrepare'])
+    ->middleware('auth')
+    ->name('public.subscription.checkout.fawaterak.prepare')
+    ->where('plan', 'teacher_starter|teacher_pro|teacher_premium');
+Route::get('/pricing/checkout/{plan}/fawaterak/methods', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPaymentMethods'])
+    ->middleware('auth')
+    ->name('public.subscription.checkout.fawaterak.methods')
+    ->where('plan', 'teacher_starter|teacher_pro|teacher_premium');
+Route::post('/pricing/checkout/{plan}/fawaterak/pay', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPay'])
+    ->middleware('auth')
+    ->name('public.subscription.checkout.fawaterak.pay')
+    ->where('plan', 'teacher_starter|teacher_pro|teacher_premium');
 Route::get('/team', [\App\Http\Controllers\Public\PageController::class, 'team'])->name('public.team');
 Route::get('/certificates', [\App\Http\Controllers\Public\PageController::class, 'certificates'])->name('public.certificates');
 Route::get('/certificates/verify', [\App\Http\Controllers\Public\CertificateVerificationController::class, 'verify'])->name('public.certificates.verify');
@@ -1148,6 +1160,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         // إدارة المحافظ الذكية
         Route::resource('wallets', \App\Http\Controllers\Admin\WalletController::class);
+        Route::post('/wallets/transfer', [\App\Http\Controllers\Admin\WalletController::class, 'transfer'])->name('wallets.transfer');
         Route::get('/wallets/{wallet}/transactions', [\App\Http\Controllers\Admin\WalletController::class, 'transactions'])->name('wallets.transactions');
         Route::get('/wallets/{wallet}/reports', [\App\Http\Controllers\Admin\WalletController::class, 'reports'])->name('wallets.reports');
         Route::post('/wallets/{wallet}/generate-report', [\App\Http\Controllers\Admin\WalletController::class, 'generateReport'])->name('wallets.generate-report');
@@ -1389,6 +1402,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::resource('wallets', \App\Http\Controllers\Admin\WalletController::class)
             ->middleware('throttle:60,1')
             ->except(['update', 'destroy']);
+        Route::post('/wallets/transfer', [\App\Http\Controllers\Admin\WalletController::class, 'transfer'])->middleware('throttle:20,5')->name('wallets.transfer');
         Route::post('/wallets/{wallet}', [\App\Http\Controllers\Admin\WalletController::class, 'update'])->middleware('throttle:20,5')->name('wallets.update');
         Route::delete('/wallets/{wallet}', [\App\Http\Controllers\Admin\WalletController::class, 'destroy'])->middleware('throttle:10,1')->name('wallets.destroy');
 
@@ -1477,6 +1491,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/accounting/reports/expenses', [\App\Http\Controllers\Admin\AccountingReportsController::class, 'expenses'])->name('accounting.reports.expenses');
         Route::get('/accounting/reports/wallets', [\App\Http\Controllers\Admin\AccountingReportsController::class, 'wallets'])->name('accounting.reports.wallets');
         Route::get('/accounting/reports/orders', [\App\Http\Controllers\Admin\AccountingReportsController::class, 'orders'])->name('accounting.reports.orders');
+        Route::get('/accounting/reports/payment-gateway', [\App\Http\Controllers\Admin\AccountingReportsController::class, 'paymentGateway'])->name('accounting.reports.payment-gateway');
 
         // الماليات الخاصة بالمدربين (قائمة المدربين ثم المطلوب دفعه لكل مدرب)
         Route::prefix('salaries')->name('salaries.')->group(function () {

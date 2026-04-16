@@ -302,6 +302,11 @@ class SubscriptionController extends Controller
                 ->with('error', 'هذا الطلب تمت معالجته مسبقاً.');
         }
 
+        if ($subscriptionRequest->payment_method === 'online' && empty($subscriptionRequest->payment_proof)) {
+            return redirect()->route('admin.subscriptions.index')
+                ->with('error', 'طلبات الدفع عبر البوابة تُفعَّل تلقائياً بعد إتمام الدفع. لا يُعتمد هذا الطلب يدوياً من لوحة الاشتراكات.');
+        }
+
         $featuresController = new TeacherFeaturesController();
         $settings = $featuresController->getSettings();
         $planConfig = $settings[$subscriptionRequest->teacher_plan_key] ?? null;

@@ -18,6 +18,8 @@ class Payment extends Model
         'wallet_id',
         'installment_payment_id',
         'amount',
+        'gateway_fee_amount',
+        'net_after_gateway_fee',
         'currency',
         'status',
         'transaction_id',
@@ -30,6 +32,8 @@ class Payment extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'gateway_fee_amount' => 'decimal:2',
+        'net_after_gateway_fee' => 'decimal:2',
         'paid_at' => 'datetime',
         'gateway_response' => 'array',
     ];

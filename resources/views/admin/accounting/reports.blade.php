@@ -66,6 +66,11 @@
                                     <i class="fas fa-shopping-cart w-4"></i>
                                     الطلبات
                                 </a>
+                                <a href="{{ route('admin.accounting.reports.export', array_merge(request()->all(), ['type' => 'payment_gateway'])) }}" 
+                                   class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg">
+                                    <i class="fas fa-credit-card w-4"></i>
+                                    بوابة الدفع
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -309,6 +314,14 @@
                     <div>
                         <p class="font-semibold text-slate-900">الطلبات</p>
                         <p class="text-xs text-slate-500">{{ $stats['order_stats']['total_orders'] }} طلب في الفترة</p>
+                    </div>
+                    <i class="fas fa-chevron-left text-slate-400 mr-auto"></i>
+                </a>
+                <a href="{{ route('admin.accounting.reports.payment-gateway', $query) }}" class="flex items-center gap-4 p-4 rounded-2xl border border-slate-200 hover:border-teal-300 hover:bg-teal-50/50 transition-colors">
+                    <div class="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center"><i class="fas fa-credit-card text-teal-600"></i></div>
+                    <div>
+                        <p class="font-semibold text-slate-900">بوابة الدفع</p>
+                        <p class="text-xs text-slate-500">مدفوعات أونلاين، عمولات، صافي</p>
                     </div>
                     <i class="fas fa-chevron-left text-slate-400 mr-auto"></i>
                 </a>

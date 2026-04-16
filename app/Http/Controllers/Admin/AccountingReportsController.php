@@ -163,6 +163,67 @@ class AccountingReportsController extends Controller
         return view('admin.accounting.reports-orders', compact('stats', 'items', 'startDate', 'endDate', 'period'));
     }
 
+    /** Online payment gateway report (gross, fees, net, by gateway). */
+    public function paymentGateway(Request $request)
+    {
+        $period = $request->get('period', 'month');
+        $dates = $this->calculateDateRange($period, $request->get('start_date'), $request->get('end_date'));
+        $startDate = $dates['start'];
+        $endDate = $dates['end'];
+        $stats = $this->getGeneralStats($startDate, $endDate);
+
+        $base = Payment::query()
+            ->where('payment_method', 'online')
+            ->whereNotNull('payment_gateway')
+            ->where('status', 'completed')
+            ->whereBetween('paid_at', [$startDate, $endDate]);
+
+        $summaryRow = (clone $base)
+            ->selectRaw('COUNT(*) as payment_count')
+            ->selectRaw('COALESCE(SUM(amount), 0) as gross_sum')
+            ->selectRaw('COALESCE(SUM(COALESCE(gateway_fee_amount, 0)), 0) as fee_sum')
+            ->selectRaw('COALESCE(SUM(COALESCE(net_after_gateway_fee, amount - COALESCE(gateway_fee_amount, 0))), 0) as net_sum')
+            ->first();
+
+        $byGateway = (clone $base)
+            ->select(
+                'payment_gateway',
+                DB::raw('COUNT(*) as cnt'),
+                DB::raw('COALESCE(SUM(amount), 0) as gross'),
+                DB::raw('COALESCE(SUM(COALESCE(gateway_fee_amount, 0)), 0) as fees'),
+                DB::raw('COALESCE(SUM(COALESCE(net_after_gateway_fee, amount - COALESCE(gateway_fee_amount, 0))), 0) as net'),
+            )
+            ->groupBy('payment_gateway')
+            ->orderByDesc('gross')
+            ->get();
+
+        $items = Payment::with(['user', 'invoice'])
+            ->where('payment_method', 'online')
+            ->whereNotNull('payment_gateway')
+            ->where('status', 'completed')
+            ->whereBetween('paid_at', [$startDate, $endDate])
+            ->orderByDesc('paid_at')
+            ->paginate(25)
+            ->withQueryString();
+
+        $gatewaySummary = [
+            'count' => (int) ($summaryRow->payment_count ?? 0),
+            'gross' => (float) ($summaryRow->gross_sum ?? 0),
+            'fees' => (float) ($summaryRow->fee_sum ?? 0),
+            'net' => (float) ($summaryRow->net_sum ?? 0),
+        ];
+
+        return view('admin.accounting.reports-payment-gateway', compact(
+            'stats',
+            'items',
+            'startDate',
+            'endDate',
+            'period',
+            'byGateway',
+            'gatewaySummary'
+        ));
+    }
+
     private function calculateDateRange($period, $startDate = null, $endDate = null)
     {
         if ($startDate && $endDate) {
@@ -523,13 +584,16 @@ class AccountingReportsController extends Controller
             $this->addWalletsSheet($spreadsheet, $sheetIndex, $headerStyle, $headerFont, $border);
             $sheetIndex++;
             $this->addOrdersSheet($spreadsheet, $sheetIndex, $startDate, $endDate, $headerStyle, $headerFont, $border);
-        } elseif (in_array($type, ['invoices', 'payments', 'transactions', 'expenses', 'wallets', 'orders'])) {
+            $sheetIndex++;
+            $this->addPaymentGatewaySheet($spreadsheet, $sheetIndex, $startDate, $endDate, $headerStyle, $headerFont, $border);
+        } elseif (in_array($type, ['invoices', 'payments', 'transactions', 'expenses', 'wallets', 'orders', 'payment_gateway'])) {
             if ($type === 'invoices') $this->addInvoicesSheet($spreadsheet, 1, $startDate, $endDate, $headerStyle, $headerFont, $border);
             if ($type === 'payments') $this->addPaymentsSheet($spreadsheet, 1, $startDate, $endDate, $headerStyle, $headerFont, $border);
             if ($type === 'transactions') $this->addTransactionsSheet($spreadsheet, 1, $startDate, $endDate, $headerStyle, $headerFont, $border);
             if ($type === 'expenses') $this->addExpensesSheet($spreadsheet, 1, $startDate, $endDate, $headerStyle, $headerFont, $border);
             if ($type === 'wallets') $this->addWalletsSheet($spreadsheet, 1, $headerStyle, $headerFont, $border);
             if ($type === 'orders') $this->addOrdersSheet($spreadsheet, 1, $startDate, $endDate, $headerStyle, $headerFont, $border);
+            if ($type === 'payment_gateway') $this->addPaymentGatewaySheet($spreadsheet, 1, $startDate, $endDate, $headerStyle, $headerFont, $border);
         }
 
         $filename = 'التقارير_المالية_Muallimx_' . $startDate->format('Y-m-d') . '_' . $endDate->format('Y-m-d') . '.xlsx';
@@ -769,6 +833,48 @@ class AccountingReportsController extends Controller
             $row++;
         }
         for ($c = 0; $c < 9; $c++) $sheet->getColumnDimensionByColumn($c + 1)->setAutoSize(true);
+    }
+
+    private function addPaymentGatewaySheet($spreadsheet, $index, $startDate, $endDate, $headerStyle, $headerFont, $border)
+    {
+        $sheet = $spreadsheet->createSheet($index);
+        $sheet->setTitle('بوابة الدفع');
+        $sheet->setRightToLeft(true);
+        $headers = ['رقم الدفعة', 'العميل', 'البوابة', 'المحصّل', 'العمولة', 'الصافي', 'الفاتورة', 'مرجع', 'تاريخ الدفع'];
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col . '1', $h);
+            $sheet->getStyle($col . '1')->applyFromArray($headerStyle);
+            $col++;
+        }
+        $payments = Payment::with(['user', 'invoice'])
+            ->where('payment_method', 'online')
+            ->whereNotNull('payment_gateway')
+            ->where('status', 'completed')
+            ->whereBetween('paid_at', [$startDate, $endDate])
+            ->orderBy('paid_at', 'desc')
+            ->get();
+        $row = 2;
+        foreach ($payments as $p) {
+            $fee = (float) ($p->gateway_fee_amount ?? 0);
+            $net = $p->net_after_gateway_fee !== null
+                ? (float) $p->net_after_gateway_fee
+                : round((float) $p->amount - $fee, 2);
+            $sheet->setCellValue('A' . $row, $p->payment_number);
+            $sheet->setCellValue('B' . $row, $p->user->name ?? 'غير معروف');
+            $sheet->setCellValue('C' . $row, (string) $p->payment_gateway);
+            $sheet->setCellValue('D' . $row, (float) $p->amount);
+            $sheet->setCellValue('E' . $row, $fee);
+            $sheet->setCellValue('F' . $row, $net);
+            $sheet->setCellValue('G' . $row, $p->invoice->invoice_number ?? '-');
+            $sheet->setCellValue('H' . $row, $p->transaction_id ?? $p->reference_number ?? '-');
+            $sheet->setCellValue('I' . $row, $p->paid_at ? $p->paid_at->format('Y-m-d H:i') : '-');
+            $sheet->getStyle('A' . $row . ':I' . $row)->applyFromArray($border);
+            $row++;
+        }
+        for ($c = 0; $c < 9; $c++) {
+            $sheet->getColumnDimensionByColumn($c + 1)->setAutoSize(true);
+        }
     }
 
 }

@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <?php if(($feature ?? '') === 'ai_tools' && Route::has('student.ai-usages.index')): ?>
+    <?php if(in_array(($feature ?? ''), ['ai_tools', 'full_ai_suite'], true) && Route::has('student.ai-usages.index')): ?>
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end">
             <a href="<?php echo e(route('student.ai-usages.index')); ?>" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-sky-200 dark:border-sky-700 bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-100 text-sm font-semibold shadow-sm hover:bg-sky-100 dark:hover:bg-sky-900/55 transition-colors">
                 <i class="fas fa-folder-open text-sky-600 dark:text-sky-400"></i>

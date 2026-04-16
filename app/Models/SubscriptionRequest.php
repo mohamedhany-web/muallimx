@@ -30,6 +30,7 @@ class SubscriptionRequest extends Model
         'notes',
         'approved_at',
         'approved_by',
+        'fawaterak_invoice_id',
     ];
 
     protected $casts = [

@@ -208,6 +208,16 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400 leading-6">
                     في لوحة فواتيرك: <strong class="text-slate-700 dark:text-slate-300">Integrations → Fawaterak</strong> — سجّل نطاقات الـ IFrame بصيغة <strong class="text-slate-700 dark:text-slate-300">HTTPS</strong> بدون شرطة مائلة في النهاية، وطابق قيمة <code class="text-[10px] bg-slate-100 dark:bg-slate-700 px-1 rounded" dir="ltr">FAWATERAK_IFRAME_DOMAIN</code> أو <code class="text-[10px] bg-slate-100 dark:bg-slate-700 px-1 rounded" dir="ltr">APP_URL</code> مع ما تتوقعه فواتيرك في حساب الـ HMAC.
                 </p>
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-600">
+                    <label for="payment_gateway_fee_percent" class="block text-sm font-black text-slate-900 dark:text-slate-100 mb-2">عمولة بوابة الدفع (تقديرية %)</label>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-2 leading-6">نسبة مئوية من <strong>مبلغ العميل</strong> تُسجَّل كعمولة في المحاسبة (مدفوعات أونلاين: فواتيرك، كاشير، واشتراك الباقة عبر فواتيرك). اترك الحقل فارغاً أو 0 إن لم ترد تسجيل عمولة.</p>
+                    <input type="text" name="payment_gateway_fee_percent" id="payment_gateway_fee_percent" inputmode="decimal"
+                           value="{{ old('payment_gateway_fee_percent', $paymentGatewayFeePercent) }}"
+                           class="w-full max-w-xs px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-sm font-mono" dir="ltr" placeholder="مثال: 2.5">
+                    @error('payment_gateway_fee_percent')
+                        <p class="text-sm text-rose-600 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
         </div>
 

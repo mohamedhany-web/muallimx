@@ -10,6 +10,7 @@ use App\Models\LearningPathEnrollment;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\StudentCourseEnrollment;
+use App\Models\SubscriptionRequest;
 use App\Models\Transaction;
 use App\Models\Wallet;
 use App\Services\AdminPanelBranding;
@@ -20,6 +21,7 @@ use App\Services\InstructorCoursePercentageService;
 use App\Services\KashierService;
 use App\Services\OrderWalletAndCouponFinalizer;
 use App\Services\PaymentGatewaySettings;
+use App\Services\TeacherSubscriptionActivationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -250,6 +252,9 @@ class CheckoutController extends Controller
                 ],
             ]);
 
+            $grossK = (float) $order->amount;
+            $splitK = PaymentGatewaySettings::computeFeeSplit($grossK);
+
             $paymentNumber = 'PAY-'.str_pad(Payment::count() + 1, 8, '0', STR_PAD_LEFT);
             $payment = Payment::create([
                 'payment_number' => $paymentNumber,
@@ -257,7 +262,9 @@ class CheckoutController extends Controller
                 'user_id' => $order->user_id,
                 'payment_method' => 'online',
                 'payment_gateway' => 'kashier',
-                'amount' => $order->amount,
+                'amount' => $grossK,
+                'gateway_fee_amount' => $splitK['fee'],
+                'net_after_gateway_fee' => $splitK['net'],
                 'currency' => 'EGP',
                 'status' => 'completed',
                 'transaction_id' => $query['transactionId'] ?? null,
@@ -276,7 +283,7 @@ class CheckoutController extends Controller
                 'subscription_id' => null,
                 'type' => 'credit',
                 'category' => 'course_payment',
-                'amount' => $order->amount,
+                'amount' => $grossK,
                 'currency' => 'EGP',
                 'description' => ($isLearningPath ? 'دفع مسار: ' : 'دفع كورس: ').$orderTitle.' - طلب #'.$order->id,
                 'status' => 'completed',
@@ -288,6 +295,28 @@ class CheckoutController extends Controller
                     'academic_year_id' => $order->academic_year_id,
                 ],
             ]);
+
+            if ($splitK['fee'] > 0.0001) {
+                Transaction::create([
+                    'transaction_number' => 'TXN-'.now()->format('YmdHis').'-'.strtoupper(Str::random(4)),
+                    'user_id' => $order->user_id,
+                    'payment_id' => $payment->id,
+                    'invoice_id' => $invoice->id,
+                    'expense_id' => null,
+                    'subscription_id' => null,
+                    'type' => 'debit',
+                    'category' => 'fee',
+                    'amount' => $splitK['fee'],
+                    'currency' => 'EGP',
+                    'description' => 'عمولة بوابة الدفع — دفع #'.$payment->payment_number,
+                    'status' => 'completed',
+                    'metadata' => [
+                        'order_id' => $order->id,
+                        'payment_id' => $payment->id,
+                        'gateway' => 'kashier',
+                    ],
+                ]);
+            }
 
             $order->update([
                 'status' => Order::STATUS_APPROVED,
@@ -511,6 +540,7 @@ class CheckoutController extends Controller
             }
 
             $request->session()->forget('fawaterak_order_id');
+            $request->session()->forget('fawaterak_subscription_request_id');
 
             return response()->json([
                 'mode' => 'completed',
@@ -540,6 +570,7 @@ class CheckoutController extends Controller
         }
 
         $request->session()->put('fawaterak_order_id', $order->id);
+        $request->session()->forget('fawaterak_subscription_request_id');
 
         $user = Auth::user();
         $email = trim((string) ($user->email ?? ''));
@@ -815,6 +846,11 @@ class CheckoutController extends Controller
      */
     public function fawaterakReturn(Request $request, string $status): RedirectResponse
     {
+        $subscriptionRequestId = (int) $request->session()->get('fawaterak_subscription_request_id');
+        if ($subscriptionRequestId > 0) {
+            return $this->fawaterakSubscriptionReturn($request, $status, $subscriptionRequestId);
+        }
+
         $orderId = (int) $request->session()->get('fawaterak_order_id');
         if ($orderId < 1) {
             return redirect()->route('orders.index')
@@ -903,6 +939,66 @@ class CheckoutController extends Controller
             ->with('success', $successMsg);
     }
 
+    private function fawaterakSubscriptionReturn(Request $request, string $status, int $subscriptionRequestId): RedirectResponse
+    {
+        $row = SubscriptionRequest::query()->find($subscriptionRequestId);
+        if (! $row || $row->user_id !== Auth::id()) {
+            $request->session()->forget('fawaterak_subscription_request_id');
+
+            return redirect()->route('dashboard')->with('error', 'طلب اشتراك غير صالح.');
+        }
+
+        $plan = (string) $row->teacher_plan_key;
+        $checkoutUrl = route('public.subscription.checkout', $plan);
+
+        if ($status === 'fail') {
+            $request->session()->forget('fawaterak_subscription_request_id');
+
+            return redirect()->to($checkoutUrl)
+                ->with('error', 'لم يتم إتمام الدفع. يمكنك المحاولة مرة أخرى.');
+        }
+
+        if ($status === 'pending') {
+            return redirect()->to($checkoutUrl)
+                ->with('info', 'دفعتك قيد المعالجة لدى فواتيرك. عند اكتمالها سيُفعَّل الاشتراك أو يمكنك تحديث الصفحة لاحقاً.');
+        }
+
+        $invoice = null;
+        try {
+            $invoice = TeacherSubscriptionActivationService::activateAfterGatewayPayment(
+                $row,
+                'other',
+                $request->query('transactionId')
+                    ?? $request->query('invoice_id')
+                    ?? $row->fawaterak_invoice_id,
+                $request->query(),
+                'فواتيرك (Fawaterak)'
+            );
+        } catch (\Throwable $e) {
+            $fresh = SubscriptionRequest::query()->find($subscriptionRequestId);
+            if ($fresh && $fresh->status === SubscriptionRequest::STATUS_APPROVED) {
+                $request->session()->forget('fawaterak_subscription_request_id');
+
+                return redirect()->route('dashboard')->with('info', 'تمت معالجة اشتراكك مسبقاً.');
+            }
+            Log::error('Fawaterak subscription return: activation failed', [
+                'subscription_request_id' => $subscriptionRequestId,
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->to($checkoutUrl)
+                ->with('error', 'تعذّر تفعيل الاشتراك بعد الدفع. يرجى التواصل مع الدعم مع رقم الطلب.');
+        }
+
+        $request->session()->forget('fawaterak_subscription_request_id');
+
+        $msg = $invoice
+            ? ('تم الدفع بنجاح. رقم الفاتورة: '.$invoice->invoice_number)
+            : 'تم الدفع وتفعيل اشتراكك بنجاح.';
+
+        return redirect()->route('dashboard')->with('success', $msg);
+    }
+
     /**
      * إتمام الفوترة والتسجيل بعد دفع أونلاين (داخل معاملة قاعدة بيانات مفتوحة).
      * يُنشئ فاتورة مدفوعة، وسجل دفع، ومعاملة محاسبية، ويحدّث الطلب إلى مقبول، ويُفعّل التسجيل في الكورس.
@@ -954,6 +1050,9 @@ class CheckoutController extends Controller
             ],
         ]);
 
+        $gross = (float) $order->amount;
+        $split = PaymentGatewaySettings::computeFeeSplit($gross);
+
         $paymentNumber = 'PAY-'.str_pad((string) (Payment::count() + 1), 8, '0', STR_PAD_LEFT);
         $payment = Payment::create([
             'payment_number' => $paymentNumber,
@@ -961,7 +1060,9 @@ class CheckoutController extends Controller
             'user_id' => $order->user_id,
             'payment_method' => 'online',
             'payment_gateway' => $paymentGateway,
-            'amount' => $order->amount,
+            'amount' => $gross,
+            'gateway_fee_amount' => $split['fee'],
+            'net_after_gateway_fee' => $split['net'],
             'currency' => $currency,
             'status' => 'completed',
             'transaction_id' => $transactionId,
@@ -980,7 +1081,7 @@ class CheckoutController extends Controller
             'subscription_id' => null,
             'type' => 'credit',
             'category' => 'course_payment',
-            'amount' => $order->amount,
+            'amount' => $gross,
             'currency' => $currency,
             'description' => ($isLearningPath ? 'دفع مسار: ' : 'دفع كورس: ').$orderTitle.' - طلب #'.$order->id,
             'status' => 'completed',
@@ -992,6 +1093,28 @@ class CheckoutController extends Controller
                 'academic_year_id' => $order->academic_year_id,
             ],
         ]);
+
+        if ($split['fee'] > 0.0001) {
+            Transaction::create([
+                'transaction_number' => 'TXN-'.now()->format('YmdHis').'-'.strtoupper(Str::random(4)),
+                'user_id' => $order->user_id,
+                'payment_id' => $payment->id,
+                'invoice_id' => $invoice->id,
+                'expense_id' => null,
+                'subscription_id' => null,
+                'type' => 'debit',
+                'category' => 'fee',
+                'amount' => $split['fee'],
+                'currency' => $currency,
+                'description' => 'عمولة بوابة الدفع — دفع #'.$payment->payment_number,
+                'status' => 'completed',
+                'metadata' => [
+                    'order_id' => $order->id,
+                    'payment_id' => $payment->id,
+                    'gateway' => $paymentGateway,
+                ],
+            ]);
+        }
 
         $order->update([
             'status' => Order::STATUS_APPROVED,
