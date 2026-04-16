@@ -148,6 +148,9 @@
                 <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                     <a class="btn-primary inline-flex items-center justify-center gap-2 !bg-[#FB5607] hover:!bg-[#e84d00]" href="{{ route('register') }}">اشترك الآن <i class="fas fa-user-plus text-xs"></i></a>
                     <a class="btn-secondary inline-flex items-center justify-center gap-2 !bg-[#283593] !text-white !border-[#283593] hover:!bg-[#1f2a7a]" href="{{ route('public.courses') }}">تصفح الكورسات <i class="fas fa-book text-xs"></i></a>
+                    <button type="button" id="pwa-install-quick-btn" class="btn-secondary hidden inline-flex items-center justify-center gap-2 !bg-white !text-[#283593] !border-[#283593] hover:!bg-[#f8f9ff]">
+                        تثبيت التطبيق <i class="fas fa-mobile-screen-button text-xs"></i>
+                    </button>
                 </div>
             </div>
 
@@ -170,7 +173,7 @@
                 </article>
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-[#fffbea] text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
                     <p class="text-3xl sm:text-4xl font-black text-mx-indigo" dir="ltr">{{ $fmt((int) ($hs['learning_paths'] ?? 0)) }}</p>
-                    <p class="text-xs sm:text-sm text-slate-600 mt-1">مسارات تعليمية</p>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-1">الخدمات المتوفرة</p>
                 </article>
             </div>
         </div>
