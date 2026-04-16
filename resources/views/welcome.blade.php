@@ -517,7 +517,7 @@
     var laterBtn = document.getElementById('pwa-later-btn');
     if (!installOverlay || !installBtn) return;
 
-    var storageKey = 'mx_pwa_prompt_seen_v2';
+    var storageKey = 'mx_pwa_prompt_seen_v3';
     var deferredPrompt = null;
     var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     var hasSeenPrompt = localStorage.getItem(storageKey) === '1';
@@ -577,7 +577,7 @@
     });
 
     if (closeBtn) closeBtn.addEventListener('click', function () { hidePrompt(true); });
-    if (laterBtn) laterBtn.addEventListener('click', function () { hidePrompt(true); });
+    if (laterBtn) laterBtn.addEventListener('click', function () { hidePrompt(false); });
     installOverlay.addEventListener('click', function (e) {
         if (e.target === installOverlay) hidePrompt(true);
     });
@@ -593,7 +593,6 @@
             if (!deferredPrompt) {
                 installHint.textContent = 'إذا لم يظهر زر التثبيت، افتح قائمة المتصفح واختر "Install app" أو "تثبيت التطبيق".';
                 installHint.classList.remove('hidden');
-                installBtn.classList.add('hidden');
                 setTimeout(showPrompt, 1200);
             }
         }, 3000);
