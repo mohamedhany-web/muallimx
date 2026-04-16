@@ -15,7 +15,10 @@
     <meta name="robots"      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="language"    content="{{ $locale === 'ar' ? 'Arabic' : 'English' }}">
     <meta name="theme-color" content="#283593">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="canonical"    href="{{ url('/') }}">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
     <!-- hreflang -->
     <link rel="alternate" hreflang="ar"        href="{{ url('/') }}?lang=ar">
     <link rel="alternate" hreflang="en"        href="{{ url('/') }}?lang=en">
@@ -408,6 +411,37 @@
     @include('partials.popup-ad', ['ad' => $popupAd])
 @endif
 
+<div id="pwa-install-overlay" class="fixed inset-0 z-[9997] hidden items-center justify-center p-4 bg-slate-900/55 backdrop-blur-sm">
+    <div class="w-full max-w-md rounded-3xl border border-[#e6e9f7] bg-white shadow-2xl overflow-hidden">
+        <div class="h-1.5 w-full bg-gradient-to-l from-[#FB5607] via-[#FFE569] to-[#283593]"></div>
+        <div class="p-6 sm:p-7">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
+                    <i class="fas fa-download text-[11px]"></i>
+                    تطبيق Muallimx
+                </span>
+                <button type="button" id="pwa-install-close" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-[#1F2A7A] transition-colors" aria-label="إغلاق">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+            <h3 class="text-xl sm:text-2xl font-extrabold text-[#1F2A7A] mb-3">حمّل تطبيق الويب الآن</h3>
+            <p class="text-slate-600 leading-7 text-sm sm:text-[15px] mb-5">
+                ثبّت Muallimx كتطبيق اختصار على شاشة الهاتف أو سطح المكتب للوصول السريع مثل التطبيقات.
+            </p>
+            <p id="pwa-install-hint" class="text-xs sm:text-sm text-slate-500 mb-5 hidden"></p>
+            <div class="flex flex-col sm:flex-row gap-2.5">
+                <button type="button" id="pwa-install-btn" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed" style="background:#283593" disabled>
+                    <i class="fas fa-mobile-screen-button text-sm"></i>
+                    جاري تجهيز التثبيت...
+                </button>
+                <button type="button" id="pwa-later-btn" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors">
+                    لاحقاً
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 (function(){
     'use strict';
@@ -473,6 +507,97 @@
         requestAnimationFrame(bindSlideWidths);
     }
     activeDot();
+})();
+
+(function () {
+    var installOverlay = document.getElementById('pwa-install-overlay');
+    var installBtn = document.getElementById('pwa-install-btn');
+    var installHint = document.getElementById('pwa-install-hint');
+    var closeBtn = document.getElementById('pwa-install-close');
+    var laterBtn = document.getElementById('pwa-later-btn');
+    if (!installOverlay || !installBtn) return;
+
+    var storageKey = 'mx_pwa_prompt_seen_v2';
+    var deferredPrompt = null;
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    var hasSeenPrompt = localStorage.getItem(storageKey) === '1';
+    if (isStandalone || hasSeenPrompt) return;
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/sw.js').catch(function () {});
+        });
+    }
+
+    function hidePrompt(markAsSeen) {
+        installOverlay.classList.add('hidden');
+        installOverlay.classList.remove('flex');
+        if (markAsSeen) localStorage.setItem(storageKey, '1');
+    }
+
+    function showPrompt() {
+        installOverlay.classList.remove('hidden');
+        installOverlay.classList.add('flex');
+    }
+
+    function setInstallButtonReady(ready) {
+        installBtn.disabled = !ready;
+        installBtn.innerHTML = ready
+            ? '<i class="fas fa-mobile-screen-button text-sm"></i>تثبيت التطبيق'
+            : '<i class="fas fa-mobile-screen-button text-sm"></i>جاري تجهيز التثبيت...';
+    }
+
+    setInstallButtonReady(false);
+
+    window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        installHint.classList.add('hidden');
+        setInstallButtonReady(true);
+        setTimeout(showPrompt, 1200);
+    });
+
+    window.addEventListener('appinstalled', function () {
+        hidePrompt(true);
+    });
+
+    installBtn.addEventListener('click', async function () {
+        if (!deferredPrompt) {
+            installHint.textContent = 'التثبيت المباشر غير متاح حالياً. افتح قائمة المتصفح واختر "Install app" أو "تثبيت التطبيق".';
+            installHint.classList.remove('hidden');
+            return;
+        }
+        deferredPrompt.prompt();
+        try {
+            await deferredPrompt.userChoice;
+        } catch (e) {}
+        deferredPrompt = null;
+        setInstallButtonReady(false);
+        hidePrompt(true);
+    });
+
+    if (closeBtn) closeBtn.addEventListener('click', function () { hidePrompt(true); });
+    if (laterBtn) laterBtn.addEventListener('click', function () { hidePrompt(true); });
+    installOverlay.addEventListener('click', function (e) {
+        if (e.target === installOverlay) hidePrompt(true);
+    });
+
+    var isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+    if (isIos) {
+        installHint.textContent = 'في iPhone/iPad: اضغط زر المشاركة في المتصفح ثم اختر "إضافة إلى الشاشة الرئيسية".';
+        installHint.classList.remove('hidden');
+        installBtn.classList.add('hidden');
+        setTimeout(showPrompt, 1200);
+    } else {
+        setTimeout(function () {
+            if (!deferredPrompt) {
+                installHint.textContent = 'إذا لم يظهر زر التثبيت، افتح قائمة المتصفح واختر "Install app" أو "تثبيت التطبيق".';
+                installHint.classList.remove('hidden');
+                installBtn.classList.add('hidden');
+                setTimeout(showPrompt, 1200);
+            }
+        }, 3000);
+    }
 })();
 </script>
 </body>

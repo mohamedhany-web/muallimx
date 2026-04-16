@@ -104,4 +104,24 @@
         </div>
     </div>
 </footer>
+
+<?php if(! empty($pf['whatsapp_url'])): ?>
+    
+    <a href="<?php echo e(e($pf['whatsapp_url'])); ?>"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="fixed z-[9998] flex items-center justify-center rounded-full shadow-lg"
+       style="
+           width: 56px;
+           height: 56px;
+           <?php echo e($isRtl ? 'left' : 'right'); ?>: 18px;
+           bottom: 18px;
+           background-color: #25D366;
+           color: #ffffff;
+           box-shadow: 0 10px 25px -10px rgba(0,0,0,.45);
+       "
+       aria-label="<?php echo e($isRtl ? 'تواصل عبر واتساب' : 'Chat on WhatsApp'); ?>">
+        <i class="fab fa-whatsapp text-2xl"></i>
+    </a>
+<?php endif; ?>
 <?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/partials/public-site-footer.blade.php ENDPATH**/ ?>

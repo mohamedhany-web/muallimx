@@ -103,3 +103,23 @@
         </div>
     </div>
 </footer>
+
+@if(! empty($pf['whatsapp_url']))
+    {{-- زر واتساب عائم للواجهة العامة (يستخدم نفس رابط إعدادات النظام) --}}
+    <a href="{{ e($pf['whatsapp_url']) }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="fixed z-[9998] flex items-center justify-center rounded-full shadow-lg"
+       style="
+           width: 56px;
+           height: 56px;
+           {{ $isRtl ? 'left' : 'right' }}: 18px;
+           bottom: 18px;
+           background-color: #25D366;
+           color: #ffffff;
+           box-shadow: 0 10px 25px -10px rgba(0,0,0,.45);
+       "
+       aria-label="{{ $isRtl ? 'تواصل عبر واتساب' : 'Chat on WhatsApp' }}">
+        <i class="fab fa-whatsapp text-2xl"></i>
+    </a>
+@endif

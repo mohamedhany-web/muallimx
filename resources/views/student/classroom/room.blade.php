@@ -276,9 +276,9 @@
             <button type="button" id="btn-classroom-copy-join" class="classroom-room-toolbar-btn bg-slate-700/80 hover:bg-slate-600 text-slate-200 border border-slate-600" title="نسخ رابط الانضمام" data-join-url="{{ url('classroom/join/' . $meeting->code) }}">
                 <i class="fas fa-link text-[10px] btn-copy-join-ic"></i><span class="hidden sm:inline btn-copy-join-tx">مشاركة الرابط</span><span class="sm:hidden btn-copy-join-tx-sm">رابط</span>
             </button>
-            <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" class="inline shrink-0" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
+            <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" class="inline shrink-0" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
                 @csrf
-                <button type="submit" class="classroom-room-toolbar-btn bg-rose-600 hover:bg-rose-500 text-white font-semibold border border-rose-500/50 shadow-sm shadow-rose-900/20">
+                <button type="submit" id="mx-end-meeting-btn" class="classroom-room-toolbar-btn bg-rose-600 hover:bg-rose-500 text-white font-semibold border border-rose-500/50 shadow-sm shadow-rose-900/20">
                     <i class="fas fa-stop text-[10px]"></i><span class="hidden md:inline">إنهاء الاجتماع</span><span class="md:hidden">إنهاء</span>
                 </button>
             </form>
@@ -438,6 +438,8 @@
             var recordDdWrap = document.getElementById('mx-record-dd-wrap');
             var btnRecordMenu = document.getElementById('btn-record-menu');
             var btnRecordStop = document.getElementById('btn-record-stop');
+            var endMeetingForm = document.getElementById('mx-end-meeting-form');
+            var endMeetingBtn = document.getElementById('mx-end-meeting-btn');
             var recordIdleWrap = document.getElementById('mx-record-idle-wrap');
             var recordDdPanel = document.getElementById('mx-record-dd-panel');
             var recordDdChevron = document.getElementById('record-dd-chevron');
@@ -536,6 +538,7 @@
             var mxUploadModalMinimized = false;
             var mxCurrentUploadJob = null;
             var mxLastFailedJob = null;
+            var pendingEndMeetingSubmit = false;
             var lectureCanvas = null;
             var lectureCtx = null;
             var lectureCanvasStream = null;
@@ -1760,6 +1763,12 @@
                     setRecordStatus('تم إيقاف تسجيل المحاضرة. جاري فتح تاب الرفع...', false);
                     mxQueueBlobUpload(blob, durationSeconds, 'lecture', null);
                     recordedChunks = [];
+                    if (pendingEndMeetingSubmit && endMeetingForm) {
+                        pendingEndMeetingSubmit = false;
+                        setTimeout(function() {
+                            endMeetingForm.submit();
+                        }, 400);
+                    }
                 });
 
                 mediaRecorder.start(3000);
@@ -1842,6 +1851,12 @@
                     setRecordStatus('تم إيقاف تسجيل التقرير. جاري فتح تاب الرفع...', false);
                     mxQueueBlobUpload(blob, durationSeconds, 'report', null);
                     recordedChunks = [];
+                    if (pendingEndMeetingSubmit && endMeetingForm) {
+                        pendingEndMeetingSubmit = false;
+                        setTimeout(function() {
+                            endMeetingForm.submit();
+                        }, 400);
+                    }
                 });
 
                 mediaRecorder.start(4000);
@@ -1853,6 +1868,10 @@
 
             function stopBrowserRecording() {
                 if (!mediaRecorder || mediaRecorder.state !== 'recording') {
+                    if (pendingEndMeetingSubmit && endMeetingForm) {
+                        pendingEndMeetingSubmit = false;
+                        endMeetingForm.submit();
+                    }
                     return;
                 }
                 setRecordButtonBusy(true);
@@ -1903,6 +1922,16 @@
 
             if (btnRecordStop) {
                 btnRecordStop.addEventListener('click', function() {
+                    stopBrowserRecording();
+                });
+            }
+
+            if (endMeetingForm && endMeetingBtn) {
+                endMeetingForm.addEventListener('submit', function(e) {
+                    if (!isRecording) return;
+                    e.preventDefault();
+                    pendingEndMeetingSubmit = true;
+                    setRecordStatus('سيتم إنهاء الاجتماع بعد حفظ التسجيل وبدء الرفع...', false);
                     stopBrowserRecording();
                 });
             }
