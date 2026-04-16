@@ -18,8 +18,8 @@ use Illuminate\Validation\Rule;
 
 class SubscriptionCheckoutController extends Controller
 {
-    protected const VALID_PLANS = ['teacher_starter', 'teacher_pro', 'teacher_premium'];
-    protected const PLAN_RANK = ['teacher_starter' => 1, 'teacher_pro' => 2, 'teacher_premium' => 3];
+    protected const VALID_PLANS = ['teacher_starter', 'teacher_pro'];
+    protected const PLAN_RANK = ['teacher_starter' => 1, 'teacher_pro' => 2];
 
     /**
      * عرض صفحة دفع اشتراك الباقة (تحويل المبلغ + رفع إيصال الدفع)
@@ -47,7 +47,7 @@ class SubscriptionCheckoutController extends Controller
                 'features' => SubscriptionRequest::planDefaults($plan)['features'] ?? [],
             ];
         } else {
-            $planConfig['label'] = $planConfig['label'] ?? ($plan === 'teacher_starter' ? 'باقة البداية' : ($plan === 'teacher_pro' ? 'باقة المعلم المحترف' : 'باقة المعلم المميز'));
+            $planConfig['label'] = $planConfig['label'] ?? ($plan === 'teacher_starter' ? 'الباقة الأساسية' : 'الباقة الشاملة');
         }
 
         $billingLabel = [

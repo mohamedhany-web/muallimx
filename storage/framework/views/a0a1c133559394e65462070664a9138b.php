@@ -109,11 +109,11 @@
                 </div>
 
                 <?php
-                    $planKeys = ['teacher_starter', 'teacher_pro', 'teacher_premium'];
+                    $planKeys = ['teacher_starter', 'teacher_pro'];
                     $billingPhrases = ['monthly' => 'جنيه شهريًا', 'quarterly' => 'جنيه / 3 شهور', 'yearly' => 'جنيه سنويًا'];
                 ?>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-7">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-7 max-w-4xl mx-auto">
                     <?php $__currentLoopData = $planKeys; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $planKey): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <?php
                             $plan = $teacherPlans[$planKey] ?? null;
@@ -130,20 +130,20 @@
                             $cycle = $plan['billing_cycle'] ?? 'monthly';
                             $cyclePhrase = $billingPhrases[$cycle] ?? 'جنيه';
                             $features = $plan['features'] ?? [];
+                            $featureDescriptions = is_array($plan['feature_descriptions'] ?? null) ? $plan['feature_descriptions'] : [];
                             $isPro = $planKey === 'teacher_pro';
                         ?>
-                        <div class="card-base card-hover !p-7 sm:!p-8 flex flex-col relative overflow-hidden
+                        <div class="card-base card-hover !p-7 sm:!p-8 pt-10 flex flex-col relative
                             <?php if($isPro): ?> border-[#283593] ring-2 ring-[#283593]/10
-                            <?php elseif($planKey === 'teacher_premium'): ?> border-[#FB5607]/30
                             <?php else: ?> border-slate-200
                             <?php endif; ?>">
                             <?php if($meta['badge'] !== ''): ?>
-                                <div class="absolute -top-3 left-4 bg-[#FB5607] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg"><?php echo e($meta['badge']); ?></div>
+                                <div class="absolute top-3 left-4 bg-[#FB5607] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg z-10"><?php echo e($meta['badge']); ?></div>
                             <?php endif; ?>
                             <div class="mb-4">
                                 <h3 class="text-2xl font-black text-mx-indigo mb-1"><?php echo e($label); ?></h3>
                                 <?php if($meta['subtitle'] !== ''): ?>
-                                <p class="text-sm font-semibold <?php echo e($planKey === 'teacher_premium' ? 'text-[#FB5607]' : 'text-[#283593]'); ?>">
+                                <p class="text-sm font-semibold text-[#283593]">
                                     <?php echo e($meta['subtitle']); ?>
 
                                 </p>
@@ -160,20 +160,21 @@
                             <ul class="space-y-3 text-slate-700 mb-8 flex-1 text-sm">
                                 <?php $__currentLoopData = $features; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $featureKey): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <li class="flex items-start">
-                                        <i class="fas fa-check-circle <?php echo e($planKey === 'teacher_premium' ? 'text-[#FB5607]' : 'text-[#283593]'); ?> ml-2 mt-1"></i>
-                                        <span><?php echo e(__("student.subscription_feature.{$featureKey}")); ?></span>
+                                        <i class="fas fa-check-circle text-[#283593] ml-2 mt-1"></i>
+                                        <div>
+                                            <p class="font-semibold"><?php echo e(__("student.subscription_feature.{$featureKey}")); ?></p>
+                                            <?php if(!empty($featureDescriptions[$featureKey])): ?>
+                                                <p class="text-xs text-slate-500 mt-0.5"><?php echo e($featureDescriptions[$featureKey]); ?></p>
+                                            <?php endif; ?>
+                                        </div>
                                     </li>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </ul>
                             <?php if($meta['footer_note'] !== ''): ?>
-                                <div class="mb-4 px-3 py-2 rounded-xl text-sm font-semibold
-                                    <?php if($planKey === 'teacher_premium'): ?> text-[#FB5607] bg-[#FFF7ED] border border-[#ffe5d3]
-                                    <?php else: ?> text-[#283593] bg-[#EFF2FF] border border-[#dbe4ff]
-                                    <?php endif; ?>"><?php echo e($meta['footer_note']); ?></div>
+                                <div class="mb-4 px-3 py-2 rounded-xl text-sm font-semibold text-[#283593] bg-[#EFF2FF] border border-[#dbe4ff]"><?php echo e($meta['footer_note']); ?></div>
                             <?php endif; ?>
                             <a href="<?php echo e(route('public.subscription.checkout', $planKey)); ?>" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors
                                 <?php if($isPro): ?> bg-[#283593] hover:bg-[#1f2a7a] text-white
-                                <?php elseif($planKey === 'teacher_premium'): ?> bg-[#FB5607] hover:bg-[#e84d00] text-white
                                 <?php else: ?> btn-primary !bg-[#283593] hover:!bg-[#1f2a7a] text-white
                                 <?php endif; ?>">
                                 <?php echo e($meta['cta'] ?? 'ابدأ الآن'); ?>
@@ -203,9 +204,9 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             <?php $__currentLoopData = $packages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $package): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <!-- Package Card -->
-            <div class="card-base card-hover !p-8 relative <?php echo e($package->is_popular ? '!bg-[#283593] !border-[#283593] text-white' : ''); ?>">
+            <div class="card-base card-hover !p-8 pt-10 relative <?php echo e($package->is_popular ? '!bg-[#283593] !border-[#283593] text-white' : ''); ?>">
                 <?php if($package->is_popular): ?>
-                <div class="absolute -top-3 left-4 bg-[#FB5607] text-white text-xs font-bold px-3 py-1.5 rounded-full text-center shadow-lg">الأكثر شعبية</div>
+                <div class="absolute top-3 left-4 bg-[#FB5607] text-white text-xs font-bold px-3 py-1.5 rounded-full text-center shadow-lg z-10">الأكثر شعبية</div>
                 <?php endif; ?>
                 
                 <div class="text-center mb-6 <?php echo e($package->is_popular ? 'mt-4' : ''); ?>">

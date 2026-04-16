@@ -14,31 +14,20 @@ class SubscriptionLimitService
         return [
             'teacher_starter' => [
                 'limits' => [
-                    'classroom_meetings_per_month' => 8,
-                    'classroom_max_participants' => 25,
+                    'classroom_meetings_per_month' => 0,
+                    'classroom_max_participants' => 1,
                     'classroom_default_duration_minutes' => 60,
-                    'classroom_max_duration_minutes' => 120,
+                    'classroom_max_duration_minutes' => 60,
                     'personal_marketing_profile_sections' => 5,
-                    'personal_marketing_priority_score' => 10,
+                    'personal_marketing_priority_score' => 40,
                     'personal_marketing_monthly_featured_days' => 0,
                 ],
             ],
             'teacher_pro' => [
                 'limits' => [
-                    'classroom_meetings_per_month' => 30,
-                    'classroom_max_participants' => 60,
-                    'classroom_default_duration_minutes' => 90,
-                    'classroom_max_duration_minutes' => 240,
-                    'personal_marketing_profile_sections' => 8,
-                    'personal_marketing_priority_score' => 50,
-                    'personal_marketing_monthly_featured_days' => 4,
-                ],
-            ],
-            'teacher_premium' => [
-                'limits' => [
                     'classroom_meetings_per_month' => 9999,
                     'classroom_max_participants' => 150,
-                    'classroom_default_duration_minutes' => 120,
+                    'classroom_default_duration_minutes' => 90,
                     'classroom_max_duration_minutes' => 480,
                     'personal_marketing_profile_sections' => 12,
                     'personal_marketing_priority_score' => 90,

@@ -8,10 +8,10 @@
     @php
         $sub = $subscription;
         $durationLabel = \App\Models\Subscription::getDurationLabel($sub->billing_cycle);
-        $planRank = ['teacher_starter' => 1, 'teacher_pro' => 2, 'teacher_premium' => 3];
+        $planRank = ['teacher_starter' => 1, 'teacher_pro' => 2];
         $currentKey = (string) ($sub->teacher_plan_key ?? '');
         $currentRank = $planRank[$currentKey] ?? 0;
-        $upgradeOptions = collect(['teacher_starter', 'teacher_pro', 'teacher_premium'])
+        $upgradeOptions = collect(['teacher_starter', 'teacher_pro'])
             ->filter(fn ($k) => ($planRank[$k] ?? 0) > $currentRank)
             ->values();
     @endphp
@@ -79,7 +79,7 @@
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <div class="text-sm font-black text-slate-900 dark:text-slate-100">
-                                    {{ $planKey === 'teacher_pro' ? 'باقة المعلم المحترف' : ($planKey === 'teacher_premium' ? 'باقة المعلم المميز' : 'باقة البداية') }}
+                                    {{ $planKey === 'teacher_pro' ? 'الباقة الشاملة' : 'الباقة الأساسية' }}
                                 </div>
                                 <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">ترقية إلى مستوى أعلى</div>
                             </div>

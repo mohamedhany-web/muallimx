@@ -16,9 +16,8 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">نمط اشتراك المعلم (اختياري)</label>
                     <select name="teacher_plan_key" x-model="selectedPlan" @change="applyPlan" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                         <option value="">بدون — إدخال يدوي</option>
-                        <option value="teacher_starter">باقة البداية — 200 ج.م شهريًا</option>
-                        <option value="teacher_pro">باقة المعلم المحترف — 600 ج.م / 3 شهور</option>
-                        <option value="teacher_premium">باقة المعلم المميز — 1500 ج.م سنويًا</option>
+                        <option value="teacher_starter">الباقة الأساسية — 200 ج.م شهريًا</option>
+                        <option value="teacher_pro">الباقة الشاملة — 600 ج.م شهريًا</option>
                     </select>
                     <p class="mt-1 text-xs text-gray-500">
                         اختيار إحدى هذه الباقات يملأ الحقول تلقائيًا (النوع، اسم الخطة، السعر، دورة الفوترة) مع افتراض العملة بالجنيه المصري.
@@ -162,9 +161,8 @@
 <script>
     function teacherSubscriptionForm() {
         var PLAN_FEATURES = {
-            teacher_starter: ['library_access', 'ai_tools', 'classroom_access', 'support'],
-            teacher_pro: ['library_access', 'ai_tools', 'classroom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite'],
-            teacher_premium: ['library_access', 'ai_tools', 'classroom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support'],
+            teacher_starter: ['library_access', 'ai_tools', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support'],
+            teacher_pro: ['library_access', 'ai_tools', 'classroom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support'],
         };
 
         function syncSubscriptionFeatureCheckboxes(featureList) {
@@ -190,19 +188,14 @@
 
                 if (key === 'teacher_starter') {
                     this.form.subscription_type = 'monthly';
-                    this.form.plan_name = 'باقة البداية للمعلمين';
+                    this.form.plan_name = 'الباقة الأساسية';
                     this.form.price = 200;
                     this.form.billing_cycle = 'monthly';
                 } else if (key === 'teacher_pro') {
-                    this.form.subscription_type = 'quarterly';
-                    this.form.plan_name = 'باقة المعلم المحترف';
+                    this.form.subscription_type = 'monthly';
+                    this.form.plan_name = 'الباقة الشاملة';
                     this.form.price = 600;
-                    this.form.billing_cycle = 'quarterly';
-                } else if (key === 'teacher_premium') {
-                    this.form.subscription_type = 'yearly';
-                    this.form.plan_name = 'باقة المعلم المميز';
-                    this.form.price = 1500;
-                    this.form.billing_cycle = 'yearly';
+                    this.form.billing_cycle = 'monthly';
                 }
                 this.$nextTick(function () {
                     syncSubscriptionFeatureCheckboxes(PLAN_FEATURES[key]);

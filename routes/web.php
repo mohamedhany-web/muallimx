@@ -276,20 +276,20 @@ Route::get('/faq', [\App\Http\Controllers\Public\PageController::class, 'faq'])-
 Route::get('/terms', [\App\Http\Controllers\Public\PageController::class, 'terms'])->name('public.terms');
 Route::get('/privacy', [\App\Http\Controllers\Public\PageController::class, 'privacy'])->name('public.privacy');
 Route::get('/pricing', [\App\Http\Controllers\Public\PageController::class, 'pricing'])->name('public.pricing');
-Route::get('/pricing/checkout/{plan}', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'show'])->name('public.subscription.checkout')->where('plan', 'teacher_starter|teacher_pro|teacher_premium');
+Route::get('/pricing/checkout/{plan}', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'show'])->name('public.subscription.checkout')->where('plan', 'teacher_starter|teacher_pro');
 Route::post('/pricing/checkout', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'store'])->name('public.subscription.checkout.store');
 Route::post('/pricing/checkout/{plan}/fawaterak/prepare', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPrepare'])
     ->middleware('auth')
     ->name('public.subscription.checkout.fawaterak.prepare')
-    ->where('plan', 'teacher_starter|teacher_pro|teacher_premium');
+    ->where('plan', 'teacher_starter|teacher_pro');
 Route::get('/pricing/checkout/{plan}/fawaterak/methods', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPaymentMethods'])
     ->middleware('auth')
     ->name('public.subscription.checkout.fawaterak.methods')
-    ->where('plan', 'teacher_starter|teacher_pro|teacher_premium');
+    ->where('plan', 'teacher_starter|teacher_pro');
 Route::post('/pricing/checkout/{plan}/fawaterak/pay', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPay'])
     ->middleware('auth')
     ->name('public.subscription.checkout.fawaterak.pay')
-    ->where('plan', 'teacher_starter|teacher_pro|teacher_premium');
+    ->where('plan', 'teacher_starter|teacher_pro');
 Route::get('/team', [\App\Http\Controllers\Public\PageController::class, 'team'])->name('public.team');
 Route::get('/certificates', [\App\Http\Controllers\Public\PageController::class, 'certificates'])->name('public.certificates');
 Route::get('/certificates/verify', [\App\Http\Controllers\Public\CertificateVerificationController::class, 'verify'])->name('public.certificates.verify');

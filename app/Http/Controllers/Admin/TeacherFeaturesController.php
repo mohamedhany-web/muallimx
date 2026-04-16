@@ -26,11 +26,12 @@ class TeacherFeaturesController extends Controller
             'plans' => 'required|array',
             'plans.teacher_starter.price' => 'required|numeric|min:0',
             'plans.teacher_pro.price' => 'required|numeric|min:0',
-            'plans.teacher_premium.price' => 'required|numeric|min:0',
             'plans.*.label' => 'nullable|string|max:255',
-            'plans.*.billing_cycle' => 'nullable|string|in:monthly,quarterly,yearly',
+            'plans.*.billing_cycle' => 'nullable|string|in:monthly',
             'plans.*.features' => 'nullable|array',
             'plans.*.features.*' => 'nullable|string|max:100',
+            'plans.*.feature_descriptions' => 'nullable|array',
+            'plans.*.feature_descriptions.*' => 'nullable|string|max:500',
             'plans.*.limits.classroom_meetings_per_month' => 'nullable|integer|min:0|max:10000',
             'plans.*.limits.classroom_max_participants' => 'nullable|integer|min:1|max:1000',
             'plans.*.limits.classroom_default_duration_minutes' => 'nullable|integer|min:15|max:1440',
@@ -48,17 +49,21 @@ class TeacherFeaturesController extends Controller
         $plans = $validated['plans'];
 
         // تأكيد أن كل خطة تحتوي على الحقول المطلوبة
-        foreach (['teacher_starter', 'teacher_pro', 'teacher_premium'] as $key) {
+        foreach (['teacher_starter', 'teacher_pro'] as $key) {
             $plans[$key]['label'] = $plans[$key]['label'] ?? $this->defaultSettings()[$key]['label'] ?? '';
-            $plans[$key]['billing_cycle'] = in_array($plans[$key]['billing_cycle'] ?? '', ['monthly', 'quarterly', 'yearly'], true)
-                ? $plans[$key]['billing_cycle']
-                : ($this->defaultSettings()[$key]['billing_cycle'] ?? 'monthly');
+            $plans[$key]['billing_cycle'] = 'monthly';
             $plans[$key]['features'] = isset($plans[$key]['features']) && is_array($plans[$key]['features'])
                 ? array_values(array_filter(
                     $plans[$key]['features'],
                     static fn ($f) => $f !== null && $f !== '' && $f !== 'zoom_access'
                 ))
                 : [];
+            if ($key === 'teacher_starter') {
+                $plans[$key]['features'] = array_values(array_filter(
+                    $plans[$key]['features'],
+                    static fn ($f) => $f !== 'classroom_access'
+                ));
+            }
             $defaults = $this->defaultSettings()[$key]['limits'] ?? [];
             $limits = $plans[$key]['limits'] ?? [];
             $plans[$key]['limits'] = [
@@ -73,6 +78,33 @@ class TeacherFeaturesController extends Controller
             if ($plans[$key]['limits']['classroom_default_duration_minutes'] > $plans[$key]['limits']['classroom_max_duration_minutes']) {
                 $plans[$key]['limits']['classroom_default_duration_minutes'] = $plans[$key]['limits']['classroom_max_duration_minutes'];
             }
+            if ($key === 'teacher_starter') {
+                // باقة البداية لا تحتوي على Muallimx Classroom نهائياً.
+                $plans[$key]['limits']['classroom_meetings_per_month'] = 0;
+                $plans[$key]['limits']['classroom_max_participants'] = 1;
+                $plans[$key]['limits']['classroom_default_duration_minutes'] = 60;
+                $plans[$key]['limits']['classroom_max_duration_minutes'] = 60;
+            }
+
+            $defaultDescriptions = $this->defaultSettings()[$key]['feature_descriptions'] ?? [];
+            $rawDescriptions = $plans[$key]['feature_descriptions'] ?? [];
+            $normalizedDescriptions = [];
+            if (is_array($rawDescriptions)) {
+                foreach ($rawDescriptions as $featureKey => $descriptionValue) {
+                    if (!is_string($featureKey)) {
+                        continue;
+                    }
+                    $normalizedDescriptions[$featureKey] = is_string($descriptionValue)
+                        ? trim($descriptionValue)
+                        : '';
+                }
+            }
+            foreach ($defaultDescriptions as $featureKey => $defaultDescription) {
+                if (!array_key_exists($featureKey, $normalizedDescriptions) || $normalizedDescriptions[$featureKey] === '') {
+                    $normalizedDescriptions[$featureKey] = (string) $defaultDescription;
+                }
+            }
+            $plans[$key]['feature_descriptions'] = $normalizedDescriptions;
 
             $defCard = $this->defaultSettings()[$key];
             foreach (['card_subtitle', 'card_badge', 'card_price_hint', 'card_cta', 'card_footer_note'] as $cf) {
@@ -124,7 +156,7 @@ class TeacherFeaturesController extends Controller
 
             $defaults = $this->defaultSettings();
             $merged = [];
-            foreach (['teacher_starter', 'teacher_pro', 'teacher_premium'] as $planKey) {
+            foreach (['teacher_starter', 'teacher_pro'] as $planKey) {
                 $merged[$planKey] = array_merge(
                     $defaults[$planKey] ?? [],
                     is_array($decoded[$planKey] ?? null) ? $decoded[$planKey] : []
@@ -135,6 +167,18 @@ class TeacherFeaturesController extends Controller
                         static fn ($f) => $f !== 'zoom_access'
                     ));
                 }
+                if ($planKey === 'teacher_starter') {
+                    $merged[$planKey]['features'] = array_values(array_filter(
+                        $merged[$planKey]['features'],
+                        static fn ($f) => $f !== 'classroom_access'
+                    ));
+                    $merged[$planKey]['limits']['classroom_meetings_per_month'] = 0;
+                }
+                $defaultFeatureDescriptions = $defaults[$planKey]['feature_descriptions'] ?? [];
+                $decodedFeatureDescriptions = is_array($merged[$planKey]['feature_descriptions'] ?? null)
+                    ? $merged[$planKey]['feature_descriptions']
+                    : [];
+                $merged[$planKey]['feature_descriptions'] = array_merge($defaultFeatureDescriptions, $decodedFeatureDescriptions);
             }
 
             return $merged;
@@ -145,68 +189,59 @@ class TeacherFeaturesController extends Controller
     {
         return [
             'teacher_starter' => [
-                'label' => 'باقة البداية',
+                'label' => 'الباقة الأساسية',
                 'price' => 200,
                 'billing_cycle' => 'monthly',
-                'card_subtitle' => 'ابدأ التدريس أونلاين بسهولة',
+                'card_subtitle' => 'كل الخدمات التعليمية بدون الميتينج وخدماته',
                 'card_badge' => '',
-                'card_price_hint' => 'أقل من 7 جنيه يوميًا.',
+                'card_price_hint' => 'اشتراك شهري مناسب للبدء.',
                 'card_cta' => 'ابدأ الآن',
                 'card_footer_note' => '',
                 'features' => [
                     'library_access',
                     'ai_tools',
-                    'classroom_access',
-                    'support',
-                ],
-                'limits' => [
-                    'classroom_meetings_per_month' => 8,
-                    'classroom_max_participants' => 25,
-                    'classroom_default_duration_minutes' => 60,
-                    'classroom_max_duration_minutes' => 120,
-                    'personal_marketing_profile_sections' => 5,
-                    'personal_marketing_priority_score' => 10,
-                    'personal_marketing_monthly_featured_days' => 0,
-                ],
-            ],
-            'teacher_pro' => [
-                'label' => 'باقة المعلم المحترف',
-                'price' => 600,
-                'billing_cycle' => 'quarterly',
-                'card_subtitle' => 'أفضل اختيار للمعلمين الذين يريدون العمل أونلاين',
-                'card_badge' => 'الأفضل للبدء أونلاين',
-                'card_price_hint' => 'استثمار ربع سنوي يمنحك حضورًا مهنيًا وفرص عمل حقيقية.',
-                'card_cta' => 'ابدأ العمل الآن',
-                'card_footer_note' => 'فرص حقيقية للعمل مع أكاديميات، وليس مجرد أدوات.',
-                'features' => [
-                    'library_access',
-                    'ai_tools',
-                    'classroom_access',
                     'support',
                     'teacher_profile',
                     'visible_to_academies',
                     'can_apply_opportunities',
                     'full_ai_suite',
+                    'teacher_evaluation',
+                    'recommended_to_academies',
+                    'priority_opportunities',
+                    'direct_support',
+                ],
+                'feature_descriptions' => [
+                    'library_access' => 'وصول كامل لمكتبة مناهج وأنشطة جاهزة للتطبيق مباشرة.',
+                    'ai_tools' => 'أدوات ذكاء اصطناعي تساعدك على تجهيز المحتوى بسرعة.',
+                    'support' => 'دعم فني لمساعدتك في أي مشكلة تشغيلية داخل المنصة.',
+                    'teacher_profile' => 'بروفايل مهني يعرض خبراتك ومجالاتك التعليمية.',
+                    'visible_to_academies' => 'ظهور ملفك للأكاديميات الباحثة عن معلمين.',
+                    'can_apply_opportunities' => 'إمكانية التقديم على فرص التدريس المتاحة.',
+                    'full_ai_suite' => 'مجموعة AI موسعة لتخطيط الدروس والمتابعة.',
+                    'teacher_evaluation' => 'تقييم احترافي يساعدك على تحسين أدائك.',
+                    'recommended_to_academies' => 'ترشيح ملفك للأكاديميات المناسبة لمهاراتك.',
+                    'priority_opportunities' => 'أولوية أعلى في الوصول لبعض فرص التدريس.',
+                    'direct_support' => 'دعم مباشر وسريع للحالات المهمة.',
                 ],
                 'limits' => [
-                    'classroom_meetings_per_month' => 30,
-                    'classroom_max_participants' => 60,
-                    'classroom_default_duration_minutes' => 90,
-                    'classroom_max_duration_minutes' => 240,
-                    'personal_marketing_profile_sections' => 8,
-                    'personal_marketing_priority_score' => 50,
-                    'personal_marketing_monthly_featured_days' => 4,
+                    'classroom_meetings_per_month' => 0,
+                    'classroom_max_participants' => 1,
+                    'classroom_default_duration_minutes' => 60,
+                    'classroom_max_duration_minutes' => 60,
+                    'personal_marketing_profile_sections' => 5,
+                    'personal_marketing_priority_score' => 40,
+                    'personal_marketing_monthly_featured_days' => 0,
                 ],
             ],
-            'teacher_premium' => [
-                'label' => 'باقة المعلم المميز',
-                'price' => 1500,
-                'billing_cycle' => 'yearly',
-                'card_subtitle' => 'للمعلمين الجادين في بناء مسار مهني مستقر',
-                'card_badge' => '',
-                'card_price_hint' => 'اشتراك سنوي يمنحك استقرارًا وفرص تدريس مستمرة طوال العام.',
-                'card_cta' => 'ابدأ رحلتك الآن',
-                'card_footer_note' => 'نساعدك في الوصول إلى فرص تدريس حقيقية وبناء اسمك كمعلم أونلاين.',
+            'teacher_pro' => [
+                'label' => 'الباقة الشاملة',
+                'price' => 600,
+                'billing_cycle' => 'monthly',
+                'card_subtitle' => 'كل الخدمات + الميتينج وجميع خدماته',
+                'card_badge' => 'الأكثر شمولاً',
+                'card_price_hint' => 'اشتراك شهري يشمل جميع الأدوات واللايف ميتينج.',
+                'card_cta' => 'ابدأ العمل الآن',
+                'card_footer_note' => 'تشمل كامل المزايا بدون استثناء.',
                 'features' => [
                     'library_access',
                     'ai_tools',
@@ -221,10 +256,24 @@ class TeacherFeaturesController extends Controller
                     'priority_opportunities',
                     'direct_support',
                 ],
+                'feature_descriptions' => [
+                    'library_access' => 'وصول كامل لمكتبة مناهج وأنشطة جاهزة للتطبيق مباشرة.',
+                    'ai_tools' => 'أدوات ذكاء اصطناعي تساعدك على تجهيز المحتوى بسرعة.',
+                    'classroom_access' => 'استخدام Muallimx Classroom لعقد لايف ميتينج وإدارة الجلسات.',
+                    'support' => 'دعم فني لمساعدتك في أي مشكلة تشغيلية داخل المنصة.',
+                    'teacher_profile' => 'بروفايل مهني يعرض خبراتك ومجالاتك التعليمية.',
+                    'visible_to_academies' => 'ظهور ملفك للأكاديميات الباحثة عن معلمين.',
+                    'can_apply_opportunities' => 'إمكانية التقديم على فرص التدريس المتاحة.',
+                    'full_ai_suite' => 'مجموعة AI موسعة لتخطيط الدروس والمتابعة.',
+                    'teacher_evaluation' => 'تقييم احترافي يساعدك على تحسين أدائك.',
+                    'recommended_to_academies' => 'ترشيح ملفك للأكاديميات المناسبة لمهاراتك.',
+                    'priority_opportunities' => 'أولوية أعلى في الوصول لبعض فرص التدريس.',
+                    'direct_support' => 'دعم مباشر وسريع للحالات المهمة.',
+                ],
                 'limits' => [
                     'classroom_meetings_per_month' => 9999,
                     'classroom_max_participants' => 150,
-                    'classroom_default_duration_minutes' => 120,
+                    'classroom_default_duration_minutes' => 90,
                     'classroom_max_duration_minutes' => 480,
                     'personal_marketing_profile_sections' => 12,
                     'personal_marketing_priority_score' => 90,
