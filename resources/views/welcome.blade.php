@@ -430,9 +430,9 @@
             </p>
             <p id="pwa-install-hint" class="text-xs sm:text-sm text-slate-500 mb-5 hidden"></p>
             <div class="flex flex-col sm:flex-row gap-2.5">
-                <button type="button" id="pwa-install-btn" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed" style="background:#283593" disabled>
+                <button type="button" id="pwa-install-btn" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white font-bold transition-colors" style="background:#283593">
                     <i class="fas fa-mobile-screen-button text-sm"></i>
-                    جاري تجهيز التثبيت...
+                    تثبيت التطبيق
                 </button>
                 <button type="button" id="pwa-later-btn" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors">
                     لاحقاً
@@ -541,12 +541,12 @@
     }
 
     function setInstallButtonReady(ready) {
-        installBtn.disabled = !ready;
         installBtn.innerHTML = ready
             ? '<i class="fas fa-mobile-screen-button text-sm"></i>تثبيت التطبيق'
             : '<i class="fas fa-mobile-screen-button text-sm"></i>جاري تجهيز التثبيت...';
     }
 
+    // نضبط النص مبدئياً، لكن الزر يبقى قابلاً للضغط دائماً
     setInstallButtonReady(false);
 
     window.addEventListener('beforeinstallprompt', function (e) {
