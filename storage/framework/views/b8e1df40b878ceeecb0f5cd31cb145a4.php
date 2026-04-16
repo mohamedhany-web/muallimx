@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>انضم إلى Muallimx Classroom — {{ $code }}</title>
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title>انضم إلى Muallimx Classroom — <?php echo e($code); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,10 +31,10 @@
     </style>
 </head>
 <body class="bg-slate-950 text-white">
-    {{-- شاشة الانضمام --}}
+    
     <div id="join-screen" class="min-h-screen flex flex-col items-center justify-center p-4">
         <div class="w-full max-w-md rounded-2xl bg-slate-800/90 border border-slate-600 p-6 shadow-2xl shadow-black/30">
-            @if(!empty($meetingEnded))
+            <?php if(!empty($meetingEnded)): ?>
                 <div class="text-center mb-2">
                     <div class="w-16 h-16 rounded-2xl bg-slate-600/40 text-slate-400 flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-door-closed text-3xl"></i>
@@ -42,11 +42,11 @@
                     <h1 class="text-xl font-bold text-white">انتهى الاجتماع</h1>
                     <p class="text-slate-400 text-sm mt-3 leading-relaxed">قام منظم الاجتماع بإنهائه. لا يمكن إعادة فتح الغرفة أو الانضمام مرة أخرى من هذا الرابط.</p>
                 </div>
-                @if($meeting && $meeting->title)
-                    <p class="text-slate-500 text-sm mb-4 text-center">{{ $meeting->title }}</p>
-                @endif
-                <p class="text-slate-500 text-xs text-center">كود الغرفة: <span class="font-mono text-slate-400">{{ $code }}</span></p>
-            @else
+                <?php if($meeting && $meeting->title): ?>
+                    <p class="text-slate-500 text-sm mb-4 text-center"><?php echo e($meeting->title); ?></p>
+                <?php endif; ?>
+                <p class="text-slate-500 text-xs text-center">كود الغرفة: <span class="font-mono text-slate-400"><?php echo e($code); ?></span></p>
+            <?php else: ?>
             <div class="text-center mb-6">
                 <div class="w-16 h-16 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-video text-3xl"></i>
@@ -54,11 +54,11 @@
                 <h1 class="text-xl font-bold text-white">Muallimx Classroom</h1>
                 <p class="text-slate-400 text-sm mt-1">انضم إلى الاجتماع باستخدام الكود أو الرابط</p>
             </div>
-            @if($meeting && $meeting->title)
-                <p class="text-slate-300 text-sm mb-4 text-center">{{ $meeting->title }}</p>
-            @endif
-            <p class="text-slate-400 text-xs mb-4 text-center">كود الغرفة: <span class="font-mono font-bold text-cyan-400 text-lg">{{ $code }}</span></p>
-            <p class="text-slate-400 text-xs mb-4 text-center">الحد الأقصى للمشاركين: <span class="font-bold text-amber-300">{{ $maxParticipants }}</span></p>
+            <?php if($meeting && $meeting->title): ?>
+                <p class="text-slate-300 text-sm mb-4 text-center"><?php echo e($meeting->title); ?></p>
+            <?php endif; ?>
+            <p class="text-slate-400 text-xs mb-4 text-center">كود الغرفة: <span class="font-mono font-bold text-cyan-400 text-lg"><?php echo e($code); ?></span></p>
+            <p class="text-slate-400 text-xs mb-4 text-center">الحد الأقصى للمشاركين: <span class="font-bold text-amber-300"><?php echo e($maxParticipants); ?></span></p>
             <div class="space-y-3">
                 <label class="block text-sm font-medium text-slate-300">اسمك (يظهر للمشاركين)</label>
                 <input type="text" id="guest-name" placeholder="أدخل اسمك" value="" class="w-full px-4 py-3 rounded-xl bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
@@ -74,11 +74,11 @@
                 </a>
             </div>
             <p class="text-slate-500 text-xs mt-4 text-center">لا تحتاج إلى حساب. ادخل باسمك وانضم مباشرة.</p>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 
-    {{-- شاشة الاجتماع بعد الانضمام --}}
+    
     <div id="meeting-screen" class="hidden h-screen flex flex-col">
         <header class="h-[72px] bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between px-4 sm:px-6 shadow-lg flex-shrink-0 gap-2">
             <div class="flex items-center gap-3 min-w-0">
@@ -86,7 +86,7 @@
                     <i class="fas fa-video text-lg"></i>
                 </span>
                 <span class="font-bold text-white truncate">Muallimx Classroom</span>
-                <span class="text-slate-400 text-sm shrink-0">— {{ $code }}</span>
+                <span class="text-slate-400 text-sm shrink-0">— <?php echo e($code); ?></span>
             </div>
             <div class="flex items-center gap-2 shrink-0">
                 <div id="mx-guest-wb-wrap" class="hidden">
@@ -106,21 +106,21 @@
             <div id="mx-video-stack" class="relative flex-1 min-h-0 flex flex-col">
                 <main id="jitsi-container" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة الاجتماع"></main>
                 <div class="jitsi-brand-mask absolute left-0 top-0 pointer-events-none" aria-hidden="true"></div>
-                @include('partials.mx-share-annotation-overlay', [
+                <?php echo $__env->make('partials.mx-share-annotation-overlay', [
                     'mxAnnRole' => 'classroom_guest_emit',
                     'mxAnnPostUrl' => route('classroom.join.share-annotation', $code),
-                ])
+                ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
             </div>
         </div>
     </div>
 
-    @if(empty($meetingEnded))
-    @include('partials.jitsi-iframe-media-allow')
-    <script src="https://{{ $jitsiDomain }}/external_api.js"></script>
+    <?php if(empty($meetingEnded)): ?>
+    <?php echo $__env->make('partials.jitsi-iframe-media-allow', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <script src="https://<?php echo e($jitsiDomain); ?>/external_api.js"></script>
     <script>
-        const domain = '{{ $jitsiDomain }}';
-        const roomName = '{{ $roomName }}';
-        const code = '{{ $code }}';
+        const domain = '<?php echo e($jitsiDomain); ?>';
+        const roomName = '<?php echo e($roomName); ?>';
+        const code = '<?php echo e($code); ?>';
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         let api = null;
         let joinToken = null;
@@ -273,6 +273,7 @@
             navigator.sendBeacon(`/classroom/join/${code}/leave`, new Blob([JSON.stringify({ token: joinToken, _token: csrfToken })], { type: 'application/json' }));
         });
     </script>
-    @endif
+    <?php endif; ?>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/classroom/join.blade.php ENDPATH**/ ?>
