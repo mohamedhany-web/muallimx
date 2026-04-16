@@ -7,7 +7,7 @@
     $aboutDisplay = trim((string) ($marketing['about'] ?? '')) !== ''
         ? $marketing['about']
         : ($u->bio ? Str::limit(strip_tags((string) $u->bio), 400) : null);
-    $skillItems = collect(preg_split('/[\n\r,،]+/', (string) ($marketing['skills'] ?? ''), -1, PREG_SPLIT_NO_EMPTY))
+    $skillItems = collect(preg_split('/[\n\r,،]+/u', (string) ($marketing['skills'] ?? ''), -1, PREG_SPLIT_NO_EMPTY))
         ->map(fn ($s) => trim($s))
         ->filter()
         ->take(24);
