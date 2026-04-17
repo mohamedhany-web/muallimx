@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -64,6 +65,12 @@ class ClassroomMeeting extends Model
         return $this->hasMany(ClassroomMeetingParticipant::class, 'classroom_meeting_id');
     }
 
+    /** تقارير نصية عبر n8n مرتبطة بالتسجيل/التقرير الصوتي */
+    public function aiReports(): HasMany
+    {
+        return $this->hasMany(ClassroomMeetingReport::class, 'classroom_meeting_id');
+    }
+
     public function isLive(): bool
     {
         return $this->started_at && ! $this->ended_at;
@@ -86,12 +93,22 @@ class ClassroomMeeting extends Model
 
     public function hasBrowserRecording(): bool
     {
-        return ! empty($this->recording_path) && ($this->recording_disk === 'live_recordings_r2');
+        return $this->hasRecordingMediaOnR2();
+    }
+
+    /** هل يوجد ملف تسجيل (فيديو و/أو صوت) مرفوع على قرص التسجيلات السحابي؟ */
+    public function hasRecordingMediaOnR2(): bool
+    {
+        if ($this->recording_disk !== 'live_recordings_r2') {
+            return false;
+        }
+
+        return ! empty($this->recording_path) || ! empty($this->recording_audio_path);
     }
 
     public function getRecordingDownloadUrlAttribute(): ?string
     {
-        if (! $this->hasBrowserRecording()) {
+        if (! $this->hasRecordingMediaOnR2() || empty($this->recording_path)) {
             return null;
         }
 
@@ -107,7 +124,7 @@ class ClassroomMeeting extends Model
 
     public function getRecordingAudioDownloadUrlAttribute(): ?string
     {
-        if (! $this->hasBrowserRecording() || empty($this->recording_audio_path)) {
+        if (! $this->hasRecordingMediaOnR2() || empty($this->recording_audio_path)) {
             return null;
         }
 

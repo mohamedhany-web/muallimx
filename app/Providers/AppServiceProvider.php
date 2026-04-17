@@ -125,6 +125,44 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
+        /*
+         | مهم (محلي/تطوير): إذا كان APP_URL يختلف عن Host الحقيقي في المتصفح (مثلاً localhost مقابل 127.0.0.1)
+         | فقد لا يُعاد إرسال كوكي الجلسة بشكل صحيح في بعض الحالات ويظهر 419 عند إرسال النماذج.
+         | نُجبر Laravel على استخدام نفس أصل الطلب الحالي في بيئة التطوير فقط.
+         */
+        $this->app->booted(function (): void {
+            if ($this->app->runningInConsole()) {
+                return;
+            }
+
+            if (! $this->app->environment(['local', 'development', 'staging'])) {
+                return;
+            }
+
+            try {
+                $request = request();
+                if (! $request) {
+                    return;
+                }
+
+                $configured = rtrim((string) config('app.url'), '/');
+                $configuredHost = $configured !== '' ? (string) parse_url($configured, PHP_URL_HOST) : '';
+                $currentHost = (string) $request->getHost();
+
+                if ($configuredHost !== '' && $currentHost !== '' && strcasecmp($configuredHost, $currentHost) !== 0) {
+                    $scheme = $request->getScheme();
+                    $port = $request->getPort();
+                    $isDefaultPort = ($scheme === 'https' && (int) $port === 443)
+                        || ($scheme === 'http' && (int) $port === 80);
+                    $root = $scheme.'://'.$currentHost.($isDefaultPort ? '' : ':'.$port);
+
+                    URL::forceRootUrl($root);
+                }
+            } catch (\Throwable $e) {
+                // لا نكسر التشغيل بسبب محاولة ضبط الأصل
+            }
+        });
+
         // Observers للنماذج - مع تحسينات الأداء
         \App\Models\User::observe(\App\Observers\UserObserver::class);
         \App\Models\StudentCourseEnrollment::observe(\App\Observers\EnrollmentObserver::class);

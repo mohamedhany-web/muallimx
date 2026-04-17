@@ -15,7 +15,7 @@
                         إعداد تكامل n8n مع Muallimx
                     </h1>
                     <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                        هنا تجد روابط الـ Endpoints والتوكن المطلوب لربط n8n بالمنصة وبخدمة تسجيلات البث (Cloudflare R2 عبر Laravel).
+                        القيم التي تحفظها في النموذج أدناه تُخزَّن في قاعدة البيانات وتُستخدم أولاً عند الاتصال بـ n8n؛ إن تركتها فارغة تُستخدم قيم <code>.env</code> (<code>N8N_WEBHOOK_TOKEN</code> و<code>N8N_LIVE_SESSION_REPORT_WEBHOOK</code>) كاحتياطي.
                     </p>
                 </div>
             </div>
@@ -32,7 +32,7 @@
                         1) إعداد قيم n8n من لوحة التحكم
                     </h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        يمكن للعميل هنا تحديد توكن الأمان ورابط الـ Webhook دون الحاجة لتعديل أي كود أو ملف إعدادات يدوياً.
+                        أي حفظ هنا يحدّث <code>integration_settings</code> فوراً ويصبح هو المصدر الافتراضي أمام <code>.env</code>.
                     </p>
                 </div>
             </div>
@@ -66,7 +66,7 @@
                                class="w-full rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm"
                                placeholder="https://your-n8n-host/webhook/live-session-report">
                         <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                            هذا هو الرابط الذي سيتم استدعاؤه من المنصة عند ضغط المعلم على زر \"تقرير ذكي للجلسة\".
+                            يُستدعى من المنصة عند طلب تقرير ذكي لجلسة البث أو تقرير نصي لاجتماع Classroom (نفس الـ webhook مع <code>source</code> مختلف في الجسم).
                         </p>
                         @error('n8n_webhook')
                         <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
@@ -81,6 +81,16 @@
                         </button>
                     </div>
                 </form>
+                <form method="POST" action="{{ route('admin.n8n.settings.test-connection') }}" class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-600 max-w-xl"
+                      onsubmit="return confirm('سيتم إرسال طلب تجريبي من خادم المنصة إلى رابط الـ Webhook المحفوظ حالياً (مع التوكن الفعّال). المتابعة؟');">
+                    @csrf
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">يستخدم القيم المحفوظة في قاعدة البيانات أو الاحتياطي من .env — دون قراءة ما كتبته في الحقول دون حفظ.</p>
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 rounded-lg text-sm font-semibold border border-slate-200 dark:border-slate-600">
+                        <i class="fas fa-plug text-xs"></i>
+                        <span>اختبار الاتصال بـ n8n</span>
+                    </button>
+                </form>
             </div>
         </section>
 
@@ -92,7 +102,7 @@
                 </div>
                 <div>
                     <h2 class="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                        1) Webhook من Muallimx إلى n8n (إنشاء التقرير)
+                        2) Webhook من Muallimx إلى n8n (إنشاء التقرير)
                     </h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         هذا هو الـ URL الذي يستدعيه Laravel داخل `generateAiReport` لتشغيل الـ Workflow في n8n.
@@ -101,9 +111,33 @@
             </div>
             <div class="px-6 py-5 space-y-4 text-sm text-slate-700 dark:text-slate-200">
                 <div>
-                    <p class="text-xs font-semibold text-slate-500 mb-1">الرابط المستخدَم حالياً (من قاعدة البيانات):</p>
+                    <p class="text-xs font-semibold text-slate-500 mb-1">الرابط الفعّال الذي تستخدمه المنصة:</p>
+                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                        @if($n8nWebhookSource === 'admin')
+                            <span class="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 px-2 py-0.5 text-[10px] font-bold">من لوحة التحكم</span>
+                        @elseif($n8nWebhookSource === 'env')
+                            <span class="inline-flex items-center rounded-full bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100 px-2 py-0.5 text-[10px] font-bold">من .env (احتياطي)</span>
+                        @else
+                            <span class="inline-flex items-center rounded-full bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200 px-2 py-0.5 text-[10px] font-bold">غير مضبوط</span>
+                        @endif
+                    </div>
                     <div class="rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 font-mono text-xs break-all">
-                        {{ $n8nWebhook ?: 'لم يتم ضبطه بعد من النموذج أعلاه' }}
+                        {{ $n8nWebhook ?: 'لم يُضبط بعد — عبّئ الحقل أعلاه أو عرّف N8N_LIVE_SESSION_REPORT_WEBHOOK في .env' }}
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-500 mb-1">التوكن الفعّال (X-N8N-Token):</p>
+                    <div class="flex flex-wrap items-center gap-2 mb-1">
+                        @if($n8nTokenSource === 'admin')
+                            <span class="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 px-2 py-0.5 text-[10px] font-bold">من لوحة التحكم</span>
+                        @elseif($n8nTokenSource === 'env')
+                            <span class="inline-flex items-center rounded-full bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100 px-2 py-0.5 text-[10px] font-bold">من .env (احتياطي)</span>
+                        @else
+                            <span class="inline-flex items-center rounded-full bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200 px-2 py-0.5 text-[10px] font-bold">غير مضبوط</span>
+                        @endif
+                    </div>
+                    <div class="rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 font-mono text-xs break-all">
+                        {{ $n8nToken ? str_repeat('•', min(24, strlen($n8nToken))) . ' (' . strlen($n8nToken) . ' حرف)' : 'لم يُضبط بعد' }}
                     </div>
                 </div>
 
@@ -156,6 +190,13 @@ Body (JSON):
                     <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                         استبدل <code>{report_id}</code> بـ <code>report_id</code> القادم من المنصة (القيمة التي أرسلناها لـ n8n في الخطوة الأولى).
                     </p>
+                    <p class="mt-3 text-xs font-semibold text-slate-600 dark:text-slate-300">تقارير اجتماعات Muallimx Classroom (نفس الـ Webhook، callback مختلف):</p>
+                    <div class="mt-1 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 font-mono text-xs break-all">
+                        PATCH {{ $classroomPlatformCallback }}
+                    </div>
+                    <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                        يُفضّل في n8n استخدام <code>callback.url</code> القادم في جسم الطلب بدل تثبيت الرابط؛ عند <code>source: classroom_meeting</code> يشير الـ callback إلى الجدول <code>classroom_meeting_reports</code>.
+                    </p>
                 </div>
 
                 <div>
@@ -165,7 +206,7 @@ Body (JSON):
                     </div>
                     @unless($n8nToken)
                         <p class="mt-1 text-[11px] text-amber-700 dark:text-amber-300">
-                            لم يتم ضبط <code>N8N_WEBHOOK_TOKEN</code> بعد في <code>.env</code>. اختر توكن سري وضع نفس القيمة في n8n (Header) وداخل ملف البيئة.
+                            لم يُضبط التوكن بعد — أدخله في النموذج أعلاه واحفظه، أو عرّف <code>N8N_WEBHOOK_TOKEN</code> في <code>.env</code>، واستخدم نفس القيمة في n8n (هيدر <code>X-N8N-Token</code>).
                         </p>
                     @endunless
                 </div>

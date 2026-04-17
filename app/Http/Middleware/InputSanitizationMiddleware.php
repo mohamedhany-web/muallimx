@@ -22,6 +22,11 @@ class InputSanitizationMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Webhooks خارجية (n8n، تسجيلات البث) — مدخلات JSON قد تحتوي كلمات تقنية تُصادَف خطأً كـ SQL/XSS
+        if ($request->is('api/n8n/*') || $request->is('api/live-recordings/register')) {
+            return $next($request);
+        }
+
         // حقول نصية طويلة (خبرات، نبذة، مهارات) نستثنيها من فحص SQL/XSS لتجنب إنذارات خاطئة عند كتابة نصوص كثيرة
         $longTextFields = ['experience', 'bio', 'skills', 'rejection_reason', 'bio_ar', 'bio_en'];
 

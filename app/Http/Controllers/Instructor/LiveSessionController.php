@@ -15,6 +15,7 @@ use App\Services\ClassroomSubscriptionFeatureMenuService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -244,6 +245,9 @@ class LiveSessionController extends Controller
             'status' => 'pending',
         ]);
 
+        $recordingUrl = $recording?->getUrl();
+        $callbackUrl = url('/api/n8n/live-session-reports/'.$report->id);
+
         $webhookUrl = IntegrationSetting::get('n8n_live_session_report_webhook', config('services.n8n.live_session_report_webhook'));
         $token = IntegrationSetting::get('n8n_token', config('services.n8n.token'));
 
@@ -252,16 +256,36 @@ class LiveSessionController extends Controller
         }
 
         try {
-            $response = Http::withHeaders([
-                'X-N8N-Token' => $token,
-                'Accept' => 'application/json',
-            ])->post($webhookUrl, [
-                'report_id' => $report->id,
-                'live_session_id' => $liveSession->id,
-                'instructor_id' => auth()->id(),
-                'live_recording_id' => $recording?->id,
-                'title' => $report->title,
-            ]);
+            $response = Http::timeout(45)
+                ->connectTimeout(10)
+                ->withHeaders([
+                    'X-N8N-Token' => $token,
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ])->post($webhookUrl, [
+                    'report_id' => $report->id,
+                    'live_session_id' => $liveSession->id,
+                    'instructor_id' => auth()->id(),
+                    'live_recording_id' => $recording?->id,
+                    'title' => $report->title,
+                    'live_session_title' => $liveSession->title,
+                    'live_session_status' => $liveSession->status,
+                    'recording' => [
+                        'id' => $recording?->id,
+                        'file_path' => $recording?->file_path,
+                        'storage_disk' => $recording?->storage_disk,
+                        'external_url' => $recording?->external_url,
+                        'duration_seconds' => $recording?->duration_seconds,
+                        'file_size' => $recording?->file_size,
+                        'status' => $recording?->status,
+                        'download_url' => $recordingUrl,
+                    ],
+                    'callback' => [
+                        'url' => $callbackUrl,
+                        'method' => 'PATCH',
+                        'header' => 'X-N8N-Token',
+                    ],
+                ]);
 
             if ($response->successful()) {
                 $executionId = $response->json('execution_id');
@@ -276,10 +300,23 @@ class LiveSessionController extends Controller
             } else {
                 $report->update(['status' => 'failed']);
 
-                return back()->with('error', 'تعذر إرسال الطلب إلى n8n. الرجاء المحاولة لاحقاً.');
+                Log::warning('n8n live-session report webhook failed', [
+                    'live_session_id' => $liveSession->id,
+                    'report_id' => $report->id,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return back()->with('error', 'تعذر إرسال الطلب إلى n8n. تحقق من رابط الـ Webhook والتوكن في إعدادات n8n داخل لوحة التحكم.');
             }
         } catch (\Throwable $e) {
             $report->update(['status' => 'failed']);
+
+            Log::error('n8n live-session report webhook exception', [
+                'live_session_id' => $liveSession->id,
+                'report_id' => $report->id,
+                'error' => $e->getMessage(),
+            ]);
 
             return back()->with('error', 'حدث خطأ أثناء الاتصال بخدمة التقارير. الرجاء المحاولة لاحقاً.');
         }

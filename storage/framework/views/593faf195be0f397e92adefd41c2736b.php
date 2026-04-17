@@ -71,22 +71,29 @@
         </div>
 
         <?php if($meeting->ended_at): ?>
+            <?php
+                $hasVideo = (bool) $meeting->recording_path;
+                $hasAudio = (bool) $meeting->recording_audio_path;
+                $hasAnyMedia = $hasVideo || $hasAudio;
+            ?>
             <div class="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-900/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
-                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100">تسجيل المحاضرة</p>
-                    <?php if($meeting->recording_path): ?>
-                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                            تم حفظ التسجيل بنجاح.
-                            <?php if($meeting->recording_uploaded_at): ?>
-                                وقت الرفع: <?php echo e($meeting->recording_uploaded_at->format('Y-m-d H:i')); ?>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100">التسجيل والتقرير الصوتي</p>
+                    <?php if($hasAnyMedia): ?>
+                        <?php if($hasVideo): ?>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                                تم حفظ تسجيل المحاضرة.
+                                <?php if($meeting->recording_uploaded_at): ?>
+                                    وقت الرفع: <?php echo e($meeting->recording_uploaded_at->format('Y-m-d H:i')); ?>
 
-                            <?php endif; ?>
-                        </p>
-                        <?php if($meeting->recording_audio_path): ?>
-                            <p class="text-xs text-emerald-700 dark:text-emerald-300 mt-1">تم حفظ ملف الصوت المنفصل بنجاح.</p>
+                                <?php endif; ?>
+                            </p>
+                        <?php endif; ?>
+                        <?php if($hasAudio): ?>
+                            <p class="text-xs text-emerald-700 dark:text-emerald-300 mt-1">تم حفظ التقرير الصوتي (الفويس) لهذا الاجتماع.</p>
                         <?php endif; ?>
                     <?php else: ?>
-                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">لا يوجد تسجيل مرفوع لهذا الاجتماع.</p>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">لا يوجد تسجيل أو تقرير صوتي مرفوع لهذا الاجتماع.</p>
                     <?php endif; ?>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -99,13 +106,16 @@
                     <?php if($meeting->recording_audio_download_url): ?>
                         <a href="<?php echo e($meeting->recording_audio_download_url); ?>" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold">
                             <i class="fas fa-music"></i>
-                            تحميل الفويس
+                            تحميل التقرير الصوتي
                         </a>
+                        <audio controls preload="none" class="max-w-full md:max-w-sm h-9 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800">
+                            <source src="<?php echo e($meeting->recording_audio_download_url); ?>" type="<?php echo e($meeting->recording_audio_mime_type ?: 'audio/webm'); ?>">
+                        </audio>
                     <?php elseif($meeting->recording_audio_path): ?>
-                        <span class="text-xs text-amber-700 dark:text-amber-300">الفويس موجود لكن رابط التحميل غير متاح حالياً.</span>
+                        <span class="text-xs text-amber-700 dark:text-amber-300">التقرير الصوتي موجود لكن رابط التحميل غير متاح حالياً.</span>
                     <?php endif; ?>
-                    <?php if(!$meeting->recording_download_url && !$meeting->recording_audio_download_url && $meeting->recording_path): ?>
-                        <span class="text-xs text-amber-700 dark:text-amber-300">التسجيل موجود ولكن رابط التحميل غير متاح حالياً.</span>
+                    <?php if(!$meeting->recording_download_url && !$meeting->recording_audio_download_url && $hasAnyMedia): ?>
+                        <span class="text-xs text-amber-700 dark:text-amber-300">الملف موجود ولكن رابط التحميل غير متاح حالياً.</span>
                     <?php endif; ?>
                 </div>
             </div>

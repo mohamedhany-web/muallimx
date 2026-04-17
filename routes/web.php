@@ -574,6 +574,12 @@ Route::patch('/api/n8n/live-session-reports/{report}', [\App\Http\Controllers\Ap
 Route::post('/api/n8n/live-session-reports/{report}', [\App\Http\Controllers\Api\N8nLiveSessionReportController::class, 'update'])
     ->name('api.n8n.live-session-reports.update.post');
 
+// Callback من n8n لتقرير اجتماع Classroom (يتطلب X-N8N-Token)
+Route::patch('/api/n8n/classroom-meeting-reports/{report}', [\App\Http\Controllers\Api\N8nClassroomMeetingReportController::class, 'update'])
+    ->name('api.n8n.classroom-meeting-reports.update');
+Route::post('/api/n8n/classroom-meeting-reports/{report}', [\App\Http\Controllers\Api\N8nClassroomMeetingReportController::class, 'update'])
+    ->name('api.n8n.classroom-meeting-reports.update.post');
+
 // مسارات لوحة التحكم - محمية بالتأكد من تسجيل الدخول ومنع الجلسات المتزامنة
 Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -804,6 +810,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/recording-audio/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignAudioUpload'])->name('student.classroom.recording-audio.presign');
         Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('student.classroom.recording-audio.upload');
         Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('student.classroom.recording-audio.complete');
+        Route::post('/classroom/{meeting}/ai-report', [\App\Http\Controllers\Student\ClassroomController::class, 'generateAiReport'])->name('student.classroom.ai-report');
     });
 
     // مزايا اشتراك Muallimx (دعم، مكتبة، صفحات المزايا، …) — للطالب والمدرب حسب التحقق داخل المتحكم
@@ -1548,6 +1555,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 ->name('settings');
             Route::post('/settings', [\App\Http\Controllers\Admin\N8nSettingsController::class, 'update'])
                 ->name('settings.update');
+            Route::post('/settings/test-connection', [\App\Http\Controllers\Admin\N8nSettingsController::class, 'testConnection'])
+                ->middleware('throttle:10,1')
+                ->name('settings.test-connection');
         });
         Route::prefix('installments')->name('installments.')->group(function () {
             Route::resource('plans', \App\Http\Controllers\Admin\InstallmentPlanController::class);
@@ -1803,6 +1813,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/recording-audio/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignAudioUpload'])->name('classroom.recording-audio.presign');
         Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('classroom.recording-audio.upload');
         Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('classroom.recording-audio.complete');
+        Route::post('/classroom/{meeting}/ai-report', [\App\Http\Controllers\Student\ClassroomController::class, 'generateAiReport'])->name('classroom.ai-report');
 
         // بروفايل المدرب
         Route::get('/profile', [\App\Http\Controllers\Instructor\ProfileController::class, 'index'])->name('profile');

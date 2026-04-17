@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassroomMeeting;
+use App\Models\ClassroomMeetingReport;
+use App\Models\IntegrationSetting;
 use App\Models\LiveSetting;
 use App\Services\ClassroomSubscriptionFeatureMenuService;
 use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -151,11 +155,24 @@ class ClassroomController extends Controller
         $this->ensureClassroomAccess($user, $meeting);
 
         $meeting->loadCount('participants');
+        $meeting->load(['aiReports' => function ($q) {
+            $q->orderByDesc('id')->limit(20);
+        }]);
+        $aiReports = $meeting->aiReports;
+        $activeAiReport = $aiReports->first(fn ($r) => in_array($r->status, ['pending', 'processing'], true));
+        $latestCompletedAiReport = $aiReports->firstWhere('status', 'completed');
         $joinUrl = url('classroom/join/'.$meeting->code);
         $limits = SubscriptionLimitService::limitsForUser($user);
         $useInstructorRoutes = request()->routeIs('instructor.*');
 
-        return view('student.classroom.show', compact('meeting', 'joinUrl', 'limits', 'useInstructorRoutes'));
+        return view('student.classroom.show', compact(
+            'meeting',
+            'joinUrl',
+            'limits',
+            'useInstructorRoutes',
+            'activeAiReport',
+            'latestCompletedAiReport'
+        ));
     }
 
     public function edit(ClassroomMeeting $meeting)
@@ -856,6 +873,125 @@ class ClassroomController extends Controller
             'message' => 'تم رفع وحفظ التسجيل الصوتي بنجاح.',
             'audio_download_url' => $meeting->fresh()->recording_audio_download_url,
         ]);
+    }
+
+    /**
+     * إرسال التسجيل/التقرير الصوتي إلى n8n لإنشاء تقرير نصي عن المحاضرة.
+     */
+    public function generateAiReport(Request $request, ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if (! $meeting->ended_at) {
+            return back()->with('error', 'يمكن إنشاء التقرير النصي بعد إنهاء الاجتماع.');
+        }
+
+        $existing = ClassroomMeetingReport::where('classroom_meeting_id', $meeting->id)
+            ->whereIn('status', ['pending', 'processing'])
+            ->first();
+
+        if ($existing) {
+            return back()->with('info', 'هناك طلب تقرير قيد المعالجة بالفعل لهذا الاجتماع.');
+        }
+
+        $meetingFresh = $meeting->fresh();
+        $audioUrl = $meetingFresh->recording_audio_download_url;
+        $videoUrl = $meetingFresh->recording_download_url;
+        $primaryUrl = $audioUrl ?? $videoUrl;
+
+        if (! $primaryUrl) {
+            return back()->with('error', 'ارفع التقرير الصوتي أو تسجيل المحاضرة أولاً حتى يمكن إرسال الملف إلى نظام التقارير (n8n).');
+        }
+
+        $report = ClassroomMeetingReport::create([
+            'classroom_meeting_id' => $meeting->id,
+            'user_id' => $user->id,
+            'title' => 'تقرير الاجتماع — '.$meeting->title,
+            'status' => 'pending',
+            'audio_path' => $meetingFresh->recording_audio_path,
+            'storage_disk' => $meetingFresh->recording_disk,
+        ]);
+
+        $callbackUrl = url('/api/n8n/classroom-meeting-reports/'.$report->id);
+        $webhookUrl = IntegrationSetting::get('n8n_live_session_report_webhook', config('services.n8n.live_session_report_webhook'));
+        $token = IntegrationSetting::get('n8n_token', config('services.n8n.token'));
+
+        if (! $webhookUrl || ! $token) {
+            $report->update(['status' => 'failed']);
+
+            return back()->with('error', 'إعدادات تكامل n8n غير مكتملة. تواصل مع مدير النظام.');
+        }
+
+        try {
+            $response = Http::timeout(45)
+                ->connectTimeout(10)
+                ->withHeaders([
+                    'X-N8N-Token' => $token,
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ])->post($webhookUrl, [
+                    'source' => 'classroom_meeting',
+                    'report_id' => $report->id,
+                    'classroom_meeting_id' => $meeting->id,
+                    'user_id' => $user->id,
+                    'title' => $report->title,
+                    'meeting_title' => $meeting->title,
+                    'meeting_code' => $meeting->code,
+                    'meeting_ended_at' => optional($meeting->ended_at)->toIso8601String(),
+                    'recording' => [
+                        'storage_disk' => $meetingFresh->recording_disk,
+                        'audio_path' => $meetingFresh->recording_audio_path,
+                        'video_path' => $meetingFresh->recording_path,
+                        'audio_mime_type' => $meetingFresh->recording_audio_mime_type,
+                        'video_mime_type' => $meetingFresh->recording_mime_type,
+                        'audio_download_url' => $audioUrl,
+                        'video_download_url' => $videoUrl,
+                        'download_url' => $primaryUrl,
+                    ],
+                    'callback' => [
+                        'url' => $callbackUrl,
+                        'method' => 'PATCH',
+                        'header' => 'X-N8N-Token',
+                    ],
+                ]);
+
+            if ($response->successful()) {
+                $executionId = $response->json('execution_id');
+                if ($executionId) {
+                    $report->update([
+                        'n8n_execution_id' => $executionId,
+                        'status' => 'processing',
+                    ]);
+                } else {
+                    $report->update(['status' => 'processing']);
+                }
+            } else {
+                $report->update(['status' => 'failed']);
+
+                Log::warning('n8n classroom-meeting report webhook failed', [
+                    'classroom_meeting_id' => $meeting->id,
+                    'report_id' => $report->id,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+
+                return back()->with('error', 'تعذر إرسال الطلب إلى n8n. تحقق من رابط الـ Webhook والتوكن في إعدادات n8n داخل لوحة التحكم.');
+            }
+        } catch (\Throwable $e) {
+            $report->update(['status' => 'failed']);
+
+            Log::error('n8n classroom-meeting report webhook exception', [
+                'classroom_meeting_id' => $meeting->id,
+                'report_id' => $report->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'حدث خطأ أثناء الاتصال بخدمة التقارير. الرجاء المحاولة لاحقاً.');
+        }
+
+        return back()->with('success', 'تم إرسال طلب إنشاء التقرير النصي، جاري المعالجة عبر n8n.');
     }
 
     public function destroy(ClassroomMeeting $meeting)

@@ -63,15 +63,11 @@
                 <label class="block text-sm font-medium text-slate-300">اسمك (يظهر للمشاركين)</label>
                 <input type="text" id="guest-name" placeholder="أدخل اسمك" value="" class="w-full px-4 py-3 rounded-xl bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
             </div>
-            <div class="mt-6 flex flex-col sm:flex-row gap-3">
-                <button type="button" id="btn-join" class="flex-1 px-6 py-3 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold transition-colors">
+            <div class="mt-6">
+                <button type="button" id="btn-join" class="w-full px-6 py-3 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold transition-colors">
                     <i class="fas fa-video ml-2"></i>
                     انضم الآن
                 </button>
-                <a href="https://github.com/jitsi/jitsi-meet-electron/releases" target="_blank" rel="noopener noreferrer" class="flex-1 px-6 py-3 rounded-xl bg-slate-600 hover:bg-slate-500 text-white font-semibold text-center transition-colors text-sm">
-                    <i class="fas fa-download ml-2"></i>
-                    تنزيل تطبيق سطح المكتب
-                </a>
             </div>
             <p class="text-slate-500 text-xs mt-4 text-center">لا تحتاج إلى حساب. ادخل باسمك وانضم مباشرة.</p>
             @endif
