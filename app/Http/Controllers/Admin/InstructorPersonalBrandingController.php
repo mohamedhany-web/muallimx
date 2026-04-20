@@ -128,11 +128,15 @@ class InstructorPersonalBrandingController extends Controller
         if ($personal_branding->status !== InstructorProfile::STATUS_PENDING_REVIEW) {
             return back()->with('error', 'يمكن رفض فقط الملفات قيد المراجعة.');
         }
+        $validated = $request->validate([
+            'rejection_reason' => 'nullable|string|max:2000',
+        ]);
+
         $personal_branding->update([
             'status' => InstructorProfile::STATUS_REJECTED,
             'reviewed_at' => now(),
             'reviewed_by' => auth()->id(),
-            'rejection_reason' => $request->input('rejection_reason'),
+            'rejection_reason' => $validated['rejection_reason'] ?? null,
         ]);
 
         return back()->with('success', 'تم رفض الملف التعريفي. يمكن للمدرب تعديله وإعادة الإرسال.');

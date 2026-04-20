@@ -34,9 +34,9 @@
                     </button>
                 </form>
                 <span class="rounded-full px-3 py-1 text-sm font-semibold
-                    @if($personal_branding->status == 'approved') bg-emerald-100 text-emerald-700
-                    @elseif($personal_branding->status == 'pending_review') bg-amber-100 text-amber-700
-                    @elseif($personal_branding->status == 'rejected') bg-rose-100 text-rose-700
+                    @if($personal_branding->status === \App\Models\InstructorProfile::STATUS_APPROVED) bg-emerald-100 text-emerald-700
+                    @elseif($personal_branding->status === \App\Models\InstructorProfile::STATUS_PENDING_REVIEW) bg-amber-100 text-amber-700
+                    @elseif($personal_branding->status === \App\Models\InstructorProfile::STATUS_REJECTED) bg-rose-100 text-rose-700
                     @else bg-slate-100 text-slate-600
                     @endif">
                     {{ \App\Models\InstructorProfile::statusLabel($personal_branding->status) }}
@@ -130,36 +130,33 @@
         </div>
         <div class="px-5 py-6 sm:px-8 border-t border-slate-200 bg-slate-50/80">
             <h3 class="text-sm font-bold text-slate-700 mb-3">إجراءات المراجعة</h3>
-            @if($personal_branding->status == 'pending_review')
-                <div class="flex flex-wrap items-center gap-3">
-                    <form method="POST" action="{{ route('admin.personal-branding.approve', $personal_branding) }}" class="inline">
+            @if($personal_branding->status === \App\Models\InstructorProfile::STATUS_PENDING_REVIEW)
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <form method="POST" action="{{ route('admin.personal-branding.approve', $personal_branding) }}" class="inline" onsubmit="return confirm('تأكيد الموافقة على هذا الملف ونشره للطلاب في الموقع؟');">
+                            @csrf
+                            <button type="submit" class="rounded-2xl bg-emerald-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-emerald-700 shadow-sm">موافقة ونشر على الموقع</button>
+                        </form>
+                    </div>
+                    {{-- نموذج رفض بدون Alpine: يعمل حتى لو تعطّل أو تأخّر تحميل Alpine.js --}}
+                    <form method="POST" action="{{ route('admin.personal-branding.reject', $personal_branding) }}" class="max-w-xl space-y-2 rounded-2xl border border-rose-200 bg-rose-50/50 p-4" onsubmit="return confirm('تأكيد رفض هذا الملف التعريفي؟ يمكن للمدرب تعديله وإعادة الإرسال.');">
                         @csrf
-                        <button type="submit" class="rounded-2xl bg-emerald-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-emerald-700 shadow-sm">موافقة ونشر على الموقع</button>
-                    </form>
-                    <form method="POST" action="{{ route('admin.personal-branding.reject', $personal_branding) }}" class="inline" x-data="{ open: false }">
-                        @csrf
-                        <template x-if="!open">
-                            <button type="button" @click="open = true" class="rounded-2xl bg-rose-100 text-rose-700 px-5 py-2.5 text-sm font-semibold hover:bg-rose-200 border border-rose-200">رفض</button>
-                        </template>
-                        <template x-if="open">
-                            <div class="flex flex-wrap items-end gap-3">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-600 mb-1">سبب الرفض (اختياري)</label>
-                                    <textarea name="rejection_reason" rows="2" class="rounded-xl border border-slate-200 px-3 py-2 text-sm w-64" placeholder="اكتب سبب الرفض للمدرب..."></textarea>
-                                </div>
-                                <button type="submit" class="rounded-2xl bg-rose-600 text-white px-4 py-2 text-sm font-semibold">تأكيد الرفض</button>
-                                <button type="button" @click="open = false" class="rounded-2xl bg-slate-200 text-slate-700 px-4 py-2 text-sm">إلغاء</button>
-                            </div>
-                        </template>
+                        <p class="text-xs font-semibold text-rose-800">رفض الملف</p>
+                        <label class="block text-xs font-semibold text-slate-600">سبب الرفض (اختياري)</label>
+                        <textarea name="rejection_reason" rows="2" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white" placeholder="اكتب سبب الرفض للمدرب...">{{ old('rejection_reason') }}</textarea>
+                        @error('rejection_reason')
+                            <p class="text-sm text-rose-600">{{ $message }}</p>
+                        @enderror
+                        <button type="submit" class="rounded-2xl bg-rose-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-rose-700">تأكيد الرفض</button>
                     </form>
                 </div>
-            @elseif(in_array($personal_branding->status, ['approved', 'rejected']))
+            @elseif(in_array($personal_branding->status, [\App\Models\InstructorProfile::STATUS_APPROVED, \App\Models\InstructorProfile::STATUS_REJECTED], true))
                 <form method="POST" action="{{ route('admin.personal-branding.send-back', $personal_branding) }}" class="inline" onsubmit="return confirm('إعادة هذا الملف إلى قيد المراجعة؟');">
                     @csrf
                     <button type="submit" class="rounded-2xl bg-amber-100 text-amber-800 px-5 py-2.5 text-sm font-semibold hover:bg-amber-200 border border-amber-200">إعادة للمراجعة</button>
                 </form>
             @else
-                <p class="text-slate-600 text-sm">هذا الملف ما زال <strong>مسودة</strong> ولم يُرسل من المدرب للمراجعة بعد. أزرار الموافقة والرفض تظهر عندما يكون الحالة <strong>قيد المراجعة</strong>.</p>
+                <p class="text-slate-600 text-sm">هذا الملف ما زال <strong>مسودة</strong> ولم يُرسل من المدرب للمراجعة بعد. أزرار الموافقة والرفض تظهر عندما تكون الحالة <strong>قيد المراجعة</strong> (بعد ضغط المدرب على «إرسال للمراجعة»).</p>
             @endif
         </div>
     </div>

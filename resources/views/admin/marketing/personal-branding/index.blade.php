@@ -56,6 +56,12 @@
                             <td class="px-4 py-3">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <a href="{{ route('admin.personal-branding.show', $p) }}" class="inline-flex items-center rounded-lg bg-slate-100 text-slate-800 px-2.5 py-1.5 text-xs font-semibold hover:bg-slate-200">عرض</a>
+                                    @if($p->status === \App\Models\InstructorProfile::STATUS_PENDING_REVIEW)
+                                        <form method="POST" action="{{ route('admin.personal-branding.approve', $p) }}" class="inline" onsubmit="return confirm('تأكيد الموافقة ونشر الملف للطلاب؟');">
+                                            @csrf
+                                            <button type="submit" class="inline-flex items-center rounded-lg bg-emerald-600 text-white px-2.5 py-1.5 text-xs font-semibold hover:bg-emerald-700">موافقة</button>
+                                        </form>
+                                    @endif
                                     <a href="{{ route('admin.personal-branding.edit', $p) }}" class="inline-flex items-center rounded-lg bg-sky-50 text-sky-700 px-2.5 py-1.5 text-xs font-semibold hover:bg-sky-100 border border-sky-200/80">تعديل</a>
                                     <form method="POST" action="{{ route('admin.personal-branding.destroy', $p) }}" class="inline" onsubmit="return confirm('حذف الملف التعريفي بالكامل لهذا المدرب؟ سيُزال من الموقع ويمكنه إنشاء ملف جديد لاحقاً.');">
                                         @csrf
