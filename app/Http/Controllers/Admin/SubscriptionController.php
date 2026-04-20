@@ -8,6 +8,7 @@ use App\Models\SubscriptionRequest;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Models\ActivityLog;
+use App\Models\CouponUsage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -353,9 +354,9 @@ class SubscriptionController extends Controller
                 'description' => ($subscriptionRequest->request_type ?? null) === 'upgrade'
                     ? 'فاتورة ترقية اشتراك: ' . $subscriptionRequest->plan_name
                     : 'فاتورة اشتراك: ' . $subscriptionRequest->plan_name,
-                'subtotal' => $subscriptionRequest->price,
+                'subtotal' => $subscriptionRequest->original_price ?? $subscriptionRequest->price,
                 'tax_amount' => 0,
-                'discount_amount' => 0,
+                'discount_amount' => $subscriptionRequest->discount_amount ?? 0,
                 'total_amount' => $subscriptionRequest->price,
                 'status' => 'pending',
                 'due_date' => $startDate,
@@ -364,7 +365,7 @@ class SubscriptionController extends Controller
                     [
                         'description' => 'اشتراك: ' . $subscriptionRequest->plan_name,
                         'quantity' => 1,
-                        'price' => $subscriptionRequest->price,
+                        'price' => $subscriptionRequest->original_price ?? $subscriptionRequest->price,
                         'total' => $subscriptionRequest->price,
                     ],
                 ],
@@ -398,6 +399,18 @@ class SubscriptionController extends Controller
                 'approved_at' => now(),
                 'approved_by' => Auth::id(),
             ]);
+
+            if ($subscriptionRequest->coupon_id) {
+                $subscriptionRequest->coupon?->incrementUsage();
+                CouponUsage::create([
+                    'coupon_id' => $subscriptionRequest->coupon_id,
+                    'user_id' => $subscriptionRequest->user_id,
+                    'invoice_id' => $invoice->id,
+                    'discount_amount' => (float) ($subscriptionRequest->discount_amount ?? 0),
+                    'order_amount' => (float) ($subscriptionRequest->original_price ?? $subscriptionRequest->price),
+                    'final_amount' => (float) $subscriptionRequest->price,
+                ]);
+            }
 
             DB::commit();
 

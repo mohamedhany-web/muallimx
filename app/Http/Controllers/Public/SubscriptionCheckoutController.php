@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Admin\TeacherFeaturesController;
+use App\Models\Coupon;
 use App\Models\SubscriptionRequest;
 use App\Models\Wallet;
 use App\Services\FawaterakApiService;
@@ -115,6 +116,7 @@ class SubscriptionCheckoutController extends Controller
             ],
             'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:'.config('upload_limits.max_upload_kb'),
             'notes' => 'nullable|string|max:1000',
+            'coupon_code' => 'nullable|string|max:64',
             'upgrade' => 'nullable|boolean',
             'from' => 'nullable',
         ], [
@@ -131,8 +133,13 @@ class SubscriptionCheckoutController extends Controller
         $planConfig = $settings[$plan] ?? SubscriptionRequest::planDefaults($plan);
 
         $planName = $planConfig['label'] ?? $planConfig['plan_name'] ?? 'باقة المعلم';
-        $price = (float) ($planConfig['price'] ?? 0);
+        $basePrice = (float) ($planConfig['price'] ?? 0);
         $billingCycle = $planConfig['billing_cycle'] ?? 'monthly';
+        $couponResolved = $this->resolveSubscriptionCoupon(Auth::user(), $basePrice, $validated['coupon_code'] ?? null);
+        if (! $couponResolved['ok']) {
+            return back()->withErrors(['coupon_code' => $couponResolved['message']])->withInput();
+        }
+        $price = $couponResolved['final_amount'];
 
         // ترقية: تحقق من الاشتراك الحالي + منع الداونجريد
         $fromSubscription = null;
@@ -175,12 +182,20 @@ class SubscriptionCheckoutController extends Controller
             'from_teacher_plan_key' => $upgrade ? ($fromSubscription?->teacher_plan_key) : null,
             'plan_name' => $planName,
             'price' => $price,
+            'original_price' => $couponResolved['original_amount'],
+            'discount_amount' => $couponResolved['discount_amount'],
+            'coupon_id' => $couponResolved['coupon_id'],
+            'coupon_code' => $couponResolved['coupon_code'],
             'billing_cycle' => $billingCycle,
             'request_type' => $upgrade ? 'upgrade' : 'new',
             'payment_method' => $validated['payment_method'],
             'payment_proof' => $paymentProofPath,
             'wallet_id' => $validated['wallet_id'] ?? null,
-            'notes' => $validated['notes'] ?? null,
+            'notes' => $this->buildSubscriptionRequestNotes(
+                $validated['notes'] ?? null,
+                $couponResolved['coupon_code'],
+                $couponResolved['discount_amount']
+            ),
             'status' => SubscriptionRequest::STATUS_PENDING,
             'from_subscription_id' => $upgrade ? ($fromSubscription?->id) : null,
         ]);
@@ -227,8 +242,13 @@ class SubscriptionCheckoutController extends Controller
         $settings = $featuresController->getSettings();
         $planConfig = $settings[$plan] ?? SubscriptionRequest::planDefaults($plan);
         $planName = $planConfig['label'] ?? $planConfig['plan_name'] ?? 'باقة المعلم';
-        $price = (float) ($planConfig['price'] ?? 0);
+        $basePrice = (float) ($planConfig['price'] ?? 0);
         $billingCycle = $planConfig['billing_cycle'] ?? 'monthly';
+        $couponResolved = $this->resolveSubscriptionCoupon(Auth::user(), $basePrice, $request->input('coupon_code'));
+        if (! $couponResolved['ok']) {
+            return response()->json(['message' => $couponResolved['message']], 422);
+        }
+        $price = $couponResolved['final_amount'];
 
         if ($price < 0.01) {
             return response()->json(['message' => 'هذه الباقة غير صالحة للدفع الإلكتروني.'], 422);
@@ -252,12 +272,20 @@ class SubscriptionCheckoutController extends Controller
             'from_teacher_plan_key' => $upgrade ? ($fromSubscription?->teacher_plan_key) : null,
             'plan_name' => $planName,
             'price' => $price,
+            'original_price' => $couponResolved['original_amount'],
+            'discount_amount' => $couponResolved['discount_amount'],
+            'coupon_id' => $couponResolved['coupon_id'],
+            'coupon_code' => $couponResolved['coupon_code'],
             'billing_cycle' => $billingCycle,
             'request_type' => $upgrade ? 'upgrade' : 'new',
             'payment_method' => 'online',
             'payment_proof' => null,
             'wallet_id' => null,
-            'notes' => null,
+            'notes' => $this->buildSubscriptionRequestNotes(
+                null,
+                $couponResolved['coupon_code'],
+                $couponResolved['discount_amount']
+            ),
             'status' => SubscriptionRequest::STATUS_PENDING,
             'from_subscription_id' => $upgrade ? ($fromSubscription?->id) : null,
         ];
@@ -558,5 +586,106 @@ class SubscriptionCheckoutController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * @return array{
+     *   ok: bool,
+     *   message?: string,
+     *   coupon_id: ?int,
+     *   coupon_code: ?string,
+     *   original_amount: float,
+     *   discount_amount: float,
+     *   final_amount: float
+     * }
+     */
+    private function resolveSubscriptionCoupon($user, float $basePrice, ?string $couponCode): array
+    {
+        $original = round(max(0, $basePrice), 2);
+        $code = strtoupper(trim((string) $couponCode));
+        if ($code === '') {
+            return [
+                'ok' => true,
+                'coupon_id' => null,
+                'coupon_code' => null,
+                'original_amount' => $original,
+                'discount_amount' => 0.0,
+                'final_amount' => $original,
+            ];
+        }
+
+        $coupon = Coupon::query()->where('code', $code)->first();
+        if (! $coupon) {
+            return [
+                'ok' => false,
+                'message' => 'كود الكوبون غير صحيح.',
+                'coupon_id' => null,
+                'coupon_code' => null,
+                'original_amount' => $original,
+                'discount_amount' => 0.0,
+                'final_amount' => $original,
+            ];
+        }
+
+        if (! in_array((string) $coupon->applicable_to, ['all', 'subscriptions'], true)) {
+            return [
+                'ok' => false,
+                'message' => 'هذا الكوبون غير مخصص لدفع الباقات.',
+                'coupon_id' => null,
+                'coupon_code' => null,
+                'original_amount' => $original,
+                'discount_amount' => 0.0,
+                'final_amount' => $original,
+            ];
+        }
+
+        if (! $coupon->canBeUsedByUser((int) $user->id)) {
+            return [
+                'ok' => false,
+                'message' => 'لا يمكن استخدام هذا الكوبون حالياً (منتهي/غير نشط/تجاوز الحد).',
+                'coupon_id' => null,
+                'coupon_code' => null,
+                'original_amount' => $original,
+                'discount_amount' => 0.0,
+                'final_amount' => $original,
+            ];
+        }
+
+        if ($coupon->minimum_amount && $original < (float) $coupon->minimum_amount) {
+            return [
+                'ok' => false,
+                'message' => 'الحد الأدنى لاستخدام هذا الكوبون هو '.number_format((float) $coupon->minimum_amount, 2).' ج.م',
+                'coupon_id' => null,
+                'coupon_code' => null,
+                'original_amount' => $original,
+                'discount_amount' => 0.0,
+                'final_amount' => $original,
+            ];
+        }
+
+        $discount = (float) $coupon->calculateDiscount($original);
+
+        return [
+            'ok' => true,
+            'coupon_id' => (int) $coupon->id,
+            'coupon_code' => $coupon->code,
+            'original_amount' => $original,
+            'discount_amount' => $discount,
+            'final_amount' => round(max(0, $original - $discount), 2),
+        ];
+    }
+
+    private function buildSubscriptionRequestNotes(?string $baseNotes, ?string $couponCode, float $discountAmount): ?string
+    {
+        $notes = trim((string) ($baseNotes ?? ''));
+        if ($couponCode === null || $couponCode === '' || $discountAmount <= 0) {
+            return $notes !== '' ? $notes : null;
+        }
+        $couponLine = "كوبون مطبق: {$couponCode} (خصم ".number_format($discountAmount, 2)." ج.م)";
+        if ($notes === '') {
+            return $couponLine;
+        }
+
+        return $notes."\n".$couponLine;
     }
 }

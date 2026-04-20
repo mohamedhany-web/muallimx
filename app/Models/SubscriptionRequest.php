@@ -31,10 +31,16 @@ class SubscriptionRequest extends Model
         'approved_at',
         'approved_by',
         'fawaterak_invoice_id',
+        'coupon_id',
+        'coupon_code',
+        'original_price',
+        'discount_amount',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
+        'original_price' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'approved_at' => 'datetime',
     ];
 
@@ -56,6 +62,11 @@ class SubscriptionRequest extends Model
     public function wallet()
     {
         return $this->belongsTo(Wallet::class);
+    }
+
+    public function coupon()
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     public function scopePending($query)

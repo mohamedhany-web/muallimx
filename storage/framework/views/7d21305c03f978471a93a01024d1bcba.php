@@ -161,7 +161,7 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-10 reveal s2">
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
                     <p class="text-3xl sm:text-4xl font-black text-mx-indigo" dir="ltr"><?php echo e($fmt((int) ($hs['learners'] ?? 0))); ?></p>
-                    <p class="text-xs sm:text-sm text-slate-600 mt-1">متعلم عربي</p>
+                    <p class="text-xs sm:text-sm text-slate-600 mt-1">معلم عربي</p>
                 </article>
                 <article class="rounded-2xl p-4 sm:p-5 border border-slate-200 bg-white text-center shadow-[0_10px_24px_-18px_rgba(31,42,122,.25)]">
                     <p class="text-3xl sm:text-4xl font-black text-[#FB5607]" dir="ltr"><?php echo e($fmt((int) ($hs['courses'] ?? 0))); ?></p>

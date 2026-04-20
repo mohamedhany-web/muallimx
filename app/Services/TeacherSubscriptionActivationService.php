@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\SubscriptionRequest;
+use App\Models\CouponUsage;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -74,9 +75,9 @@ class TeacherSubscriptionActivationService
                 'description' => ($locked->request_type ?? null) === 'upgrade'
                     ? 'فاتورة ترقية اشتراك: '.$locked->plan_name
                     : 'فاتورة اشتراك: '.$locked->plan_name,
-                'subtotal' => $gross,
+                'subtotal' => $locked->original_price ?? $gross,
                 'tax_amount' => 0,
-                'discount_amount' => 0,
+                'discount_amount' => $locked->discount_amount ?? 0,
                 'total_amount' => $gross,
                 'status' => 'paid',
                 'due_date' => $startDate,
@@ -86,7 +87,7 @@ class TeacherSubscriptionActivationService
                     [
                         'description' => 'اشتراك: '.$locked->plan_name,
                         'quantity' => 1,
-                        'price' => $gross,
+                        'price' => $locked->original_price ?? $gross,
                         'total' => $gross,
                     ],
                 ],
@@ -185,6 +186,18 @@ class TeacherSubscriptionActivationService
                 'approved_at' => now(),
                 'approved_by' => null,
             ]);
+
+            if ($locked->coupon_id) {
+                $locked->coupon?->incrementUsage();
+                CouponUsage::create([
+                    'coupon_id' => $locked->coupon_id,
+                    'user_id' => $locked->user_id,
+                    'invoice_id' => $invoice->id,
+                    'discount_amount' => (float) ($locked->discount_amount ?? 0),
+                    'order_amount' => (float) ($locked->original_price ?? $gross),
+                    'final_amount' => $gross,
+                ]);
+            }
 
             return $invoice;
         });

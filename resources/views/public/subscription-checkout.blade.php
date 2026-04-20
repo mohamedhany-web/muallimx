@@ -121,6 +121,15 @@
                                     <span class="text-lg font-bold text-amber-700">ج.م</span>
                                 </p>
                             </div>
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 mb-4">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">كوبون خصم الباقة (اختياري)</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="text" id="subscription_coupon_code" name="coupon_code" value="{{ old('coupon_code') }}"
+                                           class="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm uppercase font-mono"
+                                           placeholder="مثال: PRO20" dir="ltr" autocomplete="off">
+                                </div>
+                                <p class="text-xs text-slate-500 mt-2">إذا كان الكوبون صالحاً سيتم تطبيقه عند إرسال الطلب أو بدء الدفع الإلكتروني.</p>
+                            </div>
                             <p class="text-sm text-slate-600 mb-2"><strong>{{ $plan['label'] ?? 'الباقة' }}</strong> · {{ $billingLabel }}</p>
                             @if(!empty($plan['features']))
                                 <p class="text-xs font-semibold text-slate-500 mt-3 mb-2">ما ستحصل عليه:</p>
@@ -261,6 +270,11 @@
                                 <form action="{{ route('public.subscription.checkout.store') }}" method="POST" enctype="multipart/form-data" class="space-y-5">
                                     @csrf
                                     <input type="hidden" name="plan" value="{{ $planKey }}">
+                                    <input type="hidden" name="coupon_code" id="subscription_coupon_code_hidden" value="{{ old('coupon_code') }}">
+
+                                    @error('coupon_code')
+                                        <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm">{{ $message }}</div>
+                                    @enderror
 
                                     <div>
                                         <label class="block text-sm font-bold text-slate-700 mb-2">طريقة الدفع <span class="text-rose-500">*</span></label>
@@ -394,8 +408,10 @@
         function appendUpgrade(fd) {
             var u = document.getElementById('sub_checkout_upgrade');
             var f = document.getElementById('sub_checkout_from');
+            var coupon = document.getElementById('subscription_coupon_code');
             fd.append('upgrade', u && u.value === '1' ? '1' : '0');
             fd.append('from', f && f.value ? f.value : '');
+            fd.append('coupon_code', coupon && coupon.value ? coupon.value.trim() : '');
         }
         function run() {
             var fd = new FormData();
@@ -465,8 +481,10 @@
         function appendUpgrade(fd) {
             var u = document.getElementById('sub_checkout_upgrade');
             var f = document.getElementById('sub_checkout_from');
+            var coupon = document.getElementById('subscription_coupon_code');
             fd.append('upgrade', u && u.value === '1' ? '1' : '0');
             fd.append('from', f && f.value ? f.value : '');
+            fd.append('coupon_code', coupon && coupon.value ? coupon.value.trim() : '');
         }
         function renderMethods(list) {
             if (!methodsEl) return;
@@ -563,6 +581,16 @@
         }
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
         else run();
+    })();
+    </script>
+    <script>
+    (function() {
+        var couponInput = document.getElementById('subscription_coupon_code');
+        var hiddenCoupon = document.getElementById('subscription_coupon_code_hidden');
+        if (!couponInput || !hiddenCoupon) return;
+        function sync() { hiddenCoupon.value = (couponInput.value || '').trim(); }
+        couponInput.addEventListener('input', sync);
+        sync();
     })();
     </script>
     @endif
