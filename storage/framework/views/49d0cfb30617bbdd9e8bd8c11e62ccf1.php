@@ -30,7 +30,10 @@
                 <span class="text-white font-bold text-sm"><?php echo e(__('errors.419_title')); ?></span>
             </div>
             <h1 class="text-7xl md:text-8xl font-black text-gray-900 mb-4">419</h1>
-            <p class="text-lg text-gray-600 leading-relaxed mb-8"><?php echo e(__('errors.419_message')); ?></p>
+            <p class="text-lg text-gray-600 leading-relaxed mb-6"><?php echo e(__('errors.419_message')); ?></p>
+            <?php if(app()->environment('local')): ?>
+            <p class="text-sm text-slate-500 leading-relaxed mb-8 max-w-md mx-auto text-start"><?php echo e(__('errors.419_dev_hint')); ?></p>
+            <?php endif; ?>
             <div class="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg text-right mb-8">
                 <div class="flex items-start gap-3 text-gray-700 text-sm">
                     <i class="fas fa-lightbulb text-amber-500 mt-0.5"></i>

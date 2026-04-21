@@ -130,7 +130,7 @@
                     <p class="text-slate-500 text-sm sm:text-base">أدخل بياناتك للوصول لحسابك</p>
                 </div>
 
-                <form action="<?php echo e(route('login')); ?>" method="POST" class="space-y-5">
+                <form action="<?php echo e(route('login', [], false)); ?>" method="POST" class="space-y-5">
                     <?php echo csrf_field(); ?>
 
                     <?php if(session('status')): ?>

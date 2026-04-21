@@ -31,6 +31,35 @@ class AdminController extends Controller
     }
 
     /**
+     * تطبيق البحث والفلترة على استعلام قائمة المستخدمين في لوحة الإدارة.
+     */
+    protected function applyAdminUsersListFilters(Request $request, \Illuminate\Database\Eloquent\Builder $query): void
+    {
+        if ($request->filled('role')) {
+            if ($request->role === 'employee') {
+                $query->where('is_employee', true);
+            } else {
+                $query->where('role', $request->role);
+            }
+        }
+
+        if ($request->filled('status')) {
+            $query->where('is_active', (bool) (int) $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->search);
+            if ($search !== '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%")
+                        ->orWhere('phone', 'LIKE', "%{$search}%");
+                });
+            }
+        }
+    }
+
+    /**
      * لوحة التحكم الرئيسية للإدارة
      */
     public function dashboard()
@@ -556,7 +585,9 @@ class AdminController extends Controller
             // بعد إضافة أو تعديل مستخدم نوجّه بـ created=1 أو updated=1 — عرض نسخة مبسطة لتجنب 500
             $simpleRedirect = $request->get('created') == '1' || $request->get('updated') == '1';
             if ($simpleRedirect) {
-                $users = User::query()->latest()->paginate(20)->appends($request->only(['created', 'updated']));
+                $listQuery = User::query();
+                $this->applyAdminUsersListFilters($request, $listQuery);
+                $users = $listQuery->latest()->paginate(20)->appends($request->query());
                 $stats = [
                     'total' => User::count(),
                     'active' => User::where('is_active', true)->count(),
@@ -606,33 +637,9 @@ class AdminController extends Controller
             $studentsTrend = $this->calculateChange($newStudentsThisMonth, $newStudentsLastMonth);
 
             $query = User::query();
+            $this->applyAdminUsersListFilters($request, $query);
 
-            // فلترة حسب الدور
-            if ($request->has('role') && $request->role) {
-                if ($request->role === 'employee') {
-                    // فلترة الموظفين
-                    $query->where('is_employee', true);
-                } else {
-                    $query->where('role', $request->role);
-                }
-            }
-
-            // فلترة حسب الحالة
-            if ($request->has('status') && $request->status !== '') {
-                $query->where('is_active', $request->status);
-            }
-
-            // البحث
-            if ($request->has('search') && $request->search) {
-                $search = $request->search;
-                $query->where(function($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%")
-                      ->orWhere('email', 'LIKE', "%{$search}%")
-                      ->orWhere('phone', 'LIKE', "%{$search}%");
-                });
-            }
-
-            $users = $query->latest()->paginate(20);
+            $users = $query->latest()->paginate(20)->appends($request->only(['search', 'role', 'status']));
 
             $stats = [
                 'total' => $totalUsers,
@@ -705,7 +712,9 @@ class AdminController extends Controller
             ]);
             // عرض صفحة مبسطة بالقائمة فقط حتى لا يظهر 500 بعد إضافة مستخدم
             try {
-                $users = User::query()->latest()->paginate(20);
+                $fallbackQuery = User::query();
+                $this->applyAdminUsersListFilters($request, $fallbackQuery);
+                $users = $fallbackQuery->latest()->paginate(20)->appends($request->only(['search', 'role', 'status']));
                 $stats = [
                     'total' => User::count(),
                     'active' => User::where('is_active', true)->count(),
@@ -750,17 +759,19 @@ class AdminController extends Controller
 
             $query = User::query()->where('role', 'student');
 
-            if ($request->has('status') && $request->status !== '') {
-                $query->where('is_active', $request->status);
+            if ($request->filled('status')) {
+                $query->where('is_active', (bool) (int) $request->status);
             }
 
-            if ($request->has('search') && $request->search) {
-                $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%")
-                        ->orWhere('email', 'LIKE', "%{$search}%")
-                        ->orWhere('phone', 'LIKE', "%{$search}%");
-                });
+            if ($request->filled('search')) {
+                $search = trim((string) $request->search);
+                if ($search !== '') {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('name', 'LIKE', "%{$search}%")
+                            ->orWhere('email', 'LIKE', "%{$search}%")
+                            ->orWhere('phone', 'LIKE', "%{$search}%");
+                    });
+                }
             }
 
             $users = $query->latest()->paginate(20)->appends($request->only(['search', 'status']));
