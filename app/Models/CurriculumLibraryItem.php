@@ -38,9 +38,41 @@ class CurriculumLibraryItem extends Model
         parent::boot();
         static::creating(function ($model) {
             if (empty($model->slug)) {
-                $model->slug = Str::slug($model->title);
+                $model->slug = Str::slug($model->title ?? '') ?: 'item';
+            }
+            $model->slug = static::ensureUniqueSlug((string) $model->slug, null);
+        });
+
+        static::updating(function ($model) {
+            if ($model->isDirty('slug')) {
+                $model->slug = static::ensureUniqueSlug((string) $model->slug, $model->getKey());
             }
         });
+    }
+
+    /**
+     * يضمن عدم تكرار slug عبر إلحاق -2، -3، … مع احترام حد الطول في قاعدة البيانات.
+     */
+    public static function ensureUniqueSlug(string $base, ?int $exceptId = null): string
+    {
+        $base = trim($base);
+        if ($base === '') {
+            $base = 'item';
+        }
+        $base = Str::limit($base, 200, '');
+
+        $slug = $base;
+        $n = 2;
+        while (static::query()
+            ->when($exceptId !== null, fn ($q) => $q->where('id', '!=', $exceptId))
+            ->where('slug', $slug)
+            ->exists()) {
+            $suffix = '-'.$n;
+            $slug = Str::limit($base, 255 - strlen($suffix), '').$suffix;
+            $n++;
+        }
+
+        return $slug;
     }
 
     public function category()
