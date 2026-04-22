@@ -12,6 +12,9 @@
     <?php if(session('error')): ?>
         <div class="rounded-xl bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 text-sm font-medium"><?php echo e(session('error')); ?></div>
     <?php endif; ?>
+    <?php if(session('info')): ?>
+        <div class="rounded-xl bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 text-sm font-medium"><?php echo e(session('info')); ?></div>
+    <?php endif; ?>
 
     <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm p-6 space-y-4">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -118,6 +121,46 @@
                         <span class="text-xs text-amber-700 dark:text-amber-300">الملف موجود ولكن رابط التحميل غير متاح حالياً.</span>
                     <?php endif; ?>
                 </div>
+            </div>
+
+            <?php
+                $canGenerateReport = (bool) ($meeting->recording_audio_download_url || $meeting->recording_download_url);
+            ?>
+            <div class="rounded-xl border border-violet-200 dark:border-violet-900 bg-violet-50/60 dark:bg-violet-950/20 p-4 space-y-3">
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-bold text-slate-800 dark:text-slate-100">تقرير المحاضرة النصي (بالذكاء الاصطناعي)</p>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                            يُرسل التسجيل أو التقرير الصوتي إلى خدمة المعالجة، ثم يُحدَّث هذا القسم تلقائياً عند اكتمال إنشاء التقرير.
+                        </p>
+                    </div>
+                    <?php if($canGenerateReport && !($activeAiReport ?? null)): ?>
+                        <form method="POST" action="<?php echo e(route($rp.'classroom.ai-report', $meeting)); ?>" class="shrink-0" onsubmit="return confirm('سيتم إرسال رابط التسجيل/التقرير الصوتي لإنشاء تقرير نصي عن المحاضرة. هل تريد المتابعة؟');">
+                            <?php echo csrf_field(); ?>
+                            <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold">
+                                <i class="fas fa-robot"></i>
+                                إنشاء التقرير النصي
+                            </button>
+                        </form>
+                    <?php elseif(! $canGenerateReport): ?>
+                        <p class="text-xs text-amber-800 dark:text-amber-200 shrink-0 max-w-xs">ارفع التسجيل أو التقرير الصوتي أولاً حتى يظهر زر إنشاء التقرير.</p>
+                    <?php endif; ?>
+                </div>
+                <?php if($activeAiReport ?? null): ?>
+                    <div class="rounded-lg border border-violet-200/80 dark:border-violet-800 bg-white/80 dark:bg-slate-900/40 px-3 py-2 text-xs text-violet-900 dark:text-violet-100">
+                        <span class="font-semibold">حالة الطلب:</span>
+                        <?php if($activeAiReport->status === 'pending'): ?> في انتظار المعالجة
+                        <?php else: ?> جاري المعالجة…
+                        <?php endif; ?>
+                        <span class="text-slate-500 dark:text-slate-400">(يمكنك تحديث الصفحة لاحقاً)</span>
+                    </div>
+                <?php endif; ?>
+                <?php if(($latestCompletedAiReport ?? null) && $latestCompletedAiReport->summary): ?>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">آخر تقرير مكتمل:</p>
+                        <div class="rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-3 text-sm text-slate-800 dark:text-slate-100 whitespace-pre-wrap leading-relaxed"><?php echo e($latestCompletedAiReport->summary); ?></div>
+                    </div>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
 

@@ -124,33 +124,33 @@
             </div>
 
             @php
-                $canN8nDownload = (bool) ($meeting->recording_audio_download_url || $meeting->recording_download_url);
+                $canGenerateReport = (bool) ($meeting->recording_audio_download_url || $meeting->recording_download_url);
             @endphp
             <div class="rounded-xl border border-violet-200 dark:border-violet-900 bg-violet-50/60 dark:bg-violet-950/20 p-4 space-y-3">
                 <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                     <div>
-                        <p class="text-sm font-bold text-slate-800 dark:text-slate-100">تقرير المحاضرة النصي (n8n + ذكاء اصطناعي)</p>
+                        <p class="text-sm font-bold text-slate-800 dark:text-slate-100">تقرير المحاضرة النصي (بالذكاء الاصطناعي)</p>
                         <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                            يُرسل التسجيل أو التقرير الصوتي إلى نفس تكامل n8n المضبوط في لوحة التحكم، ثم يُحدَّث هذا القسم تلقائياً عند إرجاع النص من سير العمل.
+                            يُرسل التسجيل أو التقرير الصوتي إلى خدمة المعالجة، ثم يُحدَّث هذا القسم تلقائياً عند اكتمال إنشاء التقرير.
                         </p>
                     </div>
-                    @if($canN8nDownload && !($activeAiReport ?? null))
-                        <form method="POST" action="{{ route($rp.'classroom.ai-report', $meeting) }}" class="shrink-0" onsubmit="return confirm('سيتم إرسال رابط التسجيل/التقرير الصوتي إلى n8n لإنشاء تقرير نصي عن المحاضرة. هل تريد المتابعة؟');">
+                    @if($canGenerateReport && !($activeAiReport ?? null))
+                        <form method="POST" action="{{ route($rp.'classroom.ai-report', $meeting) }}" class="shrink-0" onsubmit="return confirm('سيتم إرسال رابط التسجيل/التقرير الصوتي لإنشاء تقرير نصي عن المحاضرة. هل تريد المتابعة؟');">
                             @csrf
                             <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold">
                                 <i class="fas fa-robot"></i>
                                 إنشاء التقرير النصي
                             </button>
                         </form>
-                    @elseif(! $canN8nDownload)
-                        <p class="text-xs text-amber-800 dark:text-amber-200 shrink-0 max-w-xs">ارفع التسجيل أو التقرير الصوتي أولاً حتى يظهر زر الإرسال إلى n8n.</p>
+                    @elseif(! $canGenerateReport)
+                        <p class="text-xs text-amber-800 dark:text-amber-200 shrink-0 max-w-xs">ارفع التسجيل أو التقرير الصوتي أولاً حتى يظهر زر إنشاء التقرير.</p>
                     @endif
                 </div>
                 @if($activeAiReport ?? null)
                     <div class="rounded-lg border border-violet-200/80 dark:border-violet-800 bg-white/80 dark:bg-slate-900/40 px-3 py-2 text-xs text-violet-900 dark:text-violet-100">
                         <span class="font-semibold">حالة الطلب:</span>
                         @if($activeAiReport->status === 'pending') في انتظار المعالجة
-                        @else جاري المعالجة في n8n…
+                        @else جاري المعالجة…
                         @endif
                         <span class="text-slate-500 dark:text-slate-400">(يمكنك تحديث الصفحة لاحقاً)</span>
                     </div>

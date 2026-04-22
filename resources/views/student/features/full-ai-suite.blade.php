@@ -20,6 +20,7 @@
         : '';
     $requiresCourseSelection = $requiresCourseSelection ?? false;
     $pageHint = $pageHint ?? __('student.full_ai_suite.layer2_hint');
+    $showPromptTemplate = ($feature ?? '') !== 'ai_tools';
 @endphp
 
 @section('content')
@@ -211,41 +212,43 @@
                 </div>
             @endif
 
-            <div class="rounded-xl border border-gray-200 dark:border-slate-600 overflow-hidden">
-                <div class="px-4 py-3 bg-gray-50 dark:bg-slate-900/60 border-b border-gray-200 dark:border-slate-600 space-y-1">
-                    <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100">{{ __('student.full_ai_suite.prompt_block_title') }}</h3>
-                    @if(data_get($preview, 'context.question_type') === 'educational_games')
-                        <p class="text-xs text-amber-800 dark:text-amber-200/90 leading-relaxed">{{ __('student.full_ai_suite.game_prompt_hint') }}</p>
-                    @endif
-                </div>
-                <div class="p-4" x-data="{ copied: false }">
-                    <div class="flex justify-end mb-2">
-                        <button type="button" @click="navigator.clipboard.writeText($refs.promptMain.textContent.trim()); copied = true; setTimeout(() => copied = false, 2000)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600">
-                            <i class="fas fa-copy text-[10px]"></i>
-                            <span x-show="!copied">{{ __('student.full_ai_suite.copy') }}</span>
-                            <span x-show="copied" x-cloak class="text-emerald-600 dark:text-emerald-400">{{ __('student.full_ai_suite.copied') }}</span>
-                        </button>
+            @if($showPromptTemplate)
+                <div class="rounded-xl border border-gray-200 dark:border-slate-600 overflow-hidden">
+                    <div class="px-4 py-3 bg-gray-50 dark:bg-slate-900/60 border-b border-gray-200 dark:border-slate-600 space-y-1">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-slate-100">{{ __('student.full_ai_suite.prompt_block_title') }}</h3>
+                        @if(data_get($preview, 'context.question_type') === 'educational_games')
+                            <p class="text-xs text-amber-800 dark:text-amber-200/90 leading-relaxed">{{ __('student.full_ai_suite.game_prompt_hint') }}</p>
+                        @endif
                     </div>
-                    <pre x-ref="promptMain" class="text-xs sm:text-sm leading-relaxed p-4 rounded-lg bg-slate-900 text-slate-100 overflow-x-auto whitespace-pre-wrap font-mono border border-slate-700 max-h-[min(55vh,520px)] overflow-y-auto" dir="ltr">{{ $promptText }}</pre>
+                    <div class="p-4" x-data="{ copied: false }">
+                        <div class="flex justify-end mb-2">
+                            <button type="button" @click="navigator.clipboard.writeText($refs.promptMain.textContent.trim()); copied = true; setTimeout(() => copied = false, 2000)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 hover:bg-gray-200 dark:hover:bg-slate-600">
+                                <i class="fas fa-copy text-[10px]"></i>
+                                <span x-show="!copied">{{ __('student.full_ai_suite.copy') }}</span>
+                                <span x-show="copied" x-cloak class="text-emerald-600 dark:text-emerald-400">{{ __('student.full_ai_suite.copied') }}</span>
+                            </button>
+                        </div>
+                        <pre x-ref="promptMain" class="text-xs sm:text-sm leading-relaxed p-4 rounded-lg bg-slate-900 text-slate-100 overflow-x-auto whitespace-pre-wrap font-mono border border-slate-700 max-h-[min(55vh,520px)] overflow-y-auto" dir="ltr">{{ $promptText }}</pre>
+                    </div>
                 </div>
-            </div>
 
-            <details class="group rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50/80 dark:bg-slate-900/40">
-                <summary class="cursor-pointer list-none flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-gray-800 dark:text-slate-200">
-                    <span>{{ __('student.full_ai_suite.technical_details') }} — {{ __('student.full_ai_suite.context_json_title') }}</span>
-                    <i class="fas fa-chevron-down text-xs text-gray-400 group-open:rotate-180 transition-transform"></i>
-                </summary>
-                <div class="p-4 pt-0 border-t border-gray-200 dark:border-slate-600" x-data="{ copied: false }">
-                    <div class="flex justify-end mb-2">
-                        <button type="button" @click="navigator.clipboard.writeText($refs.jsonBlock.textContent.trim()); copied = true; setTimeout(() => copied = false, 2000)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-slate-200 hover:bg-gray-300 dark:hover:bg-slate-600">
-                            <i class="fas fa-copy text-[10px]"></i>
-                            <span x-show="!copied">{{ __('student.full_ai_suite.copy') }}</span>
-                            <span x-show="copied" x-cloak class="text-emerald-600 dark:text-emerald-400">{{ __('student.full_ai_suite.copied') }}</span>
-                        </button>
+                <details class="group rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50/80 dark:bg-slate-900/40">
+                    <summary class="cursor-pointer list-none flex items-center justify-between gap-2 px-4 py-3 text-sm font-semibold text-gray-800 dark:text-slate-200">
+                        <span>{{ __('student.full_ai_suite.technical_details') }} — {{ __('student.full_ai_suite.context_json_title') }}</span>
+                        <i class="fas fa-chevron-down text-xs text-gray-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <div class="p-4 pt-0 border-t border-gray-200 dark:border-slate-600" x-data="{ copied: false }">
+                        <div class="flex justify-end mb-2">
+                            <button type="button" @click="navigator.clipboard.writeText($refs.jsonBlock.textContent.trim()); copied = true; setTimeout(() => copied = false, 2000)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-slate-200 hover:bg-gray-300 dark:hover:bg-slate-600">
+                                <i class="fas fa-copy text-[10px]"></i>
+                                <span x-show="!copied">{{ __('student.full_ai_suite.copy') }}</span>
+                                <span x-show="copied" x-cloak class="text-emerald-600 dark:text-emerald-400">{{ __('student.full_ai_suite.copied') }}</span>
+                            </button>
+                        </div>
+                        <pre x-ref="jsonBlock" class="text-[11px] sm:text-xs leading-relaxed p-4 rounded-lg bg-[#0d1117] text-[#7ee787] overflow-x-auto font-mono border border-slate-700 max-h-[min(40vh,360px)] overflow-y-auto" dir="ltr">{{ $jsonPreview }}</pre>
                     </div>
-                    <pre x-ref="jsonBlock" class="text-[11px] sm:text-xs leading-relaxed p-4 rounded-lg bg-[#0d1117] text-[#7ee787] overflow-x-auto font-mono border border-slate-700 max-h-[min(40vh,360px)] overflow-y-auto" dir="ltr">{{ $jsonPreview }}</pre>
-                </div>
-            </details>
+                </details>
+            @endif
         </div>
     @endif
 

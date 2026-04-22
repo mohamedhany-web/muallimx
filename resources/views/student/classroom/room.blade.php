@@ -58,6 +58,13 @@
         @media (min-width: 640px) {
             .classroom-room-toolbar-btn { padding: 0.375rem 0.75rem; }
         }
+        .mx-mobile-toolbar-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .mx-mobile-toolbar-scroll::-webkit-scrollbar {
+            display: none;
+        }
         #pkg-features-dd-btn:focus-visible {
             outline: none;
             box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9), 0 0 0 4px rgba(34, 211, 238, 0.35);
@@ -167,8 +174,8 @@
     }
 @endphp
     {{-- شريط Muallimx العلوي — تصميم المنصة فقط --}}
-    <header class="min-h-14 h-14 shrink-0 bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex items-center justify-between gap-2 px-3 sm:px-4 shadow-lg">
-        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+    <header class="min-h-14 shrink-0 bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2 sm:py-0 shadow-lg">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto sm:flex-1">
             <a href="{{ $roomExitUrl }}" class="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors shrink-0">
                 <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
                     <i class="fas fa-video text-sm sm:text-[15px]"></i>
@@ -182,18 +189,22 @@
                 <span class="text-slate-400 text-[10px] sm:text-xs px-1.5 py-0.5 rounded bg-slate-700/80 font-mono shrink-0">{{ $meeting->code }}</span>
             </div>
         </div>
-        <div class="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2 shrink-0 max-w-[min(100%,42rem)] lg:max-w-none">
-            <div class="flex flex-wrap items-center gap-1.5">
-            <span class="text-slate-300 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-slate-700/80 whitespace-nowrap">
+        <div class="mx-mobile-toolbar-scroll w-full sm:w-auto overflow-x-auto">
+        <div class="flex flex-nowrap items-center sm:justify-end gap-1.5 sm:gap-2 shrink-0 min-w-max sm:max-w-[min(100%,42rem)] lg:max-w-none pe-1">
+            <div class="flex flex-nowrap items-center gap-1.5">
+            <span class="hidden sm:inline-flex text-slate-300 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-slate-700/80 whitespace-nowrap">
                 طلاب: {{ (int) ($meeting->max_participants ?? 25) }}
             </span>
-            <span class="text-amber-200 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 whitespace-nowrap" id="meeting-timer-chip">
+            <span class="inline-flex sm:hidden text-amber-200 text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 whitespace-nowrap" id="meeting-timer-chip-mobile">
+                {{ (int) $effectiveDurationMinutes }} د
+            </span>
+            <span class="hidden sm:inline-flex text-amber-200 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 whitespace-nowrap" id="meeting-timer-chip">
                 مدة الاجتماع: {{ (int) $effectiveDurationMinutes }} دقيقة (حد الباقة {{ (int) $maxDurationMinutes }})
             </span>
             <span class="hidden text-sky-200 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-sky-500/20 border border-sky-500/30 max-w-[10rem] sm:max-w-[14rem] truncate" id="record-status-chip"></span>
             </div>
             <span class="hidden xl:block w-px h-4 bg-slate-600/50 shrink-0 rounded-full" aria-hidden="true"></span>
-            <div class="flex flex-wrap items-center gap-1.5 justify-end">
+            <div class="flex flex-nowrap items-center gap-1.5 justify-end">
             @unless($academicObserverMode)
             @if(!empty($subscriptionFeatureMenuItems))
             <div class="relative shrink-0" id="pkg-features-dd-wrap">
@@ -289,6 +300,7 @@
             @endunless
             </div>
         </div>
+        </div>
     </header>
 
     <div class="room-body">
@@ -320,12 +332,12 @@
         </div>
     </div>
 
-    {{-- تنبيه: meet.jit.si للاختبار فقط — يُقطع بعد 5 دقائق --}}
+    {{-- تنبيه: الخادم التجريبي للاختبار فقط — يُقطع بعد 5 دقائق --}}
     @if(!empty($isDemoJitsi))
     <div class="bg-amber-500/15 border-b border-amber-500/40 px-4 py-2 flex items-center justify-between gap-3 text-amber-800 dark:text-amber-200 text-sm flex-shrink-0">
         <span class="flex items-center gap-2">
             <i class="fas fa-exclamation-triangle"></i>
-            <strong>للاختبار فقط:</strong> استخدام meet.jit.si يُقطع المكالمة بعد 5 دقائق. للإنتاج: من لوحة الإدارة → <strong>جلسات البث المباشر والمعلمين → إعدادات نظام اللايف</strong> غيّر نطاق Jitsi إلى سيرفر خاص أو Jitsi as a Service.
+            <strong>للاختبار فقط:</strong> استخدام خادم الاجتماعات التجريبي قد يقطع المكالمة بعد 5 دقائق. للإنتاج استخدم خادم الاجتماعات الخاص بك من إعدادات نظام اللايف.
         </span>
         <button type="button" onclick="this.parentElement.remove()" class="text-amber-600 hover:text-amber-800 p-1" aria-label="إغلاق"><i class="fas fa-times"></i></button>
     </div>
@@ -343,9 +355,9 @@
                 <p class="font-bold text-slate-200 mb-2">لا يمكن تحميل غرفة الاجتماع</p>
                 <p class="text-slate-400 text-sm mb-3">المتصفح لم يستطع الاتصال بـ <strong class="text-slate-300">{{ $jitsiDomain }}</strong>.</p>
                 <ul class="text-right text-slate-400 text-sm mb-4 list-none space-y-1">
-                    <li>• النطاق يجب أن يكون <strong class="text-slate-300">النطاق الذي يعمل عليه Jitsi Meet</strong> (مثلاً <code class="bg-slate-700 px-1 rounded">meet.muallimx.com</code> وليس بالضرورة الموقع الرئيسي).</li>
-                    <li>• جرّب فتح <a href="https://{{ $jitsiDomain }}/external_api.js" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">هذا الرابط</a> في تاب جديد — إن لم يُحمّل، فـ Jitsi غير مُثبت على هذا النطاق أو النطاق غير متاح من جهازك.</li>
-                    <li>• إن كان Jitsi على نطاق فرعي (مثل meet.muallimx.com)، غيّر النطاق من: <strong>لوحة الإدارة → سيرفرات البث</strong> ثم «استخدام كنطاق افتراضي» للسيرفر الصحيح.</li>
+                    <li>• النطاق يجب أن يكون <strong class="text-slate-300">النطاق الصحيح لخادم الاجتماعات</strong> (مثلاً <code class="bg-slate-700 px-1 rounded">meet.muallimx.com</code> وليس بالضرورة الموقع الرئيسي).</li>
+                    <li>• جرّب فتح <a href="https://{{ $jitsiDomain }}/external_api.js" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">هذا الرابط</a> في تاب جديد — إن لم يُحمّل، فخادم الاجتماعات غير متاح من جهازك أو غير مضبوط على هذا النطاق.</li>
+                    <li>• إن كان خادم الاجتماعات على نطاق فرعي (مثل meet.muallimx.com)، حدّث النطاق من: <strong>لوحة الإدارة → سيرفرات البث</strong> ثم «استخدام كنطاق افتراضي» للسيرفر الصحيح.</li>
                 </ul>
                 <a href="https://{{ $jitsiDomain }}/{{ $meeting->room_name }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition-colors">
                     <i class="fas fa-external-link-alt"></i> فتح الغرفة في نافذة جديدة
@@ -990,6 +1002,24 @@
                 return { audioBitsPerSecond: 96000 };
             }
 
+            function normalizeAudioMimeType(mime) {
+                var raw = String(mime || '').toLowerCase();
+                if (!raw) return 'audio/webm';
+                if (raw.indexOf('audio/') === 0) return raw;
+                if (raw.indexOf('video/webm') === 0) return 'audio/webm';
+                if (raw.indexOf('video/ogg') === 0) return 'audio/ogg';
+                if (raw.indexOf('video/mp4') === 0) return 'audio/mp4';
+                return 'audio/webm';
+            }
+
+            function audioFileNameByMime(mime) {
+                var m = normalizeAudioMimeType(mime);
+                if (m.indexOf('audio/mpeg') === 0) return 'meeting-audio.mp3';
+                if (m.indexOf('audio/mp4') === 0) return 'meeting-audio.m4a';
+                if (m.indexOf('audio/ogg') === 0) return 'meeting-audio.ogg';
+                return 'meeting-audio.webm';
+            }
+
             function formatBytes(n) {
                 var x = Number(n) || 0;
                 if (x < 1024) {
@@ -1333,10 +1363,11 @@
             }
 
             async function uploadAudioBlob(blob, durationSeconds, onProgress) {
+                var effectiveAudioMime = normalizeAudioMimeType(blob && blob.type ? blob.type : 'audio/webm');
                 function uploadAudioBlobViaFormData() {
                     return new Promise(function(resolve, reject) {
                         var formData = new FormData();
-                        formData.append('recording_audio', blob, 'meeting-audio.webm');
+                        formData.append('recording_audio', blob, audioFileNameByMime(effectiveAudioMime));
                         formData.append('duration_seconds', String(durationSeconds || 0));
 
                         var xhr = new XMLHttpRequest();
@@ -1379,7 +1410,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        content_type: blob.type || 'audio/webm',
+                        content_type: effectiveAudioMime,
                     }),
                 });
                 var presignData = {};
@@ -1836,7 +1867,7 @@
                     activeRecordingStream = null;
 
                     var durationSeconds = recordingStartedAt ? Math.max(1, Math.round((Date.now() - recordingStartedAt) / 1000)) : 0;
-                    var outType = (mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'audio/webm';
+                    var outType = normalizeAudioMimeType((mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'audio/webm');
                     var blob = new Blob(recordedChunks, { type: outType });
 
                     if (!blob.size) {

@@ -991,6 +991,24 @@
                 return { audioBitsPerSecond: 96000 };
             }
 
+            function normalizeAudioMimeType(mime) {
+                var raw = String(mime || '').toLowerCase();
+                if (!raw) return 'audio/webm';
+                if (raw.indexOf('audio/') === 0) return raw;
+                if (raw.indexOf('video/webm') === 0) return 'audio/webm';
+                if (raw.indexOf('video/ogg') === 0) return 'audio/ogg';
+                if (raw.indexOf('video/mp4') === 0) return 'audio/mp4';
+                return 'audio/webm';
+            }
+
+            function audioFileNameByMime(mime) {
+                var m = normalizeAudioMimeType(mime);
+                if (m.indexOf('audio/mpeg') === 0) return 'meeting-audio.mp3';
+                if (m.indexOf('audio/mp4') === 0) return 'meeting-audio.m4a';
+                if (m.indexOf('audio/ogg') === 0) return 'meeting-audio.ogg';
+                return 'meeting-audio.webm';
+            }
+
             function formatBytes(n) {
                 var x = Number(n) || 0;
                 if (x < 1024) {
@@ -1334,10 +1352,11 @@
             }
 
             async function uploadAudioBlob(blob, durationSeconds, onProgress) {
+                var effectiveAudioMime = normalizeAudioMimeType(blob && blob.type ? blob.type : 'audio/webm');
                 function uploadAudioBlobViaFormData() {
                     return new Promise(function(resolve, reject) {
                         var formData = new FormData();
-                        formData.append('recording_audio', blob, 'meeting-audio.webm');
+                        formData.append('recording_audio', blob, audioFileNameByMime(effectiveAudioMime));
                         formData.append('duration_seconds', String(durationSeconds || 0));
 
                         var xhr = new XMLHttpRequest();
@@ -1380,7 +1399,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        content_type: blob.type || 'audio/webm',
+                        content_type: effectiveAudioMime,
                     }),
                 });
                 var presignData = {};
@@ -1837,7 +1856,7 @@
                     activeRecordingStream = null;
 
                     var durationSeconds = recordingStartedAt ? Math.max(1, Math.round((Date.now() - recordingStartedAt) / 1000)) : 0;
-                    var outType = (mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'audio/webm';
+                    var outType = normalizeAudioMimeType((mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'audio/webm');
                     var blob = new Blob(recordedChunks, { type: outType });
 
                     if (!blob.size) {

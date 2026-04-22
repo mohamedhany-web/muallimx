@@ -757,24 +757,63 @@ class ClassroomController extends Controller
 
         $disk = Storage::disk('live_recordings_r2');
         $directory = 'classroom-recordings-audio/'.now()->format('Y/m');
-        $fileName = sprintf('meeting-%d-audio-%s.%s', $meeting->id, now()->format('Ymd-His'), $ext ?: 'webm');
+        $baseName = sprintf('meeting-%d-audio-%s', $meeting->id, now()->format('Ymd-His'));
+        $fileName = $baseName.'.'.($ext ?: 'webm');
         $newPath = $directory.'/'.$fileName;
         $oldAudioPath = ($meeting->recording_disk === 'live_recordings_r2') ? $meeting->recording_audio_path : null;
 
+        $finalPath = $newPath;
+        $finalMime = (string) $file->getMimeType();
+        $finalSize = (int) $file->getSize();
+        $tempSourcePath = null;
+        $tempMp3Path = null;
+
         try {
-            $disk->putFileAs($directory, $file, $fileName);
+            if ($this->shouldConvertAudioToMp3($finalMime, $ext)) {
+                $this->ensureFfmpegAvailable();
+                $tempSourcePath = tempnam(sys_get_temp_dir(), 'mx-audio-src-');
+                $tempMp3Path = tempnam(sys_get_temp_dir(), 'mx-audio-mp3-');
+                if ($tempSourcePath === false || $tempMp3Path === false) {
+                    throw new \RuntimeException('تعذر تجهيز ملفات مؤقتة لتحويل الصوت.');
+                }
+                file_put_contents($tempSourcePath, file_get_contents($file->getRealPath()));
+                $this->convertLocalAudioFileToMp3($tempSourcePath, $tempMp3Path);
+
+                $mp3Path = $directory.'/'.$baseName.'-converted.mp3';
+                $stream = fopen($tempMp3Path, 'rb');
+                if (! is_resource($stream)) {
+                    throw new \RuntimeException('تعذر فتح ملف mp3 بعد التحويل.');
+                }
+                $disk->put($mp3Path, $stream);
+                fclose($stream);
+
+                $finalPath = $mp3Path;
+                $finalMime = 'audio/mpeg';
+                $finalSize = (int) filesize($tempMp3Path);
+            } else {
+                $disk->putFileAs($directory, $file, $fileName);
+            }
         } catch (\Throwable $e) {
             \Log::error('Classroom audio upload failed', [
                 'meeting_id' => $meeting->id,
                 'error' => $e->getMessage(),
             ]);
-
+            $msg = str_contains((string) $e->getMessage(), 'ffmpeg')
+                ? 'تعذر تحويل الصوت إلى MP3: ffmpeg غير متاح على الخادم.'
+                : 'تعذر رفع/تحويل ملف الصوت إلى MP3.';
             return response()->json([
-                'message' => 'تعذر رفع ملف الصوت إلى التخزين السحابي.',
+                'message' => $msg,
             ], 500);
+        } finally {
+            if ($tempSourcePath && is_file($tempSourcePath)) {
+                @unlink($tempSourcePath);
+            }
+            if ($tempMp3Path && is_file($tempMp3Path)) {
+                @unlink($tempMp3Path);
+            }
         }
 
-        if ($oldAudioPath && $oldAudioPath !== $newPath) {
+        if ($oldAudioPath && $oldAudioPath !== $finalPath) {
             try {
                 $disk->delete($oldAudioPath);
             } catch (\Throwable $e) {
@@ -783,9 +822,9 @@ class ClassroomController extends Controller
 
         $meeting->update([
             'recording_disk' => 'live_recordings_r2',
-            'recording_audio_path' => $newPath,
-            'recording_audio_mime_type' => $file->getMimeType(),
-            'recording_audio_size' => $file->getSize(),
+            'recording_audio_path' => $finalPath,
+            'recording_audio_mime_type' => $finalMime,
+            'recording_audio_size' => $finalSize,
             'recording_audio_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
         ]);
 
@@ -853,8 +892,44 @@ class ClassroomController extends Controller
             return response()->json(['message' => 'حجم ملف الصوت يتجاوز الحد المسموح (٢ جيجابايت).'], 422);
         }
 
+        $finalPath = $path;
+        $finalMime = $mime;
+        $finalSize = $size;
+
+        if ($this->shouldConvertAudioToMp3($mime, pathinfo($path, PATHINFO_EXTENSION))) {
+            try {
+                $this->ensureFfmpegAvailable();
+                $converted = $this->convertStoredAudioPathToMp3($disk, $path);
+                if (is_array($converted)) {
+                    $finalPath = (string) ($converted['path'] ?? $path);
+                    $finalMime = (string) ($converted['mime'] ?? 'audio/mpeg');
+                    $finalSize = (int) ($converted['size'] ?? $size);
+                    if ($finalPath !== $path) {
+                        try {
+                            $disk->delete($path);
+                        } catch (\Throwable $e) {
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                try {
+                    $disk->delete($path);
+                } catch (\Throwable $deleteErr) {
+                }
+                Log::warning('Classroom direct audio conversion to mp3 failed (strict)', [
+                    'meeting_id' => $meeting->id,
+                    'path' => $path,
+                    'error' => $e->getMessage(),
+                ]);
+                $message = str_contains((string) $e->getMessage(), 'ffmpeg')
+                    ? 'فشل التحويل إلى MP3 لأن ffmpeg غير متاح على الخادم.'
+                    : 'فشل تحويل ملف الصوت إلى MP3. أعد المحاولة.';
+                return response()->json(['message' => $message], 422);
+            }
+        }
+
         $oldAudioPath = ($meeting->recording_disk === 'live_recordings_r2') ? $meeting->recording_audio_path : null;
-        if ($oldAudioPath && $oldAudioPath !== $path) {
+        if ($oldAudioPath && $oldAudioPath !== $finalPath) {
             try {
                 $disk->delete($oldAudioPath);
             } catch (\Throwable $e) {
@@ -863,9 +938,9 @@ class ClassroomController extends Controller
 
         $meeting->update([
             'recording_disk' => 'live_recordings_r2',
-            'recording_audio_path' => $path,
-            'recording_audio_mime_type' => $mime,
-            'recording_audio_size' => $size,
+            'recording_audio_path' => $finalPath,
+            'recording_audio_mime_type' => $finalMime,
+            'recording_audio_size' => $finalSize,
             'recording_audio_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
         ]);
 
@@ -898,11 +973,13 @@ class ClassroomController extends Controller
 
         $meetingFresh = $meeting->fresh();
         $audioUrl = $meetingFresh->recording_audio_download_url;
-        $videoUrl = $meetingFresh->recording_download_url;
-        $primaryUrl = $audioUrl ?? $videoUrl;
+        $audioMime = strtolower((string) ($meetingFresh->recording_audio_mime_type ?? ''));
 
-        if (! $primaryUrl) {
-            return back()->with('error', 'ارفع التقرير الصوتي أو تسجيل المحاضرة أولاً حتى يمكن إرسال الملف إلى نظام التقارير (n8n).');
+        if (! $audioUrl) {
+            return back()->with('error', 'يجب رفع التقرير الصوتي بصيغة MP3 أولاً قبل إنشاء التقرير.');
+        }
+        if ($audioMime !== 'audio/mpeg') {
+            return back()->with('error', 'ملف التقرير الصوتي الحالي ليس MP3. أعد الرفع بعد تفعيل ffmpeg.');
         }
 
         $report = ClassroomMeetingReport::create([
@@ -921,7 +998,7 @@ class ClassroomController extends Controller
         if (! $webhookUrl || ! $token) {
             $report->update(['status' => 'failed']);
 
-            return back()->with('error', 'إعدادات تكامل n8n غير مكتملة. تواصل مع مدير النظام.');
+            return back()->with('error', 'إعدادات خدمة إنشاء التقارير غير مكتملة. تواصل مع مدير النظام.');
         }
 
         try {
@@ -947,8 +1024,8 @@ class ClassroomController extends Controller
                         'audio_mime_type' => $meetingFresh->recording_audio_mime_type,
                         'video_mime_type' => $meetingFresh->recording_mime_type,
                         'audio_download_url' => $audioUrl,
-                        'video_download_url' => $videoUrl,
-                        'download_url' => $primaryUrl,
+                        'video_download_url' => $meetingFresh->recording_download_url,
+                        'download_url' => $audioUrl,
                     ],
                     'callback' => [
                         'url' => $callbackUrl,
@@ -977,7 +1054,7 @@ class ClassroomController extends Controller
                     'body' => $response->body(),
                 ]);
 
-                return back()->with('error', 'تعذر إرسال الطلب إلى n8n. تحقق من رابط الـ Webhook والتوكن في إعدادات n8n داخل لوحة التحكم.');
+                return back()->with('error', 'تعذر إرسال طلب إنشاء التقرير حالياً. حاول مرة أخرى لاحقاً.');
             }
         } catch (\Throwable $e) {
             $report->update(['status' => 'failed']);
@@ -988,10 +1065,10 @@ class ClassroomController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->with('error', 'حدث خطأ أثناء الاتصال بخدمة التقارير. الرجاء المحاولة لاحقاً.');
+            return back()->with('error', 'حدث خطأ أثناء الاتصال بخدمة إنشاء التقارير. الرجاء المحاولة لاحقاً.');
         }
 
-        return back()->with('success', 'تم إرسال طلب إنشاء التقرير النصي، جاري المعالجة عبر n8n.');
+        return back()->with('success', 'تم إرسال طلب إنشاء التقرير النصي بنجاح، جاري المعالجة.');
     }
 
     public function destroy(ClassroomMeeting $meeting)
@@ -1081,5 +1158,100 @@ class ClassroomController extends Controller
             'audio/mpeg' => 'mp3',
             default => 'webm',
         };
+    }
+
+    private function shouldConvertAudioToMp3(?string $mime, ?string $extension): bool
+    {
+        $mime = strtolower(trim((string) $mime));
+        $extension = strtolower(trim((string) $extension));
+
+        if ($mime === 'audio/mpeg' || $extension === 'mp3') {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function ffmpegBinaryPath(): string
+    {
+        return (string) env('FFMPEG_PATH', 'ffmpeg');
+    }
+
+    private function ensureFfmpegAvailable(): void
+    {
+        $ffmpeg = $this->ffmpegBinaryPath();
+        $cmd = sprintf('%s -version 2>&1', escapeshellarg($ffmpeg));
+        exec($cmd, $output, $exitCode);
+        if ($exitCode !== 0) {
+            throw new \RuntimeException('ffmpeg is unavailable');
+        }
+    }
+
+    private function convertLocalAudioFileToMp3(string $sourcePath, string $targetMp3Path): void
+    {
+        $ffmpeg = $this->ffmpegBinaryPath();
+        $cmd = sprintf(
+            '%s -y -i %s -vn -acodec libmp3lame -b:a 128k %s 2>&1',
+            escapeshellarg($ffmpeg),
+            escapeshellarg($sourcePath),
+            escapeshellarg($targetMp3Path)
+        );
+        exec($cmd, $output, $exitCode);
+        if ($exitCode !== 0 || ! is_file($targetMp3Path) || (int) filesize($targetMp3Path) <= 0) {
+            throw new \RuntimeException('فشل تحويل الصوت إلى mp3 عبر ffmpeg. '.implode("\n", $output));
+        }
+    }
+
+    private function convertStoredAudioPathToMp3($disk, string $path): ?array
+    {
+        $read = $disk->readStream($path);
+        if (! is_resource($read)) {
+            return null;
+        }
+
+        $tempSource = tempnam(sys_get_temp_dir(), 'mx-r2-audio-src-');
+        $tempMp3 = tempnam(sys_get_temp_dir(), 'mx-r2-audio-mp3-');
+        if ($tempSource === false || $tempMp3 === false) {
+            if (is_resource($read)) {
+                fclose($read);
+            }
+            throw new \RuntimeException('تعذر إنشاء ملف مؤقت لتحويل الصوت.');
+        }
+
+        try {
+            $write = fopen($tempSource, 'wb');
+            if (! is_resource($write)) {
+                throw new \RuntimeException('تعذر كتابة الملف المؤقت قبل التحويل.');
+            }
+            stream_copy_to_stream($read, $write);
+            fclose($write);
+            fclose($read);
+
+            $this->convertLocalAudioFileToMp3($tempSource, $tempMp3);
+
+            $targetPath = preg_replace('/\.[a-z0-9]+$/i', '', $path).'.mp3';
+            $stream = fopen($tempMp3, 'rb');
+            if (! is_resource($stream)) {
+                throw new \RuntimeException('تعذر فتح ملف mp3 الناتج.');
+            }
+            $disk->put($targetPath, $stream);
+            fclose($stream);
+
+            return [
+                'path' => $targetPath,
+                'mime' => 'audio/mpeg',
+                'size' => (int) filesize($tempMp3),
+            ];
+        } finally {
+            if (is_resource($read)) {
+                fclose($read);
+            }
+            if (is_file($tempSource)) {
+                @unlink($tempSource);
+            }
+            if (is_file($tempMp3)) {
+                @unlink($tempMp3);
+            }
+        }
     }
 }

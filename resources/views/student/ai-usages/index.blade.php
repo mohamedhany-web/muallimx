@@ -46,11 +46,6 @@
                             <i class="fas fa-up-right-from-square text-xs"></i>
                             {{ __('student.ai_usages.open_game') }}
                         </a>
-                        <a href="{{ $game->publicRelativeUrl() }}" download
-                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-900 text-gray-800 dark:text-slate-200 text-sm font-semibold hover:bg-gray-100 dark:hover:bg-slate-800">
-                            <i class="fas fa-download text-xs"></i>
-                            {{ __('student.ai_usages.download_html') }}
-                        </a>
                         <form action="{{ route('student.ai-usages.saved-games.destroy', ['game' => $game->id]) }}" method="post" onsubmit="return confirm(@json(__('student.ai_usages.confirm_delete')));">
                             @csrf
                             @method('DELETE')
