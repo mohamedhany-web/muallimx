@@ -770,26 +770,44 @@ class ClassroomController extends Controller
 
         try {
             if ($this->shouldConvertAudioToMp3($finalMime, $ext)) {
-                $this->ensureFfmpegAvailable();
-                $tempSourcePath = tempnam(sys_get_temp_dir(), 'mx-audio-src-');
-                $tempMp3Path = tempnam(sys_get_temp_dir(), 'mx-audio-mp3-');
-                if ($tempSourcePath === false || $tempMp3Path === false) {
-                    throw new \RuntimeException('تعذر تجهيز ملفات مؤقتة لتحويل الصوت.');
-                }
-                file_put_contents($tempSourcePath, file_get_contents($file->getRealPath()));
-                $this->convertLocalAudioFileToMp3($tempSourcePath, $tempMp3Path);
+                if ($this->canConvertAudioLocally()) {
+                    $this->ensureFfmpegAvailable();
+                    $tempSourcePath = tempnam(sys_get_temp_dir(), 'mx-audio-src-');
+                    $tempMp3Path = tempnam(sys_get_temp_dir(), 'mx-audio-mp3-');
+                    if ($tempSourcePath === false || $tempMp3Path === false) {
+                        throw new \RuntimeException('تعذر تجهيز ملفات مؤقتة لتحويل الصوت.');
+                    }
+                    file_put_contents($tempSourcePath, file_get_contents($file->getRealPath()));
+                    $this->convertLocalAudioFileToMp3($tempSourcePath, $tempMp3Path);
 
-                $mp3Path = $directory.'/'.$baseName.'-converted.mp3';
-                $stream = fopen($tempMp3Path, 'rb');
-                if (! is_resource($stream)) {
-                    throw new \RuntimeException('تعذر فتح ملف mp3 بعد التحويل.');
-                }
-                $disk->put($mp3Path, $stream);
-                fclose($stream);
+                    $mp3Path = $directory.'/'.$baseName.'-converted.mp3';
+                    $stream = fopen($tempMp3Path, 'rb');
+                    if (! is_resource($stream)) {
+                        throw new \RuntimeException('تعذر فتح ملف mp3 بعد التحويل.');
+                    }
+                    $disk->put($mp3Path, $stream);
+                    fclose($stream);
 
-                $finalPath = $mp3Path;
-                $finalMime = 'audio/mpeg';
-                $finalSize = (int) filesize($tempMp3Path);
+                    $finalPath = $mp3Path;
+                    $finalMime = 'audio/mpeg';
+                    $finalSize = (int) filesize($tempMp3Path);
+                } elseif ($this->vpsAudioConvertEnabled()) {
+                    // لا يمكن تشغيل ffmpeg على الاستضافات المشتركة عند تعطيل exec.
+                    // نرفع الملف كما هو ثم نطلب التحويل على VPS عبر روابط موقعة (presigned).
+                    $disk->putFileAs($directory, $file, $fileName);
+                    $converted = $this->convertStoredAudioPathToMp3ViaVps($disk, $newPath);
+                    $finalPath = (string) ($converted['path'] ?? $newPath);
+                    $finalMime = (string) ($converted['mime'] ?? 'audio/mpeg');
+                    $finalSize = (int) ($converted['size'] ?? $finalSize);
+                    if ($finalPath !== $newPath) {
+                        try {
+                            $disk->delete($newPath);
+                        } catch (\Throwable $e) {
+                        }
+                    }
+                } else {
+                    throw new \RuntimeException('ffmpeg is unavailable');
+                }
             } else {
                 $disk->putFileAs($directory, $file, $fileName);
             }
@@ -898,8 +916,15 @@ class ClassroomController extends Controller
 
         if ($this->shouldConvertAudioToMp3($mime, pathinfo($path, PATHINFO_EXTENSION))) {
             try {
-                $this->ensureFfmpegAvailable();
-                $converted = $this->convertStoredAudioPathToMp3($disk, $path);
+                if ($this->canConvertAudioLocally()) {
+                    $this->ensureFfmpegAvailable();
+                    $converted = $this->convertStoredAudioPathToMp3($disk, $path);
+                } elseif ($this->vpsAudioConvertEnabled()) {
+                    $converted = $this->convertStoredAudioPathToMp3ViaVps($disk, $path);
+                } else {
+                    throw new \RuntimeException('ffmpeg is unavailable');
+                }
+
                 if (is_array($converted)) {
                     $finalPath = (string) ($converted['path'] ?? $path);
                     $finalMime = (string) ($converted['mime'] ?? 'audio/mpeg');
@@ -1179,12 +1204,82 @@ class ClassroomController extends Controller
 
     private function ensureFfmpegAvailable(): void
     {
+        if (! function_exists('exec')) {
+            throw new \RuntimeException('ffmpeg is unavailable');
+        }
         $ffmpeg = $this->ffmpegBinaryPath();
         $cmd = sprintf('%s -version 2>&1', escapeshellarg($ffmpeg));
         exec($cmd, $output, $exitCode);
         if ($exitCode !== 0) {
             throw new \RuntimeException('ffmpeg is unavailable');
         }
+    }
+
+    private function canConvertAudioLocally(): bool
+    {
+        return function_exists('exec');
+    }
+
+    private function vpsAudioConvertEnabled(): bool
+    {
+        return trim((string) env('VPS_AUDIO_CONVERT_URL', '')) !== ''
+            && trim((string) env('VPS_AUDIO_CONVERT_TOKEN', '')) !== '';
+    }
+
+    /**
+     * تحويل ملف صوت مخزن على R2 إلى MP3 عبر خدمة خارجية (VPS) باستخدام روابط GET/PUT موقّعة.
+     *
+     * يتطلب:
+     * - VPS_AUDIO_CONVERT_URL
+     * - VPS_AUDIO_CONVERT_TOKEN
+     *
+     * ملاحظة: يتطلب تفعيل CORS في R2 للـ bucket للسماح بالـ PUT من VPS.
+     */
+    private function convertStoredAudioPathToMp3ViaVps($disk, string $path): array
+    {
+        $url = trim((string) env('VPS_AUDIO_CONVERT_URL', ''));
+        $token = (string) env('VPS_AUDIO_CONVERT_TOKEN', '');
+        if ($url === '' || $token === '') {
+            throw new \RuntimeException('VPS audio convert service is not configured');
+        }
+
+        $sourceUrl = $disk->temporaryUrl($path, now()->addMinutes(40));
+        $targetPath = preg_replace('/\.[a-z0-9]+$/i', '', $path).'.mp3';
+
+        $signedPut = $disk->temporaryUploadUrl(
+            $targetPath,
+            now()->addMinutes(40),
+            ['ContentType' => 'audio/mpeg']
+        );
+
+        $resp = Http::timeout(600)
+            ->connectTimeout(10)
+            ->withHeaders([
+                'X-Mx-Token' => $token,
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])->post($url, [
+                'source_url' => $sourceUrl,
+                'upload_put_url' => $signedPut['url'],
+            ]);
+
+        if (! $resp->successful()) {
+            throw new \RuntimeException('VPS audio convert failed: '.$resp->status().' '.$resp->body());
+        }
+
+        if (! $disk->exists($targetPath)) {
+            // قد يكون هناك تأخير بسيط في ظهور الملف على التخزين.
+            usleep(350000);
+        }
+        if (! $disk->exists($targetPath)) {
+            throw new \RuntimeException('VPS audio convert finished but mp3 not found on storage');
+        }
+
+        return [
+            'path' => $targetPath,
+            'mime' => 'audio/mpeg',
+            'size' => (int) $disk->size($targetPath),
+        ];
     }
 
     private function convertLocalAudioFileToMp3(string $sourcePath, string $targetMp3Path): void
