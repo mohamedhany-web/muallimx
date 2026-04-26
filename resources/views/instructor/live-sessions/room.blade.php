@@ -15,19 +15,6 @@
         #mx-live-broadcast-root { width: 100%; flex: 1; min-height: 0; background: #0f172a; position: relative; }
         .room-body { position: relative; display: flex; flex-direction: column; height: calc(100vh - 72px); }
         #mx-live-broadcast-root iframe { width: 100% !important; height: 100% !important; border: none; }
-        /* مثل Classroom: تغطية زاوية لشعار قد يظهر رغم إعدادات واجهة الـ API */
-        .jitsi-brand-mask {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: min(240px, 46vw);
-            height: 96px;
-            z-index: 11;
-            pointer-events: none;
-            background: #0f172a;
-            border-bottom-right-radius: 12px;
-            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.5);
-        }
 
         /* Recording pulse */
         @keyframes recPulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
@@ -167,7 +154,6 @@
     <div class="room-body">
         <div id="mx-video-stack" class="relative flex-1 min-h-0 flex flex-col">
             <main id="mx-live-broadcast-root" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة البث — Muallimx"></main>
-            <div class="jitsi-brand-mask absolute left-0 top-0 pointer-events-none" aria-hidden="true"></div>
             @include('partials.mx-share-annotation-overlay', [
                 'mxAnnRole' => 'viewer_poll',
                 'mxAnnPollUrl' => route('instructor.live-sessions.share-annotations', $liveSession),
@@ -214,6 +200,8 @@
                 APP_NAME: 'Muallimx',
                 NATIVE_APP_NAME: 'Muallimx',
                 PROVIDER_NAME: 'Muallimx',
+                JITSI_WATERMARK_LINK: '',
+                HIDE_DEEP_LINKING_LOGO: true,
                 TOOLBAR_BUTTONS: [
                     'microphone', 'camera', 'desktop', 'chat',
                     'raisehand', 'participants-pane', 'tileview',

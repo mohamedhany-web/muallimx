@@ -11,29 +11,33 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
         * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
-        body { margin: 0; padding: 0; background: #0c1222; overflow: hidden; height: 100vh; }
+        html { height: 100%; height: 100dvh; }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0c1222;
+            overflow: hidden;
+            min-height: 100vh;
+            min-height: 100dvh;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
         #jitsi-container {
             width: 100%;
             flex: 1;
             min-height: 0;
             background: #0f172a;
         }
-        .room-body { display: flex; flex-direction: column; height: calc(100vh - 56px); }
+        .room-body {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
         #jitsi-container iframe { width: 100% !important; height: 100% !important; border: none; }
         #meeting-stage { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; width: 100%; }
-        /* شعار Jitsi: الخوادم الحديثة لا تطبّق SHOW_JITSI_WATERMARK من الـ iframe API — تغطية زاوية بلا اعتراض النقرات */
-        .jitsi-brand-mask {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: min(240px, 46vw);
-            height: 96px;
-            z-index: 11;
-            pointer-events: none;
-            background: #0f172a;
-            border-bottom-right-radius: 12px;
-            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.5);
-        }
         #wb-popup { z-index: 140; }
         /* عدم خلط display مع Tailwind: عند الإغلاق لا يبقى flex يتعارض مع hidden */
         #wb-popup.is-open {
@@ -41,8 +45,24 @@
             align-items: center;
             justify-content: center;
         }
-        #pkg-features-dd-panel { z-index: 130; }
-        #mx-record-dd-panel { z-index: 135; box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(148, 163, 184, 0.08); }
+        /* القوائم: fixed + فوق الدرج والـ iframe قدر الإمكان */
+        #pkg-features-dd-panel,
+        #mx-record-dd-panel {
+            z-index: 220;
+            will-change: auto;
+        }
+        #pkg-features-dd-panel.mx-dd-visible,
+        #mx-record-dd-panel.mx-dd-visible {
+            will-change: opacity;
+        }
+        #mx-record-dd-panel { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(148, 163, 184, 0.08); }
+        #mx-classroom-nav-drawer { z-index: 205; }
+        #mx-classroom-nav-drawer[data-open="1"] { visibility: visible !important; pointer-events: auto !important; }
+        #mx-classroom-nav-drawer[data-open="1"] #mx-nav-drawer-backdrop { opacity: 1; pointer-events: auto; }
+        #mx-classroom-nav-drawer[data-open="1"] #mx-nav-drawer-aside {
+            transform: translateX(0) !important;
+            pointer-events: auto;
+        }
         .pkg-features-dd-panel-inner { box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(34, 211, 238, 0.06); }
         .classroom-room-toolbar-btn {
             display: inline-flex;
@@ -173,14 +193,15 @@
         $roomExitUrl = route('student.classroom.index');
     }
 @endphp
-    {{-- شريط Muallimx العلوي — تصميم المنصة فقط --}}
-    <header class="min-h-14 shrink-0 bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2 sm:py-0 shadow-lg">
-        <div class="flex items-center gap-2 sm:gap-3 min-w-0 w-full sm:w-auto sm:flex-1">
+    {{-- شريط Muallimx العلوي — على الهاتف: صف علوي + زر سايدبار؛ من md: شريط أدوات أفقي --}}
+    <header class="min-h-14 shrink-0 bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex flex-col gap-2 px-3 sm:px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:py-0 md:flex-row md:items-center md:justify-between md:gap-2 shadow-lg">
+        <div class="flex items-center justify-between gap-2 w-full min-w-0 md:w-auto md:flex-1 md:justify-start">
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <a href="{{ $roomExitUrl }}" class="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors shrink-0">
                 <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
                     <i class="fas fa-video text-sm sm:text-[15px]"></i>
                 </span>
-                <span class="font-bold text-white text-xs sm:text-sm hidden sm:inline truncate max-w-[8rem] md:max-w-none">Muallimx</span>
+                <span class="font-bold text-white text-[11px] sm:text-sm truncate max-w-[6.5rem] sm:max-w-[8rem] md:max-w-none">Muallimx</span>
             </a>
             <span class="w-px h-5 bg-slate-600 hidden sm:block shrink-0"></span>
             <div class="flex items-center gap-1.5 min-w-0">
@@ -188,10 +209,14 @@
                 <span class="text-white font-semibold text-xs sm:text-sm truncate">{{ $meeting->title ?: 'غرفة ' . $meeting->code }}</span>
                 <span class="text-slate-400 text-[10px] sm:text-xs px-1.5 py-0.5 rounded bg-slate-700/80 font-mono shrink-0">{{ $meeting->code }}</span>
             </div>
+            </div>
+            <button type="button" id="mx-nav-drawer-toggle" class="md:hidden shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700 hover:border-cyan-500/30 transition-colors" aria-expanded="false" aria-controls="mx-classroom-nav-drawer" title="أدوات الغرفة">
+                <i class="fas fa-bars text-lg" aria-hidden="true"></i>
+            </button>
         </div>
-        <div class="mx-mobile-toolbar-scroll w-full sm:w-auto overflow-x-auto">
-        <div class="flex flex-nowrap items-center sm:justify-end gap-1.5 sm:gap-2 shrink-0 min-w-max sm:max-w-[min(100%,42rem)] lg:max-w-none pe-1">
-            <div class="flex flex-nowrap items-center gap-1.5">
+        <div id="mx-toolbar-desktop-slot" class="hidden md:block w-full md:w-auto mx-mobile-toolbar-scroll overflow-x-auto overflow-y-visible pb-0.5 md:pb-0 touch-pan-x">
+        <div id="mx-classroom-toolbar-inner" class="flex w-full flex-col items-stretch gap-3 md:w-auto md:min-w-max md:flex-row md:flex-nowrap md:items-center md:justify-end md:gap-1 md:gap-2 md:max-w-[min(100%,42rem)] lg:max-w-none pe-1 ps-0.5">
+            <div class="flex flex-wrap items-center gap-1.5 md:flex-nowrap">
             <span class="hidden sm:inline-flex text-slate-300 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-slate-700/80 whitespace-nowrap">
                 طلاب: {{ (int) ($meeting->max_participants ?? 25) }}
             </span>
@@ -204,11 +229,11 @@
             <span class="hidden text-sky-200 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-sky-500/20 border border-sky-500/30 max-w-[10rem] sm:max-w-[14rem] truncate" id="record-status-chip"></span>
             </div>
             <span class="hidden xl:block w-px h-4 bg-slate-600/50 shrink-0 rounded-full" aria-hidden="true"></span>
-            <div class="flex flex-nowrap items-center gap-1.5 justify-end">
+            <div class="flex w-full flex-col gap-2 md:w-auto md:flex-row md:flex-nowrap md:items-center md:justify-end md:gap-1.5">
             @unless($academicObserverMode)
             @if(!empty($subscriptionFeatureMenuItems))
-            <div class="relative shrink-0" id="pkg-features-dd-wrap">
-                <button type="button" id="pkg-features-dd-btn" class="classroom-room-toolbar-btn bg-slate-700/80 hover:bg-slate-600/90 text-slate-100 border border-slate-600 hover:border-cyan-500/35 max-w-[9.5rem] sm:max-w-[11rem] lg:max-w-none" aria-expanded="false" aria-haspopup="true" title="مزايا اشتراكك — تفتح في تاب جديد">
+            <div class="relative w-full shrink-0 md:w-auto" id="pkg-features-dd-wrap">
+                <button type="button" id="pkg-features-dd-btn" class="classroom-room-toolbar-btn w-full justify-between bg-slate-700/80 hover:bg-slate-600/90 text-slate-100 border border-slate-600 hover:border-cyan-500/35 md:w-auto md:max-w-[11rem] lg:max-w-none" aria-expanded="false" aria-haspopup="true" title="مزايا اشتراكك — تفتح في تاب جديد">
                     <span class="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md bg-cyan-500/15 text-cyan-400 border border-cyan-500/20">
                         <i class="fas fa-layer-group text-[11px] sm:text-xs"></i>
                     </span>
@@ -222,7 +247,7 @@
                     </span>
                     <i class="fas fa-chevron-down text-[9px] text-slate-400 shrink-0 transition-transform duration-200" id="pkg-features-dd-chevron" aria-hidden="true"></i>
                 </button>
-                <div id="pkg-features-dd-panel" class="pkg-features-dd-panel-inner hidden absolute top-[calc(100%+0.5rem)] end-0 w-[min(100vw-2rem,19.5rem)] rounded-xl border border-slate-600 bg-slate-900/98 backdrop-blur-md overflow-hidden" role="menu">
+                <div id="pkg-features-dd-panel" class="pkg-features-dd-panel-inner hidden w-[min(100vw-2rem,19.5rem)] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-600 bg-slate-900/98 backdrop-blur-md overflow-hidden" role="menu">
                     <div class="px-3 py-2.5 border-b border-slate-700/90 bg-slate-800/70 flex items-start gap-2">
                         <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-cyan-500/10 text-cyan-400">
                             <i class="fas fa-arrow-up-left-from-square text-[10px]"></i>
@@ -246,33 +271,33 @@
                 </div>
             </div>
             @endif
-            <button type="button" id="btn-wb-popup-open" class="classroom-room-toolbar-btn bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 border border-amber-500/40" title="فتح الوايت بورد في نافذة منبثقة">
+            <button type="button" id="btn-wb-popup-open" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 border border-amber-500/40 md:w-auto md:justify-start" title="فتح الوايت بورد في نافذة منبثقة">
                 <i class="fas fa-expand text-amber-300 text-[11px]"></i>
-                <span class="hidden sm:inline">الوايت بورد</span>
+                <span class="sm:inline">الوايت بورد</span>
             </button>
-            <label class="classroom-room-toolbar-btn bg-slate-700/50 border border-slate-600 cursor-pointer select-none text-slate-200 max-w-[11rem] sm:max-w-[13rem]"
+            <label class="classroom-room-toolbar-btn w-full justify-between bg-slate-700/50 border border-slate-600 cursor-pointer select-none text-slate-200 md:w-auto md:max-w-[13rem]"
                    title="الضيف يرسم قلم/ممحاة فوق عرض الاجتماع؛ يظهر عندك فوق نفس الشاشة">
                 <input type="checkbox" id="mx-classroom-toggle-guest-wb" class="rounded border-slate-500 text-amber-500 focus:ring-amber-500 shrink-0 scale-90"
                        {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}>
                 <span class="font-medium truncate"><span class="hidden sm:inline">رسم الضيف فوق العرض</span><span class="sm:hidden">رسم ضيف</span></span>
             </label>
-            <div class="relative shrink-0 inline-flex" id="mx-record-dd-wrap">
-                <div id="mx-record-idle-wrap" class="inline-flex items-center rounded-lg border border-slate-600 overflow-hidden bg-slate-700/80 hover:bg-slate-600/90 transition-colors">
-                    <button type="button" id="btn-record-menu" class="classroom-room-toolbar-btn rounded-none border-0 bg-transparent text-slate-200 hover:bg-transparent" title="تسجيل المحاضرة أو تقرير صوتي" aria-expanded="false" aria-haspopup="true">
+            <div class="relative flex w-full flex-wrap items-center gap-2 md:inline-flex md:w-auto md:flex-nowrap md:gap-0" id="mx-record-dd-wrap">
+                <div id="mx-record-idle-wrap" class="inline-flex w-full min-w-0 items-center rounded-lg border border-slate-600 overflow-hidden bg-slate-700/80 hover:bg-slate-600/90 transition-colors md:w-auto">
+                    <button type="button" id="btn-record-menu" class="classroom-room-toolbar-btn w-full min-w-0 justify-between rounded-none border-0 bg-transparent text-slate-200 hover:bg-transparent md:w-auto" title="تسجيل المحاضرة أو تقرير صوتي" aria-expanded="false" aria-haspopup="true">
                         <i class="fas fa-circle-dot text-rose-400 text-[10px]" id="record-icon-idle"></i>
-                        <span id="record-label-idle" class="truncate max-w-[4.75rem] sm:max-w-[9.5rem] lg:max-w-none">تسجيل أو تقرير</span>
+                        <span id="record-label-idle" class="min-w-0 flex-1 truncate sm:max-w-[9.5rem] lg:max-w-none">تسجيل أو تقرير</span>
                         <i class="fas fa-chevron-down text-[9px] text-slate-400 shrink-0 transition-transform duration-200" id="record-dd-chevron" aria-hidden="true"></i>
                     </button>
                 </div>
-                <button type="button" id="btn-record-stop" class="hidden classroom-room-toolbar-btn rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white font-semibold border border-rose-500/40 shadow-sm shadow-rose-900/25 max-w-[11rem]" title="إيقاف التسجيل">
+                <button type="button" id="btn-record-stop" class="hidden classroom-room-toolbar-btn w-full justify-center rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white font-semibold border border-rose-500/40 shadow-sm shadow-rose-900/25 md:w-auto md:max-w-[11rem]" title="إيقاف التسجيل">
                     <i class="fas fa-stop text-[10px] shrink-0" id="record-icon-active"></i>
                     <span id="record-label-active" class="truncate text-right">إيقاف</span>
                 </button>
-                <button type="button" id="btn-lecture-add-screen" class="hidden classroom-room-toolbar-btn rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-100 font-medium border border-cyan-500/35 max-w-[10rem] sm:max-w-[13rem]" title="إضافة تبويب الاجتماع أو الشاشة إلى الفيديو المسجّل">
+                <button type="button" id="btn-lecture-add-screen" class="hidden classroom-room-toolbar-btn w-full justify-center rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-100 font-medium border border-cyan-500/35 md:w-auto md:max-w-[13rem]" title="إضافة تبويب الاجتماع أو الشاشة إلى الفيديو المسجّل">
                     <i class="fas fa-desktop text-[10px] shrink-0 text-cyan-300"></i>
                     <span class="truncate hidden sm:inline">إضافة شاشة للتسجيل</span><span class="sm:hidden">+شاشة</span>
                 </button>
-                <div id="mx-record-dd-panel" class="hidden absolute top-[calc(100%+0.35rem)] end-0 w-[min(100vw-1.5rem,18.5rem)] rounded-lg border border-slate-600 bg-slate-900/98 backdrop-blur-md overflow-hidden" role="menu">
+                <div id="mx-record-dd-panel" class="hidden w-[min(100vw-1.5rem,18.5rem)] max-w-[calc(100vw-1rem)] rounded-lg border border-slate-600 bg-slate-900/98 backdrop-blur-md overflow-hidden" role="menu">
                     <p class="px-2.5 py-1.5 text-[10px] leading-snug text-slate-500 border-b border-slate-700/80 m-0">يبدأ التسجيل بالصوت فقط. أثناء التسجيل اضغط «إضافة شاشة للتسجيل» واختر <strong class="text-slate-400">تبويب الاجتماع</strong> ليظهر العرض والمشاركة في الفيديو.</p>
                     <button type="button" role="menuitem" data-mx-rec-mode="lecture" class="w-full text-right px-2.5 py-2 text-xs text-slate-200 hover:bg-slate-700/80 border-0 border-b border-slate-700/50 bg-transparent cursor-pointer flex items-center gap-2">
                         <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-rose-500/15 text-rose-300"><i class="fas fa-display text-[11px]"></i></span>
@@ -284,12 +309,14 @@
                     </button>
                 </div>
             </div>
-            <button type="button" id="btn-classroom-copy-join" class="classroom-room-toolbar-btn bg-slate-700/80 hover:bg-slate-600 text-slate-200 border border-slate-600" title="نسخ رابط الانضمام" data-join-url="{{ url('classroom/join/' . $meeting->code) }}">
-                <i class="fas fa-link text-[10px] btn-copy-join-ic"></i><span class="hidden sm:inline btn-copy-join-tx">مشاركة الرابط</span><span class="sm:hidden btn-copy-join-tx-sm">رابط</span>
+            <button type="button" id="btn-classroom-copy-join" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-slate-700/80 hover:bg-slate-600 text-slate-200 border border-slate-600 md:w-auto md:justify-start" title="نسخ رابط الانضمام" data-join-url="{{ url('classroom/join/' . $meeting->code) }}">
+                <i class="fas fa-link text-[10px] btn-copy-join-ic"></i>
+                <span class="btn-copy-join-tx min-w-0 truncate">مشاركة الرابط</span>
+                <span class="btn-copy-join-tx-sm hidden min-w-0 truncate" aria-hidden="true">رابط</span>
             </button>
-            <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" class="inline shrink-0" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
+            <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" class="inline w-full shrink-0 md:w-auto" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
                 @csrf
-                <button type="submit" id="mx-end-meeting-btn" class="classroom-room-toolbar-btn bg-rose-600 hover:bg-rose-500 text-white font-semibold border border-rose-500/50 shadow-sm shadow-rose-900/20">
+                <button type="submit" id="mx-end-meeting-btn" class="classroom-room-toolbar-btn w-full justify-center bg-rose-600 hover:bg-rose-500 text-white font-semibold border border-rose-500/50 shadow-sm shadow-rose-900/20 md:w-auto md:justify-start">
                     <i class="fas fa-stop text-[10px]"></i><span class="hidden md:inline">إنهاء الاجتماع</span><span class="md:hidden">إنهاء</span>
                 </button>
             </form>
@@ -302,6 +329,86 @@
         </div>
         </div>
     </header>
+
+    {{-- درج أدوات الغرفة (هاتف فقط): نفس عناصر الشريط تُنقل هنا عبر JS --}}
+    <div id="mx-classroom-nav-drawer" class="md:hidden fixed inset-0 invisible pointer-events-none" data-open="0" aria-hidden="true">
+        <div id="mx-nav-drawer-backdrop" class="absolute inset-0 bg-slate-950/65 opacity-0 transition-opacity duration-200 pointer-events-none" aria-hidden="true"></div>
+        <aside id="mx-nav-drawer-aside" class="absolute end-0 top-0 flex h-full min-h-0 w-[min(20rem,calc(100vw-2.5rem))] max-w-[100vw] flex-col border-s border-slate-600/80 bg-slate-900 shadow-2xl transition-transform duration-200 ease-out ltr:translate-x-full rtl:-translate-x-full pointer-events-none pt-[max(0.5rem,env(safe-area-inset-top))]" role="dialog" aria-modal="true" aria-labelledby="mx-nav-drawer-title">
+            <div class="flex items-center justify-between gap-2 border-b border-slate-700/80 px-3 py-2.5 shrink-0">
+                <h2 id="mx-nav-drawer-title" class="text-sm font-bold text-white m-0 truncate">أدوات الغرفة</h2>
+                <button type="button" id="mx-nav-drawer-close" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white" aria-label="إغلاق القائمة">
+                    <i class="fas fa-times text-sm" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div id="mx-toolbar-drawer-slot" class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain p-3 pb-[max(1rem,env(safe-area-inset-bottom))]"></div>
+        </aside>
+    </div>
+    <script>
+        (function () {
+            var mq = window.matchMedia('(max-width: 767px)');
+            var inner = document.getElementById('mx-classroom-toolbar-inner');
+            var desk = document.getElementById('mx-toolbar-desktop-slot');
+            var slot = document.getElementById('mx-toolbar-drawer-slot');
+            var drawer = document.getElementById('mx-classroom-nav-drawer');
+            var toggle = document.getElementById('mx-nav-drawer-toggle');
+            var closeBtn = document.getElementById('mx-nav-drawer-close');
+            var backdrop = document.getElementById('mx-nav-drawer-backdrop');
+            var asideEl = document.getElementById('mx-nav-drawer-aside');
+
+            function setDrawerOpen(open) {
+                if (!drawer || !toggle) return;
+                drawer.setAttribute('data-open', open ? '1' : '0');
+                drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                document.body.classList.toggle('mx-classroom-drawer-open', !!open);
+                if (open) {
+                    try { window.dispatchEvent(new Event('resize')); } catch (e) {}
+                }
+            }
+
+            function placeToolbar() {
+                if (!inner || !desk || !slot) return;
+                if (mq.matches) {
+                    slot.appendChild(inner);
+                } else {
+                    desk.appendChild(inner);
+                    setDrawerOpen(false);
+                }
+            }
+
+            placeToolbar();
+            if (typeof mq.addEventListener === 'function') {
+                mq.addEventListener('change', placeToolbar);
+            } else if (typeof mq.addListener === 'function') {
+                mq.addListener(placeToolbar);
+            }
+            window.addEventListener('resize', placeToolbar);
+
+            if (toggle) {
+                toggle.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    setDrawerOpen(drawer.getAttribute('data-open') !== '1');
+                });
+            }
+            if (closeBtn) closeBtn.addEventListener('click', function () { setDrawerOpen(false); });
+            if (backdrop) {
+                backdrop.addEventListener('click', function () { setDrawerOpen(false); });
+            }
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') setDrawerOpen(false);
+            });
+            document.addEventListener('mousedown', function (e) {
+                if (!drawer || drawer.getAttribute('data-open') !== '1') return;
+                if (toggle && toggle.contains(e.target)) return;
+                if (backdrop && e.target === backdrop) {
+                    setDrawerOpen(false);
+                    return;
+                }
+                if (asideEl && asideEl.contains(e.target)) return;
+                setDrawerOpen(false);
+            }, true);
+        })();
+    </script>
 
     <div class="room-body">
     {{-- بوابة إذن الميكروفون/الكاميرا قبل تحميل Jitsi (تحل مشكلة بعض الأجهزة التي لا تُظهر الطلب تلقائياً) --}}
@@ -364,7 +471,6 @@
                 </a>
             </div>
         </main>
-        <div class="jitsi-brand-mask" aria-hidden="true"></div>
         @unless(!empty($academicObserverMode))
         @include('partials.mx-share-annotation-overlay', [
             'mxAnnRole' => 'viewer_poll',
@@ -434,6 +540,50 @@
             '/vendor/excalidraw/',
         ])));
     @endphp
+    {{-- محاذاة القوائم المنسدلة خارج منطقة overflow-x (الهاتف) --}}
+    <script>
+        /**
+         * @param {HTMLElement} panel
+         * @param {HTMLElement} alignEl — عنصر المحاذاة الأفقية (مثل الحاوية relative + end-0)
+         * @param {HTMLElement} [topEl] — أسفل هذا العنصر يُفتح اللوح (افتراضياً alignEl)
+         */
+        window.mxPositionClassroomDropdown = function (panel, alignEl, topEl) {
+            if (!panel || !alignEl) return;
+            if (!topEl) topEl = alignEl;
+
+            var gap = 6;
+            var vw = window.innerWidth || document.documentElement.clientWidth || 0;
+            var vh = window.innerHeight || document.documentElement.clientHeight || 0;
+            var ar = alignEl.getBoundingClientRect();
+            var tr = topEl.getBoundingClientRect();
+            var rtl = ((document.documentElement.getAttribute('dir') || 'ltr').toLowerCase()) === 'rtl';
+
+            panel.style.position = 'fixed';
+            panel.style.zIndex = '220';
+
+            var pw = panel.offsetWidth;
+
+            var wantLeft = rtl ? ar.left : (ar.right - pw);
+            if (wantLeft + pw > vw - 8) wantLeft = vw - 8 - pw;
+            if (wantLeft < 8) wantLeft = 8;
+            panel.style.left = wantLeft + 'px';
+            panel.style.right = 'auto';
+
+            var ph = panel.offsetHeight;
+            var top = tr.bottom + gap;
+            if (top + ph > vh - 8) top = tr.top - gap - ph;
+            if (top < 8) top = 8;
+            panel.style.top = top + 'px';
+            panel.style.bottom = 'auto';
+        };
+        window.mxClearClassroomDropdownPosition = function (panel) {
+            if (!panel) return;
+            panel.classList.remove('mx-dd-visible');
+            ['position', 'top', 'left', 'right', 'width', 'maxWidth', 'bottom', 'zIndex', 'opacity', 'transition', 'pointerEvents'].forEach(function (k) {
+                panel.style[k] = '';
+            });
+        };
+    </script>
     {{-- Muallimx Whiteboard: تحميل ديناميكي + أكثر من مسار (Laravel ثم ملفات public المباشرة) --}}
     <script>
         (function() {
@@ -446,6 +596,7 @@
             var errorEl = document.getElementById('jitsi-error');
             var meetingEndsAt = {!! json_encode(optional($meetingEndsAt)->toIso8601String()) !!};
             var timerChip = document.getElementById('meeting-timer-chip');
+            var timerChipMobile = document.getElementById('meeting-timer-chip-mobile');
             var mxMeetingId = {{ (int) $meeting->id }};
             var recordDdWrap = document.getElementById('mx-record-dd-wrap');
             var btnRecordMenu = document.getElementById('btn-record-menu');
@@ -900,9 +1051,28 @@
 
             function setRecordDdOpen(open) {
                 mxRecordDdOpen = !!open;
-                if (recordDdPanel) recordDdPanel.classList.toggle('hidden', !open);
                 if (btnRecordMenu) btnRecordMenu.setAttribute('aria-expanded', open ? 'true' : 'false');
                 if (recordDdChevron) recordDdChevron.style.transform = open ? 'rotate(180deg)' : '';
+                if (!open) {
+                    if (recordDdPanel) recordDdPanel.classList.add('hidden');
+                    if (typeof window.mxClearClassroomDropdownPosition === 'function') {
+                        window.mxClearClassroomDropdownPosition(recordDdPanel);
+                    }
+                } else if (recordDdPanel && recordDdWrap && typeof window.mxPositionClassroomDropdown === 'function') {
+                    recordDdPanel.style.opacity = '0';
+                    recordDdPanel.style.pointerEvents = 'none';
+                    recordDdPanel.classList.remove('hidden');
+                    recordDdPanel.classList.add('mx-dd-visible');
+                    window.mxPositionClassroomDropdown(recordDdPanel, recordDdWrap, btnRecordMenu);
+                    requestAnimationFrame(function () {
+                        requestAnimationFrame(function () {
+                            recordDdPanel.style.transition = 'opacity 0.14s ease-out';
+                            recordDdPanel.style.opacity = '1';
+                            recordDdPanel.style.pointerEvents = '';
+                            window.mxPositionClassroomDropdown(recordDdPanel, recordDdWrap, btnRecordMenu);
+                        });
+                    });
+                }
             }
 
             function setRecordButtonState(recording) {
@@ -1929,9 +2099,6 @@
                     if (isRecording) return;
                     setRecordDdOpen(recordDdPanel.classList.contains('hidden'));
                 });
-                recordDdWrap.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                });
                 recordDdPanel.querySelectorAll('[data-mx-rec-mode]').forEach(function(el) {
                     el.addEventListener('click', function() {
                         var mode = el.getAttribute('data-mx-rec-mode');
@@ -1943,11 +2110,20 @@
                         }
                     });
                 });
-                document.addEventListener('click', function() {
-                    setRecordDdOpen(false);
-                });
+                document.addEventListener('mousedown', function (e) {
+                    if (!recordDdWrap.contains(e.target)) setRecordDdOpen(false);
+                }, true);
                 document.addEventListener('keydown', function(e) {
                     if (e.key === 'Escape') setRecordDdOpen(false);
+                });
+                var recResizeT = null;
+                window.addEventListener('resize', function () {
+                    if (!mxRecordDdOpen || !recordDdPanel || typeof window.mxPositionClassroomDropdown !== 'function') return;
+                    if (recResizeT) clearTimeout(recResizeT);
+                    recResizeT = setTimeout(function () {
+                        recResizeT = null;
+                        window.mxPositionClassroomDropdown(recordDdPanel, recordDdWrap, btnRecordMenu);
+                    }, 80);
                 });
             }
 
@@ -2153,6 +2329,8 @@
                             APP_NAME: 'Muallimx Classroom',
                             NATIVE_APP_NAME: 'Muallimx Classroom',
                             PROVIDER_NAME: 'Muallimx',
+                            JITSI_WATERMARK_LINK: '',
+                            HIDE_DEEP_LINKING_LOGO: true,
                             TOOLBAR_BUTTONS: [
                                 'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
                                 'fodeviceselection', 'hangup', 'chat', 'recording',
@@ -2194,20 +2372,30 @@
             }
 
             function tickMeetingTimer() {
-                if (!meetingEndsAt || !timerChip) return;
+                if (!meetingEndsAt || (!timerChip && !timerChipMobile)) return;
                 var end = new Date(meetingEndsAt).getTime();
                 var nowTs = Date.now();
                 var diff = end - nowTs;
                 if (diff <= 0) {
-                    timerChip.textContent = 'انتهت المدة المسموح بها';
-                    timerChip.classList.remove('bg-amber-500/20', 'border-amber-500/30', 'text-amber-200');
-                    timerChip.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
+                    if (timerChip) {
+                        timerChip.textContent = 'انتهت المدة المسموح بها';
+                        timerChip.classList.remove('bg-amber-500/20', 'border-amber-500/30', 'text-amber-200');
+                        timerChip.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
+                    }
+                    if (timerChipMobile) {
+                        timerChipMobile.textContent = 'انتهت المدة';
+                        timerChipMobile.classList.remove('bg-amber-500/20', 'border-amber-500/30', 'text-amber-200');
+                        timerChipMobile.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
+                    }
                     window.location.href = roomExitUrl;
                     return;
                 }
                 var mins = Math.floor(diff / 60000);
                 var secs = Math.floor((diff % 60000) / 1000);
-                timerChip.textContent = 'الوقت المتبقي: ' + mins + ':' + String(secs).padStart(2, '0');
+                var fullText = 'الوقت المتبقي: ' + mins + ':' + String(secs).padStart(2, '0');
+                var shortText = mins + ':' + String(secs).padStart(2, '0');
+                if (timerChip) timerChip.textContent = fullText;
+                if (timerChipMobile) timerChipMobile.textContent = shortText;
             }
             setInterval(tickMeetingTimer, 1000);
             tickMeetingTimer();
@@ -2241,22 +2429,47 @@
             var chev = document.getElementById('pkg-features-dd-chevron');
             if (!wrap || !btn || !panel) return;
             function setOpen(open) {
-                panel.classList.toggle('hidden', !open);
                 btn.setAttribute('aria-expanded', open ? 'true' : 'false');
                 if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
+                if (!open) {
+                    panel.classList.add('hidden');
+                    if (typeof window.mxClearClassroomDropdownPosition === 'function') {
+                        window.mxClearClassroomDropdownPosition(panel);
+                    }
+                } else if (typeof window.mxPositionClassroomDropdown === 'function') {
+                    panel.style.opacity = '0';
+                    panel.style.pointerEvents = 'none';
+                    panel.classList.remove('hidden');
+                    panel.classList.add('mx-dd-visible');
+                    window.mxPositionClassroomDropdown(panel, wrap, btn);
+                    requestAnimationFrame(function () {
+                        requestAnimationFrame(function () {
+                            panel.style.transition = 'opacity 0.14s ease-out';
+                            panel.style.opacity = '1';
+                            panel.style.pointerEvents = '';
+                            window.mxPositionClassroomDropdown(panel, wrap, btn);
+                        });
+                    });
+                }
             }
             btn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 setOpen(panel.classList.contains('hidden'));
             });
-            wrap.addEventListener('click', function (e) {
-                e.stopPropagation();
-            });
-            document.addEventListener('click', function () {
-                setOpen(false);
-            });
+            document.addEventListener('mousedown', function (e) {
+                if (!wrap.contains(e.target)) setOpen(false);
+            }, true);
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'Escape') setOpen(false);
+            });
+            var pkgResizeT = null;
+            window.addEventListener('resize', function () {
+                if (panel.classList.contains('hidden') || typeof window.mxPositionClassroomDropdown !== 'function') return;
+                if (pkgResizeT) clearTimeout(pkgResizeT);
+                pkgResizeT = setTimeout(function () {
+                    pkgResizeT = null;
+                    window.mxPositionClassroomDropdown(panel, wrap, btn);
+                }, 80);
             });
         })();
     </script>

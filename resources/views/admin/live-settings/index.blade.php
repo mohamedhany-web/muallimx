@@ -14,7 +14,7 @@
         <i class="fas fa-exclamation-triangle text-amber-500 text-xl mt-0.5"></i>
         <div>
             <p class="font-bold text-amber-800 dark:text-amber-200">نطاق meet.jit.si للاختبار فقط</p>
-            <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">المكالمات المضمّنة (embed) عبر meet.jit.si تُقطع تلقائياً بعد 5 دقائق. للإنتاج: غيّر <strong>نطاق Jitsi Meet</strong> أدناه إلى سيرفر Jitsi خاص بك أو استخدم <strong>Jitsi as a Service</strong> من 8x8.</p>
+            <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">المكالمات المضمّنة (embed) عبر meet.jit.si تُقطع تلقائياً بعد 5 دقائق، ولا يمكن إخفاء شعار Jitsi من المتصفح على هذا النطاق. للإنتاج: غيّر <strong>نطاق Jitsi Meet</strong> أدناه إلى سيرفر Jitsi خاص بك (مع تعديل <code class="text-xs bg-amber-100 dark:bg-amber-950 px-1 rounded">interface_config.js</code> على الخادم إن رغبت بإخفاء العلامة) أو استخدم <strong>Jitsi as a Service</strong> من 8x8.</p>
         </div>
     </div>
     @endif
@@ -44,6 +44,13 @@
                     <i class="fas fa-cog text-slate-400"></i> {{ $group }}
                 @endif
             </h2>
+            @if($group === 'jitsi')
+            <div class="mb-4 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 p-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p class="font-semibold text-slate-800 dark:text-slate-100 mb-2"><i class="fas fa-info-circle text-blue-500 ml-1"></i> ظهور كلمة أو شعار «Jitsi» داخل الغرفة</p>
+                <p class="mb-2">المنصة ترسل بالفعل طلب إخفاء العلامة عبر واجهة الـ iframe، لكن خوادم Jitsi <strong>لا تطبّق ذلك من المتصفح</strong> لمعاملات العلامة التجارية (قائمة بيضاء في الواجهة). على <strong>meet.jit.si</strong> يبقى الشعار ظاهراً وفق شروط الخدمة.</p>
+                <p>لإخفائه على سيرفرك الخاص عدّل ملف الواجهة على الخادم نفسه، مثلاً <code class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">/usr/share/jitsi-meet/interface_config.js</code> أو في Docker الملف <code class="text-xs bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">CONFIG/web/custom-interface_config.js</code> واضبط <code class="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">SHOW_JITSI_WATERMARK</code> و<code class="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">SHOW_BRAND_WATERMARK</code> و<code class="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">SHOW_WATERMARK_FOR_GUESTS</code> إلى <code class="text-xs bg-slate-200 dark:bg-slate-700 px-1 rounded">false</code> ثم أعد نشر الواجهة أو أعد تحميل الصفحة بعد مسح ذاكرة التخزين المؤقت للمتصفح.</p>
+            </div>
+            @endif
             <div class="space-y-4">
                 @foreach($items as $setting)
                 <div class="flex items-center justify-between gap-4">

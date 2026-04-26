@@ -16,18 +16,6 @@
         .room-body { position: relative; display: flex; flex-direction: column; height: calc(100vh - 72px); }
         #jitsi-container { width: 100%; flex: 1; min-height: 0; background: #0f172a; }
         #jitsi-container iframe { width: 100% !important; height: 100% !important; border: none; }
-        .jitsi-brand-mask {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: min(240px, 46vw);
-            height: 96px;
-            z-index: 11;
-            pointer-events: none;
-            background: #0f172a;
-            border-bottom-right-radius: 12px;
-            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.5);
-        }
     </style>
 </head>
 <body class="bg-slate-950 text-white">
@@ -101,7 +89,6 @@
         <div class="room-body">
             <div id="mx-video-stack" class="relative flex-1 min-h-0 flex flex-col">
                 <main id="jitsi-container" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة الاجتماع"></main>
-                <div class="jitsi-brand-mask absolute left-0 top-0 pointer-events-none" aria-hidden="true"></div>
                 @include('partials.mx-share-annotation-overlay', [
                     'mxAnnRole' => 'classroom_guest_emit',
                     'mxAnnPostUrl' => route('classroom.join.share-annotation', $code),
@@ -197,6 +184,8 @@
                     APP_NAME: 'Muallimx Classroom',
                     NATIVE_APP_NAME: 'Muallimx Classroom',
                     PROVIDER_NAME: 'Muallimx',
+                    JITSI_WATERMARK_LINK: '',
+                    HIDE_DEEP_LINKING_LOGO: true,
                     TOOLBAR_BUTTONS: [
                         'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
                         'fodeviceselection', 'hangup', 'chat',
