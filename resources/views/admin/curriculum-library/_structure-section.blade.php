@@ -86,10 +86,28 @@
     </div>
 
     {{-- رفع مادة --}}
-    <div x-data="{ fileName: '' }" class="px-4 sm:px-5 py-5 bg-gradient-to-l from-indigo-50/80 via-white to-violet-50/50 dark:from-indigo-950/20 dark:via-slate-800/40 dark:to-violet-950/20 border-b border-slate-100 dark:border-slate-700">
+    @php
+        $useMatDirect = !empty($materialDirectUpload);
+        $clMatCfg = [
+            'presign' => route('admin.curriculum-library.items.materials.presign-upload', [$item, $section]),
+            'complete' => route('admin.curriculum-library.items.materials.complete-direct', [$item, $section]),
+            'csrf' => csrf_token(),
+            'maxBytes' => (int) config('upload_limits.curriculum_material_max_bytes', 150 * 1024 * 1024),
+        ];
+        $clMatMaxMb = max(1, (int) round((int) config('upload_limits.curriculum_material_max_kb', 150 * 1024) / 1024));
+        $phpUploadBytes = \Illuminate\Http\UploadedFile::getMaxFilesize();
+        $phpUploadMb = $phpUploadBytes > 0 ? max(1, (int) round($phpUploadBytes / 1024 / 1024)) : null;
+    @endphp
+    <div
+        @if($useMatDirect) data-cl-mat-wrap="1" data-cl-mat-cfg="{{ e(json_encode($clMatCfg, JSON_UNESCAPED_UNICODE)) }}" @endif
+        x-data="{ fileName: '' }"
+        class="px-4 sm:px-5 py-5 bg-gradient-to-l from-indigo-50/80 via-white to-violet-50/50 dark:from-indigo-950/20 dark:via-slate-800/40 dark:to-violet-950/20 border-b border-slate-100 dark:border-slate-700">
         <p class="text-sm font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2">
             <i class="fas fa-cloud-upload-alt text-indigo-600 dark:text-indigo-400"></i>
             رفع مادة إلى Cloudflare R2
+            @if($useMatDirect)
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 border border-emerald-200/80 dark:border-emerald-800">رفع مباشر متاح</span>
+            @endif
         </p>
         <form action="{{ route('admin.curriculum-library.items.materials.store', [$item, $section]) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
@@ -107,7 +125,7 @@
                             </span>
                         </template>
                     </label>
-                    <input id="{{ $fileInputId }}" type="file" name="file" required class="sr-only"
+                    <input id="{{ $fileInputId }}" type="file" name="file" @if(!$useMatDirect) required @endif class="sr-only"
                            @change="fileName = ($event.target.files && $event.target.files[0]) ? $event.target.files[0].name : ''">
                 </div>
                 <div class="lg:col-span-7 space-y-4">
@@ -127,10 +145,29 @@
                             السماح بالتحميل
                         </label>
                     </div>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">يُستنتج نوع الملف من الامتداد. HTML وعروض PowerPoint لا تُحمَّل مهما علّمت «تحميل». الحد الأقصى للحجم يحدد من إعدادات الخادم (مثل <span class="font-mono">upload_max_filesize</span> و <span class="font-mono">post_max_size</span>) وليس من المنصة.</p>
-                    <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-lg shadow-indigo-500/25 transition-colors">
-                        <i class="fas fa-upload text-xs"></i> رفع إلى R2
-                    </button>
+                    @if($useMatDirect)
+                        <div data-cl-mat-err class="hidden rounded-xl border border-rose-200 bg-rose-50 dark:bg-rose-950/40 dark:border-rose-900 px-3 py-2 text-xs font-bold text-rose-800 dark:text-rose-200"></div>
+                        <div data-cl-mat-progress-wrap class="hidden space-y-1">
+                            <div class="flex justify-between text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                                <span>جاري الرفع المباشر إلى R2…</span>
+                                <span data-cl-mat-pct>0%</span>
+                            </div>
+                            <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                                <div data-cl-mat-bar class="h-full w-0 bg-gradient-to-l from-indigo-600 to-violet-500 transition-[width] duration-150"></div>
+                            </div>
+                        </div>
+                    @endif
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">يُستنتج نوع الملف من الامتداد. HTML وعروض PowerPoint لا تُحمَّل مهما علّمت «تحميل». الحد الأعلى في المنصة لهذه المواد: <strong class="text-slate-700 dark:text-slate-200">{{ $clMatMaxMb }} ميجابايت</strong>@if(!$useMatDirect && $phpUploadMb !== null)؛ حد PHP الحالي للرفع يعادل تقريباً <strong class="font-mono text-slate-600 dark:text-slate-300">{{ $phpUploadMb }} ميجابايت</strong> (<span class="font-mono">upload_max_filesize</span> / <span class="font-mono">post_max_size</span>) ويجب ألا يقل عن حجم الملف@elseif($useMatDirect)؛ <strong class="text-emerald-800 dark:text-emerald-200">الرفع المباشر</strong> يتجاوز حد PHP (تأكد من CORS على الـ bucket لـ PUT من نطاق لوحة التحكم)@endif. لوقت أقل على الشبكة استخدم ملفات مضغوطة (مثل ZIP) عندما يناسب المحتوى.</p>
+                    <div class="flex flex-wrap items-center gap-3">
+                        @if($useMatDirect)
+                            <button type="button" data-cl-mat-direct-btn class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-black shadow-lg shadow-emerald-500/25 transition-colors">
+                                <i class="fas fa-bolt text-xs"></i> رفع مباشر (أسرع — من المتصفح إلى R2)
+                            </button>
+                        @endif
+                        <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-lg shadow-indigo-500/25 transition-colors @if($useMatDirect) text-sm @endif">
+                            <i class="fas fa-upload text-xs"></i> @if($useMatDirect) رفع عبر الخادم (PHP) @else رفع إلى R2 @endif
+                        </button>
+                    </div>
                 </div>
             </div>
         </form>
@@ -198,7 +235,7 @@
         <div class="p-4 sm:p-5 bg-slate-50/90 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700 space-y-4
             {{ $depth > 0 ? 'ms-2 sm:ms-4 md:ms-6 ps-3 sm:ps-5 md:ps-6 border-s-2 border-indigo-100 dark:border-indigo-900/60' : '' }}">
             @foreach($section->treeChildren as $child)
-                @include('admin.curriculum-library._structure-section', ['section' => $child, 'item' => $item, 'depth' => $depth + 1])
+                @include('admin.curriculum-library._structure-section', ['section' => $child, 'item' => $item, 'depth' => $depth + 1, 'materialDirectUpload' => $materialDirectUpload ?? false])
             @endforeach
         </div>
     @endif

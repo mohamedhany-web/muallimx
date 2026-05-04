@@ -110,7 +110,7 @@
         </div>
 
         @forelse($tree as $root)
-            @include('admin.curriculum-library._structure-section', ['section' => $root, 'item' => $item, 'depth' => 0])
+            @include('admin.curriculum-library._structure-section', ['section' => $root, 'item' => $item, 'depth' => 0, 'materialDirectUpload' => $materialDirectUpload ?? false])
         @empty
             <div class="rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-900/40 px-8 py-16 text-center">
                 <div class="w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 flex items-center justify-center mx-auto mb-4 text-slate-400">
@@ -122,4 +122,146 @@
         @endforelse
     </div>
 </div>
+@if(!empty($materialDirectUpload))
+@push('scripts')
+<script>
+(function () {
+    function jsonHeaders(csrf) {
+        return {
+            'X-CSRF-TOKEN': csrf,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+    }
+    function putWithProgress(url, file, contentType, extraHeaders, onProgress) {
+        return new Promise(function (resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('PUT', url, true);
+            xhr.timeout = 0;
+            if (contentType) xhr.setRequestHeader('Content-Type', contentType);
+            if (extraHeaders && typeof extraHeaders === 'object') {
+                Object.keys(extraHeaders).forEach(function (k) {
+                    try { xhr.setRequestHeader(k, extraHeaders[k]); } catch (e) {}
+                });
+            }
+            xhr.upload.onprogress = function (ev) {
+                if (ev.lengthComputable && typeof onProgress === 'function') onProgress(ev.loaded / ev.total);
+            };
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) resolve();
+                else reject(new Error('HTTP ' + xhr.status));
+            };
+            xhr.onerror = function () { reject(new Error('network')); };
+            xhr.send(file);
+        });
+    }
+    function setErr(wrap, msg) {
+        var el = wrap.querySelector('[data-cl-mat-err]');
+        if (!el) return;
+        if (!msg) {
+            el.classList.add('hidden');
+            el.textContent = '';
+            return;
+        }
+        el.textContent = msg;
+        el.classList.remove('hidden');
+    }
+    function setProgress(wrap, visible, pct) {
+        var outer = wrap.querySelector('[data-cl-mat-progress-wrap]');
+        var bar = wrap.querySelector('[data-cl-mat-bar]');
+        var lab = wrap.querySelector('[data-cl-mat-pct]');
+        if (!outer || !bar || !lab) return;
+        if (!visible) {
+            outer.classList.add('hidden');
+            bar.style.width = '0%';
+            lab.textContent = '0%';
+            return;
+        }
+        outer.classList.remove('hidden');
+        var p = Math.max(0, Math.min(100, Math.round((pct || 0) * 100)));
+        bar.style.width = p + '%';
+        lab.textContent = p + '%';
+    }
+    document.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest ? e.target.closest('[data-cl-mat-direct-btn]') : null;
+        if (!btn) return;
+        var wrap = btn.closest('[data-cl-mat-wrap]');
+        if (!wrap) return;
+        var raw = wrap.getAttribute('data-cl-mat-cfg');
+        if (!raw) return;
+        var cfg;
+        try { cfg = JSON.parse(raw); } catch (err) { return; }
+        var form = wrap.querySelector('form');
+        var fileInput = wrap.querySelector('input[type="file"]');
+        if (!form || !fileInput || !fileInput.files || !fileInput.files[0]) {
+            setErr(wrap, 'اختر ملفاً أولاً.');
+            return;
+        }
+        var file = fileInput.files[0];
+        if (file.size > cfg.maxBytes) {
+            setErr(wrap, 'الملف أكبر من الحد المسموح.');
+            return;
+        }
+        var titleInp = form.querySelector('input[name="title"]');
+        var viewChk = form.querySelector('input[name="view_in_platform"][type="checkbox"]');
+        var dlChk = form.querySelector('input[name="allow_download"][type="checkbox"]');
+        setErr(wrap, '');
+        btn.disabled = true;
+        setProgress(wrap, true, 0);
+        var chain = fetch(cfg.presign, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: jsonHeaders(cfg.csrf),
+            body: JSON.stringify({
+                content_type: file.type || 'application/octet-stream',
+                original_name: file.name,
+                file_size: file.size
+            })
+        }).then(function (res) { return res.json().then(function (j) { return { res: res, j: j }; }); })
+        .then(function (_ref) {
+            var res = _ref.res;
+            var presign = _ref.j;
+            if (!res.ok || !presign.direct_upload || !presign.upload_url || !presign.upload_token) {
+                throw new Error((presign && presign.message) ? presign.message : 'تعذر تجهيز الرفع المباشر.');
+            }
+            return putWithProgress(
+                presign.upload_url,
+                file,
+                presign.content_type || file.type || 'application/octet-stream',
+                presign.headers || {},
+                function (p) { setProgress(wrap, true, p); }
+            ).then(function () { return presign; });
+        })
+        .then(function (presign) {
+            return fetch(cfg.complete, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: jsonHeaders(cfg.csrf),
+                body: JSON.stringify({
+                    upload_token: presign.upload_token,
+                    title: titleInp ? titleInp.value : '',
+                    view_in_platform: viewChk && viewChk.checked ? 1 : 0,
+                    allow_download: dlChk && dlChk.checked ? 1 : 0
+                })
+            }).then(function (res) { return res.json().then(function (j) { return { res: res, j: j }; }); });
+        })
+        .then(function (_ref2) {
+            var res = _ref2.res;
+            var body = _ref2.j;
+            if (!res.ok || !body.ok || !body.redirect) {
+                throw new Error((body && body.message) ? body.message : 'فشل إتمام الرفع.');
+            }
+            window.location.href = body.redirect;
+        })
+        .catch(function (err) {
+            setErr(wrap, (err && err.message) ? err.message : 'فشل الرفع.');
+            setProgress(wrap, false, 0);
+            btn.disabled = false;
+        });
+    });
+})();
+</script>
+@endpush
+@endif
 @endsection
