@@ -6,14 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Models\CurriculumLibraryItem;
 use App\Models\CurriculumLibraryMaterial;
 use App\Models\CurriculumLibrarySection;
+use App\Services\CurriculumLibraryR2MultipartService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Throwable;
 
 class CurriculumLibraryStructureController extends Controller
 {
+    public function __construct(
+        protected CurriculumLibraryR2MultipartService $r2Multipart
+    ) {}
+
     /** امتدادات مسموحة لمواد المناهج (رفع لوحة التحكم) — متوافقة تقريباً مع FileUploadSecurityMiddleware */
     private const CURRICULUM_MATERIAL_EXTENSIONS = [
         'pdf', 'html', 'htm', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'txt', 'zip', 'rar',
@@ -346,6 +353,324 @@ class CurriculumLibraryStructureController extends Controller
             return response()->json(['message' => 'مسار التخزين غير صالح.'], 422);
         }
 
+        $fail = $this->persistCurriculumMaterialFromR2Path(
+            $item,
+            $section,
+            $path,
+            $originalName,
+            $validated['title'] ?? null,
+            $request->boolean('view_in_platform'),
+            $request->boolean('allow_download'),
+            $maxBytes,
+            $diskName
+        );
+        if ($fail !== null) {
+            return $fail;
+        }
+
+        session()->flash('success', 'تم رفع المادة مباشرة إلى Cloudflare R2.');
+
+        return response()->json([
+            'ok' => true,
+            'redirect' => route('admin.curriculum-library.items.structure', $item),
+        ]);
+    }
+
+    public function multipartInitMaterial(Request $request, CurriculumLibraryItem $item, CurriculumLibrarySection $section)
+    {
+        $this->assertSectionBelongs($item, $section);
+        @set_time_limit(120);
+
+        if (! $this->curriculumMaterialDiskSupportsDirectUpload()) {
+            return response()->json(['message' => 'الرفع المباشر غير متاح.'], 503);
+        }
+
+        $maxBytes = (int) config('upload_limits.curriculum_material_max_bytes', 150 * 1024 * 1024);
+        $validated = $request->validate([
+            'content_type' => ['nullable', 'string', 'max:191'],
+            'original_name' => ['required', 'string', 'max:255'],
+            'file_size' => ['required', 'integer', 'min:1', 'max:'.$maxBytes],
+        ]);
+
+        $originalName = basename(str_replace(["\0", '\\'], '', $validated['original_name']));
+        if ($originalName === '' || $originalName === '.' || $originalName === '..') {
+            return response()->json(['message' => 'اسم الملف غير صالح.'], 422);
+        }
+
+        $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        if ($ext === '' || in_array($ext, self::DANGEROUS_EXTENSIONS, true)) {
+            return response()->json(['message' => 'امتداد الملف غير مسموح.'], 422);
+        }
+        if (! in_array($ext, self::CURRICULUM_MATERIAL_EXTENSIONS, true)) {
+            return response()->json(['message' => 'امتداد الملف غير مسموح لمادة المنهج.'], 422);
+        }
+
+        $mime = $this->normalizeCurriculumMaterialMime(
+            (string) ($validated['content_type'] ?? ''),
+            $originalName,
+            $ext
+        );
+
+        $fileSize = (int) $validated['file_size'];
+        $partSize = (int) config('upload_limits.curriculum_r2_multipart_part_bytes', 8 * 1024 * 1024);
+        $minPart = 5 * 1024 * 1024;
+        if ($partSize < $minPart) {
+            $partSize = $minPart;
+        }
+        $totalParts = (int) max(1, (int) ceil($fileSize / $partSize));
+        if ($totalParts > 10000) {
+            return response()->json(['message' => 'عدد أجزاء الرفع كبير جداً. قلّل حجم الملف أو زد حجم الجزء.'], 422);
+        }
+
+        $baseDir = 'curriculum-library/materials/'.$section->id;
+        $newPath = $baseDir.'/'.Str::uuid()->toString().'.'.$ext;
+
+        try {
+            $created = $this->r2Multipart->createMultipartUpload($newPath, $mime);
+        } catch (Throwable $e) {
+            Log::error('Curriculum material multipart init failed', [
+                'item_id' => $item->id,
+                'section_id' => $section->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'تعذر بدء الرفع المتعدد. تحقق من إعدادات R2.'], 503);
+        }
+
+        $token = Str::random(64);
+        Cache::put(
+            'curriculum_mat_mpu:'.$token,
+            [
+                'upload_id' => $created['UploadId'],
+                'bucket' => $created['Bucket'],
+                'key' => $created['Key'],
+                'path' => $newPath,
+                'curriculum_library_item_id' => (int) $item->id,
+                'curriculum_library_section_id' => (int) $section->id,
+                'user_id' => (int) auth()->id(),
+                'mime' => $mime,
+                'original_name' => $originalName,
+                'file_size' => $fileSize,
+                'part_size' => $partSize,
+                'total_parts' => $totalParts,
+                'max_bytes' => $maxBytes,
+            ],
+            now()->addMinutes(90)
+        );
+
+        return response()->json([
+            'multipart' => true,
+            'upload_session_token' => $token,
+            'part_size' => $partSize,
+            'total_parts' => $totalParts,
+        ]);
+    }
+
+    public function multipartSignPartMaterial(Request $request, CurriculumLibraryItem $item, CurriculumLibrarySection $section)
+    {
+        $this->assertSectionBelongs($item, $section);
+        @set_time_limit(60);
+
+        $validated = $request->validate([
+            'upload_session_token' => ['required', 'string', 'size:64'],
+            'part_number' => ['required', 'integer', 'min:1', 'max:10000'],
+        ]);
+
+        $cacheKey = 'curriculum_mat_mpu:'.$validated['upload_session_token'];
+        $payload = Cache::get($cacheKey);
+        if (! is_array($payload)
+            || (int) ($payload['curriculum_library_item_id'] ?? 0) !== (int) $item->id
+            || (int) ($payload['curriculum_library_section_id'] ?? 0) !== (int) $section->id
+            || (int) ($payload['user_id'] ?? 0) !== (int) auth()->id()) {
+            return response()->json(['message' => 'جلسة الرفع غير صالحة أو منتهية.'], 422);
+        }
+
+        $partNumber = (int) $validated['part_number'];
+        $totalParts = (int) ($payload['total_parts'] ?? 0);
+        if ($partNumber < 1 || $partNumber > $totalParts) {
+            return response()->json(['message' => 'رقم الجزء غير صالح.'], 422);
+        }
+
+        try {
+            $signed = $this->r2Multipart->presignedUploadPart(
+                (string) $payload['bucket'],
+                (string) $payload['key'],
+                (string) $payload['upload_id'],
+                $partNumber
+            );
+        } catch (Throwable $e) {
+            Log::error('Curriculum material multipart sign failed', [
+                'item_id' => $item->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'تعذر تجهيز رابط الجزء.'], 503);
+        }
+
+        return response()->json([
+            'url' => $signed['url'],
+            'headers' => $signed['headers'] ?? [],
+        ]);
+    }
+
+    public function multipartCompleteMaterial(Request $request, CurriculumLibraryItem $item, CurriculumLibrarySection $section)
+    {
+        $this->assertSectionBelongs($item, $section);
+        @set_time_limit(300);
+
+        if (! $this->curriculumMaterialDiskSupportsDirectUpload()) {
+            return response()->json(['message' => 'الرفع المباشر غير متاح.'], 503);
+        }
+
+        $validated = $request->validate([
+            'upload_session_token' => ['required', 'string', 'size:64'],
+            'parts' => ['required', 'array', 'min:1', 'max:10000'],
+            'parts.*.PartNumber' => ['required', 'integer', 'min:1', 'max:10000'],
+            'parts.*.ETag' => ['required', 'string', 'max:512'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'view_in_platform' => ['nullable', 'boolean'],
+            'allow_download' => ['nullable', 'boolean'],
+        ]);
+
+        $cacheKey = 'curriculum_mat_mpu:'.$validated['upload_session_token'];
+        $payload = Cache::pull($cacheKey);
+        if (! is_array($payload)
+            || (int) ($payload['curriculum_library_item_id'] ?? 0) !== (int) $item->id
+            || (int) ($payload['curriculum_library_section_id'] ?? 0) !== (int) $section->id
+            || (int) ($payload['user_id'] ?? 0) !== (int) auth()->id()) {
+            return response()->json(['message' => 'جلسة الرفع غير صالحة أو منتهية.'], 422);
+        }
+
+        $bucket = (string) ($payload['bucket'] ?? '');
+        $key = (string) ($payload['key'] ?? '');
+        $uploadId = (string) ($payload['upload_id'] ?? '');
+        $path = (string) ($payload['path'] ?? '');
+        $originalName = (string) ($payload['original_name'] ?? '');
+        $totalParts = (int) ($payload['total_parts'] ?? 0);
+        $maxBytes = (int) ($payload['max_bytes'] ?? config('upload_limits.curriculum_material_max_bytes', 150 * 1024 * 1024));
+
+        if ($bucket === '' || $key === '' || $uploadId === '' || $path === '' || str_contains($path, '..')) {
+            return response()->json(['message' => 'بيانات الرفع غير صالحة.'], 422);
+        }
+
+        $parts = $this->normalizeMultipartCompleteParts($validated['parts']);
+        if (count($parts) !== $totalParts) {
+            $this->r2Multipart->abortMultipartUpload($bucket, $key, $uploadId);
+
+            return response()->json(['message' => 'عدد الأجزاء لا يطابق المطلوب ('.$totalParts.').'], 422);
+        }
+
+        try {
+            $this->r2Multipart->completeMultipartUpload($bucket, $key, $uploadId, $parts);
+        } catch (Throwable $e) {
+            Log::error('Curriculum material multipart complete S3 failed', [
+                'item_id' => $item->id,
+                'message' => $e->getMessage(),
+            ]);
+            $this->r2Multipart->abortMultipartUpload($bucket, $key, $uploadId);
+
+            return response()->json(['message' => 'فشل دمج الأجزاء على R2. تحقق من الأجزاء وCORS (ETag).'], 422);
+        }
+
+        $fail = $this->persistCurriculumMaterialFromR2Path(
+            $item,
+            $section,
+            $path,
+            $originalName,
+            $validated['title'] ?? null,
+            $request->boolean('view_in_platform'),
+            $request->boolean('allow_download'),
+            $maxBytes,
+            'r2'
+        );
+        if ($fail !== null) {
+            try {
+                Storage::disk('r2')->delete($path);
+            } catch (Throwable) {
+            }
+
+            return $fail;
+        }
+
+        session()->flash('success', 'تم رفع المادة إلى Cloudflare R2 (رفع متعدد الأجزاء).');
+
+        return response()->json([
+            'ok' => true,
+            'redirect' => route('admin.curriculum-library.items.structure', $item),
+        ]);
+    }
+
+    public function multipartAbortMaterial(Request $request, CurriculumLibraryItem $item, CurriculumLibrarySection $section)
+    {
+        $this->assertSectionBelongs($item, $section);
+
+        $validated = $request->validate([
+            'upload_session_token' => ['required', 'string', 'size:64'],
+        ]);
+
+        $cacheKey = 'curriculum_mat_mpu:'.$validated['upload_session_token'];
+        $payload = Cache::pull($cacheKey);
+        if (! is_array($payload)
+            || (int) ($payload['curriculum_library_item_id'] ?? 0) !== (int) $item->id
+            || (int) ($payload['curriculum_library_section_id'] ?? 0) !== (int) $section->id
+            || (int) ($payload['user_id'] ?? 0) !== (int) auth()->id()) {
+            return response()->json(['message' => 'لا توجد جلسة لإلغائها.'], 422);
+        }
+
+        $this->r2Multipart->abortMultipartUpload(
+            (string) ($payload['bucket'] ?? ''),
+            (string) ($payload['key'] ?? ''),
+            (string) ($payload['upload_id'] ?? '')
+        );
+
+        return response()->json(['ok' => true, 'message' => 'تم إلغاء الرفع المتعدد.']);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $parts
+     * @return array<int, array{PartNumber: int, ETag: string}>
+     */
+    private function normalizeMultipartCompleteParts(array $parts): array
+    {
+        $byNum = [];
+        foreach ($parts as $p) {
+            $n = (int) ($p['PartNumber'] ?? 0);
+            $e = trim((string) ($p['ETag'] ?? ''));
+            if ($n < 1 || $e === '') {
+                continue;
+            }
+            if ($e[0] !== '"') {
+                $e = '"'.trim($e, '"').'"';
+            }
+            $byNum[$n] = $e;
+        }
+        ksort($byNum, SORT_NUMERIC);
+        $out = [];
+        foreach ($byNum as $n => $e) {
+            $out[] = ['PartNumber' => (int) $n, 'ETag' => $e];
+        }
+
+        return $out;
+    }
+
+    /**
+     * التحقق من الملف على R2 وإنشاء سجل المادة.
+     */
+    private function persistCurriculumMaterialFromR2Path(
+        CurriculumLibraryItem $item,
+        CurriculumLibrarySection $section,
+        string $path,
+        string $originalName,
+        ?string $title,
+        bool $viewIn,
+        bool $allowDl,
+        int $maxBytes,
+        string $diskName = 'r2'
+    ): ?JsonResponse {
+        if ($path === '' || str_contains($path, '..') || $diskName !== 'r2') {
+            return response()->json(['message' => 'مسار التخزين غير صالح.'], 422);
+        }
+
         $disk = Storage::disk($diskName);
         if (! $disk->exists($path)) {
             return response()->json([
@@ -357,7 +682,7 @@ class CurriculumLibraryStructureController extends Controller
         if ($size <= 0) {
             try {
                 $disk->delete($path);
-            } catch (\Throwable) {
+            } catch (Throwable) {
             }
 
             return response()->json(['message' => 'الملف فارغ.'], 422);
@@ -365,7 +690,7 @@ class CurriculumLibraryStructureController extends Controller
         if ($size > $maxBytes) {
             try {
                 $disk->delete($path);
-            } catch (\Throwable) {
+            } catch (Throwable) {
             }
 
             return response()->json(['message' => 'حجم الملف يتجاوز الحد المسموح.'], 422);
@@ -373,9 +698,6 @@ class CurriculumLibraryStructureController extends Controller
 
         $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
         $fileKind = CurriculumLibraryMaterial::fileKindFromExtension($ext);
-
-        $viewIn = $request->boolean('view_in_platform');
-        $allowDl = $request->boolean('allow_download');
         [$viewIn, $allowDl] = $this->applyCurriculumMaterialKindRules($fileKind, $viewIn, $allowDl);
 
         try {
@@ -383,7 +705,7 @@ class CurriculumLibraryStructureController extends Controller
 
             CurriculumLibraryMaterial::create([
                 'curriculum_library_section_id' => $section->id,
-                'title' => $validated['title'] ?: null,
+                'title' => $title ?: null,
                 'path' => $path,
                 'storage_disk' => 'r2',
                 'original_name' => $originalName,
@@ -393,12 +715,12 @@ class CurriculumLibraryStructureController extends Controller
                 'order' => $order,
                 'is_active' => true,
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             try {
                 $disk->delete($path);
-            } catch (\Throwable) {
+            } catch (Throwable) {
             }
-            Log::error('Curriculum material direct complete failed', [
+            Log::error('Curriculum material persist after R2 failed', [
                 'item_id' => $item->id,
                 'section_id' => $section->id,
                 'message' => $e->getMessage(),
@@ -407,12 +729,7 @@ class CurriculumLibraryStructureController extends Controller
             return response()->json(['message' => 'فشل حفظ المادة بعد الرفع. أعد المحاولة.'], 500);
         }
 
-        session()->flash('success', 'تم رفع المادة مباشرة إلى Cloudflare R2.');
-
-        return response()->json([
-            'ok' => true,
-            'redirect' => route('admin.curriculum-library.items.structure', $item),
-        ]);
+        return null;
     }
 
     protected function assertSectionBelongs(CurriculumLibraryItem $item, CurriculumLibrarySection $section): void

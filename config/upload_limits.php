@@ -32,4 +32,18 @@ return [
 
     'curriculum_material_max_bytes' => $curriculumMaterialMaxKb * 1024,
 
+    /*
+    |--------------------------------------------------------------------------
+    | R2 — رفع متعدد الأجزاء (مواد المناهج)
+    |--------------------------------------------------------------------------
+    |
+    | أقل من العتبة: PUT واحد موقّت. منها فصاعداً: CreateMultipartUpload + أجزاء.
+    | حجم الجزء ≥ 5 ميجابايت (اشتراط S3) باستثناء الجزء الأخير.
+    |
+    */
+
+    'curriculum_r2_multipart_threshold_bytes' => (int) env('CURRICULUM_R2_MULTIPART_THRESHOLD_BYTES', 12 * 1024 * 1024),
+
+    'curriculum_r2_multipart_part_bytes' => (int) env('CURRICULUM_R2_MULTIPART_PART_BYTES', 8 * 1024 * 1024),
+
 ];

@@ -134,17 +134,22 @@
             'X-Requested-With': 'XMLHttpRequest'
         };
     }
+    function applyXhrHeaders(xhr, hdrs) {
+        if (!hdrs || typeof hdrs !== 'object') return;
+        Object.keys(hdrs).forEach(function (k) {
+            var v = hdrs[k];
+            if (v === undefined || v === null) return;
+            if (Array.isArray(v)) v = v[0];
+            try { xhr.setRequestHeader(k, v); } catch (e) {}
+        });
+    }
     function putWithProgress(url, file, contentType, extraHeaders, onProgress) {
         return new Promise(function (resolve, reject) {
             var xhr = new XMLHttpRequest();
             xhr.open('PUT', url, true);
             xhr.timeout = 0;
             if (contentType) xhr.setRequestHeader('Content-Type', contentType);
-            if (extraHeaders && typeof extraHeaders === 'object') {
-                Object.keys(extraHeaders).forEach(function (k) {
-                    try { xhr.setRequestHeader(k, extraHeaders[k]); } catch (e) {}
-                });
-            }
+            applyXhrHeaders(xhr, extraHeaders);
             xhr.upload.onprogress = function (ev) {
                 if (ev.lengthComputable && typeof onProgress === 'function') onProgress(ev.loaded / ev.total);
             };
@@ -154,6 +159,27 @@
             };
             xhr.onerror = function () { reject(new Error('network')); };
             xhr.send(file);
+        });
+    }
+    function putPartWithProgress(url, blob, extraHeaders, onProgress) {
+        return new Promise(function (resolve, reject) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('PUT', url, true);
+            xhr.timeout = 0;
+            applyXhrHeaders(xhr, extraHeaders);
+            xhr.upload.onprogress = function (ev) {
+                if (ev.lengthComputable && typeof onProgress === 'function') onProgress(ev.loaded / ev.total);
+            };
+            xhr.onload = function () {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    var etag = xhr.getResponseHeader('ETag') || xhr.getResponseHeader('etag');
+                    if (!etag) {
+                        reject(new Error('لم يُعاد ETag للجزء. في CORS لـ R2 أضف Expose-Headers: ETag'));
+                    } else resolve(etag);
+                } else reject(new Error('HTTP ' + xhr.status));
+            };
+            xhr.onerror = function () { reject(new Error('network')); };
+            xhr.send(blob);
         });
     }
     function setErr(wrap, msg) {
@@ -183,33 +209,16 @@
         bar.style.width = p + '%';
         lab.textContent = p + '%';
     }
-    document.addEventListener('click', function (e) {
-        var btn = e.target && e.target.closest ? e.target.closest('[data-cl-mat-direct-btn]') : null;
-        if (!btn) return;
-        var wrap = btn.closest('[data-cl-mat-wrap]');
-        if (!wrap) return;
-        var raw = wrap.getAttribute('data-cl-mat-cfg');
-        if (!raw) return;
-        var cfg;
-        try { cfg = JSON.parse(raw); } catch (err) { return; }
+    function setBusy(wrap, busy) {
         var form = wrap.querySelector('form');
-        var fileInput = wrap.querySelector('input[type="file"]');
-        if (!form || !fileInput || !fileInput.files || !fileInput.files[0]) {
-            setErr(wrap, 'اختر ملفاً أولاً.');
-            return;
-        }
-        var file = fileInput.files[0];
-        if (file.size > cfg.maxBytes) {
-            setErr(wrap, 'الملف أكبر من الحد المسموح.');
-            return;
-        }
-        var titleInp = form.querySelector('input[name="title"]');
-        var viewChk = form.querySelector('input[name="view_in_platform"][type="checkbox"]');
-        var dlChk = form.querySelector('input[name="allow_download"][type="checkbox"]');
-        setErr(wrap, '');
-        btn.disabled = true;
-        setProgress(wrap, true, 0);
-        var chain = fetch(cfg.presign, {
+        if (!form) return;
+        var subs = form.querySelectorAll('button[type="submit"], [data-cl-mat-classic-link]');
+        for (var i = 0; i < subs.length; i++) subs[i].disabled = !!busy;
+        var fin = form.querySelector('input[type="file"]');
+        if (fin) fin.disabled = !!busy;
+    }
+    function runClMatSinglePutUpload(wrap, cfg, file, titleInp, viewChk, dlChk) {
+        return fetch(cfg.presign, {
             method: 'POST',
             credentials: 'same-origin',
             headers: jsonHeaders(cfg.csrf),
@@ -253,12 +262,158 @@
                 throw new Error((body && body.message) ? body.message : 'فشل إتمام الرفع.');
             }
             window.location.href = body.redirect;
+        });
+    }
+    function runClMatMultipartUpload(wrap, cfg, file, titleInp, viewChk, dlChk) {
+        var sessionToken = null;
+        return fetch(cfg.multipartInit, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: jsonHeaders(cfg.csrf),
+            body: JSON.stringify({
+                content_type: file.type || 'application/octet-stream',
+                original_name: file.name,
+                file_size: file.size
+            })
+        }).then(function (res) { return res.json().then(function (j) { return { res: res, j: j }; }); })
+        .then(function (o) {
+            if (!o.res.ok || !o.j.multipart || !o.j.upload_session_token) {
+                throw new Error((o.j && o.j.message) ? o.j.message : 'تعذر بدء الرفع المتعدد.');
+            }
+            sessionToken = o.j.upload_session_token;
+            var totalParts = parseInt(o.j.total_parts, 10) || 1;
+            var partSize = parseInt(o.j.part_size, 10) || (8 * 1024 * 1024);
+            var partsArr = [];
+            function uploadPart(partNum) {
+                if (partNum > totalParts) {
+                    return Promise.resolve(partsArr);
+                }
+                var start = (partNum - 1) * partSize;
+                var end = Math.min(start + partSize, file.size);
+                var chunk = file.slice(start, end);
+                var base = (partNum - 1) / totalParts;
+                var weight = 1 / totalParts;
+                return fetch(cfg.multipartSignPart, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: jsonHeaders(cfg.csrf),
+                    body: JSON.stringify({
+                        upload_session_token: sessionToken,
+                        part_number: partNum
+                    })
+                }).then(function (res) { return res.json().then(function (j) { return { res: res, j: j }; }); })
+                .then(function (sig) {
+                    if (!sig.res.ok || !sig.j.url) {
+                        throw new Error((sig.j && sig.j.message) ? sig.j.message : 'تعذر توقيع جزء الرفع.');
+                    }
+                    return putPartWithProgress(sig.j.url, chunk, sig.j.headers || {}, function (frac) {
+                        setProgress(wrap, true, base + weight * frac);
+                    });
+                })
+                .then(function (etag) {
+                    partsArr.push({ PartNumber: partNum, ETag: etag });
+                    return uploadPart(partNum + 1);
+                });
+            }
+            return uploadPart(1);
+        })
+        .then(function (partsArr) {
+            return fetch(cfg.multipartComplete, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: jsonHeaders(cfg.csrf),
+                body: JSON.stringify({
+                    upload_session_token: sessionToken,
+                    parts: partsArr,
+                    title: titleInp ? titleInp.value : '',
+                    view_in_platform: viewChk && viewChk.checked ? 1 : 0,
+                    allow_download: dlChk && dlChk.checked ? 1 : 0
+                })
+            }).then(function (res) { return res.json().then(function (j) { return { res: res, j: j }; }); });
+        })
+        .then(function (done) {
+            if (!done.res.ok || !done.j.ok || !done.j.redirect) {
+                throw new Error((done.j && done.j.message) ? done.j.message : 'فشل إتمام الدمج على R2.');
+            }
+            window.location.href = done.j.redirect;
         })
         .catch(function (err) {
+            if (sessionToken && cfg.multipartAbort) {
+                fetch(cfg.multipartAbort, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: jsonHeaders(cfg.csrf),
+                    body: JSON.stringify({ upload_session_token: sessionToken })
+                }).catch(function () {});
+            }
+            throw err;
+        });
+    }
+    function runClMatDirectUpload(wrap) {
+        var raw = wrap.getAttribute('data-cl-mat-cfg');
+        if (!raw) return;
+        var cfg;
+        try { cfg = JSON.parse(raw); } catch (err) { return; }
+        var form = wrap.querySelector('form');
+        var fileInput = wrap.querySelector('input[type="file"]');
+        if (!form || !fileInput || !fileInput.files || !fileInput.files[0]) {
+            setErr(wrap, 'اختر ملفاً أولاً.');
+            return;
+        }
+        var file = fileInput.files[0];
+        if (file.size > cfg.maxBytes) {
+            setErr(wrap, 'الملف أكبر من الحد المسموح.');
+            return;
+        }
+        var titleInp = form.querySelector('input[name="title"]');
+        var viewChk = form.querySelector('input[name="view_in_platform"][type="checkbox"]');
+        var dlChk = form.querySelector('input[name="allow_download"][type="checkbox"]');
+        setErr(wrap, '');
+        setBusy(wrap, true);
+        setProgress(wrap, true, 0);
+        var threshold = typeof cfg.multipartThreshold === 'number' ? cfg.multipartThreshold : 12582912;
+        var useMp = file.size >= threshold && cfg.multipartInit && cfg.multipartSignPart && cfg.multipartComplete;
+        var chain = useMp
+            ? runClMatMultipartUpload(wrap, cfg, file, titleInp, viewChk, dlChk)
+            : runClMatSinglePutUpload(wrap, cfg, file, titleInp, viewChk, dlChk);
+        chain.catch(function (err) {
             setErr(wrap, (err && err.message) ? err.message : 'فشل الرفع.');
             setProgress(wrap, false, 0);
-            btn.disabled = false;
+            setBusy(wrap, false);
         });
+    }
+    document.addEventListener('click', function (e) {
+        var classic = e.target && e.target.closest ? e.target.closest('[data-cl-mat-classic-link]') : null;
+        if (!classic) return;
+        var wrap = classic.closest('[data-cl-mat-wrap]');
+        if (!wrap) return;
+        var form = wrap.querySelector('form[data-cl-mat-form="1"]');
+        if (!form) return;
+        e.preventDefault();
+        wrap.dataset.forceClassicUpload = '1';
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            form.submit();
+        }
+    });
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form || form.getAttribute('data-cl-mat-form') !== '1') return;
+        var wrap = form.closest('[data-cl-mat-wrap]');
+        if (!wrap) return;
+        if (wrap.dataset.forceClassicUpload === '1') {
+            delete wrap.dataset.forceClassicUpload;
+            return;
+        }
+        var fileInput = wrap.querySelector('input[type="file"]');
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+            e.preventDefault();
+            setErr(wrap, 'اختر ملفاً أولاً.');
+            return;
+        }
+        e.preventDefault();
+        runClMatDirectUpload(wrap);
     });
 })();
 </script>

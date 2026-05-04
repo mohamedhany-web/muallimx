@@ -64,6 +64,8 @@ return [
          * Cloudflare R2 — متوافق مع واجهة S3.
          * يُستخدم لرفع ملفات مجتمع الذكاء الاصطناعي (تقديمات المساهمين).
          */
+        // للرفع المباشر من لوحة «هيكل المناهج»: CORS على الـ bucket — PUT لكل جزء + Expose-Headers: ETag (ضروري لـ Multipart Complete).
+        // للرفع عبر PHP فقط: nginx client_max_body_size و proxy_read_timeout و Cloudflare (حدود الحجم/الوقت) — الملفات الكبيرة تفضل الرفع المباشر لتجنب ERR_HTTP2.
         'r2' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
