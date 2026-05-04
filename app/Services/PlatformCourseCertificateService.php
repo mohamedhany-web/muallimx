@@ -128,6 +128,12 @@ class PlatformCourseCertificateService
             $verificationUrl
         ))->render();
 
+        if (! class_exists(Mpdf::class)) {
+            throw new \RuntimeException(
+                'مكتبة PDF (mpdf/mpdf) غير موجودة في الخادم. من مجلد المشروع نفّذ: composer install --no-dev --optimize-autoloader'
+            );
+        }
+
         $mpdf = new Mpdf([
             'mode' => 'utf-8',
             'format' => 'A4-L',
