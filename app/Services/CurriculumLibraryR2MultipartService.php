@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Aws\S3\S3Client;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -128,5 +129,38 @@ class CurriculumLibraryR2MultipartService
         } catch (Throwable $e) {
             Log::warning('R2 multipart abort', ['message' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * رفع جسم ثنائي إلى رابط PUT موقّع (من الخادم، بدون CORS للمتصفح مع R2).
+     *
+     * @param  array<string, array<int, string>|string>  $headersFromPresign
+     * @throws \RuntimeException عند فشل HTTP أو غياب ETag
+     */
+    public function relayPresignedPut(string $url, array $headersFromPresign, string $body): string
+    {
+        $flat = [];
+        foreach (self::filterPresignedUploadHeadersForBrowser($headersFromPresign) as $name => $values) {
+            $flat[(string) $name] = is_array($values) ? (string) ($values[0] ?? '') : (string) $values;
+        }
+
+        $response = Http::timeout(720)
+            ->connectTimeout(60)
+            ->withOptions(['http_errors' => false])
+            ->withHeaders($flat)
+            ->withBody($body, '')
+            ->put($url);
+
+        $code = $response->status();
+        if ($code < 200 || $code >= 300) {
+            throw new \RuntimeException('R2 relay PUT failed: HTTP '.$code);
+        }
+
+        $etag = trim((string) $response->header('ETag'));
+        if ($etag === '') {
+            throw new \RuntimeException('R2 relay PUT missing ETag');
+        }
+
+        return $etag;
     }
 }

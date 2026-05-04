@@ -262,11 +262,56 @@
         }
         return tryPart(1);
     }
+    function postPartProxyWithProgressRetry(proxyUrl, csrf, sessionToken, partNum, chunk, onProgress) {
+        var max = 6;
+        function tryProxy(n) {
+            return new Promise(function (resolve, reject) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', proxyUrl, true);
+                xhr.timeout = 0;
+                xhr.setRequestHeader('X-CSRF-TOKEN', csrf);
+                xhr.setRequestHeader('Accept', 'application/json');
+                xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.setRequestHeader('X-Upload-Session-Token', sessionToken);
+                xhr.setRequestHeader('X-Part-Number', String(partNum));
+                xhr.upload.onprogress = function (ev) {
+                    if (ev.lengthComputable && onProgress) onProgress(ev.loaded / ev.total);
+                };
+                function retryOrReject(httpErr) {
+                    if (n < max) {
+                        backoffUploadAttempt(n).then(function () { tryProxy(n + 1).then(resolve, reject); });
+                    } else if (httpErr) reject(httpErr);
+                    else reject(new Error('network'));
+                }
+                xhr.onload = function () {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        try {
+                            var j = JSON.parse(xhr.responseText || '{}');
+                            if (j.etag) {
+                                resolve(j.etag);
+                                return;
+                            }
+                        } catch (eParse) {}
+                        reject(new Error('تعذّر قراءة استجابة الرفع عبر الخادم.'));
+                        return;
+                    }
+                    if ((xhr.status === 0 || (xhr.status >= 502 && xhr.status <= 504) || xhr.status === 408) && n < max) {
+                        retryOrReject(null);
+                    } else reject(new Error('HTTP ' + xhr.status));
+                };
+                xhr.onerror = function () { retryOrReject(null); };
+                xhr.onabort = function () { retryOrReject(null); };
+                xhr.send(chunk);
+            });
+        }
+        return tryProxy(1);
+    }
     function humanUploadError(err) {
         if (!err || !err.message) return 'تعذّر إكمال الرفع. تحقق من الاتصال ثم أعد المحاولة.';
         var m = String(err.message);
         if (m === 'network' || m.indexOf('network') >= 0) {
-            return 'تعذّر الاتصال أثناء الرفع (غالباً شبكة أو إعدادات CORS على تخزين R2). جرّب «الرفع عبر الخادم» أسفل النموذج، أو في Cloudflare R2 → CORS للـ bucket: AllowedOrigins = نطاق الموقع، Methods PUT، AllowedHeaders *، ExposeHeaders ETag.';
+            return 'تعذّر إكمال الرفع. إن تكرّر ذلك استخدم «الرفع عبر الخادم» أو راجع CORS على bucket الـ R2 (PUT، ExposeHeaders: ETag).';
         }
         if (m === 'part_verify') {
             return 'تعذّر التحقق من جزء من الملف. أعد المحاولة؛ إن استمر ذلك استخدم «الرفع عبر الخادم» أسفل النموذج.';
@@ -414,28 +459,50 @@
                         })
                     });
                 }
-                return signPart()
-                .then(function (sig) {
-                    if (!sig.res.ok || !sig.j.url) {
-                        throw new Error((sig.j && sig.j.message) ? sig.j.message : 'تعذّر تجهيز جزء من الملف.');
-                    }
-                    return putPartWithProgressRetry(sig.j.url, chunk, sig.j.headers || {}, function (frac) {
-                        setProgress(wrap, true, base + weight * frac, ph);
-                    }).catch(function (err) {
-                        if (err && err.message === 'HTTP 403') {
-                            return signPart().then(function (sig2) {
-                                if (!sig2.res.ok || !sig2.j.url) {
-                                    throw new Error((sig2.j && sig2.j.message) ? sig2.j.message : 'تعذّر تجهيز جزء من الملف.');
+                function directPutPart() {
+                    return signPart()
+                        .then(function (sig) {
+                            if (!sig.res.ok || !sig.j.url) {
+                                throw new Error((sig.j && sig.j.message) ? sig.j.message : 'تعذّر تجهيز جزء من الملف.');
+                            }
+                            return putPartWithProgressRetry(sig.j.url, chunk, sig.j.headers || {}, function (frac) {
+                                setProgress(wrap, true, base + weight * frac, ph);
+                            }).catch(function (err) {
+                                if (err && err.message === 'HTTP 403') {
+                                    return signPart().then(function (sig2) {
+                                        if (!sig2.res.ok || !sig2.j.url) {
+                                            throw new Error((sig2.j && sig2.j.message) ? sig2.j.message : 'تعذّر تجهيز جزء من الملف.');
+                                        }
+                                        return putPartWithProgressRetry(sig2.j.url, chunk, sig2.j.headers || {}, function (frac) {
+                                            setProgress(wrap, true, base + weight * frac, ph);
+                                        });
+                                    });
                                 }
-                                return putPartWithProgressRetry(sig2.j.url, chunk, sig2.j.headers || {}, function (frac) {
-                                    setProgress(wrap, true, base + weight * frac, ph);
-                                });
+                                throw err;
                             });
-                        }
-                        throw err;
+                        });
+                }
+                function proxyPutPart() {
+                    if (!cfg.multipartProxyPart) {
+                        return Promise.reject(new Error('network'));
+                    }
+                    var phP = ph + ' — عبر الخادم';
+                    setPhase(wrap, phP);
+                    return postPartProxyWithProgressRetry(cfg.multipartProxyPart, cfg.csrf, sessionToken, partNum, chunk, function (frac) {
+                        setProgress(wrap, true, base + weight * frac, phP);
                     });
-                })
-                .then(function (etag) {
+                }
+                var browserFirst = cfg.multipartBrowserFirst !== false;
+                var partChain = browserFirst ? directPutPart() : proxyPutPart();
+                return partChain.catch(function (err) {
+                    if (cfg.multipartProxyPart && browserFirst) {
+                        var mm = err && err.message ? String(err.message) : '';
+                        if (mm === 'network' || mm === 'part_verify' || mm.indexOf('HTTP ') === 0) {
+                            return proxyPutPart();
+                        }
+                    }
+                    throw err;
+                }).then(function (etag) {
                     partsArr.push({ PartNumber: partNum, ETag: etag });
                     return uploadPart(partNum + 1);
                 });

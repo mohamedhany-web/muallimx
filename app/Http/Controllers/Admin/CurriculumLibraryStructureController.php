@@ -514,6 +514,81 @@ class CurriculumLibraryStructureController extends Controller
         ]);
     }
 
+    /**
+     * رفع جزء multipart من الخادم إلى R2 (نفس المنشأ) لتجاوز أخطاء CORS/الشبكة بين المتصفح والتخزين.
+     */
+    public function multipartProxyUploadPartMaterial(Request $request, CurriculumLibraryItem $item, CurriculumLibrarySection $section)
+    {
+        $this->assertSectionBelongs($item, $section);
+        @set_time_limit(0);
+
+        if (! $this->curriculumMaterialDiskSupportsDirectUpload()) {
+            return response()->json(['message' => 'الرفع الموثوق غير متاح حالياً.'], 503);
+        }
+
+        $token = (string) $request->header('X-Upload-Session-Token', '');
+        $partHdr = $request->header('X-Part-Number');
+        if (strlen($token) !== 64 || $partHdr === null || $partHdr === '' || ! ctype_digit((string) $partHdr)) {
+            return response()->json(['message' => 'بيانات الجزء غير صالحة.'], 422);
+        }
+        $partNumber = (int) $partHdr;
+
+        $cacheKey = 'curriculum_mat_mpu:'.$token;
+        $payload = Cache::get($cacheKey);
+        if (! is_array($payload)
+            || (int) ($payload['curriculum_library_item_id'] ?? 0) !== (int) $item->id
+            || (int) ($payload['curriculum_library_section_id'] ?? 0) !== (int) $section->id
+            || (int) ($payload['user_id'] ?? 0) !== (int) auth()->id()) {
+            return response()->json(['message' => 'جلسة الرفع غير صالحة أو منتهية.'], 422);
+        }
+
+        $totalParts = (int) ($payload['total_parts'] ?? 0);
+        $fileSize = (int) ($payload['file_size'] ?? 0);
+        $partSize = (int) ($payload['part_size'] ?? 0);
+        if ($partNumber < 1 || $partNumber > $totalParts || $totalParts < 1 || $fileSize < 1 || $partSize < 1) {
+            return response()->json(['message' => 'رقم الجزء غير صالح.'], 422);
+        }
+
+        $expectedLen = ($partNumber === $totalParts)
+            ? ($fileSize - (($totalParts - 1) * $partSize))
+            : $partSize;
+        if ($expectedLen < 1) {
+            return response()->json(['message' => 'حجم الجزء المتوقع غير صالح.'], 422);
+        }
+
+        $raw = $request->getContent();
+        if (strlen($raw) !== $expectedLen) {
+            return response()->json([
+                'message' => 'حجم الجزء غير متطابق مع الجلسة (مستلم '.strlen($raw).' بايت، متوقع '.$expectedLen.').',
+            ], 422);
+        }
+
+        try {
+            $signed = $this->r2Multipart->presignedUploadPart(
+                (string) $payload['bucket'],
+                (string) $payload['key'],
+                (string) $payload['upload_id'],
+                $partNumber
+            );
+            $etag = $this->r2Multipart->relayPresignedPut(
+                (string) $signed['url'],
+                $signed['headers'] ?? [],
+                $raw
+            );
+        } catch (Throwable $e) {
+            Log::error('Curriculum material multipart proxy part failed', [
+                'item_id' => $item->id,
+                'section_id' => $section->id,
+                'part' => $partNumber,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'تعذّر رفع الجزء عبر الخادم. أعد المحاولة بعد قليل.'], 502);
+        }
+
+        return response()->json(['etag' => $etag]);
+    }
+
     public function multipartCompleteMaterial(Request $request, CurriculumLibraryItem $item, CurriculumLibrarySection $section)
     {
         $this->assertSectionBelongs($item, $section);

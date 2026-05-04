@@ -65,6 +65,7 @@ return [
          * يُستخدم لرفع ملفات مجتمع الذكاء الاصطناعي (تقديمات المساهمين).
          */
         // للرفع المباشر من لوحة «هيكل المناهج»: CORS على الـ bucket — AllowedMethods PUT، AllowedOrigins = https://نطاقك، AllowedHeaders * أو x-amz-*، ExposeHeaders: ETag (بدونها يفشل الـ multipart بعد نجاح الجزء).
+        // مسار multipart-proxy-part (احتياطي عبر Laravel): اضبط nginx client_max_body_size و PHP post_max_size ≥ حجم الجزء (upload_limits.curriculum_r2_multipart_part_bytes).
         // للرفع عبر PHP فقط: nginx client_max_body_size و proxy_read_timeout و Cloudflare (حدود الحجم/الوقت) — الملفات الكبيرة تفضل الرفع المباشر لتجنب ERR_HTTP2.
         'r2' => [
             'driver' => 's3',

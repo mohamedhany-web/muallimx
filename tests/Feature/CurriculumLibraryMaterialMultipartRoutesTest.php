@@ -15,6 +15,7 @@ class CurriculumLibraryMaterialMultipartRoutesTest extends TestCase
             'admin.curriculum-library.items.materials.multipart-sign-part',
             'admin.curriculum-library.items.materials.multipart-complete',
             'admin.curriculum-library.items.materials.multipart-abort',
+            'admin.curriculum-library.items.materials.multipart-proxy-part',
             'admin.curriculum-library.items.materials.presign-upload',
             'admin.curriculum-library.items.materials.complete-direct',
             'admin.curriculum-library.items.materials.store',
@@ -31,6 +32,7 @@ class CurriculumLibraryMaterialMultipartRoutesTest extends TestCase
         $this->assertArrayHasKey('curriculum_material_max_bytes', $c);
         $this->assertArrayHasKey('curriculum_r2_multipart_threshold_bytes', $c);
         $this->assertArrayHasKey('curriculum_r2_multipart_part_bytes', $c);
+        $this->assertArrayHasKey('curriculum_r2_multipart_browser_first', $c);
         $this->assertGreaterThanOrEqual(5 * 1024 * 1024, (int) $c['curriculum_r2_multipart_part_bytes']);
     }
 

@@ -47,4 +47,10 @@ return [
     /* جزء أكبر = عدد أجزاء أقل (PUT أقل بين المتصفح وـ R2)؛ الحد الأدنى لـ S3 لغير الجزء الأخير 5 ميجابايت */
     'curriculum_r2_multipart_part_bytes' => (int) env('CURRICULUM_R2_MULTIPART_PART_BYTES', 16 * 1024 * 1024),
 
+    /** false = رفع الأجزاء دائماً عبر Laravel (يتجاوز CORS المتصفح↔R2) */
+    'curriculum_r2_multipart_browser_first' => filter_var(
+        env('CURRICULUM_R2_MULTIPART_BROWSER_FIRST', true),
+        FILTER_VALIDATE_BOOL
+    ),
+
 ];

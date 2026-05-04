@@ -95,11 +95,13 @@
             'complete' => route('admin.curriculum-library.items.materials.complete-direct', [$item, $section]),
             'multipartInit' => route('admin.curriculum-library.items.materials.multipart-init', [$item, $section]),
             'multipartSignPart' => route('admin.curriculum-library.items.materials.multipart-sign-part', [$item, $section]),
+            'multipartProxyPart' => route('admin.curriculum-library.items.materials.multipart-proxy-part', [$item, $section]),
             'multipartComplete' => route('admin.curriculum-library.items.materials.multipart-complete', [$item, $section]),
             'multipartAbort' => route('admin.curriculum-library.items.materials.multipart-abort', [$item, $section]),
             'csrf' => csrf_token(),
             'maxBytes' => (int) config('upload_limits.curriculum_material_max_bytes', 150 * 1024 * 1024),
             'multipartThreshold' => (int) config('upload_limits.curriculum_r2_multipart_threshold_bytes', 12 * 1024 * 1024),
+            'multipartBrowserFirst' => (bool) config('upload_limits.curriculum_r2_multipart_browser_first', true),
         ];
         $clMatMaxMb = max(1, (int) round((int) config('upload_limits.curriculum_material_max_kb', 150 * 1024) / 1024));
         $phpUploadBytes = \Illuminate\Http\UploadedFile::getMaxFilesize();
