@@ -7,6 +7,7 @@ use App\Models\CurriculumLibraryItem;
 use App\Models\CurriculumLibraryMaterial;
 use App\Models\CurriculumLibrarySection;
 use App\Services\CurriculumLibraryR2MultipartService;
+use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -779,14 +780,17 @@ class CurriculumLibraryStructureController extends Controller
         return [$viewIn, $allowDl];
     }
 
+    /**
+     * قرص r2 يستخدم AwsS3V3Adapter ويدعم temporaryUploadUrl (Put موقّت) وخدمة multipart لدينا.
+     * لا تعتمد على providesTemporaryUploadUrls() — مع Flysystem 3 قد تُرجع false رغم أن R2/S3 يعملان.
+     */
     protected function curriculumMaterialDiskSupportsDirectUpload(): bool
     {
         try {
             $disk = Storage::disk('r2');
 
-            return method_exists($disk, 'providesTemporaryUploadUrls')
-                && $disk->providesTemporaryUploadUrls();
-        } catch (\Throwable) {
+            return $disk instanceof AwsS3V3Adapter;
+        } catch (Throwable) {
             return false;
         }
     }

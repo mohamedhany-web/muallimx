@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Services\AssignmentFileStorage;
+use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -516,11 +517,13 @@ class AssignmentController extends Controller
 
     private function submissionDiskProvidesDirectUpload(string $diskName): bool
     {
+        if (! in_array($diskName, ['r2', 's3'], true)) {
+            return false;
+        }
         try {
             $disk = Storage::disk($diskName);
 
-            return method_exists($disk, 'providesTemporaryUploadUrls')
-                && $disk->providesTemporaryUploadUrls();
+            return $disk instanceof AwsS3V3Adapter;
         } catch (\Throwable) {
             return false;
         }
