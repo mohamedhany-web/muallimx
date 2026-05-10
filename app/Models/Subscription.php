@@ -137,13 +137,19 @@ class Subscription extends Model
 
     public function isActive()
     {
-        return $this->status === 'active' &&
-               (!$this->end_date || $this->end_date >= now());
+        if ($this->status !== 'active') {
+            return false;
+        }
+        if (! $this->end_date) {
+            return true;
+        }
+
+        return $this->end_date->toDateString() >= now()->toDateString();
     }
 
     public function isExpired()
     {
-        return $this->end_date && $this->end_date < now();
+        return $this->end_date && $this->end_date->toDateString() < now()->toDateString();
     }
 
     /**

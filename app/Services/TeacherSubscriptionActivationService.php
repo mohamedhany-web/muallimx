@@ -59,7 +59,7 @@ class TeacherSubscriptionActivationService
             $activeOld = Subscription::where('user_id', $locked->user_id)
                 ->where('status', 'active')
                 ->where(function ($q) {
-                    $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+                    $q->whereNull('end_date')->orWhereDate('end_date', '>=', now());
                 })
                 ->orderByDesc('end_date')
                 ->lockForUpdate()
