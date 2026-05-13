@@ -613,14 +613,14 @@
 
             @endif
 
-            @if($isFull || $u->hasPermission('manage.subscriptions') || $u->hasPermission('manage.courses') || $u->hasPermission('manage.packages') || $u->hasPermission('manage.teacher-features') || $u->hasPermission('manage.curriculum-library'))
+            {{-- قسم «العناصر المدفوعة»: لا يُعرض لمن لديه مكتبة مناهج فقط — مكتبة المناهج مرتبطة أعلاه في «التحكم الشامل بالطلاب» --}}
+            @if($isFull || $u->hasPermission('manage.subscriptions') || $u->hasPermission('manage.packages') || $u->hasPermission('manage.teacher-features'))
             <li class="sidebar-section-label">العناصر المدفوعة</li>
             {{-- التحكم في العناصر المدفوعة --}}
             @php
                 $paidSubscriptionsOpen = request()->routeIs('admin.subscriptions.*')
                     || request()->routeIs('admin.teacher-features.*')
-                    || request()->routeIs('admin.packages.*')
-                    || request()->routeIs('admin.curriculum-library.*');
+                    || request()->routeIs('admin.packages.*');
             @endphp
             <li x-data="{ open: {{ $paidSubscriptionsOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">

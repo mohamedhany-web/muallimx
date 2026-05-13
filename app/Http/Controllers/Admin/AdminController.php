@@ -317,20 +317,39 @@ class AdminController extends Controller
             'recent_employees' => User::employees()->with('employeeJob')->latest('hire_date')->take(5)->get(),
         ];
 
-        // قسم العناصر المدفوعة: الباقات (الاشتراكات) والمشتركين فيها
-        $subscriptionPackages = Subscription::with('user')
-            ->orderBy('plan_name')
-            ->get()
-            ->groupBy('plan_name')
-            ->map(function ($subs, $planName) {
-                return [
-                    'plan_name' => $planName ?: 'غير محدد',
-                    'count' => $subs->count(),
-                    'subscriptions' => $subs->take(15),
-                ];
-            })
-            ->take(12)
-            ->values();
+        $authUser = Auth::user();
+        $dashboardUnrestricted = $authUser->isAdmin() && ! $authUser->roles()->exists();
+        // كل مفتاح يطابق صلاحيات من الدور (مع aliases في User::permissionNamesToCheck)
+        $canDash = function (array $permissions) use ($authUser, $dashboardUnrestricted): bool {
+            if ($dashboardUnrestricted) {
+                return true;
+            }
+            foreach ($permissions as $perm) {
+                if ($authUser->hasPermission($perm)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        // قسم العناصر المدفوعة على اللوحة: بيانات مشتركين — لا يُستعلَم إلا بصلاحية manage.subscriptions
+        $subscriptionPackages = null;
+        if ($canDash(['manage.subscriptions'])) {
+            $subscriptionPackages = Subscription::with('user')
+                ->orderBy('plan_name')
+                ->get()
+                ->groupBy('plan_name')
+                ->map(function ($subs, $planName) {
+                    return [
+                        'plan_name' => $planName ?: 'غير محدد',
+                        'count' => $subs->count(),
+                        'subscriptions' => $subs->take(15),
+                    ];
+                })
+                ->take(12)
+                ->values();
+        }
 
         $quickActions = [
             [
@@ -454,22 +473,6 @@ class AdminController extends Controller
             ],
         ];
 
-        $authUser = Auth::user();
-        $dashboardUnrestricted = $authUser->isAdmin() && ! $authUser->roles()->exists();
-        // كل مفتاح يطابق صلاحيات من الدور (مع aliases في User::permissionNamesToCheck)
-        $canDash = function (array $permissions) use ($authUser, $dashboardUnrestricted): bool {
-            if ($dashboardUnrestricted) {
-                return true;
-            }
-            foreach ($permissions as $perm) {
-                if ($authUser->hasPermission($perm)) {
-                    return true;
-                }
-            }
-
-            return false;
-        };
-
         $dashboardShow = [
             'users_metric' => $canDash(['manage.users', 'manage.students-accounts', 'view.statistics', 'view.reports', 'manage.student-control', 'manage.quality-control']),
             'students_metric' => $canDash(['manage.students-accounts', 'manage.users', 'view.statistics', 'view.reports', 'manage.student-control']),
@@ -485,7 +488,8 @@ class AdminController extends Controller
             'recent_courses' => $canDash(['manage.courses', 'manage.lectures', 'manage.enrollments']),
             'sales_section' => $canDash(['manage.orders', 'manage.leads', 'view.sales-analytics', 'manage.coupons', 'manage.referrals']),
             'hr_section' => $canDash(['manage.users', 'manage.leaves', 'manage.employee-agreements', 'manage.instructor-requests']),
-            'subscriptions_section' => $canDash(['manage.subscriptions', 'manage.packages', 'manage.teacher-features', 'manage.curriculum-library']),
+            // اشتراكات وبيانات مشتركين — فقط manage.subscriptions (لا تربط بمكتبة المناهج أو غيرها)
+            'subscriptions_section' => $canDash(['manage.subscriptions']),
             'invoices_panel' => $canDash(['manage.invoices', 'view.financial-reports']),
             'payments_panel' => $canDash(['manage.payments', 'view.financial-reports', 'manage.transactions']),
         ];
