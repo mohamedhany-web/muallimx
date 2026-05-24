@@ -3,6 +3,7 @@
 <html lang="{{ $locale }}" dir="{{ $rtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
+    @include('partials.cache-bust-meta')
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', __('admin.community_dashboard')) - {{ config('app.name') }}</title>

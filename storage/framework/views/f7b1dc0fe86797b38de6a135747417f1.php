@@ -5,6 +5,7 @@
 <?php
     $typeOptions = \App\Models\Subscription::typeLabels();
     $tp = $teacherPlans ?? [];
+    $free = $tp['teacher_free'] ?? null;
     $starter = $tp['teacher_starter'] ?? null;
     $pro = $tp['teacher_pro'] ?? null;
     $fmtPrice = fn ($v) => number_format((float) $v, 0);
@@ -31,7 +32,11 @@
         }
         $featureDisplayLines[$fk] = $hint !== '' ? $hint : __('student.subscription_feature.'.$fk);
     }
+    $fRow = is_array($free) ? $free : [];
     $planFeatures = [
+        'teacher_free' => is_array($fRow['features'] ?? null) ? $fRow['features'] : [
+            'library_access', 'ai_tools', 'support',
+        ],
         'teacher_starter' => is_array($sRow['features'] ?? null) ? $sRow['features'] : [
             'library_access', 'ai_tools', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support',
         ],
@@ -40,7 +45,7 @@
         ],
     ];
     $planApplyMeta = [];
-    foreach (['teacher_starter', 'teacher_pro'] as $planKey) {
+    foreach (['teacher_free', 'teacher_starter', 'teacher_pro'] as $planKey) {
         if (! isset($tp[$planKey]) || ! is_array($tp[$planKey])) {
             continue;
         }
@@ -72,6 +77,13 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">نمط اشتراك المعلم (اختياري)</label>
                     <select name="teacher_plan_key" x-model="selectedPlan" @change="applyPlan" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                         <option value="">بدون — إدخال يدوي</option>
+                        <?php if($free): ?>
+                            <option value="teacher_free">
+                                <?php echo e($free['label'] ?? 'الباقة المجانية'); ?>
+
+                                — مجاناً / شهريًا
+                            </option>
+                        <?php endif; ?>
                         <?php if($starter): ?>
                             <option value="teacher_starter">
                                 <?php echo e($starter['label'] ?? 'الباقة الأساسية'); ?>

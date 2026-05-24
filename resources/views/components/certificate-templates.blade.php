@@ -3,6 +3,12 @@
 
 @php
     $template = $template ?? 'classic';
+@endphp
+
+@if(in_array($template, ['platform_academic', 'enhanced'], true))
+    @include('components.certificate-enhanced', ['certificate' => $certificate])
+@else
+@php
     $studentName = $studentName ?? ($certificate->user->name ?? auth()->user()->name ?? 'الطالب');
     $courseTitle = $courseTitle ?? ($certificate->title ?? $certificate->course_name ?? 'شهادة الإتمام');
     $courseName = $courseName ?? ($certificate->course->title ?? $certificate->course_name ?? '');
@@ -195,4 +201,6 @@
     });
 </script>
 @endpush
+@endif
+
 @endif

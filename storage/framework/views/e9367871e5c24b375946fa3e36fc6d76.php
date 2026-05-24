@@ -109,15 +109,16 @@
                 </div>
 
                 <?php
-                    $planKeys = ['teacher_starter', 'teacher_pro'];
+                    $planKeys = ['teacher_free', 'teacher_starter', 'teacher_pro'];
                     $billingPhrases = ['monthly' => 'جنيه شهريًا', 'quarterly' => 'جنيه / 3 شهور', 'yearly' => 'جنيه سنويًا'];
                 ?>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-7 max-w-4xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-7 max-w-6xl mx-auto">
                     <?php $__currentLoopData = $planKeys; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $planKey): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <?php
                             $plan = $teacherPlans[$planKey] ?? null;
                             if (!$plan) continue;
+                            if ($planKey === 'teacher_free' && !filter_var($plan['is_active'] ?? true, FILTER_VALIDATE_BOOLEAN)) continue;
                             $meta = [
                                 'subtitle' => $plan['card_subtitle'] ?? '',
                                 'badge' => trim((string) ($plan['card_badge'] ?? '')),
@@ -132,9 +133,11 @@
                             $features = $plan['features'] ?? [];
                             $featureDescriptions = is_array($plan['feature_descriptions'] ?? null) ? $plan['feature_descriptions'] : [];
                             $isPro = $planKey === 'teacher_pro';
+                            $isFree = $planKey === 'teacher_free';
                         ?>
                         <div class="card-base card-hover !p-7 sm:!p-8 pt-10 flex flex-col relative
                             <?php if($isPro): ?> border-[#283593] ring-2 ring-[#283593]/10
+                            <?php elseif($isFree): ?> border-emerald-400 ring-2 ring-emerald-500/15
                             <?php else: ?> border-slate-200
                             <?php endif; ?>">
                             <?php if($meta['badge'] !== ''): ?>
@@ -151,7 +154,14 @@
                             </div>
                             <div class="mb-6">
                                 <div class="text-3xl font-black text-mx-indigo mb-1">
-                                    <?php echo e(number_format($price, 0)); ?> <span class="text-base sm:text-lg font-bold text-slate-600"><?php echo e($cyclePhrase); ?></span>
+                                    <?php if($isFree): ?>
+                                        مجاناً
+                                        <span class="block text-base sm:text-lg font-bold text-emerald-700 mt-1">
+                                            لمدة <?php echo e((int) ($plan['duration_days'] ?? 14)); ?> يوماً — ثم تنتهي تلقائياً
+                                        </span>
+                                    <?php else: ?>
+                                        <?php echo e(number_format($price, 0)); ?> <span class="text-base sm:text-lg font-bold text-slate-600"><?php echo e($cyclePhrase); ?></span>
+                                    <?php endif; ?>
                                 </div>
                                 <?php if($meta['priceHint'] !== ''): ?>
                                     <p class="text-sm text-slate-500"><?php echo e($meta['priceHint']); ?></p>
@@ -173,13 +183,30 @@
                             <?php if($meta['footer_note'] !== ''): ?>
                                 <div class="mb-4 px-3 py-2 rounded-xl text-sm font-semibold text-[#283593] bg-[#EFF2FF] border border-[#dbe4ff]"><?php echo e($meta['footer_note']); ?></div>
                             <?php endif; ?>
-                            <a href="<?php echo e(route('public.subscription.checkout', $planKey)); ?>" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors
-                                <?php if($isPro): ?> bg-[#283593] hover:bg-[#1f2a7a] text-white
-                                <?php else: ?> btn-primary !bg-[#283593] hover:!bg-[#1f2a7a] text-white
-                                <?php endif; ?>">
-                                <?php echo e($meta['cta'] ?? 'ابدأ الآن'); ?>
+                            <?php if($isFree): ?>
+                                <?php if(auth()->guard()->check()): ?>
+                                    <form action="<?php echo e(route('public.subscription.activate-free')); ?>" method="POST" class="w-full">
+                                        <?php echo csrf_field(); ?>
+                                        <input type="hidden" name="plan" value="teacher_free">
+                                        <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors bg-emerald-600 hover:bg-emerald-700 text-white">
+                                            <?php echo e($meta['cta'] ?? 'فعّل الباقة المجانية'); ?>
 
-                            </a>
+                                        </button>
+                                    </form>
+                                <?php else: ?>
+                                    <a href="<?php echo e(route('login', ['intended' => route('public.pricing')])); ?>" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors bg-emerald-600 hover:bg-emerald-700 text-white">
+                                        سجّل الدخول للتفعيل المجاني
+                                    </a>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <a href="<?php echo e(route('public.subscription.checkout', $planKey)); ?>" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors
+                                    <?php if($isPro): ?> bg-[#283593] hover:bg-[#1f2a7a] text-white
+                                    <?php else: ?> btn-primary !bg-[#283593] hover:!bg-[#1f2a7a] text-white
+                                    <?php endif; ?>">
+                                    <?php echo e($meta['cta'] ?? 'ابدأ الآن'); ?>
+
+                                </a>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>

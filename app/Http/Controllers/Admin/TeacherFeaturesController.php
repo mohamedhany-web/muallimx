@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Subscription;
+use App\Support\TeacherPlanKeys;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -24,10 +26,14 @@ class TeacherFeaturesController extends Controller
     {
         $validated = $request->validate([
             'plans' => 'required|array',
+            'plans.teacher_free.price' => 'required|numeric|in:0',
+            'plans.teacher_free.is_active' => 'nullable|boolean',
+            'plans.teacher_free.duration_days' => 'required|integer|min:1|max:365',
+            'plans.teacher_free.allow_repeat_activation' => 'nullable|boolean',
             'plans.teacher_starter.price' => 'required|numeric|min:0',
             'plans.teacher_pro.price' => 'required|numeric|min:0',
             'plans.*.label' => 'nullable|string|max:255',
-            'plans.*.billing_cycle' => 'nullable|string|in:monthly',
+            'plans.*.billing_cycle' => 'nullable|string|in:monthly,trial',
             'plans.*.features' => 'nullable|array',
             'plans.*.features.*' => 'nullable|string|max:100',
             'plans.*.feature_descriptions' => 'nullable|array',
@@ -46,19 +52,37 @@ class TeacherFeaturesController extends Controller
             'plans.*.card_footer_note' => 'nullable|string|max:500',
         ]);
 
-        $plans = $validated['plans'];
+        // استخدام مدخلات النموذج كاملة (المزايا/الحدود) بعد نجاح التحقق
+        $plans = $request->input('plans', []);
+        if (! is_array($plans)) {
+            $plans = [];
+        }
 
         // تأكيد أن كل خطة تحتوي على الحقول المطلوبة
-        foreach (['teacher_starter', 'teacher_pro'] as $key) {
+        foreach (TeacherPlanKeys::ordered() as $key) {
+            $plans[$key] = array_merge(
+                $this->defaultSettings()[$key] ?? [],
+                is_array($plans[$key] ?? null) ? $plans[$key] : []
+            );
             $plans[$key]['label'] = $plans[$key]['label'] ?? $this->defaultSettings()[$key]['label'] ?? '';
             $plans[$key]['billing_cycle'] = 'monthly';
+            if ($key === TeacherPlanKeys::FREE) {
+                $plans[$key]['price'] = 0;
+                $plans[$key]['billing_cycle'] = 'trial';
+                $plans[$key]['is_active'] = filter_var($plans[$key]['is_active'] ?? true, FILTER_VALIDATE_BOOLEAN);
+                $plans[$key]['duration_days'] = max(1, min(365, (int) ($plans[$key]['duration_days'] ?? 14)));
+                $plans[$key]['allow_repeat_activation'] = filter_var(
+                    $plans[$key]['allow_repeat_activation'] ?? false,
+                    FILTER_VALIDATE_BOOLEAN
+                );
+            }
             $plans[$key]['features'] = isset($plans[$key]['features']) && is_array($plans[$key]['features'])
                 ? array_values(array_filter(
                     $plans[$key]['features'],
                     static fn ($f) => $f !== null && $f !== '' && $f !== 'zoom_access'
                 ))
                 : [];
-            if ($key === 'teacher_starter') {
+            if ($key === TeacherPlanKeys::STARTER) {
                 $plans[$key]['features'] = array_values(array_filter(
                     $plans[$key]['features'],
                     static fn ($f) => $f !== 'classroom_access'
@@ -78,7 +102,7 @@ class TeacherFeaturesController extends Controller
             if ($plans[$key]['limits']['classroom_default_duration_minutes'] > $plans[$key]['limits']['classroom_max_duration_minutes']) {
                 $plans[$key]['limits']['classroom_default_duration_minutes'] = $plans[$key]['limits']['classroom_max_duration_minutes'];
             }
-            if ($key === 'teacher_starter') {
+            if ($key === TeacherPlanKeys::STARTER) {
                 // باقة البداية لا تحتوي على Muallimx Classroom نهائياً.
                 $plans[$key]['limits']['classroom_meetings_per_month'] = 0;
                 $plans[$key]['limits']['classroom_max_participants'] = 1;
@@ -132,7 +156,14 @@ class TeacherFeaturesController extends Controller
         Cache::forget($this->cacheKey);
         Cache::forget('teacher_features_settings_limits');
 
-        return back()->with('success', 'تم تحديث مزايا باقات المعلمين بنجاح.');
+        $synced = $this->syncActiveSubscriptionsFromPlans($plans);
+
+        $message = 'تم تحديث مزايا باقات المعلمين بنجاح.';
+        if ($synced > 0) {
+            $message .= ' تم تحديث مزايا '.$synced.' اشتراك نشط ليطابق الإعدادات الجديدة.';
+        }
+
+        return back()->with('success', $message);
     }
 
     public function getSettings(): array
@@ -156,18 +187,25 @@ class TeacherFeaturesController extends Controller
 
             $defaults = $this->defaultSettings();
             $merged = [];
-            foreach (['teacher_starter', 'teacher_pro'] as $planKey) {
+            foreach (TeacherPlanKeys::ordered() as $planKey) {
                 $merged[$planKey] = array_merge(
                     $defaults[$planKey] ?? [],
                     is_array($decoded[$planKey] ?? null) ? $decoded[$planKey] : []
                 );
+                if ($planKey === TeacherPlanKeys::FREE) {
+                    $merged[$planKey]['price'] = 0;
+                    $merged[$planKey]['billing_cycle'] = 'trial';
+                    $merged[$planKey]['duration_days'] = TeacherPlanKeys::freeDurationDays($merged[$planKey]);
+                    $merged[$planKey]['is_active'] = filter_var($merged[$planKey]['is_active'] ?? true, FILTER_VALIDATE_BOOLEAN);
+                    $merged[$planKey]['allow_repeat_activation'] = TeacherPlanKeys::freeAllowsRepeat($merged[$planKey]);
+                }
                 if (isset($merged[$planKey]['features']) && is_array($merged[$planKey]['features'])) {
                     $merged[$planKey]['features'] = array_values(array_filter(
                         $merged[$planKey]['features'],
                         static fn ($f) => $f !== 'zoom_access'
                     ));
                 }
-                if ($planKey === 'teacher_starter') {
+                if ($planKey === TeacherPlanKeys::STARTER) {
                     $merged[$planKey]['features'] = array_values(array_filter(
                         $merged[$planKey]['features'],
                         static fn ($f) => $f !== 'classroom_access'
@@ -185,10 +223,71 @@ class TeacherFeaturesController extends Controller
         });
     }
 
+    /**
+     * مزامنة حقل features للاشتراكات النشطة مع إعدادات الباقة (بعد تعديل الأدمن).
+     */
+    protected function syncActiveSubscriptionsFromPlans(array $plans): int
+    {
+        $total = 0;
+
+        foreach (TeacherPlanKeys::ordered() as $planKey) {
+            if (! isset($plans[$planKey]) || ! is_array($plans[$planKey])) {
+                continue;
+            }
+
+            $features = isset($plans[$planKey]['features']) && is_array($plans[$planKey]['features'])
+                ? Subscription::normalizeFeatureKeys($plans[$planKey]['features'])
+                : [];
+
+            $total += Subscription::query()
+                ->where('status', 'active')
+                ->where('teacher_plan_key', $planKey)
+                ->where(function ($q) {
+                    $q->whereNull('end_date')->orWhereDate('end_date', '>=', now());
+                })
+                ->update(['features' => $features]);
+        }
+
+        return $total;
+    }
+
     protected function defaultSettings(): array
     {
         return [
-            'teacher_starter' => [
+            TeacherPlanKeys::FREE => [
+                'label' => 'الباقة المجانية',
+                'price' => 0,
+                'is_active' => true,
+                'duration_days' => 14,
+                'allow_repeat_activation' => false,
+                'billing_cycle' => 'trial',
+                'card_subtitle' => 'ابدأ مجاناً بمزايا محدودة لمدة محددة',
+                'card_badge' => 'مجانية',
+                'card_price_hint' => 'تفعيل فوري — تنتهي تلقائياً بعد المدة المحددة.',
+                'card_cta' => 'فعّل الباقة المجانية',
+                'card_footer_note' => 'الحدود والمزايا تُضبط من لوحة الإدارة.',
+                'features' => [
+                    'library_access',
+                    'ai_tools',
+                    'support',
+                ],
+                'feature_descriptions' => [
+                    'library_access' => 'وصول محدود لمكتبة المحتوى التعليمي.',
+                    'ai_tools' => 'أدوات ذكاء اصطناعي أساسية للتحضير.',
+                    'classroom_access' => 'استخدام Muallimx Classroom بعدد اجتماعات محدود شهرياً.',
+                    'support' => 'دعم فني عبر المنصة.',
+                ],
+                'limits' => [
+                    'classroom_meetings_per_month' => 2,
+                    'classroom_max_participants' => 15,
+                    'classroom_default_duration_minutes' => 45,
+                    'classroom_max_duration_minutes' => 60,
+                    'personal_marketing_profile_sections' => 3,
+                    'personal_marketing_priority_score' => 20,
+                    'personal_marketing_monthly_featured_days' => 0,
+                ],
+            ],
+            TeacherPlanKeys::STARTER => [
                 'label' => 'الباقة الأساسية',
                 'price' => 200,
                 'billing_cycle' => 'monthly',
@@ -233,7 +332,7 @@ class TeacherFeaturesController extends Controller
                     'personal_marketing_monthly_featured_days' => 0,
                 ],
             ],
-            'teacher_pro' => [
+            TeacherPlanKeys::PRO => [
                 'label' => 'الباقة الشاملة',
                 'price' => 600,
                 'billing_cycle' => 'monthly',

@@ -15,7 +15,7 @@ class ExpireSubscriptionsCommand extends Command
     {
         $count = Subscription::where('status', 'active')
             ->whereNotNull('end_date')
-            ->where('end_date', '<', now()->startOfDay())
+            ->whereDate('end_date', '<', today())
             ->update(['status' => 'expired']);
 
         $this->info("تم تحديث {$count} اشتراكاً إلى حالة منتهي.");

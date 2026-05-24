@@ -957,6 +957,15 @@ class CheckoutController extends Controller
         $plan = (string) $row->teacher_plan_key;
         $checkoutUrl = route('public.subscription.checkout', $plan);
 
+        if (! $row->isOnlineGatewayPayment()) {
+            $request->session()->forget('fawaterak_subscription_request_id');
+
+            return redirect()->route('dashboard')->with(
+                'info',
+                'هذا الطلب مسجّل بتحويل يدوي وإيصال — يُراجع من الإدارة بعد رفع الإيصال، وليس عبر بوابة الدفع.'
+            );
+        }
+
         if ($status === 'fail') {
             $request->session()->forget('fawaterak_subscription_request_id');
 
@@ -985,7 +994,7 @@ class CheckoutController extends Controller
             if ($fresh && $fresh->status === SubscriptionRequest::STATUS_APPROVED) {
                 $request->session()->forget('fawaterak_subscription_request_id');
 
-                return redirect()->route('dashboard')->with('info', 'تمت معالجة اشتراكك مسبقاً.');
+                return redirect()->route('student.my-subscription')->with('info', 'تمت معالجة اشتراكك مسبقاً.');
             }
             Log::error('Fawaterak subscription return: activation failed', [
                 'subscription_request_id' => $subscriptionRequestId,
@@ -1002,7 +1011,7 @@ class CheckoutController extends Controller
             ? ('تم الدفع بنجاح. رقم الفاتورة: '.$invoice->invoice_number)
             : 'تم الدفع وتفعيل اشتراكك بنجاح.';
 
-        return redirect()->route('dashboard')->with('success', $msg);
+        return redirect()->route('student.my-subscription')->with('success', $msg);
     }
 
     /**

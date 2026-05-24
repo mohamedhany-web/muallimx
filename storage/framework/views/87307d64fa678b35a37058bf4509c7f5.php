@@ -83,7 +83,7 @@
                             <div class="certificate-container">
                                 <?php echo $__env->make('components.certificate-templates', [
                                     'certificate' => $certificate,
-                                    'template' => $certificate->template ?? 'classic'
+                                    'template' => $certificate->template ?? 'classic',
                                 ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                             </div>
                         </div>

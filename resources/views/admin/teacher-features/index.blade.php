@@ -10,13 +10,23 @@
             {{ session('success') }}
         </div>
     @endif
+    @if($errors->any())
+        <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl shadow-sm">
+            <p class="font-bold mb-2">تعذر الحفظ — راجع الحقول التالية:</p>
+            <ul class="list-disc pr-5 text-sm space-y-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
                 <h1 class="text-2xl font-black text-slate-900">التحكم في مزايا باقات المعلمين</h1>
                 <p class="text-sm text-slate-600 mt-1">
-                    من هنا تتحكم في أسعار ومزايا باقتين فقط للمعلمين، ويتم استخدامهما عند إنشاء اشتراك جديد (للطلاب الذين يعملون كمعلمين).
+                    من هنا تتحكم في أسعار ومزايا باقات المعلمين (مجانية، أساسية، شاملة) بما فيها الحدود الشهرية لكل ميزة.
                 </p>
                 <p class="text-xs text-slate-500 mt-1">
                     العملة الأساسية لكل الأسعار في هذه الصفحة هي <span class="font-semibold">الجنيه المصري (ج.م)</span>.
@@ -33,6 +43,12 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 @php
                     $plansMeta = [
+                        'teacher_free' => [
+                            'title' => 'الباقة المجانية',
+                            'subtitle' => 'مزايا محدودة — السعر دائماً صفر',
+                            'badge' => 'مجانية',
+                            'color' => 'from-emerald-500 to-teal-600',
+                        ],
                         'teacher_starter' => [
                             'title' => 'الباقة الأساسية',
                             'subtitle' => 'كل الخدمات التعليمية بدون الميتينج',
@@ -118,16 +134,53 @@
 
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">السعر (جنيه مصري)</label>
-                                <div class="relative">
-                                    <input type="number"
-                                           step="0.01"
-                                           min="0"
-                                           name="plans[{{ $key }}][price]"
-                                           value="{{ old('plans.' . $key . '.price', $plan['price'] ?? 0) }}"
-                                           class="w-full pl-12 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
-                                    <span class="absolute inset-y-0 left-3 flex items-center text-xs font-semibold text-slate-500">ج.م</span>
-                                </div>
+                                @if($key === 'teacher_free')
+                                    <input type="hidden" name="plans[{{ $key }}][price]" value="0">
+                                    <p class="text-sm font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">مجانية — السعر ثابت عند 0 ج.م</p>
+                                    <label class="mt-3 flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                                        <input type="hidden" name="plans[{{ $key }}][is_active]" value="0">
+                                        <input type="checkbox"
+                                               name="plans[{{ $key }}][is_active]"
+                                               value="1"
+                                               class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                               {{ old('plans.'.$key.'.is_active', $plan['is_active'] ?? true) ? 'checked' : '' }}>
+                                        <span>إظهار الباقة المجانية في صفحة الأسعار والسماح بالتفعيل</span>
+                                    </label>
+                                    <div class="mt-4 space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-emerald-900 mb-1">مدة التجربة (بالأيام)</label>
+                                            <input type="number"
+                                                   min="1"
+                                                   max="365"
+                                                   name="plans[{{ $key }}][duration_days]"
+                                                   value="{{ old('plans.'.$key.'.duration_days', $plan['duration_days'] ?? 14) }}"
+                                                   class="w-full px-3 py-2 rounded-lg border border-emerald-200 text-sm focus:ring-2 focus:ring-emerald-500">
+                                            <p class="text-[11px] text-emerald-800 mt-1">ينتهي الاشتراك تلقائياً بعد هذا العدد من الأيام (أمر subscriptions:expire يومياً).</p>
+                                        </div>
+                                        <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                                            <input type="hidden" name="plans[{{ $key }}][allow_repeat_activation]" value="0">
+                                            <input type="checkbox"
+                                                   name="plans[{{ $key }}][allow_repeat_activation]"
+                                                   value="1"
+                                                   class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                                   {{ old('plans.'.$key.'.allow_repeat_activation', $plan['allow_repeat_activation'] ?? false) ? 'checked' : '' }}>
+                                            <span>السماح بتفعيل الباقة المجانية أكثر من مرة لنفس المستخدم</span>
+                                        </label>
+                                    </div>
+                                    <input type="hidden" name="plans[{{ $key }}][billing_cycle]" value="trial">
+                                @else
+                                    <div class="relative">
+                                        <input type="number"
+                                               step="0.01"
+                                               min="0"
+                                               name="plans[{{ $key }}][price]"
+                                               value="{{ old('plans.' . $key . '.price', $plan['price'] ?? 0) }}"
+                                               class="w-full pl-12 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
+                                        <span class="absolute inset-y-0 left-3 flex items-center text-xs font-semibold text-slate-500">ج.م</span>
+                                    </div>
+                                @endif
                             </div>
+                            @if($key !== 'teacher_free')
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">دورة الفوترة</label>
                                 @php $billingCycle = old('plans.' . $key . '.billing_cycle', $plan['billing_cycle'] ?? 'monthly'); @endphp
@@ -136,6 +189,7 @@
                                     <option value="monthly" {{ $billingCycle === 'monthly' ? 'selected' : '' }}>شهري</option>
                                 </select>
                             </div>
+                            @endif
 
                             <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
                                 <p class="text-xs font-bold text-slate-700 mb-2">قيود الاستهلاك الدقيقة (Classroom)</p>

@@ -10,6 +10,8 @@ use App\Models\Wallet;
 use App\Services\FawaterakApiService;
 use App\Services\FawaterakService;
 use App\Services\PaymentGatewaySettings;
+use App\Services\TeacherSubscriptionActivationService;
+use App\Support\TeacherPlanKeys;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,16 +21,17 @@ use Illuminate\Validation\Rule;
 
 class SubscriptionCheckoutController extends Controller
 {
-    protected const VALID_PLANS = ['teacher_starter', 'teacher_pro'];
-    protected const PLAN_RANK = ['teacher_starter' => 1, 'teacher_pro' => 2];
-
     /**
      * عرض صفحة دفع اشتراك الباقة (تحويل المبلغ + رفع إيصال الدفع)
      */
     public function show(string $plan)
     {
-        if (!in_array($plan, self::VALID_PLANS, true)) {
+        if (! TeacherPlanKeys::isValid($plan)) {
             return redirect()->route('public.pricing')->with('error', 'الباقة غير صحيحة.');
+        }
+
+        if (TeacherPlanKeys::isFree($plan)) {
+            return redirect()->route('public.pricing')->with('info', 'الباقة المجانية تُفعَّل مباشرة من صفحة الأسعار بدون دفع.');
         }
 
         if (!Auth::check()) {
@@ -100,8 +103,12 @@ class SubscriptionCheckoutController extends Controller
         }
 
         $plan = $request->input('plan');
-        if (!in_array($plan, self::VALID_PLANS, true)) {
+        if (! TeacherPlanKeys::isValid($plan)) {
             return redirect()->route('public.pricing')->with('error', 'الباقة غير صحيحة.');
+        }
+
+        if (TeacherPlanKeys::isFree($plan)) {
+            return redirect()->route('public.pricing')->with('error', 'استخدم زر تفعيل الباقة المجانية من صفحة الأسعار.');
         }
 
         $upgrade = (bool) $request->boolean('upgrade');
@@ -154,8 +161,8 @@ class SubscriptionCheckoutController extends Controller
             }
 
             $fromKey = (string) ($fromSubscription->teacher_plan_key ?? '');
-            $fromRank = self::PLAN_RANK[$fromKey] ?? 0;
-            $toRank = self::PLAN_RANK[$plan] ?? 0;
+            $fromRank = TeacherPlanKeys::rank($fromKey);
+            $toRank = TeacherPlanKeys::rank($plan);
             if ($fromRank <= 0 || $toRank <= 0) {
                 return redirect()->route('student.my-subscription')->with('error', 'لا يمكن ترقية هذه الباقة حالياً.');
             }
@@ -209,8 +216,12 @@ class SubscriptionCheckoutController extends Controller
      */
     public function fawaterakPrepare(Request $request, string $plan): JsonResponse
     {
-        if (! in_array($plan, self::VALID_PLANS, true)) {
+        if (! TeacherPlanKeys::isValid($plan)) {
             return response()->json(['message' => 'الباقة غير صحيحة.'], 404);
+        }
+
+        if (TeacherPlanKeys::isFree($plan)) {
+            return response()->json(['message' => 'الباقة المجانية لا تدعم الدفع الإلكتروني.'], 422);
         }
 
         if (! PaymentGatewaySettings::isFawaterakEnabled()) {
@@ -562,11 +573,42 @@ class SubscriptionCheckoutController extends Controller
             return response()->json(['message' => 'تمت معالجة هذا الطلب مسبقاً.'], 409);
         }
 
-        if ($row->payment_method !== 'online' || $row->payment_proof !== null) {
+        if (! $row->isOnlineGatewayPayment()) {
             return response()->json(['message' => 'هذا الطلب لا يصلح للدفع الإلكتروني.'], 422);
         }
 
         return $row;
+    }
+
+    /**
+     * تفعيل الباقة المجانية (بدون دفع).
+     */
+    public function activateFree(Request $request)
+    {
+        if (! Auth::check()) {
+            return redirect()->guest(route('login', ['intended' => route('public.pricing')]))
+                ->with('info', 'سجّل الدخول أولاً لتفعيل الباقة المجانية.');
+        }
+
+        $validated = $request->validate([
+            'plan' => 'required|string|in:'.TeacherPlanKeys::FREE,
+        ]);
+
+        $plan = $validated['plan'];
+
+        $featuresController = new TeacherFeaturesController;
+        $settings = $featuresController->getSettings();
+        $planConfig = $settings[$plan] ?? [];
+        $days = TeacherPlanKeys::freeDurationDays($planConfig);
+
+        try {
+            TeacherSubscriptionActivationService::activateFreePlanForUser(Auth::user(), $plan);
+        } catch (\Throwable $e) {
+            return redirect()->route('public.pricing')->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('student.my-subscription')
+            ->with('success', 'تم تفعيل الباقة المجانية لمدة '.$days.' يوماً. ستنتهي تلقائياً في نهاية المدة ويمكنك استخدام المزايا ضمن الحدود المحددة.');
     }
 
     private function upgradeValidationMessage(Request $request, string $plan): ?string
@@ -587,9 +629,9 @@ class SubscriptionCheckoutController extends Controller
         }
 
         $fromKey = (string) ($fromSubscription->teacher_plan_key ?? '');
-        $fromRank = self::PLAN_RANK[$fromKey] ?? 0;
-        $toRank = self::PLAN_RANK[$plan] ?? 0;
-        if ($fromRank <= 0 || $toRank <= 0) {
+        $fromRank = TeacherPlanKeys::rank($fromKey);
+        $toRank = TeacherPlanKeys::rank($plan);
+        if ($fromRank < 0 || $toRank < 0) {
             return 'لا يمكن ترقية هذه الباقة حالياً.';
         }
         if ($toRank <= $fromRank) {

@@ -6,6 +6,7 @@
 <html lang="<?php echo e($appLocale); ?>" dir="<?php echo e($appRtl ? 'rtl' : 'ltr'); ?>" class="light">
 <head>
     <meta charset="utf-8">
+    <?php echo $__env->make('partials.cache-bust-meta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
 
@@ -43,7 +44,7 @@
     <script>
         window.Laravel = { user: { name: '<?php echo e(auth()->check() ? auth()->user()->name : "زائر"); ?>' } };
     </script>
-    <script src="<?php echo e(asset('js/platform-protection.js')); ?>"></script>
+    <script src="<?php echo e(vasset('js/platform-protection.js')); ?>"></script>
     <?php endif; ?>
 
     

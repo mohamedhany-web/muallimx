@@ -6,6 +6,7 @@
 <html lang="{{ $publicLocale }}" dir="{{ $publicRtl ? 'rtl' : 'ltr' }}" class="light">
 <head>
     <meta charset="utf-8">
+    @include('partials.cache-bust-meta')
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @php
         $seoTitle = trim($__env->yieldContent('title')) ?: (config('app.name') . ' - ' . __('landing.nav.brand'));

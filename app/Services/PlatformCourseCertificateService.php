@@ -6,6 +6,10 @@ use App\Models\AdvancedCourse;
 use App\Models\Certificate;
 use App\Models\StudentCourseEnrollment;
 use App\Models\User;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -42,7 +46,7 @@ class PlatformCourseCertificateService
         try {
             return $this->createPlatformCertificate($user, $course, now(), [
                 'source' => 'platform_auto',
-                'design' => 'platform_academic_v1',
+                'design' => 'platform_enhanced_v1',
             ]);
         } catch (Throwable $e) {
             Log::warning('platform_certificate_issue_failed', [
@@ -66,7 +70,7 @@ class PlatformCourseCertificateService
 
         return $this->createPlatformCertificate($user, $course, $issueAt ?? now(), [
             'source' => 'platform_admin',
-            'design' => 'platform_academic_v1',
+            'design' => 'platform_enhanced_v1',
         ]);
     }
 
@@ -78,12 +82,12 @@ class PlatformCourseCertificateService
         $issueCarbon = now();
         $fakeCert = 'CERT-PREVIEW';
         $fakeCode = 'MX-PREVIEW-DEMO';
-        $verificationUrl = url('/');
+        $verificationUrl = route('public.certificates.verify', ['code' => $fakeCode]);
 
         $data = $this->pdfViewData($user, $course, $issueCarbon, $fakeCert, $fakeCode, $verificationUrl);
         $data['previewWatermark'] = $watermark;
 
-        return view('pdf.certificates.platform-academic', $data)->render();
+        return view('pdf.certificates.platform-enhanced', $data)->render();
     }
 
     /**
@@ -119,7 +123,7 @@ class PlatformCourseCertificateService
 
         $verificationUrl = route('public.certificates.verify.code', ['code' => $verificationCode]);
 
-        $html = view('pdf.certificates.platform-academic', $this->pdfViewData(
+        $html = view('pdf.certificates.platform-enhanced', $this->pdfViewData(
             $user,
             $course,
             $issueCarbon,
@@ -155,7 +159,7 @@ class PlatformCourseCertificateService
         $instructorTitle = 'مدرب الدورة';
 
         $metadata = array_merge([
-            'design' => 'platform_academic_v1',
+            'design' => 'platform_enhanced_v1',
         ], $metadataExtra);
 
         $row = [
@@ -216,25 +220,54 @@ class PlatformCourseCertificateService
         $instructorName = $instructor?->name ?? 'المدرب المعتمد';
         $instructorTitle = 'مدرب الدورة';
 
+        $hours = (int) ($course->duration_hours ?? 0);
+        $mins = (int) ($course->duration_minutes ?? 0);
+        $durationLabel = '—';
+        if ($hours > 0) {
+            $durationLabel = $hours.' ساعة';
+        } elseif ($mins > 0) {
+            $durationLabel = $mins.' دقيقة';
+        }
+
         return [
             'academyName' => $academy,
             'studentName' => $user->name,
             'courseDisplayName' => $course->title,
             'issueDateFormatted' => $issueCarbon->format('Y/m/d'),
+            'issueYear' => $issueCarbon->format('Y'),
             'certificateNumber' => $certificateNumber,
             'verificationCode' => $verificationCode,
             'verificationUrl' => $verificationUrl,
             'directorName' => (string) config('certificates.director_name', 'المدير العام'),
-            'directorTitle' => (string) config('certificates.director_title', 'الإدارة التنفيذية'),
+            'directorTitle' => (string) config('certificates.director_title', $academy),
             'instructorName' => $instructorName,
             'instructorTitle' => $instructorTitle,
+            'courseDurationLabel' => $durationLabel,
             'logoDataUri' => $this->resolveLogoDataUri(),
-            'primaryColor' => (string) config('certificates.primary', '#283593'),
-            'secondaryColor' => (string) config('certificates.secondary', '#FB5607'),
-            'creamBg' => (string) config('certificates.cream', '#FDFBF7'),
-            'accentLight' => (string) config('certificates.accent_light', '#FFE5F7'),
+            'watermarkDataUri' => $this->resolveWatermarkDataUri(),
+            'qrDataUri' => $this->qrCodeDataUri($verificationUrl),
             'previewWatermark' => false,
         ];
+    }
+
+    private function qrCodeDataUri(string $text): ?string
+    {
+        if ($text === '') {
+            return null;
+        }
+
+        try {
+            $renderer = new ImageRenderer(
+                new RendererStyle(140, 2),
+                new SvgImageBackEnd
+            );
+            $writer = new Writer($renderer);
+            $svg = $writer->writeString($text);
+
+            return 'data:image/svg+xml;base64,'.base64_encode($svg);
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     private function uniqueVerificationCode(): string
@@ -263,13 +296,37 @@ class PlatformCourseCertificateService
 
     private function resolveLogoDataUri(): ?string
     {
-        foreach ([public_path('icons/icon-192.png'), public_path('icons/icon-512.png')] as $p) {
+        foreach ([
+            public_path('images/certificates/enhanced-1.jpeg'),
+            public_path('icons/icon-192.png'),
+            public_path('icons/icon-512.png'),
+        ] as $p) {
             if (is_file($p)) {
-                return 'data:image/png;base64,'.base64_encode((string) file_get_contents($p));
+                return $this->fileToDataUri($p);
             }
         }
 
         return null;
+    }
+
+    private function resolveWatermarkDataUri(): ?string
+    {
+        $p = public_path('images/certificates/enhanced-1.jpeg');
+
+        return is_file($p) ? $this->fileToDataUri($p) : $this->resolveLogoDataUri();
+    }
+
+    private function fileToDataUri(string $path): string
+    {
+        $mime = match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'webp' => 'image/webp',
+            'gif' => 'image/gif',
+            default => 'application/octet-stream',
+        };
+
+        return 'data:'.$mime.';base64,'.base64_encode((string) file_get_contents($path));
     }
 
     /**

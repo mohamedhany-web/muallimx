@@ -16,6 +16,7 @@
         })();
     </script>
     <meta charset="utf-8">
+    @include('partials.cache-bust-meta')
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Muallimx') }} - @yield('title', __('auth.dashboard'))</title>

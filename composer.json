@@ -35,7 +35,8 @@
         },
         "files": [
             "app/Helpers/FilesystemHelper.php",
-            "app/Helpers/WhatsAppHelper.php"
+            "app/Helpers/WhatsAppHelper.php",
+            "app/Helpers/AssetHelper.php"
         ]
     },
     "autoload-dev": {

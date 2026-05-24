@@ -711,6 +711,120 @@
             var lectureRafId = null;
             var btnLectureAddScreen = document.getElementById('btn-lecture-add-screen');
 
+            var MX_REC_MIN_BYTES = 4096;
+            var MX_REC_MIN_MS = 8000;
+            var MX_REC_HEARTBEAT_MS = 45000;
+            var MX_REC_CONSOLIDATE_AFTER_CHUNKS = 400;
+            var mxRecHeartbeatTimer = null;
+
+            function mxStopRecHeartbeat() {
+                if (mxRecHeartbeatTimer) {
+                    clearInterval(mxRecHeartbeatTimer);
+                    mxRecHeartbeatTimer = null;
+                }
+            }
+
+            function mxStartRecHeartbeat() {
+                mxStopRecHeartbeat();
+                mxRecHeartbeatTimer = setInterval(function() {
+                    if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+                    try {
+                        if (typeof mediaRecorder.requestData === 'function') {
+                            mediaRecorder.requestData();
+                        }
+                    } catch (e) {}
+                    mxConsolidateRecordedChunks();
+                }, MX_REC_HEARTBEAT_MS);
+            }
+
+            function mxConsolidateRecordedChunks() {
+                if (!recordedChunks || recordedChunks.length < MX_REC_CONSOLIDATE_AFTER_CHUNKS) return;
+                try {
+                    var mime = (mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'video/webm';
+                    if (recordingKind === 'report') {
+                        mime = normalizeAudioMimeType(mime);
+                    }
+                    var merged = new Blob(recordedChunks, { type: mime });
+                    if (merged.size > 0) {
+                        recordedChunks = [merged];
+                    }
+                } catch (e) {
+                    console.warn('mxConsolidateRecordedChunks:', e);
+                }
+            }
+
+            function mxValidateRecordingBeforeUpload(blob, durationSeconds, kindLabel) {
+                if (!blob || !blob.size) {
+                    return 'لا يوجد محتوى في ' + (kindLabel || 'التسجيل') + '.';
+                }
+                if (blob.size < MX_REC_MIN_BYTES) {
+                    return 'حجم ' + (kindLabel || 'التسجيل') + ' صغير جداً (' + formatBytes(blob.size) + '). انتظر 10 ثوانٍ على الأقل بعد بدء التسجيل ثم أوقفه من الزر الأحمر.';
+                }
+                var dur = durationSeconds || 0;
+                if (dur >= 120) {
+                    var expectedMin = Math.max(MX_REC_MIN_BYTES, Math.floor((dur / 60) * 800));
+                    if (blob.size < expectedMin) {
+                        return 'مدة التسجيل (' + dur + ' ث) لا تتطابق مع حجم الملف. قد يكون التسجيل تالفاً — أعد المحاولة ولا تغلق التبويب أثناء الرفع.';
+                    }
+                }
+                return null;
+            }
+
+            function mxFlushMediaRecorder(recorder, extraRecorder) {
+                return new Promise(function(resolve) {
+                    if (!recorder || recorder.state !== 'recording') {
+                        resolve();
+                        return;
+                    }
+                    var settled = false;
+                    function finish() {
+                        if (settled) return;
+                        settled = true;
+                        resolve();
+                    }
+                    recorder.addEventListener('stop', finish, { once: true });
+                    try {
+                        if (typeof recorder.requestData === 'function') {
+                            recorder.requestData();
+                        }
+                    } catch (e) {}
+                    setTimeout(function() {
+                        try {
+                            if (extraRecorder && extraRecorder.state === 'recording') {
+                                if (typeof extraRecorder.requestData === 'function') {
+                                    extraRecorder.requestData();
+                                }
+                                extraRecorder.stop();
+                            }
+                            if (recorder.state === 'recording') {
+                                recorder.stop();
+                            }
+                        } catch (e2) {
+                            finish();
+                        }
+                    }, 350);
+                    setTimeout(finish, 12000);
+                });
+            }
+
+            document.addEventListener('visibilitychange', function() {
+                if (!isRecording || !mediaRecorder || mediaRecorder.state !== 'recording') return;
+                if (document.visibilityState === 'hidden') {
+                    try {
+                        if (typeof mediaRecorder.requestData === 'function') {
+                            mediaRecorder.requestData();
+                        }
+                    } catch (e) {}
+                }
+            });
+
+            window.addEventListener('beforeunload', function(e) {
+                if (isRecording) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
             var wbCanvas = null;
             var wbCtx = null;
 
@@ -1720,6 +1834,14 @@
             }
 
             function mxQueueBlobUpload(blob, durationSeconds, kind, secondaryBlob) {
+                var label = kind === 'report' ? 'تسجيل التقرير الصوتي' : 'تسجيل المحاضرة';
+                var uploadErr = mxValidateRecordingBeforeUpload(blob, durationSeconds, label);
+                if (uploadErr) {
+                    setRecordStatus(uploadErr, true);
+                    alert(uploadErr);
+                    pendingEndMeetingSubmit = false;
+                    return;
+                }
                 var job = {
                     id: mxMakeUploadJobId(),
                     meetingId: mxMeetingId,
@@ -1935,10 +2057,14 @@
                 mediaRecorder.addEventListener('dataavailable', function(event) {
                     if (event.data && event.data.size > 0) {
                         recordedChunks.push(event.data);
+                        if (recordedChunks.length >= MX_REC_CONSOLIDATE_AFTER_CHUNKS) {
+                            mxConsolidateRecordedChunks();
+                        }
                     }
                 });
 
                 mediaRecorder.addEventListener('stop', async function onLectureRecorderStopped() {
+                    mxStopRecHeartbeat();
                     isRecording = false;
                     setRecordButtonState(false);
                     recordingKind = null;
@@ -1950,14 +2076,17 @@
                     cleanupLectureRecordingVisuals();
 
                     var durationSeconds = recordingStartedAt ? Math.max(1, Math.round((Date.now() - recordingStartedAt) / 1000)) : 0;
+                    mxConsolidateRecordedChunks();
                     var outType = (mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'video/webm';
                     var blob = new Blob(recordedChunks, { type: outType });
+                    var lectureErr = mxValidateRecordingBeforeUpload(blob, durationSeconds, 'تسجيل المحاضرة');
 
-                    if (!blob.size) {
+                    if (lectureErr) {
                         setRecordButtonBusy(false);
-                        setRecordStatus('لا يوجد محتوى في تسجيل المحاضرة.', true);
-                        alert('لا يوجد محتوى في التسجيل. تأكد من عمل الميكروفون ثم أعد المحاولة.');
+                        setRecordStatus(lectureErr, true);
+                        alert(lectureErr);
                         recordedChunks = [];
+                        pendingEndMeetingSubmit = false;
                         return;
                     }
 
@@ -1975,6 +2104,7 @@
 
                 mediaRecorder.start(3000);
                 isRecording = true;
+                mxStartRecHeartbeat();
                 setRecordButtonState(true);
                 setRecordStatus('جاري تسجيل المحاضرة (صوت منذ البداية). اضغط «إضافة شاشة» لإظهار التبويب في الفيديو.', false);
                 setRecordButtonBusy(false);
@@ -2026,10 +2156,14 @@
                 mediaRecorder.addEventListener('dataavailable', function(event) {
                     if (event.data && event.data.size > 0) {
                         recordedChunks.push(event.data);
+                        if (recordedChunks.length >= MX_REC_CONSOLIDATE_AFTER_CHUNKS) {
+                            mxConsolidateRecordedChunks();
+                        }
                     }
                 });
 
                 mediaRecorder.addEventListener('stop', async function onReportRecorderStopped() {
+                    mxStopRecHeartbeat();
                     isRecording = false;
                     setRecordButtonState(false);
                     recordingKind = null;
@@ -2038,14 +2172,17 @@
                     activeRecordingStream = null;
 
                     var durationSeconds = recordingStartedAt ? Math.max(1, Math.round((Date.now() - recordingStartedAt) / 1000)) : 0;
+                    mxConsolidateRecordedChunks();
                     var outType = normalizeAudioMimeType((mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : 'audio/webm');
                     var blob = new Blob(recordedChunks, { type: outType });
+                    var reportErr = mxValidateRecordingBeforeUpload(blob, durationSeconds, 'تسجيل التقرير الصوتي');
 
-                    if (!blob.size) {
+                    if (reportErr) {
                         setRecordButtonBusy(false);
-                        setRecordStatus('لا يوجد محتوى في التسجيل.', true);
-                        alert('لا يوجد محتوى في التسجيل الصوتي.');
+                        setRecordStatus(reportErr, true);
+                        alert(reportErr);
                         recordedChunks = [];
+                        pendingEndMeetingSubmit = false;
                         return;
                     }
 
@@ -2063,12 +2200,13 @@
 
                 mediaRecorder.start(4000);
                 isRecording = true;
+                mxStartRecHeartbeat();
                 setRecordButtonState(true);
                 setRecordStatus('تسجيل تقرير صوتي (يمكنك متابعة الاجتماع)...', false);
                 setRecordButtonBusy(false);
             }
 
-            function stopBrowserRecording() {
+            async function stopBrowserRecording() {
                 if (!mediaRecorder || mediaRecorder.state !== 'recording') {
                     if (pendingEndMeetingSubmit && endMeetingForm) {
                         pendingEndMeetingSubmit = false;
@@ -2076,22 +2214,13 @@
                     }
                     return;
                 }
+                if (recordingStartedAt && (Date.now() - recordingStartedAt) < MX_REC_MIN_MS) {
+                    alert('التسجيل قصير جداً (أقل من 8 ثوانٍ). انتظر قليلاً ثم أوقف التسجيل من الزر الأحمر لضمان حفظ الملف.');
+                }
                 setRecordButtonBusy(true);
-                setRecordStatus(recordingKind === 'lecture' ? 'جاري إنهاء تسجيل المحاضرة...' : 'جاري إنهاء التسجيل ودمج المقاطع...', false);
-                try {
-                    if (typeof mediaRecorder.requestData === 'function') {
-                        mediaRecorder.requestData();
-                    }
-                    if (audioRecorder && audioRecorder.state === 'recording' && typeof audioRecorder.requestData === 'function') {
-                        audioRecorder.requestData();
-                    }
-                } catch (reqErr) {
-                    console.warn('requestData:', reqErr);
-                }
-                if (audioRecorder && audioRecorder.state === 'recording') {
-                    audioRecorder.stop();
-                }
-                mediaRecorder.stop();
+                setRecordStatus(recordingKind === 'lecture' ? 'جاري إنهاء تسجيل المحاضرة ودمج المقاطع...' : 'جاري إنهاء التسجيل ودمج المقاطع...', false);
+                mxStopRecHeartbeat();
+                await mxFlushMediaRecorder(mediaRecorder, audioRecorder);
             }
 
             if (btnRecordMenu && recordDdPanel && recordDdWrap) {

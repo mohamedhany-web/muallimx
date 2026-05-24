@@ -27,6 +27,12 @@ class SubscriptionFeatureController extends Controller
             abort(404);
         }
 
+        if (! $user->hasActiveTeacherSubscription()) {
+            return redirect()
+                ->route('public.pricing')
+                ->with('error', 'انتهى اشتراكك أو التجربة المجانية. اشترك في باقة للمتابعة.');
+        }
+
         if (! $user->hasSubscriptionFeature($feature)) {
             abort(403, 'هذه الميزة غير متاحة في باقتك الحالية. يمكنك ترقية اشتراكك من صفحة التسعير.');
         }

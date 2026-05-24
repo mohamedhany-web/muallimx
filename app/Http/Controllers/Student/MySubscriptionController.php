@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,8 +22,13 @@ class MySubscriptionController extends Controller
                 ->with('info', 'ليس لديك اشتراك نشط. يمكنك الاشتراك في إحدى الباقات من صفحة التسعير.');
         }
 
+        $limits = SubscriptionLimitService::limitsForUser($user);
+        $classroomUsed = SubscriptionLimitService::monthlyClassroomUsage($user);
+
         return view('student.my-subscription', [
             'subscription' => $subscription,
+            'limits' => $limits,
+            'classroomUsed' => $classroomUsed,
         ]);
     }
 }

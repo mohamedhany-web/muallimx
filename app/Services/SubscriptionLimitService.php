@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ClassroomMeeting;
 use App\Models\User;
+use App\Support\TeacherPlanKeys;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +13,18 @@ class SubscriptionLimitService
     public static function defaultPlans(): array
     {
         return [
-            'teacher_starter' => [
+            TeacherPlanKeys::FREE => [
+                'limits' => [
+                    'classroom_meetings_per_month' => 2,
+                    'classroom_max_participants' => 15,
+                    'classroom_default_duration_minutes' => 45,
+                    'classroom_max_duration_minutes' => 60,
+                    'personal_marketing_profile_sections' => 3,
+                    'personal_marketing_priority_score' => 20,
+                    'personal_marketing_monthly_featured_days' => 0,
+                ],
+            ],
+            TeacherPlanKeys::STARTER => [
                 'limits' => [
                     'classroom_meetings_per_month' => 0,
                     'classroom_max_participants' => 1,
@@ -23,7 +35,7 @@ class SubscriptionLimitService
                     'personal_marketing_monthly_featured_days' => 0,
                 ],
             ],
-            'teacher_pro' => [
+            TeacherPlanKeys::PRO => [
                 'limits' => [
                     'classroom_meetings_per_month' => 9999,
                     'classroom_max_participants' => 150,
@@ -73,11 +85,11 @@ class SubscriptionLimitService
      */
     public static function limitsArrayForPlanKey(array $teacherPlansFull, string $planKey): array
     {
-        if (! in_array($planKey, ['teacher_starter', 'teacher_pro'], true)) {
-            $planKey = 'teacher_starter';
+        if (! TeacherPlanKeys::isValid($planKey)) {
+            $planKey = TeacherPlanKeys::FREE;
         }
 
-        $defaults = self::defaultPlans()[$planKey]['limits'] ?? self::defaultPlans()['teacher_starter']['limits'];
+        $defaults = self::defaultPlans()[$planKey]['limits'] ?? self::defaultPlans()[TeacherPlanKeys::FREE]['limits'];
         $fromPlan = is_array(($teacherPlansFull[$planKey]['limits'] ?? null)) ? $teacherPlansFull[$planKey]['limits'] : [];
 
         return array_merge($defaults, $fromPlan);
@@ -151,14 +163,37 @@ class SubscriptionLimitService
         ];
     }
 
+    /**
+     * حدود صفرية عند عدم وجود اشتراك نشط (بعد انتهاء التجربة المجانية مثلاً).
+     *
+     * @return array<string, int>
+     */
+    public static function deniedLimitsRow(): array
+    {
+        return self::normalizeLimitsRow([
+            'classroom_meetings_per_month' => 0,
+            'classroom_max_participants' => 1,
+            'classroom_default_duration_minutes' => 60,
+            'classroom_max_duration_minutes' => 60,
+            'personal_marketing_profile_sections' => 1,
+            'personal_marketing_priority_score' => 0,
+            'personal_marketing_monthly_featured_days' => 0,
+        ], 'none');
+    }
+
     public static function limitsForUser(User $user): array
     {
-        $plans = self::teacherPlansFromSettings();
         $sub = $user->activeSubscription();
 
-        $planKey = $sub?->teacher_plan_key;
+        if (! $sub) {
+            return self::deniedLimitsRow();
+        }
+
+        $plans = self::teacherPlansFromSettings();
+
+        $planKey = $sub->teacher_plan_key;
         if (! $planKey || ! isset($plans[$planKey])) {
-            $planKey = 'teacher_starter';
+            return self::deniedLimitsRow();
         }
 
         $limits = self::limitsArrayForPlanKey($plans, $planKey);

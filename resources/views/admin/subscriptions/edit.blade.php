@@ -10,11 +10,16 @@
     $subscriptionFeatureKeys = \App\Models\Subscription::normalizeFeatureKeys($subscription->features ?? []);
     $tp = $teacherPlans ?? [];
     $fmtPrice = fn ($v) => number_format((float) $v, 0);
+    $free = $tp['teacher_free'] ?? null;
     $starter = $tp['teacher_starter'] ?? null;
     $pro = $tp['teacher_pro'] ?? null;
     $sRow = is_array($starter) ? $starter : [];
     $pRow = is_array($pro) ? $pro : [];
+    $fRow = is_array($free) ? $free : [];
     $planFeatures = [
+        'teacher_free' => is_array($fRow['features'] ?? null) ? $fRow['features'] : [
+            'library_access', 'ai_tools', 'support',
+        ],
         'teacher_starter' => is_array($sRow['features'] ?? null) ? $sRow['features'] : [
             'library_access', 'ai_tools', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support',
         ],
@@ -23,7 +28,7 @@
         ],
     ];
     $planApplyMeta = [];
-    foreach (['teacher_starter', 'teacher_pro'] as $planKey) {
+    foreach (['teacher_free', 'teacher_starter', 'teacher_pro'] as $planKey) {
         if (! isset($tp[$planKey]) || ! is_array($tp[$planKey])) {
             continue;
         }
@@ -108,6 +113,12 @@
                         <label class="block text-sm font-semibold text-gray-700">نمط اشتراك المعلم (اختياري)</label>
                         <select name="teacher_plan_key" x-model="selectedPlan" @change="applyPlan" class="w-full px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-sky-500 focus:border-sky-500">
                             <option value="">بدون — إدخال يدوي</option>
+                            @if($free)
+                                <option value="teacher_free">
+                                    {{ $free['label'] ?? 'الباقة المجانية' }}
+                                    — مجاناً
+                                </option>
+                            @endif
                             @if($starter)
                                 <option value="teacher_starter">
                                     {{ $starter['label'] ?? 'الباقة الأساسية' }}

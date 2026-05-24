@@ -74,6 +74,40 @@ class SubscriptionRequest extends Model
         return $query->where('status', self::STATUS_PENDING);
     }
 
+    /**
+     * طلبات تنتظر مراجعة الأدمن (تحويل يدوي + إيصال).
+     * طلبات الدفع الإلكتروني (فواتيرك) لا تُعرض — تُفعَّل تلقائياً عند العودة من البوابة.
+     */
+    public function scopePendingManualReview($query)
+    {
+        return $query->where('status', self::STATUS_PENDING)
+            ->whereNotNull('payment_proof')
+            ->where('payment_proof', '!=', '');
+    }
+
+    public function requiresManualReview(): bool
+    {
+        return $this->status === self::STATUS_PENDING
+            && filled($this->payment_proof);
+    }
+
+    /**
+     * طلب دفع إلكتروني عبر البوابة (يُفعَّل تلقائياً عند العودة من فواتيرك).
+     */
+    public function isOnlineGatewayPayment(): bool
+    {
+        return $this->payment_method === 'online' && ! filled($this->payment_proof);
+    }
+
+    public function scopePendingOnlineGateway($query)
+    {
+        return $query->where('status', self::STATUS_PENDING)
+            ->where('payment_method', 'online')
+            ->where(function ($q) {
+                $q->whereNull('payment_proof')->orWhere('payment_proof', '');
+            });
+    }
+
     public function scopeApproved($query)
     {
         return $query->where('status', self::STATUS_APPROVED);
@@ -85,6 +119,13 @@ class SubscriptionRequest extends Model
     public static function planDefaults(string $key): array
     {
         $plans = [
+            'teacher_free' => [
+                'plan_name' => 'الباقة المجانية',
+                'price' => 0,
+                'billing_cycle' => 'monthly',
+                'subscription_type' => 'monthly',
+                'features' => ['library_access', 'ai_tools', 'support'],
+            ],
             'teacher_starter' => [
                 'plan_name' => 'الباقة الأساسية',
                 'price' => 200,
@@ -100,6 +141,6 @@ class SubscriptionRequest extends Model
                 'features' => ['library_access', 'ai_tools', 'classroom_access', 'support', 'teacher_profile', 'visible_to_academies', 'can_apply_opportunities', 'full_ai_suite', 'teacher_evaluation', 'recommended_to_academies', 'priority_opportunities', 'direct_support'],
             ],
         ];
-        return $plans[$key] ?? $plans['teacher_starter'];
+        return $plans[$key] ?? $plans['teacher_free'];
     }
 }

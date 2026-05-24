@@ -116,9 +116,9 @@
             <div class="px-6 py-4 border-b border-slate-200 bg-amber-50">
                 <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
                     <i class="fas fa-clock text-amber-600"></i>
-                    طلبات الاشتراك المعلقة (<?php echo e($pendingRequests->count()); ?>)
+                    طلبات التحويل اليدوي (<?php echo e($pendingRequests->count()); ?>)
                 </h3>
-                <p class="text-xs text-slate-600 mt-1">مراجعة الطلبات وتفعيل الاشتراك للطالب ليظهر له القسم المدفوع في لوحته. طلبات <strong>الدفع الإلكتروني</strong> تُنشأ بعد «تحضير الدفع»؛ إن اكتمل السداد في فواتيرك ولم يُفعَّل الطلب تلقائياً (مثلاً انقطعت الجلسة)، يمكنك الضغط على «تفعيل الاشتراك» هنا لإتمام الفاتورة والمعاملات كما بعد العودة من البوابة.</p>
+                <p class="text-xs text-slate-600 mt-1">تظهر هنا فقط طلبات رفع إيصال التحويل (بنك / محفظة). اشتراكات <strong>الدفع الإلكتروني (فواتيرك)</strong> تُفعَّل تلقائياً بعد إتمام السداد والعودة من البوابة ولا تحتاج مراجعة في هذه القائمة.</p>
             </div>
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -168,14 +168,8 @@
                             <?php endif; ?>
                             <p class="text-xs text-slate-500 mb-4">طلب <?php echo e(optional($req->created_at)->diffForHumans()); ?></p>
                             <div class="flex flex-wrap gap-2">
-                                <form action="<?php echo e(route('admin.subscription-requests.approve', $req)); ?>" method="POST" class="inline-flex flex-col sm:flex-row sm:items-end gap-2 w-full sm:w-auto">
+                                <form action="<?php echo e(route('admin.subscription-requests.approve', $req)); ?>" method="POST" class="inline">
                                     <?php echo csrf_field(); ?>
-                                    <?php if($req->payment_method === 'online'): ?>
-                                        <div class="w-full min-w-0">
-                                            <label for="gw_tx_<?php echo e($req->id); ?>" class="block text-[10px] font-semibold text-slate-500 mb-0.5">مرجع فواتيرك (اختياري — من لوحة فواتيرك)</label>
-                                            <input type="text" name="gateway_transaction_id" id="gw_tx_<?php echo e($req->id); ?>" placeholder="رقم العملية / الفاتورة" class="w-full sm:w-48 text-xs rounded-lg border border-slate-200 px-2 py-1.5" dir="ltr" autocomplete="off">
-                                        </div>
-                                    <?php endif; ?>
                                     <button type="submit" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-colors shrink-0">
                                         <i class="fas fa-check"></i>
                                         تفعيل الاشتراك

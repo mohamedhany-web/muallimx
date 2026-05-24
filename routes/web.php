@@ -276,20 +276,23 @@ Route::get('/faq', [\App\Http\Controllers\Public\PageController::class, 'faq'])-
 Route::get('/terms', [\App\Http\Controllers\Public\PageController::class, 'terms'])->name('public.terms');
 Route::get('/privacy', [\App\Http\Controllers\Public\PageController::class, 'privacy'])->name('public.privacy');
 Route::get('/pricing', [\App\Http\Controllers\Public\PageController::class, 'pricing'])->name('public.pricing');
-Route::get('/pricing/checkout/{plan}', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'show'])->name('public.subscription.checkout')->where('plan', 'teacher_starter|teacher_pro');
+Route::post('/pricing/activate-free', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'activateFree'])
+    ->middleware('auth')
+    ->name('public.subscription.activate-free');
+Route::get('/pricing/checkout/{plan}', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'show'])->name('public.subscription.checkout')->where('plan', \App\Support\TeacherPlanKeys::routePattern());
 Route::post('/pricing/checkout', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'store'])->name('public.subscription.checkout.store');
 Route::post('/pricing/checkout/{plan}/fawaterak/prepare', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPrepare'])
     ->middleware('auth')
     ->name('public.subscription.checkout.fawaterak.prepare')
-    ->where('plan', 'teacher_starter|teacher_pro');
+    ->where('plan', \App\Support\TeacherPlanKeys::routePattern());
 Route::get('/pricing/checkout/{plan}/fawaterak/methods', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPaymentMethods'])
     ->middleware('auth')
     ->name('public.subscription.checkout.fawaterak.methods')
-    ->where('plan', 'teacher_starter|teacher_pro');
+    ->where('plan', \App\Support\TeacherPlanKeys::routePattern());
 Route::post('/pricing/checkout/{plan}/fawaterak/pay', [\App\Http\Controllers\Public\SubscriptionCheckoutController::class, 'fawaterakPay'])
     ->middleware('auth')
     ->name('public.subscription.checkout.fawaterak.pay')
-    ->where('plan', 'teacher_starter|teacher_pro');
+    ->where('plan', \App\Support\TeacherPlanKeys::routePattern());
 Route::get('/team', [\App\Http\Controllers\Public\PageController::class, 'team'])->name('public.team');
 Route::get('/certificates', [\App\Http\Controllers\Public\PageController::class, 'certificates'])->name('public.certificates');
 Route::get('/certificates/verify', [\App\Http\Controllers\Public\CertificateVerificationController::class, 'verify'])->name('public.certificates.verify');
@@ -762,7 +765,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/consultations/{consultation}', [\App\Http\Controllers\Student\ConsultationController::class, 'show'])->name('consultations.show');
         Route::post('/consultations/{consultation}/report-payment', [\App\Http\Controllers\Student\ConsultationController::class, 'reportPayment'])->name('consultations.report-payment');
         // التسويق الشخصي / البورتفوليو للطالب (إدارة المشاريع)
-        Route::prefix('my-portfolio')->name('student.')->group(function () {
+        Route::middleware(['teacher.subscription'])->prefix('my-portfolio')->name('student.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Student\PortfolioProjectController::class, 'index'])->name('portfolio.index');
             Route::get('/profile', [\App\Http\Controllers\Student\PortfolioProfileController::class, 'edit'])->name('portfolio.profile.edit');
             Route::put('/profile', [\App\Http\Controllers\Student\PortfolioProfileController::class, 'update'])->name('portfolio.profile.update');
@@ -791,6 +794,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
                 ->name('student.ai-usages.saved-games.destroy');
         });
         // Muallimx Classroom — بديل Zoom للمعلم (رابط/كود للضيوف بدون اشتراك)
+        Route::middleware(['teacher.subscription'])->group(function () {
         Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
         Route::get('/classroom/create', [\App\Http\Controllers\Student\ClassroomController::class, 'create'])->name('student.classroom.create');
         Route::post('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'store'])->name('student.classroom.store');
@@ -813,10 +817,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('student.classroom.recording-audio.upload');
         Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('student.classroom.recording-audio.complete');
         Route::post('/classroom/{meeting}/ai-report', [\App\Http\Controllers\Student\ClassroomController::class, 'generateAiReport'])->name('student.classroom.ai-report');
+        });
     });
 
     // مزايا اشتراك Muallimx (دعم، مكتبة، صفحات المزايا، …) — للطالب والمدرب حسب التحقق داخل المتحكم
-    Route::middleware(['role:student|instructor|teacher'])->group(function () {
+    Route::middleware(['role:student|instructor|teacher', 'teacher.subscription'])->group(function () {
         Route::get('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'index'])->name('student.support.index');
         Route::post('/support', [\App\Http\Controllers\Student\SupportTicketController::class, 'store'])->name('student.support.store');
         Route::get('/support/{ticket}', [\App\Http\Controllers\Student\SupportTicketController::class, 'show'])->name('student.support.show');
@@ -1562,6 +1567,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::prefix('n8n')->name('n8n.')->group(function () {
             Route::get('/live-session-reports', [\App\Http\Controllers\Admin\N8nLiveReportsController::class, 'index'])
                 ->name('live-session-reports.index');
+            Route::get('/live-session-reports/{source}/{report}', [\App\Http\Controllers\Admin\N8nLiveReportsController::class, 'show'])
+                ->where('source', 'live_session|classroom_meeting')
+                ->name('live-session-reports.show');
             Route::get('/settings', [\App\Http\Controllers\Admin\N8nSettingsController::class, 'index'])
                 ->name('settings');
             Route::post('/settings', [\App\Http\Controllers\Admin\N8nSettingsController::class, 'update'])

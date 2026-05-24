@@ -16,6 +16,7 @@
         })();
     </script>
     <meta charset="utf-8">
+    <?php echo $__env->make('partials.cache-bust-meta', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title><?php echo e(config('app.name', 'Muallimx')); ?> - <?php echo $__env->yieldContent('title', __('auth.dashboard')); ?></title>

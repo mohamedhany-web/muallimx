@@ -104,7 +104,7 @@
 
                         </td>
                         <td class="px-4 py-3 text-slate-600 dark:text-slate-400">
-                            <span title="استخدامات فعلية"><?php echo e($coupon->used_count ?? ($coupon->usages_count ?? 0)); ?></span>
+                            <span title="استخدامات فعلية"><?php echo e($coupon->totalUsageCount()); ?></span>
                             <?php if($coupon->usage_limit): ?>
                                 / <?php echo e($coupon->usage_limit); ?>
 

@@ -129,4 +129,10 @@ return [
     */
     'admin_2fa_required' => env('ADMIN_2FA_REQUIRED', false),
 
+    /*
+    | إصدار الأصول المحلية (JS/CSS) — عند كل نشر غيّر ASSET_VERSION في .env
+    | أو اتركه فارغاً ليُشتق تلقائياً من تاريخ composer.lock.
+    */
+    'asset_version' => env('ASSET_VERSION'),
+
 ];

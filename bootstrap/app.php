@@ -64,6 +64,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         
         // تحديد لغة الموقع من ?lang= أو الجلسة (لجميع الصفحات)
+        $middleware->appendToGroup('web', \App\Http\Middleware\PreventBrowserCacheMiddleware::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\SetLocale::class);
         
         // Input Sanitization - تنظيف المدخلات
@@ -93,6 +94,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'employee.can' => \App\Http\Middleware\EnsureEmployeeCan::class,
             'rbac.strict.admin' => \App\Http\Middleware\RestrictRbacEmployeeAdminRoutes::class,
             'student.ai-usages' => \App\Http\Middleware\EnsureStudentAiUsagesAccess::class,
+            'teacher.subscription' => \App\Http\Middleware\EnsureActiveTeacherSubscription::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

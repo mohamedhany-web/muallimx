@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Http\Controllers\Admin\TeacherFeaturesController;
 use App\Models\Invoice;
+use App\Models\User;
+use App\Support\TeacherPlanKeys;
 use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\SubscriptionRequest;
@@ -14,6 +16,95 @@ use Illuminate\Support\Str;
 
 class TeacherSubscriptionActivationService
 {
+    /**
+     * تفعيل الباقة المجانية فوراً (بدون دفع) مع حدود ومزايا من إعدادات الأدمن.
+     */
+    public static function activateFreePlanForUser(User $user, string $planKey = TeacherPlanKeys::FREE): Subscription
+    {
+        if (! TeacherPlanKeys::isFree($planKey)) {
+            throw new \InvalidArgumentException('هذه العملية للباقة المجانية فقط.');
+        }
+
+        $featuresController = new TeacherFeaturesController;
+        $settings = $featuresController->getSettings();
+        $planConfig = $settings[$planKey] ?? null;
+
+        if (! $planConfig || ! filter_var($planConfig['is_active'] ?? true, FILTER_VALIDATE_BOOLEAN)) {
+            throw new \RuntimeException('الباقة المجانية غير متاحة حالياً.');
+        }
+
+        if ((float) ($planConfig['price'] ?? 0) > 0.001) {
+            throw new \RuntimeException('إعدادات الباقة المجانية غير صحيحة (يجب أن يكون السعر صفراً).');
+        }
+
+        $durationDays = TeacherPlanKeys::freeDurationDays($planConfig);
+
+        return DB::transaction(function () use ($user, $planKey, $planConfig, $durationDays) {
+            $lockedUser = User::whereKey($user->id)->lockForUpdate()->first();
+            if (! $lockedUser) {
+                throw new \RuntimeException('المستخدم غير موجود.');
+            }
+
+            $activeOld = Subscription::where('user_id', $lockedUser->id)
+                ->where('status', 'active')
+                ->where(function ($q) {
+                    $q->whereNull('end_date')->orWhereDate('end_date', '>=', now());
+                })
+                ->orderByDesc('end_date')
+                ->lockForUpdate()
+                ->first();
+
+            if ($activeOld) {
+                $currentRank = TeacherPlanKeys::rank((string) ($activeOld->teacher_plan_key ?? ''));
+                $freeRank = TeacherPlanKeys::rank($planKey);
+                if ($currentRank > $freeRank) {
+                    throw new \RuntimeException('لديك اشتراك مدفوع نشط — لا يمكن التحويل إلى الباقة المجانية.');
+                }
+                if ($activeOld->teacher_plan_key === $planKey) {
+                    throw new \RuntimeException('الباقة المجانية مفعّلة لديك بالفعل حتى '.$activeOld->end_date?->format('Y-m-d').'.');
+                }
+                $activeOld->update([
+                    'status' => 'expired',
+                    'end_date' => now()->toDateString(),
+                ]);
+            }
+
+            if (! TeacherPlanKeys::freeAllowsRepeat($planConfig)) {
+                $usedFreeBefore = Subscription::where('user_id', $lockedUser->id)
+                    ->where('teacher_plan_key', $planKey)
+                    ->exists();
+                if ($usedFreeBefore) {
+                    throw new \RuntimeException('استخدمت الباقة المجانية مسبقاً وانتهت مدتها. يمكنك الاشتراك في باقة مدفوعة أو تواصل مع الدعم.');
+                }
+            }
+
+            $features = Subscription::normalizeFeatureKeys($planConfig['features'] ?? []);
+            $featureLimitsSnapshot = is_array($planConfig['limits'] ?? null)
+                ? SubscriptionLimitService::sanitizeFeatureLimits($planConfig['limits'])
+                : null;
+
+            $startDate = Carbon::now()->startOfDay();
+            // مدة N يوماً شاملة يوم البداية (تنتهي في اليوم N من التفعيل).
+            $endDate = $startDate->copy()->addDays(max(0, $durationDays - 1));
+
+            return Subscription::create([
+                'user_id' => $lockedUser->id,
+                'subscription_type' => 'trial',
+                'teacher_plan_key' => $planKey,
+                'plan_name' => $planConfig['label'] ?? 'الباقة المجانية',
+                'price' => 0,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'status' => 'active',
+                'auto_renew' => false,
+                'billing_cycle' => 'trial',
+                'invoice_id' => null,
+                'features' => $features,
+                'feature_limits' => $featureLimitsSnapshot,
+            ]);
+        });
+    }
+
     /**
      * تفعيل اشتراك المعلم بعد نجاح الدفع عبر بوابة (فواتيرك وغيرها): فاتورة مدفوعة، دفع، معاملات، اشتراك نشط.
      *
@@ -33,6 +124,10 @@ class TeacherSubscriptionActivationService
 
             if (! $locked || $locked->status !== SubscriptionRequest::STATUS_PENDING) {
                 throw new \RuntimeException('طلب الاشتراك غير قابل للتفعيل.');
+            }
+
+            if (! $locked->isOnlineGatewayPayment()) {
+                throw new \RuntimeException('هذا الطلب ليس دفعاً إلكترونياً عبر البوابة.');
             }
 
             $featuresController = new TeacherFeaturesController();

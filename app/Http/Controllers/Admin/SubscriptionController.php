@@ -95,7 +95,10 @@ class SubscriptionController extends Controller
                 ->take(6)
                 ->get();
 
-            $pendingRequests = SubscriptionRequest::pending()->with(['user', 'wallet'])->latest()->get();
+            $pendingRequests = SubscriptionRequest::pendingManualReview()
+                ->with(['user', 'wallet'])
+                ->latest()
+                ->get();
 
             return view('admin.subscriptions.index', compact(
                 'subscriptions',
@@ -334,8 +337,8 @@ class SubscriptionController extends Controller
                 ->with('error', 'هذا الطلب تمت معالجته مسبقاً.');
         }
 
-        // دفع إلكتروني (فواتيرك): عادة يُفعَّل عند العودة من البوابة؛ إن تعذّر ذلك نُكمّل يدوياً بنفس مسار الفاتورة/المدفوعات/المعاملات
-        if ($subscriptionRequest->payment_method === 'online' && empty($subscriptionRequest->payment_proof)) {
+        // دفع إلكتروني (فواتيرك): استثناء للتفعيل اليدوي من الأدمن عند فشل العودة من البوابة (لا يظهر في القائمة العادية)
+        if ($subscriptionRequest->isOnlineGatewayPayment()) {
             try {
                 TeacherSubscriptionActivationService::activateAfterGatewayPayment(
                     $subscriptionRequest,
@@ -363,6 +366,11 @@ class SubscriptionController extends Controller
                 return redirect()->route('admin.subscriptions.index')
                     ->with('error', 'تعذّر التفعيل الإلكتروني: '.$e->getMessage());
             }
+        }
+
+        if (! $subscriptionRequest->requiresManualReview()) {
+            return redirect()->route('admin.subscriptions.index')
+                ->with('error', 'لا يمكن الموافقة على هذا الطلب: يتطلب إيصال تحويل يدوي مرفوعاً، أو استخدم مسار الدفع الإلكتروني.');
         }
 
         $featuresController = new TeacherFeaturesController();
@@ -488,6 +496,12 @@ class SubscriptionController extends Controller
             return redirect()->route('admin.subscriptions.index')
                 ->with('error', 'هذا الطلب تمت معالجته مسبقاً.');
         }
+
+        if (! $subscriptionRequest->requiresManualReview()) {
+            return redirect()->route('admin.subscriptions.index')
+                ->with('error', 'رفض طلبات الدفع الإلكتروني غير متاح من هنا — يُلغى تلقائياً عند انتهاء صلاحية الجلسة أو يُعالَج عبر البوابة.');
+        }
+
         $subscriptionRequest->update([
             'status' => SubscriptionRequest::STATUS_REJECTED,
             'approved_at' => now(),

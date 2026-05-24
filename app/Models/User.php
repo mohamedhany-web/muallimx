@@ -332,15 +332,36 @@ class User extends Authenticatable
     /**
      * الاشتراك النشط الحالي (باقة معلم مفعلة ولم تنتهِ)
      */
+    /**
+     * تحويل الاشتراكات المنتهية (بعد end_date) إلى expired فوراً دون انتظار الأمر اليومي.
+     */
+    public function expireOverdueSubscriptionsIfAny(): int
+    {
+        return Subscription::query()
+            ->where('user_id', $this->id)
+            ->where('status', 'active')
+            ->whereNotNull('end_date')
+            ->whereDate('end_date', '<', today())
+            ->update(['status' => 'expired']);
+    }
+
     public function activeSubscription(): ?Subscription
     {
+        $this->expireOverdueSubscriptionsIfAny();
+
         return $this->subscriptions()
             ->where('status', 'active')
             ->where(function ($q) {
-                $q->whereNull('end_date')->orWhere('end_date', '>=', now());
+                $q->whereNull('end_date')
+                    ->orWhereDate('end_date', '>=', today());
             })
             ->orderByDesc('end_date')
             ->first();
+    }
+
+    public function hasActiveTeacherSubscription(): bool
+    {
+        return $this->activeSubscription() !== null;
     }
 
     /** أقسام مكتبة المناهج «الخاصة» المسموح لهذا المستخدم */
@@ -366,17 +387,15 @@ class User extends Authenticatable
             return [];
         }
 
+        // اشتراك مربوط بباقة معلم: المزايا من إعدادات الأدمن الحالية (وليس لقطة قديمة عند التفعيل).
+        if (is_string($sub->teacher_plan_key) && \App\Support\TeacherPlanKeys::isValid($sub->teacher_plan_key)) {
+            return \App\Support\TeacherPlanConfig::featureKeysForPlan($sub->teacher_plan_key);
+        }
+
         $fromDb = $this->normalizeSubscriptionFeaturesRaw($sub->features);
 
         if ($fromDb !== []) {
             return Subscription::normalizeFeatureKeys($fromDb);
-        }
-
-        if (is_string($sub->teacher_plan_key) && in_array($sub->teacher_plan_key, ['teacher_starter', 'teacher_pro'], true)) {
-            $defaults = SubscriptionRequest::planDefaults($sub->teacher_plan_key);
-            $feat = $defaults['features'] ?? [];
-
-            return Subscription::normalizeFeatureKeys(is_array($feat) ? $feat : []);
         }
 
         return [];

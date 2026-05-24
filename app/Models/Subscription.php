@@ -86,6 +86,7 @@ class Subscription extends Model
             'yearly' => 'سنة واحدة',
             'biannual' => '6 أشهر',
             'weekly' => 'أسبوع واحد',
+            'trial' => 'فترة تجريبية محددة',
         ];
     }
 
@@ -98,11 +99,27 @@ class Subscription extends Model
     }
 
     /**
+     * مدة مقروءة للاشتراك (خاصة الباقة المجانية بعدد الأيام الفعلي).
+     */
+    public function readableDurationLabel(): string
+    {
+        if ($this->teacher_plan_key === \App\Support\TeacherPlanKeys::FREE
+            && $this->start_date
+            && $this->end_date) {
+            $days = max(1, $this->start_date->diffInDays($this->end_date) + 1);
+
+            return $days.' '.($days === 1 ? 'يوم' : 'أيام');
+        }
+
+        return static::getDurationLabel($this->billing_cycle);
+    }
+
+    /**
      * مدة الباقة للاشتراك الحالي
      */
     public function getDurationLabelAttribute(): string
     {
-        return static::getDurationLabel($this->billing_cycle);
+        return $this->readableDurationLabel();
     }
 
     public function user()

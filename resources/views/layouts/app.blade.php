@@ -6,6 +6,7 @@
 <html lang="{{ $appLocale }}" dir="{{ $appRtl ? 'rtl' : 'ltr' }}" class="light">
 <head>
     <meta charset="utf-8">
+    @include('partials.cache-bust-meta')
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -43,7 +44,7 @@
     <script>
         window.Laravel = { user: { name: '{{ auth()->check() ? auth()->user()->name : "زائر" }}' } };
     </script>
-    <script src="{{ asset('js/platform-protection.js') }}"></script>
+    <script src="{{ vasset('js/platform-protection.js') }}"></script>
     @endif
 
     {{-- نفس منطق الإدارة: الافتراضي فاتح؛ الوضع الداكن فقط عند theme=dark في localStorage --}}

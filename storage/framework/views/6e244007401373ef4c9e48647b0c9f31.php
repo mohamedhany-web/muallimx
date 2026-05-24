@@ -3,6 +3,12 @@
 
 <?php
     $template = $template ?? 'classic';
+?>
+
+<?php if(in_array($template, ['platform_academic', 'enhanced'], true)): ?>
+    <?php echo $__env->make('components.certificate-enhanced', ['certificate' => $certificate], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php else: ?>
+<?php
     $studentName = $studentName ?? ($certificate->user->name ?? auth()->user()->name ?? 'الطالب');
     $courseTitle = $courseTitle ?? ($certificate->title ?? $certificate->course_name ?? 'شهادة الإتمام');
     $courseName = $courseName ?? ($certificate->course->title ?? $certificate->course_name ?? '');
@@ -199,5 +205,7 @@
     });
 </script>
 <?php $__env->stopPush(); ?>
+<?php endif; ?>
+
 <?php endif; ?>
 <?php /**PATH C:\xampp\htdocs\Muallimx\resources\views\components\certificate-templates.blade.php ENDPATH**/ ?>

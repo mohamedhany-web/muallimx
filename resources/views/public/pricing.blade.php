@@ -109,15 +109,16 @@
                 </div>
 
                 @php
-                    $planKeys = ['teacher_starter', 'teacher_pro'];
+                    $planKeys = ['teacher_free', 'teacher_starter', 'teacher_pro'];
                     $billingPhrases = ['monthly' => 'جنيه شهريًا', 'quarterly' => 'جنيه / 3 شهور', 'yearly' => 'جنيه سنويًا'];
                 @endphp
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-7 max-w-4xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-7 max-w-6xl mx-auto">
                     @foreach($planKeys as $planKey)
                         @php
                             $plan = $teacherPlans[$planKey] ?? null;
                             if (!$plan) continue;
+                            if ($planKey === 'teacher_free' && !filter_var($plan['is_active'] ?? true, FILTER_VALIDATE_BOOLEAN)) continue;
                             $meta = [
                                 'subtitle' => $plan['card_subtitle'] ?? '',
                                 'badge' => trim((string) ($plan['card_badge'] ?? '')),
@@ -132,9 +133,11 @@
                             $features = $plan['features'] ?? [];
                             $featureDescriptions = is_array($plan['feature_descriptions'] ?? null) ? $plan['feature_descriptions'] : [];
                             $isPro = $planKey === 'teacher_pro';
+                            $isFree = $planKey === 'teacher_free';
                         @endphp
                         <div class="card-base card-hover !p-7 sm:!p-8 pt-10 flex flex-col relative
                             @if($isPro) border-[#283593] ring-2 ring-[#283593]/10
+                            @elseif($isFree) border-emerald-400 ring-2 ring-emerald-500/15
                             @else border-slate-200
                             @endif">
                             @if($meta['badge'] !== '')
@@ -150,7 +153,14 @@
                             </div>
                             <div class="mb-6">
                                 <div class="text-3xl font-black text-mx-indigo mb-1">
-                                    {{ number_format($price, 0) }} <span class="text-base sm:text-lg font-bold text-slate-600">{{ $cyclePhrase }}</span>
+                                    @if($isFree)
+                                        مجاناً
+                                        <span class="block text-base sm:text-lg font-bold text-emerald-700 mt-1">
+                                            لمدة {{ (int) ($plan['duration_days'] ?? 14) }} يوماً — ثم تنتهي تلقائياً
+                                        </span>
+                                    @else
+                                        {{ number_format($price, 0) }} <span class="text-base sm:text-lg font-bold text-slate-600">{{ $cyclePhrase }}</span>
+                                    @endif
                                 </div>
                                 @if($meta['priceHint'] !== '')
                                     <p class="text-sm text-slate-500">{{ $meta['priceHint'] }}</p>
@@ -172,12 +182,28 @@
                             @if($meta['footer_note'] !== '')
                                 <div class="mb-4 px-3 py-2 rounded-xl text-sm font-semibold text-[#283593] bg-[#EFF2FF] border border-[#dbe4ff]">{{ $meta['footer_note'] }}</div>
                             @endif
-                            <a href="{{ route('public.subscription.checkout', $planKey) }}" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors
-                                @if($isPro) bg-[#283593] hover:bg-[#1f2a7a] text-white
-                                @else btn-primary !bg-[#283593] hover:!bg-[#1f2a7a] text-white
-                                @endif">
-                                {{ $meta['cta'] ?? 'ابدأ الآن' }}
-                            </a>
+                            @if($isFree)
+                                @auth
+                                    <form action="{{ route('public.subscription.activate-free') }}" method="POST" class="w-full">
+                                        @csrf
+                                        <input type="hidden" name="plan" value="teacher_free">
+                                        <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors bg-emerald-600 hover:bg-emerald-700 text-white">
+                                            {{ $meta['cta'] ?? 'فعّل الباقة المجانية' }}
+                                        </button>
+                                    </form>
+                                @else
+                                    <a href="{{ route('login', ['intended' => route('public.pricing')]) }}" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors bg-emerald-600 hover:bg-emerald-700 text-white">
+                                        سجّل الدخول للتفعيل المجاني
+                                    </a>
+                                @endauth
+                            @else
+                                <a href="{{ route('public.subscription.checkout', $planKey) }}" class="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-sm transition-colors
+                                    @if($isPro) bg-[#283593] hover:bg-[#1f2a7a] text-white
+                                    @else btn-primary !bg-[#283593] hover:!bg-[#1f2a7a] text-white
+                                    @endif">
+                                    {{ $meta['cta'] ?? 'ابدأ الآن' }}
+                                </a>
+                            @endif
                         </div>
                     @endforeach
                 </div>

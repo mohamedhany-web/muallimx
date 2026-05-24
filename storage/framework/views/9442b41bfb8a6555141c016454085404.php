@@ -9,7 +9,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">معاينة تصميم الشهادة</h1>
-                <p class="text-gray-600 mt-1 text-sm">نفس القالب المستخدم عند اختيار «شهادة النظام» عند إصدار شهادة. البيانات أدناه نصوص توضيحية فقط.</p>
+                <p class="text-gray-600 mt-1 text-sm">تصميم الشهادة المعتمد (MUALLIMX Enhanced) — نفس القالب عند إصدار «شهادة النظام» تلقائياً أو من الإدارة.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <a href="<?php echo e(route('admin.certificates.preview-sample')); ?>" target="_blank" rel="noopener"

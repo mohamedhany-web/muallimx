@@ -7,8 +7,11 @@
 <div class="w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
     @php
         $sub = $subscription;
-        $durationLabel = \App\Models\Subscription::getDurationLabel($sub->billing_cycle);
-        $planRank = ['teacher_starter' => 1, 'teacher_pro' => 2];
+        $durationLabel = $sub->readableDurationLabel();
+        $limits = $limits ?? [];
+        $classroomUsed = (int) ($classroomUsed ?? 0);
+        $classroomCap = (int) ($limits['classroom_meetings_per_month'] ?? 0);
+        $planRank = ['teacher_free' => 0, 'teacher_starter' => 1, 'teacher_pro' => 2];
         $currentKey = (string) ($sub->teacher_plan_key ?? '');
         $currentRank = $planRank[$currentKey] ?? 0;
         $upgradeOptions = collect(['teacher_starter', 'teacher_pro'])
@@ -26,7 +29,14 @@
                     نشط
                 </span>
             </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400">مدة الباقة: <strong>{{ $durationLabel }}</strong> · ينتهي عند انتهاء المدة</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">
+                مدة الباقة: <strong>{{ $durationLabel }}</strong>
+                @if($currentKey === 'teacher_free')
+                    · تنتهي تلقائياً في <strong>{{ $sub->end_date?->format('Y-m-d') }}</strong> ولا تتجدد
+                @else
+                    · ينتهي عند انتهاء المدة
+                @endif
+            </p>
         </div>
         <div class="p-6">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -44,6 +54,32 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    {{-- حدود الاستخدام --}}
+    <div class="rounded-2xl bg-white dark:bg-slate-800/95 border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+        <h2 class="text-lg font-black text-slate-900 dark:text-slate-100 mb-4">حدود الاستخدام في باقتك</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/40">
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">اجتماعات Classroom هذا الشهر</p>
+                <p class="mt-1 font-bold text-slate-900 dark:text-slate-100">
+                    {{ $classroomUsed }} / {{ $classroomCap >= 9999 ? '∞' : $classroomCap }}
+                </p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/40">
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">أقصى مدة للاجتماع</p>
+                <p class="mt-1 font-bold text-slate-900 dark:text-slate-100">{{ (int) ($limits['classroom_max_duration_minutes'] ?? 0) }} دقيقة</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/40">
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">أقصى مشاركين</p>
+                <p class="mt-1 font-bold text-slate-900 dark:text-slate-100">{{ (int) ($limits['classroom_max_participants'] ?? 0) }}</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-700/40">
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">أقسام التسويق الشخصي</p>
+                <p class="mt-1 font-bold text-slate-900 dark:text-slate-100">{{ (int) ($limits['personal_marketing_profile_sections'] ?? 0) }}</p>
+            </div>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-4">تُضبط هذه الحدود من لوحة الإدارة → مزايا اشتراك المعلمين.</p>
     </div>
 
     {{-- المزايا المتاحة --}}
@@ -79,7 +115,13 @@
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <div class="text-sm font-black text-slate-900 dark:text-slate-100">
-                                    {{ $planKey === 'teacher_pro' ? 'الباقة الشاملة' : 'الباقة الأساسية' }}
+                                    @if($planKey === 'teacher_pro')
+                                        الباقة الشاملة
+                                    @elseif($planKey === 'teacher_starter')
+                                        الباقة الأساسية
+                                    @else
+                                        الباقة المجانية
+                                    @endif
                                 </div>
                                 <div class="text-xs text-slate-500 dark:text-slate-400 mt-1">ترقية إلى مستوى أعلى</div>
                             </div>
