@@ -1570,6 +1570,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/live-session-reports/{source}/{report}', [\App\Http\Controllers\Admin\N8nLiveReportsController::class, 'show'])
                 ->where('source', 'live_session|classroom_meeting')
                 ->name('live-session-reports.show');
+            Route::post('/live-session-reports/{source}/{report}/regenerate', [\App\Http\Controllers\Admin\N8nLiveReportsController::class, 'regenerate'])
+                ->where('source', 'live_session|classroom_meeting')
+                ->middleware('throttle:15,1')
+                ->name('live-session-reports.regenerate');
             Route::get('/settings', [\App\Http\Controllers\Admin\N8nSettingsController::class, 'index'])
                 ->name('settings');
             Route::post('/settings', [\App\Http\Controllers\Admin\N8nSettingsController::class, 'update'])

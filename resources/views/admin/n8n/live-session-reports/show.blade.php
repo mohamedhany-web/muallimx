@@ -4,6 +4,17 @@
 
 @section('content')
     <div class="space-y-6 max-w-4xl">
+        @if(session('success'))
+            <div class="rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 text-sm font-medium">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="rounded-xl bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 text-sm font-medium">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="flex items-start gap-3">
                 <a href="{{ route('admin.n8n.live-session-reports.index') }}"
@@ -42,15 +53,27 @@
                     </div>
                 </div>
             </div>
-            @if($reportView->media_url)
-                <a href="{{ $reportView->media_url }}"
-                   target="_blank"
-                   rel="noopener"
-                   class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-emerald-500/60 text-emerald-600 dark:text-emerald-300 text-sm font-medium hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
-                    <i class="fas fa-play"></i>
-                    تشغيل التسجيل
-                </a>
-            @endif
+            <div class="flex flex-wrap items-center gap-2">
+                <form method="POST"
+                      action="{{ route('admin.n8n.live-session-reports.regenerate', ['source' => $source, 'report' => $reportView->id]) }}"
+                      onsubmit="return confirm('إعادة إرسال طلب التقرير إلى n8n؟ سيُعاد توليده لنفس المستخدم عند اكتمال المعالجة.');">
+                    @csrf
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-400 bg-amber-50 hover:bg-amber-100 text-amber-900 text-sm font-semibold dark:bg-amber-950/40 dark:border-amber-700 dark:text-amber-200">
+                        <i class="fas fa-redo"></i>
+                        إعادة توليد التقرير للمعلم
+                    </button>
+                </form>
+                @if($reportView->media_url)
+                    <a href="{{ $reportView->media_url }}"
+                       target="_blank"
+                       rel="noopener"
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-emerald-500/60 text-emerald-600 dark:text-emerald-300 text-sm font-medium hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
+                        <i class="fas fa-play"></i>
+                        تشغيل التسجيل
+                    </a>
+                @endif
+            </div>
         </div>
 
         <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ClassroomMeetingReport;
 use App\Models\LiveSessionReport;
+use App\Services\N8nReportRegenerationService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -62,6 +63,24 @@ class N8nLiveReportsController extends Controller
         };
 
         return view('admin.n8n.live-session-reports.show', compact('reportView', 'source'));
+    }
+
+    /**
+     * إعادة إرسال طلب التقرير إلى n8n (نفس السجل — يظهر للمعلم بعد الاكتمال).
+     */
+    public function regenerate(Request $request, string $source, int $report, N8nReportRegenerationService $regeneration)
+    {
+        if (! in_array($source, ['live_session', 'classroom_meeting'], true)) {
+            abort(404);
+        }
+
+        $result = $regeneration->regenerate($source, $report);
+
+        if (! $result['ok']) {
+            return back()->with('error', $result['message']);
+        }
+
+        return back()->with('success', $result['message']);
     }
 
     /**
