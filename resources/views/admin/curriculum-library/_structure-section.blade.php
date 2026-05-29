@@ -128,6 +128,7 @@
                         <i class="fas fa-file-import text-2xl text-indigo-400 mb-2"></i>
                         <span class="text-xs font-semibold text-slate-600 dark:text-slate-400 text-center">اضغط لاختيار ملف</span>
                         <span class="text-[10px] text-slate-400 mt-1">PPTX · PDF · HTML · أخرى</span>
+                        <span class="text-[10px] text-amber-700 dark:text-amber-400 mt-1 text-center leading-snug">انتقالات PPTX تعمل في وضع «عرض الشرائح» داخل المنصة؛ بعض التأثيرات المتقدّمة قد لا تظهر في الويب.</span>
                         <template x-if="fileName">
                             <span class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-slate-800 border border-indigo-100 dark:border-slate-700 text-[11px] font-bold text-indigo-800 dark:text-slate-200 max-w-full">
                                 <i class="fas fa-check-circle text-emerald-600"></i>

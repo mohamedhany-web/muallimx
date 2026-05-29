@@ -8,6 +8,7 @@ use App\Models\CurriculumLibraryItemFile;
 use App\Models\CurriculumLibraryMaterial;
 use App\Models\CurriculumLibraryPreviewOpen;
 use App\Models\CurriculumLibrarySection;
+use App\Services\CurriculumPresentationViewerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -232,19 +233,34 @@ class CurriculumLibraryController extends Controller
         }
 
         $presentationTitle = $file->label ?: 'عرض تفاعلي (PowerPoint)';
-        $publicUrl = $this->absoluteStorageUrl($diskName, $file->path);
-        $canUseOfficeViewer = $this->isOfficeViewerSupportedUrl($publicUrl);
-        $embedUrl = $canUseOfficeViewer
-            ? 'https://view.officeapps.live.com/op/embed.aspx?src=' . rawurlencode($publicUrl)
-            : null;
+        $viewer = app(CurriculumPresentationViewerService::class);
+        $streamUrl = $viewer->signedStreamUrl($item, 'file', $file->id);
+        $office = $viewer->officeViewerPayload($streamUrl);
 
         return view('student.curriculum-library.presentation', [
             'item' => $item,
             'presentationTitle' => $presentationTitle,
-            'publicUrl' => $publicUrl,
-            'embedUrl' => $embedUrl,
-            'canUseOfficeViewer' => $canUseOfficeViewer,
+            'publicUrl' => $streamUrl,
+            'viewUrl' => $office['viewUrl'],
+            'embedUrl' => $office['embedUrl'],
+            'canUseOfficeViewer' => $office['canUseOfficeViewer'],
         ]);
+    }
+
+    /**
+     * بث ملف PPTX لعارض Microsoft (رابط موقّع — بدون جلسة).
+     */
+    public function streamPresentation(Request $request, CurriculumLibraryItem $item, string $kind, int $id)
+    {
+        if (! $item->is_active) {
+            abort(404);
+        }
+
+        if (! in_array($kind, ['file', 'material'], true)) {
+            abort(404);
+        }
+
+        return app(CurriculumPresentationViewerService::class)->streamPresentation($item, $kind, $id);
     }
 
     public function downloadMaterial(CurriculumLibraryItem $item, CurriculumLibraryMaterial $material)
@@ -400,18 +416,17 @@ class CurriculumLibraryController extends Controller
             abort(404);
         }
 
-        $publicUrl = $this->absoluteStorageUrl($diskName, $material->path);
-        $canUseOfficeViewer = $this->isOfficeViewerSupportedUrl($publicUrl);
-        $embedUrl = $canUseOfficeViewer
-            ? 'https://view.officeapps.live.com/op/embed.aspx?src=' . rawurlencode($publicUrl)
-            : null;
+        $viewer = app(CurriculumPresentationViewerService::class);
+        $streamUrl = $viewer->signedStreamUrl($item, 'material', $material->id);
+        $office = $viewer->officeViewerPayload($streamUrl);
 
         return view('student.curriculum-library.presentation', [
             'item' => $item,
             'presentationTitle' => $material->displayTitle(),
-            'publicUrl' => $publicUrl,
-            'embedUrl' => $embedUrl,
-            'canUseOfficeViewer' => $canUseOfficeViewer,
+            'publicUrl' => $streamUrl,
+            'viewUrl' => $office['viewUrl'],
+            'embedUrl' => $office['embedUrl'],
+            'canUseOfficeViewer' => $office['canUseOfficeViewer'],
         ]);
     }
 
@@ -438,44 +453,4 @@ class CurriculumLibraryController extends Controller
         return null;
     }
 
-    protected function absoluteStorageUrl(string $diskName, string $path): string
-    {
-        $disk = Storage::disk($diskName);
-
-        if ($diskName === 'r2') {
-            return $disk->temporaryUrl($path, now()->addHours(2));
-        }
-
-        $rel = $disk->url($path);
-        if (str_starts_with($rel, 'http://') || str_starts_with($rel, 'https://')) {
-            return $rel;
-        }
-
-        // لو APP_URL فاضي أو disk.url رجّع مسار نسبي، نحوله لرابط مطلق حسب host الحالي.
-        $host = request()->getSchemeAndHttpHost();
-        if (str_starts_with($rel, '/')) {
-            return rtrim($host, '/') . $rel;
-        }
-
-        return rtrim($host, '/') . '/' . ltrim($rel, '/');
-    }
-
-    protected function isOfficeViewerSupportedUrl(string $url): bool
-    {
-        $parts = parse_url($url);
-        $host = strtolower((string) ($parts['host'] ?? ''));
-        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
-
-        // Microsoft Office Viewer عادة لا يستطيع جلب روابط localhost/127.0.0.1.
-        if ($host === '' || $host === 'localhost' || $host === '127.0.0.1' || $host === '::1') {
-            return false;
-        }
-
-        if (str_ends_with($host, '.local') || str_ends_with($host, '.test')) {
-            return false;
-        }
-
-        // الأفضل أن يكون HTTPS. على HTTP غالباً يفشل العارض أو تُمنع الموارد المختلطة.
-        return $scheme === 'https';
-    }
 }
