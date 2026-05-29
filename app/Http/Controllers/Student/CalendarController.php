@@ -72,7 +72,7 @@ class CalendarController extends Controller
                 'allDay' => $event->is_all_day ?? false,
                 'color' => $event->color ?? $this->getEventColor($event->type),
                 'type' => $event->type,
-                'url' => $event->url ?? null,
+                'url' => ! empty($event->is_personal) ? null : ($event->url ?? null),
                 'description' => $event->description ?? null,
                 'extendedProps' => [
                     'priority' => $event->priority ?? 'medium',
@@ -80,6 +80,8 @@ class CalendarController extends Controller
                     'is_personal' => $event->is_personal ?? false,
                     'schedule_type' => $event->schedule_type ?? null,
                     'appointment_id' => $event->appointment_id ?? null,
+                    'occurrence_id' => $event->occurrence_id ?? null,
+                    'description' => $event->description ?? null,
                 ],
             ];
         });

@@ -2,6 +2,28 @@
     $weekdayLabels = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 @endphp
 <div x-cloak>
+    {{-- تفاصيل موعد شخصي --}}
+    <div x-show="detailOpen" class="fixed inset-0 z-[85] flex items-center justify-center p-4 bg-black/50" @keydown.escape.window="detailOpen = false">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700" @click.outside="detailOpen = false">
+            <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3">
+                <h2 class="text-lg font-black text-slate-900 dark:text-slate-100">تفاصيل الموعد</h2>
+                <button type="button" @click="detailOpen = false" class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 flex items-center justify-center">&times;</button>
+            </div>
+            <div class="p-5 space-y-3 text-sm">
+                <p class="font-bold text-slate-900 dark:text-slate-100" x-text="detail.title"></p>
+                <p class="text-slate-600 dark:text-slate-400 whitespace-pre-line" x-text="detail.description"></p>
+                <p class="text-xs text-violet-700 dark:text-violet-300 font-semibold" x-show="detail.schedule_type === 'temporary'">موعد مؤقت — يُحذف تلقائياً بعد انتهائه</p>
+                <p class="text-xs text-violet-700 dark:text-violet-300 font-semibold" x-show="detail.schedule_type === 'fixed'">موعد ثابت</p>
+            </div>
+            <div class="p-5 border-t border-slate-100 dark:border-slate-700 flex flex-wrap gap-2">
+                <button type="button" @click="detailOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-800 text-sm font-semibold">إغلاق</button>
+                <button type="button" @click="deleteDetail()" :disabled="deleting" class="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-60">
+                    <span x-text="deleting ? 'جاري الحذف...' : 'حذف الموعد'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div x-show="modalOpen" class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50" @keydown.escape.window="modalOpen = false">
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700" @click.outside="modalOpen = false">
             <div class="p-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between gap-3">
@@ -144,6 +166,9 @@ function teacherPersonalCalendar() {
 
     return {
         modalOpen: false,
+        detailOpen: false,
+        detail: {},
+        deleting: false,
         saving: false,
         errorText: '',
         previewText: '',
@@ -165,9 +190,36 @@ function teacherPersonalCalendar() {
         },
         openModal() {
             this.modalOpen = true;
+            this.detailOpen = false;
             this.errorText = '';
             this.rebuildMonthDays();
             this.refreshPreview();
+        },
+        openDetail(payload) {
+            this.detail = payload || {};
+            this.detailOpen = true;
+            this.modalOpen = false;
+        },
+        async deleteDetail() {
+            if (!this.detail.appointment_id) return;
+            if (!confirm('هل تريد حذف هذا الموعد؟')) return;
+            this.deleting = true;
+            try {
+                const url = '/api/calendar/personal-appointments/' + this.detail.appointment_id;
+                const res = await fetch(url, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'تعذر الحذف');
+                this.detailOpen = false;
+                if (window.studentCalendar) window.studentCalendar.refetchEvents();
+                window.location.reload();
+            } catch (e) {
+                alert(e.message || 'تعذر الحذف');
+            } finally {
+                this.deleting = false;
+            }
         },
         onTypeChange() {
             if (this.form.schedule_type === 'temporary') {

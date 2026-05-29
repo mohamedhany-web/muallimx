@@ -7,15 +7,14 @@ use Illuminate\Console\Command;
 
 class SendCalendarAppointmentRemindersCommand extends Command
 {
-    protected $signature = 'calendar:send-reminders {--minutes=5 : Minutes before appointment}';
+    protected $signature = 'calendar:send-reminders';
 
-    protected $description = 'Send platform and email reminders before teacher personal calendar sessions';
+    protected $description = 'Send platform and email reminders before teacher personal calendar sessions (uses each appointment reminder_minutes)';
 
     public function handle(TeacherCalendarReminderService $service): int
     {
-        $minutes = (int) $this->option('minutes');
-        $sent = $service->sendDueReminders($minutes);
-        $this->info("Sent {$sent} calendar reminder(s) (~{$minutes} min before).");
+        $sent = $service->sendDueReminders();
+        $this->info("Sent {$sent} calendar reminder(s).");
 
         return self::SUCCESS;
     }

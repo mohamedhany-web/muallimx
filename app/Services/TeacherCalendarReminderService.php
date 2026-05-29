@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendTeacherCalendarOccurrenceReminderJob;
 use App\Models\Notification;
 use App\Models\TeacherCalendarOccurrence;
 use App\Support\CalendarTimezoneCatalog;
@@ -13,15 +14,15 @@ class TeacherCalendarReminderService
         protected EmailNotificationService $emailService
     ) {}
 
-    public function sendDueReminders(int $minutesBefore = 5): int
+    /**
+     * يُستدعى من cron كل دقيقة — يحترم reminder_minutes لكل موعد.
+     */
+    public function sendDueReminders(): int
     {
-        $windowStart = now()->addMinutes($minutesBefore - 1);
-        $windowEnd = now()->addMinutes($minutesBefore + 1);
-
         $occurrences = TeacherCalendarOccurrence::query()
             ->active()
             ->whereNull('reminder_sent_at')
-            ->whereBetween('starts_at', [$windowStart, $windowEnd])
+            ->where('starts_at', '>', now())
             ->whereHas('appointment', fn ($q) => $q->where('status', 'active'))
             ->with(['appointment', 'user'])
             ->get();
@@ -29,10 +30,14 @@ class TeacherCalendarReminderService
         $sent = 0;
 
         foreach ($occurrences as $occurrence) {
+            if (! $this->isDueNow($occurrence)) {
+                continue;
+            }
+
             try {
-                $this->notifyForOccurrence($occurrence, $minutesBefore);
-                $occurrence->update(['reminder_sent_at' => now()]);
-                $sent++;
+                if ($this->sendForOccurrence($occurrence)) {
+                    $sent++;
+                }
             } catch (\Throwable $e) {
                 Log::warning('Calendar reminder failed', [
                     'occurrence_id' => $occurrence->id,
@@ -42,6 +47,66 @@ class TeacherCalendarReminderService
         }
 
         return $sent;
+    }
+
+    public function sendForOccurrenceId(int $occurrenceId): bool
+    {
+        $occurrence = TeacherCalendarOccurrence::query()
+            ->active()
+            ->whereNull('reminder_sent_at')
+            ->whereKey($occurrenceId)
+            ->whereHas('appointment', fn ($q) => $q->where('status', 'active'))
+            ->with(['appointment', 'user'])
+            ->first();
+
+        if (! $occurrence || ! $this->isDueNow($occurrence, allowGraceAfter: true)) {
+            return false;
+        }
+
+        return $this->sendForOccurrence($occurrence);
+    }
+
+    protected function isDueNow(TeacherCalendarOccurrence $occurrence, bool $allowGraceAfter = false): bool
+    {
+        $appointment = $occurrence->appointment;
+        if (! $appointment) {
+            return false;
+        }
+
+        $minutes = max(1, (int) ($appointment->reminder_minutes ?? 5));
+        $dueAt = $occurrence->starts_at->copy()->subMinutes($minutes);
+        $windowEnd = $dueAt->copy()->addMinutes(2);
+
+        if ($allowGraceAfter) {
+            $windowEnd = $occurrence->starts_at;
+        }
+
+        return now()->between($dueAt, $windowEnd);
+    }
+
+    protected function sendForOccurrence(TeacherCalendarOccurrence $occurrence): bool
+    {
+        if ($occurrence->reminder_sent_at) {
+            return false;
+        }
+
+        $appointment = $occurrence->appointment;
+        $user = $occurrence->user;
+        if (! $appointment || ! $user) {
+            return false;
+        }
+
+        if (! $appointment->notify_platform && ! $appointment->notify_email) {
+            $occurrence->update(['reminder_sent_at' => now()]);
+
+            return false;
+        }
+
+        $minutes = max(1, (int) ($appointment->reminder_minutes ?? 5));
+        $this->notifyForOccurrence($occurrence, $minutes);
+        $occurrence->update(['reminder_sent_at' => now()]);
+
+        return true;
     }
 
     protected function notifyForOccurrence(TeacherCalendarOccurrence $occurrence, int $minutesBefore): void
@@ -93,5 +158,36 @@ class TeacherCalendarReminderService
                 'تذكير: '.$appointment->title.' — Muallimx'
             );
         }
+    }
+
+    public function scheduleOccurrenceReminder(TeacherCalendarOccurrence $occurrence): void
+    {
+        $occurrence->loadMissing('appointment');
+        $appointment = $occurrence->appointment;
+        if (! $appointment || $appointment->status !== 'active') {
+            return;
+        }
+
+        if (! $appointment->notify_platform && ! $appointment->notify_email) {
+            return;
+        }
+
+        $minutes = max(1, (int) ($appointment->reminder_minutes ?? 5));
+        $runAt = $occurrence->starts_at->copy()->subMinutes($minutes);
+
+        if ($runAt->isPast()) {
+            if ($this->isDueNow($occurrence, allowGraceAfter: true)) {
+                $this->sendForOccurrence($occurrence);
+            }
+
+            return;
+        }
+
+        if (config('queue.default') === 'sync') {
+            return;
+        }
+
+        SendTeacherCalendarOccurrenceReminderJob::dispatch($occurrence->id)
+            ->delay($runAt);
     }
 }

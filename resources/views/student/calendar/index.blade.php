@@ -44,7 +44,7 @@
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-6" x-data="teacherPersonalCalendar()">
+<div class="min-h-screen bg-gray-50 py-6" id="teacher-calendar-app" x-data="teacherPersonalCalendar()">
     <div class="w-full px-4 sm:px-6 lg:px-8">
         <!-- الهيدر -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 p-5 sm:p-6">
@@ -117,8 +117,21 @@
                     
                     <div class="space-y-3 max-h-96 overflow-y-auto">
                         @forelse($events->where('start_date', '>=', now())->take(10) as $event)
+                            @php
+                                $isPersonal = ($event->type ?? '') === 'personal';
+                                $personalPayload = $isPersonal ? [
+                                    'title' => $event->title,
+                                    'description' => $event->description ?? '',
+                                    'schedule_type' => $event->schedule_type ?? 'temporary',
+                                    'appointment_id' => $event->appointment_id ?? null,
+                                ] : null;
+                            @endphp
                             <div class="p-3 rounded-lg border border-gray-200 hover:border-sky-500 transition-colors cursor-pointer"
-                                 onclick="window.location.href='{{ $event->url ?? '#' }}'">
+                                 @if($isPersonal)
+                                     @click="openDetail(@js($personalPayload))"
+                                 @elseif(!empty($event->url))
+                                     onclick="window.location.href='{{ $event->url }}'"
+                                 @endif>
                                 <div class="flex items-start gap-2 mb-2">
                                     <div class="w-3 h-3 rounded-full mt-1.5 flex-shrink-0" 
                                          style="background-color: {{ $event->color ?? '#6B7280' }}"></div>
@@ -235,9 +248,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         },
         eventClick: function(info) {
+            info.jsEvent.preventDefault();
+            info.jsEvent.stopPropagation();
+            var props = info.event.extendedProps || {};
+            if (props.is_personal) {
+                window.dispatchEvent(new CustomEvent('open-calendar-personal-detail', {
+                    detail: {
+                        title: info.event.title,
+                        description: props.description || info.event.extendedProps.description || '',
+                        schedule_type: props.schedule_type || 'temporary',
+                        appointment_id: props.appointment_id || null,
+                    }
+                }));
+                return;
+            }
             if (info.event.url) {
-                window.open(info.event.url, '_self');
-                info.jsEvent.preventDefault();
+                window.location.href = info.event.url;
             }
         },
         eventMouseEnter: function(info) {
@@ -252,13 +278,20 @@ document.addEventListener('DOMContentLoaded', function() {
         contentHeight: 600,
         firstDay: 6, // السبت كأول يوم
         weekends: true,
-        navLinks: true,
+        navLinks: false,
         dayMaxEvents: 3,
         moreLinkClick: 'popover'
     });
     
     calendar.render();
     window.studentCalendar = calendar;
+
+    window.addEventListener('open-calendar-personal-detail', function (e) {
+        var root = document.getElementById('teacher-calendar-app');
+        if (root && root._x_dataStack && root._x_dataStack[0] && root._x_dataStack[0].openDetail) {
+            root._x_dataStack[0].openDetail(e.detail);
+        }
+    });
 });
 </script>
 @endpush

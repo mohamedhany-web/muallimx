@@ -6,32 +6,38 @@ use App\Models\CurriculumLibraryItem;
 use App\Models\CurriculumLibraryItemFile;
 use App\Models\CurriculumLibraryMaterial;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CurriculumPresentationViewerService
 {
     /**
-     * رابط موقّع يجلبه عارض Microsoft (بدون كوكيز) مع Content-Type صحيح للـ PPTX.
+     * رابط عام/مؤقت يمكن لعارض Microsoft جلب الملف منه (كما كان قبل التعديل).
      */
-    public function signedStreamUrl(CurriculumLibraryItem $item, string $kind, int $id): string
+    public function absoluteStorageUrl(string $diskName, string $path): string
     {
-        return URL::temporarySignedRoute(
-            'curriculum-library.presentation.stream',
-            now()->addHours(3),
-            [
-                'item' => $item->slug,
-                'kind' => $kind,
-                'id' => $id,
-            ]
-        );
+        $disk = Storage::disk($diskName);
+
+        if ($diskName === 'r2') {
+            return $disk->temporaryUrl($path, now()->addHours(2));
+        }
+
+        $rel = $disk->url($path);
+        if (str_starts_with($rel, 'http://') || str_starts_with($rel, 'https://')) {
+            return $rel;
+        }
+
+        $host = request()->getSchemeAndHttpHost();
+        if (str_starts_with($rel, '/')) {
+            return rtrim($host, '/').$rel;
+        }
+
+        return rtrim($host, '/').'/'.ltrim($rel, '/');
     }
 
     /**
      * @return array{
      *   canUseOfficeViewer: bool,
      *   fileUrl: string,
-     *   viewUrl: ?string,
      *   embedUrl: ?string
      * }
      */
@@ -42,7 +48,6 @@ class CurriculumPresentationViewerService
             return [
                 'canUseOfficeViewer' => false,
                 'fileUrl' => $fileUrl,
-                'viewUrl' => null,
                 'embedUrl' => null,
             ];
         }
@@ -52,8 +57,6 @@ class CurriculumPresentationViewerService
         return [
             'canUseOfficeViewer' => true,
             'fileUrl' => $fileUrl,
-            // view.aspx يدعم وضع عرض الشرائح والانتقالات أفضل من embed.aspx
-            'viewUrl' => 'https://view.officeapps.live.com/op/view.aspx?src='.$encoded,
             'embedUrl' => 'https://view.officeapps.live.com/op/embed.aspx?src='.$encoded,
         ];
     }
@@ -62,7 +65,6 @@ class CurriculumPresentationViewerService
     {
         $parts = parse_url($url);
         $host = strtolower((string) ($parts['host'] ?? ''));
-        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
 
         if ($host === '' || $host === 'localhost' || $host === '127.0.0.1' || $host === '::1') {
             return false;
@@ -72,7 +74,7 @@ class CurriculumPresentationViewerService
             return false;
         }
 
-        return $scheme === 'https';
+        return true;
     }
 
     public function streamPresentation(CurriculumLibraryItem $item, string $kind, int $id): StreamedResponse

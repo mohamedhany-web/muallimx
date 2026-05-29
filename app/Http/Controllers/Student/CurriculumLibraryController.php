@@ -234,33 +234,16 @@ class CurriculumLibraryController extends Controller
 
         $presentationTitle = $file->label ?: 'عرض تفاعلي (PowerPoint)';
         $viewer = app(CurriculumPresentationViewerService::class);
-        $streamUrl = $viewer->signedStreamUrl($item, 'file', $file->id);
-        $office = $viewer->officeViewerPayload($streamUrl);
+        $publicUrl = $viewer->absoluteStorageUrl($diskName, $file->path);
+        $office = $viewer->officeViewerPayload($publicUrl);
 
         return view('student.curriculum-library.presentation', [
             'item' => $item,
             'presentationTitle' => $presentationTitle,
-            'publicUrl' => $streamUrl,
-            'viewUrl' => $office['viewUrl'],
+            'publicUrl' => $publicUrl,
             'embedUrl' => $office['embedUrl'],
             'canUseOfficeViewer' => $office['canUseOfficeViewer'],
         ]);
-    }
-
-    /**
-     * بث ملف PPTX لعارض Microsoft (رابط موقّع — بدون جلسة).
-     */
-    public function streamPresentation(Request $request, CurriculumLibraryItem $item, string $kind, int $id)
-    {
-        if (! $item->is_active) {
-            abort(404);
-        }
-
-        if (! in_array($kind, ['file', 'material'], true)) {
-            abort(404);
-        }
-
-        return app(CurriculumPresentationViewerService::class)->streamPresentation($item, $kind, $id);
     }
 
     public function downloadMaterial(CurriculumLibraryItem $item, CurriculumLibraryMaterial $material)
@@ -417,14 +400,13 @@ class CurriculumLibraryController extends Controller
         }
 
         $viewer = app(CurriculumPresentationViewerService::class);
-        $streamUrl = $viewer->signedStreamUrl($item, 'material', $material->id);
-        $office = $viewer->officeViewerPayload($streamUrl);
+        $publicUrl = $viewer->absoluteStorageUrl($diskName, $material->path);
+        $office = $viewer->officeViewerPayload($publicUrl);
 
         return view('student.curriculum-library.presentation', [
             'item' => $item,
             'presentationTitle' => $material->displayTitle(),
-            'publicUrl' => $streamUrl,
-            'viewUrl' => $office['viewUrl'],
+            'publicUrl' => $publicUrl,
             'embedUrl' => $office['embedUrl'],
             'canUseOfficeViewer' => $office['canUseOfficeViewer'],
         ]);

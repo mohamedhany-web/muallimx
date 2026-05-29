@@ -503,12 +503,6 @@ Route::get('/checkout/fawaterak/{status}', [\App\Http\Controllers\Public\Checkou
     ->where('status', 'success|fail|pending')
     ->name('public.checkout.fawaterak.return');
 
-// بث PPTX لعارض Microsoft (رابط موقّع — يُولَّد من صفحة العرض للمشتركين فقط)
-Route::get('/curriculum-library/presentation-stream/{item:slug}/{kind}/{id}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'streamPresentation'])
-    ->middleware('signed')
-    ->where('kind', 'file|material')
-    ->name('curriculum-library.presentation.stream');
-
 Route::post('/learning-path/{slug}/enroll-free', function () {
     return redirect('/courses', 302);
 })->name('public.learning-path.enroll.free');

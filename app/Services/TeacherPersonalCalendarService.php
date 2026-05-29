@@ -13,7 +13,8 @@ use InvalidArgumentException;
 class TeacherPersonalCalendarService
 {
     public function __construct(
-        protected TeacherCalendarTimezoneService $timezoneService
+        protected TeacherCalendarTimezoneService $timezoneService,
+        protected TeacherCalendarReminderService $reminderService
     ) {}
 
     public function create(User $user, array $data): TeacherCalendarAppointment
@@ -145,6 +146,11 @@ class TeacherPersonalCalendarService
                 'auto_remove_after_end' => $appointment->isTemporary(),
             ]);
         }
+
+        $appointment->load('occurrences');
+        foreach ($appointment->occurrences()->active()->get() as $occurrence) {
+            $this->reminderService->scheduleOccurrenceReminder($occurrence);
+        }
     }
 
     protected function refreshOccurrenceTimes(
@@ -241,6 +247,8 @@ class TeacherPersonalCalendarService
                 'location' => $appointment->location,
                 'is_personal' => true,
                 'schedule_type' => $appointment->schedule_type,
+                'appointment_id' => $appointment->id,
+                'occurrence_id' => $occurrence->id,
             ];
         });
     }
