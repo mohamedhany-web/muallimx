@@ -131,7 +131,18 @@
                     <h1 class="font-heading text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 mb-1 leading-tight">
                         {{ __('student.welcome_name', ['name' => auth()->user()->name]) }}
                     </h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-sm max-w-lg">{{ __('student.dashboard_subtitle') }}</p>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm max-w-lg">
+                        @if(empty($activeSubscription))
+                            {{ __('student.dashboard_subtitle_no_subscription') }}
+                        @else
+                            {{ __('student.dashboard_subtitle') }}
+                        @endif
+                    </p>
+                    @if(empty($activeSubscription))
+                        <div class="mt-4">
+                            <x-dashboard-subscribe-cta variant="compact" />
+                        </div>
+                    @endif
                 </div>
                 <div class="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 flex-shrink-0">
                     @hasPermission('student.view.courses')
@@ -163,6 +174,10 @@
             </div>
         </div>
     </div>
+
+    @if(empty($activeSubscription))
+        <x-dashboard-subscribe-cta />
+    @endif
 
     @if(isset($activeSubscription) && $activeSubscription)
     {{-- بطاقة الاشتراك الحالي — مباشرة تحت الترحيب --}}

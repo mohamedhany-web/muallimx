@@ -47,6 +47,12 @@ return [
     'your_dashboard' => 'لوحة تحكمك',
     'welcome_name' => 'مرحباً، :name',
     'dashboard_subtitle' => 'استمر في رحلتك التعليمية واجعل كل يوم خطوة نحو تحقيق أهدافك',
+    'dashboard_subtitle_no_subscription' => 'فعّل باقتك للوصول إلى المناهج، البث، والأدوات الاحترافية — يمكنك الاشتراك من هنا دون الخروج من حسابك.',
+    'subscribe_now' => 'اشترك الآن',
+    'view_packages' => 'اطلع على الباقات',
+    'subscribe_cta_title' => 'ابدأ اشتراكك في Muallimx',
+    'subscribe_cta_description' => 'اختر الباقة المناسبة لك وفعّل المزايا فوراً. لا حاجة للخروج من لوحة التحكم — اضغط «اشترك الآن» أو تصفّح الباقات.',
+    'sidebar_packages' => 'الباقات والاشتراك',
     'total_progress' => 'التقدم الكلي',
     'from_course_completion' => 'من إكمال الكورسات',
     'my_active_courses' => 'كورساتي النشطة',
@@ -141,7 +147,9 @@ return [
 
     // Calendar
     'calendar_title' => 'التقويم الأكاديمي',
-    'calendar_subtitle' => 'جميع الأحداث والمواعيد المهمة في مكان واحد',
+    'calendar_subtitle' => 'مواعيد المنصة + جدولك الشخصي للحصص مع دعم التوقيتات والتذكير',
+    'calendar_add_personal' => 'إضافة موعدي',
+    'calendar_personal_legend' => 'مواعيدي (حصص الأسرة)',
     'total_events' => 'إجمالي الأحداث',
     'legend_exams' => 'امتحانات',
     'legend_lectures' => 'محاضرات',

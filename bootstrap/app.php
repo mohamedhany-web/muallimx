@@ -47,6 +47,16 @@ return Application::configure(basePath: dirname(__DIR__))
                  ->withoutOverlapping()
                  ->runInBackground();
 
+        // تذكير المعلم قبل مواعيده الشخصية في التقويم (منصة + بريد)
+        $schedule->command('calendar:send-reminders --minutes=5')
+                 ->everyMinute()
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        $schedule->command('calendar:cleanup-temporary')
+                 ->hourly()
+                 ->withoutOverlapping();
+
         // إنهاء جلسات البث التي تجاوزت المدة القصوى تلقائياً
         $schedule->command('live:auto-end-sessions')
                  ->everyFiveMinutes()

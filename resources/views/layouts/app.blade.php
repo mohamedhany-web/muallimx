@@ -421,6 +421,20 @@ function themeManager() {
                     </div>
 
                     <div class="flex items-center gap-2">
+                        @php
+                            $headerUser = auth()->user();
+                            $headerNeedsSubscription = $headerUser
+                                && ($headerUser->role === 'student' || strtolower((string) $headerUser->role) === 'student')
+                                && ! $headerUser->activeSubscription()
+                                && Route::has('public.pricing');
+                        @endphp
+                        @if($headerNeedsSubscription)
+                            <a href="{{ route('public.pricing') }}"
+                               class="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#FB5607] hover:bg-[#e04d00] text-white text-xs font-bold transition-colors shadow-sm">
+                                <i class="fas fa-crown text-[10px]"></i>
+                                {{ __('student.subscribe_now') }}
+                            </a>
+                        @endif
                         {{-- Theme toggle --}}
                         <div x-data="themeManager()" x-init="init()">
                             <button @click="toggle()" type="button" class="h-btn"

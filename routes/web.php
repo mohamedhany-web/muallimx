@@ -764,6 +764,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/api/notifications/recent', [\App\Http\Controllers\Student\NotificationController::class, 'getRecent'])->name('notifications.recent');
         Route::get('/calendar', [\App\Http\Controllers\Student\CalendarController::class, 'index'])->name('calendar');
         Route::get('/api/calendar/events', [\App\Http\Controllers\Student\CalendarController::class, 'getEvents'])->name('calendar.events');
+        Route::get('/api/calendar/personal/timezones', [\App\Http\Controllers\Student\TeacherPersonalCalendarController::class, 'timezones'])->name('calendar.personal.timezones');
+        Route::post('/api/calendar/personal/preview', [\App\Http\Controllers\Student\TeacherPersonalCalendarController::class, 'preview'])->name('calendar.personal.preview');
+        Route::post('/api/calendar/personal-appointments', [\App\Http\Controllers\Student\TeacherPersonalCalendarController::class, 'store'])->name('calendar.personal.store');
+        Route::put('/api/calendar/personal-appointments/{appointment}', [\App\Http\Controllers\Student\TeacherPersonalCalendarController::class, 'update'])->name('calendar.personal.update');
+        Route::delete('/api/calendar/personal-appointments/{appointment}', [\App\Http\Controllers\Student\TeacherPersonalCalendarController::class, 'destroy'])->name('calendar.personal.destroy');
 
         Route::get('/consultations', [\App\Http\Controllers\Student\ConsultationController::class, 'index'])->name('consultations.index');
         Route::get('/consultations/request/{instructor}', [\App\Http\Controllers\Student\ConsultationController::class, 'create'])->name('consultations.create');

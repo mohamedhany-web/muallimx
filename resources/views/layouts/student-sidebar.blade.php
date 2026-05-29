@@ -52,6 +52,8 @@
         @php
             $user = auth()->user();
             $isStudent = $user->role === 'student' || strtolower($user->role) === 'student';
+            $activeSub = $user->activeSubscription();
+            $featureConfig = config('student_subscription_features', []);
         @endphp
         @if($isStudent || $user->hasAnyPermission('student.view.courses', 'student.view.my-courses', 'student.view.orders', 'student.view.invoices', 'student.view.wallet', 'student.view.certificates', 'student.view.achievements', 'student.view.exams', 'student.view.calendar', 'student.view.notifications', 'student.view.profile', 'student.view.settings'))
 
@@ -71,11 +73,18 @@
                 <span class="flex-1 truncate">{{ __('student.dashboard') }}</span>
             </a>
 
+            @if(!$activeSub && Route::has('public.pricing'))
+            <a href="{{ route('public.pricing') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+               class="ins-nav {{ request()->routeIs('public.pricing', 'public.subscription.checkout*') ? 'active' : '' }}">
+                <span class="ins-icon bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 text-[#FB5607] dark:text-amber-400">
+                    <i class="fas fa-crown text-sm"></i>
+                </span>
+                <span class="flex-1 truncate font-semibold">{{ __('student.sidebar_packages') }}</span>
+                <span class="ins-nav-badge bg-[#FB5607] text-white text-[9px]">جديد</span>
+            </a>
+            @endif
+
             {{-- ─── القسم المدفوع ─── --}}
-            @php
-                $activeSub = $user->activeSubscription();
-                $featureConfig = config('student_subscription_features', []);
-            @endphp
             @if($activeSub)
             <div class="ins-nav-group mt-3">
                 <span class="inline-flex items-center gap-1.5">

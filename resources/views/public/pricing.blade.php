@@ -94,7 +94,7 @@
         </section>
 
         <!-- Teacher Plans Section (بيانات من إعدادات مزايا اشتراك المعلمين /admin/teacher-features) -->
-        <section class="py-16 md:py-20 bg-white">
+        <section id="plans" class="py-16 md:py-20 bg-white scroll-mt-24">
             <div class="container-1200">
                 <div class="text-center mb-12">
                     <span class="inline-block px-4 py-1.5 rounded-full text-sm font-semibold mb-4" style="background:#FFE5F7;color:#283593">

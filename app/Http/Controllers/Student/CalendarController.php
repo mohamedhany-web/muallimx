@@ -9,6 +9,9 @@ use App\Models\ConsultationRequest;
 use App\Models\Exam;
 use App\Models\Lecture;
 use App\Models\LectureAssignment;
+use App\Services\TeacherCalendarTimezoneService;
+use App\Services\TeacherPersonalCalendarService;
+use App\Support\CalendarTimezoneCatalog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,10 +35,20 @@ class CalendarController extends Controller
             'lectures' => $events->where('type', 'lecture')->count(),
             'assignments' => $events->where('type', 'assignment')->count(),
             'consultations' => $events->where('type', 'consultation')->count(),
+            'personal' => $events->where('type', 'personal')->count(),
             'upcoming' => $events->where('start_date', '>=', now())->count(),
         ];
 
-        return view('student.calendar.index', compact('events', 'stats'));
+        $teacherTimezone = app(TeacherCalendarTimezoneService::class)->resolveTeacherTimezone(
+            $user->calendar_timezone
+        );
+
+        return view('student.calendar.index', [
+            'events' => $events,
+            'stats' => $stats,
+            'timezoneOptions' => CalendarTimezoneCatalog::options(),
+            'teacherTimezone' => $teacherTimezone,
+        ]);
     }
 
     /**
@@ -64,6 +77,9 @@ class CalendarController extends Controller
                 'extendedProps' => [
                     'priority' => $event->priority ?? 'medium',
                     'location' => $event->location ?? null,
+                    'is_personal' => $event->is_personal ?? false,
+                    'schedule_type' => $event->schedule_type ?? null,
+                    'appointment_id' => $event->appointment_id ?? null,
                 ],
             ];
         });
@@ -247,6 +263,15 @@ class CalendarController extends Controller
             'student'
         ) as $cEvent) {
             $events->push($cEvent);
+        }
+
+        // 7. مواعيد المعلم الشخصية (حصص الأسرة / جدول خاص)
+        foreach (app(TeacherPersonalCalendarService::class)->calendarItemsForUser(
+            $user,
+            $startDate ?? now()->subMonths(1),
+            $endDate ?? now()->addMonths(3)
+        ) as $personalEvent) {
+            $events->push($personalEvent);
         }
 
         // ترتيب الأحداث حسب التاريخ

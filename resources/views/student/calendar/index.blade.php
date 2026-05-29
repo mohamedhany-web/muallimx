@@ -44,7 +44,7 @@
 @endpush
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-6">
+<div class="min-h-screen bg-gray-50 py-6" x-data="teacherPersonalCalendar()">
     <div class="w-full px-4 sm:px-6 lg:px-8">
         <!-- الهيدر -->
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 p-5 sm:p-6">
@@ -53,9 +53,19 @@
                     <h1 class="text-xl sm:text-2xl font-bold text-gray-900">{{ __('student.calendar_title') }}</h1>
                     <p class="text-sm text-gray-500 mt-1">{{ __('student.calendar_subtitle') }}</p>
                 </div>
-                <div class="text-sm text-gray-600 flex items-center gap-2">
-                    <i class="fas fa-calendar-alt text-sky-500"></i>
-                    <span>{{ __('student.total_events') }}: <strong>{{ $stats['total'] ?? 0 }}</strong></span>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="button" @click="openModal()"
+                            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold shadow-md">
+                        <i class="fas fa-plus"></i>
+                        إضافة موعدي
+                    </button>
+                    <div class="text-sm text-gray-600 flex items-center gap-2">
+                        <i class="fas fa-calendar-alt text-sky-500"></i>
+                        <span>{{ __('student.total_events') }}: <strong>{{ $stats['total'] ?? 0 }}</strong></span>
+                        @if(($stats['personal'] ?? 0) > 0)
+                            <span class="text-violet-600">· مواعيدي: <strong>{{ $stats['personal'] }}</strong></span>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
@@ -87,6 +97,10 @@
                         <div class="legend-item">
                             <div class="legend-color bg-emerald-600"></div>
                             <span>استشارة مدفوعة</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color bg-violet-500"></div>
+                            <span>مواعيدي (حصص الأسرة)</span>
                         </div>
                     </div>
                 </div>
@@ -129,6 +143,8 @@
                                                 <i class="fas fa-chalkboard-teacher"></i> محاضرة
                                             @elseif($event->type == 'assignment') 
                                                 <i class="fas fa-tasks"></i> واجب
+                                            @elseif($event->type == 'personal')
+                                                <i class="fas fa-user-clock"></i> موعدي
                                             @else 
                                                 <i class="fas fa-calendar-alt"></i> حدث
                                             @endif
@@ -186,6 +202,8 @@
             </div>
         </div>
     </div>
+
+    @include('student.calendar._personal-appointment-modal')
 </div>
 @endsection
 
@@ -240,6 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     calendar.render();
+    window.studentCalendar = calendar;
 });
 </script>
 @endpush
