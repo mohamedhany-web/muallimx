@@ -369,6 +369,9 @@ return [
         'muallimx_ai_error_quota' => 'Usage limit exceeded or the current model is not available on your plan. Update the model value in .env (see .env.example), run php artisan config:clear, and check your provider usage dashboard.',
         'muallimx_ai_error_auth' => 'The request was rejected (invalid or restricted API key). Fix the Muallimx AI key in .env (no quotes/spaces), then php artisan config:clear.',
         'muallimx_ai_error_model' => 'Unknown model id for this API. Fix the model value in .env per .env.example, then php artisan config:clear.',
+        'muallimx_ai_error_busy' => 'The AI provider is temporarily busy (high demand). We retried automatically — wait a moment and try again, or try later.',
+        'muallimx_ai_error_safety' => 'No response was generated because content was blocked by safety filters. Rephrase your request and try again.',
+        'game_busy_static_fallback_notice' => 'AI game generation is temporarily unavailable (provider busy). A simplified interactive version is shown — try again in a few minutes.',
         'muallimx_ai_error_debug' => 'Error detail (debug): :detail',
         'context_json_title' => 'Context payload (JSON)',
         'prompt_preview_title' => 'Prompt preview',
@@ -378,9 +381,10 @@ return [
         ],
         'question_types' => [
             'educational_tips' => 'Educational tips',
-            'educational_games' => 'Educational games',
-            'interactive_file_creation' => 'Create interactive file',
+            'educational_games' => 'Educational game',
         ],
+        'question_type_tips_hint' => 'Get tailored educational tips and guidance for your request.',
+        'question_type_game_hint' => 'Generates an interactive HTML game from your description (topic, age, language).',
     ],
 
     'portfolio_marketing' => [

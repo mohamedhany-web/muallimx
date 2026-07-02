@@ -165,7 +165,7 @@ class SubscriptionFeatureController extends Controller
                     $muallimxAiError = $muallimxAi->userFacingErrorMessage($e);
                 }
             }
-            if ($gameHtmlUrl === null && ! $muallimxAi->isConfigured()) {
+            if ($gameHtmlUrl === null && (! $muallimxAi->isConfigured() || $muallimxAiError !== null)) {
                 $html = $service->buildEducationalGameHtml($ctx);
                 $gameStoragePath = 'ai-games/student-'.$request->user()->id
                     .'/game-'.now()->format('Ymd-His').'-'.Str::lower(Str::random(6)).'.html';
@@ -173,7 +173,12 @@ class SubscriptionFeatureController extends Controller
                 $storedUrl = Storage::disk('public')->url($gameStoragePath);
                 $relativePath = parse_url($storedUrl, PHP_URL_PATH) ?: '/storage/'.ltrim($gameStoragePath, '/');
                 $gameHtmlUrl = $request->getSchemeAndHttpHost().$relativePath;
-                $muallimxAiText = __('student.full_ai_suite.game_static_fallback_notice');
+                $muallimxAiText = $muallimxAiError !== null
+                    ? __('student.full_ai_suite.game_busy_static_fallback_notice')
+                    : __('student.full_ai_suite.game_static_fallback_notice');
+                if ($muallimxAiError !== null) {
+                    // الإبقاء على رسالة الخطأ الودية أعلاه مع عرض اللعطة البديلة
+                }
             }
         } elseif ($muallimxAi->isConfigured()) {
             try {

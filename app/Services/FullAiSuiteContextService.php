@@ -15,7 +15,6 @@ class FullAiSuiteContextService
     public const QUESTION_TYPES = [
         'educational_tips' => 'student.full_ai_suite.question_types.educational_tips',
         'educational_games' => 'student.full_ai_suite.question_types.educational_games',
-        'interactive_file_creation' => 'student.full_ai_suite.question_types.interactive_file_creation',
     ];
 
     /** @return list<string> */
@@ -112,7 +111,6 @@ class FullAiSuiteContextService
         return match ($questionType) {
             'educational_tips' => 'Provide practical, step-by-step educational tips tailored to this request: '.$question,
             'educational_games' => 'Muallimx AI should output one complete standalone HTML5 mini-game or interactive activity that strictly follows the student description (theme, rules, age, language). Student wrote: '.$question,
-            'interactive_file_creation' => 'Create a structured interactive learning file content tailored to this request: '.$question,
             default => 'Educational support response: '.$question,
         };
     }

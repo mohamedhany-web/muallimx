@@ -78,7 +78,7 @@
 
             <form action="{{ route('student.features.full-ai-suite.preview') }}" method="POST" class="space-y-5">
                 @csrf
-                <div class="space-y-5" x-data="{ questionType: @json(old('question_type') ?: array_key_first($qTypes)), len: {{ strlen(old('question', '')) }} }">
+                <div class="space-y-5" x-data="{ questionType: @json(in_array(old('question_type'), array_keys($qTypes), true) ? old('question_type') : 'educational_tips'), len: {{ strlen(old('question', '')) }} }">
                     @if($requiresCourseSelection)
                         <div>
                             <label for="advanced_course_id" class="block text-sm font-semibold text-gray-800 dark:text-slate-200 mb-2">
@@ -97,15 +97,30 @@
                     @endif
 
                     <div>
-                        <label for="question_type" class="block text-sm font-semibold text-gray-800 dark:text-slate-200 mb-2">
+                        <p class="block text-sm font-semibold text-gray-800 dark:text-slate-200 mb-3">
                             {{ __('student.full_ai_suite.question_type_label') }}
-                        </label>
-                        <select name="question_type" id="question_type" required x-model="questionType"
-                            class="w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 px-4 py-3 text-sm shadow-sm focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500">
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             @foreach($qTypes as $key => $transKey)
-                                <option value="{{ $key }}" @selected(old('question_type') === $key)>{{ __($transKey) }}</option>
+                                <label class="relative flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors"
+                                       :class="questionType === '{{ $key }}' ? 'border-sky-500 bg-sky-50 dark:bg-sky-950/30' : 'border-gray-200 dark:border-slate-600 hover:border-sky-300 dark:hover:border-sky-700'">
+                                    <input type="radio" name="question_type" value="{{ $key }}" class="mt-1 text-sky-600"
+                                           x-model="questionType" @checked(old('question_type', 'educational_tips') === $key) required>
+                                    <span class="min-w-0">
+                                        <span class="block text-sm font-bold text-gray-900 dark:text-slate-100">{{ __($transKey) }}</span>
+                                        <span class="block text-xs text-gray-500 dark:text-slate-400 mt-1 leading-relaxed">
+                                            @if($key === 'educational_games')
+                                                {{ __('student.full_ai_suite.question_type_game_hint') }}
+                                            @else
+                                                {{ __('student.full_ai_suite.question_type_tips_hint') }}
+                                            @endif
+                                        </span>
+                                    </span>
+                                    <i class="fas {{ $key === 'educational_games' ? 'fa-gamepad' : 'fa-lightbulb' }} text-lg ms-auto shrink-0"
+                                       :class="questionType === '{{ $key }}' ? 'text-sky-600' : 'text-gray-400'"></i>
+                                </label>
                             @endforeach
-                        </select>
+                        </div>
                     </div>
 
                     <div x-show="questionType === 'educational_games'" x-cloak
@@ -170,6 +185,11 @@
                         {{ __('student.full_ai_suite.muallimx_ai_reply_title') }}
                     </p>
                     <p>{{ $muallimxAiError }}</p>
+                    @if($gameHtmlUrl !== '')
+                        <p class="mt-3 text-xs text-amber-800 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+                            {{ __('student.full_ai_suite.game_busy_static_fallback_notice') }}
+                        </p>
+                    @endif
                 </div>
             @endif
 

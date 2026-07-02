@@ -373,6 +373,9 @@ return [
         'muallimx_ai_error_quota' => 'تجاوزت حدّ الاستخدام أو النموذج غير متاح ضمن خطتك الحالية. غيّر قيمة متغيّر النموذج في ملف البيئة (انظر القيمة الافتراضية في .env.example) ثم نفّذ php artisan config:clear، وراجع لوحة استخدام المزوّد.',
         'muallimx_ai_error_auth' => 'رُفض الطلب (مفتاح غير صالح أو مقيد). تحقق من مفتاح Muallimx AI في .env دون مسافات أو علامات اقتباس، ثم php artisan config:clear.',
         'muallimx_ai_error_model' => 'معرّف النموذج غير معروف لهذه الواجهة. صحّح قيمة متغيّر النموذج في .env وفق .env.example ثم php artisan config:clear.',
+        'muallimx_ai_error_busy' => 'الخدمة مشغولة حالياً لدى مزوّد الذكاء الاصطناعي (ضغط مؤقت). تمت إعادة المحاولة تلقائياً — انتظر قليلاً ثم أعد الإرسال. إن استمر الخطأ جرّب لاحقاً أو غيّر النموذج في الإعدادات.',
+        'muallimx_ai_error_safety' => 'لم يُولَّد رد لأن المحتوى خضع لفلاتر الأمان. صِغ الطلب بصياغة تعليمية مناسبة وحاول مرة أخرى.',
+        'game_busy_static_fallback_notice' => 'تعذّر توليد اللعبة بالذكاء الاصطناعي الآن (الخدمة مشغولة). عُرضت نسخة تفاعلية مبسّطة مؤقتاً — يمكنك إعادة المحاولة بعد دقائق.',
         'muallimx_ai_error_debug' => 'تفاصيل الخطأ (وضع التطوير): :detail',
         'context_json_title' => 'مصفوفة السياق (JSON)',
         'prompt_preview_title' => 'معاينة النص (Prompt)',
@@ -382,9 +385,10 @@ return [
         ],
         'question_types' => [
             'educational_tips' => 'نصائح تعليمية',
-            'educational_games' => 'ألعاب تعليمية',
-            'interactive_file_creation' => 'إنشاء ملف تفاعلي',
+            'educational_games' => 'لعبة تعليمية',
         ],
+        'question_type_tips_hint' => 'احصل على نصائح وإرشادات تعليمية مخصّصة لطلبك.',
+        'question_type_game_hint' => 'يُولَّد لعبة تفاعلية HTML من وصفك (الموضوع، العمر، اللغة).',
     ],
 
     /*
