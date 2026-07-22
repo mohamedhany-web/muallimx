@@ -184,7 +184,7 @@
         <div class="container-1200">
             <div class="max-w-3xl mx-auto text-center reveal mb-10">
                 <span class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold mb-4" style="background:#FFE5F7;color:#283593">ماذا نقدّم؟</span>
-                <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-4">بجمل بسيطة: منصة أدوات للمعلم</h2>
+                <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-4">منصة أدوات للمعلم</h2>
                 <p class="text-slate-600 text-base sm:text-lg leading-8">
                     كثير من العملاء يسألوننا على واتساب: «أنتم بتقدّموا إيه؟»
                     الإجابة المختصرة: <strong class="text-mx-indigo">Muallimx منصة اشتراك للمعلمين</strong> تمنحك أدوات جاهزة للتحضير والتدريس والنمو المهني داخل حساب واحد.
