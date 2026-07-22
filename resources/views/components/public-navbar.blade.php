@@ -27,7 +27,7 @@
                 @php
                     $desktopLinks = [
                         ['route' => 'home', 'label' => 'الرئيسية', 'match' => 'home'],
-                        ['route' => 'public.courses', 'label' => 'الكورسات', 'match' => 'public.courses*'],
+                        ['route' => 'public.pricing', 'label' => 'الباقات', 'match' => 'public.pricing*'],
                         ['route' => 'public.about', 'label' => 'من نحن', 'match' => 'public.about'],
                         ['route' => 'public.contact', 'label' => 'تواصل معنا', 'match' => 'public.contact'],
                     ];
@@ -88,9 +88,9 @@
                 <i class="fas fa-home ml-3 text-sky-500"></i>
                 الرئيسية
             </a>
-            <a href="{{ route('public.courses') }}" class="block text-gray-700 font-medium text-lg py-3 border-b border-gray-200 hover:text-sky-600 transition-colors {{ request()->routeIs('public.courses*') ? 'text-sky-600 font-semibold' : '' }}">
-                <i class="fas fa-code ml-3 text-sky-500"></i>
-                الكورسات
+            <a href="{{ route('public.pricing') }}" class="block text-gray-700 font-medium text-lg py-3 border-b border-gray-200 hover:text-sky-600 transition-colors {{ request()->routeIs('public.pricing*') ? 'text-sky-600 font-semibold' : '' }}">
+                <i class="fas fa-tags ml-3 text-sky-500"></i>
+                الباقات
             </a>
             <a href="{{ route('public.about') }}" class="block text-gray-700 font-medium text-lg py-3 border-b border-gray-200 hover:text-sky-600 transition-colors {{ request()->routeIs('public.about') ? 'text-sky-600 font-semibold' : '' }}">
                 <i class="fas fa-graduation-cap ml-3 text-sky-500"></i>

@@ -189,117 +189,86 @@ class DashboardController extends Controller
     private function studentDashboard()
     {
         $user = Auth::user();
-        
-        $activeCourses = $user->activeCourses()
-            ->with(['academicYear', 'academicSubject', 'teacher'])
-            ->get();
+        $activeSubscription = $user->activeSubscription();
+        $pricingUrl = route('public.pricing');
+        $featureConfig = config('student_subscription_features', []);
 
-        $activeCourseIds = $activeCourses->pluck('id')->filter()->unique()->values();
+        $packageFeatures = [];
+        $unlockedCount = 0;
 
-        // تحميل بيانات التسجيلات لضمان توفر التقدم
-        $enrollments = $user->courseEnrollments()
-            ->whereIn('advanced_course_id', $activeCourseIds)
-            ->whereIn('status', ['active', 'completed'])
-            ->get()
-            ->keyBy('advanced_course_id');
+        foreach ($featureConfig as $featureKey => $cfg) {
+            $unlocked = $user->hasSubscriptionFeature($featureKey);
+            if ($unlocked) {
+                $unlockedCount++;
+            }
 
-        $activeCourses->each(function ($course) use ($enrollments, $user) {
-            if ($enrollment = $enrollments->get($course->id)) {
-                $course->setRelation('enrollment', $enrollment);
+            $routeName = $cfg['route'] ?? 'student.features.show';
+            $params = $cfg['route_params'] ?? [];
+            if ($routeName === 'student.features.show') {
+                $params = array_merge($params, ['feature' => $featureKey]);
+            }
 
-                if ($course->pivot) {
-                    $course->pivot->progress = (float) ($course->pivot->progress ?? $enrollment->progress ?? 0);
+            $featureUrl = $pricingUrl;
+            if ($unlocked) {
+                if ($routeName === 'student.features.show' && \Illuminate\Support\Facades\Route::has('student.features.show')) {
+                    $featureUrl = route('student.features.show', $params);
+                } elseif ($routeName !== 'student.features.show' && \Illuminate\Support\Facades\Route::has($routeName)) {
+                    $featureUrl = route($routeName, $params);
                 }
             }
-            $course->student_points = LectureVideoQuestionAnswer::totalScoreForUserInCourse($user->id, $course->id);
-        });
 
-        $recentOrders = Order::where('user_id', $user->id)
-            ->with(['course.academicYear', 'course.academicSubject'])
-            ->latest()
-            ->take(5)
-            ->get();
+            $packageFeatures[] = [
+                'key' => $featureKey,
+                'label' => __('student.subscription_feature.'.$featureKey),
+                'description' => __('student.subscription_feature_desc.'.$featureKey),
+                'icon' => $cfg['icon'] ?? 'fa-star',
+                'icon_bg' => $cfg['icon_bg'] ?? 'bg-slate-100',
+                'icon_text' => $cfg['icon_text'] ?? 'text-slate-600',
+                'unlocked' => $unlocked,
+                'url' => $featureUrl,
+            ];
+        }
+
+        $isFreeTrial = $activeSubscription
+            && is_string($activeSubscription->teacher_plan_key ?? null)
+            && \App\Support\TeacherPlanKeys::isFree($activeSubscription->teacher_plan_key);
+
+        $daysRemaining = null;
+        $daysUsed = null;
+        if ($activeSubscription?->end_date) {
+            $daysRemaining = max(0, now()->startOfDay()->diffInDays($activeSubscription->end_date->copy()->startOfDay(), false));
+        }
+        if ($activeSubscription?->start_date) {
+            $daysUsed = max(0, $activeSubscription->start_date->copy()->startOfDay()->diffInDays(now()->startOfDay()));
+        }
+
+        // بعد يومين من التجربة المجانية، أو قرب الانتهاء، أو بدون اشتراك → إظهار تجديد/ترقية
+        $showRenewCta = ! $activeSubscription
+            || $isFreeTrial
+            || ($daysRemaining !== null && $daysRemaining <= 3);
+
+        $renewHighlight = $isFreeTrial && $daysUsed !== null && $daysUsed >= 2;
 
         $stats = [
-            'active_courses' => $activeCourses->count(),
-            'pending_orders' => Order::where('user_id', $user->id)->where('status', 'pending')->count(),
-            'completed_courses' => $user->courseEnrollments()->where('status', 'completed')->count(),
-            'total_progress' => $this->calculateOverallProgress($user),
-            'total_learning_hours' => $activeCourseIds->isEmpty()
-                ? 0
-                : (int) AdvancedCourse::whereIn('id', $activeCourseIds)->sum('duration_hours'),
-            'average_score' => round($user->getAverageScore(), 1),
-            'completed_exams' => $user->getCompletedExamsCount(),
+            'features_total' => count($packageFeatures),
+            'features_unlocked' => $unlockedCount,
+            'has_subscription' => (bool) $activeSubscription,
+            'is_free_trial' => $isFreeTrial,
+            'days_remaining' => $daysRemaining,
+            'days_used' => $daysUsed,
         ];
 
-        $upcomingAssignments = Assignment::with(['course', 'lesson'])
-            ->where('status', 'published')
-            ->where(function ($query) use ($activeCourseIds) {
-                $query->whereIn('advanced_course_id', $activeCourseIds)
-                    ->orWhereIn('course_id', $activeCourseIds);
-            })
-            ->where(function ($query) {
-                $query->whereNull('due_date')
-                    ->orWhere('due_date', '>=', now()->startOfDay());
-            })
-            ->get()
-            ->sortBy(function ($assignment) {
-                return $assignment->due_date ?? now()->addYear();
-            })
-            ->values()
-            ->take(5);
-
-        $upcomingExams = Exam::with(['course.academicSubject'])
-            ->whereIn('advanced_course_id', $activeCourseIds)
-            ->where('is_active', true)
-            ->where('is_published', true)
-            ->where(function ($query) {
-                $query->whereNull('end_time')
-                    ->orWhere('end_time', '>=', now());
-            })
-            ->get()
-            ->sortBy(function ($exam) {
-                if ($exam->start_time) {
-                    return $exam->start_time;
-                }
-
-                if ($exam->start_date) {
-                    return $exam->start_date->startOfDay();
-                }
-
-                return $exam->created_at ?? now();
-            })
-            ->values()
-            ->take(5);
-
-        $recentExamAttempts = $user->examAttempts()
-            ->with(['exam.course'])
-            ->latest()
-            ->take(5)
-            ->get();
-
-        $recentCertificates = Certificate::where('user_id', $user->id)
-            ->with('course')
-            ->orderByDesc('issued_at')
-            ->orderByDesc('created_at')
-            ->take(5)
-            ->get();
-
-        $activeSubscription = $user->activeSubscription();
-
-        return view(
-            'dashboard.student',
-            compact(
-                'stats',
-                'activeCourses',
-                'recentOrders',
-                'upcomingAssignments',
-                'upcomingExams',
-                'recentExamAttempts',
-                'recentCertificates',
-                'activeSubscription'
-            )
-        );
+        return view('dashboard.student', compact(
+            'activeSubscription',
+            'packageFeatures',
+            'stats',
+            'pricingUrl',
+            'showRenewCta',
+            'renewHighlight',
+            'isFreeTrial',
+            'daysRemaining',
+            'daysUsed'
+        ));
     }
 
     private function calculateOverallProgress($user)
@@ -307,13 +276,14 @@ class DashboardController extends Controller
         $enrollments = $user->courseEnrollments()
             ->whereIn('status', ['active', 'completed'])
             ->get();
-        if ($enrollments->isEmpty()) return 0;
-        
+        if ($enrollments->isEmpty()) {
+            return 0;
+        }
+
         $totalProgress = $enrollments->reduce(function ($carry, $enrollment) {
             return $carry + (float) ($enrollment->progress ?? 0);
         }, 0);
 
         return round($totalProgress / $enrollments->count(), 1);
     }
-
 }

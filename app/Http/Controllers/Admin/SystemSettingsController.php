@@ -7,7 +7,6 @@ use App\Mail\TwoFactorCodeMail;
 use App\Models\Setting;
 use App\Models\TwoFactorLog;
 use App\Services\AdminPanelBranding;
-use App\Services\FawaterakService;
 use App\Services\PaymentGatewaySettings;
 use App\Services\PlatformSecuritySettings;
 use App\Services\PublicFooterSettings;
@@ -65,8 +64,6 @@ class SystemSettingsController extends Controller
         $currentUser = auth()->user();
         $admin2faAppliesToCurrentUserRole = $currentUser && in_array((string) $currentUser->role, ['super_admin', 'admin'], true);
 
-        $fawaterakGatewayEnabled = Setting::getValue(PaymentGatewaySettings::SETTING_KEY) === '1';
-        $fawaterakEnvConfigured = app(FawaterakService::class)->isConfigured();
         $paymentGatewayFeePercent = Setting::getValue(PaymentGatewaySettings::FEE_PERCENT_SETTING_KEY) ?? '';
 
         return view('admin.system-settings.edit', compact(
@@ -75,8 +72,6 @@ class SystemSettingsController extends Controller
             'adminPanelLogoUrl',
             'adminTwoFactorRequired',
             'admin2faAppliesToCurrentUserRole',
-            'fawaterakGatewayEnabled',
-            'fawaterakEnvConfigured',
             'paymentGatewayFeePercent'
         ));
     }
@@ -326,8 +321,9 @@ class SystemSettingsController extends Controller
         }
 
         Setting::setValue(
+            // بوابة فواتيرك ملغاة — الإبقاء على نظام المحافظ / التحويل اليدوي فقط
             PaymentGatewaySettings::SETTING_KEY,
-            $request->boolean('fawaterak_gateway_enabled') ? '1' : null
+            null
         );
 
         $feeRaw = trim((string) $request->input('payment_gateway_fee_percent', ''));

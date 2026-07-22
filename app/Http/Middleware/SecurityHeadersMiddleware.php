@@ -77,6 +77,9 @@ class SecurityHeadersMiddleware
             "frame-src 'self' ".
             'https://iframe.mediadelivery.net '.
             'https://player.mediadelivery.net '.
+            'https://www.youtube.com '.
+            'https://youtube.com '.
+            'https://www.youtube-nocookie.com '.
             $jitsiOrigin.
             $fawaterkCsp.'; '.
             "object-src 'none'; ".

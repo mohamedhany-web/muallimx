@@ -127,8 +127,6 @@ Route::get('/sitemap.xml', function () {
 
     // الصفحات العامة الثابتة
     $staticPages = [
-        ['url' => '/courses',      'priority' => '0.9', 'changefreq' => 'daily'],
-        ['url' => '/instructors',  'priority' => '0.8', 'changefreq' => 'weekly'],
         ['url' => '/pricing',      'priority' => '0.8', 'changefreq' => 'weekly'],
         ['url' => '/about',        'priority' => '0.8', 'changefreq' => 'monthly'],
         ['url' => '/contact',      'priority' => '0.7', 'changefreq' => 'monthly'],
@@ -154,50 +152,6 @@ Route::get('/sitemap.xml', function () {
             'changefreq' => $page['changefreq'],
             'priority' => $page['priority'],
         ];
-    }
-
-    // الكورسات النشطة مع صورة (Image Sitemap)
-    try {
-        $courses = \App\Models\AdvancedCourse::where('is_active', true)
-            ->select('id', 'title', 'thumbnail', 'description', 'updated_at')
-            ->orderBy('updated_at', 'desc')
-            ->get();
-
-        foreach ($courses as $course) {
-            $entry = [
-                'loc' => url('/course/'.$course->id),
-                'lastmod' => optional($course->updated_at)->format('Y-m-d') ?: now()->toDateString(),
-                'changefreq' => 'weekly',
-                'priority' => '0.8',
-            ];
-            if ($course->thumbnail) {
-                $entry['image_loc'] = asset('storage/'.str_replace('\\', '/', $course->thumbnail));
-                $entry['image_title'] = $course->title ?? '';
-                $entry['image_caption'] = \Illuminate\Support\Str::limit(strip_tags($course->description ?? ''), 100);
-            }
-            $urls[] = $entry;
-        }
-    } catch (\Exception $e) {
-    }
-
-    // المدربون النشطون مع صورة
-    try {
-        $instructors = \App\Models\User::whereIn('role', ['instructor', 'teacher'])
-            ->where('is_active', true)
-            ->select('id', 'name', 'updated_at')
-            ->orderBy('updated_at', 'desc')
-            ->limit(1000)
-            ->get();
-
-        foreach ($instructors as $instructor) {
-            $urls[] = [
-                'loc' => route('public.instructors.show', $instructor),
-                'lastmod' => optional($instructor->updated_at)->format('Y-m-d') ?: now()->toDateString(),
-                'changefreq' => 'weekly',
-                'priority' => '0.7',
-            ];
-        }
-    } catch (\Exception $e) {
     }
 
     // مقالات Media المنشورة
@@ -231,6 +185,25 @@ Route::get('/sitemap.xml', function () {
                 'lastmod' => optional($svc->updated_at)->format('Y-m-d') ?: now()->toDateString(),
                 'changefreq' => 'monthly',
                 'priority' => '0.65',
+            ];
+        }
+    } catch (\Exception $e) {
+    }
+
+    // صفحات الهبوط النشطة (إعلانات)
+    try {
+        $landingPages = \App\Models\LandingPage::query()
+            ->publishedNow()
+            ->select('slug', 'updated_at')
+            ->orderByDesc('updated_at')
+            ->limit(500)
+            ->get();
+        foreach ($landingPages as $lp) {
+            $urls[] = [
+                'loc' => route('public.landing-pages.show', $lp->slug),
+                'lastmod' => optional($lp->updated_at)->format('Y-m-d') ?: now()->toDateString(),
+                'changefreq' => 'weekly',
+                'priority' => '0.7',
             ];
         }
     } catch (\Exception $e) {
@@ -312,6 +285,10 @@ Route::get('/portfolio/{id}', [\App\Http\Controllers\Public\PortfolioController:
 Route::get('/services', [\App\Http\Controllers\Public\SiteServiceController::class, 'index'])->name('public.services.index');
 Route::get('/services/{siteService}', [\App\Http\Controllers\Public\SiteServiceController::class, 'show'])->name('public.services.show');
 
+// صفحات الهبوط للإعلانات الممولة
+Route::get('/lp/{landingPage}', [\App\Http\Controllers\Public\LandingPageController::class, 'show'])
+    ->name('public.landing-pages.show');
+
 // تم إيقاف مجتمع البيانات والذكاء الاصطناعي (مسابقات، داتاسيت، مجتمع) بالكامل، لذا أزيلت جميع مساراته.
 
 // Muallimx Classroom — دخول الضيوف برابط/كود (بدون تسجيل دخول)
@@ -332,103 +309,22 @@ Route::post('/contact', [\App\Http\Controllers\Public\ContactController::class, 
 Route::get('/media', [\App\Http\Controllers\Public\MediaController::class, 'index'])->name('public.media.index');
 Route::get('/media/{media}', [\App\Http\Controllers\Public\MediaController::class, 'show'])->name('public.media.show');
 
-// صفحة الكورسات العامة (?subject=id لتصفية حسب المادة من الصفحة الرئيسية)
-Route::get('/courses', function (\Illuminate\Http\Request $request) {
-    $coursesQuery = \App\Models\AdvancedCourse::where('is_active', true);
-
-    $subjectId = (int) $request->query('subject', 0);
-    if ($subjectId > 0) {
-        $coursesQuery->where('academic_subject_id', $subjectId);
-    }
-
-    $coursesCollection = $coursesQuery
-        ->with(['academicSubject', 'academicYear', 'instructor:id,name', 'courseCategory'])
-        ->withCount('lectures')
-        ->orderBy('is_featured', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->get();
-
-    $courseFilterCategories = \App\Models\CourseCategory::active()->ordered()->get(['id', 'name']);
-
-    $courses = $coursesCollection->map(function ($course) {
-        return [
-            'id' => $course->id,
-            'title' => $course->title ?? 'بدون عنوان',
-            'description' => $course->description ?? '',
-            'level' => $course->level ?? 'beginner',
-            'price' => (float) ($course->price ?? 0),
-            'sale_price' => $course->effectivePurchasePrice(),
-            'has_promo_price' => $course->hasPromotionalPrice(),
-            'duration_hours' => (int) ($course->duration_hours ?? 0),
-            'is_featured' => (bool) ($course->is_featured ?? false),
-            'is_free' => (bool) ($course->is_free ?? false),
-            'lectures_count' => (int) ($course->lectures_count ?? 0),
-            'thumbnail' => $course->thumbnail ? str_replace('\\', '/', $course->thumbnail) : null,
-            'academic_subject_id' => $course->academic_subject_id ? (int) $course->academic_subject_id : null,
-            'academic_subject' => $course->academicSubject ? [
-                'name' => $course->academicSubject->name ?? 'غير محدد',
-            ] : null,
-            'course_category_id' => $course->course_category_id ? (int) $course->course_category_id : null,
-            'course_category' => $course->courseCategory ? [
-                'name' => $course->courseCategory->name ?? '',
-            ] : null,
-            'instructor' => $course->instructor ? [
-                'name' => $course->instructor->name,
-            ] : null,
-        ];
-    })->values()->toArray();
-
-    // جلب الباقات النشطة
-    $packages = \App\Models\Package::active()
-        ->with(['courses' => function ($query) {
-            $query->where('is_active', true);
-        }])
-        ->withCount('courses')
-        ->orderBy('is_featured', 'desc')
-        ->orderBy('is_popular', 'desc')
-        ->orderBy('order')
-        ->get();
-
-    return view('courses', compact('courses', 'packages', 'courseFilterCategories'));
+// صفحة الكورسات العامة — مخفية للمعلمين؛ إعادة توجيه لصفحة الباقات
+Route::get('/courses', function () {
+    return redirect()->route('public.pricing')->with('info', 'المنصة مخصّصة لباقات وأدوات المعلمين. تصفّح الباقات من هنا.');
 })->name('public.courses');
 
-// صفحة المدربين (الملفات التعريفية المعتمدة)
-Route::get('/instructors', [\App\Http\Controllers\Public\InstructorController::class, 'index'])->name('public.instructors.index');
-Route::get('/instructors/{instructor}', [\App\Http\Controllers\Public\InstructorController::class, 'show'])->name('public.instructors.show');
+// صفحة المدربين — مخفية؛ إعادة توجيه لصفحة الباقات
+Route::get('/instructors', function () {
+    return redirect()->route('public.pricing');
+})->name('public.instructors.index');
+Route::get('/instructors/{instructor}', function () {
+    return redirect()->route('public.pricing');
+})->name('public.instructors.show');
 
-// صفحة تفاصيل الكورس العامة
-Route::get('/course/{id}', function ($id) {
-    $course = \App\Models\AdvancedCourse::where('id', $id)
-        ->where('is_active', true)
-        ->with(['academicSubject', 'academicYear', 'instructor', 'courseCategory'])
-        ->withCount('lessons')
-        ->firstOrFail();
-
-    // التحقق من التسجيل في الكورس
-    $isEnrolled = false;
-    if (auth()->check()) {
-        $isEnrolled = \App\Models\StudentCourseEnrollment::where('user_id', auth()->id())
-            ->where('advanced_course_id', $course->id)
-            ->where('status', 'active')
-            ->exists();
-    }
-
-    // كورسات ذات صلة
-    $relatedCourses = \App\Models\AdvancedCourse::where('is_active', true)
-        ->where('id', '!=', $course->id)
-        ->where(function ($query) use ($course) {
-            if ($course->course_category_id) {
-                $query->where('course_category_id', $course->course_category_id);
-            }
-            $query->orWhere('academic_subject_id', $course->academic_subject_id)
-                ->orWhere('is_featured', true);
-        })
-        ->with(['academicSubject'])
-        ->withCount('lessons')
-        ->limit(3)
-        ->get();
-
-    return view('course-show', compact('course', 'relatedCourses', 'isEnrolled'));
+// صفحة تفاصيل الكورس العامة — مخفية؛ إعادة توجيه لصفحة الباقات
+Route::get('/course/{id}', function () {
+    return redirect()->route('public.pricing');
 })->name('public.course.show');
 
 // سكربت الدفع عبر نطاق الموقع — مسار محايد (قوائم الحجب تعرّف غالباً /fawaterk/)
@@ -476,23 +372,23 @@ Route::post('/course/{courseId}/enroll-free', [\App\Http\Controllers\Public\Chec
     ->middleware('auth')
     ->name('public.course.enroll.free');
 
-// المسارات التعليمية ملغاة — التوجيه إلى الدورات
-Route::redirect('/learning-paths', '/courses', 301)->name('public.learning-paths.index');
+// المسارات التعليمية ملغاة — التوجيه إلى الباقات
+Route::redirect('/learning-paths', '/pricing', 301)->name('public.learning-paths.index');
 Route::get('/learning-path/{slug}', function () {
-    return redirect('/courses', 301);
+    return redirect()->route('public.pricing', [], 301);
 })
     ->where('slug', '[a-z0-9-]+')
     ->name('public.learning-path.show');
 
-// المسارات التعليمية ملغاة — توجيه كل مسارات المسارات والدفع إلى الدورات
+// المسارات التعليمية ملغاة — توجيه كل مسارات الدفع إلى الباقات
 Route::get('/learning-path/{slug}/checkout', function () {
-    return redirect('/courses', 302);
+    return redirect()->route('public.pricing', [], 302);
 })->name('public.learning-path.checkout');
 Route::post('/learning-path/{slug}/checkout/complete', function () {
-    return redirect('/courses', 302);
+    return redirect()->route('public.pricing', [], 302);
 })->name('public.learning-path.checkout.complete');
 Route::post('/learning-path/{slug}/checkout/kashier', function () {
-    return redirect('/courses', 302);
+    return redirect()->route('public.pricing', [], 302);
 })->name('public.learning-path.checkout.kashier');
 
 Route::get('/checkout/kashier/callback', [\App\Http\Controllers\Public\CheckoutController::class, 'kashierCallback'])
@@ -504,10 +400,10 @@ Route::get('/checkout/fawaterak/{status}', [\App\Http\Controllers\Public\Checkou
     ->name('public.checkout.fawaterak.return');
 
 Route::post('/learning-path/{slug}/enroll-free', function () {
-    return redirect('/courses', 302);
+    return redirect()->route('public.pricing', [], 302);
 })->name('public.learning-path.enroll.free');
 Route::post('/learning-path/{slug}/enroll', function () {
-    return redirect('/courses', 302);
+    return redirect()->route('public.pricing', [], 302);
 })->name('public.learning-path.enroll');
 
 // صفحة تفاصيل الباقة (للتوافق مع الروابط القديمة)
@@ -843,6 +739,11 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             ->name('student.features.full-ai-suite.preview');
         Route::get('/curriculum-library', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
         Route::get('/curriculum-library/{item:slug}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'show'])->name('curriculum-library.show');
+
+        // مكتبة الفيديو (قنوات يوتيوب داخل المنصة) — منفصلة عن مكتبة المناهج
+        Route::get('/video-library', [\App\Http\Controllers\Student\VideoLibraryController::class, 'index'])->name('video-library.index');
+        Route::get('/video-library/channel/{category:slug}', [\App\Http\Controllers\Student\VideoLibraryController::class, 'category'])->name('video-library.category');
+        Route::get('/video-library/watch/{video:slug}', [\App\Http\Controllers\Student\VideoLibraryController::class, 'show'])->name('video-library.show');
         Route::get('/curriculum-library/{item:slug}/m/{material}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'downloadMaterial'])->name('curriculum-library.material.download');
         Route::get('/curriculum-library/{item:slug}/m/{material}/html', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialHtml'])->name('curriculum-library.material.html');
         Route::get('/curriculum-library/{item:slug}/m/{material}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPdf'])->name('curriculum-library.material.pdf');
@@ -1485,6 +1386,20 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::delete('/academy-opportunities/{academy_opportunity}/recruitment/presentations/{presentation}', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'destroyPresentation'])->name('academy-opportunities.recruitment.presentations.destroy');
         Route::get('/academy-opportunities/{academy_opportunity}/recruitment/presentations/{presentation}/print', [\App\Http\Controllers\Admin\RecruitmentDeskController::class, 'printForAcademy'])->name('academy-opportunities.recruitment.presentations.print');
         // مكتبة المناهج التفاعلية (إدارة)
+        // مكتبة الفيديو (يوتيوب داخل المنصة)
+        Route::get('/video-library', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'index'])->name('video-library.index');
+        Route::get('/video-library/categories', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'categories'])->name('video-library.categories');
+        Route::get('/video-library/categories/create', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'createCategory'])->name('video-library.categories.create');
+        Route::post('/video-library/categories', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'storeCategory'])->name('video-library.categories.store');
+        Route::get('/video-library/categories/{category}/edit', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'editCategory'])->name('video-library.categories.edit');
+        Route::put('/video-library/categories/{category}', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'updateCategory'])->name('video-library.categories.update');
+        Route::delete('/video-library/categories/{category}', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'destroyCategory'])->name('video-library.categories.destroy');
+        Route::get('/video-library/videos/create', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'createVideo'])->name('video-library.videos.create');
+        Route::post('/video-library/videos', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'storeVideo'])->name('video-library.videos.store');
+        Route::get('/video-library/videos/{video}/edit', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'editVideo'])->name('video-library.videos.edit');
+        Route::put('/video-library/videos/{video}', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'updateVideo'])->name('video-library.videos.update');
+        Route::delete('/video-library/videos/{video}', [\App\Http\Controllers\Admin\VideoLibraryController::class, 'destroyVideo'])->name('video-library.videos.destroy');
+
         Route::get('/curriculum-library', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'index'])->name('curriculum-library.index');
         Route::get('/curriculum-library/categories', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'categories'])->name('curriculum-library.categories');
         Route::get('/curriculum-library/categories/create', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'createCategory'])->name('curriculum-library.categories.create');
@@ -1648,6 +1563,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         // إدارة التسويق
         Route::get('/personal-branding', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'index'])->name('personal-branding.index');
         Route::resource('popup-ads', \App\Http\Controllers\Admin\PopupAdController::class)->except(['show']);
+        Route::resource('landing-pages', \App\Http\Controllers\Admin\LandingPageController::class)->except(['show']);
         Route::get('/personal-branding/{personal_branding}/edit', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'edit'])->name('personal-branding.edit');
         Route::put('/personal-branding/{personal_branding}', [\App\Http\Controllers\Admin\InstructorPersonalBrandingController::class, 'update'])
             ->middleware('throttle:30,1')

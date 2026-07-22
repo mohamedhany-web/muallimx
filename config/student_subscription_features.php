@@ -13,6 +13,13 @@ return [
         'route' => 'curriculum-library.index',
         'route_params' => [],
     ],
+    'video_library_access' => [
+        'icon' => 'fa-play-circle',
+        'icon_bg' => 'bg-rose-100 dark:bg-rose-900/40',
+        'icon_text' => 'text-rose-600 dark:text-rose-400',
+        'route' => 'video-library.index',
+        'route_params' => [],
+    ],
     'ai_tools' => [
         'icon' => 'fa-robot',
         'icon_bg' => 'bg-violet-100 dark:bg-violet-900/40',

@@ -312,10 +312,20 @@ return [
             'icon' => 'fas fa-book-open',
             'route_patterns' => ['admin.curriculum-library.*'],
         ],
+        'manage.video-library' => [
+            'route' => 'admin.video-library.index',
+            'icon' => 'fas fa-play-circle',
+            'route_patterns' => ['admin.video-library.*'],
+        ],
         'manage.popup-ads' => [
             'route' => 'admin.popup-ads.index',
             'icon' => 'fas fa-bullhorn',
             'route_patterns' => ['admin.popup-ads.*'],
+        ],
+        'manage.landing-pages' => [
+            'route' => 'admin.landing-pages.index',
+            'icon' => 'fas fa-pager',
+            'route_patterns' => ['admin.landing-pages.*'],
         ],
         'manage.personal-branding' => [
             'route' => 'admin.personal-branding.index',

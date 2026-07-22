@@ -32,11 +32,9 @@
             <div class="hidden lg:flex items-center gap-1">
                 @php
                 $navLinks = [
-                    ['route' => 'public.courses', 'icon' => 'fa-graduation-cap', 'label' => __('landing.nav.courses')],
-                    ['route' => 'public.portfolio.index', 'icon' => 'fa-briefcase', 'label' => __('landing.nav.portfolio')],
-                    ['route' => 'public.instructors.index', 'icon' => 'fa-chalkboard-teacher', 'label' => __('landing.nav.instructors')],
-                    ['route' => 'public.services.index', 'icon' => 'fa-concierge-bell', 'label' => __('landing.nav.services')],
                     ['route' => 'public.pricing', 'icon' => 'fa-tags', 'label' => __('landing.nav.pricing')],
+                    ['route' => 'public.services.index', 'icon' => 'fa-concierge-bell', 'label' => __('landing.nav.services')],
+                    ['route' => 'public.portfolio.index', 'icon' => 'fa-briefcase', 'label' => __('landing.nav.portfolio')],
                 ];
                 @endphp
 
@@ -131,11 +129,9 @@
         <div class="relative flex-1 px-4 py-5 space-y-1">
             @php
             $mobileLinks = [
-                ['route' => 'public.courses', 'icon' => 'fa-graduation-cap', 'label' => __('landing.nav.courses'), 'color' => 'blue'],
-                ['route' => 'public.portfolio.index', 'icon' => 'fa-briefcase', 'label' => __('landing.nav.portfolio'), 'color' => 'purple'],
-                ['route' => 'public.instructors.index', 'icon' => 'fa-chalkboard-teacher', 'label' => __('landing.nav.instructors'), 'color' => 'emerald'],
-                ['route' => 'public.services.index', 'icon' => 'fa-concierge-bell', 'label' => __('landing.nav.services'), 'color' => 'orange'],
                 ['route' => 'public.pricing', 'icon' => 'fa-tags', 'label' => __('landing.nav.pricing'), 'color' => 'cyan'],
+                ['route' => 'public.services.index', 'icon' => 'fa-concierge-bell', 'label' => __('landing.nav.services'), 'color' => 'orange'],
+                ['route' => 'public.portfolio.index', 'icon' => 'fa-briefcase', 'label' => __('landing.nav.portfolio'), 'color' => 'purple'],
             ];
             @endphp
 

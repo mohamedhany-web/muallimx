@@ -6,7 +6,7 @@
             <i class="fas fa-times text-xs"></i>
         </button>
         <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-[#283593] to-[#FB5607] text-white flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#283593]/25">
-            <i class="fas fa-user-graduate text-lg"></i>
+            <i class="fas fa-chalkboard-teacher text-lg"></i>
         </div>
         <div class="flex-1 min-w-0 relative z-10">
             <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">Muallimx</h2>
@@ -14,54 +14,59 @@
         </div>
     </div>
 
-    {{-- Stats cards --}}
     @php
-        $coursesCount = auth()->user()->activeCourses()->count();
-        $enrollments = auth()->user()->courseEnrollments()->whereIn('status', ['active', 'completed'])->get();
-        $totalProgress = $enrollments->isEmpty() ? 0 : round($enrollments->avg('progress') ?? 0, 0);
-        /** صفحة الكورسات العامة (الواجهة الخارجية) */
-        $publicCoursesUrl = url('/courses');
+        $user = auth()->user();
+        $isStudent = $user->role === 'student' || strtolower((string) $user->role) === 'student';
+        $activeSub = $user->activeSubscription();
+        $featureConfig = config('student_subscription_features', []);
+        $pricingUrl = Route::has('public.pricing') ? route('public.pricing') : url('/pricing');
+        $unlockedFeatures = 0;
+        foreach ($featureConfig as $fk => $_) {
+            if ($user->hasSubscriptionFeature($fk)) {
+                $unlockedFeatures++;
+            }
+        }
+        $featuresTotal = count($featureConfig);
+        $isFreeTrial = $activeSub
+            && is_string($activeSub->teacher_plan_key ?? null)
+            && \App\Support\TeacherPlanKeys::isFree($activeSub->teacher_plan_key);
     @endphp
+
+    {{-- Stats: اشتراك + مزايا --}}
     <div class="px-3 py-3 flex-shrink-0">
         <div class="grid grid-cols-2 gap-2.5">
-            <a href="{{ $publicCoursesUrl }}"
-               title="{{ __('student.browse_courses') }}"
-               class="ins-stat-card bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 block group cursor-pointer no-underline text-inherit focus:outline-none focus-visible:ring-2 focus-visible:ring-[#283593] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 rounded-xl">
+            <a href="{{ $pricingUrl }}"
+               class="ins-stat-card bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 block group cursor-pointer no-underline text-inherit rounded-xl">
+                <div class="flex items-center gap-2 mb-1.5">
+                    <span class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-[#FB5607] dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <i class="fas fa-crown text-sm"></i>
+                    </span>
+                    <span class="text-[10px] font-bold text-[#FB5607] dark:text-amber-400 uppercase tracking-wider">{{ __('student.sidebar_plan') }}</span>
+                </div>
+                <div class="text-sm font-black text-gray-900 dark:text-gray-100 leading-tight truncate">
+                    {{ $activeSub?->plan_name ?? __('student.no_plan_yet') }}
+                </div>
+            </a>
+            <a href="{{ route('dashboard') }}" class="ins-stat-card bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 block group no-underline text-inherit rounded-xl">
                 <div class="flex items-center gap-2 mb-1.5">
                     <span class="w-8 h-8 rounded-lg bg-[#FFE5F7] dark:bg-violet-900/40 text-[#283593] dark:text-violet-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <i class="fas fa-book-open text-sm"></i>
+                        <i class="fas fa-puzzle-piece text-sm"></i>
                     </span>
-                    <span class="text-[10px] font-bold text-[#283593] dark:text-violet-400 uppercase tracking-wider">{{ __('student.courses') }}</span>
+                    <span class="text-[10px] font-bold text-[#283593] dark:text-violet-400 uppercase tracking-wider">{{ __('student.sidebar_features') }}</span>
                 </div>
-                <div class="text-xl font-black text-gray-900 dark:text-gray-100 leading-none tabular-nums">{{ $coursesCount }}</div>
-            </a>
-            <a href="{{ route('my-courses.index') }}" class="ins-stat-card bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/80 block group">
-                <div class="flex items-center gap-2 mb-1.5">
-                    <span class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <i class="fas fa-chart-line text-sm"></i>
-                    </span>
-                    <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">{{ __('student.progress') }}</span>
-                </div>
-                <div class="text-xl font-black text-gray-900 dark:text-gray-100 leading-none tabular-nums">{{ $totalProgress }}%</div>
+                <div class="text-xl font-black text-gray-900 dark:text-gray-100 leading-none tabular-nums">{{ $unlockedFeatures }}/{{ $featuresTotal }}</div>
             </a>
         </div>
     </div>
 
     {{-- Navigation --}}
     <nav class="flex-1 overflow-y-auto sidebar-scroll px-0 py-2 space-y-0.5 min-h-0">
-        @php
-            $user = auth()->user();
-            $isStudent = $user->role === 'student' || strtolower($user->role) === 'student';
-            $activeSub = $user->activeSubscription();
-            $featureConfig = config('student_subscription_features', []);
-        @endphp
         @if($isStudent || $user->hasAnyPermission('student.view.courses', 'student.view.my-courses', 'student.view.orders', 'student.view.invoices', 'student.view.wallet', 'student.view.certificates', 'student.view.achievements', 'student.view.exams', 'student.view.calendar', 'student.view.notifications', 'student.view.profile', 'student.view.settings'))
 
-            {{-- ─── الرئيسية ─── --}}
             <div class="ins-nav-group">
                 <span class="inline-flex items-center gap-1.5">
                     <i class="fas fa-home text-[9px] opacity-50"></i>
-                    الرئيسية
+                    {{ __('student.sidebar_home') }}
                 </span>
             </div>
 
@@ -73,164 +78,90 @@
                 <span class="flex-1 truncate">{{ __('student.dashboard') }}</span>
             </a>
 
-            @if(!$activeSub && Route::has('public.pricing'))
-            <a href="{{ route('public.pricing') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+            <a href="{{ $pricingUrl }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('public.pricing', 'public.subscription.checkout*') ? 'active' : '' }}">
                 <span class="ins-icon bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 text-[#FB5607] dark:text-amber-400">
-                    <i class="fas fa-crown text-sm"></i>
+                    <i class="fas fa-{{ $activeSub ? 'sync-alt' : 'crown' }} text-sm"></i>
                 </span>
-                <span class="flex-1 truncate font-semibold">{{ __('student.sidebar_packages') }}</span>
-                <span class="ins-nav-badge bg-[#FB5607] text-white text-[9px]">جديد</span>
+                <span class="flex-1 truncate font-semibold">
+                    {{ $activeSub ? __('student.renew_or_upgrade') : __('student.sidebar_packages') }}
+                </span>
+                @if(!$activeSub || $isFreeTrial)
+                    <span class="ins-nav-badge bg-[#FB5607] text-white text-[9px]">{{ $isFreeTrial ? __('student.trial_badge') : __('student.new_badge') }}</span>
+                @endif
             </a>
-            @endif
 
-            {{-- ─── القسم المدفوع ─── --}}
-            @if($activeSub)
-            <div class="ins-nav-group mt-3">
-                <span class="inline-flex items-center gap-1.5">
-                    <i class="fas fa-crown text-[9px] text-amber-500 opacity-80"></i>
-                    <span>القسم المدفوع</span>
-                    <span class="mr-auto text-[8px] font-semibold bg-gradient-to-l from-amber-500 to-orange-500 text-white px-1.5 py-0.5 rounded-full leading-none">PRO</span>
-                </span>
-            </div>
-
-            @if(Route::has('student.my-subscription'))
+            @if($activeSub && Route::has('student.my-subscription'))
             <a href="{{ route('student.my-subscription') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('student.my-subscription') ? 'active' : '' }}">
                 <span class="ins-icon bg-[#FFE5F7] dark:bg-sky-900/40 text-[#283593] dark:text-sky-400">
                     <i class="fas fa-gem text-sm"></i>
                 </span>
-                <span class="flex-1 truncate">اشتراكي</span>
-                <span class="text-[9px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded" title="ينتهي في {{ $activeSub->end_date?->format('Y-m-d') }}">{{ $activeSub->end_date?->format('m/d') }}</span>
+                <span class="flex-1 truncate">{{ __('student.my_subscription_short') }}</span>
+                <span class="text-[9px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{{ $activeSub->end_date?->format('m/d') }}</span>
             </a>
             @endif
 
+            {{-- مزايا الباقة — ظاهرة دائماً --}}
+            <div class="ins-nav-group mt-3">
+                <span class="inline-flex items-center gap-1.5">
+                    <i class="fas fa-puzzle-piece text-[9px] text-amber-500 opacity-80"></i>
+                    <span>{{ __('student.package_features_title') }}</span>
+                </span>
+            </div>
+
             @foreach($featureConfig as $featureKey => $cfg)
-                @if(!$user->hasSubscriptionFeature($featureKey))
-                    @continue
-                @endif
                 @php
+                    $unlocked = $user->hasSubscriptionFeature($featureKey);
                     $routeName = $cfg['route'] ?? 'student.features.show';
                     $params = $cfg['route_params'] ?? [];
                     if ($routeName === 'student.features.show') {
                         $params = array_merge($params, ['feature' => $featureKey]);
                     }
-                    $url = $routeName === 'student.features.show' ? route('student.features.show', $params) : route($routeName, $params);
+                    if ($unlocked) {
+                        $url = ($routeName === 'student.features.show')
+                            ? (Route::has('student.features.show') ? route('student.features.show', $params) : $pricingUrl)
+                            : (Route::has($routeName) ? route($routeName, $params) : $pricingUrl);
+                    } else {
+                        $url = $pricingUrl;
+                    }
                     if ($routeName === 'student.portfolio.index') $isActive = request()->routeIs('student.portfolio.*');
                     elseif ($routeName === 'curriculum-library.index') $isActive = request()->routeIs('curriculum-library.*');
+                    elseif ($routeName === 'video-library.index') $isActive = request()->routeIs('video-library.*');
                     elseif ($routeName === 'student.classroom.index') $isActive = request()->routeIs('student.classroom.*');
                     elseif ($routeName === 'student.support.index') $isActive = request()->routeIs('student.support.*');
                     elseif ($routeName === 'student.academies.visibility') $isActive = request()->routeIs('student.academies.*');
                     elseif ($routeName === 'student.opportunities.index') $isActive = request()->routeIs('student.opportunities.*');
                     else $isActive = request()->routeIs('student.features.show') && request()->route('feature') === $featureKey;
+                    $isActive = $unlocked && $isActive;
                 @endphp
-                @if(($routeName === 'student.features.show' && Route::has('student.features.show')) || ($routeName !== 'student.features.show' && Route::has($routeName)))
                 <a href="{{ $url }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-                   class="ins-nav {{ $isActive ? 'active' : '' }}">
+                   class="ins-nav {{ $isActive ? 'active' : '' }} {{ $unlocked ? '' : 'opacity-90' }}">
                     <span class="ins-icon {{ $cfg['icon_bg'] ?? 'bg-slate-100 dark:bg-slate-700/70' }} {{ $cfg['icon_text'] ?? 'text-slate-600 dark:text-slate-300' }}">
-                        <i class="fas {{ $cfg['icon'] ?? 'fa-star' }} text-sm"></i>
+                        <i class="fas {{ $unlocked ? ($cfg['icon'] ?? 'fa-star') : 'fa-lock' }} text-sm"></i>
                     </span>
                     <span class="flex-1 truncate">{{ __("student.subscription_feature.{$featureKey}") }}</span>
+                    @unless($unlocked)
+                        <span class="text-[9px] font-bold text-[#FB5607] bg-orange-50 dark:bg-orange-900/30 px-1.5 py-0.5 rounded">{{ __('student.feature_locked') }}</span>
+                    @endunless
                 </a>
-                @endif
             @endforeach
-            @endif
 
-            @hasPermission('student.view.courses')
-            @php $catalogActive = request()->routeIs('public.courses', 'public.course.*') || request()->routeIs('academic-years*') || request()->routeIs('subjects.*') || request()->routeIs('courses.show'); @endphp
-            <a href="{{ route('public.courses') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ $catalogActive ? 'active' : '' }}">
-                <span class="ins-icon bg-[#FFE5F7] dark:bg-indigo-900/40 text-[#283593] dark:text-indigo-400">
-                    <i class="fas fa-search text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">{{ __('student.browse_courses') }}</span>
-            </a>
-            @endif
-
-            @if($isStudent || $user->hasPermission('student.view.my-courses'))
-            <a href="{{ route('my-courses.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('my-courses.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-[#eef2ff] dark:bg-violet-900/40 text-[#283593] dark:text-violet-400">
-                    <i class="fas fa-book-open text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">{{ __('student.my_courses') }}</span>
-                @if($coursesCount > 0)
-                    <span class="ins-nav-badge bg-[#eef2ff] dark:bg-violet-900/50 text-[#283593] dark:text-violet-300">{{ $coursesCount }}</span>
-                @endif
-            </a>
-            @endif
-
-            @if(Route::has('student.live-sessions.index'))
-            <a href="{{ route('student.live-sessions.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('student.live-sessions.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400">
-                    <i class="fas fa-broadcast-tower text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">البث المباشر</span>
-                @php $studentLiveCount = \App\Models\LiveSession::where('status', 'live')->count(); @endphp
-                @if($studentLiveCount > 0)
-                    <span class="ins-nav-badge bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400">
-                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse inline-block ml-1"></span>{{ $studentLiveCount }}
-                    </span>
-                @endif
-            </a>
-            @endif
-
-            @if(Route::has('student.live-recordings.index'))
-            <a href="{{ route('student.live-recordings.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('student.live-recordings.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-                    <i class="fas fa-play-circle text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">تسجيلات البث</span>
-            </a>
-            @endif
-
-            {{-- ─── التعلم والإنجازات ─── --}}
+            {{-- أدوات مساعدة مبسطة --}}
             <div class="ins-nav-group mt-3">
                 <span class="inline-flex items-center gap-1.5">
-                    <i class="fas fa-trophy text-[9px] opacity-50"></i>
-                    التعلم والإنجازات
+                    <i class="fas fa-toolbox text-[9px] opacity-50"></i>
+                    {{ __('student.sidebar_tools') }}
                 </span>
             </div>
 
-            @if($isStudent || $user->hasPermission('student.view.orders'))
-            <a href="{{ route('orders.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('orders.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">
-                    <i class="fas fa-shopping-bag text-sm"></i>
+            @if($isStudent || $user->hasPermission('student.view.calendar'))
+            <a href="{{ route('calendar') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+               class="ins-nav {{ request()->routeIs('calendar') ? 'active' : '' }}">
+                <span class="ins-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
+                    <i class="fas fa-calendar-alt text-sm"></i>
                 </span>
-                <span class="flex-1 truncate">{{ __('student.orders') }}</span>
-            </a>
-            @endif
-
-            @if($isStudent || $user->hasPermission('student.view.exams'))
-            <a href="{{ route('student.exams.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('student.exams.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400">
-                    <i class="fas fa-clipboard-check text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">{{ __('student.exams') }}</span>
-            </a>
-            @endif
-
-            @if($isStudent)
-            <a href="{{ route('student.assignments.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('student.assignments.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
-                    <i class="fas fa-tasks text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">واجباتي</span>
-            </a>
-            @endif
-
-            @if($isStudent || $user->hasPermission('student.view.certificates'))
-            <a href="{{ route('student.certificates.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('student.certificates.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-                    <i class="fas fa-award text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">{{ __('student.certificates') }}</span>
+                <span class="flex-1 truncate">{{ __('student.calendar') }}</span>
             </a>
             @endif
 
@@ -244,66 +175,21 @@
             </a>
             @endif
 
-            @if($isStudent && Route::has('referrals.index'))
-            <a href="{{ route('referrals.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('referrals.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-cyan-100 dark:bg-cyan-900/40 text-cyan-600 dark:text-cyan-400">
-                    <i class="fas fa-user-friends text-sm"></i>
+            @if($isStudent || $user->hasPermission('student.view.orders'))
+            <a href="{{ route('orders.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
+               class="ins-nav {{ request()->routeIs('orders.*') ? 'active' : '' }}">
+                <span class="ins-icon bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400">
+                    <i class="fas fa-receipt text-sm"></i>
                 </span>
-                <span class="flex-1 truncate">برنامج الإحالات</span>
-            </a>
-            @endif
-
-            @if($isStudent || $user->hasPermission('student.view.calendar'))
-            @php
-                $upcomingEventsCount = 0;
-                try {
-                    $user = auth()->user();
-                    $upcomingEventsCount += \App\Models\Lecture::whereHas('course', function($q) use ($user) {
-                        $q->whereHas('enrollments', function($q2) use ($user) { $q2->where('user_id', $user->id)->where('status', 'active'); });
-                    })->where('status', 'scheduled')->where('scheduled_at', '>=', now())->count();
-                    $upcomingEventsCount += \App\Models\Exam::whereHas('course', function($q) use ($user) {
-                        $q->whereHas('enrollments', function($q2) use ($user) { $q2->where('user_id', $user->id)->where('status', 'active'); });
-                    })->where('is_active', true)->where('is_published', true)->where(function($q) { $q->where('start_time', '>=', now())->orWhere('start_date', '>=', now()); })->count();
-                    $upcomingEventsCount += \App\Models\Assignment::whereHas('course', function($q) use ($user) {
-                        $q->whereHas('enrollments', function($q2) use ($user) { $q2->where('user_id', $user->id)->where('status', 'active'); });
-                    })->where('status', 'published')->where('due_date', '>=', now())->count();
-                    $upcomingEventsCount += \App\Models\LectureAssignment::whereHas('lecture.course', function($q) use ($user) {
-                        $q->whereHas('enrollments', function($q2) use ($user) { $q2->where('user_id', $user->id)->where('status', 'active'); });
-                    })->where('status', 'published')->where('due_date', '>=', now())->count();
-                } catch (\Exception $e) {}
-            @endphp
-            <a href="{{ route('calendar') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('calendar') ? 'active' : '' }}">
-                <span class="ins-icon bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 relative">
-                    <i class="fas fa-calendar-alt text-sm"></i>
-                    @if($upcomingEventsCount > 0)
-                        <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center text-[7px] font-bold text-white">{{ $upcomingEventsCount > 9 ? '9+' : $upcomingEventsCount }}</span>
-                    @endif
-                </span>
-                <span class="flex-1 truncate">{{ __('student.calendar') }}</span>
-                @if($upcomingEventsCount > 0)
-                    <span class="ins-nav-badge bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">{{ $upcomingEventsCount }}</span>
-                @endif
-            </a>
-            @endif
-
-            @if(Route::has('consultations.index') && $isStudent)
-            <a href="{{ route('consultations.index') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
-               class="ins-nav {{ request()->routeIs('consultations.*') ? 'active' : '' }}">
-                <span class="ins-icon bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400">
-                    <i class="fas fa-comments-dollar text-sm"></i>
-                </span>
-                <span class="flex-1 truncate">استشارات المدربين</span>
+                <span class="flex-1 truncate">{{ __('student.orders') }}</span>
             </a>
             @endif
 
             @if($isStudent || $user->hasPermission('student.view.notifications'))
             <a href="{{ route('notifications') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                class="ins-nav {{ request()->routeIs('notifications') ? 'active' : '' }}">
-                <span class="ins-icon bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 relative">
+                <span class="ins-icon bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400">
                     <i class="fas fa-bell text-sm"></i>
-                    <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-900 animate-pulse"></span>
                 </span>
                 <span class="flex-1 truncate">{{ __('student.notifications') }}</span>
             </a>
@@ -319,11 +205,10 @@
             </a>
             @endif
 
-            {{-- ─── الحساب ─── --}}
             <div class="ins-nav-group mt-3">
                 <span class="inline-flex items-center gap-1.5">
                     <i class="fas fa-user-cog text-[9px] opacity-50"></i>
-                    الحساب
+                    {{ __('student.sidebar_account') }}
                 </span>
             </div>
 
@@ -367,7 +252,7 @@
             @if(auth()->user()->isInstructor())
                 <a href="{{ route('dashboard') }}" @click="if (window.innerWidth < 1024) setTimeout(() => { sidebarOpen = false }, 50)"
                    class="ins-nav">
-                <span class="ins-icon bg-[#FFE5F7] dark:bg-sky-900/40 text-[#283593] dark:text-sky-400">
+                    <span class="ins-icon bg-[#FFE5F7] dark:bg-sky-900/40 text-[#283593] dark:text-sky-400">
                         <i class="fas fa-chalkboard-teacher text-sm"></i>
                     </span>
                     <span class="flex-1 truncate">لوحة المعلم</span>
@@ -376,7 +261,6 @@
         @endif
     </nav>
 
-    {{-- User card --}}
     <div class="px-3 py-3 flex-shrink-0 border-t border-gray-200/80 dark:border-gray-700/80">
         <div class="ins-user-card flex items-center gap-3">
             <div class="u-avatar flex-shrink-0 w-10 h-10 rounded-xl">

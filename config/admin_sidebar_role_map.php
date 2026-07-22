@@ -30,7 +30,7 @@ return [
         ],
         [
             'title' => 'تسمية: أقسام حسب الوظيفة',
-            'note' => 'تظهر مجموعة «التحكم الشامل بالطلاب…» إذا وُجدت إحدى: manage.users, manage.students-accounts, manage.enrollments, manage.subscriptions, manage.student-control, manage.support-tickets, manage.consultations, manage.hiring-academies, manage.curriculum-library, manage.teacher-features, manage.quality-control, view.reports',
+            'note' => 'تظهر مجموعة «التحكم الشامل بالطلاب…» إذا وُجدت إحدى: manage.users, manage.students-accounts, manage.enrollments, manage.subscriptions, manage.student-control, manage.support-tickets, manage.consultations, manage.hiring-academies, manage.curriculum-library, manage.video-library, manage.teacher-features, manage.quality-control, view.reports',
             'items' => [
                 [
                     'label' => 'التحكم الشامل بالطلاب والخدمات المدفوعة',
@@ -45,6 +45,7 @@ return [
                         ['label' => 'الأكاديميات التوظيفية', 'permissions' => ['manage.hiring-academies']],
                         ['label' => 'فرص الأكاديميات', 'permissions' => ['manage.hiring-academies']],
                         ['label' => 'مكتبة المناهج (المدفوع)', 'permissions' => ['manage.curriculum-library']],
+                        ['label' => 'مكتبة الفيديو (قنوات)', 'permissions' => ['manage.video-library']],
                         ['label' => 'مراقبة شاملة على الطلاب', 'permissions' => ['manage.student-control', 'manage.quality-control']],
                         ['label' => 'تقارير الطلاب والاشتراكات', 'permissions' => ['view.reports', 'manage.student-control']],
                         ['label' => 'إدارة المزايا المدفوعة', 'permissions' => ['manage.subscriptions', 'manage.student-control']],
@@ -133,6 +134,7 @@ return [
             'title' => 'التسويق (مجموعة)',
             'items' => [
                 ['label' => 'الإعلانات المنبثقة', 'permissions' => ['manage.popup-ads']],
+                ['label' => 'صفحات الهبوط (إعلانات)', 'permissions' => ['manage.landing-pages']],
                 ['label' => 'العلامة الشخصية', 'permissions' => ['manage.personal-branding']],
                 ['label' => 'الكوبونات والخصومات', 'permissions' => ['manage.coupons']],
                 ['label' => 'عمولات كوبونات التسويق', 'permissions' => ['manage.coupons']],
@@ -147,6 +149,7 @@ return [
                 ['label' => 'الاشتراكات', 'permissions' => ['manage.subscriptions']],
                 ['label' => 'مزايا اشتراك المعلمين', 'permissions' => ['manage.teacher-features']],
                 ['label' => 'مكتبة المناهج', 'permissions' => ['manage.curriculum-library']],
+                ['label' => 'مكتبة الفيديو', 'permissions' => ['manage.video-library']],
                 ['label' => 'الباقات والأسعار', 'permissions' => ['manage.packages']],
             ],
         ],

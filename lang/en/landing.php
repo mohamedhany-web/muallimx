@@ -2,10 +2,10 @@
 
 return [
     'meta' => [
-        'title' => 'Muallimx | Qualify & Empower Teachers to Teach Online Professionally',
-        'description' => 'Muallimx is an Arabic platform specializing in qualifying and developing teachers to work online — through hands-on training, AI tools, ready-made curricula, and a professional profile that opens real job opportunities.',
-        'og_title' => 'Muallimx — Teach Online Like a Pro',
-        'og_description' => 'Advanced practical training, AI assistant that cuts preparation time, ready-made lesson plans and activities, and a professional profile connecting you with real job opportunities — whatever your subject.',
+        'title' => 'Muallimx | Teacher tools platform — curricula, AI, video & classroom',
+        'description' => 'Muallimx is a subscription platform for teachers: interactive curricula, video channels, AI tools, virtual classroom, and personal marketing — not a student course store.',
+        'og_title' => 'Muallimx — Teacher tools in one plan',
+        'og_description' => 'What do we offer? In short: subscription plans and tools for teachers (curricula, AI, video, classroom, personal marketing) inside one account.',
     ],
 
     'nav' => [
@@ -15,7 +15,7 @@ return [
         'community' => 'Data & AI Community',
         'portfolio' => 'Portfolio',
         'instructors' => 'Instructors',
-        'pricing' => 'Pricing & plans',
+        'pricing' => 'Plans & pricing',
         'services' => 'Services',
         'login' => 'Login',
         'register' => 'Sign Up',
@@ -25,9 +25,9 @@ return [
     ],
 
     'hero' => [
-        'headline' => 'Your all-in-one platform to develop, evaluate, and hire teachers',
-        'subheadline' => 'Recorded courses, interactive curricula, performance dashboards, and hiring workflows built for teachers and academy owners.',
-        'browse_courses' => 'Browse teacher development courses',
+        'headline' => 'Your all-in-one platform for professional teacher tools',
+        'subheadline' => 'Ready curricula, AI tools, educational videos, and a virtual classroom in clear subscription plans for teachers.',
+        'browse_courses' => 'View plans',
         'signup_now' => 'Start for your academy',
     ],
 

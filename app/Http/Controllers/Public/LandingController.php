@@ -5,12 +5,10 @@ namespace App\Http\Controllers\Public;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\AdvancedCourse;
-use App\Models\Certificate;
 use App\Models\PopupAd;
 use App\Models\SiteTestimonial;
 use App\Models\SiteService;
 use App\Models\User;
-use App\Services\InstructorMarketingRankingService;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -33,25 +31,11 @@ class LandingController extends Controller
             }
         }
 
-        // نفس مسارات صفحة المسارات التعليمية بكل بياناتها (سعر المسار المستقل، عدد الكورسات، الصورة، إلخ)
-        $landingPaths = $this->getPublicLearningPaths(12);
-
         // باقات المعلمين من إعدادات مزايا اشتراك المعلمين (نفس بيانات /admin/teacher-features وصفحة الأسعار)
         $featuresController = new \App\Http\Controllers\Admin\TeacherFeaturesController();
         $teacherPlans = $featuresController->getSettings();
 
-        $featuredCourses = AdvancedCourse::query()
-            ->where('is_active', true)
-            ->with(['instructor:id,name'])
-            ->withCount('lessons')
-            ->orderByDesc('is_featured')
-            ->orderByDesc('created_at')
-            ->limit(8)
-            ->get();
-
         $homeCategories = $this->buildHomeCategories();
-
-        $homeInstructors = InstructorMarketingRankingService::rankApprovedProfiles();
 
         $homeTestimonials = SiteTestimonial::query()
             ->active()
@@ -59,24 +43,25 @@ class LandingController extends Controller
             ->limit(24)
             ->get();
 
+        $featureKeys = config('student_subscription_features', []);
+
         $homeStats = [
             'learners' => User::query()->where('role', 'student')->where('is_active', true)->count(),
-            'courses' => AdvancedCourse::query()->where('is_active', true)->count(),
-            'certificates' => Certificate::query()
-                ->where(function ($q) {
-                    $q->where('status', 'issued')->orWhere('is_verified', true);
-                })
-                ->count(),
+            'features' => count($featureKeys),
+            'plans' => collect($teacherPlans)->filter(function ($plan, $key) {
+                if ($key === 'teacher_free') {
+                    return filter_var($plan['is_active'] ?? true, FILTER_VALIDATE_BOOLEAN);
+                }
+
+                return is_array($plan);
+            })->count(),
             'services' => SiteService::active()->count(),
         ];
 
         return view('welcome', compact(
             'popupAd',
-            'landingPaths',
             'teacherPlans',
-            'featuredCourses',
             'homeCategories',
-            'homeInstructors',
             'homeTestimonials',
             'homeStats'
         ));

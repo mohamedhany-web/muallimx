@@ -204,6 +204,15 @@ class TeacherFeaturesController extends Controller
                         $merged[$planKey]['features'],
                         static fn ($f) => $f !== 'zoom_access'
                     ));
+                    // دمج ميزات جديدة من الافتراضي دون حذف تخصيصات الأدمن
+                    foreach (($defaults[$planKey]['features'] ?? []) as $defaultFeature) {
+                        if (! in_array($defaultFeature, $merged[$planKey]['features'], true)) {
+                            // أضف فقط الميزات الجديدة المعروفة التي لم تكن موجودة في النسخ القديمة
+                            if (in_array($defaultFeature, ['video_library_access'], true)) {
+                                $merged[$planKey]['features'][] = $defaultFeature;
+                            }
+                        }
+                    }
                 }
                 if ($planKey === TeacherPlanKeys::STARTER) {
                     $merged[$planKey]['features'] = array_values(array_filter(
@@ -273,6 +282,7 @@ class TeacherFeaturesController extends Controller
                 ],
                 'feature_descriptions' => [
                     'library_access' => 'وصول محدود لمكتبة المحتوى التعليمي.',
+                    'video_library_access' => 'مشاهدة فيديو واحد للتجربة من قنوات التعلم (بدون اشتراك كامل).',
                     'ai_tools' => 'أدوات ذكاء اصطناعي أساسية للتحضير.',
                     'classroom_access' => 'استخدام Muallimx Classroom بعدد اجتماعات محدود شهرياً.',
                     'support' => 'دعم فني عبر المنصة.',
@@ -298,6 +308,7 @@ class TeacherFeaturesController extends Controller
                 'card_footer_note' => '',
                 'features' => [
                     'library_access',
+                    'video_library_access',
                     'ai_tools',
                     'support',
                     'teacher_profile',
@@ -311,6 +322,7 @@ class TeacherFeaturesController extends Controller
                 ],
                 'feature_descriptions' => [
                     'library_access' => 'وصول كامل لمكتبة مناهج وأنشطة جاهزة للتطبيق مباشرة.',
+                    'video_library_access' => 'وصول كامل لقنوات الفيديو التعليمية داخل المنصة.',
                     'ai_tools' => 'أدوات ذكاء اصطناعي تساعدك على تجهيز المحتوى بسرعة.',
                     'support' => 'دعم فني لمساعدتك في أي مشكلة تشغيلية داخل المنصة.',
                     'teacher_profile' => 'بروفايل مهني يعرض خبراتك ومجالاتك التعليمية.',
@@ -343,6 +355,7 @@ class TeacherFeaturesController extends Controller
                 'card_footer_note' => 'تشمل كامل المزايا بدون استثناء.',
                 'features' => [
                     'library_access',
+                    'video_library_access',
                     'ai_tools',
                     'classroom_access',
                     'support',
@@ -357,6 +370,7 @@ class TeacherFeaturesController extends Controller
                 ],
                 'feature_descriptions' => [
                     'library_access' => 'وصول كامل لمكتبة مناهج وأنشطة جاهزة للتطبيق مباشرة.',
+                    'video_library_access' => 'وصول كامل لقنوات الفيديو التعليمية داخل المنصة.',
                     'ai_tools' => 'أدوات ذكاء اصطناعي تساعدك على تجهيز المحتوى بسرعة.',
                     'classroom_access' => 'استخدام Muallimx Classroom لعقد لايف ميتينج وإدارة الجلسات.',
                     'support' => 'دعم فني لمساعدتك في أي مشكلة تشغيلية داخل المنصة.',

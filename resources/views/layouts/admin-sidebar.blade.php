@@ -37,6 +37,7 @@
             || $u->hasPermission('manage.consultations')
             || $u->hasPermission('manage.hiring-academies')
             || $u->hasPermission('manage.curriculum-library')
+            || $u->hasPermission('manage.video-library')
             || $u->hasPermission('manage.teacher-features')
             || $u->hasPermission('manage.quality-control')
             || $u->hasPermission('view.reports');
@@ -157,6 +158,7 @@
                     || request()->routeIs('admin.academy-opportunities.*')
                     || request()->routeIs('admin.hiring-academies.*')
                     || request()->routeIs('admin.curriculum-library.*')
+                    || request()->routeIs('admin.video-library.*')
                     || request()->routeIs('admin.consultations.*')
                     || request()->routeIs('admin.quality-control.students')
                     || request()->routeIs('admin.reports.users')
@@ -259,6 +261,13 @@
                     <li>
                         <a href="{{ route('admin.curriculum-library.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.curriculum-library.*') ? 'active' : '' }}">
                             <i class="fas fa-book-open"></i><span>مكتبة المناهج (المدفوع)</span>
+                        </a>
+                    </li>
+                    @endif
+                    @if(($isFull || $u->hasPermission('manage.video-library')) && Route::has('admin.video-library.index'))
+                    <li>
+                        <a href="{{ route('admin.video-library.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.video-library.*') ? 'active' : '' }}">
+                            <i class="fas fa-play-circle"></i><span>مكتبة الفيديو (قنوات)</span>
                         </a>
                     </li>
                     @endif
@@ -580,10 +589,10 @@
 
             @endif
 
-            @if($isFull || $u->hasPermission('manage.coupons') || $u->hasPermission('manage.referrals') || $u->hasPermission('manage.loyalty') || $u->hasPermission('manage.popup-ads') || $u->hasPermission('manage.personal-branding'))
+            @if($isFull || $u->hasPermission('manage.coupons') || $u->hasPermission('manage.referrals') || $u->hasPermission('manage.loyalty') || $u->hasPermission('manage.popup-ads') || $u->hasPermission('manage.landing-pages') || $u->hasPermission('manage.personal-branding'))
             {{-- إدارة التسويق --}}
             @php
-                $marketingOpen = request()->routeIs('admin.coupons.*') || request()->routeIs('admin.coupon-commissions.*') || request()->routeIs('admin.referral-programs.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.loyalty.*') || request()->routeIs('admin.personal-branding.*') || request()->routeIs('admin.popup-ads.*');
+                $marketingOpen = request()->routeIs('admin.coupons.*') || request()->routeIs('admin.coupon-commissions.*') || request()->routeIs('admin.referral-programs.*') || request()->routeIs('admin.referrals.*') || request()->routeIs('admin.loyalty.*') || request()->routeIs('admin.personal-branding.*') || request()->routeIs('admin.popup-ads.*') || request()->routeIs('admin.landing-pages.*');
             @endphp
             <li x-data="{ open: {{ $marketingOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
@@ -593,6 +602,9 @@
                 <ul x-show="open" x-transition class="mt-1 mr-3 space-y-0.5 border-r border-slate-200 pr-3">
                     @if($isFull || $u->hasPermission('manage.popup-ads'))
                     <li><a href="{{ route('admin.popup-ads.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.popup-ads.*') ? 'active' : '' }}"><i class="fas fa-bullhorn"></i><span>{{ __('admin.popup_ads') }}</span></a></li>
+                    @endif
+                    @if($isFull || $u->hasPermission('manage.landing-pages'))
+                    <li><a href="{{ route('admin.landing-pages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.landing-pages.*') ? 'active' : '' }}"><i class="fas fa-pager"></i><span>صفحات الهبوط</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.personal-branding'))
                     <li><a href="{{ route('admin.personal-branding.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.personal-branding.*') ? 'active' : '' }}"><i class="fas fa-user-tie"></i><span>{{ __('admin.personal_branding') }}</span></a></li>
@@ -614,13 +626,15 @@
             @endif
 
             {{-- قسم «العناصر المدفوعة»: لا يُعرض لمن لديه مكتبة مناهج فقط — مكتبة المناهج مرتبطة أعلاه في «التحكم الشامل بالطلاب» --}}
-            @if($isFull || $u->hasPermission('manage.subscriptions') || $u->hasPermission('manage.packages') || $u->hasPermission('manage.teacher-features'))
+            @if($isFull || $u->hasPermission('manage.subscriptions') || $u->hasPermission('manage.packages') || $u->hasPermission('manage.teacher-features') || $u->hasPermission('manage.curriculum-library') || $u->hasPermission('manage.video-library'))
             <li class="sidebar-section-label">العناصر المدفوعة</li>
             {{-- التحكم في العناصر المدفوعة --}}
             @php
                 $paidSubscriptionsOpen = request()->routeIs('admin.subscriptions.*')
                     || request()->routeIs('admin.teacher-features.*')
-                    || request()->routeIs('admin.packages.*');
+                    || request()->routeIs('admin.packages.*')
+                    || request()->routeIs('admin.curriculum-library.*')
+                    || request()->routeIs('admin.video-library.*');
             @endphp
             <li x-data="{ open: {{ $paidSubscriptionsOpen ? 'true' : 'false' }} }">
                 <button @click="open = !open" class="sidebar-group-btn">
@@ -636,6 +650,9 @@
                     @endif
                     @if($isFull || $u->hasPermission('manage.curriculum-library'))
                     <li><a href="{{ route('admin.curriculum-library.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.curriculum-library.*') ? 'active' : '' }}"><i class="fas fa-book-open"></i><span>مكتبة المناهج</span></a></li>
+                    @endif
+                    @if($isFull || $u->hasPermission('manage.video-library'))
+                    <li><a href="{{ route('admin.video-library.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.video-library.*') ? 'active' : '' }}"><i class="fas fa-play-circle"></i><span>مكتبة الفيديو</span></a></li>
                     @endif
                     @if($isFull || $u->hasPermission('manage.packages'))
                     <li><a href="{{ route('admin.packages.index') }}" class="sidebar-sub-link {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}"><i class="fas fa-tags"></i><span>{{ __('admin.pricing_packages') }}</span></a></li>

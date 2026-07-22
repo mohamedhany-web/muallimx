@@ -97,9 +97,11 @@ class PermissionsSeeder extends Seeder
             ['name' => 'manage.packages',            'display_name' => 'إدارة الباقات والأسعار',          'description' => 'إدارة باقات الاشتراك والتسعير',              'group' => 'العناصر المدفوعة'],
             ['name' => 'manage.teacher-features',    'display_name' => 'إدارة مزايا اشتراك المدربين',     'description' => 'إدارة مزايا ومستويات اشتراك المدربين',       'group' => 'العناصر المدفوعة'],
             ['name' => 'manage.curriculum-library',  'display_name' => 'إدارة مكتبة المناهج',             'description' => 'إدارة مكتبة مناهج ومحتوى المنصة',            'group' => 'العناصر المدفوعة'],
+            ['name' => 'manage.video-library',       'display_name' => 'إدارة مكتبة الفيديو',            'description' => 'إدارة قنوات وفيديوهات يوتيوب داخل المنصة', 'group' => 'العناصر المدفوعة'],
 
             // التسويق التفصيلي
             ['name' => 'manage.popup-ads',           'display_name' => 'إدارة الإعلانات المنبثقة',        'description' => 'إدارة البوبأب والإعلانات الترويجية',         'group' => 'إدارة التسويق'],
+            ['name' => 'manage.landing-pages',       'display_name' => 'إدارة صفحات الهبوط',              'description' => 'إنشاء صفحات هبوط للإعلانات الممولة مع فيديو يوتيوب وأزرار CTA', 'group' => 'إدارة التسويق'],
             ['name' => 'manage.personal-branding',   'display_name' => 'إدارة العلامة الشخصية',           'description' => 'إدارة تخصيص العلامة التجارية للمدربين',     'group' => 'إدارة التسويق'],
 
             // رقابة الجودة والمتابعة

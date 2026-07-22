@@ -11,9 +11,12 @@ class PaymentGatewaySettings
     /** نسبة عمولة بوابة الدفع على المبلغ المحصّل (0–100)، تُخزَّن في إعدادات النظام */
     public const FEE_PERCENT_SETTING_KEY = 'payment_gateway_fee_percent';
 
+    /**
+     * بوابة فواتيرك ملغاة نهائياً — الدفع عبر نظام المحافظ / التحويل اليدوي فقط.
+     */
     public static function isFawaterakEnabled(): bool
     {
-        return Setting::getValue(self::SETTING_KEY) === '1';
+        return false;
     }
 
     /**
