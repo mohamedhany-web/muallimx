@@ -136,14 +136,14 @@
         <div class="container-1200 relative z-10">
             <div class="max-w-4xl mx-auto text-center reveal">
                 <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-bold mb-6" style="background:#FFE5F7;color:#283593;border:1px solid #f5c7e8">
-                    <i class="fas fa-chalkboard-teacher"></i> منصة للمعلمين — ليست منصة كورسات للطلاب
+                    <i class="fas fa-chalkboard-teacher"></i> منصة للمعلمين
                 </span>
                 <h1 class="font-heading text-[2rem] sm:text-[2.8rem] lg:text-[3.35rem] leading-[1.22] font-black text-mx-indigo mb-5">
                     كل أدوات المعلم المحترف
                     <span class="block" style="color:#FB5607">في باقة واحدة واضحة</span>
                 </h1>
                 <p class="text-slate-600 text-base sm:text-lg leading-8 mb-7 max-w-3xl mx-auto">
-                    Muallimx تساعد المعلم على التحضير والتدريس والنمو المهني: مناهج جاهزة، فيديوهات تعليمية، أدوات ذكاء اصطناعي، فصل افتراضي، وتسويق شخصي — بدون تشتيت كورسات الطلاب.
+                    Muallimx تساعد المعلم على التحضير والتدريس والنمو المهني: مناهج جاهزة، فيديوهات تعليمية، أدوات ذكاء اصطناعي، فصل افتراضي، وتسويق شخصي.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                     <a class="btn-primary inline-flex items-center justify-center gap-2 !bg-[#FB5607] hover:!bg-[#e84d00]" href="{{ route('register') }}">ابدأ مجاناً <i class="fas fa-user-plus text-xs"></i></a>
@@ -187,7 +187,7 @@
                 <h2 class="font-heading text-3xl sm:text-4xl font-black text-mx-indigo mb-4">بجمل بسيطة: منصة أدوات للمعلم</h2>
                 <p class="text-slate-600 text-base sm:text-lg leading-8">
                     كثير من العملاء يسألوننا على واتساب: «أنتم بتقدّموا إيه؟»
-                    الإجابة المختصرة: <strong class="text-mx-indigo">Muallimx منصة اشتراك للمعلمين</strong> تمنحك أدوات جاهزة للتحضير والتدريس والنمو المهني داخل حساب واحد — وليست متجر كورسات للطلاب.
+                    الإجابة المختصرة: <strong class="text-mx-indigo">Muallimx منصة اشتراك للمعلمين</strong> تمنحك أدوات جاهزة للتحضير والتدريس والنمو المهني داخل حساب واحد.
                 </p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 reveal s2">

@@ -3,7 +3,7 @@
 return [
     'meta' => [
         'title' => 'Muallimx | Teacher tools platform — curricula, AI, video & classroom',
-        'description' => 'Muallimx is a subscription platform for teachers: interactive curricula, video channels, AI tools, virtual classroom, and personal marketing — not a student course store.',
+        'description' => 'Muallimx is a subscription platform for teachers: interactive curricula, video channels, AI tools, virtual classroom, and personal marketing.',
         'og_title' => 'Muallimx — Teacher tools in one plan',
         'og_description' => 'What do we offer? In short: subscription plans and tools for teachers (curricula, AI, video, classroom, personal marketing) inside one account.',
     ],
