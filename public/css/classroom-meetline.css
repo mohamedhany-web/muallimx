@@ -40,16 +40,18 @@ body.mx-meetline {
   flex-direction: column !important;
 }
 
-/* Shell fills the viewport; flex: 1 1 0% is required so children can grow */
+/* Shell fills the viewport — fixed so layout cannot collapse if body flex chain breaks */
 .mx-ml-shell {
+  position: fixed;
+  inset: 6px;
+  z-index: 1;
   display: flex;
   flex-direction: column;
-  flex: 1 1 0%;
-  width: calc(100% - 12px);
+  width: auto;
   min-height: 0;
-  height: calc(100dvh - 12px);
-  max-height: calc(100dvh - 12px);
-  margin: 6px;
+  height: auto;
+  max-height: none;
+  margin: 0;
   padding: 12px;
   border-radius: var(--ml-radius);
   background: var(--ml-bg-100);
@@ -460,13 +462,10 @@ body.mx-meetline #mx-record-dd-panel button:hover {
 
 @media (max-width: 900px) {
   .mx-ml-shell {
-    margin: 0;
-    width: 100%;
+    inset: 0;
     border-radius: 0;
     padding: 8px;
     gap: 8px;
-    height: 100dvh;
-    max-height: 100dvh;
   }
   /* Keep video full-stage; artboard overlays instead of crushing the feed */
   .mx-ml-stage-row {

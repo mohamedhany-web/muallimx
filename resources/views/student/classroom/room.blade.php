@@ -9,10 +9,17 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link href="{{ asset('css/classroom-meetline.css') }}?v={{ @filemtime(public_path('css/classroom-meetline.css')) ?: time() }}" rel="stylesheet">
+    {{-- Inline Meet.Line CSS: production returns 404 for /css/*.css static files; inlining guarantees styles load --}}
+    @php
+        $mxMeetlineCssFile = public_path('css/classroom-meetline.css');
+        $mxMeetlineCss = is_readable($mxMeetlineCssFile) ? file_get_contents($mxMeetlineCssFile) : '';
+    @endphp
+    @if($mxMeetlineCss !== '')
+    <style id="mx-classroom-meetline-css">{!! $mxMeetlineCss !!}</style>
+    @endif
     <style>
         * { font-family: 'IBM Plex Sans Arabic', 'Poppins', system-ui, sans-serif; }
-        /* Critical layout — must work even if external CSS is cached/stale on production */
+        /* Critical layout fallback */
         html { height: 100%; height: 100dvh; }
         html, body.mx-meetline {
             height: 100% !important;
@@ -24,20 +31,23 @@
             margin: 0 !important;
             padding: 0 !important;
             background: #fdfdfd !important;
-            display: flex !important;
-            flex-direction: column !important;
+            display: block !important;
         }
         body.mx-meetline > .mx-ml-shell {
-            flex: 1 1 0% !important;
-            min-height: 0 !important;
-            height: calc(100dvh - 12px) !important;
-            max-height: calc(100dvh - 12px) !important;
-            width: calc(100% - 12px) !important;
-            margin: 6px !important;
+            position: fixed !important;
+            inset: 6px !important;
+            z-index: 1 !important;
             display: flex !important;
             flex-direction: column !important;
+            width: auto !important;
+            height: auto !important;
+            margin: 0 !important;
             overflow: hidden !important;
             box-sizing: border-box !important;
+            background: #f3f4f6 !important;
+            border-radius: 12px !important;
+            padding: 12px !important;
+            gap: 12px !important;
         }
         body.mx-meetline .room-body.mx-ml-main {
             display: flex !important;
@@ -61,6 +71,8 @@
             position: relative !important;
             overflow: hidden !important;
             background: #111827 !important;
+            border: 2px solid #0065fd !important;
+            border-radius: 12px !important;
         }
         body.mx-meetline #meeting-stage #jitsi-container {
             position: absolute !important;
@@ -83,6 +95,22 @@
         }
         body.mx-meetline .mx-ml-dock {
             flex-shrink: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            padding: 8px 10px !important;
+            border-radius: 12px !important;
+            background: #fdfdfd !important;
+            border: 1px solid #e9e9e9 !important;
+        }
+        @media (max-width: 900px) {
+            body.mx-meetline > .mx-ml-shell {
+                inset: 0 !important;
+                border-radius: 0 !important;
+                padding: 8px !important;
+            }
         }
         #wb-popup { z-index: 140; }
         #wb-popup.is-open {
