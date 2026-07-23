@@ -27,18 +27,19 @@
         }
         #jitsi-container {
             width: 100%;
-            flex: 1;
+            height: 100%;
             min-height: 0;
             background: #0f172a;
         }
-        .room-body {
+        .room-body.mx-ml-main {
             display: flex;
             flex-direction: column;
             flex: 1 1 auto;
             min-height: 0;
+            overflow: hidden;
         }
         #jitsi-container iframe { width: 100% !important; height: 100% !important; border: none; }
-        #meeting-stage { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; width: 100%; }
+        #meeting-stage { flex: 1 1 auto; min-height: 0; min-width: 0; position: relative; width: 100%; height: 100%; }
         #wb-popup { z-index: 140; }
         #wb-popup.is-open {
             display: flex;
@@ -88,7 +89,7 @@
             outline: none;
             box-shadow: 0 0 0 2px rgba(253, 253, 253, 0.9), 0 0 0 4px rgba(0, 101, 253, 0.35);
         }
-        #wb-popup-stage { min-height: 50vh; }
+        #wb-popup-stage { min-height: 0; }
         .classroom-excalidraw-host {
             position: absolute;
             inset: 0;
@@ -2532,8 +2533,7 @@
                         setTimeout(resizeWbCanvas, 500);
                         mxSyncMediaButtonState();
                         mxUpdateLiveCount();
-                        // افتح Artboard تلقائياً ليطابق تصميم Meet.Line
-                        try { openWbPopup(); } catch (eOpen) {}
+                        // اللوح يُفتح يدوياً من زر القلم — لا يفتح تلقائياً حتى لا يسرق مساحة الفيديو
                     });
 
                     api.addEventListener('audioMuteStatusChanged', function(e) {

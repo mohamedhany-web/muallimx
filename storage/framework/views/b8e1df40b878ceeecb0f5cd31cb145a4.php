@@ -378,6 +378,17 @@
                     startWithAudioMuted: true,
                     startWithVideoMuted: true,
                     enableNoisyMicDetection: false,
+                    // الضيف يغادر فقط — لا طرد/إعطاء مشرف/إنهاء للجميع
+                    disableRemoteMute: true,
+                    remoteVideoMenu: {
+                        disableKick: true,
+                        disableGrantModerator: true,
+                    },
+                    // إن وُجدت قائمة Hangup: امنع تنفيذ «إنهاء الاجتماع للجميع»
+                    buttonsWithNotifyClick: [
+                        { key: 'end-meeting', preventExecution: true },
+                        { key: 'hangup', preventExecution: false },
+                    ],
                 },
                 interfaceConfigOverwrite: {
                     APP_NAME: 'Muallimx Classroom',
@@ -433,8 +444,21 @@
             });
 
             document.getElementById('btn-leave').onclick = function() {
-                if (api) api.executeCommand('hangup');
+                // مغادرة الضيف فقط — لا يستدعي إنهاء الاجتماع في Laravel
+                if (api) {
+                    try { api.executeCommand('hangup'); } catch (e) {}
+                } else {
+                    leaveMeetingAndReload();
+                }
             };
+
+            // لو ظهرت قائمة «إنهاء للجميع» من Jitsi — نتجاهلها ونغادر فقط
+            api.addEventListener('toolbarButtonClicked', function (e) {
+                var key = e && (e.key || e.buttonName || '');
+                if (key === 'end-meeting' || key === 'endmeeting') {
+                    try { api.executeCommand('hangup'); } catch (err) {}
+                }
+            });
         });
 
         async function leaveMeetingAndReload() {

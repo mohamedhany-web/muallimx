@@ -1,0 +1,299 @@
+<?php $__env->startSection('title', __('student.calendar_title')); ?>
+
+<?php $__env->startPush('styles'); ?>
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.css' rel='stylesheet' />
+<style>
+    .fc {
+        direction: rtl;
+    }
+    .fc-toolbar {
+        flex-direction: row-reverse;
+    }
+    .fc-button-group {
+        flex-direction: row-reverse;
+    }
+    .fc-event {
+        cursor: pointer;
+        border-radius: 4px;
+        padding: 2px 4px;
+    }
+    .fc-daygrid-event {
+        white-space: normal;
+        font-size: 0.85rem;
+    }
+    .event-legend {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+    }
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+    }
+</style>
+<?php $__env->stopPush(); ?>
+
+<?php $__env->startSection('content'); ?>
+<div class="min-h-screen bg-gray-50 py-6" id="teacher-calendar-app" x-data="teacherPersonalCalendar()">
+    <div class="w-full px-4 sm:px-6 lg:px-8">
+        <!-- الهيدر -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6 p-5 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900"><?php echo e(__('student.calendar_title')); ?></h1>
+                    <p class="text-sm text-gray-500 mt-1"><?php echo e(__('student.calendar_subtitle')); ?></p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="button" @click="openModal()"
+                            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold shadow-md">
+                        <i class="fas fa-plus"></i>
+                        إضافة موعدي
+                    </button>
+                    <div class="text-sm text-gray-600 flex items-center gap-2">
+                        <i class="fas fa-calendar-alt text-sky-500"></i>
+                        <span><?php echo e(__('student.total_events')); ?>: <strong><?php echo e($stats['total'] ?? 0); ?></strong></span>
+                        <?php if(($stats['personal'] ?? 0) > 0): ?>
+                            <span class="text-violet-600">· مواعيدي: <strong><?php echo e($stats['personal']); ?></strong></span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- التقويم الرئيسي -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-6">
+                    <div id="calendar" class="calendar-container"></div>
+                    
+                    <!-- مفتاح الألوان -->
+                    <div class="event-legend mt-4 pt-4 border-t border-gray-200">
+                        <div class="legend-item">
+                            <div class="legend-color bg-red-500"></div>
+                            <span><?php echo e(__('student.legend_exams')); ?></span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color bg-sky-500"></div>
+                            <span><?php echo e(__('student.legend_lectures')); ?></span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color bg-amber-500"></div>
+                            <span><?php echo e(__('student.legend_assignments')); ?></span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color bg-emerald-500"></div>
+                            <span><?php echo e(__('student.other_events')); ?></span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color bg-emerald-600"></div>
+                            <span>استشارة مدفوعة</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color bg-violet-500"></div>
+                            <span>مواعيدي (حصص الأسرة)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الشريط الجانبي -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- الأحداث القادمة -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-6">
+                    <h3 class="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-clock text-sky-500"></i>
+                        <span>الأحداث القادمة</span>
+                    </h3>
+                    
+                    <div class="space-y-3 max-h-96 overflow-y-auto">
+                        <?php $__empty_1 = true; $__currentLoopData = $events->where('start_date', '>=', now())->take(10); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $event): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <?php
+                                $isPersonal = ($event->type ?? '') === 'personal';
+                                $personalPayload = $isPersonal ? [
+                                    'title' => $event->title,
+                                    'description' => $event->description ?? '',
+                                    'schedule_type' => $event->schedule_type ?? 'temporary',
+                                    'appointment_id' => $event->appointment_id ?? null,
+                                ] : null;
+                            ?>
+                            <div class="p-3 rounded-lg border border-gray-200 hover:border-sky-500 transition-colors cursor-pointer"
+                                 <?php if($isPersonal): ?>
+                                     @click="openDetail(<?php echo \Illuminate\Support\Js::from($personalPayload)->toHtml() ?>)"
+                                 <?php elseif(!empty($event->url)): ?>
+                                     onclick="window.location.href='<?php echo e($event->url); ?>'"
+                                 <?php endif; ?>>
+                                <div class="flex items-start gap-2 mb-2">
+                                    <div class="w-3 h-3 rounded-full mt-1.5 flex-shrink-0" 
+                                         style="background-color: <?php echo e($event->color ?? '#6B7280'); ?>"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm font-bold text-gray-900 truncate"><?php echo e($event->title); ?></div>
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            <i class="fas fa-calendar text-sky-500"></i>
+                                            <?php echo e($event->start_date->format('d/m/Y')); ?>
+
+                                            <?php if(!$event->is_all_day): ?>
+                                                <?php echo e($event->start_date->format('h:i A')); ?>
+
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="text-xs mt-1 
+                                            <?php if($event->type == 'exam'): ?> text-red-600
+                                            <?php elseif($event->type == 'lecture'): ?> text-blue-600
+                                            <?php elseif($event->type == 'assignment'): ?> text-yellow-600
+                                            <?php else: ?> text-gray-600
+                                            <?php endif; ?> font-semibold">
+                                            <?php if($event->type == 'exam'): ?> 
+                                                <i class="fas fa-clipboard-check"></i> امتحان
+                                            <?php elseif($event->type == 'lecture'): ?> 
+                                                <i class="fas fa-chalkboard-teacher"></i> محاضرة
+                                            <?php elseif($event->type == 'assignment'): ?> 
+                                                <i class="fas fa-tasks"></i> واجب
+                                            <?php elseif($event->type == 'personal'): ?>
+                                                <i class="fas fa-user-clock"></i> موعدي
+                                            <?php else: ?> 
+                                                <i class="fas fa-calendar-alt"></i> حدث
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                            <div class="text-center py-8 text-gray-500">
+                                <i class="fas fa-calendar-times text-3xl mb-2 opacity-30"></i>
+                                <p class="text-sm">لا توجد أحداث قادمة</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- إحصائيات -->
+                <div class="bg-sky-500 rounded-xl p-4 md:p-6 text-white border border-sky-600">
+                    <h3 class="text-lg font-black mb-4 flex items-center gap-2">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>إحصائيات</span>
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between bg-white/20 rounded-lg p-3">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-clipboard-check"></i>
+                                <span class="text-sm font-semibold">الامتحانات</span>
+                            </div>
+                            <span class="text-lg font-black"><?php echo e($stats['exams'] ?? 0); ?></span>
+                        </div>
+                        <div class="flex items-center justify-between bg-white/20 rounded-lg p-3">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                                <span class="text-sm font-semibold">المحاضرات</span>
+                            </div>
+                            <span class="text-lg font-black"><?php echo e($stats['lectures'] ?? 0); ?></span>
+                        </div>
+                        <div class="flex items-center justify-between bg-white/20 rounded-lg p-3">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-tasks"></i>
+                                <span class="text-sm font-semibold">الواجبات</span>
+                            </div>
+                            <span class="text-lg font-black"><?php echo e($stats['assignments'] ?? 0); ?></span>
+                        </div>
+                        <div class="flex items-center justify-between bg-white/20 rounded-lg p-3">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-arrow-up"></i>
+                                <span class="text-sm font-semibold">القادمة</span>
+                            </div>
+                            <span class="text-lg font-black"><?php echo e($stats['upcoming'] ?? 0); ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php echo $__env->make('student.calendar._personal-appointment-modal', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+</div>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startPush('scripts'); ?>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/main.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.5/locales/ar.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'ar',
+        direction: 'rtl',
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            right: 'prev,next today',
+            center: 'title',
+            left: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        buttonText: {
+            today: 'اليوم',
+            month: 'شهر',
+            week: 'أسبوع',
+            day: 'يوم'
+        },
+        events: {
+            url: '<?php echo e(route("calendar.events")); ?>',
+            failure: function() {
+                alert('حدث خطأ في تحميل الأحداث');
+            }
+        },
+        eventClick: function(info) {
+            info.jsEvent.preventDefault();
+            info.jsEvent.stopPropagation();
+            var props = info.event.extendedProps || {};
+            if (props.is_personal) {
+                window.dispatchEvent(new CustomEvent('open-calendar-personal-detail', {
+                    detail: {
+                        title: info.event.title,
+                        description: props.description || info.event.extendedProps.description || '',
+                        schedule_type: props.schedule_type || 'temporary',
+                        appointment_id: props.appointment_id || null,
+                    }
+                }));
+                return;
+            }
+            if (info.event.url) {
+                window.location.href = info.event.url;
+            }
+        },
+        eventMouseEnter: function(info) {
+            info.el.style.cursor = 'pointer';
+        },
+        eventContent: function(arg) {
+            return {
+                html: '<div class="fc-event-title">' + arg.event.title + '</div>'
+            };
+        },
+        height: 'auto',
+        contentHeight: 600,
+        firstDay: 6, // السبت كأول يوم
+        weekends: true,
+        navLinks: false,
+        dayMaxEvents: 3,
+        moreLinkClick: 'popover'
+    });
+    
+    calendar.render();
+    window.studentCalendar = calendar;
+
+    window.addEventListener('open-calendar-personal-detail', function (e) {
+        var root = document.getElementById('teacher-calendar-app');
+        if (root && root._x_dataStack && root._x_dataStack[0] && root._x_dataStack[0].openDetail) {
+            root._x_dataStack[0].openDetail(e.detail);
+        }
+    });
+});
+</script>
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Muallimx\resources\views/student/calendar/index.blade.php ENDPATH**/ ?>

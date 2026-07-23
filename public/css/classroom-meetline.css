@@ -32,6 +32,8 @@ body.mx-meetline {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
+  height: 100%;
+  max-height: 100dvh;
   min-height: 0;
   margin: 6px;
   padding: 12px;
@@ -39,6 +41,8 @@ body.mx-meetline {
   background: var(--ml-bg-100);
   box-shadow: var(--ml-shadow);
   gap: 12px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .mx-ml-top {
@@ -108,14 +112,18 @@ body.mx-meetline {
   flex-direction: row;
   flex: 1 1 auto;
   min-height: 0;
+  height: 100%;
   gap: 10px;
   direction: ltr; /* Match Meet.Line: video left, artboard right */
+  overflow: hidden;
+  align-items: stretch;
 }
 
 #meeting-stage.mx-ml-video {
-  flex: 1.65 1 0;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
+  height: 100%;
   border-radius: var(--ml-radius);
   border: 2px solid var(--ml-stroke-primary);
   overflow: hidden;
@@ -126,22 +134,32 @@ body.mx-meetline {
 /* إخفاء شريط أدوات Jitsi الداخلي قدر الإمكان (التحكم من Meet.Line) */
 #meeting-stage.mx-ml-video iframe {
   border: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 #meeting-stage.mx-ml-video #jitsi-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   border-radius: calc(var(--ml-radius) - 2px);
   background: #0f172a;
+  overflow: hidden;
 }
 
-/* Artboard side panel (whiteboard) */
+/* Artboard side panel — fixed width so Excalidraw cannot crush video */
 #mx-artboard-panel {
   display: none;
   flex-direction: column;
-  flex: 1 1 0;
-  min-width: 260px;
-  max-width: 480px;
-  width: 36%;
+  flex: 0 0 clamp(280px, 32vw, 400px);
+  width: clamp(280px, 32vw, 400px);
+  max-width: 400px;
+  min-width: 280px;
   min-height: 0;
+  height: 100%;
+  align-self: stretch;
   border-radius: var(--ml-radius);
   border: 1px solid var(--ml-stroke);
   background: var(--ml-bg-50);
@@ -160,6 +178,8 @@ body.mx-meetline {
   z-index: 145;
   max-width: none;
   width: auto;
+  height: auto;
+  flex: none;
   border: 1px solid var(--ml-stroke);
   box-shadow: var(--ml-shadow);
 }
@@ -223,7 +243,19 @@ body.mx-meetline {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
+  height: 100%;
+  overflow: hidden;
   background: #fafafa;
+}
+
+.mx-ml-artboard-body .classroom-excalidraw-host,
+.mx-ml-artboard-body #classroom-excalidraw-root {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden;
 }
 
 .mx-ml-dock {
@@ -419,19 +451,30 @@ body.mx-meetline #mx-record-dd-panel button:hover {
     border-radius: 0;
     padding: 8px;
     gap: 8px;
+    max-height: 100dvh;
   }
+  /* Keep video full-stage; artboard overlays instead of crushing the feed */
   .mx-ml-stage-row {
-    flex-direction: column;
+    flex-direction: row;
+    position: relative;
   }
   #meeting-stage.mx-ml-video {
-    flex: 1 1 55%;
-    min-height: 40vh;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    height: 100%;
   }
   #mx-artboard-panel.is-open {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    flex: none;
+    width: auto;
     max-width: none;
-    width: 100%;
-    flex: 1 1 45%;
-    min-height: 36vh;
+    min-width: 0;
+    height: auto;
+    border-radius: var(--ml-radius);
+    box-shadow: var(--ml-shadow);
   }
   .mx-ml-dock {
     gap: 8px;
