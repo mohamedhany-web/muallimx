@@ -12,16 +12,80 @@
         <div class="rounded-xl bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 text-sm font-medium">{{ session('error') }}</div>
     @endif
 
+    @if(session('info'))
+        <div class="rounded-xl bg-sky-50 border border-sky-200 text-sky-800 px-4 py-3 text-sm font-medium">{{ session('info') }}</div>
+    @endif
+
     <div class="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg p-6">
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-black text-slate-800 dark:text-white">Muallimx Classroom</h1>
-                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">صفحة منظمة لإدارة كل اجتماعاتك وصلاحياتها وإعداداتها.</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">شارك رابطاً ثابتاً واحداً مع طلابك — يدخلون فقط عندما تبدأ اللايف، وكل جلسة تُحسب من باقتك.</p>
             </div>
-            <a href="{{ route('student.classroom.create') }}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-bold shadow-lg shadow-red-500/30">
-                <i class="fas fa-plus"></i>
-                إنشاء اجتماع جديد
-            </a>
+            <div class="flex flex-wrap gap-2">
+                @if(!empty($activeLiveMeeting))
+                    <a href="{{ route('student.classroom.room', $activeLiveMeeting) }}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold shadow-lg">
+                        <i class="fas fa-broadcast-tower"></i>
+                        العودة للجلسة المباشرة
+                    </a>
+                @elseif(!empty($quotaExhausted))
+                    <a href="{{ route('public.pricing') }}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold shadow-lg">
+                        <i class="fas fa-tags"></i>
+                        الرصيد خلص — ترقية الباقة
+                    </a>
+                @else
+                    <form action="{{ route('student.classroom.start') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold shadow-lg shadow-rose-500/30">
+                            <i class="fas fa-play"></i>
+                            بدء لايف الآن
+                        </button>
+                    </form>
+                @endif
+                <a href="{{ route('student.classroom.create') }}" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 text-white text-sm font-bold">
+                    <i class="fas fa-plus"></i>
+                    إنشاء / جدولة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="rounded-2xl bg-gradient-to-l from-[#283593] to-[#1F2A7A] text-white shadow-lg p-5 sm:p-6">
+        <div class="flex flex-col lg:flex-row lg:items-start gap-4">
+            <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-white/70 uppercase tracking-wider mb-1">رابطك الثابت للطلاب</p>
+                <p class="text-sm text-white/85 mb-3">انسخه مرة واحدة وشاركه دائماً. الطلاب ينتظرون هنا حتى تبدأ اللايف — ثم يدخلون تلقائياً.</p>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" readonly value="{{ $fixedJoinUrl }}" id="fixed-join-url"
+                           class="flex-1 min-w-0 rounded-xl bg-white/10 border border-white/20 px-3 py-2.5 text-sm font-mono text-white" dir="ltr">
+                    <button type="button"
+                            onclick="navigator.clipboard.writeText(document.getElementById('fixed-join-url').value); this.textContent='تم النسخ'; setTimeout(()=>this.textContent='نسخ الرابط',1500)"
+                            class="px-4 py-2.5 rounded-xl bg-[#FB5607] hover:bg-[#e84d00] text-white text-sm font-bold shrink-0">
+                        نسخ الرابط
+                    </button>
+                    <a href="{{ $fixedJoinUrl }}" target="_blank" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-bold shrink-0 text-center">فتح</a>
+                </div>
+                <form method="POST" action="{{ route('student.classroom.fixed-link') }}" class="mt-4 flex flex-col sm:flex-row gap-2 items-stretch sm:items-end">
+                    @csrf
+                    @method('PUT')
+                    <div class="flex-1">
+                        <label class="block text-[11px] font-semibold text-white/70 mb-1">تخصيص الجزء الأخير من الرابط</label>
+                        <div class="flex items-center gap-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2" dir="ltr">
+                            <span class="text-xs text-white/50 whitespace-nowrap">/classroom/join/t/</span>
+                            <input type="text" name="classroom_slug" value="{{ auth()->user()->classroom_slug }}"
+                                   pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required maxlength="80"
+                                   class="flex-1 bg-transparent border-0 text-sm text-white focus:ring-0 p-0">
+                        </div>
+                        @error('classroom_slug')<p class="text-rose-200 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                    <button type="submit" class="px-4 py-2.5 rounded-xl bg-white text-[#283593] text-sm font-bold shrink-0">حفظ</button>
+                </form>
+            </div>
+            <div class="lg:w-56 rounded-xl bg-white/10 border border-white/15 p-4 text-center">
+                <p class="text-[11px] text-white/70 mb-1">استهلاك هذا الشهر</p>
+                <p class="text-2xl font-black">{{ number_format($usedMeetingsThisMonth) }} <span class="text-base font-bold text-white/70">/ {{ number_format($limits['classroom_meetings_per_month']) }}</span></p>
+                <p class="text-xs mt-2 {{ $remainingMeetingsThisMonth > 0 ? 'text-emerald-300' : 'text-rose-300' }}">متبقي: {{ number_format($remainingMeetingsThisMonth) }} جلسة</p>
+            </div>
         </div>
     </div>
 
@@ -109,8 +173,8 @@
                             <td class="px-4 py-3 text-sm">
                                 <div class="flex items-center gap-2">
                                     <a href="{{ route('student.classroom.show', $m) }}" class="text-sky-600 hover:underline">عرض</a>
-                                    <a href="{{ route('student.classroom.edit', $m) }}" class="text-amber-600 hover:underline">تعديل</a>
                                     @if(!$m->started_at && !$m->ended_at)
+                                        <a href="{{ route('student.classroom.edit', $m) }}" class="text-amber-600 hover:underline">تعديل</a>
                                         <form action="{{ route('student.classroom.start-meeting', $m) }}" method="POST" class="inline">@csrf<button class="text-emerald-600 hover:underline">بدء</button></form>
                                     @elseif($m->isLive())
                                         <a href="{{ route('student.classroom.room', $m) }}" class="text-rose-600 hover:underline">دخول</a>

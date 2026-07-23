@@ -1,0 +1,33 @@
+{
+  "inviteTitle": "Muallimx",
+  "logoClickUrl": "https://muallimx.com",
+  "customTheme": {
+    "palette": {
+      "uiBackground": "#111827",
+      "ui01": "#171717",
+      "ui02": "#292929",
+      "ui03": "#3D3D3D",
+      "ui04": "#525252",
+      "ui05": "#717171",
+      "action01": "#0065FD",
+      "action01Hover": "#005BC5",
+      "action01Active": "#004A9E",
+      "actionDanger": "#FD0000",
+      "actionDangerHover": "#FF2A2A",
+      "actionDangerActive": "#C50000",
+      "text01": "#FDFDFD",
+      "text02": "#C2C2C2",
+      "icon01": "#FDFDFD",
+      "icon02": "#C2C2C2",
+      "link01": "#0065FD",
+      "field01": "#111827",
+      "bottomSheet": "#FDFDFD",
+      "success01": "#16A34A",
+      "warning01": "#FD8700"
+    },
+    "shape": {
+      "borderRadius": 8,
+      "boxShadow": "0 0 60px rgba(185, 185, 185, 0.25)"
+    }
+  }
+}

@@ -15,18 +15,22 @@ class TeacherCalendarReminderService
     ) {}
 
     /**
-     * يُستدعى من cron كل دقيقة — يحترم reminder_minutes لكل موعد.
+     * يُستدعى من cron كل دقيقة — وأيضاً عند فتح التقويم كاحتياطي.
      */
-    public function sendDueReminders(): int
+    public function sendDueReminders(?int $userId = null): int
     {
-        $occurrences = TeacherCalendarOccurrence::query()
+        $query = TeacherCalendarOccurrence::query()
             ->active()
             ->whereNull('reminder_sent_at')
             ->where('starts_at', '>', now())
             ->whereHas('appointment', fn ($q) => $q->where('status', 'active'))
-            ->with(['appointment', 'user'])
-            ->get();
+            ->with(['appointment', 'user']);
 
+        if ($userId !== null) {
+            $query->where('user_id', $userId);
+        }
+
+        $occurrences = $query->get();
         $sent = 0;
 
         foreach ($occurrences as $occurrence) {
@@ -59,29 +63,31 @@ class TeacherCalendarReminderService
             ->with(['appointment', 'user'])
             ->first();
 
-        if (! $occurrence || ! $this->isDueNow($occurrence, allowGraceAfter: true)) {
+        if (! $occurrence || ! $this->isDueNow($occurrence)) {
             return false;
         }
 
         return $this->sendForOccurrence($occurrence);
     }
 
-    protected function isDueNow(TeacherCalendarOccurrence $occurrence, bool $allowGraceAfter = false): bool
+    /**
+     * مستحق إذا حان وقت التذكير ولم يبدأ الموعد بعد (نافذة واسعة حتى لا يُفوت بسبب cron).
+     */
+    protected function isDueNow(TeacherCalendarOccurrence $occurrence): bool
     {
         $appointment = $occurrence->appointment;
         if (! $appointment) {
             return false;
         }
 
-        $minutes = max(1, (int) ($appointment->reminder_minutes ?? 5));
-        $dueAt = $occurrence->starts_at->copy()->subMinutes($minutes);
-        $windowEnd = $dueAt->copy()->addMinutes(2);
-
-        if ($allowGraceAfter) {
-            $windowEnd = $occurrence->starts_at;
+        if ($occurrence->starts_at->lte(now())) {
+            return false;
         }
 
-        return now()->between($dueAt, $windowEnd);
+        $minutes = max(1, (int) ($appointment->reminder_minutes ?? 5));
+        $dueAt = $occurrence->starts_at->copy()->subMinutes($minutes);
+
+        return now()->gte($dueAt);
     }
 
     protected function sendForOccurrence(TeacherCalendarOccurrence $occurrence): bool
@@ -103,18 +109,33 @@ class TeacherCalendarReminderService
         }
 
         $minutes = max(1, (int) ($appointment->reminder_minutes ?? 5));
-        $this->notifyForOccurrence($occurrence, $minutes);
-        $occurrence->update(['reminder_sent_at' => now()]);
+        $result = $this->notifyForOccurrence($occurrence, $minutes);
 
-        return true;
+        if ($result['platform_ok'] || $result['email_ok']) {
+            $occurrence->update(['reminder_sent_at' => now()]);
+
+            return true;
+        }
+
+        return false;
     }
 
-    protected function notifyForOccurrence(TeacherCalendarOccurrence $occurrence, int $minutesBefore): void
+    /**
+     * @return array{platform_ok: bool, email_ok: bool, platform_skipped: bool, email_attempted: bool}
+     */
+    protected function notifyForOccurrence(TeacherCalendarOccurrence $occurrence, int $minutesBefore): array
     {
         $appointment = $occurrence->appointment;
         $user = $occurrence->user;
+        $out = [
+            'platform_ok' => false,
+            'email_ok' => false,
+            'platform_skipped' => ! $appointment->notify_platform,
+            'email_attempted' => false,
+        ];
+
         if (! $appointment || ! $user) {
-            return;
+            return $out;
         }
 
         $teacherTz = $appointment->teacher_timezone;
@@ -132,32 +153,51 @@ class TeacherCalendarReminderService
         );
 
         if ($appointment->notify_platform) {
-            Notification::create([
-                'user_id' => $user->id,
-                'sender_id' => null,
-                'title' => 'تذكير حصة: '.$appointment->title,
-                'message' => $message,
-                'type' => 'reminder',
-                'priority' => 'urgent',
-                'audience' => 'student',
-                'action_url' => route('calendar'),
-                'action_text' => 'فتح التقويم',
-                'expires_at' => $occurrence->ends_at,
-                'data' => [
+            try {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'sender_id' => null,
+                    'title' => 'تذكير حصة: '.$appointment->title,
+                    'message' => $message,
+                    'type' => 'reminder',
+                    'priority' => 'urgent',
+                    'audience' => 'student',
+                    'action_url' => route('calendar'),
+                    'action_text' => 'فتح التقويم',
+                    'expires_at' => $occurrence->ends_at,
+                    'data' => [
+                        'occurrence_id' => $occurrence->id,
+                        'appointment_id' => $appointment->id,
+                        'reminder_minutes' => $minutesBefore,
+                    ],
+                ]);
+                $out['platform_ok'] = true;
+            } catch (\Throwable $e) {
+                Log::error('Calendar platform notification failed', [
                     'occurrence_id' => $occurrence->id,
-                    'appointment_id' => $appointment->id,
-                    'reminder_minutes' => $minutesBefore,
-                ],
-            ]);
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         if ($appointment->notify_email && $user->email) {
-            $this->emailService->sendToUser(
+            $out['email_attempted'] = true;
+            $emailResult = $this->emailService->sendToUser(
                 $user,
                 $message."\n\nرابط التقويم: ".route('calendar'),
                 'تذكير: '.$appointment->title.' — Muallimx'
             );
+            $out['email_ok'] = (bool) ($emailResult['success'] ?? false);
+            if (! $out['email_ok']) {
+                Log::warning('Calendar reminder email failed', [
+                    'occurrence_id' => $occurrence->id,
+                    'user_id' => $user->id,
+                    'error' => $emailResult['error'] ?? 'unknown',
+                ]);
+            }
         }
+
+        return $out;
     }
 
     public function scheduleOccurrenceReminder(TeacherCalendarOccurrence $occurrence): void
@@ -176,13 +216,14 @@ class TeacherCalendarReminderService
         $runAt = $occurrence->starts_at->copy()->subMinutes($minutes);
 
         if ($runAt->isPast()) {
-            if ($this->isDueNow($occurrence, allowGraceAfter: true)) {
+            if ($this->isDueNow($occurrence)) {
                 $this->sendForOccurrence($occurrence);
             }
 
             return;
         }
 
+        // مع QUEUE_CONNECTION=sync لا يعمل delay — نعتمد على cron + فتح التقويم
         if (config('queue.default') === 'sync') {
             return;
         }

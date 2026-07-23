@@ -76,6 +76,11 @@ class ClassroomMeeting extends Model
         return $this->started_at && ! $this->ended_at;
     }
 
+    public function scopeLive($query)
+    {
+        return $query->whereNotNull('started_at')->whereNull('ended_at');
+    }
+
     /** سبورة الضيوف: قلم + ممحاة عند تفعيل منظم الاجتماع */
     public function allowsParticipantWhiteboard(): bool
     {

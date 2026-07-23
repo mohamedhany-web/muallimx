@@ -292,6 +292,17 @@ Route::get('/lp/{landingPage}', [\App\Http\Controllers\Public\LandingPageControl
 // تم إيقاف مجتمع البيانات والذكاء الاصطناعي (مسابقات، داتاسيت، مجتمع) بالكامل، لذا أزيلت جميع مساراته.
 
 // Muallimx Classroom — دخول الضيوف برابط/كود (بدون تسجيل دخول)
+// رابط Classroom الثابت للمعلم ثم روابط الجلسة بالكود
+Route::get('/classroom/join/t/{slug}', [\App\Http\Controllers\ClassroomJoinController::class, 'showTeacher'])
+    ->name('classroom.join.teacher')
+    ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*');
+Route::get('/classroom/join/t/{slug}/status', [\App\Http\Controllers\ClassroomJoinController::class, 'teacherStatus'])
+    ->name('classroom.join.teacher.status')
+    ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*');
+Route::post('/classroom/join/t/{slug}/enter', [\App\Http\Controllers\ClassroomJoinController::class, 'enterTeacher'])
+    ->name('classroom.join.teacher.enter')
+    ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*');
+
 Route::get('/classroom/join/{code}', [\App\Http\Controllers\ClassroomJoinController::class, 'show'])->name('classroom.join')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/enter', [\App\Http\Controllers\ClassroomJoinController::class, 'enter'])->name('classroom.join.enter')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/heartbeat', [\App\Http\Controllers\ClassroomJoinController::class, 'heartbeat'])->name('classroom.join.heartbeat')->where('code', '[A-Za-z0-9]+');
@@ -299,6 +310,14 @@ Route::post('/classroom/join/{code}/leave', [\App\Http\Controllers\ClassroomJoin
 Route::post('/classroom/join/{code}/share-annotation', [\App\Http\Controllers\ClassroomJoinController::class, 'pushShareAnnotation'])
     ->middleware('throttle:90,1')
     ->name('classroom.join.share-annotation')
+    ->where('code', '[A-Za-z0-9]+');
+Route::get('/classroom/join/{code}/whiteboard-scene', [\App\Http\Controllers\ClassroomJoinController::class, 'whiteboardScene'])
+    ->middleware('throttle:120,1')
+    ->name('classroom.join.whiteboard-scene')
+    ->where('code', '[A-Za-z0-9]+');
+Route::post('/classroom/join/{code}/whiteboard-scene', [\App\Http\Controllers\ClassroomJoinController::class, 'pushWhiteboardScene'])
+    ->middleware('throttle:90,1')
+    ->name('classroom.join.whiteboard-scene.push')
     ->where('code', '[A-Za-z0-9]+');
 
 // التواصل
@@ -655,6 +674,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/calendar', [\App\Http\Controllers\Student\CalendarController::class, 'index'])->name('calendar');
         Route::get('/api/calendar/events', [\App\Http\Controllers\Student\CalendarController::class, 'getEvents'])->name('calendar.events');
         Route::get('/api/calendar/personal/timezones', [\App\Http\Controllers\Student\TeacherPersonalCalendarController::class, 'timezones'])->name('calendar.personal.timezones');
+        Route::post('/api/calendar/personal/us-state', [\App\Http\Controllers\Student\TeacherPersonalCalendarController::class, 'resolveUsState'])->name('calendar.personal.us-state');
         Route::post('/api/calendar/personal/preview', [\App\Http\Controllers\Student\TeacherPersonalCalendarController::class, 'preview'])->name('calendar.personal.preview');
         Route::post('/api/calendar/personal-appointments', [\App\Http\Controllers\Student\TeacherPersonalCalendarController::class, 'store'])->name('calendar.personal.store');
         Route::put('/api/calendar/personal-appointments/{appointment}', [\App\Http\Controllers\Student\TeacherPersonalCalendarController::class, 'update'])->name('calendar.personal.update');
@@ -699,6 +719,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
         Route::get('/classroom/create', [\App\Http\Controllers\Student\ClassroomController::class, 'create'])->name('student.classroom.create');
         Route::post('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'store'])->name('student.classroom.store');
+        Route::put('/classroom/fixed-link', [\App\Http\Controllers\Student\ClassroomController::class, 'updateClassroomSlug'])->name('student.classroom.fixed-link');
         Route::get('/classroom/whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardStandalone'])->name('student.classroom.whiteboard');
         Route::get('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'show'])->name('student.classroom.show');
         Route::get('/classroom/{meeting}/edit', [\App\Http\Controllers\Student\ClassroomController::class, 'edit'])->name('student.classroom.edit');
@@ -707,9 +728,12 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/start', [\App\Http\Controllers\Student\ClassroomController::class, 'start'])->name('student.classroom.start');
         Route::post('/classroom/{meeting}/start', [\App\Http\Controllers\Student\ClassroomController::class, 'startMeeting'])->name('student.classroom.start-meeting');
         Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
+        Route::get('/classroom/room/{meeting}/pip', [\App\Http\Controllers\Student\ClassroomController::class, 'roomPip'])->name('student.classroom.room.pip');
         Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('student.classroom.recording.upload-tab');
         Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('student.classroom.participant-whiteboard');
         Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('student.classroom.share-annotations');
+        Route::get('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardScene'])->name('student.classroom.whiteboard-scene');
+        Route::post('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'pushWhiteboardScene'])->name('student.classroom.whiteboard-scene.push');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('student.classroom.end');
         Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('student.classroom.recording.upload');
         Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('student.classroom.recording.presign');
@@ -802,6 +826,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
 
         Route::get('/desk/academic-supervision', [\App\Http\Controllers\Employee\AcademicSupervisionController::class, 'index'])->middleware('employee.can:academic_supervision_desk')->name('academic-supervision.index');
         Route::get('/desk/academic-supervision/students/{student}', [\App\Http\Controllers\Employee\AcademicSupervisionController::class, 'show'])->middleware('employee.can:academic_supervision_desk')->name('academic-supervision.show');
+        Route::get('/desk/academic-supervision/meetings/{meeting}', [\App\Http\Controllers\Employee\AcademicSupervisionController::class, 'meetingShow'])->middleware('employee.can:academic_supervision_desk')->name('academic-supervision.meeting.show');
         Route::get('/desk/academic-supervision/meetings/{meeting}/observe', [\App\Http\Controllers\Employee\AcademicSupervisionController::class, 'observerRoom'])->middleware('employee.can:academic_supervision_desk')->name('academic-supervision.meeting.observe');
 
         Route::get('/tasks', [\App\Http\Controllers\Employee\EmployeeTaskController::class, 'index'])->middleware('employee.can:tasks')->name('tasks.index');
@@ -1257,6 +1282,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::post('/supervisors/{supervisor}/students', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'attachStudent'])->name('supervisors.students.attach');
             Route::delete('/supervisors/{supervisor}/students/{student}', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'detachStudent'])->name('supervisors.students.detach');
             Route::get('/supervisors/{supervisor}/students/{student}', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'studentShow'])->name('supervisors.students.show');
+            Route::get('/supervisors/{supervisor}/meetings/{meeting}', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'meetingShow'])->name('supervisors.meetings.show');
             Route::get('/supervisors/{supervisor}/meetings/{meeting}/observe', [\App\Http\Controllers\Admin\AcademicSupervisionController::class, 'observeMeeting'])->name('supervisors.meetings.observe');
         });
         Route::resource('employee-tasks', \App\Http\Controllers\Admin\EmployeeTaskController::class);
@@ -1755,9 +1781,12 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'show'])->name('classroom.show');
         Route::post('/classroom/{meeting}/start', [\App\Http\Controllers\Student\ClassroomController::class, 'startMeeting'])->name('classroom.start-meeting');
         Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('classroom.room');
+        Route::get('/classroom/room/{meeting}/pip', [\App\Http\Controllers\Student\ClassroomController::class, 'roomPip'])->name('classroom.room.pip');
         Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('classroom.recording.upload-tab');
         Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('classroom.participant-whiteboard');
         Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('classroom.share-annotations');
+        Route::get('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardScene'])->name('classroom.whiteboard-scene');
+        Route::post('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'pushWhiteboardScene'])->name('classroom.whiteboard-scene.push');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('classroom.end');
         Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('classroom.recording.upload');
         Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('classroom.recording.presign');

@@ -85,9 +85,8 @@ class TeacherPersonalCalendarService
             ]);
             $appointment->save();
 
-            if ($appointment->isFixed()) {
-                $this->syncOccurrences($appointment);
-            }
+            // مزامنة الجلسات للمواعيد الثابتة والمؤقتة (وقت + تذكيرات)
+            $this->syncOccurrences($appointment);
 
             return $appointment->fresh('occurrences');
         });
@@ -167,11 +166,23 @@ class TeacherPersonalCalendarService
             $appointment->duration_minutes
         );
 
-        $occurrence->update([
+        $timesChanged = ! $occurrence->starts_at->equalTo($times['starts_at_utc'])
+            || ! $occurrence->ends_at->equalTo($times['ends_at_utc']);
+
+        $payload = [
             'starts_at' => $times['starts_at_utc'],
             'ends_at' => $times['ends_at_utc'],
-            'reminder_sent_at' => null,
-        ]);
+        ];
+
+        // إعادة التذكير فقط عند تغيّر الوقت أو إعدادات التذكير
+        if ($timesChanged || $appointment->wasChanged([
+            'reminder_minutes', 'notify_platform', 'notify_email',
+            'family_time', 'family_timezone', 'teacher_timezone', 'duration_minutes', 'selected_dates',
+        ])) {
+            $payload['reminder_sent_at'] = null;
+        }
+
+        $occurrence->update($payload);
     }
 
     /**

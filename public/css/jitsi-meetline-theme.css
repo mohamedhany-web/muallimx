@@ -1,0 +1,155 @@
+/* jitsi-meetline-theme.css
+ * Canonical Meet.Line tokens for Jitsi (live.muallimx.com)
+ * MUST stay in sync with public/css/classroom-meetline.css :root
+ * Figma: Meet.Line 2252:4386
+ *
+ * Safe rules only — does not rewrite Jitsi layout/structure.
+ */
+
+:root {
+  --ml-bg-50: #fdfdfd;
+  --ml-bg-100: #f3f4f6;
+  --ml-text: #171717;
+  --ml-text-white: #fdfdfd;
+  --ml-primary: #0065fd;
+  --ml-primary-400: #005bc5;
+  --ml-primary-50: #eef5ff;
+  --ml-stroke: #e9e9e9;
+  --ml-stroke-primary: #0065fd;
+  --ml-black: #171717;
+  --ml-black-stroke: #525252;
+  --ml-red: #fd0000;
+  --ml-red-stroke: #c50000;
+  --ml-video: #111827;
+  --ml-radius: 12px;
+  --ml-radius-sm: 8px;
+  --ml-shadow: 0 0 60px rgba(185, 185, 185, 0.25);
+}
+
+/* Video stage = same as #meeting-stage.mx-ml-video */
+#largeVideoContainer,
+#largeVideoBackgroundContainer,
+#videospace,
+.large-video-background {
+  background-color: var(--ml-video) !important;
+}
+
+/* Top chip ≈ .mx-ml-record-chip */
+.subject-info-container {
+  background: var(--ml-black) !important;
+  border: 1px solid var(--ml-black-stroke) !important;
+  border-radius: var(--ml-radius-sm) !important;
+  padding: 6px 10px !important;
+  height: auto !important;
+  min-height: 32px !important;
+  gap: 8px !important;
+}
+
+.subject-info-container .subject-text,
+.subject-info-container span,
+.subject-info-container .timer,
+.subject-info-container .conference-timer {
+  color: var(--ml-text-white) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+.subject-info-container .jitsi-icon svg,
+.subject-info-container svg {
+  fill: var(--ml-primary) !important;
+}
+
+/* Filmstrip tiles ≈ video pane blue border */
+.filmstrip .videocontainer,
+.filmstrip__videos .videocontainer,
+#localVideoContainer,
+.remote-videos .videocontainer {
+  border: 2px solid var(--ml-stroke-primary) !important;
+  border-radius: var(--ml-radius) !important;
+  overflow: hidden !important;
+  background: var(--ml-video) !important;
+}
+
+.videocontainer.active-speaker,
+.videocontainer.videoContainerFocused {
+  box-shadow: 0 0 0 2px var(--ml-primary) !important;
+}
+
+.display-name,
+.videocontainer .displayname,
+.videocontainer .displayNameContainer {
+  background: rgba(23, 23, 23, 0.88) !important;
+  color: #fff !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 2px 8px !important;
+}
+
+/* Bottom dock ≈ .mx-ml-dock (guest / direct join) */
+.toolbox-content-items {
+  background: var(--ml-bg-50) !important;
+  border: 1px solid var(--ml-stroke) !important;
+  border-radius: var(--ml-radius) !important;
+  padding: 8px 10px !important;
+  box-shadow: var(--ml-shadow) !important;
+}
+
+.toolbox-icon {
+  border-radius: var(--ml-radius-sm) !important;
+  border: 1px solid var(--ml-stroke) !important;
+  background: var(--ml-bg-50) !important;
+}
+
+.toolbox-button:hover .toolbox-icon,
+.toolbox-button.toggled .toolbox-icon {
+  background: var(--ml-primary-50) !important;
+  border-color: var(--ml-primary) !important;
+}
+
+/* End = .mx-ml-end-btn */
+.hangup-button,
+.hangup-menu-button,
+.hangup-button .toolbox-icon {
+  background: var(--ml-red) !important;
+  border: 1px solid var(--ml-red-stroke) !important;
+  border-radius: var(--ml-radius-sm) !important;
+}
+
+.hangup-button svg,
+.hangup-button .toolbox-icon svg,
+.hangup-button .jitsi-icon svg {
+  fill: #fff !important;
+  color: #fff !important;
+}
+
+.badge-round {
+  background: var(--ml-primary) !important;
+  color: #fff !important;
+}
+
+/* Side panels light chrome */
+.participants-pane,
+#sideToolbarContainer,
+.chat-panel {
+  background: var(--ml-bg-50) !important;
+  color: var(--ml-text) !important;
+  border-color: var(--ml-stroke) !important;
+}
+
+/* Prejoin light */
+.premeeting-screen,
+.welcome-page,
+.lobby-screen {
+  background: var(--ml-bg-100) !important;
+  color: var(--ml-text) !important;
+}
+
+.premeeting-screen .action-btn,
+.prejoin .primary-button,
+.prejoin-btn {
+  background: var(--ml-primary) !important;
+  border: 1px solid var(--ml-primary-400) !important;
+  border-radius: var(--ml-radius-sm) !important;
+  color: #fff !important;
+}

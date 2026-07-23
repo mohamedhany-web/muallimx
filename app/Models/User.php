@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'calendar_timezone',
+        'classroom_slug',
         'phone',
         'password',
         'google_id',

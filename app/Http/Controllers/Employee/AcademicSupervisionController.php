@@ -82,6 +82,46 @@ class AcademicSupervisionController extends Controller
         ));
     }
 
+    public function meetingShow(ClassroomMeeting $meeting)
+    {
+        $supervisor = Auth::user();
+        $this->ensureAcademicSupervisor($supervisor);
+
+        if ($meeting->consultation_request_id) {
+            abort(403, 'غرف الاستشارة غير متاحة من مسار الإشراف الأكاديمي.');
+        }
+
+        $student = $meeting->user;
+        if (! $student || $student->role !== 'student') {
+            abort(404);
+        }
+
+        $this->ensureSupervises($supervisor, $student);
+
+        $meeting->load([
+            'participants' => fn ($q) => $q->orderBy('joined_at'),
+        ]);
+
+        $participants = $meeting->participants;
+        $presentNow = $participants->filter(fn ($p) => $p->left_at === null);
+        $leftAlready = $participants->filter(fn ($p) => $p->left_at !== null);
+
+        $durationMinutes = null;
+        if ($meeting->started_at) {
+            $end = $meeting->ended_at ?: now();
+            $durationMinutes = max(0, $meeting->started_at->diffInMinutes($end));
+        }
+
+        return view('employee.academic-supervision.meeting-show', compact(
+            'student',
+            'meeting',
+            'participants',
+            'presentNow',
+            'leftAlready',
+            'durationMinutes'
+        ));
+    }
+
     public function observerRoom(ClassroomMeeting $meeting)
     {
         $supervisor = Auth::user();

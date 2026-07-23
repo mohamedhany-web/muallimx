@@ -25,7 +25,7 @@
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">الكود: <span class="font-mono font-bold">{{ $meeting->code }}</span></p>
             </div>
             <div class="flex items-center gap-2">
-                @if(!$meeting->consultation_request_id && !($useInstructorRoutes ?? false))
+                @if(!$meeting->consultation_request_id && !($useInstructorRoutes ?? false) && !$meeting->isLive() && !$meeting->ended_at)
                 <a href="{{ route('student.classroom.edit', $meeting) }}" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold">تعديل</a>
                 @endif
                 @if(!$meeting->started_at && !$meeting->ended_at)
@@ -66,11 +66,22 @@
             </div>
         </div>
 
-        <div class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-3 flex flex-wrap items-center justify-between gap-3">
-            <div class="text-xs text-slate-600 dark:text-slate-300">رابط الانضمام للطلاب والضيوف:</div>
-            <div class="flex items-center gap-2">
-                <input type="text" readonly value="{{ $joinUrl }}" class="w-[340px] max-w-[60vw] px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs">
-                <button type="button" onclick="navigator.clipboard.writeText('{{ $joinUrl }}')" class="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold">نسخ</button>
+        <div class="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-3 space-y-3">
+            @if(!empty($fixedJoinUrl) && !($useInstructorRoutes ?? false))
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="text-xs text-slate-600 dark:text-slate-300">الرابط الثابت (يُفضَّل مشاركته دائماً):</div>
+                <div class="flex items-center gap-2">
+                    <input type="text" readonly value="{{ $fixedJoinUrl }}" class="w-[340px] max-w-[60vw] px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs" dir="ltr">
+                    <button type="button" onclick="navigator.clipboard.writeText(@json($fixedJoinUrl))" class="px-3 py-2 rounded-lg bg-[#FB5607]/15 text-[#FB5607] text-xs font-semibold">نسخ</button>
+                </div>
+            </div>
+            @endif
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="text-xs text-slate-600 dark:text-slate-300">رابط هذه الجلسة فقط:</div>
+                <div class="flex items-center gap-2">
+                    <input type="text" readonly value="{{ $joinUrl }}" class="w-[340px] max-w-[60vw] px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs" dir="ltr">
+                    <button type="button" onclick="navigator.clipboard.writeText(@json($joinUrl))" class="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold">نسخ</button>
+                </div>
             </div>
         </div>
 

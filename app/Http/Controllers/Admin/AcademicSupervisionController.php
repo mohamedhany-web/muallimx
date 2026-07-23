@@ -165,6 +165,50 @@ class AcademicSupervisionController extends Controller
         ));
     }
 
+    public function meetingShow(User $supervisor, ClassroomMeeting $meeting)
+    {
+        if (! $supervisor->is_employee || $supervisor->employeeJob?->code !== 'academic_supervisor') {
+            abort(404);
+        }
+
+        if ($meeting->consultation_request_id) {
+            abort(403, 'غرف الاستشارة غير متاحة من هذا المسار.');
+        }
+
+        $student = $meeting->user;
+        if (! $student || $student->role !== 'student') {
+            abort(404);
+        }
+
+        if (! $supervisor->supervisedStudentsAsAcademic()->whereKey($student->id)->exists()) {
+            abort(403);
+        }
+
+        $meeting->load([
+            'participants' => fn ($q) => $q->orderBy('joined_at'),
+        ]);
+
+        $participants = $meeting->participants;
+        $presentNow = $participants->filter(fn ($p) => $p->left_at === null);
+        $leftAlready = $participants->filter(fn ($p) => $p->left_at !== null);
+
+        $durationMinutes = null;
+        if ($meeting->started_at) {
+            $end = $meeting->ended_at ?: now();
+            $durationMinutes = max(0, $meeting->started_at->diffInMinutes($end));
+        }
+
+        return view('admin.academic-supervision.meeting-show', compact(
+            'supervisor',
+            'student',
+            'meeting',
+            'participants',
+            'presentNow',
+            'leftAlready',
+            'durationMinutes'
+        ));
+    }
+
     public function observeMeeting(User $supervisor, ClassroomMeeting $meeting)
     {
         if (! $supervisor->is_employee || $supervisor->employeeJob?->code !== 'academic_supervisor') {

@@ -6,16 +6,17 @@
     <title>Muallimx Classroom — {{ $meeting->title ?: $meeting->code }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="{{ asset('css/classroom-meetline.css') }}" rel="stylesheet">
     <style>
-        * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+        * { font-family: 'IBM Plex Sans Arabic', 'Poppins', system-ui, sans-serif; }
         html { height: 100%; height: 100dvh; }
         body {
             margin: 0;
             padding: 0;
-            background: #0c1222;
+            background: #fdfdfd;
             overflow: hidden;
             min-height: 100vh;
             min-height: 100dvh;
@@ -39,13 +40,11 @@
         #jitsi-container iframe { width: 100% !important; height: 100% !important; border: none; }
         #meeting-stage { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; width: 100%; }
         #wb-popup { z-index: 140; }
-        /* عدم خلط display مع Tailwind: عند الإغلاق لا يبقى flex يتعارض مع hidden */
         #wb-popup.is-open {
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        /* القوائم: fixed + فوق الدرج والـ iframe قدر الإمكان */
         #pkg-features-dd-panel,
         #mx-record-dd-panel {
             z-index: 220;
@@ -55,7 +54,7 @@
         #mx-record-dd-panel.mx-dd-visible {
             will-change: opacity;
         }
-        #mx-record-dd-panel { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(148, 163, 184, 0.08); }
+        #mx-record-dd-panel { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 101, 253, 0.08); }
         #mx-classroom-nav-drawer { z-index: 205; }
         #mx-classroom-nav-drawer[data-open="1"] { visibility: visible !important; pointer-events: auto !important; }
         #mx-classroom-nav-drawer[data-open="1"] #mx-nav-drawer-backdrop { opacity: 1; pointer-events: auto; }
@@ -63,7 +62,7 @@
             transform: translateX(0) !important;
             pointer-events: auto;
         }
-        .pkg-features-dd-panel-inner { box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(34, 211, 238, 0.06); }
+        .pkg-features-dd-panel-inner { box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 101, 253, 0.06); }
         .classroom-room-toolbar-btn {
             display: inline-flex;
             align-items: center;
@@ -87,7 +86,7 @@
         }
         #pkg-features-dd-btn:focus-visible {
             outline: none;
-            box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.9), 0 0 0 4px rgba(34, 211, 238, 0.35);
+            box-shadow: 0 0 0 2px rgba(253, 253, 253, 0.9), 0 0 0 4px rgba(0, 101, 253, 0.35);
         }
         #wb-popup-stage { min-height: 50vh; }
         .classroom-excalidraw-host {
@@ -97,7 +96,7 @@
             height: 100%;
         }
         .classroom-excalidraw-host .excalidraw {
-            --color-surface-lowest: #0f172a;
+            --color-surface-lowest: #fdfdfd;
         }
         /* Muallimx Whiteboard: مكتبة + روابط وخدمات خارجية داخل واجهة اللوحة */
         .mx-muallimx-whiteboard .excalidraw .layer-ui__library,
@@ -175,13 +174,13 @@
             display: none;
             align-items: center;
             justify-content: center;
-            background: rgba(15,23,42,0.75);
-            color: #94a3b8;
+            background: rgba(253,253,253,0.85);
+            color: #717171;
             font-size: 14px;
         }
     </style>
 </head>
-<body class="bg-slate-950">
+<body class="mx-meetline bg-[#fdfdfd]">
 @php
     $academicObserverMode = !empty($academicObserverMode);
     $rp = ($useInstructorRoutes ?? false) ? 'instructor.' : 'student.';
@@ -193,150 +192,44 @@
         $roomExitUrl = route('student.classroom.index');
     }
 @endphp
-    {{-- شريط Muallimx العلوي — على الهاتف: صف علوي + زر سايدبار؛ من md: شريط أدوات أفقي --}}
-    <header class="min-h-14 shrink-0 bg-gradient-to-l from-slate-900 to-slate-800 border-b border-slate-700/50 flex flex-col gap-2 px-3 sm:px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 md:py-0 md:flex-row md:items-center md:justify-between md:gap-2 shadow-lg">
-        <div class="flex items-center justify-between gap-2 w-full min-w-0 md:w-auto md:flex-1 md:justify-start">
-            <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <a href="{{ $roomExitUrl }}" class="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors shrink-0">
-                <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
-                    <i class="fas fa-video text-sm sm:text-[15px]"></i>
-                </span>
-                <span class="font-bold text-white text-[11px] sm:text-sm truncate max-w-[6.5rem] sm:max-w-[8rem] md:max-w-none">Muallimx</span>
+<div class="mx-ml-shell">
+    {{-- Meet.Line top bar --}}
+    <header class="mx-ml-top">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
+            <a href="{{ $roomExitUrl }}" class="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg border border-[#e9e9e9] bg-white text-[#0065fd] hover:bg-[#eef5ff]" title="خروج">
+                <i class="fas fa-arrow-right"></i>
             </a>
-            <span class="w-px h-5 bg-slate-600 hidden sm:block shrink-0"></span>
-            <div class="flex items-center gap-1.5 min-w-0">
-                <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow shadow-emerald-400/40 shrink-0"></span>
-                <span class="text-white font-semibold text-xs sm:text-sm truncate">{{ $meeting->title ?: 'غرفة ' . $meeting->code }}</span>
-                <span class="text-slate-400 text-[10px] sm:text-xs px-1.5 py-0.5 rounded bg-slate-700/80 font-mono shrink-0">{{ $meeting->code }}</span>
-            </div>
-            </div>
-            <button type="button" id="mx-nav-drawer-toggle" class="md:hidden shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700 hover:border-cyan-500/30 transition-colors" aria-expanded="false" aria-controls="mx-classroom-nav-drawer" title="أدوات الغرفة">
-                <i class="fas fa-bars text-lg" aria-hidden="true"></i>
+            <h1 class="mx-ml-title truncate">{{ $meeting->title ?: ('غرفة ' . $meeting->code) }}</h1>
+            <button type="button" id="mx-nav-drawer-toggle" class="md:hidden shrink-0 mx-ml-icon-btn" aria-expanded="false" aria-controls="mx-classroom-nav-drawer" title="أدوات الغرفة">
+                <i class="fas fa-bars"></i>
             </button>
         </div>
-        <div id="mx-toolbar-desktop-slot" class="hidden md:block w-full md:w-auto mx-mobile-toolbar-scroll overflow-x-auto overflow-y-visible pb-0.5 md:pb-0 touch-pan-x">
-        <div id="mx-classroom-toolbar-inner" class="flex w-full flex-col items-stretch gap-3 md:w-auto md:min-w-max md:flex-row md:flex-nowrap md:items-center md:justify-end md:gap-1 md:gap-2 md:max-w-[min(100%,42rem)] lg:max-w-none pe-1 ps-0.5">
-            <div class="flex flex-wrap items-center gap-1.5 md:flex-nowrap">
-            <span class="hidden sm:inline-flex text-slate-300 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-slate-700/80 whitespace-nowrap">
-                طلاب: {{ (int) ($meeting->max_participants ?? 25) }}
+        <div class="flex items-center gap-2 shrink-0">
+            <span class="hidden sm:inline text-[11px] text-[#717171] px-2 py-1 rounded-lg border border-[#e9e9e9] bg-white">حد الطلاب: {{ (int) ($meeting->max_participants ?? 25) }}</span>
+            <span id="mx-ml-live-count" class="inline-flex items-center gap-1.5 text-[11px] text-[#0065fd] px-2 py-1 rounded-lg border border-[#0065fd]/30 bg-[#eef5ff] font-semibold">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#0065fd] animate-pulse"></span>
+                <span id="mx-ml-live-count-num">1</span> متصل
             </span>
-            <span class="inline-flex sm:hidden text-amber-200 text-[10px] px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 whitespace-nowrap" id="meeting-timer-chip-mobile">
-                {{ (int) $effectiveDurationMinutes }} د
+            <span id="mx-ml-quality" class="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-[#525252] px-2 py-1 rounded-lg border border-[#e9e9e9] bg-white font-medium" title="جودة الاتصال">
+                <span id="mx-ml-quality-bars" class="mx-ml-quality-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                <span id="mx-ml-quality-label">—</span>
             </span>
-            <span class="hidden sm:inline-flex text-amber-200 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 whitespace-nowrap" id="meeting-timer-chip">
-                مدة الاجتماع: {{ (int) $effectiveDurationMinutes }} دقيقة (حد الباقة {{ (int) $maxDurationMinutes }})
-            </span>
-            <span class="hidden text-sky-200 text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-sky-500/20 border border-sky-500/30 max-w-[10rem] sm:max-w-[14rem] truncate" id="record-status-chip"></span>
+            <div class="mx-ml-record-chip" title="الوقت المتبقي حسب الباقة">
+                <span class="mx-ml-rec-dot-wrap"><span class="mx-ml-rec-dot"></span></span>
+                <span id="meeting-timer-chip">{{ (int) $effectiveDurationMinutes }}:00</span>
+                <span id="meeting-timer-chip-mobile" class="sr-only">{{ (int) $effectiveDurationMinutes }} د</span>
             </div>
-            <span class="hidden xl:block w-px h-4 bg-slate-600/50 shrink-0 rounded-full" aria-hidden="true"></span>
-            <div class="flex w-full flex-col gap-2 md:w-auto md:flex-row md:flex-nowrap md:items-center md:justify-end md:gap-1.5">
-            @unless($academicObserverMode)
-            @if(!empty($subscriptionFeatureMenuItems))
-            <div class="relative w-full shrink-0 md:w-auto" id="pkg-features-dd-wrap">
-                <button type="button" id="pkg-features-dd-btn" class="classroom-room-toolbar-btn w-full justify-between bg-slate-700/80 hover:bg-slate-600/90 text-slate-100 border border-slate-600 hover:border-cyan-500/35 md:w-auto md:max-w-[11rem] lg:max-w-none" aria-expanded="false" aria-haspopup="true" title="مزايا اشتراكك — تفتح في تاب جديد">
-                    <span class="flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-md bg-cyan-500/15 text-cyan-400 border border-cyan-500/20">
-                        <i class="fas fa-layer-group text-[11px] sm:text-xs"></i>
-                    </span>
-                    <span class="flex min-w-0 flex-1 flex-col items-stretch text-right leading-tight">
-                        <span class="truncate font-semibold text-slate-100 text-[11px] sm:text-xs">مزايا الباقة</span>
-                        @if(!empty($subscriptionPackageLabel))
-                        <span class="truncate text-[9px] sm:text-[10px] font-normal text-slate-400">{{ $subscriptionPackageLabel }}</span>
-                        @else
-                        <span class="text-[9px] sm:text-[10px] font-normal text-slate-500">اشتراكك النشط</span>
-                        @endif
-                    </span>
-                    <i class="fas fa-chevron-down text-[9px] text-slate-400 shrink-0 transition-transform duration-200" id="pkg-features-dd-chevron" aria-hidden="true"></i>
-                </button>
-                <div id="pkg-features-dd-panel" class="pkg-features-dd-panel-inner hidden w-[min(100vw-2rem,19.5rem)] max-w-[calc(100vw-1rem)] rounded-xl border border-slate-600 bg-slate-900/98 backdrop-blur-md overflow-hidden" role="menu">
-                    <div class="px-3 py-2.5 border-b border-slate-700/90 bg-slate-800/70 flex items-start gap-2">
-                        <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-cyan-500/10 text-cyan-400">
-                            <i class="fas fa-arrow-up-left-from-square text-[10px]"></i>
-                        </span>
-                        <div class="min-w-0">
-                            <p class="text-xs font-semibold text-slate-200 m-0 leading-snug">روابط سريعة</p>
-                            <p class="text-[11px] text-slate-500 m-0 mt-0.5 leading-relaxed">كل رابط يُفتح في نافذة جديدة دون إغلاق الاجتماع.</p>
-                        </div>
-                    </div>
-                    <div class="max-h-[min(58vh,20rem)] overflow-y-auto py-1.5 px-1">
-                        @foreach($subscriptionFeatureMenuItems as $item)
-                        <a href="{{ $item['url'] }}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex items-center gap-3 px-2.5 py-2 mx-0.5 rounded-lg text-slate-200 hover:bg-slate-700/70 transition-colors border border-transparent hover:border-slate-600/80">
-                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $item['icon_bg'] }} {{ $item['icon_text'] }} ring-1 ring-white/5 group-hover:ring-cyan-500/15 transition-[box-shadow]">
-                                <i class="fas {{ $item['icon'] }} text-sm"></i>
-                            </span>
-                            <span class="min-w-0 flex-1 text-sm font-medium leading-snug text-right group-hover:text-white">{{ $item['label'] }}</span>
-                            <i class="fas fa-arrow-up-left-from-square text-slate-500 group-hover:text-cyan-400/90 text-[11px] shrink-0 transition-colors"></i>
-                        </a>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-            @endif
-            <button type="button" id="btn-wb-popup-open" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 border border-amber-500/40 md:w-auto md:justify-start" title="فتح الوايت بورد في نافذة منبثقة">
-                <i class="fas fa-expand text-amber-300 text-[11px]"></i>
-                <span class="sm:inline">الوايت بورد</span>
-            </button>
-            <label class="classroom-room-toolbar-btn w-full justify-between bg-slate-700/50 border border-slate-600 cursor-pointer select-none text-slate-200 md:w-auto md:max-w-[13rem]"
-                   title="الضيف يرسم قلم/ممحاة فوق عرض الاجتماع؛ يظهر عندك فوق نفس الشاشة">
-                <input type="checkbox" id="mx-classroom-toggle-guest-wb" class="rounded border-slate-500 text-amber-500 focus:ring-amber-500 shrink-0 scale-90"
-                       {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}>
-                <span class="font-medium truncate"><span class="hidden sm:inline">رسم الضيف فوق العرض</span><span class="sm:hidden">رسم ضيف</span></span>
-            </label>
-            <div class="relative flex w-full flex-wrap items-center gap-2 md:inline-flex md:w-auto md:flex-nowrap md:gap-0" id="mx-record-dd-wrap">
-                <div id="mx-record-idle-wrap" class="inline-flex w-full min-w-0 items-center rounded-lg border border-slate-600 overflow-hidden bg-slate-700/80 hover:bg-slate-600/90 transition-colors md:w-auto">
-                    <button type="button" id="btn-record-menu" class="classroom-room-toolbar-btn w-full min-w-0 justify-between rounded-none border-0 bg-transparent text-slate-200 hover:bg-transparent md:w-auto" title="تسجيل المحاضرة أو تقرير صوتي" aria-expanded="false" aria-haspopup="true">
-                        <i class="fas fa-circle-dot text-rose-400 text-[10px]" id="record-icon-idle"></i>
-                        <span id="record-label-idle" class="min-w-0 flex-1 truncate sm:max-w-[9.5rem] lg:max-w-none">تسجيل أو تقرير</span>
-                        <i class="fas fa-chevron-down text-[9px] text-slate-400 shrink-0 transition-transform duration-200" id="record-dd-chevron" aria-hidden="true"></i>
-                    </button>
-                </div>
-                <button type="button" id="btn-record-stop" class="hidden classroom-room-toolbar-btn w-full justify-center rounded-lg bg-rose-600/90 hover:bg-rose-600 text-white font-semibold border border-rose-500/40 shadow-sm shadow-rose-900/25 md:w-auto md:max-w-[11rem]" title="إيقاف التسجيل">
-                    <i class="fas fa-stop text-[10px] shrink-0" id="record-icon-active"></i>
-                    <span id="record-label-active" class="truncate text-right">إيقاف</span>
-                </button>
-                <button type="button" id="btn-lecture-add-screen" class="hidden classroom-room-toolbar-btn w-full justify-center rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-100 font-medium border border-cyan-500/35 md:w-auto md:max-w-[13rem]" title="إضافة تبويب الاجتماع أو الشاشة إلى الفيديو المسجّل">
-                    <i class="fas fa-desktop text-[10px] shrink-0 text-cyan-300"></i>
-                    <span class="truncate hidden sm:inline">إضافة شاشة للتسجيل</span><span class="sm:hidden">+شاشة</span>
-                </button>
-                <div id="mx-record-dd-panel" class="hidden w-[min(100vw-1.5rem,18.5rem)] max-w-[calc(100vw-1rem)] rounded-lg border border-slate-600 bg-slate-900/98 backdrop-blur-md overflow-hidden" role="menu">
-                    <p class="px-2.5 py-1.5 text-[10px] leading-snug text-slate-500 border-b border-slate-700/80 m-0">يبدأ التسجيل بالصوت فقط. أثناء التسجيل اضغط «إضافة شاشة للتسجيل» واختر <strong class="text-slate-400">تبويب الاجتماع</strong> ليظهر العرض والمشاركة في الفيديو.</p>
-                    <button type="button" role="menuitem" data-mx-rec-mode="lecture" class="w-full text-right px-2.5 py-2 text-xs text-slate-200 hover:bg-slate-700/80 border-0 border-b border-slate-700/50 bg-transparent cursor-pointer flex items-center gap-2">
-                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-rose-500/15 text-rose-300"><i class="fas fa-display text-[11px]"></i></span>
-                        <span class="min-w-0 flex-1 leading-snug"><strong class="block text-slate-100 text-xs">تسجيل المحاضرة</strong><span class="text-[10px] text-slate-500">فيديو (اختياري) + ميكروفون</span></span>
-                    </button>
-                    <button type="button" role="menuitem" data-mx-rec-mode="report" class="w-full text-right px-2.5 py-2 text-xs text-slate-200 hover:bg-slate-700/80 border-0 bg-transparent cursor-pointer flex items-center gap-2">
-                        <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-cyan-500/15 text-cyan-300"><i class="fas fa-file-audio text-[11px]"></i></span>
-                        <span class="min-w-0 flex-1 leading-snug"><strong class="block text-slate-100 text-xs">إنشاء تقرير</strong><span class="text-[10px] text-slate-500">صوت فقط</span></span>
-                    </button>
-                </div>
-            </div>
-            <button type="button" id="btn-classroom-copy-join" class="classroom-room-toolbar-btn w-full justify-center gap-2 bg-slate-700/80 hover:bg-slate-600 text-slate-200 border border-slate-600 md:w-auto md:justify-start" title="نسخ رابط الانضمام" data-join-url="{{ url('classroom/join/' . $meeting->code) }}">
-                <i class="fas fa-link text-[10px] btn-copy-join-ic"></i>
-                <span class="btn-copy-join-tx min-w-0 truncate">مشاركة الرابط</span>
-                <span class="btn-copy-join-tx-sm hidden min-w-0 truncate" aria-hidden="true">رابط</span>
-            </button>
-            <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" class="inline w-full shrink-0 md:w-auto" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
-                @csrf
-                <button type="submit" id="mx-end-meeting-btn" class="classroom-room-toolbar-btn w-full justify-center bg-rose-600 hover:bg-rose-500 text-white font-semibold border border-rose-500/50 shadow-sm shadow-rose-900/20 md:w-auto md:justify-start">
-                    <i class="fas fa-stop text-[10px]"></i><span class="hidden md:inline">إنهاء الاجتماع</span><span class="md:hidden">إنهاء</span>
-                </button>
-            </form>
-            @else
-            <span class="text-amber-200 text-[11px] px-2 py-1 rounded-md bg-amber-500/15 border border-amber-500/30 font-semibold">
-                <i class="fas fa-eye text-[10px] ms-0.5"></i> مراقبة
-            </span>
-            @endunless
-            </div>
-        </div>
+            <span class="hidden text-[11px] px-2 py-1 rounded-lg border border-[#e9e9e9] bg-white text-[#005bc5] max-w-[10rem] truncate" id="record-status-chip"></span>
         </div>
     </header>
 
     {{-- درج أدوات الغرفة (هاتف فقط): نفس عناصر الشريط تُنقل هنا عبر JS --}}
     <div id="mx-classroom-nav-drawer" class="md:hidden fixed inset-0 invisible pointer-events-none" data-open="0" aria-hidden="true">
         <div id="mx-nav-drawer-backdrop" class="absolute inset-0 bg-slate-950/65 opacity-0 transition-opacity duration-200 pointer-events-none" aria-hidden="true"></div>
-        <aside id="mx-nav-drawer-aside" class="absolute end-0 top-0 flex h-full min-h-0 w-[min(20rem,calc(100vw-2.5rem))] max-w-[100vw] flex-col border-s border-slate-600/80 bg-slate-900 shadow-2xl transition-transform duration-200 ease-out ltr:translate-x-full rtl:-translate-x-full pointer-events-none pt-[max(0.5rem,env(safe-area-inset-top))]" role="dialog" aria-modal="true" aria-labelledby="mx-nav-drawer-title">
-            <div class="flex items-center justify-between gap-2 border-b border-slate-700/80 px-3 py-2.5 shrink-0">
-                <h2 id="mx-nav-drawer-title" class="text-sm font-bold text-white m-0 truncate">أدوات الغرفة</h2>
-                <button type="button" id="mx-nav-drawer-close" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white" aria-label="إغلاق القائمة">
+        <aside id="mx-nav-drawer-aside" class="absolute end-0 top-0 flex h-full min-h-0 w-[min(20rem,calc(100vw-2.5rem))] max-w-[100vw] flex-col border-s border-[#e9e9e9] bg-white shadow-2xl transition-transform duration-200 ease-out ltr:translate-x-full rtl:-translate-x-full pointer-events-none pt-[max(0.5rem,env(safe-area-inset-top))]" role="dialog" aria-modal="true" aria-labelledby="mx-nav-drawer-title">
+            <div class="flex items-center justify-between gap-2 border-b border-[#e9e9e9] px-3 py-2.5 shrink-0">
+                <h2 id="mx-nav-drawer-title" class="text-sm font-bold text-[#171717] m-0 truncate">أدوات الغرفة</h2>
+                <button type="button" id="mx-nav-drawer-close" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#e9e9e9] bg-[#f3f4f6] text-[#171717] hover:bg-[#eef5ff]" aria-label="إغلاق القائمة">
                     <i class="fas fa-times text-sm" aria-hidden="true"></i>
                 </button>
             </div>
@@ -346,9 +239,6 @@
     <script>
         (function () {
             var mq = window.matchMedia('(max-width: 767px)');
-            var inner = document.getElementById('mx-classroom-toolbar-inner');
-            var desk = document.getElementById('mx-toolbar-desktop-slot');
-            var slot = document.getElementById('mx-toolbar-drawer-slot');
             var drawer = document.getElementById('mx-classroom-nav-drawer');
             var toggle = document.getElementById('mx-nav-drawer-toggle');
             var closeBtn = document.getElementById('mx-nav-drawer-close');
@@ -367,6 +257,9 @@
             }
 
             function placeToolbar() {
+                var inner = document.getElementById('mx-classroom-toolbar-inner');
+                var desk = document.getElementById('mx-toolbar-desktop-slot');
+                var slot = document.getElementById('mx-toolbar-drawer-slot');
                 if (!inner || !desk || !slot) return;
                 if (mq.matches) {
                     slot.appendChild(inner);
@@ -376,13 +269,20 @@
                 }
             }
 
-            placeToolbar();
-            if (typeof mq.addEventListener === 'function') {
-                mq.addEventListener('change', placeToolbar);
-            } else if (typeof mq.addListener === 'function') {
-                mq.addListener(placeToolbar);
+            function bootToolbarPlacement() {
+                placeToolbar();
+                if (typeof mq.addEventListener === 'function') {
+                    mq.addEventListener('change', placeToolbar);
+                } else if (typeof mq.addListener === 'function') {
+                    mq.addListener(placeToolbar);
+                }
+                window.addEventListener('resize', placeToolbar);
             }
-            window.addEventListener('resize', placeToolbar);
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', bootToolbarPlacement);
+            } else {
+                bootToolbarPlacement();
+            }
 
             if (toggle) {
                 toggle.addEventListener('click', function (e) {
@@ -410,51 +310,50 @@
         })();
     </script>
 
-    <div class="room-body">
-    {{-- بوابة إذن الميكروفون/الكاميرا قبل تحميل Jitsi (تحل مشكلة بعض الأجهزة التي لا تُظهر الطلب تلقائياً) --}}
-    <div id="permission-gate" class="absolute inset-0 z-20 bg-slate-950/95 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="w-full max-w-xl rounded-2xl border border-slate-700 bg-slate-900/95 shadow-2xl p-6 sm:p-7 text-center">
-            <div class="w-14 h-14 mx-auto rounded-2xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center mb-4">
+    <div class="room-body mx-ml-main">
+    {{-- بوابة إذن الميكروفون/الكاميرا قبل تحميل Jitsi --}}
+    <div id="permission-gate" class="absolute inset-0 z-20 bg-[#f3f4f6]/95 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="w-full max-w-xl rounded-2xl border border-[#e9e9e9] bg-white shadow-2xl p-6 sm:p-7 text-center">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-[#eef5ff] text-[#0065fd] flex items-center justify-center mb-4">
                 <i class="fas fa-microphone-lines text-xl"></i>
             </div>
-            <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">السماح بالميكروفون والكاميرا</h2>
-            <p class="text-slate-300 text-sm leading-7 mb-5">
+            <h2 class="text-xl sm:text-2xl font-bold text-[#171717] mb-2">السماح بالميكروفون والكاميرا</h2>
+            <p class="text-[#717171] text-sm leading-7 mb-5">
                 قبل دخول الاجتماع، اضغط على الزر التالي للسماح بالوصول إلى
-                <strong class="text-white">الميكروفون والكاميرا</strong>.
+                <strong class="text-[#171717]">الميكروفون والكاميرا</strong>.
                 هذا يساعد في حل مشكلة الأجهزة التي لا يظهر فيها طلب الإذن تلقائياً.
             </p>
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
                 <button type="button" id="btn-request-media"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition-colors">
+                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#0065fd] hover:bg-[#005bc5] text-white font-semibold transition-colors">
                     <i class="fas fa-shield-check"></i>
                     طلب الأذونات والدخول
                 </button>
                 <button type="button" id="btn-join-without-media"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-100 font-semibold transition-colors">
+                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-[#eef5ff] text-[#171717] font-semibold transition-colors border border-[#e9e9e9]">
                     <i class="fas fa-arrow-left"></i>
                     دخول بدون تفعيل الأجهزة
                 </button>
             </div>
-            <p id="permission-help" class="mt-4 text-xs text-slate-400"></p>
+            <p id="permission-help" class="mt-4 text-xs text-[#717171]"></p>
         </div>
     </div>
 
-    {{-- تنبيه: الخادم التجريبي للاختبار فقط — يُقطع بعد 5 دقائق --}}
     @if(!empty($isDemoJitsi))
-    <div class="bg-amber-500/15 border-b border-amber-500/40 px-4 py-2 flex items-center justify-between gap-3 text-amber-800 dark:text-amber-200 text-sm flex-shrink-0">
+    <div class="bg-[#fff7ed] border border-[#fd8700]/40 rounded-[8px] px-4 py-2 flex items-center justify-between gap-3 text-[#c57300] text-sm flex-shrink-0">
         <span class="flex items-center gap-2">
             <i class="fas fa-exclamation-triangle"></i>
-            <strong>للاختبار فقط:</strong> استخدام خادم الاجتماعات التجريبي قد يقطع المكالمة بعد 5 دقائق. للإنتاج استخدم خادم الاجتماعات الخاص بك من إعدادات نظام اللايف.
+            <strong>للاختبار فقط:</strong> استخدام خادم الاجتماعات التجريبي قد يقطع المكالمة بعد 5 دقائق.
         </span>
-        <button type="button" onclick="this.parentElement.remove()" class="text-amber-600 hover:text-amber-800 p-1" aria-label="إغلاق"><i class="fas fa-times"></i></button>
+        <button type="button" onclick="this.parentElement.remove()" class="p-1" aria-label="إغلاق"><i class="fas fa-times"></i></button>
     </div>
     @endif
 
-    {{-- منطقة الاجتماع --}}
-    <div id="meeting-stage" class="flex-1 min-h-0 relative w-full">
-        <main id="jitsi-container" class="flex-1 min-h-0 relative w-full" role="application" aria-label="غرفة الاجتماع">
+    <div class="mx-ml-stage-row">
+    <div id="meeting-stage" class="mx-ml-video flex-1 min-h-0 relative w-full">
+        <main id="jitsi-container" class="flex-1 min-h-0 relative w-full h-full" role="application" aria-label="غرفة الاجتماع">
             <div id="jitsi-loading" class="flex flex-col items-center justify-center h-full text-slate-400 text-sm gap-3">
-                <i class="fas fa-spinner fa-spin text-2xl text-cyan-400"></i>
+                <i class="fas fa-spinner fa-spin text-2xl text-[#0065fd]"></i>
                 <span>جاري تحميل غرفة الاجتماع…</span>
             </div>
             <div id="jitsi-error" class="hidden flex-col items-center justify-center h-full p-6 text-center max-w-lg mx-auto" style="display: none;">
@@ -462,60 +361,179 @@
                 <p class="font-bold text-slate-200 mb-2">لا يمكن تحميل غرفة الاجتماع</p>
                 <p class="text-slate-400 text-sm mb-3">المتصفح لم يستطع الاتصال بـ <strong class="text-slate-300">{{ $jitsiDomain }}</strong>.</p>
                 <ul class="text-right text-slate-400 text-sm mb-4 list-none space-y-1">
-                    <li>• النطاق يجب أن يكون <strong class="text-slate-300">النطاق الصحيح لخادم الاجتماعات</strong> (مثلاً <code class="bg-slate-700 px-1 rounded">meet.muallimx.com</code> وليس بالضرورة الموقع الرئيسي).</li>
-                    <li>• جرّب فتح <a href="https://{{ $jitsiDomain }}/external_api.js" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">هذا الرابط</a> في تاب جديد — إن لم يُحمّل، فخادم الاجتماعات غير متاح من جهازك أو غير مضبوط على هذا النطاق.</li>
-                    <li>• إن كان خادم الاجتماعات على نطاق فرعي (مثل meet.muallimx.com)، حدّث النطاق من: <strong>لوحة الإدارة → سيرفرات البث</strong> ثم «استخدام كنطاق افتراضي» للسيرفر الصحيح.</li>
+                    <li>• النطاق يجب أن يكون <strong class="text-slate-300">النطاق الصحيح لخادم الاجتماعات</strong> (مثلاً <code class="bg-slate-700 px-1 rounded">meet.muallimx.com</code>).</li>
+                    <li>• جرّب فتح <a href="https://{{ $jitsiDomain }}/external_api.js" target="_blank" rel="noopener" class="text-cyan-400 hover:underline">هذا الرابط</a> في تاب جديد.</li>
                 </ul>
-                <a href="https://{{ $jitsiDomain }}/{{ $meeting->room_name }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-semibold transition-colors">
+                <a href="https://{{ $jitsiDomain }}/{{ $meeting->room_name }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0065fd] hover:bg-[#005bc5] text-white font-semibold transition-colors">
                     <i class="fas fa-external-link-alt"></i> فتح الغرفة في نافذة جديدة
                 </a>
             </div>
         </main>
-        @unless(!empty($academicObserverMode))
-        @include('partials.mx-share-annotation-overlay', [
-            'mxAnnRole' => 'viewer_poll',
-            'mxAnnPollUrl' => route($rp . 'classroom.share-annotations', $meeting),
-        ])
-        @endunless
-    </div>
     </div>
 
-    {{-- لوحة بيضاء منبثقة بشاشة كبيرة --}}
-    <div id="wb-popup" class="hidden fixed inset-0 p-2 sm:p-4" inert aria-hidden="true" role="dialog" aria-labelledby="wb-popup-title" aria-modal="true">
-        <div id="wb-popup-backdrop" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm cursor-pointer" aria-hidden="true"></div>
-        <div id="wb-popup-panel" class="relative z-[141] flex flex-col w-full max-w-[min(1680px,99vw)] h-[min(92vh,calc(100dvh-1rem))] rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl overflow-hidden">
-            <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-700 bg-slate-800/95 shrink-0">
-                <h2 id="wb-popup-title" class="text-base font-bold text-white m-0 flex items-center gap-2">
-                    <i class="fas fa-chalkboard text-amber-400"></i>
-                    الوايت بورد
-                </h2>
-                <div class="flex items-center gap-2">
-                    <button type="button" id="btn-wb-popup-fullscreen" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium border border-slate-600" title="ملء الشاشة (اخرج بـ Esc)">
-                        <i class="fas fa-expand"></i>
-                        <span class="hidden sm:inline">ملء الشاشة</span>
+    {{-- Artboard / الوايت بورد الجانبي (Meet.Line) --}}
+    <aside id="mx-artboard-panel" aria-label="Artboard" aria-hidden="true">
+        <div class="mx-ml-artboard-head">
+            <h2 class="mx-ml-artboard-title" id="wb-popup-title">Artboard</h2>
+            <button type="button" id="btn-wb-popup-fullscreen" class="mx-ml-icon-btn" title="توسيع اللوح">
+                <i class="fas fa-expand text-sm text-[#171717]"></i>
+            </button>
+            <button type="button" id="wb-popup-close" class="mx-ml-icon-btn" title="إغلاق اللوح" aria-label="إغلاق">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+        <div id="wb-popup-stage" class="mx-ml-artboard-body">
+            <div id="classroom-excalidraw-root" class="classroom-excalidraw-host mx-muallimx-whiteboard" data-view-only="0" data-lang="ar"></div>
+            <div id="classroom-excalidraw-loading" class="classroom-excalidraw-loading">جاري تحميل Muallimx Whiteboard…</div>
+        </div>
+    </aside>
+    </div>{{-- /.mx-ml-stage-row --}}
+
+    {{-- شريط الأدوات السفلي Meet.Line + كل مزايا Muallimx --}}
+    <div class="mx-ml-dock" dir="ltr">
+        <button type="button" id="btn-classroom-copy-join" class="mx-ml-code-pill" title="نسخ رابط الانضمام" data-join-url="{{ url('classroom/join/' . $meeting->code) }}">
+            <i class="fas fa-link text-[10px] btn-copy-join-ic me-1"></i>
+            <span class="btn-copy-join-tx font-mono">{{ $meeting->code }}</span>
+            <span class="btn-copy-join-tx-sm hidden" aria-hidden="true">{{ $meeting->code }}</span>
+        </button>
+
+        <div id="mx-toolbar-desktop-slot" class="mx-ml-dock-center flex-1 min-w-0">
+        <div id="mx-classroom-toolbar-inner" class="flex w-full flex-wrap items-center justify-center gap-1.5 md:gap-2">
+            @unless($academicObserverMode)
+            {{-- أدوات Meet.Line الأساسية (تتحكم في Jitsi) --}}
+            <button type="button" id="mx-ml-btn-mic" class="mx-ml-icon-btn" title="ميكروفون" aria-pressed="true">
+                <i class="fas fa-microphone-slash text-[#fd0000] text-sm" id="mx-ml-mic-icon"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-cam" class="mx-ml-icon-btn" title="الكاميرا" aria-pressed="true">
+                <i class="fas fa-video-slash text-[#fd0000] text-sm" id="mx-ml-cam-icon"></i>
+            </button>
+            <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn is-active mx-ml-wb-active" title="الوايت بورد / Artboard">
+                <i class="fas fa-pen text-[#0065fd] text-sm"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-react" class="mx-ml-icon-btn" title="رفع اليد / تفاعل">
+                <i class="fas fa-hand-paper text-[#171717] text-sm"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-share" class="mx-ml-icon-btn" title="مشاركة الشاشة">
+                <i class="fas fa-desktop text-[#171717] text-sm"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-pip" class="mx-ml-icon-btn" title="نافذة المشاركين العائمة (مثل Zoom)" aria-pressed="false">
+                <i class="fas fa-window-restore text-[#171717] text-sm"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-tile" class="mx-ml-icon-btn" title="عرض الشبكة (Tile)">
+                <i class="fas fa-th-large text-[#171717] text-sm"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-focus" class="mx-ml-icon-btn" title="وضع التركيز (إخفاء الشريط الثانوي)">
+                <i class="fas fa-compress text-[#171717] text-sm"></i>
+            </button>
+            <label class="classroom-room-toolbar-btn cursor-pointer select-none max-w-[11rem]"
+                   title="اتاحة كتابة الطلاب على الوايت بورد">
+                <input type="checkbox" id="mx-classroom-toggle-guest-wb" class="rounded border-[#e9e9e9] text-[#0065fd] focus:ring-[#0065fd] shrink-0 scale-90"
+                       {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}>
+                <span class="font-medium truncate text-[11px]"><span class="hidden sm:inline">كتابة الطلاب</span><span class="sm:hidden">طلاب</span></span>
+            </label>
+            <div class="relative inline-flex items-center gap-1" id="mx-record-dd-wrap">
+                <div id="mx-record-idle-wrap" class="inline-flex items-center overflow-hidden rounded-[8px] border border-[#e9e9e9] bg-white">
+                    <button type="button" id="btn-record-menu" class="classroom-room-toolbar-btn border-0 rounded-none" title="تسجيل" aria-expanded="false" aria-haspopup="true">
+                        <i class="fas fa-circle-dot text-[#fd0000] text-[10px]" id="record-icon-idle"></i>
+                        <span id="record-label-idle" class="truncate max-w-[6rem]">تسجيل</span>
+                        <i class="fas fa-chevron-down text-[9px] text-[#717171]" id="record-dd-chevron"></i>
                     </button>
-                    <button type="button" id="wb-popup-close" class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-700 hover:bg-rose-600/80 text-white text-lg leading-none border border-slate-600" aria-label="إغلاق اللوحة">&times;</button>
+                </div>
+                <button type="button" id="btn-record-stop" class="hidden classroom-room-toolbar-btn bg-[#fd0000] text-white border-[#c50000]" title="إيقاف التسجيل">
+                    <i class="fas fa-stop text-[10px]" id="record-icon-active"></i>
+                    <span id="record-label-active">إيقاف</span>
+                </button>
+                <button type="button" id="btn-lecture-add-screen" class="hidden classroom-room-toolbar-btn" title="إضافة شاشة للتسجيل">
+                    <i class="fas fa-desktop text-[10px] text-[#0065fd]"></i>
+                    <span class="hidden sm:inline">+شاشة</span>
+                </button>
+                <div id="mx-record-dd-panel" class="hidden w-[min(100vw-1.5rem,18.5rem)] max-w-[calc(100vw-1rem)] rounded-lg border border-[#e9e9e9] bg-white overflow-hidden" role="menu">
+                    <p class="px-2.5 py-1.5 text-[10px] leading-snug text-[#717171] border-b border-[#e9e9e9] m-0">يبدأ التسجيل بالصوت. أضف تبويب الاجتماع أثناء التسجيل إن رغبت.</p>
+                    <button type="button" role="menuitem" data-mx-rec-mode="lecture" class="w-full text-right px-2.5 py-2 text-xs text-[#171717] hover:bg-[#eef5ff] border-0 border-b border-[#e9e9e9] bg-transparent cursor-pointer">تسجيل المحاضرة</button>
+                    <button type="button" role="menuitem" data-mx-rec-mode="report" class="w-full text-right px-2.5 py-2 text-xs text-[#171717] hover:bg-[#eef5ff] border-0 bg-transparent cursor-pointer">إنشاء تقرير صوتي</button>
                 </div>
             </div>
-            <div id="wb-popup-stage" class="relative flex-1 min-h-0 bg-[#121212]">
-                <div id="classroom-excalidraw-root" class="classroom-excalidraw-host mx-muallimx-whiteboard" data-view-only="0" data-lang="ar"></div>
-                <div id="classroom-excalidraw-loading" class="classroom-excalidraw-loading">جاري تحميل Muallimx Whiteboard…</div>
+            @if(!empty($subscriptionFeatureMenuItems))
+            <div class="relative shrink-0" id="pkg-features-dd-wrap">
+                <button type="button" id="pkg-features-dd-btn" class="classroom-room-toolbar-btn" aria-expanded="false" aria-haspopup="true" title="مزايا الباقة">
+                    <i class="fas fa-layer-group text-[#0065fd] text-[11px]"></i>
+                    <span class="hidden sm:inline text-[11px]">مزايا</span>
+                    <i class="fas fa-chevron-down text-[9px] text-[#717171]" id="pkg-features-dd-chevron"></i>
+                </button>
+                <div id="pkg-features-dd-panel" class="pkg-features-dd-panel-inner hidden w-[min(100vw-2rem,19.5rem)] rounded-xl border border-[#e9e9e9] bg-white overflow-hidden" role="menu">
+                    <div class="px-3 py-2.5 border-b border-[#e9e9e9] bg-[#f3f4f6]">
+                        <p class="text-xs font-semibold text-[#171717] m-0">روابط سريعة</p>
+                        @if(!empty($subscriptionPackageLabel))
+                        <p class="text-[11px] text-[#717171] m-0 mt-0.5">{{ $subscriptionPackageLabel }}</p>
+                        @endif
+                    </div>
+                    <div class="max-h-[min(58vh,20rem)] overflow-y-auto py-1.5 px-1">
+                        @foreach($subscriptionFeatureMenuItems as $item)
+                        <a href="{{ $item['url'] }}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex items-center gap-3 px-2.5 py-2 mx-0.5 rounded-lg text-[#171717] hover:bg-[#eef5ff] transition-colors">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $item['icon_bg'] }} {{ $item['icon_text'] }}">
+                                <i class="fas {{ $item['icon'] }} text-sm"></i>
+                            </span>
+                            <span class="min-w-0 flex-1 text-sm font-medium text-right">{{ $item['label'] }}</span>
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
             </div>
-            <div id="wb-popup-toolbar" class="flex flex-wrap items-center justify-center gap-2 px-4 py-2.5 border-t border-slate-700 bg-slate-800/95 shrink-0">
-                <span class="text-slate-400 text-[11px] leading-relaxed text-center max-w-3xl">
-                    <strong class="text-slate-200">Muallimx Whiteboard</strong> — أدوات رسم كاملة (أشكال، نص، تصدير PNG/SVG من القائمة). الرسم محلي على جهازك فقط.
-                </span>
-            </div>
+            @endif
+            @else
+            <span class="text-[11px] px-2 py-1 rounded-md bg-[#fff7ed] border border-[#fd8700]/40 text-[#c57300] font-semibold">
+                <i class="fas fa-eye text-[10px]"></i> مراقبة
+            </span>
+            @endunless
+        </div>
+        </div>
+
+        @unless($academicObserverMode)
+        <form method="POST" action="{{ route($rp.'classroom.end', $meeting) }}" class="inline shrink-0" id="mx-end-meeting-form" onsubmit="return confirm('إنهاء الاجتماع للجميع؟');">
+            @csrf
+            <button type="submit" id="mx-end-meeting-btn" class="mx-ml-end-btn">
+                إنهاء الاجتماع
+            </button>
+        </form>
+        @endunless
+
+        <div class="mx-ml-dock-right">
+            <button type="button" id="mx-ml-btn-participants" class="mx-ml-icon-btn" title="المشاركون">
+                <i class="fas fa-users text-[#717171] text-sm"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-chat" class="mx-ml-icon-btn" title="الدردشة">
+                <i class="fas fa-comment text-[#717171] text-sm"></i>
+            </button>
+        </div>
+    </div>
+    </div>{{-- /.room-body --}}
+</div>{{-- /.mx-ml-shell --}}
+
+    {{-- توافق: عنصر wb-popup مخفي — اللوح أصبح اللوحة الجانبية --}}
+    <div id="wb-popup" class="mx-ml-legacy-hidden" inert aria-hidden="true"></div>
+    <div id="wb-popup-backdrop" class="hidden"></div>
+    <div id="wb-popup-panel" class="hidden"></div>
+    <div id="wb-popup-toolbar" class="hidden"></div>
+
+    {{-- نافذة مشاركين عائمة (Fallback داخل الصفحة إن لم يدعم المتصفح Document PiP) --}}
+    <div id="mx-pip-float" aria-hidden="true">
+        <div class="mx-pip-float-bar" id="mx-pip-float-bar">
+            <strong>المشاركون</strong>
+            <button type="button" id="mx-pip-float-collapse" title="تصغير/توسيع"><i class="fas fa-minus"></i></button>
+            <button type="button" id="mx-pip-float-close" title="إخفاء"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="mx-pip-float-body">
+            <iframe id="mx-pip-float-frame" title="نافذة المشاركين" allow="camera; microphone; display-capture; autoplay; clipboard-write"></iframe>
         </div>
     </div>
 
     {{-- نافذة رفع التسجيل — يمكن تصغيرها والمتابعة داخل الغرفة --}}
-    <div id="mx-upload-modal" class="hidden fixed inset-0 z-[180] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm" aria-hidden="true">
-        <div class="w-full max-w-md rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl p-5 sm:p-6" role="dialog" aria-labelledby="mx-upload-modal-title" aria-modal="true">
-            <h3 id="mx-upload-modal-title" class="text-lg font-bold text-white m-0 mb-1">جاري رفع التسجيل</h3>
-            <p id="mx-upload-modal-sub" class="text-xs text-slate-500 m-0 mb-4">يتم رفع وحفظ التسجيل. يمكنك تصغير هذه النافذة والمتابعة في الاجتماع.</p>
-            <div class="h-2.5 rounded-full bg-slate-700 overflow-hidden mb-2">
-                <div id="mx-upload-modal-bar" class="h-full w-0 bg-cyan-500 transition-[width] duration-150"></div>
+    <div id="mx-upload-modal" class="hidden fixed inset-0 z-[180] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm" aria-hidden="true">
+        <div class="w-full max-w-md rounded-2xl border border-[#e9e9e9] bg-white shadow-2xl p-5 sm:p-6" role="dialog" aria-labelledby="mx-upload-modal-title" aria-modal="true">
+            <h3 id="mx-upload-modal-title" class="text-lg font-bold text-[#171717] m-0 mb-1">جاري رفع التسجيل</h3>
+            <p id="mx-upload-modal-sub" class="text-xs text-[#717171] m-0 mb-4">يتم رفع وحفظ التسجيل. يمكنك تصغير هذه النافذة والمتابعة في الاجتماع.</p>
+            <div class="h-2.5 rounded-full bg-[#f3f4f6] overflow-hidden mb-2">
+                <div id="mx-upload-modal-bar" class="h-full w-0 bg-[#0065fd] transition-[width] duration-150"></div>
             </div>
             <p id="mx-upload-modal-status" class="text-sm text-slate-300 mb-4 min-h-[2.75rem] whitespace-pre-wrap m-0"></p>
             <div class="flex flex-wrap gap-2">
@@ -530,6 +548,7 @@
     </button>
 
     @include('partials.jitsi-iframe-media-allow')
+    @include('partials.mx-classroom-wb-sync')
     @php
         $mxBp = rtrim((string) request()->getBasePath(), '/');
         $mxP = $mxBp !== '' ? $mxBp : '';
@@ -598,6 +617,7 @@
             var timerChip = document.getElementById('meeting-timer-chip');
             var timerChipMobile = document.getElementById('meeting-timer-chip-mobile');
             var mxMeetingId = {{ (int) $meeting->id }};
+            var mxPipUrl = {!! json_encode(route(($useInstructorRoutes ?? false) ? 'instructor.classroom.room.pip' : 'student.classroom.room.pip', $meeting)) !!};
             var recordDdWrap = document.getElementById('mx-record-dd-wrap');
             var btnRecordMenu = document.getElementById('btn-record-menu');
             var btnRecordStop = document.getElementById('btn-record-stop');
@@ -629,6 +649,9 @@
             var recordingUploadTabBaseUrl = '{{ route($rp . 'classroom.recording.upload-tab', $meeting) }}';
             var csrfToken = '{{ csrf_token() }}';
             var participantWbUrl = '{{ route($rp . 'classroom.participant-whiteboard', $meeting) }}';
+            var whiteboardSceneGetUrl = '{{ route($rp . 'classroom.whiteboard-scene', $meeting) }}';
+            var whiteboardScenePostUrl = '{{ route($rp . 'classroom.whiteboard-scene.push', $meeting) }}';
+            var hostWbSync = null;
             var mxClassroomGuestWbToggle = document.getElementById('mx-classroom-toggle-guest-wb');
             var mxClassroomGuestWbSaving = false;
             if (mxClassroomGuestWbToggle) {
@@ -641,7 +664,16 @@
                         headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' },
                         body: JSON.stringify({ allow: want }),
                     }).then(function (r) {
-                        if (!r.ok) mxClassroomGuestWbToggle.checked = !want;
+                        if (!r.ok) {
+                            mxClassroomGuestWbToggle.checked = !want;
+                            return;
+                        }
+                        if (want) {
+                            try { openWbPopup(); } catch (e) {}
+                            if (typeof mxToast === 'function') mxToast('تم إتاحة الكتابة للطلاب على الوايت بورد');
+                        } else if (typeof mxToast === 'function') {
+                            mxToast('تم إيقاف كتابة الطلاب');
+                        }
                     }).catch(function () {
                         mxClassroomGuestWbToggle.checked = !want;
                     }).finally(function () {
@@ -656,26 +688,27 @@
                     var ic = btnClassroomCopyJoin.querySelector('.btn-copy-join-ic');
                     var tx = btnClassroomCopyJoin.querySelector('.btn-copy-join-tx');
                     var txSm = btnClassroomCopyJoin.querySelector('.btn-copy-join-tx-sm');
+                    var originalCode = (tx && tx.textContent) ? tx.textContent : '';
                     function restoreJoinBtn() {
                         if (ic) {
-                            ic.className = 'fas fa-link text-[10px] btn-copy-join-ic';
+                            ic.className = 'fas fa-link text-[10px] btn-copy-join-ic me-1';
                         }
-                        if (tx) tx.textContent = 'مشاركة الرابط';
-                        if (txSm) txSm.textContent = 'رابط';
+                        if (tx) tx.textContent = originalCode;
+                        if (txSm) txSm.textContent = originalCode;
                     }
                     function showCopied() {
                         if (ic) {
-                            ic.className = 'fas fa-check text-[10px] btn-copy-join-ic text-emerald-400';
+                            ic.className = 'fas fa-check text-[10px] btn-copy-join-ic text-emerald-400 me-1';
                         }
                         if (tx) tx.textContent = 'تم النسخ';
                         if (txSm) txSm.textContent = 'تم';
+                        if (typeof mxToast === 'function') mxToast('تم نسخ رابط الانضمام');
                     }
                     navigator.clipboard.writeText(joinUrl).then(function () {
                         showCopied();
                         setTimeout(restoreJoinBtn, 2000);
                     }).catch(function () {
-                        if (tx) tx.textContent = 'فشل النسخ';
-                        if (txSm) tx.textContent = '!';
+                        if (tx) tx.textContent = 'فشل';
                         setTimeout(restoreJoinBtn, 2500);
                     });
                 });
@@ -973,6 +1006,9 @@
                                         viewModeEnabled: viewOnly,
                                         excalidrawAPI: function(api) {
                                             window.__mxClassroomExcalidrawAPI = api;
+                                        },
+                                        onChange: function() {
+                                            if (hostWbSync) hostWbSync.onLocalChange();
                                         }
                                     };
                                     if (lang.indexOf('ar') === 0) props.langCode = 'ar-SA';
@@ -981,6 +1017,16 @@
                                     excMounted = true;
                                     excShowLoading(false);
                                     nudgeClassroomExLayout();
+                                    if (!hostWbSync && window.MxClassroomWbSync) {
+                                        hostWbSync = window.MxClassroomWbSync.attach({
+                                            getApi: function() { return window.__mxClassroomExcalidrawAPI || null; },
+                                            getUrl: whiteboardSceneGetUrl,
+                                            postUrl: whiteboardScenePostUrl,
+                                            csrfToken: csrfToken,
+                                            canWrite: function() { return true; }
+                                        });
+                                    }
+                                    if (hostWbSync) hostWbSync.start();
                                     resolve();
                                 } catch (err) {
                                     failMount(err);
@@ -1056,14 +1102,16 @@
                 }
             }
 
+            var artboardPanel = document.getElementById('mx-artboard-panel');
+            var wbOpenBtn = document.getElementById('btn-wb-popup-open');
+
             function openWbPopup() {
-                if (!wbPopup) return;
-                wbPopup.removeAttribute('inert');
-                wbPopup.classList.remove('hidden');
-                wbPopup.classList.add('is-open');
-                wbPopup.setAttribute('aria-hidden', 'false');
-                document.body.style.overflow = 'hidden';
+                if (!artboardPanel) return;
+                artboardPanel.classList.add('is-open');
+                artboardPanel.setAttribute('aria-hidden', 'false');
+                if (wbOpenBtn) wbOpenBtn.classList.add('is-active', 'mx-ml-wb-active');
                 mountClassroomExcalidrawOnce().then(function() {
+                    if (hostWbSync) hostWbSync.start();
                     setTimeout(nudgeClassroomExLayout, 80);
                     setTimeout(nudgeClassroomExLayout, 400);
                 }).catch(function() {});
@@ -1071,87 +1119,73 @@
 
             function closeWbPopup() {
                 if (wbPopupClosing) return;
-                if (!wbPopup || wbPopup.classList.contains('hidden')) return;
+                if (!artboardPanel || !artboardPanel.classList.contains('is-open')) return;
                 wbPopupClosing = true;
+                if (hostWbSync) hostWbSync.pushNow();
 
                 function detachWhiteboardFromMeetingUi() {
                     var ae = document.activeElement;
-                    if (ae && typeof ae.blur === 'function' && wbPopup.contains(ae)) {
+                    if (ae && typeof ae.blur === 'function' && artboardPanel.contains(ae)) {
                         ae.blur();
                     }
-                    try {
-                        var sel = window.getSelection && window.getSelection();
-                        if (sel && typeof sel.removeAllRanges === 'function') {
-                            sel.removeAllRanges();
-                        }
-                    } catch (eSel) {}
-
-                    wbPopup.classList.add('hidden');
-                    wbPopup.classList.remove('is-open');
-                    wbPopup.setAttribute('aria-hidden', 'true');
-                    wbPopup.setAttribute('inert', '');
-                    document.body.style.overflow = '';
-
-                    var reopenBtn = document.getElementById('btn-wb-popup-open');
-                    if (reopenBtn && typeof reopenBtn.focus === 'function') {
-                        try {
-                            reopenBtn.focus({ preventScroll: true });
-                        } catch (eF) {
-                            try { reopenBtn.focus(); } catch (eF2) {}
-                        }
+                    artboardPanel.classList.remove('is-open', 'is-expanded');
+                    artboardPanel.setAttribute('aria-hidden', 'true');
+                    if (wbOpenBtn) wbOpenBtn.classList.remove('is-active', 'mx-ml-wb-active');
+                    if (document.fullscreenElement) {
+                        try { document.exitFullscreen(); } catch (eFs) {}
                     }
-
                     wbPopupClosing = false;
+                    nudgeClassroomExLayout();
                 }
 
-                function runClosePipeline() {
-                    mergeExcalidrawToMain(function() {
-                        detachWhiteboardFromMeetingUi();
-                    });
-                }
-
-                var fsEl = document.fullscreenElement;
-                if (fsEl && wbPopup.contains(fsEl)) {
-                    var p = document.exitFullscreen && document.exitFullscreen();
-                    if (p && typeof p.then === 'function') {
-                        p.then(runClosePipeline).catch(runClosePipeline);
-                    } else {
-                        runClosePipeline();
-                    }
-                } else {
-                    runClosePipeline();
-                }
+                mergeExcalidrawToMain(function() {
+                    detachWhiteboardFromMeetingUi();
+                });
             }
 
             function resizeWbCanvas() {}
 
-            if (wbPopup) {
-                var wbOpenPopupBtn = document.getElementById('btn-wb-popup-open');
-                if (wbOpenPopupBtn) wbOpenPopupBtn.addEventListener('click', openWbPopup);
-                var wbClosePopupBtn = document.getElementById('wb-popup-close');
-                if (wbClosePopupBtn) wbClosePopupBtn.addEventListener('click', closeWbPopup);
-                var wbBackdropEl = document.getElementById('wb-popup-backdrop');
-                if (wbBackdropEl) wbBackdropEl.addEventListener('click', closeWbPopup);
-                var wbFsBtn = document.getElementById('btn-wb-popup-fullscreen');
-                if (wbFsBtn && wbPopupPanel) {
-                    wbFsBtn.addEventListener('click', function() {
-                        if (!document.fullscreenElement) {
-                            wbPopupPanel.requestFullscreen().catch(function() {});
-                        } else {
-                            try { document.exitFullscreen(); } catch (ex) {}
-                        }
+            if (artboardPanel || wbOpenBtn) {
+                if (wbOpenBtn) {
+                    wbOpenBtn.addEventListener('click', function() {
+                        if (artboardPanel && artboardPanel.classList.contains('is-open')) closeWbPopup();
+                        else openWbPopup();
                     });
                 }
-
+                var wbClosePopupBtn = document.getElementById('wb-popup-close');
+                if (wbClosePopupBtn) wbClosePopupBtn.addEventListener('click', closeWbPopup);
+                var wbFsBtn = document.getElementById('btn-wb-popup-fullscreen');
+                if (wbFsBtn && artboardPanel) {
+                    wbFsBtn.addEventListener('click', function() {
+                        if (!artboardPanel.classList.contains('is-open')) openWbPopup();
+                        if (!document.fullscreenElement) {
+                            if (typeof artboardPanel.requestFullscreen === 'function') {
+                                artboardPanel.requestFullscreen().catch(function() {
+                                    artboardPanel.classList.toggle('is-expanded');
+                                });
+                            } else {
+                                artboardPanel.classList.toggle('is-expanded');
+                            }
+                        } else {
+                            try { document.exitFullscreen(); } catch (ex) {}
+                            artboardPanel.classList.remove('is-expanded');
+                        }
+                        setTimeout(nudgeClassroomExLayout, 200);
+                    });
+                }
                 document.addEventListener('keydown', function(ev) {
-                    if (ev.key === 'Escape' && wbPopup && !wbPopup.classList.contains('hidden')) {
+                    if (ev.key === 'Escape' && artboardPanel && artboardPanel.classList.contains('is-open')) {
+                        if (artboardPanel.classList.contains('is-expanded') || document.fullscreenElement) {
+                            artboardPanel.classList.remove('is-expanded');
+                            try { document.exitFullscreen(); } catch (e) {}
+                            return;
+                        }
                         closeWbPopup();
                     }
                 });
-
                 if (wbPopupStage && typeof ResizeObserver !== 'undefined') {
                     new ResizeObserver(function() {
-                        if (wbPopup && !wbPopup.classList.contains('hidden')) {
+                        if (artboardPanel && artboardPanel.classList.contains('is-open')) {
                             nudgeClassroomExLayout();
                         }
                     }).observe(wbPopupStage);
@@ -2453,6 +2487,11 @@
                             startWithVideoMuted: true,
                             disableAudioLevels: false,
                             enableNoisyMicDetection: false,
+                            // شريط Jitsi الداخلي مخفي — التحكم من شريط Meet.Line السفلي
+                            toolbarButtons: [],
+                            buttonsWithNotifyClick: [],
+                            hideConferenceTimer: false,
+                            disableFocusIndicator: true,
                         },
                         interfaceConfigOverwrite: {
                             APP_NAME: 'Muallimx Classroom',
@@ -2460,23 +2499,21 @@
                             PROVIDER_NAME: 'Muallimx',
                             JITSI_WATERMARK_LINK: '',
                             HIDE_DEEP_LINKING_LOGO: true,
-                            TOOLBAR_BUTTONS: [
-                                'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-                                'fodeviceselection', 'hangup', 'chat', 'recording',
-                                'raisehand', 'invite', 'tileview', 'videoquality', 'filmstrip',
-                                'whiteboard'
-                            ],
+                            TOOLBAR_BUTTONS: [],
+                            TOOLBAR_ALWAYS_VISIBLE: false,
                             SHOW_JITSI_WATERMARK: false,
                             SHOW_WATERMARK_FOR_GUESTS: false,
                             SHOW_BRAND_WATERMARK: false,
                             SHOW_POWERED_BY: false,
                             MOBILE_APP_PROMO: false,
-                            DEFAULT_BACKGROUND: '#0f172a',
+                            DEFAULT_BACKGROUND: '#111827',
                             DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
-                            FILM_STRIP_MAX_HEIGHT: 100,
+                            FILM_STRIP_MAX_HEIGHT: 120,
+                            VERTICAL_FILMSTRIP: false,
                         }
                     };
                     api = new JitsiMeetExternalAPI(jitsiDomain, options);
+                    window.__mxClassroomJitsiApi = api;
 
                     if (loadingEl) loadingEl.classList.add('hidden');
                     setTimeout(resizeWbCanvas, 300);
@@ -2493,11 +2530,400 @@
                         hasJoinedConference = true;
                         resizeWbCanvas();
                         setTimeout(resizeWbCanvas, 500);
+                        mxSyncMediaButtonState();
+                        mxUpdateLiveCount();
+                        // افتح Artboard تلقائياً ليطابق تصميم Meet.Line
+                        try { openWbPopup(); } catch (eOpen) {}
+                    });
+
+                    api.addEventListener('audioMuteStatusChanged', function(e) {
+                        mxSetMicUi(!!(e && e.muted));
+                    });
+                    api.addEventListener('videoMuteStatusChanged', function(e) {
+                        mxSetCamUi(!!(e && e.muted));
+                    });
+                    api.addEventListener('participantJoined', mxUpdateLiveCount);
+                    api.addEventListener('participantLeft', mxUpdateLiveCount);
+                    api.addEventListener('participantKickedOut', mxUpdateLiveCount);
+                    api.addEventListener('participantJoined', function(e) {
+                        if (!hasJoinedConference) return;
+                        var name = (e && (e.displayName || e.id)) || 'مشارك';
+                        if (typeof mxToast === 'function') mxToast('انضم: ' + name);
+                    });
+                    api.addEventListener('connectionQualityChanged', function(e) {
+                        mxSetConnectionQuality(e);
+                    });
+                    api.addEventListener('screenSharingStatusChanged', function(e) {
+                        var on = !!(e && (e.on === true || e.on === 'true'));
+                        if (on) {
+                            try { mxOpenParticipantsPip({ reason: 'share' }); } catch (errPip) {}
+                        }
                     });
                 } catch (e) {
                     console.error('Jitsi init error:', e);
                     showError();
                 }
+            }
+
+            function mxJitsiCmd(cmd, arg) {
+                var j = window.__mxClassroomJitsiApi || api;
+                if (!j || typeof j.executeCommand !== 'function') {
+                    alert('ادخل الاجتماع أولاً ثم أعد المحاولة.');
+                    return false;
+                }
+                try {
+                    if (typeof arg === 'undefined') j.executeCommand(cmd);
+                    else j.executeCommand(cmd, arg);
+                    return true;
+                } catch (err) {
+                    console.warn('Jitsi command failed:', cmd, err);
+                    alert('تعذر تنفيذ الأمر داخل الاجتماع.');
+                    return false;
+                }
+            }
+
+            function mxSetMicUi(muted) {
+                var btn = document.getElementById('mx-ml-btn-mic');
+                var ic = document.getElementById('mx-ml-mic-icon');
+                if (btn) btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+                if (ic) {
+                    ic.className = muted
+                        ? 'fas fa-microphone-slash text-[#fd0000] text-sm'
+                        : 'fas fa-microphone text-[#0065fd] text-sm';
+                }
+                if (btn) btn.classList.toggle('is-active', !muted);
+            }
+            function mxSetCamUi(muted) {
+                var btn = document.getElementById('mx-ml-btn-cam');
+                var ic = document.getElementById('mx-ml-cam-icon');
+                if (btn) btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+                if (ic) {
+                    ic.className = muted
+                        ? 'fas fa-video-slash text-[#fd0000] text-sm'
+                        : 'fas fa-video text-[#0065fd] text-sm';
+                }
+                if (btn) btn.classList.toggle('is-active', !muted);
+            }
+            function mxSyncMediaButtonState() {
+                var j = window.__mxClassroomJitsiApi || api;
+                if (!j) return;
+                try {
+                    if (typeof j.isAudioMuted === 'function') {
+                        var p = j.isAudioMuted();
+                        if (p && typeof p.then === 'function') p.then(mxSetMicUi);
+                        else mxSetMicUi(!!p);
+                    }
+                    if (typeof j.isVideoMuted === 'function') {
+                        var p2 = j.isVideoMuted();
+                        if (p2 && typeof p2.then === 'function') p2.then(mxSetCamUi);
+                        else mxSetCamUi(!!p2);
+                    }
+                } catch (e) {}
+            }
+            function mxUpdateLiveCount() {
+                var el = document.getElementById('mx-ml-live-count-num');
+                var j = window.__mxClassroomJitsiApi || api;
+                if (!el || !j) return;
+                try {
+                    var n = 1;
+                    if (typeof j.getNumberOfParticipants === 'function') n = j.getNumberOfParticipants() || 1;
+                    else if (typeof j.getParticipantsInfo === 'function') {
+                        var info = j.getParticipantsInfo() || [];
+                        n = Math.max(1, info.length);
+                    }
+                    el.textContent = String(n);
+                } catch (e) {}
+            }
+            function mxToast(msg) {
+                var t = document.getElementById('mx-ml-toast');
+                if (!t) {
+                    t = document.createElement('div');
+                    t.id = 'mx-ml-toast';
+                    t.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:300;background:#171717;color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;transition:opacity .2s;pointer-events:none;';
+                    document.body.appendChild(t);
+                }
+                t.textContent = msg;
+                t.style.opacity = '1';
+                clearTimeout(window.__mxToastTimer);
+                window.__mxToastTimer = setTimeout(function() { t.style.opacity = '0'; }, 2200);
+            }
+
+            /* —— نافذة المشاركين العائمة (Document PiP / popup / in-page) —— */
+            var mxPipDocWin = null;
+            var mxPipPopup = null;
+            var mxPipFloat = document.getElementById('mx-pip-float');
+            var mxPipFloatFrame = document.getElementById('mx-pip-float-frame');
+            var mxPipBtn = document.getElementById('mx-ml-btn-pip');
+            var mxPipOpening = false;
+
+            function mxPipIsOpen() {
+                if (mxPipDocWin && !mxPipDocWin.closed) return true;
+                if (mxPipPopup && !mxPipPopup.closed) return true;
+                if (mxPipFloat && mxPipFloat.classList.contains('is-open')) return true;
+                try {
+                    if (window.documentPictureInPicture && window.documentPictureInPicture.window) return true;
+                } catch (e) {}
+                return false;
+            }
+
+            function mxPipSetBtn(open) {
+                if (!mxPipBtn) return;
+                mxPipBtn.classList.toggle('is-active', !!open);
+                mxPipBtn.setAttribute('aria-pressed', open ? 'true' : 'false');
+            }
+
+            function mxCloseParticipantsPip() {
+                try {
+                    if (mxPipDocWin && !mxPipDocWin.closed) mxPipDocWin.close();
+                } catch (e) {}
+                mxPipDocWin = null;
+                try {
+                    if (window.documentPictureInPicture && window.documentPictureInPicture.window) {
+                        window.documentPictureInPicture.window.close();
+                    }
+                } catch (e2) {}
+                try {
+                    if (mxPipPopup && !mxPipPopup.closed) {
+                        try { mxPipPopup.postMessage({ type: 'mx-pip-close' }, window.location.origin); } catch (e3) {}
+                        mxPipPopup.close();
+                    }
+                } catch (e4) {}
+                mxPipPopup = null;
+                if (mxPipFloat) {
+                    mxPipFloat.classList.remove('is-open', 'is-collapsed');
+                    mxPipFloat.setAttribute('aria-hidden', 'true');
+                    if (mxPipFloatFrame) mxPipFloatFrame.removeAttribute('src');
+                }
+                mxPipSetBtn(false);
+            }
+
+            async function mxOpenParticipantsPip(opts) {
+                opts = opts || {};
+                if (mxPipOpening) return;
+                if (mxPipIsOpen()) {
+                    mxPipSetBtn(true);
+                    if (opts.reason === 'toggle') {
+                        mxCloseParticipantsPip();
+                    }
+                    return;
+                }
+                mxPipOpening = true;
+                try {
+                    // 1) Document Picture-in-Picture (يبقى فوق التطبيقات/التبويبات — Chrome/Edge)
+                    if (window.documentPictureInPicture && typeof window.documentPictureInPicture.requestWindow === 'function') {
+                        try {
+                            var pipWin = await window.documentPictureInPicture.requestWindow({
+                                width: 420,
+                                height: 300,
+                                disallowReturnToOpener: false
+                            });
+                            mxPipDocWin = pipWin;
+                            var html = '<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>مشاركون</title>' +
+                                '<style>html,body{margin:0;height:100%;background:#111827;overflow:hidden}iframe{border:0;width:100%;height:100%;display:block}</style></head>' +
+                                '<body><iframe src="' + mxPipUrl.replace(/"/g, '&quot;') + '" allow="camera; microphone; display-capture; autoplay; clipboard-write" allowfullscreen></iframe></body></html>';
+                            pipWin.document.open();
+                            pipWin.document.write(html);
+                            pipWin.document.close();
+                            pipWin.addEventListener('pagehide', function () {
+                                mxPipDocWin = null;
+                                mxPipSetBtn(false);
+                            });
+                            mxPipSetBtn(true);
+                            if (typeof mxToast === 'function') {
+                                mxToast(opts.reason === 'share' ? 'نافذة المشاركين — اسحبها فوق شاشة المشاركة' : 'نافذة المشاركين العائمة');
+                            }
+                            return;
+                        } catch (errDoc) {
+                            console.warn('Document PiP unavailable', errDoc);
+                        }
+                    }
+
+                    // 2) نافذة منبثقة دائماً في المقدمة قدر الإمكان
+                    try {
+                        mxPipPopup = window.open(
+                            mxPipUrl,
+                            'mxClassroomPip',
+                            'popup=yes,width=420,height=300,left=40,top=80,resizable=yes,scrollbars=no'
+                        );
+                        if (mxPipPopup) {
+                            mxPipSetBtn(true);
+                            var poll = setInterval(function () {
+                                if (!mxPipPopup || mxPipPopup.closed) {
+                                    clearInterval(poll);
+                                    mxPipPopup = null;
+                                    mxPipSetBtn(false);
+                                }
+                            }, 800);
+                            if (typeof mxToast === 'function') mxToast('نافذة المشاركين — ثبّتها فوق شاشة المشاركة');
+                            return;
+                        }
+                    } catch (errPop) {}
+
+                    // 3) Fallback داخل الصفحة (مفيد داخل نفس التبويب فقط)
+                    if (mxPipFloat && mxPipFloatFrame) {
+                        mxPipFloatFrame.src = mxPipUrl;
+                        mxPipFloat.classList.add('is-open');
+                        mxPipFloat.classList.remove('is-collapsed');
+                        mxPipFloat.setAttribute('aria-hidden', 'false');
+                        mxPipSetBtn(true);
+                        if (typeof mxToast === 'function') {
+                            mxToast('نافذة داخل الصفحة — للمتصفح الحالي. الأفضل Chrome لنافذة فوق التطبيقات');
+                        }
+                    }
+                } finally {
+                    mxPipOpening = false;
+                }
+            }
+
+            if (mxPipBtn) {
+                mxPipBtn.addEventListener('click', function () {
+                    if (mxPipIsOpen()) mxCloseParticipantsPip();
+                    else mxOpenParticipantsPip({ reason: 'toggle' });
+                });
+            }
+            var mxPipFloatClose = document.getElementById('mx-pip-float-close');
+            var mxPipFloatCollapse = document.getElementById('mx-pip-float-collapse');
+            if (mxPipFloatClose) mxPipFloatClose.addEventListener('click', mxCloseParticipantsPip);
+            if (mxPipFloatCollapse && mxPipFloat) {
+                mxPipFloatCollapse.addEventListener('click', function () {
+                    mxPipFloat.classList.toggle('is-collapsed');
+                });
+            }
+            // سحب النافذة الداخلية
+            (function bindPipDrag() {
+                var bar = document.getElementById('mx-pip-float-bar');
+                if (!bar || !mxPipFloat) return;
+                var dragging = false, ox = 0, oy = 0;
+                bar.addEventListener('mousedown', function (e) {
+                    if (e.target.closest('button')) return;
+                    dragging = true;
+                    var r = mxPipFloat.getBoundingClientRect();
+                    ox = e.clientX - r.left;
+                    oy = e.clientY - r.top;
+                    e.preventDefault();
+                });
+                window.addEventListener('mousemove', function (e) {
+                    if (!dragging) return;
+                    var x = Math.max(0, Math.min(window.innerWidth - 80, e.clientX - ox));
+                    var y = Math.max(0, Math.min(window.innerHeight - 40, e.clientY - oy));
+                    mxPipFloat.style.left = x + 'px';
+                    mxPipFloat.style.top = y + 'px';
+                    mxPipFloat.style.right = 'auto';
+                    mxPipFloat.style.bottom = 'auto';
+                });
+                window.addEventListener('mouseup', function () { dragging = false; });
+            })();
+
+            window.addEventListener('message', function (ev) {
+                if (ev.origin !== window.location.origin) return;
+                if (ev.data && ev.data.type === 'mx-pip-closed') {
+                    mxPipDocWin = null;
+                    mxPipPopup = null;
+                    mxPipSetBtn(false);
+                }
+            });
+
+            document.addEventListener('visibilitychange', function () {
+                if (document.visibilityState === 'hidden' && hasJoinedConference) {
+                    try { mxOpenParticipantsPip({ reason: 'blur' }); } catch (e) {}
+                }
+            });
+
+            (function bindMeetlineDockJitsi() {
+                var btnChat = document.getElementById('mx-ml-btn-chat');
+                var btnPeople = document.getElementById('mx-ml-btn-participants');
+                var btnMic = document.getElementById('mx-ml-btn-mic');
+                var btnCam = document.getElementById('mx-ml-btn-cam');
+                var btnShare = document.getElementById('mx-ml-btn-share');
+                var btnReact = document.getElementById('mx-ml-btn-react');
+
+                if (btnMic) btnMic.addEventListener('click', function() {
+                    if (mxJitsiCmd('toggleAudio')) setTimeout(mxSyncMediaButtonState, 200);
+                });
+                if (btnCam) btnCam.addEventListener('click', function() {
+                    if (mxJitsiCmd('toggleVideo')) setTimeout(mxSyncMediaButtonState, 200);
+                });
+                if (btnShare) btnShare.addEventListener('click', function() {
+                    mxJitsiCmd('toggleShareScreen');
+                    mxToast('مشاركة الشاشة…');
+                });
+                if (btnReact) btnReact.addEventListener('click', function() {
+                    if (mxJitsiCmd('toggleRaiseHand')) mxToast('تم تبديل رفع اليد');
+                });
+                if (btnChat) {
+                    btnChat.addEventListener('click', function() {
+                        btnChat.classList.toggle('is-active');
+                        mxJitsiCmd('toggleChat');
+                    });
+                }
+                if (btnPeople) {
+                    btnPeople.addEventListener('click', function() {
+                        btnPeople.classList.toggle('is-active');
+                        var j = window.__mxClassroomJitsiApi || api;
+                        if (!j || typeof j.executeCommand !== 'function') {
+                            alert('ادخل الاجتماع أولاً ثم أعد المحاولة.');
+                            return;
+                        }
+                        try {
+                            j.executeCommand('toggleParticipantsPane');
+                        } catch (e1) {
+                            try { j.executeCommand('toggleParticipantsPane', true); }
+                            catch (e2) {
+                                try { j.executeCommand('toggleFilmStrip'); }
+                                catch (e3) { alert('تعذر فتح قائمة المشاركين.'); }
+                            }
+                        }
+                    });
+                }
+
+                var btnTile = document.getElementById('mx-ml-btn-tile');
+                var btnFocus = document.getElementById('mx-ml-btn-focus');
+                if (btnTile) btnTile.addEventListener('click', function() {
+                    if (mxJitsiCmd('toggleTileView')) {
+                        btnTile.classList.toggle('is-active');
+                        mxToast(btnTile.classList.contains('is-active') ? 'عرض الشبكة' : 'العرض العادي');
+                    }
+                });
+                if (btnFocus) btnFocus.addEventListener('click', function() {
+                    document.body.classList.toggle('mx-ml-focus');
+                    btnFocus.classList.toggle('is-active', document.body.classList.contains('mx-ml-focus'));
+                    mxToast(document.body.classList.contains('mx-ml-focus') ? 'وضع التركيز' : 'الشريط الكامل');
+                });
+
+                document.addEventListener('keydown', function(ev) {
+                    var tag = (ev.target && ev.target.tagName) ? ev.target.tagName.toLowerCase() : '';
+                    if (tag === 'input' || tag === 'textarea' || (ev.target && ev.target.isContentEditable)) return;
+                    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+                    var k = (ev.key || '').toLowerCase();
+                    if (k === 'm') { ev.preventDefault(); if (btnMic) btnMic.click(); }
+                    else if (k === 'v') { ev.preventDefault(); if (btnCam) btnCam.click(); }
+                    else if (k === 'w') { ev.preventDefault(); var wb = document.getElementById('btn-wb-popup-open'); if (wb) wb.click(); }
+                    else if (k === 'c') { ev.preventDefault(); if (btnChat) btnChat.click(); }
+                    else if (k === 'p') { ev.preventDefault(); if (btnPeople) btnPeople.click(); }
+                    else if (k === 'h') { ev.preventDefault(); if (btnReact) btnReact.click(); }
+                    else if (k === 's') { ev.preventDefault(); if (btnShare) btnShare.click(); }
+                    else if (k === 'f') { ev.preventDefault(); if (btnFocus) btnFocus.click(); }
+                    else if (k === '?' || (ev.shiftKey && k === '/')) {
+                        mxToast('اختصارات: M ميك · V كام · W لوح · H يد · S شاشة · C دردشة · P مشاركون · F تركيز');
+                    }
+                });
+            })();
+
+            function mxSetConnectionQuality(e) {
+                var wrap = document.getElementById('mx-ml-quality');
+                var label = document.getElementById('mx-ml-quality-label');
+                if (!wrap || !label) return;
+                var level = 0;
+                try {
+                    var q = (e && typeof e.connectionQuality === 'number') ? e.connectionQuality
+                        : (e && typeof e === 'number') ? e : 0;
+                    if (q >= 70) level = 4;
+                    else if (q >= 50) level = 3;
+                    else if (q >= 30) level = 2;
+                    else if (q > 0) level = 1;
+                } catch (err) {}
+                wrap.setAttribute('data-level', String(level));
+                label.textContent = level >= 4 ? 'ممتاز' : level === 3 ? 'جيد' : level === 2 ? 'متوسط' : level === 1 ? 'ضعيف' : '—';
             }
 
             function tickMeetingTimer() {
@@ -2516,14 +2942,30 @@
                         timerChipMobile.classList.remove('bg-amber-500/20', 'border-amber-500/30', 'text-amber-200');
                         timerChipMobile.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
                     }
-                    window.location.href = roomExitUrl;
+                    // إنهاء الجلسة على السيرفر حتى لا تبقى «مباشرة» بعد انتهاء مدة الباقة
+                    if (!window.__mxDurationEnded) {
+                        window.__mxDurationEnded = true;
+                        if (endMeetingForm) {
+                            endMeetingForm.removeAttribute('onsubmit');
+                            endMeetingForm.onsubmit = null;
+                            if (isRecording) {
+                                pendingEndMeetingSubmit = true;
+                                stopBrowserRecording();
+                            } else {
+                                endMeetingForm.submit();
+                            }
+                        } else {
+                            window.location.href = roomExitUrl;
+                        }
+                    }
                     return;
                 }
                 var mins = Math.floor(diff / 60000);
                 var secs = Math.floor((diff % 60000) / 1000);
-                var fullText = 'الوقت المتبقي: ' + mins + ':' + String(secs).padStart(2, '0');
-                var shortText = mins + ':' + String(secs).padStart(2, '0');
-                if (timerChip) timerChip.textContent = fullText;
+                var hours = Math.floor(mins / 60);
+                var remMins = mins % 60;
+                var shortText = (hours > 0 ? (String(hours).padStart(2, '0') + ':') : '') + String(remMins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+                if (timerChip) timerChip.textContent = shortText;
                 if (timerChipMobile) timerChipMobile.textContent = shortText;
             }
             setInterval(tickMeetingTimer, 1000);

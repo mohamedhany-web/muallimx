@@ -56,20 +56,36 @@
                 <div class="grid sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">توقيت الأسرة / الطالب</label>
-                        <select x-model="form.family_timezone" @change="refreshPreview()" class="w-full rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-800 px-3 py-2 text-sm">
-                            @foreach($timezoneOptions as $tz => $label)
-                                <option value="{{ $tz }}">{{ $label }}</option>
-                            @endforeach
+                        <input type="search" x-model="familyTzQuery" @input.debounce.200ms="filterFamilyTz()" placeholder="ابحث: مصر، New York، Paris..."
+                               class="w-full mb-1.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-800 px-3 py-2 text-sm">
+                        <select x-model="form.family_timezone" @change="refreshPreview()" class="w-full rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-800 px-3 py-2 text-sm" size="6">
+                            <template x-for="opt in familyTzOptions" :key="opt.id">
+                                <option :value="opt.id" x-text="opt.label" :selected="opt.id === form.family_timezone"></option>
+                            </template>
                         </select>
+                        <p class="text-[10px] text-slate-400 mt-1" x-text="form.family_timezone"></p>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-600 mb-1">توقيتك (العرض)</label>
-                        <select x-model="form.teacher_timezone" @change="refreshPreview()" class="w-full rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-800 px-3 py-2 text-sm">
-                            @foreach($timezoneOptions as $tz => $label)
-                                <option value="{{ $tz }}" @selected($tz === $teacherTimezone)>{{ $label }}</option>
-                            @endforeach
+                        <input type="search" x-model="teacherTzQuery" @input.debounce.200ms="filterTeacherTz()" placeholder="ابحث عن مدينتك أو الدولة..."
+                               class="w-full mb-1.5 rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-800 px-3 py-2 text-sm">
+                        <select x-model="form.teacher_timezone" @change="refreshPreview()" class="w-full rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-800 px-3 py-2 text-sm" size="6">
+                            <template x-for="opt in teacherTzOptions" :key="'t'+opt.id">
+                                <option :value="opt.id" x-text="opt.label" :selected="opt.id === form.teacher_timezone"></option>
+                            </template>
                         </select>
+                        <p class="text-[10px] text-slate-400 mt-1" x-text="form.teacher_timezone"></p>
                     </div>
+                </div>
+
+                <div class="rounded-xl border border-slate-200 dark:border-slate-600 p-3 space-y-2">
+                    <label class="block text-xs font-bold text-slate-600">ولاية أمريكا (اختياري) — يضبط توقيت الأسرة تلقائياً</label>
+                    <select x-model="usState" @change="applyUsState()" class="w-full rounded-xl border border-slate-200 dark:border-slate-600 dark:bg-slate-800 px-3 py-2 text-sm">
+                        <option value="">— اختر ولاية إن كانت الأسرة في أمريكا —</option>
+                        <template x-for="(st, code) in usStates" :key="code">
+                            <option :value="code" x-text="st.name + ' → ' + st.timezone"></option>
+                        </template>
+                    </select>
                 </div>
 
                 <div class="grid sm:grid-cols-3 gap-3">
@@ -136,12 +152,13 @@
                     </label>
                     <label class="inline-flex items-center gap-2 text-sm">
                         <input type="checkbox" x-model="form.notify_email" class="rounded text-violet-600">
-                        إرسال تذكير على Gmail
+                        إرسال تذكير على البريد الإلكتروني
                     </label>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-600 mb-1">التذكير قبل (دقائق)</label>
-                    <input type="number" x-model.number="form.reminder_minutes" min="1" max="120" class="w-32 rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                    <input type="number" x-model.number="form.reminder_minutes" min="1" max="1440" class="w-32 rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                    <p class="text-[10px] text-slate-400 mt-1">من 1 إلى 1440 دقيقة (24 ساعة)</p>
                 </div>
 
                 <p x-show="errorText" class="text-sm text-red-600 font-semibold" x-text="errorText"></p>
@@ -163,6 +180,8 @@
 function teacherPersonalCalendar() {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const weekdayLabels = @json($weekdayLabels);
+    const initialTzOptions = @json(collect($timezoneOptions ?? [])->map(fn ($label, $id) => ['id' => $id, 'label' => $label])->values());
+    const usStatesMap = @json($usStates ?? []);
 
     return {
         modalOpen: false,
@@ -174,6 +193,12 @@ function teacherPersonalCalendar() {
         previewText: '',
         tempDate: '',
         monthCells: [],
+        familyTzQuery: '',
+        teacherTzQuery: '',
+        familyTzOptions: initialTzOptions.slice(0, 80),
+        teacherTzOptions: initialTzOptions.slice(0, 80),
+        usStates: usStatesMap,
+        usState: '',
         form: {
             title: '',
             schedule_type: 'temporary',
@@ -192,8 +217,52 @@ function teacherPersonalCalendar() {
             this.modalOpen = true;
             this.detailOpen = false;
             this.errorText = '';
+            this.ensureSelectedInLists();
             this.rebuildMonthDays();
             this.refreshPreview();
+        },
+        ensureSelectedInLists() {
+            const ensure = (list, id, label) => {
+                if (!list.some(o => o.id === id)) list.unshift({ id, label: label || id });
+            };
+            ensure(this.familyTzOptions, this.form.family_timezone, this.form.family_timezone);
+            ensure(this.teacherTzOptions, this.form.teacher_timezone, this.form.teacher_timezone);
+        },
+        async filterFamilyTz() {
+            this.familyTzOptions = await this.searchTimezones(this.familyTzQuery);
+            this.ensureSelectedInLists();
+        },
+        async filterTeacherTz() {
+            this.teacherTzOptions = await this.searchTimezones(this.teacherTzQuery);
+            this.ensureSelectedInLists();
+        },
+        async searchTimezones(q) {
+            try {
+                const url = @json(route('calendar.personal.timezones')) + (q ? ('?q=' + encodeURIComponent(q)) : '');
+                const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                const data = await res.json();
+                const opts = data.options || {};
+                return Object.keys(opts).map(id => ({ id, label: opts[id] }));
+            } catch (e) {
+                return initialTzOptions.slice(0, 40);
+            }
+        },
+        async applyUsState() {
+            if (!this.usState) return;
+            try {
+                const res = await fetch(@json(route('calendar.personal.us-state')), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                    body: JSON.stringify({ state: this.usState }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'تعذر تحديد التوقيت');
+                this.form.family_timezone = data.timezone;
+                this.familyTzOptions = [{ id: data.timezone, label: data.label }, ...this.familyTzOptions.filter(o => o.id !== data.timezone)];
+                this.refreshPreview();
+            } catch (e) {
+                alert(e.message || 'تعذر تطبيق الولاية');
+            }
         },
         openDetail(payload) {
             this.detail = payload || {};
@@ -305,7 +374,10 @@ function teacherPersonalCalendar() {
                     body: JSON.stringify(this.form),
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'تعذر الحفظ');
+                if (!res.ok) {
+                    const firstErr = data.errors ? Object.values(data.errors).flat()[0] : null;
+                    throw new Error(firstErr || data.message || 'تعذر الحفظ');
+                }
                 this.modalOpen = false;
                 if (window.studentCalendar) window.studentCalendar.refetchEvents();
                 window.location.reload();

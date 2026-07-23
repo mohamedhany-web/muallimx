@@ -50,8 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // تذكير المعلم قبل مواعيده الشخصية في التقويم (منصة + بريد)
         $schedule->command('calendar:send-reminders')
                  ->everyMinute()
-                 ->withoutOverlapping()
-                 ->runInBackground();
+                 ->withoutOverlapping(5);
 
         $schedule->command('calendar:cleanup-temporary')
                  ->hourly()

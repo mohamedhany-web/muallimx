@@ -215,10 +215,103 @@ class SubscriptionLimitService
 
     public static function monthlyClassroomUsage(User $user): int
     {
+        $start = now()->copy()->startOfMonth();
+        $end = now()->copy()->endOfMonth();
+
+        // جلسات بدأت هذا الشهر + جلسات محجوزة (مجدولة) أُنشئت هذا الشهر ولم تبدأ بعد
+        // حتى لا يُحتسب نفس الاجتماع مرتين عند البدء.
         return ClassroomMeeting::query()
             ->where('user_id', $user->id)
-            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+            ->where(function ($q) use ($start, $end) {
+                $q->whereBetween('started_at', [$start, $end])
+                    ->orWhere(function ($q2) use ($start, $end) {
+                        $q2->whereNull('started_at')
+                            ->whereNull('ended_at')
+                            ->whereBetween('created_at', [$start, $end]);
+                    });
+            })
             ->count();
+    }
+
+    /**
+     * هل بدء هذا الاجتماع (إن لم يكن قد بدأ) سيُحسب ضمن رصيد الشهر الحالي؟
+     */
+    public static function startingWouldConsumeQuota(ClassroomMeeting $meeting): bool
+    {
+        if ($meeting->started_at) {
+            return false;
+        }
+
+        $start = now()->copy()->startOfMonth();
+        $end = now()->copy()->endOfMonth();
+
+        // محجوز هذا الشهر مسبقاً — البدء لا يضيف حصة جديدة
+        if ($meeting->created_at && $meeting->created_at->between($start, $end)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static function canStartOrCreateMeeting(User $user, ?ClassroomMeeting $existingUnstarted = null): bool
+    {
+        $limits = self::limitsForUser($user);
+        $limit = (int) $limits['classroom_meetings_per_month'];
+        $used = self::monthlyClassroomUsage($user);
+
+        if ($existingUnstarted && ! self::startingWouldConsumeQuota($existingUnstarted)) {
+            return true;
+        }
+
+        return $used < $limit;
+    }
+
+    /**
+     * المدة الفعلية المسموح بها للجلسة حسب باقة المعلّم الحالية (لا تتجاوز حد الباقة).
+     */
+    public static function effectiveMeetingDurationMinutes(User $owner, ClassroomMeeting $meeting): int
+    {
+        $limits = self::limitsForUser($owner);
+        $packageMax = (int) $limits['classroom_max_duration_minutes'];
+        $planned = (int) ($meeting->planned_duration_minutes ?: $packageMax);
+
+        return max(1, min($planned, $packageMax));
+    }
+
+    /**
+     * إنهاء الجلسة تلقائياً إذا تجاوزت مدة الباقة. يعيد true إن تم إنهاؤها (أو كانت منتهية).
+     */
+    public static function expireMeetingIfPastDuration(ClassroomMeeting $meeting): bool
+    {
+        if ($meeting->ended_at) {
+            return true;
+        }
+
+        if (! $meeting->started_at) {
+            return false;
+        }
+
+        $owner = $meeting->user;
+        if (! $owner) {
+            return false;
+        }
+
+        if ($meeting->consultation_request_id) {
+            $limits = self::limitsForUser($owner);
+            $packageMax = (int) $limits['classroom_max_duration_minutes'];
+            $effective = (int) ($meeting->planned_duration_minutes ?: $packageMax);
+            $effective = min($effective, max(480, $packageMax));
+        } else {
+            $effective = self::effectiveMeetingDurationMinutes($owner, $meeting);
+        }
+
+        if ($meeting->started_at->copy()->addMinutes($effective)->isPast()) {
+            $meeting->update(['ended_at' => now()]);
+
+            return true;
+        }
+
+        return false;
     }
 }
 

@@ -25,6 +25,13 @@ class CalendarController extends Controller
     {
         $user = Auth::user();
 
+        // احتياطي إذا لم يعمل cron: إرسال التذكيرات المستحقة عند فتح التقويم
+        try {
+            app(\App\Services\TeacherCalendarReminderService::class)->sendDueReminders($user->id);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         // جلب جميع الأحداث للطالب
         $events = $this->getStudentEvents($user);
 
@@ -47,6 +54,8 @@ class CalendarController extends Controller
             'events' => $events,
             'stats' => $stats,
             'timezoneOptions' => CalendarTimezoneCatalog::options(),
+            'timezoneGrouped' => CalendarTimezoneCatalog::grouped(),
+            'usStates' => CalendarTimezoneCatalog::usStates(),
             'teacherTimezone' => $teacherTimezone,
         ]);
     }
@@ -57,6 +66,13 @@ class CalendarController extends Controller
     public function getEvents(Request $request)
     {
         $user = Auth::user();
+
+        try {
+            app(\App\Services\TeacherCalendarReminderService::class)->sendDueReminders($user->id);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         $start = $request->get('start');
         $end = $request->get('end');
 

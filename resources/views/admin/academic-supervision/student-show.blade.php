@@ -90,7 +90,8 @@
 
     <div class="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
-            <h3 class="text-base font-bold text-gray-900">اجتماعات Classroom</h3>
+            <h3 class="text-base font-bold text-gray-900">اجتماعات Classroom (سجل الجلسات)</h3>
+            <p class="text-xs text-gray-500 mt-1">التفاصيل تشمل وقت البداية/النهاية وأسماء الحضور</p>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
@@ -98,6 +99,8 @@
                     <tr>
                         <th class="text-right px-4 py-2">العنوان</th>
                         <th class="text-right px-4 py-2">الحالة</th>
+                        <th class="text-right px-4 py-2">بدأت</th>
+                        <th class="text-right px-4 py-2">انتهت</th>
                         <th class="text-right px-4 py-2">الحضور</th>
                         <th class="text-right px-4 py-2 w-36"></th>
                     </tr>
@@ -115,15 +118,24 @@
                                     <span class="text-amber-700 text-xs">مجدول</span>
                                 @endif
                             </td>
+                            <td class="px-4 py-2 tabular-nums whitespace-nowrap text-xs">{{ $m->started_at?->format('Y-m-d H:i') ?? '—' }}</td>
+                            <td class="px-4 py-2 tabular-nums whitespace-nowrap text-xs">
+                                @if($m->isLive())
+                                    <span class="text-emerald-600">جارية</span>
+                                @else
+                                    {{ $m->ended_at?->format('Y-m-d H:i') ?? '—' }}
+                                @endif
+                            </td>
                             <td class="px-4 py-2">{{ $m->participants_count }}</td>
-                            <td class="px-4 py-2">
+                            <td class="px-4 py-2 space-x-2 space-x-reverse">
+                                <a href="{{ route('admin.academic-supervision.supervisors.meetings.show', [$supervisor, $m]) }}" class="text-teal-700 font-semibold text-xs hover:underline">التفاصيل</a>
                                 @if($m->isLive())
                                     <a href="{{ route('admin.academic-supervision.supervisors.meetings.observe', [$supervisor, $m]) }}" class="text-cyan-600 font-semibold text-xs hover:underline">مراقبة</a>
                                 @endif
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="px-4 py-6 text-center text-gray-500">لا توجد اجتماعات.</td></tr>
+                        <tr><td colspan="6" class="px-4 py-6 text-center text-gray-500">لا توجد اجتماعات.</td></tr>
                     @endforelse
                 </tbody>
             </table>

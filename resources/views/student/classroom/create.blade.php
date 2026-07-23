@@ -47,9 +47,15 @@
             @error('planned_duration_minutes')<p class="text-xs text-rose-600 mt-1">{{ $message }}</p>@enderror
         </div>
 
-        <div class="rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-600 p-3 text-xs text-slate-600 dark:text-slate-300">
-            استهلاك الشهر الحالي: {{ number_format($usedMeetingsThisMonth) }} من {{ number_format($limits['classroom_meetings_per_month']) }}.
-            المتبقي: <span class="font-bold">{{ number_format($remainingMeetingsThisMonth) }}</span>
+        <div class="rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-600 p-3 text-xs text-slate-600 dark:text-slate-300 space-y-1">
+            <p>استهلاك الشهر الحالي: {{ number_format($usedMeetingsThisMonth) }} من {{ number_format($limits['classroom_meetings_per_month']) }}.
+            المتبقي: <span class="font-bold">{{ number_format($remainingMeetingsThisMonth) }}</span></p>
+            @if(!empty($fixedJoinUrl))
+                <p>رابطك الثابت للطلاب (لا يتغير): <span class="font-mono text-[11px]" dir="ltr">{{ $fixedJoinUrl }}</span></p>
+            @endif
+            @if($remainingMeetingsThisMonth <= 0)
+                <p class="text-rose-600 font-semibold">رصيد الجلسات لهذا الشهر انتهى — رقِّ الباقة للمتابعة.</p>
+            @endif
         </div>
 
         <div class="flex items-center gap-2 justify-end">

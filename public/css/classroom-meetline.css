@@ -1,0 +1,518 @@
+/* Meet.Line classroom shell — Figma 2252:4386 tokens
+ * Jitsi iframe theme twin: public/css/jitsi-meetline-theme.css (deployed to live.muallimx.com)
+ */
+:root {
+  --ml-bg-50: #fdfdfd;
+  --ml-bg-100: #f3f4f6;
+  --ml-text: #171717;
+  --ml-text-white: #fdfdfd;
+  --ml-primary: #0065fd;
+  --ml-primary-400: #005bc5;
+  --ml-primary-50: #eef5ff;
+  --ml-stroke: #e9e9e9;
+  --ml-stroke-primary: #0065fd;
+  --ml-black: #171717;
+  --ml-black-stroke: #525252;
+  --ml-red: #fd0000;
+  --ml-red-stroke: #c50000;
+  --ml-red-50: #ffeeee;
+  --ml-transparent: rgba(44, 44, 44, 0.5);
+  --ml-video: #111827;
+  --ml-radius: 12px;
+  --ml-radius-sm: 8px;
+  --ml-shadow: 0 0 60px rgba(185, 185, 185, 0.25);
+}
+
+body.mx-meetline {
+  background: var(--ml-bg-50) !important;
+  color: var(--ml-text);
+}
+
+.mx-ml-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 6px;
+  padding: 12px;
+  border-radius: var(--ml-radius);
+  background: var(--ml-bg-100);
+  box-shadow: var(--ml-shadow);
+  gap: 12px;
+}
+
+.mx-ml-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  min-height: 0;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.mx-ml-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ml-text);
+  margin: 0;
+  line-height: 1.4;
+  min-width: 0;
+}
+
+.mx-ml-record-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: var(--ml-radius-sm);
+  background: var(--ml-black);
+  border: 1px solid var(--ml-black-stroke);
+  color: var(--ml-text-white);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+}
+
+.mx-ml-record-chip .mx-ml-rec-dot-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1.5px solid var(--ml-red);
+}
+
+.mx-ml-record-chip .mx-ml-rec-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--ml-red);
+}
+
+.mx-ml-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 10px;
+  position: relative;
+}
+
+.mx-ml-stage-row {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 10px;
+  direction: ltr; /* Match Meet.Line: video left, artboard right */
+}
+
+#meeting-stage.mx-ml-video {
+  flex: 1.65 1 0;
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--ml-radius);
+  border: 2px solid var(--ml-stroke-primary);
+  overflow: hidden;
+  background: var(--ml-video);
+  position: relative;
+}
+
+/* إخفاء شريط أدوات Jitsi الداخلي قدر الإمكان (التحكم من Meet.Line) */
+#meeting-stage.mx-ml-video iframe {
+  border: 0 !important;
+}
+
+#meeting-stage.mx-ml-video #jitsi-container {
+  border-radius: calc(var(--ml-radius) - 2px);
+  background: #0f172a;
+}
+
+/* Artboard side panel (whiteboard) */
+#mx-artboard-panel {
+  display: none;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 260px;
+  max-width: 480px;
+  width: 36%;
+  min-height: 0;
+  border-radius: var(--ml-radius);
+  border: 1px solid var(--ml-stroke);
+  background: var(--ml-bg-50);
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+#mx-artboard-panel.is-open {
+  display: flex;
+}
+
+#mx-artboard-panel.is-expanded {
+  position: fixed;
+  inset: 10px;
+  z-index: 145;
+  max-width: none;
+  width: auto;
+  border: 1px solid var(--ml-stroke);
+  box-shadow: var(--ml-shadow);
+}
+
+.mx-ml-artboard-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  flex-shrink: 0;
+}
+
+.mx-ml-artboard-title {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ml-text);
+  padding: 8px;
+  border-radius: var(--ml-radius-sm);
+  border: 1px solid var(--ml-stroke);
+  background: var(--ml-bg-50);
+  margin: 0;
+}
+
+.mx-ml-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--ml-radius-sm);
+  border: 1px solid var(--ml-stroke);
+  background: var(--ml-bg-50);
+  color: var(--ml-text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.mx-ml-icon-btn:hover {
+  background: var(--ml-primary-50);
+  border-color: var(--ml-primary-400);
+  color: var(--ml-primary);
+}
+
+.mx-ml-icon-btn.is-active {
+  background: var(--ml-primary-50);
+  border-color: var(--ml-stroke-primary);
+  color: var(--ml-primary);
+}
+
+.mx-ml-icon-btn img {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.mx-ml-artboard-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: #fafafa;
+}
+
+.mx-ml-dock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  direction: ltr;
+  border-radius: var(--ml-radius);
+  background: var(--ml-bg-50);
+  border: 1px solid var(--ml-stroke);
+}
+
+
+.mx-ml-quality-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.mx-ml-quality-bars i {
+  display: block;
+  width: 3px;
+  border-radius: 1px;
+  background: #d4d4d4;
+}
+.mx-ml-quality-bars i:nth-child(1) { height: 4px; }
+.mx-ml-quality-bars i:nth-child(2) { height: 6px; }
+.mx-ml-quality-bars i:nth-child(3) { height: 9px; }
+.mx-ml-quality-bars i:nth-child(4) { height: 12px; }
+#mx-ml-quality[data-level="0"] .mx-ml-quality-bars i { background: #d4d4d4; }
+#mx-ml-quality[data-level="1"] .mx-ml-quality-bars i:nth-child(-n+1) { background: #fd0000; }
+#mx-ml-quality[data-level="2"] .mx-ml-quality-bars i:nth-child(-n+2) { background: #fd8700; }
+#mx-ml-quality[data-level="3"] .mx-ml-quality-bars i:nth-child(-n+3) { background: #0065fd; }
+#mx-ml-quality[data-level="4"] .mx-ml-quality-bars i { background: #16a34a; }
+
+body.mx-meetline.mx-ml-focus .classroom-room-toolbar-btn span,
+body.mx-meetline.mx-ml-focus #mx-record-dd-wrap,
+body.mx-meetline.mx-ml-focus #pkg-features-dd-wrap,
+body.mx-meetline.mx-ml-focus label.classroom-room-toolbar-btn {
+  display: none !important;
+}
+body.mx-meetline.mx-ml-focus #mx-ml-btn-focus {
+  background: var(--ml-primary-50);
+  border-color: var(--ml-stroke-primary);
+}
+
+.mx-ml-dock-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+  padding: 4px 6px;
+  border-radius: var(--ml-radius-sm);
+  background: var(--ml-bg-100);
+  border: 1px solid transparent;
+}
+
+.mx-ml-code-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: var(--ml-radius-sm);
+  background: var(--ml-black);
+  border: 1px solid var(--ml-black-stroke);
+  color: var(--ml-text-white);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  min-width: 7rem;
+  cursor: pointer;
+}
+
+.mx-ml-dock-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 7rem;
+}
+
+.mx-ml-end-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: var(--ml-radius-sm);
+  background: var(--ml-red);
+  border: 1px solid var(--ml-red-stroke);
+  color: var(--ml-text-white);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mx-ml-end-btn:hover {
+  filter: brightness(1.05);
+}
+
+/* Restyle existing toolbar buttons inside Meet.Line dock */
+body.mx-meetline .classroom-room-toolbar-btn {
+  border-radius: var(--ml-radius-sm);
+  border: 1px solid var(--ml-stroke);
+  background: var(--ml-bg-50);
+  color: var(--ml-text);
+  font-size: 12px;
+  padding: 8px 10px;
+}
+
+body.mx-meetline .classroom-room-toolbar-btn:hover {
+  background: var(--ml-primary-50);
+  border-color: var(--ml-primary-400);
+  color: var(--ml-primary);
+}
+
+body.mx-meetline #btn-wb-popup-open.is-active,
+body.mx-meetline #btn-wb-popup-open.mx-ml-wb-active {
+  background: var(--ml-primary-50);
+  border-color: var(--ml-stroke-primary);
+  color: var(--ml-primary);
+}
+body.mx-meetline #btn-wb-popup-open.is-active i,
+body.mx-meetline #btn-wb-popup-open.mx-ml-wb-active i {
+  color: var(--ml-primary) !important;
+}
+body.mx-meetline #mx-ml-btn-chat.is-active,
+body.mx-meetline #mx-ml-btn-participants.is-active {
+  background: var(--ml-primary-50);
+  border-color: var(--ml-stroke-primary);
+}
+
+body.mx-meetline #mx-end-meeting-btn {
+  background: var(--ml-red) !important;
+  border-color: var(--ml-red-stroke) !important;
+  color: #fff !important;
+}
+
+body.mx-meetline #permission-gate {
+  background: rgba(243, 244, 246, 0.96) !important;
+}
+
+body.mx-meetline #permission-gate .rounded-2xl {
+  background: var(--ml-bg-50);
+  border-color: var(--ml-stroke);
+  color: var(--ml-text);
+}
+
+body.mx-meetline #mx-classroom-nav-drawer #mx-nav-drawer-aside {
+  background: var(--ml-bg-50);
+  border-color: var(--ml-stroke);
+  color: var(--ml-text);
+}
+
+body.mx-meetline #mx-nav-drawer-title {
+  color: var(--ml-text);
+}
+
+body.mx-meetline #pkg-features-dd-panel,
+body.mx-meetline #mx-record-dd-panel {
+  background: var(--ml-bg-50) !important;
+  border-color: var(--ml-stroke) !important;
+  color: var(--ml-text);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.12);
+}
+
+body.mx-meetline #pkg-features-dd-panel .text-slate-200,
+body.mx-meetline #mx-record-dd-panel .text-slate-200,
+body.mx-meetline #pkg-features-dd-panel .text-slate-100 {
+  color: var(--ml-text) !important;
+}
+
+body.mx-meetline #pkg-features-dd-panel a:hover,
+body.mx-meetline #mx-record-dd-panel button:hover {
+  background: var(--ml-primary-50) !important;
+}
+
+/* Hide legacy fullscreen wb popup chrome when using docked artboard */
+#wb-popup.mx-ml-legacy-hidden {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .mx-ml-shell {
+    margin: 0;
+    border-radius: 0;
+    padding: 8px;
+    gap: 8px;
+  }
+  .mx-ml-stage-row {
+    flex-direction: column;
+  }
+  #meeting-stage.mx-ml-video {
+    flex: 1 1 55%;
+    min-height: 40vh;
+  }
+  #mx-artboard-panel.is-open {
+    max-width: none;
+    width: 100%;
+    flex: 1 1 45%;
+    min-height: 36vh;
+  }
+  .mx-ml-dock {
+    gap: 8px;
+  }
+  .mx-ml-dock-right {
+    min-width: 0;
+    width: 100%;
+    justify-content: center;
+  }
+  .mx-ml-code-pill {
+    order: 3;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .mx-ml-title {
+    font-size: 13px;
+  }
+}
+
+/* Floating participants window (in-page fallback when Document PiP unavailable) */
+#mx-pip-float {
+  position: fixed;
+  z-index: 240;
+  width: min(380px, calc(100vw - 24px));
+  height: min(260px, 42vh);
+  min-width: 220px;
+  min-height: 160px;
+  right: 16px;
+  bottom: 88px;
+  border-radius: var(--ml-radius);
+  border: 2px solid var(--ml-stroke-primary);
+  background: #111827;
+  box-shadow: var(--ml-shadow);
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  resize: both;
+}
+#mx-pip-float.is-open { display: flex; }
+#mx-pip-float.is-collapsed { height: 40px !important; min-height: 40px; resize: none; }
+#mx-pip-float.is-collapsed .mx-pip-float-body { display: none; }
+.mx-pip-float-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: #171717;
+  color: #fdfdfd;
+  cursor: move;
+  flex-shrink: 0;
+  user-select: none;
+}
+.mx-pip-float-bar strong {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+}
+.mx-pip-float-bar button {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #525252;
+  background: #292929;
+  color: #fff;
+  cursor: pointer;
+}
+.mx-pip-float-bar button:hover { background: #0065fd; border-color: #0065fd; }
+.mx-pip-float-body {
+  flex: 1;
+  min-height: 0;
+  background: #0f172a;
+}
+.mx-pip-float-body iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+body.mx-meetline #mx-ml-btn-pip.is-active {
+  background: var(--ml-primary-50);
+  border-color: var(--ml-stroke-primary);
+}

@@ -19,13 +19,36 @@ class TeacherPersonalCalendarController extends Controller
         protected TeacherCalendarTimezoneService $timezoneService
     ) {}
 
-    public function timezones(): JsonResponse
+    public function timezones(Request $request): JsonResponse
     {
+        $q = (string) $request->query('q', '');
+
         return response()->json([
-            'options' => CalendarTimezoneCatalog::options(),
+            'options' => $q !== ''
+                ? CalendarTimezoneCatalog::search($q, 50)
+                : CalendarTimezoneCatalog::popular(),
+            'grouped' => $q === '' ? CalendarTimezoneCatalog::grouped() : null,
+            'us_states' => CalendarTimezoneCatalog::usStates(),
             'teacher_default' => $this->timezoneService->resolveTeacherTimezone(
                 Auth::user()?->calendar_timezone
             ),
+        ]);
+    }
+
+    public function resolveUsState(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'state' => 'required|string|max:2',
+        ]);
+
+        $tz = CalendarTimezoneCatalog::timezoneForUsState($validated['state']);
+        if (! $tz) {
+            return response()->json(['message' => 'ولاية غير معروفة'], 422);
+        }
+
+        return response()->json([
+            'timezone' => $tz,
+            'label' => CalendarTimezoneCatalog::label($tz),
         ]);
     }
 
@@ -34,8 +57,8 @@ class TeacherPersonalCalendarController extends Controller
         $validated = $request->validate([
             'date' => 'required|date_format:Y-m-d',
             'time' => 'required|date_format:H:i',
-            'family_timezone' => ['required', 'string', Rule::in(array_keys(CalendarTimezoneCatalog::options()))],
-            'teacher_timezone' => ['nullable', 'string', Rule::in(array_keys(CalendarTimezoneCatalog::options()))],
+            'family_timezone' => ['required', 'string', 'timezone:all'],
+            'teacher_timezone' => ['nullable', 'string', 'timezone:all'],
         ]);
 
         $user = Auth::user();
@@ -105,7 +128,6 @@ class TeacherPersonalCalendarController extends Controller
 
     protected function validatePayload(Request $request, ?TeacherCalendarAppointment $existing = null): array
     {
-        $tzKeys = array_keys(CalendarTimezoneCatalog::options());
         $scheduleType = $request->input('schedule_type', $existing?->schedule_type ?? 'temporary');
 
         $rules = [
@@ -113,10 +135,10 @@ class TeacherPersonalCalendarController extends Controller
             'description' => 'nullable|string|max:2000',
             'location' => 'nullable|string|max:255',
             'schedule_type' => ['required', Rule::in(['fixed', 'temporary'])],
-            'family_timezone' => ['required', 'string', Rule::in($tzKeys)],
+            'family_timezone' => ['required', 'string', 'timezone:all'],
             'family_time' => 'required|date_format:H:i',
             'duration_minutes' => 'nullable|integer|min:5|max:480',
-            'teacher_timezone' => ['nullable', 'string', Rule::in($tzKeys)],
+            'teacher_timezone' => ['nullable', 'string', 'timezone:all'],
             'color' => 'nullable|string|max:7',
             'notify_platform' => 'nullable|boolean',
             'notify_email' => 'nullable|boolean',
