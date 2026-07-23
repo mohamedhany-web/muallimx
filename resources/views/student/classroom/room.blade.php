@@ -9,37 +9,81 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <link href="{{ asset('css/classroom-meetline.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/classroom-meetline.css') }}?v={{ @filemtime(public_path('css/classroom-meetline.css')) ?: time() }}" rel="stylesheet">
     <style>
         * { font-family: 'IBM Plex Sans Arabic', 'Poppins', system-ui, sans-serif; }
+        /* Critical layout — must work even if external CSS is cached/stale on production */
         html { height: 100%; height: 100dvh; }
-        body {
-            margin: 0;
-            padding: 0;
-            background: #fdfdfd;
-            overflow: hidden;
-            min-height: 100vh;
-            min-height: 100dvh;
-            height: 100vh;
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
+        html, body.mx-meetline {
+            height: 100% !important;
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            overflow: hidden !important;
         }
-        #jitsi-container {
-            width: 100%;
-            height: 100%;
-            min-height: 0;
+        body.mx-meetline {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fdfdfd !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        body.mx-meetline > .mx-ml-shell {
+            flex: 1 1 0% !important;
+            min-height: 0 !important;
+            height: calc(100dvh - 12px) !important;
+            max-height: calc(100dvh - 12px) !important;
+            width: calc(100% - 12px) !important;
+            margin: 6px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+        }
+        body.mx-meetline .room-body.mx-ml-main {
+            display: flex !important;
+            flex-direction: column !important;
+            flex: 1 1 0% !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+        }
+        body.mx-meetline .mx-ml-stage-row {
+            display: flex !important;
+            flex-direction: row !important;
+            flex: 1 1 0% !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            align-items: stretch !important;
+        }
+        body.mx-meetline #meeting-stage.mx-ml-video {
+            flex: 1 1 0% !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            position: relative !important;
+            overflow: hidden !important;
+            background: #111827 !important;
+        }
+        body.mx-meetline #meeting-stage #jitsi-container {
+            position: absolute !important;
+            inset: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            min-height: 0 !important;
             background: #0f172a;
         }
-        .room-body.mx-ml-main {
-            display: flex;
-            flex-direction: column;
-            flex: 1 1 auto;
-            min-height: 0;
-            overflow: hidden;
+        body.mx-meetline #jitsi-container iframe {
+            width: 100% !important;
+            height: 100% !important;
+            border: none !important;
         }
-        #jitsi-container iframe { width: 100% !important; height: 100% !important; border: none; }
-        #meeting-stage { flex: 1 1 auto; min-height: 0; min-width: 0; position: relative; width: 100%; height: 100%; }
+        body.mx-meetline #mx-artboard-panel:not(.is-open) {
+            display: none !important;
+        }
+        body.mx-meetline #mx-pip-float:not(.is-open) {
+            display: none !important;
+        }
+        body.mx-meetline .mx-ml-dock {
+            flex-shrink: 0 !important;
+        }
         #wb-popup { z-index: 140; }
         #wb-popup.is-open {
             display: flex;
@@ -373,7 +417,7 @@
     </div>
 
     {{-- Artboard / الوايت بورد الجانبي (Meet.Line) --}}
-    <aside id="mx-artboard-panel" aria-label="Artboard" aria-hidden="true">
+    <aside id="mx-artboard-panel" aria-label="Artboard" aria-hidden="true" hidden>
         <div class="mx-ml-artboard-head">
             <h2 class="mx-ml-artboard-title" id="wb-popup-title">Artboard</h2>
             <button type="button" id="btn-wb-popup-fullscreen" class="mx-ml-icon-btn" title="توسيع اللوح">
@@ -408,8 +452,8 @@
             <button type="button" id="mx-ml-btn-cam" class="mx-ml-icon-btn" title="الكاميرا" aria-pressed="true">
                 <i class="fas fa-video-slash text-[#fd0000] text-sm" id="mx-ml-cam-icon"></i>
             </button>
-            <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn is-active mx-ml-wb-active" title="الوايت بورد / Artboard">
-                <i class="fas fa-pen text-[#0065fd] text-sm"></i>
+            <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn" title="الوايت بورد / Artboard" aria-pressed="false">
+                <i class="fas fa-pen text-[#171717] text-sm"></i>
             </button>
             <button type="button" id="mx-ml-btn-react" class="mx-ml-icon-btn" title="رفع اليد / تفاعل">
                 <i class="fas fa-hand-paper text-[#171717] text-sm"></i>
@@ -670,7 +714,6 @@
                             return;
                         }
                         if (want) {
-                            try { openWbPopup(); } catch (e) {}
                             if (typeof mxToast === 'function') mxToast('تم إتاحة الكتابة للطلاب على الوايت بورد');
                         } else if (typeof mxToast === 'function') {
                             mxToast('تم إيقاف كتابة الطلاب');
@@ -1108,9 +1151,15 @@
 
             function openWbPopup() {
                 if (!artboardPanel) return;
+                artboardPanel.hidden = false;
                 artboardPanel.classList.add('is-open');
                 artboardPanel.setAttribute('aria-hidden', 'false');
-                if (wbOpenBtn) wbOpenBtn.classList.add('is-active', 'mx-ml-wb-active');
+                if (wbOpenBtn) {
+                    wbOpenBtn.classList.add('is-active', 'mx-ml-wb-active');
+                    wbOpenBtn.setAttribute('aria-pressed', 'true');
+                    var pen = wbOpenBtn.querySelector('i');
+                    if (pen) pen.className = 'fas fa-pen text-[#0065fd] text-sm';
+                }
                 mountClassroomExcalidrawOnce().then(function() {
                     if (hostWbSync) hostWbSync.start();
                     setTimeout(nudgeClassroomExLayout, 80);
@@ -1131,7 +1180,13 @@
                     }
                     artboardPanel.classList.remove('is-open', 'is-expanded');
                     artboardPanel.setAttribute('aria-hidden', 'true');
-                    if (wbOpenBtn) wbOpenBtn.classList.remove('is-active', 'mx-ml-wb-active');
+                    artboardPanel.hidden = true;
+                    if (wbOpenBtn) {
+                        wbOpenBtn.classList.remove('is-active', 'mx-ml-wb-active');
+                        wbOpenBtn.setAttribute('aria-pressed', 'false');
+                        var pen = wbOpenBtn.querySelector('i');
+                        if (pen) pen.className = 'fas fa-pen text-[#171717] text-sm';
+                    }
                     if (document.fullscreenElement) {
                         try { document.exitFullscreen(); } catch (eFs) {}
                     }

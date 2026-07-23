@@ -23,18 +23,32 @@
   --ml-shadow: 0 0 60px rgba(185, 185, 185, 0.25);
 }
 
+html:has(body.mx-meetline),
+body.mx-meetline {
+  height: 100% !important;
+  height: 100dvh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+}
+
 body.mx-meetline {
   background: var(--ml-bg-50) !important;
   color: var(--ml-text);
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
+/* Shell fills the viewport; flex: 1 1 0% is required so children can grow */
 .mx-ml-shell {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  height: 100%;
-  max-height: 100dvh;
+  flex: 1 1 0%;
+  width: calc(100% - 12px);
   min-height: 0;
+  height: calc(100dvh - 12px);
+  max-height: calc(100dvh - 12px);
   margin: 6px;
   padding: 12px;
   border-radius: var(--ml-radius);
@@ -101,18 +115,18 @@ body.mx-meetline {
 .mx-ml-main {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-height: 0;
   gap: 10px;
   position: relative;
+  overflow: hidden;
 }
 
 .mx-ml-stage-row {
   display: flex;
   flex-direction: row;
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-height: 0;
-  height: 100%;
   gap: 10px;
   direction: ltr; /* Match Meet.Line: video left, artboard right */
   overflow: hidden;
@@ -120,10 +134,9 @@ body.mx-meetline {
 }
 
 #meeting-stage.mx-ml-video {
-  flex: 1 1 auto;
+  flex: 1 1 0%;
   min-width: 0;
   min-height: 0;
-  height: 100%;
   border-radius: var(--ml-radius);
   border: 2px solid var(--ml-stroke-primary);
   overflow: hidden;
@@ -149,16 +162,15 @@ body.mx-meetline {
   overflow: hidden;
 }
 
-/* Artboard side panel — fixed width so Excalidraw cannot crush video */
+/* Artboard side panel — closed by default; fixed width when open */
 #mx-artboard-panel {
-  display: none;
+  display: none !important;
   flex-direction: column;
   flex: 0 0 clamp(280px, 32vw, 400px);
   width: clamp(280px, 32vw, 400px);
   max-width: 400px;
   min-width: 280px;
   min-height: 0;
-  height: 100%;
   align-self: stretch;
   border-radius: var(--ml-radius);
   border: 1px solid var(--ml-stroke);
@@ -169,10 +181,11 @@ body.mx-meetline {
 }
 
 #mx-artboard-panel.is-open {
-  display: flex;
+  display: flex !important;
 }
 
 #mx-artboard-panel.is-expanded {
+  display: flex !important;
   position: fixed;
   inset: 10px;
   z-index: 145;
@@ -448,9 +461,11 @@ body.mx-meetline #mx-record-dd-panel button:hover {
 @media (max-width: 900px) {
   .mx-ml-shell {
     margin: 0;
+    width: 100%;
     border-radius: 0;
     padding: 8px;
     gap: 8px;
+    height: 100dvh;
     max-height: 100dvh;
   }
   /* Keep video full-stage; artboard overlays instead of crushing the feed */
@@ -459,20 +474,18 @@ body.mx-meetline #mx-record-dd-panel button:hover {
     position: relative;
   }
   #meeting-stage.mx-ml-video {
-    flex: 1 1 auto;
+    flex: 1 1 0%;
     width: 100%;
     min-height: 0;
-    height: 100%;
   }
   #mx-artboard-panel.is-open {
     position: absolute;
     inset: 0;
     z-index: 40;
     flex: none;
-    width: auto;
+    width: auto !important;
     max-width: none;
     min-width: 0;
-    height: auto;
     border-radius: var(--ml-radius);
     box-shadow: var(--ml-shadow);
   }
@@ -511,11 +524,11 @@ body.mx-meetline #mx-record-dd-panel button:hover {
   background: #111827;
   box-shadow: var(--ml-shadow);
   overflow: hidden;
-  display: none;
+  display: none !important;
   flex-direction: column;
   resize: both;
 }
-#mx-pip-float.is-open { display: flex; }
+#mx-pip-float.is-open { display: flex !important; }
 #mx-pip-float.is-collapsed { height: 40px !important; min-height: 40px; resize: none; }
 #mx-pip-float.is-collapsed .mx-pip-float-body { display: none; }
 .mx-pip-float-bar {
