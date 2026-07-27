@@ -15,8 +15,10 @@ use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -576,6 +578,9 @@ class ClassroomController extends Controller
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
         $this->ensureClassroomAccess($user, $meeting);
+        if ($limited = $this->assertRecordingUploadRateLimit($user)) {
+            return $limited;
+        }
 
         if (! $meeting->started_at) {
             return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
@@ -624,17 +629,19 @@ class ClassroomController extends Controller
         }
 
         $disk = Storage::disk('live_recordings_r2');
-        $directory = 'classroom-recordings/'.now()->format('Y/m');
-        $fileName = sprintf('meeting-%d-%s.%s', $meeting->id, now()->format('Ymd-His'), $ext ?: 'webm');
-        $newPath = $directory.'/'.$fileName;
-
-        $oldPath = ($meeting->recording_disk === 'live_recordings_r2') ? $meeting->recording_path : null;
+        [$directory, $fileName, $newPath] = $this->makeUniqueRecordingObject(
+            (int) $meeting->id,
+            (int) $user->id,
+            'video',
+            $ext ?: 'webm'
+        );
 
         try {
             $disk->putFileAs($directory, $file, $fileName);
         } catch (\Throwable $e) {
             \Log::error('Classroom recording upload failed', [
                 'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
                 'error' => $e->getMessage(),
             ]);
 
@@ -643,26 +650,17 @@ class ClassroomController extends Controller
             ], 500);
         }
 
-        if ($oldPath && $oldPath !== $newPath) {
-            try {
-                $disk->delete($oldPath);
-            } catch (\Throwable $e) {
-                // تجاهل فشل حذف التسجيل القديم حتى لا يتعطل حفظ الجديد.
-            }
-        }
-
-        $meeting->update([
-            'recording_disk' => 'live_recordings_r2',
-            'recording_path' => $newPath,
-            'recording_mime_type' => $file->getMimeType(),
-            'recording_size' => $file->getSize(),
-            'recording_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
-            'recording_uploaded_at' => now(),
-        ]);
+        $fresh = $this->persistMeetingVideoRecording(
+            $meeting,
+            $newPath,
+            (string) $file->getMimeType(),
+            (int) $file->getSize(),
+            (int) ($validated['duration_seconds'] ?? 0)
+        );
 
         return response()->json([
             'message' => 'تم رفع وحفظ تسجيل المحاضرة بنجاح.',
-            'download_url' => $meeting->fresh()->recording_download_url,
+            'download_url' => $fresh->recording_download_url,
         ]);
     }
 
@@ -676,6 +674,9 @@ class ClassroomController extends Controller
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
         $this->ensureClassroomAccess($user, $meeting);
+        if ($limited = $this->assertRecordingUploadRateLimit($user)) {
+            return $limited;
+        }
 
         if (! $meeting->started_at) {
             return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
@@ -696,15 +697,12 @@ class ClassroomController extends Controller
         $mime = $this->normalizeRecordingMime((string) ($validated['content_type'] ?? 'video/webm'));
         $ext = $this->mimeToRecordingExt($mime);
 
-        $directory = 'classroom-recordings/'.now()->format('Y/m');
-        $fileName = sprintf(
-            'meeting-%d-%s-%s.%s',
-            $meeting->id,
-            now()->format('Ymd-His'),
-            Str::lower(Str::random(8)),
+        [$directory, $fileName, $newPath] = $this->makeUniqueRecordingObject(
+            (int) $meeting->id,
+            (int) $user->id,
+            'video',
             $ext
         );
-        $newPath = $directory.'/'.$fileName;
 
         $token = Str::random(64);
         Cache::put(
@@ -730,6 +728,7 @@ class ClassroomController extends Controller
             Cache::forget('classroom_recording_presign:'.$token);
             \Log::error('Classroom recording presign failed', [
                 'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
                 'error' => $e->getMessage(),
             ]);
 
@@ -758,6 +757,9 @@ class ClassroomController extends Controller
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
         $this->ensureClassroomAccess($user, $meeting);
+        if ($limited = $this->assertRecordingUploadRateLimit($user)) {
+            return $limited;
+        }
 
         if (! $meeting->started_at) {
             return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
@@ -812,27 +814,17 @@ class ClassroomController extends Controller
             return response()->json(['message' => 'حجم التسجيل يتجاوز الحد المسموح (٢ جيجابايت).'], 422);
         }
 
-        $oldPath = ($meeting->recording_disk === 'live_recordings_r2') ? $meeting->recording_path : null;
-
-        if ($oldPath && $oldPath !== $path) {
-            try {
-                $disk->delete($oldPath);
-            } catch (\Throwable $e) {
-            }
-        }
-
-        $meeting->update([
-            'recording_disk' => 'live_recordings_r2',
-            'recording_path' => $path,
-            'recording_mime_type' => $mime,
-            'recording_size' => $size,
-            'recording_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
-            'recording_uploaded_at' => now(),
-        ]);
+        $fresh = $this->persistMeetingVideoRecording(
+            $meeting,
+            $path,
+            $mime,
+            $size,
+            $completeDuration
+        );
 
         return response()->json([
             'message' => 'تم رفع وحفظ تسجيل المحاضرة بنجاح.',
-            'download_url' => $meeting->fresh()->recording_download_url,
+            'download_url' => $fresh->recording_download_url,
         ]);
     }
 
@@ -846,6 +838,9 @@ class ClassroomController extends Controller
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
         $this->ensureClassroomAccess($user, $meeting);
+        if ($limited = $this->assertRecordingUploadRateLimit($user)) {
+            return $limited;
+        }
 
         if (! $meeting->started_at) {
             return response()->json(['message' => 'لا يمكن رفع تسجيل صوتي لاجتماع لم يبدأ بعد.'], 422);
@@ -865,15 +860,12 @@ class ClassroomController extends Controller
 
         $mime = $this->normalizeAudioMime((string) ($validated['content_type'] ?? 'audio/webm'));
         $ext = $this->mimeToAudioExt($mime);
-        $directory = 'classroom-recordings-audio/'.now()->format('Y/m');
-        $fileName = sprintf(
-            'meeting-%d-audio-%s-%s.%s',
-            $meeting->id,
-            now()->format('Ymd-His'),
-            Str::lower(Str::random(8)),
+        [$directory, $fileName, $newPath] = $this->makeUniqueRecordingObject(
+            (int) $meeting->id,
+            (int) $user->id,
+            'audio',
             $ext
         );
-        $newPath = $directory.'/'.$fileName;
 
         $token = Str::random(64);
         Cache::put(
@@ -899,6 +891,7 @@ class ClassroomController extends Controller
             Cache::forget('classroom_audio_presign:'.$token);
             \Log::error('Classroom audio presign failed', [
                 'meeting_id' => $meeting->id,
+                'user_id' => $user->id,
                 'error' => $e->getMessage(),
             ]);
 
@@ -928,6 +921,9 @@ class ClassroomController extends Controller
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
         $this->ensureClassroomAccess($user, $meeting);
+        if ($limited = $this->assertRecordingUploadRateLimit($user)) {
+            return $limited;
+        }
 
         if (! $meeting->started_at) {
             return response()->json(['message' => 'لا يمكن رفع تسجيل صوتي لاجتماع لم يبدأ بعد.'], 422);
@@ -961,11 +957,13 @@ class ClassroomController extends Controller
         }
 
         $disk = Storage::disk('live_recordings_r2');
-        $directory = 'classroom-recordings-audio/'.now()->format('Y/m');
-        $baseName = sprintf('meeting-%d-audio-%s', $meeting->id, now()->format('Ymd-His'));
-        $fileName = $baseName.'.'.($ext ?: 'webm');
-        $newPath = $directory.'/'.$fileName;
-        $oldAudioPath = ($meeting->recording_disk === 'live_recordings_r2') ? $meeting->recording_audio_path : null;
+        [$directory, $fileName, $newPath] = $this->makeUniqueRecordingObject(
+            (int) $meeting->id,
+            (int) $user->id,
+            'audio',
+            $ext ?: 'webm'
+        );
+        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
 
         $finalPath = $newPath;
         $finalMime = (string) $file->getMimeType();
@@ -1036,24 +1034,17 @@ class ClassroomController extends Controller
             }
         }
 
-        if ($oldAudioPath && $oldAudioPath !== $finalPath) {
-            try {
-                $disk->delete($oldAudioPath);
-            } catch (\Throwable $e) {
-            }
-        }
-
-        $meeting->update([
-            'recording_disk' => 'live_recordings_r2',
-            'recording_audio_path' => $finalPath,
-            'recording_audio_mime_type' => $finalMime,
-            'recording_audio_size' => $finalSize,
-            'recording_audio_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
-        ]);
+        $fresh = $this->persistMeetingAudioRecording(
+            $meeting,
+            $finalPath,
+            $finalMime,
+            $finalSize,
+            (int) ($validated['duration_seconds'] ?? 0)
+        );
 
         return response()->json([
             'message' => 'تم رفع وحفظ التسجيل الصوتي بنجاح.',
-            'audio_download_url' => $meeting->fresh()->recording_audio_download_url,
+            'audio_download_url' => $fresh->recording_audio_download_url,
         ]);
     }
 
@@ -1067,6 +1058,9 @@ class ClassroomController extends Controller
         $user = Auth::user();
         $this->ensureMeetingOwnership($meeting, $user);
         $this->ensureClassroomAccess($user, $meeting);
+        if ($limited = $this->assertRecordingUploadRateLimit($user)) {
+            return $limited;
+        }
 
         if (! $meeting->started_at) {
             return response()->json(['message' => 'لا يمكن رفع تسجيل صوتي لاجتماع لم يبدأ بعد.'], 422);
@@ -1164,25 +1158,17 @@ class ClassroomController extends Controller
             }
         }
 
-        $oldAudioPath = ($meeting->recording_disk === 'live_recordings_r2') ? $meeting->recording_audio_path : null;
-        if ($oldAudioPath && $oldAudioPath !== $finalPath) {
-            try {
-                $disk->delete($oldAudioPath);
-            } catch (\Throwable $e) {
-            }
-        }
-
-        $meeting->update([
-            'recording_disk' => 'live_recordings_r2',
-            'recording_audio_path' => $finalPath,
-            'recording_audio_mime_type' => $finalMime,
-            'recording_audio_size' => $finalSize,
-            'recording_audio_duration_seconds' => (int) ($validated['duration_seconds'] ?? 0),
-        ]);
+        $fresh = $this->persistMeetingAudioRecording(
+            $meeting,
+            $finalPath,
+            $finalMime,
+            $finalSize,
+            (int) ($validated['duration_seconds'] ?? 0)
+        );
 
         return response()->json([
             'message' => 'تم رفع وحفظ التسجيل الصوتي بنجاح.',
-            'audio_download_url' => $meeting->fresh()->recording_audio_download_url,
+            'audio_download_url' => $fresh->recording_audio_download_url,
         ]);
     }
 
@@ -1349,6 +1335,115 @@ class ClassroomController extends Controller
         if ((int) $meeting->user_id !== (int) $user->id) {
             abort(403);
         }
+    }
+
+    /**
+     * حد معقول لكل معلم (وليس مشتركاً بين المعلمين) لمنع إغراق Presign مع السماح بالتوازي العالي.
+     */
+    private function assertRecordingUploadRateLimit($user): ?\Illuminate\Http\JsonResponse
+    {
+        $key = 'classroom-recording-ops:'.(int) $user->id;
+        if (RateLimiter::tooManyAttempts($key, 60)) {
+            return response()->json([
+                'message' => 'وصلتَ لحد محاولات الرفع مؤقتاً. انتظر دقيقة ثم أعد المحاولة. المعلمون الآخرون غير متأثرين.',
+            ], 429);
+        }
+        RateLimiter::hit($key, 60);
+
+        return null;
+    }
+
+    /**
+     * مسار R2 فريد لكل رفع — يمنع تعارض الملفات بين المعلمين أو الرفعات المتزامنة لنفس الاجتماع.
+     *
+     * @return array{0:string,1:string,2:string} [directory, fileName, fullPath]
+     */
+    private function makeUniqueRecordingObject(int $meetingId, int $userId, string $kind, string $ext): array
+    {
+        $ext = strtolower(preg_replace('/[^a-z0-9]/i', '', $ext) ?: 'webm');
+        $root = $kind === 'audio' ? 'classroom-recordings-audio' : 'classroom-recordings';
+        $directory = $root.'/'.now()->format('Y/m');
+        $fileName = sprintf(
+            'meeting-%d-u%d-%s-%s-%s.%s',
+            $meetingId,
+            $userId,
+            $kind === 'audio' ? 'audio' : 'video',
+            now()->format('Ymd-His'),
+            Str::lower(Str::random(12)),
+            $ext
+        );
+
+        return [$directory, $fileName, $directory.'/'.$fileName];
+    }
+
+    private function persistMeetingVideoRecording(
+        ClassroomMeeting $meeting,
+        string $path,
+        string $mime,
+        int $size,
+        int $durationSeconds
+    ): ClassroomMeeting {
+        $disk = Storage::disk('live_recordings_r2');
+
+        return DB::transaction(function () use ($meeting, $path, $mime, $size, $durationSeconds, $disk) {
+            /** @var ClassroomMeeting $locked */
+            $locked = ClassroomMeeting::query()->whereKey($meeting->id)->lockForUpdate()->firstOrFail();
+            $oldPath = ($locked->recording_disk === 'live_recordings_r2') ? (string) $locked->recording_path : '';
+
+            $locked->update([
+                'recording_disk' => 'live_recordings_r2',
+                'recording_path' => $path,
+                'recording_mime_type' => $mime,
+                'recording_size' => $size,
+                'recording_duration_seconds' => $durationSeconds,
+                'recording_uploaded_at' => now(),
+            ]);
+
+            if ($oldPath !== '' && $oldPath !== $path) {
+                try {
+                    $disk->delete($oldPath);
+                } catch (\Throwable $e) {
+                    // لا نفشل الحفظ بسبب حذف قديم
+                }
+            }
+
+            return $locked->fresh();
+        });
+    }
+
+    private function persistMeetingAudioRecording(
+        ClassroomMeeting $meeting,
+        string $path,
+        string $mime,
+        int $size,
+        int $durationSeconds
+    ): ClassroomMeeting {
+        $disk = Storage::disk('live_recordings_r2');
+
+        return DB::transaction(function () use ($meeting, $path, $mime, $size, $durationSeconds, $disk) {
+            /** @var ClassroomMeeting $locked */
+            $locked = ClassroomMeeting::query()->whereKey($meeting->id)->lockForUpdate()->firstOrFail();
+            $oldAudioPath = ($locked->recording_disk === 'live_recordings_r2')
+                ? (string) ($locked->recording_audio_path ?? '')
+                : '';
+
+            $locked->update([
+                'recording_disk' => 'live_recordings_r2',
+                'recording_audio_path' => $path,
+                'recording_audio_mime_type' => $mime,
+                'recording_audio_size' => $size,
+                'recording_audio_duration_seconds' => $durationSeconds,
+            ]);
+
+            if ($oldAudioPath !== '' && $oldAudioPath !== $path) {
+                try {
+                    $disk->delete($oldAudioPath);
+                } catch (\Throwable $e) {
+                }
+            }
+
+            return $locked->fresh();
+        });
     }
 
     private function normalizeRecordingMime(string $mime): string

@@ -292,7 +292,11 @@
                 <span id="meeting-timer-chip">{{ (int) $effectiveDurationMinutes }}:00</span>
                 <span id="meeting-timer-chip-mobile" class="sr-only">{{ (int) $effectiveDurationMinutes }} د</span>
             </div>
-            <span class="hidden text-[11px] px-2 py-1 rounded-lg border border-[#e9e9e9] bg-white text-[#005bc5] max-w-[10rem] truncate" id="record-status-chip"></span>
+            <span class="hidden sm:inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg border border-[#e9e9e9] bg-white text-[#005bc5] max-w-[16rem] truncate font-medium" id="record-status-chip" title="حالة التسجيل والرفع"></span>
+            <span id="mx-rec-live-badge" class="hidden inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg border border-[#c50000] bg-[#ffeeee] text-[#fd0000] font-semibold">
+                <span class="w-1.5 h-1.5 rounded-full bg-[#fd0000] animate-pulse"></span>
+                <span id="mx-rec-live-badge-label">جارٍ التسجيل</span>
+            </span>
         </div>
     </header>
 
@@ -704,6 +708,8 @@
             var recordIconActive = document.getElementById('record-icon-active');
             var recordLabelActive = document.getElementById('record-label-active');
             var recordStatusChip = document.getElementById('record-status-chip');
+            var mxRecLiveBadge = document.getElementById('mx-rec-live-badge');
+            var mxRecLiveBadgeLabel = document.getElementById('mx-rec-live-badge-label');
             var mxUploadModal = document.getElementById('mx-upload-modal');
             var mxUploadModalBar = document.getElementById('mx-upload-modal-bar');
             var mxUploadModalStatus = document.getElementById('mx-upload-modal-status');
@@ -1315,14 +1321,22 @@
                 if (btnLectureAddScreen) {
                     btnLectureAddScreen.classList.toggle('hidden', !recording || recordingKind !== 'lecture');
                 }
+                if (mxRecLiveBadge) {
+                    mxRecLiveBadge.classList.toggle('hidden', !recording);
+                }
                 if (recording) {
                     if (recordIconActive) recordIconActive.className = 'fas fa-stop';
                     if (recordLabelActive) {
                         recordLabelActive.textContent = recordingKind === 'report' ? 'إيقاف — تقرير صوتي' : 'إيقاف — تسجيل المحاضرة';
                     }
+                    if (mxRecLiveBadgeLabel) {
+                        mxRecLiveBadgeLabel.textContent = recordingKind === 'report'
+                            ? 'تقرير صوتي'
+                            : 'محاضرة (فيديو)';
+                    }
                 } else {
-                    if (recordIconIdle) recordIconIdle.className = 'fas fa-circle-dot text-rose-400';
-                    if (recordLabelIdle) recordLabelIdle.textContent = 'تسجيل أو تقرير';
+                    if (recordIconIdle) recordIconIdle.className = 'fas fa-circle-dot text-[#fd0000]';
+                    if (recordLabelIdle) recordLabelIdle.textContent = 'تسجيل';
                 }
             }
 
@@ -1353,11 +1367,11 @@
                 }
                 recordStatusChip.classList.remove('hidden');
                 recordStatusChip.textContent = message;
-                recordStatusChip.classList.remove('bg-sky-500/20', 'border-sky-500/30', 'text-sky-200', 'bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
+                recordStatusChip.classList.remove('bg-[#eef5ff]', 'border-[#0065fd]/30', 'text-[#005bc5]', 'bg-[#ffeeee]', 'border-[#c50000]', 'text-[#fd0000]');
                 if (isError) {
-                    recordStatusChip.classList.add('bg-rose-600/20', 'border-rose-500/30', 'text-rose-200');
+                    recordStatusChip.classList.add('bg-[#ffeeee]', 'border-[#c50000]', 'text-[#fd0000]');
                 } else {
-                    recordStatusChip.classList.add('bg-sky-500/20', 'border-sky-500/30', 'text-sky-200');
+                    recordStatusChip.classList.add('bg-[#eef5ff]', 'border-[#0065fd]/30', 'text-[#005bc5]');
                 }
             }
 
@@ -1885,7 +1899,7 @@
             }
 
             function mxMakeUploadJobId() {
-                return 'mx-' + mxMeetingId + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+                return 'mx-' + mxMeetingId + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 12) + '-' + Math.random().toString(36).slice(2, 8);
             }
 
             async function mxRunUploadJob(job) {
@@ -2155,6 +2169,10 @@
             }
 
             async function startLectureRecording() {
+                if (isRecording) {
+                    alert('هناك تسجيل قيد التشغيل بالفعل في هذه الغرفة.');
+                    return;
+                }
                 if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
                     alert('المتصفح لا يدعم تسجيل الصوت من الميكروفون.');
                     return;
@@ -2337,6 +2355,10 @@
             }
 
             async function startMicRecording() {
+                if (isRecording) {
+                    alert('هناك تسجيل قيد التشغيل بالفعل في هذه الغرفة.');
+                    return;
+                }
                 if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
                     alert('المتصفح لا يدعم تسجيل الصوت من الميكروفون.');
                     return;
