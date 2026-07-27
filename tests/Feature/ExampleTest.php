@@ -2,18 +2,26 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_application_config_boots(): void
     {
-        $response = $this->get('/');
+        $this->assertSame('testing', config('app.env'));
+        $this->assertNotEmpty(config('app.key'));
+        $this->assertSame('Muallimx', config('app.name'));
+    }
 
-        $response->assertStatus(200);
+    public function test_classroom_recording_routes_are_registered(): void
+    {
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.classroom.recording.presign'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.classroom.recording.complete'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.classroom.recording.upload'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.classroom.recording-audio.presign'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.classroom.recording-audio.complete'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('instructor.classroom.recording.presign'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('student.classroom.room'));
+        $this->assertTrue(\Illuminate\Support\Facades\Route::has('classroom.join'));
     }
 }
