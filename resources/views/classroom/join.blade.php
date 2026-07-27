@@ -62,9 +62,14 @@
     @php
         $mxVbgJsFile = public_path('js/classroom-virtual-background.js');
         $mxVbgJs = is_readable($mxVbgJsFile) ? file_get_contents($mxVbgJsFile) : '';
+        $mxNoiseJsFile = public_path('js/classroom-noise-isolation.js');
+        $mxNoiseJs = is_readable($mxNoiseJsFile) ? file_get_contents($mxNoiseJsFile) : '';
     @endphp
     @if($mxVbgJs !== '')
     <script id="mx-classroom-vbg-js">{!! $mxVbgJs !!}</script>
+    @endif
+    @if($mxNoiseJs !== '')
+    <script id="mx-classroom-noise-js">{!! $mxNoiseJs !!}</script>
     @endif
 </head>
 <body class="bg-slate-950 text-white">
@@ -120,6 +125,10 @@
                 <span class="text-slate-400 text-sm shrink-0">— {{ $code }}</span>
             </div>
             <div class="flex items-center gap-2 shrink-0">
+                <button type="button" id="mx-ml-btn-noise" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-cyan-600/25 hover:bg-cyan-600/40 text-cyan-100 text-sm font-semibold transition-colors border border-cyan-500/40" title="عزل الضوضاء: مفعّل (صوت نقي)" aria-pressed="true">
+                    <i class="fas fa-ear-listen text-cyan-300"></i>
+                    <span class="hidden sm:inline">عزل الضوضاء</span>
+                </button>
                 <button type="button" id="mx-ml-btn-bg" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-100 text-sm font-semibold transition-colors border border-slate-600" title="خلفية الكاميرا" aria-expanded="false" aria-controls="mx-vbg-panel">
                     <i class="fas fa-image text-cyan-300"></i>
                     <span class="hidden sm:inline">خلفية</span>
@@ -403,30 +412,50 @@
                 width: '100%',
                 height: '100%',
                 userInfo: { displayName: name },
-                configOverwrite: {
-                    prejoinConfig: { enabled: false },
-                    prejoinPageEnabled: false,
-                    enableLobby: false,
-                    requireDisplayName: false,
-                    enableWelcomePage: false,
-                    disableDeepLinking: true,
-                    enableRecording: false,
-                    startWithAudioMuted: true,
-                    startWithVideoMuted: true,
-                    enableNoisyMicDetection: false,
-                    disableVirtualBackground: false,
-                    // الضيف يغادر فقط — لا طرد/إعطاء مشرف/إنهاء للجميع
-                    disableRemoteMute: true,
-                    remoteVideoMenu: {
-                        disableKick: true,
-                        disableGrantModerator: true,
-                    },
-                    // إن وُجدت قائمة Hangup: امنع تنفيذ «إنهاء الاجتماع للجميع»
-                    buttonsWithNotifyClick: [
-                        { key: 'end-meeting', preventExecution: true },
-                        { key: 'hangup', preventExecution: false },
-                    ],
-                },
+                configOverwrite: (function () {
+                    var base = {
+                        prejoinConfig: { enabled: false },
+                        prejoinPageEnabled: false,
+                        enableLobby: false,
+                        requireDisplayName: false,
+                        enableWelcomePage: false,
+                        disableDeepLinking: true,
+                        enableRecording: false,
+                        startWithAudioMuted: true,
+                        startWithVideoMuted: true,
+                        disableVirtualBackground: false,
+                        // الضيف يغادر فقط — لا طرد/إعطاء مشرف/إنهاء للجميع
+                        disableRemoteMute: true,
+                        remoteVideoMenu: {
+                            disableKick: true,
+                            disableGrantModerator: true,
+                        },
+                        // إن وُجدت قائمة Hangup: امنع تنفيذ «إنهاء الاجتماع للجميع»
+                        buttonsWithNotifyClick: [
+                            { key: 'end-meeting', preventExecution: true },
+                            { key: 'hangup', preventExecution: false },
+                        ],
+                    };
+                    var audioPatch = (window.MxClassroomNoiseIsolation && typeof window.MxClassroomNoiseIsolation.getJitsiAudioConfigPatch === 'function')
+                        ? window.MxClassroomNoiseIsolation.getJitsiAudioConfigPatch()
+                        : {
+                            disableAP: false,
+                            disableAEC: false,
+                            disableNS: false,
+                            disableAGC: false,
+                            disableHPF: false,
+                            enableNoisyMicDetection: true,
+                            enableOpusRed: true,
+                            constraints: {
+                                audio: {
+                                    echoCancellation: true,
+                                    noiseSuppression: true,
+                                    autoGainControl: true,
+                                },
+                            },
+                        };
+                    return Object.assign({}, base, audioPatch);
+                })(),
                 interfaceConfigOverwrite: {
                     APP_NAME: 'Muallimx Classroom',
                     NATIVE_APP_NAME: 'Muallimx Classroom',
@@ -449,6 +478,41 @@
             };
             api = new JitsiMeetExternalAPI(domain, options);
             window.__mxClassroomJitsiApi = api;
+
+            (function bindGuestNoiseIsolation() {
+                function tryBind() {
+                    if (!window.MxClassroomNoiseIsolation || typeof window.MxClassroomNoiseIsolation.bindUi !== 'function') return false;
+                    var btnNoise = document.getElementById('mx-ml-btn-noise');
+                    if (!btnNoise) return true;
+                    window.__mxNoiseUi = window.MxClassroomNoiseIsolation.bindUi({
+                        toggleBtn: btnNoise,
+                        theme: 'dark',
+                        getApi: function () { return window.__mxClassroomJitsiApi || api; },
+                        onToast: function (msg) {
+                            try { console.info(msg); } catch (e) {}
+                            var t = document.getElementById('mx-guest-noise-toast');
+                            if (!t) {
+                                t = document.createElement('div');
+                                t.id = 'mx-guest-noise-toast';
+                                t.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:300;background:#171717;color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;';
+                                document.body.appendChild(t);
+                            }
+                            t.textContent = msg;
+                            t.style.opacity = '1';
+                            clearTimeout(window.__mxGuestNoiseToastTimer);
+                            window.__mxGuestNoiseToastTimer = setTimeout(function () { t.style.opacity = '0'; }, 2200);
+                        },
+                    });
+                    return true;
+                }
+                if (!tryBind()) {
+                    var n = 0;
+                    var t = setInterval(function () {
+                        n += 1;
+                        if (tryBind() || n > 40) clearInterval(t);
+                    }, 150);
+                }
+            })();
 
             (function bindGuestVirtualBg() {
                 function tryBind() {
@@ -516,6 +580,20 @@
                         setTimeout(function () { window.__mxVbgUi.restoreSaved(); }, 800);
                     }
                 } catch (e) {}
+                try {
+                    if (window.__mxNoiseUi && typeof window.__mxNoiseUi.enableOnJoin === 'function') {
+                        window.__mxNoiseUi.enableOnJoin();
+                    }
+                } catch (eNs) {}
+            });
+            api.addEventListener('audioMuteStatusChanged', function (e) {
+                if (e && e.muted === false) {
+                    try {
+                        if (window.__mxNoiseUi && typeof window.__mxNoiseUi.enableOnJoin === 'function') {
+                            window.__mxNoiseUi.enableOnJoin();
+                        }
+                    } catch (errNs) {}
+                }
             });
             api.addEventListener('videoMuteStatusChanged', function (e) {
                 if (e && e.muted === false) {

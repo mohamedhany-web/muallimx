@@ -14,9 +14,14 @@
     @php
         $mxVbgJsFile = public_path('js/classroom-virtual-background.js');
         $mxVbgJs = is_readable($mxVbgJsFile) ? file_get_contents($mxVbgJsFile) : '';
+        $mxNoiseJsFile = public_path('js/classroom-noise-isolation.js');
+        $mxNoiseJs = is_readable($mxNoiseJsFile) ? file_get_contents($mxNoiseJsFile) : '';
     @endphp
     @if($mxVbgJs !== '')
     <script id="mx-classroom-vbg-js">{!! $mxVbgJs !!}</script>
+    @endif
+    @if($mxNoiseJs !== '')
+    <script id="mx-classroom-noise-js">{!! $mxNoiseJs !!}</script>
     @endif
     {{-- Inline Meet.Line CSS: production returns 404 for /css/*.css static files; inlining guarantees styles load --}}
     @php
@@ -490,6 +495,9 @@
             <button type="button" id="mx-ml-btn-mic" class="mx-ml-icon-btn" title="ميكروفون" aria-pressed="true">
                 <i class="fas fa-microphone-slash text-[#fd0000] text-sm" id="mx-ml-mic-icon"></i>
             </button>
+            <button type="button" id="mx-ml-btn-noise" class="mx-ml-icon-btn is-active" title="عزل الضوضاء: مفعّل (صوت نقي)" aria-pressed="true">
+                <i class="fas fa-ear-listen text-[#0065fd] text-sm"></i>
+            </button>
             <button type="button" id="mx-ml-btn-cam" class="mx-ml-icon-btn" title="الكاميرا" aria-pressed="true">
                 <i class="fas fa-video-slash text-[#fd0000] text-sm" id="mx-ml-cam-icon"></i>
             </button>
@@ -832,6 +840,8 @@
             var lectureDisplayVideo = null;
             var lectureRafId = null;
             var lectureAudioCtx = null;
+            var reportRawMicStream = null;
+            var reportEnhanceCtx = null;
             var lectureMixDest = null;
             var btnLectureAddScreen = document.getElementById('btn-lecture-add-screen');
 
@@ -2097,12 +2107,24 @@
                         displayGain.connect(lectureMixDest);
                     }
 
-                    // صوت المضيف من الميكروفون
+                    // صوت المضيف من الميكروفون + تنقية إضافية (high-pass + ضغط خفيف)
                     if (micStr && micStr.getAudioTracks().length) {
                         var micSrc = lectureAudioCtx.createMediaStreamSource(micStr);
+                        var micHp = lectureAudioCtx.createBiquadFilter();
+                        micHp.type = 'highpass';
+                        micHp.frequency.value = 85;
+                        micHp.Q.value = 0.7;
+                        var micComp = lectureAudioCtx.createDynamicsCompressor();
+                        micComp.threshold.value = -28;
+                        micComp.knee.value = 18;
+                        micComp.ratio.value = 3.5;
+                        micComp.attack.value = 0.003;
+                        micComp.release.value = 0.18;
                         var micGain = lectureAudioCtx.createGain();
-                        micGain.gain.value = 1.0;
-                        micSrc.connect(micGain);
+                        micGain.gain.value = 1.05;
+                        micSrc.connect(micHp);
+                        micHp.connect(micComp);
+                        micComp.connect(micGain);
                         micGain.connect(lectureMixDest);
                     }
 
@@ -2134,9 +2156,21 @@
                     }
                     if (micStream && micStream.getAudioTracks().length) {
                         var mSrc = lectureAudioCtx.createMediaStreamSource(micStream);
+                        var mHp = lectureAudioCtx.createBiquadFilter();
+                        mHp.type = 'highpass';
+                        mHp.frequency.value = 85;
+                        mHp.Q.value = 0.7;
+                        var mComp = lectureAudioCtx.createDynamicsCompressor();
+                        mComp.threshold.value = -28;
+                        mComp.knee.value = 18;
+                        mComp.ratio.value = 3.5;
+                        mComp.attack.value = 0.003;
+                        mComp.release.value = 0.18;
                         var mGain = lectureAudioCtx.createGain();
-                        mGain.gain.value = 1.0;
-                        mSrc.connect(mGain);
+                        mGain.gain.value = 1.05;
+                        mSrc.connect(mHp);
+                        mHp.connect(mComp);
+                        mComp.connect(mGain);
                         mGain.connect(nextDest);
                     }
                     lectureMixDest = nextDest;
@@ -2368,14 +2402,13 @@
                     return;
                 }
 
-                // 2) الميكروفون (صوت المضيف)
+                // 2) الميكروفون (صوت المضيف) — قيود تنقية قوية
                 try {
+                    var micAudioConstraints = (window.MxClassroomNoiseIsolation && typeof window.MxClassroomNoiseIsolation.getCleanMicAudioConstraints === 'function')
+                        ? window.MxClassroomNoiseIsolation.getCleanMicAudioConstraints()
+                        : { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
                     micStream = await navigator.mediaDevices.getUserMedia({
-                        audio: {
-                            echoCancellation: true,
-                            noiseSuppression: true,
-                            autoGainControl: true,
-                        },
+                        audio: micAudioConstraints,
                         video: false,
                     });
                 } catch (err) {
@@ -2537,10 +2570,23 @@
                 recordingKind = 'report';
 
                 try {
-                    activeRecordingStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    var reportMicConstraints = (window.MxClassroomNoiseIsolation && typeof window.MxClassroomNoiseIsolation.getCleanMicAudioConstraints === 'function')
+                        ? window.MxClassroomNoiseIsolation.getCleanMicAudioConstraints()
+                        : { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+                    reportRawMicStream = await navigator.mediaDevices.getUserMedia({ audio: reportMicConstraints, video: false });
+                    activeRecordingStream = reportRawMicStream;
+                    if (window.MxClassroomNoiseIsolation && typeof window.MxClassroomNoiseIsolation.enhanceMicStreamForRecording === 'function') {
+                        var enh = window.MxClassroomNoiseIsolation.enhanceMicStreamForRecording(reportRawMicStream);
+                        if (enh && enh.stream) {
+                            activeRecordingStream = enh.stream;
+                            reportEnhanceCtx = enh.ctx || null;
+                        }
+                    }
                 } catch (err) {
                     setRecordButtonBusy(false);
                     recordingKind = null;
+                    reportRawMicStream = null;
+                    reportEnhanceCtx = null;
                     alert('لم يُسمح بالميكروفون أو تعذر تشغيله. تحقق من أذونات المتصفح.');
                     return;
                 }
@@ -2555,6 +2601,12 @@
                     } catch (err2) {
                         stopCaptureTracks(activeRecordingStream);
                         activeRecordingStream = null;
+                        stopCaptureTracks(reportRawMicStream);
+                        reportRawMicStream = null;
+                        if (reportEnhanceCtx) {
+                            try { reportEnhanceCtx.close(); } catch (eRepFail) {}
+                            reportEnhanceCtx = null;
+                        }
                         setRecordButtonBusy(false);
                         recordingKind = null;
                         alert('تعذر بدء التسجيل الصوتي. جرّب Chrome أو Edge بإصدار حديث.');
@@ -2582,6 +2634,12 @@
 
                     stopCaptureTracks(activeRecordingStream);
                     activeRecordingStream = null;
+                    stopCaptureTracks(reportRawMicStream);
+                    reportRawMicStream = null;
+                    if (reportEnhanceCtx) {
+                        try { reportEnhanceCtx.close(); } catch (eRepCtx) {}
+                        reportEnhanceCtx = null;
+                    }
 
                     var durationSeconds = recordingStartedAt ? Math.max(1, Math.round((Date.now() - recordingStartedAt) / 1000)) : 0;
                     mxConsolidateRecordedChunks();
@@ -2871,25 +2929,45 @@
                         width: '100%',
                         height: '100%',
                         userInfo: { displayName: userName, email: userEmail },
-                        configOverwrite: {
-                            prejoinConfig: { enabled: false },
-                            prejoinPageEnabled: false,
-                            enableLobby: false,
-                            requireDisplayName: false,
-                            enableWelcomePage: false,
-                            disableDeepLinking: true,
-                            enableRecording: true,
-                            startWithAudioMuted: true,
-                            startWithVideoMuted: true,
-                            disableAudioLevels: false,
-                            enableNoisyMicDetection: false,
-                            disableVirtualBackground: false,
-                            // شريط Jitsi الداخلي مخفي — التحكم من شريط Meet.Line السفلي
-                            toolbarButtons: [],
-                            buttonsWithNotifyClick: [],
-                            hideConferenceTimer: false,
-                            disableFocusIndicator: true,
-                        },
+                        configOverwrite: (function () {
+                            var base = {
+                                prejoinConfig: { enabled: false },
+                                prejoinPageEnabled: false,
+                                enableLobby: false,
+                                requireDisplayName: false,
+                                enableWelcomePage: false,
+                                disableDeepLinking: true,
+                                enableRecording: true,
+                                startWithAudioMuted: true,
+                                startWithVideoMuted: true,
+                                disableAudioLevels: false,
+                                disableVirtualBackground: false,
+                                // شريط Jitsi الداخلي مخفي — التحكم من شريط Meet.Line السفلي
+                                toolbarButtons: [],
+                                buttonsWithNotifyClick: [],
+                                hideConferenceTimer: false,
+                                disableFocusIndicator: true,
+                            };
+                            var audioPatch = (window.MxClassroomNoiseIsolation && typeof window.MxClassroomNoiseIsolation.getJitsiAudioConfigPatch === 'function')
+                                ? window.MxClassroomNoiseIsolation.getJitsiAudioConfigPatch()
+                                : {
+                                    disableAP: false,
+                                    disableAEC: false,
+                                    disableNS: false,
+                                    disableAGC: false,
+                                    disableHPF: false,
+                                    enableNoisyMicDetection: true,
+                                    enableOpusRed: true,
+                                    constraints: {
+                                        audio: {
+                                            echoCancellation: true,
+                                            noiseSuppression: true,
+                                            autoGainControl: true,
+                                        },
+                                    },
+                                };
+                            return Object.assign({}, base, audioPatch);
+                        })(),
                         interfaceConfigOverwrite: {
                             APP_NAME: 'Muallimx Classroom',
                             NATIVE_APP_NAME: 'Muallimx Classroom',
@@ -2935,10 +3013,22 @@
                                 setTimeout(function () { window.__mxVbgUi.restoreSaved(); }, 800);
                             }
                         } catch (eVbg) {}
+                        try {
+                            if (window.__mxNoiseUi && typeof window.__mxNoiseUi.enableOnJoin === 'function') {
+                                window.__mxNoiseUi.enableOnJoin();
+                            }
+                        } catch (eNs) {}
                     });
 
                     api.addEventListener('audioMuteStatusChanged', function(e) {
                         mxSetMicUi(!!(e && e.muted));
+                        if (e && e.muted === false) {
+                            try {
+                                if (window.__mxNoiseUi && typeof window.__mxNoiseUi.enableOnJoin === 'function') {
+                                    window.__mxNoiseUi.enableOnJoin();
+                                }
+                            } catch (eNs2) {}
+                        }
                     });
                     api.addEventListener('videoMuteStatusChanged', function(e) {
                         mxSetCamUi(!!(e && e.muted));
@@ -3251,6 +3341,29 @@
                 if (btnCam) btnCam.addEventListener('click', function() {
                     if (mxJitsiCmd('toggleVideo')) setTimeout(mxSyncMediaButtonState, 200);
                 });
+                (function bindNoiseIsolationUi() {
+                    function tryBind() {
+                        if (!window.MxClassroomNoiseIsolation || typeof window.MxClassroomNoiseIsolation.bindUi !== 'function') {
+                            return false;
+                        }
+                        var btnNoise = document.getElementById('mx-ml-btn-noise');
+                        if (!btnNoise) return true;
+                        window.__mxNoiseUi = window.MxClassroomNoiseIsolation.bindUi({
+                            theme: 'light',
+                            toggleBtn: btnNoise,
+                            getApi: function () { return window.__mxClassroomJitsiApi || api; },
+                            onToast: function (msg) { if (typeof mxToast === 'function') mxToast(msg); },
+                        });
+                        return true;
+                    }
+                    if (!tryBind()) {
+                        var nNs = 0;
+                        var tNs = setInterval(function () {
+                            nNs += 1;
+                            if (tryBind() || nNs > 40) clearInterval(tNs);
+                        }, 150);
+                    }
+                })();
                 (function bindVirtualBackgroundUi() {
                     function tryBind() {
                         if (!window.MxClassroomVirtualBackground || typeof window.MxClassroomVirtualBackground.bindUi !== 'function') {
