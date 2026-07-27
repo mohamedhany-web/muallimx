@@ -200,7 +200,10 @@
 
             async function uploadRecordedBlob(blob, durationSeconds, onProgress) {
                 var putSucceeded = false;
-                var ct = blob.type || 'audio/webm';
+                var ct = blob.type || 'video/webm';
+                if (String(ct).indexOf('audio/') === 0) {
+                    ct = 'video/webm';
+                }
                 try {
                     if (typeof onProgress === 'function') {
                         onProgress({ text: 'جاري تجهيز رابط الرفع...', percent: 2 });
