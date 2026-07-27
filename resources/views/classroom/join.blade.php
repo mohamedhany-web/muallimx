@@ -33,7 +33,39 @@
             align-items: center; justify-content: center;
             background: rgba(15, 23, 42, 0.7); color: #94a3b8; font-size: 14px; text-align: center; padding: 1rem;
         }
+        /* Virtual background panel (guest dark theme) */
+        #mx-vbg-panel {
+            position: fixed; z-index: 260; left: 50%; bottom: 24px; transform: translateX(-50%);
+            width: min(420px, calc(100vw - 24px)); max-height: min(70vh, 520px); overflow: auto;
+            border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0;
+            box-shadow: 0 0 60px rgba(0,0,0,.35); padding: 12px; display: none; flex-direction: column; gap: 10px; direction: rtl;
+        }
+        #mx-vbg-panel.is-open { display: flex; }
+        .mx-vbg-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .mx-vbg-head strong { font-size: 13px; }
+        .mx-vbg-close { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; cursor: pointer; font-size: 18px; }
+        .mx-vbg-hint { margin: 0; font-size: 11px; color: #94a3b8; line-height: 1.5; }
+        .mx-vbg-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+        .mx-vbg-chip { border: 1px solid #475569; background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 7px 10px; font-size: 11px; font-weight: 600; cursor: pointer; }
+        .mx-vbg-chip:hover, .mx-vbg-chip.is-selected { border-color: #0065fd; background: rgba(0,101,253,.2); color: #93c5fd; }
+        .mx-vbg-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+        .mx-vbg-preset { border: 2px solid transparent; border-radius: 10px; overflow: hidden; padding: 0; background: #111827; cursor: pointer; display: flex; flex-direction: column; }
+        .mx-vbg-preset img { width: 100%; height: 52px; object-fit: cover; display: block; }
+        .mx-vbg-preset span { font-size: 10px; padding: 4px 2px; text-align: center; background: #1e293b; color: #e2e8f0; }
+        .mx-vbg-preset.is-selected, .mx-vbg-preset:hover { border-color: #0065fd; }
+        .mx-vbg-upload { display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed #0065fd; border-radius: 10px; padding: 10px; cursor: pointer; font-size: 12px; font-weight: 600; color: #93c5fd; background: rgba(0,101,253,.15); }
+        .mx-vbg-fallback { border: 0; background: transparent; color: #94a3b8; font-size: 11px; text-decoration: underline; cursor: pointer; padding: 4px; }
+        @media (max-width: 640px) { .mx-vbg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     </style>
+    <meta name="mx-asset-base" content="{{ rtrim(asset(''), '/') }}">
+    <script>window.MX_ASSET_BASE = @json(rtrim(asset(''), '/'));</script>
+    @php
+        $mxVbgJsFile = public_path('js/classroom-virtual-background.js');
+        $mxVbgJs = is_readable($mxVbgJsFile) ? file_get_contents($mxVbgJsFile) : '';
+    @endphp
+    @if($mxVbgJs !== '')
+    <script id="mx-classroom-vbg-js">{!! $mxVbgJs !!}</script>
+    @endif
 </head>
 <body class="bg-slate-950 text-white">
     <div id="join-screen" class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -88,6 +120,10 @@
                 <span class="text-slate-400 text-sm shrink-0">— {{ $code }}</span>
             </div>
             <div class="flex items-center gap-2 shrink-0">
+                <button type="button" id="mx-ml-btn-bg" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-100 text-sm font-semibold transition-colors border border-slate-600" title="خلفية الكاميرا" aria-expanded="false" aria-controls="mx-vbg-panel">
+                    <i class="fas fa-image text-cyan-300"></i>
+                    <span class="hidden sm:inline">خلفية</span>
+                </button>
                 <div id="mx-guest-wb-wrap" class="hidden">
                     <button type="button" id="btn-guest-whiteboard"
                             class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 text-sm font-semibold transition-colors border border-amber-500/40"
@@ -378,6 +414,7 @@
                     startWithAudioMuted: true,
                     startWithVideoMuted: true,
                     enableNoisyMicDetection: false,
+                    disableVirtualBackground: false,
                     // الضيف يغادر فقط — لا طرد/إعطاء مشرف/إنهاء للجميع
                     disableRemoteMute: true,
                     remoteVideoMenu: {
@@ -399,7 +436,7 @@
                     TOOLBAR_BUTTONS: [
                         'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
                         'fodeviceselection', 'hangup', 'chat',
-                        'raisehand', 'tileview', 'videoquality', 'filmstrip'
+                        'raisehand', 'tileview', 'videoquality', 'filmstrip', 'select-background'
                     ],
                     SHOW_JITSI_WATERMARK: false,
                     SHOW_WATERMARK_FOR_GUESTS: false,
@@ -411,6 +448,84 @@
                 }
             };
             api = new JitsiMeetExternalAPI(domain, options);
+            window.__mxClassroomJitsiApi = api;
+
+            (function bindGuestVirtualBg() {
+                function tryBind() {
+                    if (!window.MxClassroomVirtualBackground || typeof window.MxClassroomVirtualBackground.bindUi !== 'function') return false;
+                    var btnBg = document.getElementById('mx-ml-btn-bg');
+                    if (!btnBg) return true;
+                    window.__mxVbgUi = window.MxClassroomVirtualBackground.bindUi({
+                        theme: 'dark',
+                        toggleBtn: btnBg,
+                        mountEl: document.body,
+                        getApi: function () { return window.__mxClassroomJitsiApi || api; },
+                        onToast: function (msg) {
+                            try { console.info(msg); } catch (e) {}
+                            var t = document.getElementById('mx-guest-vbg-toast');
+                            if (!t) {
+                                t = document.createElement('div');
+                                t.id = 'mx-guest-vbg-toast';
+                                t.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:300;background:#171717;color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;';
+                                document.body.appendChild(t);
+                            }
+                            t.textContent = msg;
+                            t.style.opacity = '1';
+                            clearTimeout(window.__mxGuestVbgToastTimer);
+                            window.__mxGuestVbgToastTimer = setTimeout(function () { t.style.opacity = '0'; }, 2200);
+                        },
+                        ensureCameraOn: function () {
+                            return new Promise(function (resolve) {
+                                var j = window.__mxClassroomJitsiApi || api;
+                                if (!j) { resolve(false); return; }
+                                function afterCheck(muted) {
+                                    if (!muted) { resolve(true); return; }
+                                    try { j.executeCommand('toggleVideo'); } catch (e) { resolve(false); return; }
+                                    setTimeout(function () {
+                                        try {
+                                            var p2 = typeof j.isVideoMuted === 'function' ? j.isVideoMuted() : false;
+                                            if (p2 && typeof p2.then === 'function') p2.then(function (m2) { resolve(!m2); });
+                                            else resolve(!p2);
+                                        } catch (e2) { resolve(true); }
+                                    }, 350);
+                                }
+                                try {
+                                    if (typeof j.isVideoMuted === 'function') {
+                                        var p = j.isVideoMuted();
+                                        if (p && typeof p.then === 'function') p.then(afterCheck);
+                                        else afterCheck(!!p);
+                                    } else resolve(true);
+                                } catch (e3) { resolve(true); }
+                            });
+                        },
+                    });
+                    return true;
+                }
+                if (!tryBind()) {
+                    var n = 0;
+                    var t = setInterval(function () {
+                        n += 1;
+                        if (tryBind() || n > 40) clearInterval(t);
+                    }, 150);
+                }
+            })();
+
+            api.addEventListener('videoConferenceJoined', function () {
+                try {
+                    if (window.__mxVbgUi && typeof window.__mxVbgUi.restoreSaved === 'function') {
+                        setTimeout(function () { window.__mxVbgUi.restoreSaved(); }, 800);
+                    }
+                } catch (e) {}
+            });
+            api.addEventListener('videoMuteStatusChanged', function (e) {
+                if (e && e.muted === false) {
+                    try {
+                        if (window.__mxVbgUi && typeof window.__mxVbgUi.restoreSaved === 'function') {
+                            setTimeout(function () { window.__mxVbgUi.restoreSaved(); }, 400);
+                        }
+                    } catch (err) {}
+                }
+            });
 
             heartbeatTimer = setInterval(async function() {
                 if (!joinToken) return;

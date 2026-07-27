@@ -9,6 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Poppins:wght@500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <meta name="mx-asset-base" content="{{ rtrim(asset(''), '/') }}">
+    <script>window.MX_ASSET_BASE = @json(rtrim(asset(''), '/'));</script>
+    @php
+        $mxVbgJsFile = public_path('js/classroom-virtual-background.js');
+        $mxVbgJs = is_readable($mxVbgJsFile) ? file_get_contents($mxVbgJsFile) : '';
+    @endphp
+    @if($mxVbgJs !== '')
+    <script id="mx-classroom-vbg-js">{!! $mxVbgJs !!}</script>
+    @endif
     {{-- Inline Meet.Line CSS: production returns 404 for /css/*.css static files; inlining guarantees styles load --}}
     @php
         $mxMeetlineCssFile = public_path('css/classroom-meetline.css');
@@ -483,6 +492,9 @@
             </button>
             <button type="button" id="mx-ml-btn-cam" class="mx-ml-icon-btn" title="الكاميرا" aria-pressed="true">
                 <i class="fas fa-video-slash text-[#fd0000] text-sm" id="mx-ml-cam-icon"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-bg" class="mx-ml-icon-btn" title="خلفية الكاميرا (تمويه / صورة)" aria-expanded="false" aria-controls="mx-vbg-panel">
+                <i class="fas fa-image text-[#171717] text-sm"></i>
             </button>
             <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn" title="الوايت بورد / Artboard" aria-pressed="false">
                 <i class="fas fa-pen text-[#171717] text-sm"></i>
@@ -2705,6 +2717,7 @@
                             startWithVideoMuted: true,
                             disableAudioLevels: false,
                             enableNoisyMicDetection: false,
+                            disableVirtualBackground: false,
                             // شريط Jitsi الداخلي مخفي — التحكم من شريط Meet.Line السفلي
                             toolbarButtons: [],
                             buttonsWithNotifyClick: [],
@@ -2751,6 +2764,11 @@
                         mxSyncMediaButtonState();
                         mxUpdateLiveCount();
                         // اللوح يُفتح يدوياً من زر القلم — لا يفتح تلقائياً حتى لا يسرق مساحة الفيديو
+                        try {
+                            if (window.__mxVbgUi && typeof window.__mxVbgUi.restoreSaved === 'function') {
+                                setTimeout(function () { window.__mxVbgUi.restoreSaved(); }, 800);
+                            }
+                        } catch (eVbg) {}
                     });
 
                     api.addEventListener('audioMuteStatusChanged', function(e) {
@@ -2758,6 +2776,13 @@
                     });
                     api.addEventListener('videoMuteStatusChanged', function(e) {
                         mxSetCamUi(!!(e && e.muted));
+                        if (e && e.muted === false) {
+                            try {
+                                if (window.__mxVbgUi && typeof window.__mxVbgUi.restoreSaved === 'function') {
+                                    setTimeout(function () { window.__mxVbgUi.restoreSaved(); }, 400);
+                                }
+                            } catch (e2) {}
+                        }
                     });
                     api.addEventListener('participantJoined', mxUpdateLiveCount);
                     api.addEventListener('participantLeft', mxUpdateLiveCount);
@@ -3060,6 +3085,68 @@
                 if (btnCam) btnCam.addEventListener('click', function() {
                     if (mxJitsiCmd('toggleVideo')) setTimeout(mxSyncMediaButtonState, 200);
                 });
+                (function bindVirtualBackgroundUi() {
+                    function tryBind() {
+                        if (!window.MxClassroomVirtualBackground || typeof window.MxClassroomVirtualBackground.bindUi !== 'function') {
+                            return false;
+                        }
+                        var btnBg = document.getElementById('mx-ml-btn-bg');
+                        if (!btnBg) return true;
+                        window.__mxVbgUi = window.MxClassroomVirtualBackground.bindUi({
+                            theme: 'light',
+                            toggleBtn: btnBg,
+                            mountEl: document.body,
+                            getApi: function () { return window.__mxClassroomJitsiApi || api; },
+                            onToast: function (msg) { if (typeof mxToast === 'function') mxToast(msg); },
+                            ensureCameraOn: function () {
+                                return new Promise(function (resolve) {
+                                    var j = window.__mxClassroomJitsiApi || api;
+                                    if (!j) { resolve(false); return; }
+                                    function afterCheck(muted) {
+                                        if (!muted) { resolve(true); return; }
+                                        try {
+                                            j.executeCommand('toggleVideo');
+                                        } catch (e) {
+                                            resolve(false);
+                                            return;
+                                        }
+                                        setTimeout(function () {
+                                            try {
+                                                var p2 = typeof j.isVideoMuted === 'function' ? j.isVideoMuted() : false;
+                                                if (p2 && typeof p2.then === 'function') {
+                                                    p2.then(function (m2) { resolve(!m2); });
+                                                } else {
+                                                    resolve(!p2);
+                                                }
+                                            } catch (e2) {
+                                                resolve(true);
+                                            }
+                                        }, 350);
+                                    }
+                                    try {
+                                        if (typeof j.isVideoMuted === 'function') {
+                                            var p = j.isVideoMuted();
+                                            if (p && typeof p.then === 'function') p.then(afterCheck);
+                                            else afterCheck(!!p);
+                                        } else {
+                                            resolve(true);
+                                        }
+                                    } catch (e3) {
+                                        resolve(true);
+                                    }
+                                });
+                            },
+                        });
+                        return true;
+                    }
+                    if (!tryBind()) {
+                        var n = 0;
+                        var t = setInterval(function () {
+                            n += 1;
+                            if (tryBind() || n > 40) clearInterval(t);
+                        }, 150);
+                    }
+                })();
                 if (btnShare) btnShare.addEventListener('click', function() {
                     mxJitsiCmd('toggleShareScreen');
                     mxToast('مشاركة الشاشة…');
