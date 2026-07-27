@@ -537,7 +537,7 @@
                     <span class="hidden sm:inline">+شاشة</span>
                 </button>
                 <div id="mx-record-dd-panel" class="hidden w-[min(100vw-1.5rem,18.5rem)] max-w-[calc(100vw-1rem)] rounded-lg border border-[#e9e9e9] bg-white overflow-hidden" role="menu">
-                    <p class="px-2.5 py-1.5 text-[10px] leading-snug text-[#717171] border-b border-[#e9e9e9] m-0">تسجيل المحاضرة: فيديو الشاشة/التبويب + الصوت. التقرير الصوتي: صوت فقط.</p>
+                    <p class="px-2.5 py-1.5 text-[10px] leading-snug text-[#717171] border-b border-[#e9e9e9] m-0">المحاضرة: اختر تبويب الاجتماع وفعّل «Share tab audio» لتسجيل أصوات الجميع. التقرير: صوت الميكروفون فقط.</p>
                     <button type="button" role="menuitem" data-mx-rec-mode="lecture" class="w-full text-right px-2.5 py-2 text-xs text-[#171717] hover:bg-[#eef5ff] border-0 border-b border-[#e9e9e9] bg-transparent cursor-pointer">تسجيل المحاضرة (فيديو + صوت)</button>
                     <button type="button" role="menuitem" data-mx-rec-mode="report" class="w-full text-right px-2.5 py-2 text-xs text-[#171717] hover:bg-[#eef5ff] border-0 bg-transparent cursor-pointer">إنشاء تقرير صوتي</button>
                 </div>
@@ -2084,12 +2084,28 @@
                         lectureAudioCtx.resume().catch(function() {});
                     }
                     lectureMixDest = lectureAudioCtx.createMediaStreamDestination();
-                    if (micStr && micStr.getAudioTracks().length) {
-                        lectureAudioCtx.createMediaStreamSource(micStr).connect(lectureMixDest);
-                    }
+
+                    // صوت المشاركين يأتي من تبويب/شاشة الاجتماع (display) — ارفعه قليلاً
                     if (displayStr && displayStr.getAudioTracks().length) {
-                        lectureAudioCtx.createMediaStreamSource(displayStr).connect(lectureMixDest);
+                        displayStr.getAudioTracks().forEach(function (t) {
+                            try { t.enabled = true; } catch (eEn) {}
+                        });
+                        var displaySrc = lectureAudioCtx.createMediaStreamSource(displayStr);
+                        var displayGain = lectureAudioCtx.createGain();
+                        displayGain.gain.value = 1.25;
+                        displaySrc.connect(displayGain);
+                        displayGain.connect(lectureMixDest);
                     }
+
+                    // صوت المضيف من الميكروفون
+                    if (micStr && micStr.getAudioTracks().length) {
+                        var micSrc = lectureAudioCtx.createMediaStreamSource(micStr);
+                        var micGain = lectureAudioCtx.createGain();
+                        micGain.gain.value = 1.0;
+                        micSrc.connect(micGain);
+                        micGain.connect(lectureMixDest);
+                    }
+
                     var mixed = lectureMixDest.stream.getAudioTracks();
                     if (mixed.length) return mixed[0];
                 } catch (mixErr) {
@@ -2099,7 +2115,50 @@
             }
 
             /**
-             * يطلب مشاركة الشاشة/التبويب لتسجيل الفيديو.
+             * يعيد ربط مصادر الصوت إلى نفس مسار الميكسر دون إيقاف MediaRecorder.
+             */
+            function mxReconnectLectureAudioSources() {
+                if (!lectureAudioCtx || !lectureMixDest) return false;
+                try {
+                    // أنشئ ميكسر جديد على نفس الـ AudioContext ثم انقل المسار إن أمكن
+                    var nextDest = lectureAudioCtx.createMediaStreamDestination();
+                    if (lectureDisplayStream && lectureDisplayStream.getAudioTracks().length) {
+                        lectureDisplayStream.getAudioTracks().forEach(function (t) {
+                            try { t.enabled = true; } catch (e1) {}
+                        });
+                        var dSrc = lectureAudioCtx.createMediaStreamSource(lectureDisplayStream);
+                        var dGain = lectureAudioCtx.createGain();
+                        dGain.gain.value = 1.25;
+                        dSrc.connect(dGain);
+                        dGain.connect(nextDest);
+                    }
+                    if (micStream && micStream.getAudioTracks().length) {
+                        var mSrc = lectureAudioCtx.createMediaStreamSource(micStream);
+                        var mGain = lectureAudioCtx.createGain();
+                        mGain.gain.value = 1.0;
+                        mSrc.connect(mGain);
+                        mGain.connect(nextDest);
+                    }
+                    lectureMixDest = nextDest;
+                    var newTrack = nextDest.stream.getAudioTracks()[0];
+                    if (newTrack && activeRecordingStream) {
+                        activeRecordingStream.getAudioTracks().forEach(function (old) {
+                            try {
+                                activeRecordingStream.removeTrack(old);
+                                old.stop();
+                            } catch (e2) {}
+                        });
+                        activeRecordingStream.addTrack(newTrack);
+                    }
+                    return !!newTrack;
+                } catch (e) {
+                    console.warn('mxReconnectLectureAudioSources', e);
+                    return false;
+                }
+            }
+
+            /**
+             * يطلب مشاركة الشاشة/التبويب لتسجيل الفيديو + أصوات المشاركين.
              * @param {boolean} required إن true يُفشل البدء عند الإلغاء
              * @returns {Promise<boolean>}
              */
@@ -2116,34 +2175,96 @@
                     setRecordStatus('مشاركة الشاشة مفعّلة بالفعل.', false);
                     return true;
                 }
-                var stream;
-                try {
-                    stream = await navigator.mediaDevices.getDisplayMedia({
-                        video: {
-                            frameRate: { ideal: 30, max: 30 },
-                            width: { ideal: 1920 },
-                            height: { ideal: 1080 },
-                            displaySurface: 'browser',
-                        },
-                        audio: true,
-                        preferCurrentTab: true,
-                        selfBrowserSurface: 'include',
-                        surfaceSwitching: 'include',
-                        systemAudio: 'include',
-                    });
-                } catch (errPick) {
-                    if (required) {
-                        alert('يجب اختيار تبويب غرفة الاجتماع أو الشاشة لتسجيل المحاضرة بالفيديو.\nفي نافذة المشاركة اختر «Chrome Tab / تبويب» ثم تبويب الاجتماع واسمح بمشاركة الصوت إن ظهر الخيار.');
+
+                var attempts = 0;
+                var maxAttempts = required ? 3 : 1;
+                var stream = null;
+
+                while (attempts < maxAttempts) {
+                    attempts += 1;
+                    try {
+                        stream = await navigator.mediaDevices.getDisplayMedia({
+                            video: {
+                                frameRate: { ideal: 30, max: 30 },
+                                width: { ideal: 1920 },
+                                height: { ideal: 1080 },
+                                displaySurface: 'browser',
+                            },
+                            // ضروري لالتقاط أصوات المشاركين من تبويب الاجتماع
+                            audio: {
+                                echoCancellation: false,
+                                noiseSuppression: false,
+                                autoGainControl: false,
+                                suppressLocalAudioPlayback: true,
+                            },
+                            preferCurrentTab: true,
+                            selfBrowserSurface: 'include',
+                            surfaceSwitching: 'include',
+                            systemAudio: 'include',
+                            // قيد غير قياسي يدعمه كروم عند مشاركة التبويب
+                            monitorTypeSurfaces: 'exclude',
+                        });
+                    } catch (errPick) {
+                        stream = null;
+                        if (required && attempts >= maxAttempts) {
+                            alert('يجب اختيار تبويب غرفة الاجتماع لتسجيل الفيديو وأصوات الجميع.\n\n1) اختر «Chrome Tab / تبويب»\n2) اختر تبويب Muallimx Classroom\n3) فعّل «مشاركة صوت التبويب / Share tab audio»');
+                            return false;
+                        }
+                        if (!required) return false;
+                        continue;
                     }
-                    return false;
-                }
-                if (!stream || !stream.getVideoTracks().length) {
-                    stopCaptureTracks(stream);
-                    if (required) {
-                        alert('لم يتم الحصول على مسار فيديو من الشاشة. أعد المحاولة واختر تبويباً أو نافذة.');
+
+                    if (!stream || !stream.getVideoTracks().length) {
+                        stopCaptureTracks(stream);
+                        stream = null;
+                        if (required && attempts >= maxAttempts) {
+                            alert('لم يتم الحصول على مسار فيديو من الشاشة. أعد المحاولة واختر تبويباً.');
+                            return false;
+                        }
+                        continue;
                     }
-                    return false;
+
+                    var audioCount = stream.getAudioTracks().length;
+                    if (audioCount < 1) {
+                        // بدون صوت التبويب لن تُسجَّل أصوات المشاركين — فقط الميكروفون
+                        var retryMsg =
+                            'لم يتم التقاط صوت التبويب.\n\n' +
+                            'بدون «Share tab audio» سيُسجَّل صوتك فقط ولن تُسمع أصوات المشاركين.\n\n' +
+                            'أعد المحاولة: اختر تبويب الاجتماع وفعّل مشاركة صوت التبويب.';
+                        stopCaptureTracks(stream);
+                        stream = null;
+                        if (required && attempts < maxAttempts) {
+                            alert(retryMsg);
+                            continue;
+                        }
+                        if (required) {
+                            var proceedMicOnly = confirm(
+                                retryMsg + '\n\nهل تريد المتابعة بصوت الميكروفون فقط؟ (غير مُستحسن)'
+                            );
+                            if (!proceedMicOnly) return false;
+                            // آخر محاولة: اطلب الشاشة مرة أخرى لكن اقبل بدون صوت
+                            try {
+                                stream = await navigator.mediaDevices.getDisplayMedia({
+                                    video: true,
+                                    audio: true,
+                                    preferCurrentTab: true,
+                                    systemAudio: 'include',
+                                });
+                            } catch (eLast) {
+                                return false;
+                            }
+                            if (!stream || !stream.getVideoTracks().length) {
+                                stopCaptureTracks(stream);
+                                return false;
+                            }
+                            break;
+                        }
+                        return false;
+                    }
+                    break;
                 }
+
+                if (!stream || !stream.getVideoTracks().length) return false;
 
                 lectureDisplayStream = stream;
                 if (!lectureDisplayVideo) {
@@ -2170,13 +2291,29 @@
                                 lectureDisplayVideo.srcObject = null;
                             } catch (e) {}
                         }
-                        setRecordStatus('توقفت مشاركة الشاشة — اضغط «+شاشة» فوراً لإعادة ربط فيديو التبويب.', true);
+                        setRecordStatus('توقفت مشاركة الشاشة — اضغط «+شاشة» وأعد تفعيل صوت التبويب.', true);
                         if (typeof mxToast === 'function') {
-                            mxToast('الشاشة توقفت — اضغط +شاشة لإكمال الفيديو');
+                            mxToast('الشاشة توقفت — اضغط +شاشة مع Share tab audio');
                         }
                     });
                 });
-                setRecordStatus('تم ربط الشاشة/التبويب بفيديو التسجيل.', false);
+                stream.getAudioTracks().forEach(function (track) {
+                    track.addEventListener('ended', function () {
+                        if (recordingKind !== 'lecture') return;
+                        setRecordStatus('توقف صوت التبويب — أعد «+شاشة» مع تفعيل Share tab audio لسماع المشاركين.', true);
+                    });
+                });
+
+                var hasTabAudio = stream.getAudioTracks().length > 0;
+                setRecordStatus(
+                    hasTabAudio
+                        ? 'تم ربط التبويب: فيديو + أصوات المشاركين + الميكروفون.'
+                        : 'تم ربط الشاشة بدون صوت تبويب — سيُسجَّل الميكروفون فقط.',
+                    !hasTabAudio
+                );
+                if (hasTabAudio && typeof mxToast === 'function') {
+                    mxToast('سيتم تسجيل أصوات المشاركين من التبويب');
+                }
                 return true;
             }
 
@@ -2208,7 +2345,16 @@
 
                 cleanupLectureRecordingVisuals();
 
-                // 1) الشاشة/التبويب إلزامي — بدونها لا يبدأ تسجيل المحاضرة (كان سابقاً صوت فقط بالخطأ)
+                // تنبيه قبل نافذة المشاركة
+                alert(
+                    'لتسجيل أصوات الجميع:\n' +
+                    '1) اختر «تبويب / Chrome Tab»\n' +
+                    '2) اختر تبويب غرفة الاجتماع\n' +
+                    '3) فعّل «مشاركة صوت التبويب / Share tab audio»\n\n' +
+                    'بدون ذلك سيُسجَّل صوتك فقط.'
+                );
+
+                // 1) الشاشة/التبويب إلزامي — ويفضّل مع صوت التبويب
                 var screenOk = false;
                 try {
                     screenOk = await attachLectureDisplayStream(true);
@@ -2222,7 +2368,7 @@
                     return;
                 }
 
-                // 2) الميكروفون
+                // 2) الميكروفون (صوت المضيف)
                 try {
                     micStream = await navigator.mediaDevices.getUserMedia({
                         audio: {
@@ -2281,6 +2427,7 @@
                     return;
                 }
 
+                var tabAudioOk = !!(lectureDisplayStream && lectureDisplayStream.getAudioTracks().length);
                 activeRecordingStream = new MediaStream([vidTracks[0], mixedAudio]);
                 lectureCompositeTick();
 
@@ -2362,7 +2509,12 @@
                 isRecording = true;
                 mxStartRecHeartbeat();
                 setRecordButtonState(true);
-                setRecordStatus('جاري تسجيل المحاضرة (فيديو الشاشة + الصوت). اختر تبويب الاجتماع في نافذة المشاركة إن طُلب منك مجدداً.', false);
+                setRecordStatus(
+                    tabAudioOk
+                        ? 'جاري التسجيل: فيديو التبويب + أصوات المشاركين + الميكروفون.'
+                        : 'جاري التسجيل بدون صوت التبويب — صوتك فقط. أوقف وأعد مع Share tab audio.',
+                    !tabAudioOk
+                );
                 setRecordButtonBusy(false);
             }
 
@@ -2537,10 +2689,24 @@
                 btnLectureAddScreen.addEventListener('click', function() {
                     if (!isRecording || recordingKind !== 'lecture') return;
                     setRecordButtonBusy(true);
+                    // أوقف المشاركة القديمة إن وُجدت حتى نطلب صوتاً جديداً
+                    if (lectureDisplayStream) {
+                        stopCaptureTracks(lectureDisplayStream);
+                        lectureDisplayStream = null;
+                        if (lectureDisplayVideo) {
+                            try {
+                                lectureDisplayVideo.pause();
+                                lectureDisplayVideo.srcObject = null;
+                            } catch (eClr) {}
+                        }
+                    }
                     attachLectureDisplayStream(false).then(function(ok) {
+                        if (ok) {
+                            try { mxReconnectLectureAudioSources(); } catch (eMix) {}
+                        }
                         setRecordButtonBusy(false);
                         if (!ok) {
-                            alert('تم الإلغاء أو لم يُسمح بمشاركة الشاشة.');
+                            alert('تم الإلغاء أو لم يُسمح بمشاركة الشاشة. لتسجيل أصوات المشاركين فعّل Share tab audio.');
                         }
                     }).catch(function() {
                         setRecordButtonBusy(false);
