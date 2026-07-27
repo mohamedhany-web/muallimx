@@ -70,6 +70,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'api/n8n/*',
             'api/live-recordings/register',
+            'api/classroom-recordings/register',
         ]);
         
         // تحديد لغة الموقع من ?lang= أو الجلسة (لجميع الصفحات)

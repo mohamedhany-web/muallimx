@@ -486,6 +486,10 @@ Route::middleware(['auth'])->prefix('2fa')->name('two-factor.')->group(function 
 Route::post('/api/live-recordings/register', [\App\Http\Controllers\Api\LiveRecordingWebhookController::class, 'register'])
     ->name('api.live-recordings.register');
 
+// ويب هوك تسجيل محاضرات Classroom بعد رفع Jibri إلى R2
+Route::post('/api/classroom-recordings/register', [\App\Http\Controllers\Api\ClassroomRecordingWebhookController::class, 'register'])
+    ->name('api.classroom-recordings.register');
+
 // Callback من n8n لتحديث تقرير الجلسة (يتطلب X-N8N-Token)
 Route::patch('/api/n8n/live-session-reports/{report}', [\App\Http\Controllers\Api\N8nLiveSessionReportController::class, 'update'])
     ->name('api.n8n.live-session-reports.update');
