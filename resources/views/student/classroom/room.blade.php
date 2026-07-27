@@ -2080,7 +2080,7 @@
                     lectureCtx.font = '600 22px sans-serif';
                     lectureCtx.textAlign = 'center';
                     lectureCtx.textBaseline = 'middle';
-                    lectureCtx.fillText('لا توجد شاشة — اضغط «+شاشة» واختر تبويب الاجتماع', w / 2, h / 2);
+                    lectureCtx.fillText('لا توجد شاشة — التسجيل الاحتياطي يحتاج مشاركة الشاشة', w / 2, h / 2);
                 }
                 lectureRafId = requestAnimationFrame(lectureCompositeTick);
             }
