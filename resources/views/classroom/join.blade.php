@@ -281,6 +281,8 @@
         let guestWbSync = null;
         let pendingGuestName = '';
         let guestAvPassed = false;
+        let guestLocalScreenSharing = false;
+        let guestLastPermFingerprint = '';
 
         function applyGuestWhiteboardAllowed(on) {
             guestWbAllowed = !!on;
@@ -337,15 +339,31 @@
                 }
             }
 
+            var fp = [
+                guestPerms.allow_participant_whiteboard,
+                guestPerms.allow_participant_screen_share,
+                guestPerms.allow_participant_chat,
+                guestPerms.allow_participant_raise_hand,
+                guestPerms.allow_participant_virtual_background,
+            ].join('|');
+
             if (api && typeof api.executeCommand === 'function') {
-                try {
-                    api.executeCommand('overwriteConfig', {
-                        toolbarButtons: buildGuestToolbarButtons(guestPerms),
-                        disableVirtualBackground: !guestPerms.allow_participant_virtual_background,
-                    });
-                } catch (eCfg) {}
-                if (!guestPerms.allow_participant_screen_share) {
-                    try { api.executeCommand('toggleShareScreen', false); } catch (eSs) {}
+                // حدّث شريط الأدوات فقط عند تغيّر الصلاحيات (تجنب أوامر متكررة كل heartbeat)
+                if (fp !== guestLastPermFingerprint) {
+                    guestLastPermFingerprint = fp;
+                    try {
+                        api.executeCommand('overwriteConfig', {
+                            toolbarButtons: buildGuestToolbarButtons(guestPerms),
+                            disableVirtualBackground: !guestPerms.allow_participant_virtual_background,
+                        });
+                    } catch (eCfg) {}
+                }
+                // مهم: لا تستدعِ toggleShareScreen لإيقاف الصلاحية — Jitsi يفتح نافذة «Choose what to share»
+                // أوقف الشير فقط إذا كان الطالب يشارك فعلياً ثم ألغى المعلم الإذن.
+                if (!guestPerms.allow_participant_screen_share && guestLocalScreenSharing) {
+                    try {
+                        api.executeCommand('toggleShareScreen');
+                    } catch (eSs) {}
                 }
             }
         }
@@ -909,6 +927,9 @@
             });
             api.addEventListener('screenSharingStatusChanged', function (e) {
                 var on = !!(e && (e.on === true || e.on === 'true'));
+                // حالة مشاركة الشاشة المحلية للطالب فقط — لا نستدعِ toggle هنا أبداً
+                // (toggleShareScreen يفتح نافذة المتصفح «Choose what to share»)
+                guestLocalScreenSharing = on;
                 try {
                     if (window.__mxNoiseUi && typeof window.__mxNoiseUi.onScreenShareChanged === 'function') {
                         window.__mxNoiseUi.onScreenShareChanged(on);
