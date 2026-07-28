@@ -154,8 +154,8 @@
           : 'fas fa-ear-listen text-slate-400';
       } else {
         icon.className = enabled
-          ? 'fas fa-ear-listen text-[#0065fd] text-sm'
-          : 'fas fa-ear-listen text-[#717171] text-sm';
+          ? 'fas fa-ear-listen text-[#0065fd]'
+          : 'fas fa-ear-listen text-[#717171]';
       }
     }
     btn.title = enabled

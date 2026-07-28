@@ -493,34 +493,41 @@
             @unless($academicObserverMode)
             {{-- أدوات Meet.Line الأساسية (تتحكم في Jitsi) --}}
             <button type="button" id="mx-ml-btn-mic" class="mx-ml-icon-btn" title="ميكروفون" aria-pressed="true">
-                <i class="fas fa-microphone-slash text-[#fd0000] text-sm" id="mx-ml-mic-icon"></i>
+                <i class="fas fa-microphone-slash text-[#fd0000]" id="mx-ml-mic-icon"></i>
             </button>
             <button type="button" id="mx-ml-btn-noise" class="mx-ml-icon-btn is-active" title="عزل الضوضاء: مفعّل (صوت نقي)" aria-pressed="true">
-                <i class="fas fa-ear-listen text-[#0065fd] text-sm"></i>
+                <i class="fas fa-ear-listen text-[#0065fd]"></i>
             </button>
             <button type="button" id="mx-ml-btn-cam" class="mx-ml-icon-btn" title="الكاميرا" aria-pressed="true">
-                <i class="fas fa-video-slash text-[#fd0000] text-sm" id="mx-ml-cam-icon"></i>
+                <i class="fas fa-video-slash text-[#fd0000]" id="mx-ml-cam-icon"></i>
             </button>
             <button type="button" id="mx-ml-btn-bg" class="mx-ml-icon-btn" title="خلفية الكاميرا (تمويه / صورة)" aria-expanded="false" aria-controls="mx-vbg-panel">
-                <i class="fas fa-image text-[#171717] text-sm"></i>
+                <i class="fas fa-image text-[#171717]"></i>
             </button>
             <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn" title="الوايت بورد / Artboard" aria-pressed="false">
-                <i class="fas fa-pen text-[#171717] text-sm"></i>
+                <i class="fas fa-pen text-[#171717]"></i>
             </button>
             <button type="button" id="mx-ml-btn-react" class="mx-ml-icon-btn" title="رفع اليد / تفاعل">
-                <i class="fas fa-hand-paper text-[#171717] text-sm"></i>
+                <i class="fas fa-hand-paper text-[#171717]"></i>
             </button>
-            <button type="button" id="mx-ml-btn-share" class="mx-ml-icon-btn" title="مشاركة الشاشة">
-                <i class="fas fa-desktop text-[#171717] text-sm"></i>
+
+            <span class="mx-ml-dock-sep" aria-hidden="true"></span>
+
+            <button type="button" id="mx-ml-btn-share" class="mx-ml-icon-btn" title="مشاركة الشاشة فقط — بدون تسجيل" aria-pressed="false">
+                <i class="fas fa-desktop text-[#171717]" id="mx-ml-share-icon"></i>
             </button>
+            <p class="mx-ml-action-hint" id="mx-ml-share-hint">شير = عرض فقط<br>بدون حفظ تسجيل</p>
+
+            <span class="mx-ml-dock-sep" aria-hidden="true"></span>
+
             <button type="button" id="mx-ml-btn-pip" class="mx-ml-icon-btn" title="نافذة المشاركين العائمة (مثل Zoom)" aria-pressed="false">
-                <i class="fas fa-window-restore text-[#171717] text-sm"></i>
+                <i class="fas fa-window-restore text-[#171717]"></i>
             </button>
             <button type="button" id="mx-ml-btn-tile" class="mx-ml-icon-btn" title="عرض الشبكة (Tile)">
-                <i class="fas fa-th-large text-[#171717] text-sm"></i>
+                <i class="fas fa-th-large text-[#171717]"></i>
             </button>
             <button type="button" id="mx-ml-btn-focus" class="mx-ml-icon-btn" title="وضع التركيز (إخفاء الشريط الثانوي)">
-                <i class="fas fa-compress text-[#171717] text-sm"></i>
+                <i class="fas fa-compress text-[#171717]"></i>
             </button>
             <label class="classroom-room-toolbar-btn cursor-pointer select-none max-w-[11rem]"
                    title="اتاحة كتابة الطلاب على الوايت بورد">
@@ -529,25 +536,34 @@
                 <span class="font-medium truncate text-[11px]"><span class="hidden sm:inline">كتابة الطلاب</span><span class="sm:hidden">طلاب</span></span>
             </label>
             <div class="relative inline-flex items-center gap-1" id="mx-record-dd-wrap">
-                <div id="mx-record-idle-wrap" class="inline-flex items-center overflow-hidden rounded-[8px] border border-[#e9e9e9] bg-white">
-                    <button type="button" id="btn-record-menu" class="classroom-room-toolbar-btn border-0 rounded-none" title="تسجيل" aria-expanded="false" aria-haspopup="true">
-                        <i class="fas fa-circle-dot text-[#fd0000] text-[10px]" id="record-icon-idle"></i>
-                        <span id="record-label-idle" class="truncate max-w-[6rem]">تسجيل</span>
+                <div id="mx-record-idle-wrap" class="inline-flex items-center overflow-hidden rounded-[12px] border border-[#e9e9e9] bg-white">
+                    <button type="button" id="btn-record-menu" class="classroom-room-toolbar-btn border-0 rounded-none" title="تسجيل الجلسة تلقائياً — بدون شير سكرين" aria-expanded="false" aria-haspopup="true">
+                        <i class="fas fa-circle-dot text-[#fd0000] text-[12px]" id="record-icon-idle"></i>
+                        <span id="record-label-idle" class="truncate max-w-[7.5rem]">تسجيل الجلسة</span>
                         <i class="fas fa-chevron-down text-[9px] text-[#717171]" id="record-dd-chevron"></i>
                     </button>
                 </div>
                 <button type="button" id="btn-record-stop" class="hidden classroom-room-toolbar-btn bg-[#fd0000] text-white border-[#c50000]" title="إيقاف التسجيل">
-                    <i class="fas fa-stop text-[10px]" id="record-icon-active"></i>
+                    <i class="fas fa-stop text-[12px]" id="record-icon-active"></i>
                     <span id="record-label-active">إيقاف</span>
                 </button>
                 <button type="button" id="btn-lecture-add-screen" class="hidden classroom-room-toolbar-btn" title="إضافة شاشة للتسجيل (احتياطي)">
-                    <i class="fas fa-desktop text-[10px] text-[#0065fd]"></i>
+                    <i class="fas fa-desktop text-[12px] text-[#0065fd]"></i>
                     <span class="hidden sm:inline">+شاشة</span>
                 </button>
-                <div id="mx-record-dd-panel" class="hidden w-[min(100vw-1.5rem,18.5rem)] max-w-[calc(100vw-1rem)] rounded-lg border border-[#e9e9e9] bg-white overflow-hidden" role="menu">
-                    <p class="px-2.5 py-1.5 text-[10px] leading-snug text-[#717171] border-b border-[#e9e9e9] m-0">المحاضرة: تسجيل تلقائي لصورة الاجتماع وأصوات الجميع بضغطة واحدة التقرير: صوت الميكروفون فقط.</p>
-                    <button type="button" role="menuitem" data-mx-rec-mode="lecture" class="w-full text-right px-2.5 py-2 text-xs text-[#171717] hover:bg-[#eef5ff] border-0 border-b border-[#e9e9e9] bg-transparent cursor-pointer">تسجيل المحاضرة (تلقائي — الجميع)</button>
-                    <button type="button" role="menuitem" data-mx-rec-mode="report" class="w-full text-right px-2.5 py-2 text-xs text-[#171717] hover:bg-[#eef5ff] border-0 bg-transparent cursor-pointer">إنشاء تقرير صوتي</button>
+                <div id="mx-record-dd-panel" class="hidden w-[min(100vw-1.5rem,20rem)] max-w-[calc(100vw-1rem)] rounded-xl border border-[#e9e9e9] bg-white overflow-hidden" role="menu">
+                    <div class="mx-ml-record-menu-head">
+                        <strong>ماذا تريد؟</strong>
+                        <p>لتسجيل الجلسة اضغط «تسجيل» — بدون شير.<br>لعرض شاشتك فقط بدون حفظ اضغط زر الشير.</p>
+                    </div>
+                    <button type="button" role="menuitem" data-mx-rec-mode="lecture" class="mx-ml-record-menu-item">
+                        <span class="mx-ml-rec-title">تسجيل الجلسة (تلقائي)</span>
+                        <span class="mx-ml-rec-desc">يحفظ فيديو الاجتماع + أصوات الجميع — بدون مشاركة شاشة</span>
+                    </button>
+                    <button type="button" role="menuitem" data-mx-rec-mode="report" class="mx-ml-record-menu-item">
+                        <span class="mx-ml-rec-title">تقرير صوتي فقط</span>
+                        <span class="mx-ml-rec-desc">يسجّل صوت الميكروفون للتقرير — بدون فيديو</span>
+                    </button>
                 </div>
             </div>
             @if(!empty($subscriptionFeatureMenuItems))
@@ -596,10 +612,10 @@
 
         <div class="mx-ml-dock-right">
             <button type="button" id="mx-ml-btn-participants" class="mx-ml-icon-btn" title="المشاركون">
-                <i class="fas fa-users text-[#717171] text-sm"></i>
+                <i class="fas fa-users text-[#717171]"></i>
             </button>
             <button type="button" id="mx-ml-btn-chat" class="mx-ml-icon-btn" title="الدردشة">
-                <i class="fas fa-comment text-[#717171] text-sm"></i>
+                <i class="fas fa-comment text-[#717171]"></i>
             </button>
         </div>
     </div>
@@ -1363,7 +1379,7 @@
                     }
                 } else {
                     if (recordIconIdle) recordIconIdle.className = 'fas fa-circle-dot text-[#fd0000]';
-                    if (recordLabelIdle) recordLabelIdle.textContent = 'تسجيل';
+                    if (recordLabelIdle) recordLabelIdle.textContent = 'تسجيل الجلسة';
                 }
             }
 
@@ -2554,7 +2570,7 @@
                     isRecording = true;
                     setRecordButtonState(true);
                     setRecordStatus('جاري التسجيل التلقائي: فيديو الاجتماع + أصوات الجميع.', false);
-                    if (typeof mxToast === 'function') mxToast('التسجيل التلقائي يعمل — لا حاجة لمشاركة تبويب');
+                    if (typeof mxToast === 'function') mxToast('تسجيل الجلسة يعمل تلقائياً — الشير منفصل ولا يُسجَّل');
                     setRecordButtonBusy(false);
                     return;
                 }
@@ -3117,8 +3133,12 @@
                     });
                     api.addEventListener('screenSharingStatusChanged', function(e) {
                         var on = !!(e && (e.on === true || e.on === 'true'));
+                        try { mxSetShareUi(on); } catch (eShareUi) {}
                         if (on) {
                             try { mxOpenParticipantsPip({ reason: 'share' }); } catch (errPip) {}
+                            if (typeof mxToast === 'function') {
+                                mxToast('مشاركة شاشة للعرض فقط — التسجيل من زر «تسجيل الجلسة»');
+                            }
                         }
                     });
                 } catch (e) {
@@ -3150,8 +3170,8 @@
                 if (btn) btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
                 if (ic) {
                     ic.className = muted
-                        ? 'fas fa-microphone-slash text-[#fd0000] text-sm'
-                        : 'fas fa-microphone text-[#0065fd] text-sm';
+                        ? 'fas fa-microphone-slash text-[#fd0000]'
+                        : 'fas fa-microphone text-[#0065fd]';
                 }
                 if (btn) btn.classList.toggle('is-active', !muted);
             }
@@ -3161,10 +3181,32 @@
                 if (btn) btn.setAttribute('aria-pressed', muted ? 'true' : 'false');
                 if (ic) {
                     ic.className = muted
-                        ? 'fas fa-video-slash text-[#fd0000] text-sm'
-                        : 'fas fa-video text-[#0065fd] text-sm';
+                        ? 'fas fa-video-slash text-[#fd0000]'
+                        : 'fas fa-video text-[#0065fd]';
                 }
                 if (btn) btn.classList.toggle('is-active', !muted);
+            }
+            function mxSetShareUi(on) {
+                var btn = document.getElementById('mx-ml-btn-share');
+                var ic = document.getElementById('mx-ml-share-icon');
+                var hint = document.getElementById('mx-ml-share-hint');
+                if (btn) {
+                    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+                    btn.classList.toggle('is-active', !!on);
+                    btn.title = on
+                        ? 'إيقاف مشاركة الشاشة (عرض فقط — بدون تسجيل)'
+                        : 'مشاركة الشاشة فقط — بدون تسجيل';
+                }
+                if (ic) {
+                    ic.className = on
+                        ? 'fas fa-desktop text-[#0065fd]'
+                        : 'fas fa-desktop text-[#171717]';
+                }
+                if (hint) {
+                    hint.innerHTML = on
+                        ? 'جارٍ الشير الآن<br>بدون تسجيل تلقائي'
+                        : 'شير = عرض فقط<br>بدون حفظ تسجيل';
+                }
             }
             function mxSyncMediaButtonState() {
                 var j = window.__mxClassroomJitsiApi || api;
@@ -3492,7 +3534,7 @@
                 })();
                 if (btnShare) btnShare.addEventListener('click', function() {
                     mxJitsiCmd('toggleShareScreen');
-                    mxToast('مشاركة الشاشة…');
+                    mxToast('شير سكرين = عرض للمشاركين فقط (بدون تسجيل)');
                 });
                 if (btnReact) btnReact.addEventListener('click', function() {
                     if (mxJitsiCmd('toggleRaiseHand')) mxToast('تم تبديل رفع اليد');

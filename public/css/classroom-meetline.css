@@ -224,34 +224,137 @@ body.mx-meetline {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  border-radius: var(--ml-radius-sm);
+  border-radius: 12px;
   border: 1px solid var(--ml-stroke);
-  background: var(--ml-bg-50);
+  background: #ffffff;
   color: var(--ml-text);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
   flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(23, 23, 23, 0.04);
 }
 
 .mx-ml-icon-btn:hover {
   background: var(--ml-primary-50);
   border-color: var(--ml-primary-400);
   color: var(--ml-primary);
+  box-shadow: 0 2px 8px rgba(0, 101, 253, 0.12);
+  transform: translateY(-1px);
+}
+
+.mx-ml-icon-btn:active {
+  transform: translateY(0);
 }
 
 .mx-ml-icon-btn.is-active {
   background: var(--ml-primary-50);
   border-color: var(--ml-stroke-primary);
   color: var(--ml-primary);
+  box-shadow: 0 0 0 2px rgba(0, 101, 253, 0.12);
+}
+
+.mx-ml-icon-btn.is-danger,
+.mx-ml-icon-btn[aria-pressed="true"]#mx-ml-btn-mic,
+.mx-ml-icon-btn[aria-pressed="true"]#mx-ml-btn-cam {
+  border-color: rgba(253, 0, 0, 0.28);
+  background: #fff5f5;
+}
+
+.mx-ml-icon-btn i {
+  font-size: 17px;
+  line-height: 1;
+  width: 1.1em;
+  text-align: center;
 }
 
 .mx-ml-icon-btn img {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   display: block;
+}
+
+/* فاصل بصري خفيف بين مجموعات الأدوات */
+.mx-ml-dock-sep {
+  width: 1px;
+  height: 28px;
+  background: var(--ml-stroke);
+  margin: 0 4px;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.mx-ml-action-hint {
+  display: none;
+  max-width: 11rem;
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--ml-text-secondary, #717171);
+  text-align: right;
+  margin: 0;
+  padding: 0 4px;
+}
+
+@media (min-width: 900px) {
+  .mx-ml-action-hint {
+    display: block;
+  }
+}
+
+.mx-ml-record-menu-head {
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--ml-stroke);
+  background: #f8fafc;
+}
+
+.mx-ml-record-menu-head strong {
+  display: block;
+  font-size: 12px;
+  color: var(--ml-text);
+  margin: 0 0 4px;
+}
+
+.mx-ml-record-menu-head p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.45;
+  color: #717171;
+}
+
+.mx-ml-record-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  width: 100%;
+  text-align: right;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--ml-stroke);
+  background: transparent;
+  cursor: pointer;
+  color: #171717;
+}
+
+.mx-ml-record-menu-item:last-child {
+  border-bottom: 0;
+}
+
+.mx-ml-record-menu-item:hover {
+  background: #eef5ff;
+}
+
+.mx-ml-record-menu-item .mx-ml-rec-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mx-ml-record-menu-item .mx-ml-rec-desc {
+  font-size: 10px;
+  color: #717171;
+  line-height: 1.4;
 }
 
 .mx-ml-artboard-body {
@@ -277,10 +380,10 @@ body.mx-meetline {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   flex-shrink: 0;
   flex-wrap: wrap;
-  padding: 8px 10px;
+  padding: 10px 12px;
   direction: ltr;
   border-radius: var(--ml-radius);
   background: var(--ml-bg-50);
@@ -325,11 +428,11 @@ body.mx-meetline.mx-ml-focus #mx-ml-btn-focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
   flex: 1 1 auto;
-  padding: 4px 6px;
-  border-radius: var(--ml-radius-sm);
+  padding: 6px 8px;
+  border-radius: 12px;
   background: var(--ml-bg-100);
   border: 1px solid transparent;
 }
@@ -380,12 +483,14 @@ body.mx-meetline.mx-ml-focus #mx-ml-btn-focus {
 
 /* Restyle existing toolbar buttons inside Meet.Line dock */
 body.mx-meetline .classroom-room-toolbar-btn {
-  border-radius: var(--ml-radius-sm);
+  border-radius: 12px;
   border: 1px solid var(--ml-stroke);
-  background: var(--ml-bg-50);
+  background: #ffffff;
   color: var(--ml-text);
   font-size: 12px;
-  padding: 8px 10px;
+  padding: 10px 12px;
+  min-height: 44px;
+  box-shadow: 0 1px 2px rgba(23, 23, 23, 0.04);
 }
 
 body.mx-meetline .classroom-room-toolbar-btn:hover {
