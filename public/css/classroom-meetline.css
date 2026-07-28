@@ -792,6 +792,98 @@ body.mx-meetline #mx-ml-btn-pip.is-active {
   border-color: var(--ml-stroke-primary);
 }
 
+/* —— Zoom-like floating share control bar —— */
+#mx-share-float {
+  position: fixed;
+  z-index: 260;
+  display: none !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: rgba(23, 23, 23, 0.94);
+  border: 1px solid #404040;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 101, 253, 0.15);
+  color: #fdfdfd;
+  max-width: calc(100vw - 16px);
+  touch-action: none;
+  user-select: none;
+}
+#mx-share-float.is-open { display: flex !important; }
+#mx-share-float.is-dragging { opacity: 0.95; cursor: grabbing; }
+#mx-share-float .mx-sf-handle {
+  cursor: grab;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px 0 2px;
+  color: #a3a3a3;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+#mx-share-float .mx-sf-handle i { color: #737373; }
+#mx-share-float .mx-sf-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #525252;
+  background: #292929;
+  color: #fdfdfd;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s, transform .1s;
+}
+#mx-share-float .mx-sf-btn:hover {
+  background: #0065fd;
+  border-color: #0065fd;
+}
+#mx-share-float .mx-sf-btn:active { transform: scale(0.96); }
+#mx-share-float .mx-sf-btn.is-active {
+  background: rgba(0, 101, 253, 0.35);
+  border-color: #0065fd;
+}
+#mx-share-float .mx-sf-btn.is-danger,
+#mx-share-float .mx-sf-btn[aria-pressed="true"]#mx-sf-mic,
+#mx-share-float .mx-sf-btn[aria-pressed="true"]#mx-sf-cam {
+  background: rgba(253, 0, 0, 0.2);
+  border-color: #fd0000;
+}
+#mx-share-float .mx-sf-btn--stop {
+  background: #7f1d1d;
+  border-color: #fd0000;
+  width: auto;
+  padding: 0 12px;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+#mx-share-float .mx-sf-btn--stop:hover { background: #fd0000; }
+#mx-share-float .mx-sf-sep {
+  width: 1px;
+  height: 28px;
+  background: #404040;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+body.mx-sharing .mx-ml-dock {
+  opacity: 0.55;
+}
+body.mx-sharing .mx-ml-dock:hover,
+body.mx-sharing .mx-ml-dock:focus-within {
+  opacity: 1;
+}
+@media (max-width: 640px) {
+  #mx-share-float .mx-sf-handle span { display: none; }
+  #mx-share-float .mx-sf-btn--stop span { display: none; }
+  #mx-share-float .mx-sf-btn { width: 40px; height: 40px; }
+}
+
 /* Virtual background picker */
 #mx-vbg-panel {
   position: fixed;

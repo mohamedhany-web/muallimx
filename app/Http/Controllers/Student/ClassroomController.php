@@ -478,18 +478,43 @@ class ClassroomController extends Controller
         }
 
         $validated = $request->validate([
-            'allow' => ['required', 'boolean'],
+            'allow' => ['sometimes', 'boolean'],
+            'allow_participant_whiteboard' => ['sometimes', 'boolean'],
+            'allow_participant_screen_share' => ['sometimes', 'boolean'],
+            'allow_participant_chat' => ['sometimes', 'boolean'],
+            'allow_participant_raise_hand' => ['sometimes', 'boolean'],
+            'allow_participant_virtual_background' => ['sometimes', 'boolean'],
         ]);
 
-        $settings = $meeting->settings ?? [];
-        $settings['allow_participant_whiteboard'] = $validated['allow'];
+        $settings = is_array($meeting->settings) ? $meeting->settings : [];
+        $map = [
+            'allow_participant_whiteboard' => $validated['allow_participant_whiteboard']
+                ?? ($validated['allow'] ?? null),
+            'allow_participant_screen_share' => $validated['allow_participant_screen_share'] ?? null,
+            'allow_participant_chat' => $validated['allow_participant_chat'] ?? null,
+            'allow_participant_raise_hand' => $validated['allow_participant_raise_hand'] ?? null,
+            'allow_participant_virtual_background' => $validated['allow_participant_virtual_background'] ?? null,
+        ];
+
+        $changed = false;
+        foreach ($map as $key => $value) {
+            if ($value === null) {
+                continue;
+            }
+            $settings[$key] = (bool) $value;
+            $changed = true;
+        }
+
+        if (! $changed) {
+            return response()->json(['message' => 'لم يُرسل أي صلاحية للتحديث.'], 422);
+        }
+
         $meeting->update(['settings' => $settings]);
         $meeting->refresh();
 
-        return response()->json([
+        return response()->json(array_merge([
             'ok' => true,
-            'allow_participant_whiteboard' => $meeting->allowsParticipantWhiteboard(),
-        ]);
+        ], $meeting->guestPermissionsPayload()));
     }
 
     public function shareAnnotations(ClassroomMeeting $meeting)

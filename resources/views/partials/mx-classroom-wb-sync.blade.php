@@ -1,6 +1,7 @@
 {{--
   مزامنة مشهد Excalidraw لغرفة Classroom (معلم ↔ طلاب).
   الاستخدام: استدعاء window.MxClassroomWbSync.attach({...}) بعد توفر الـ API.
+  يدعم استطلاع أبطأ عند إغلاق اللوح (idlePollMs) لتقليل الحمل.
 --}}
 <script>
 (function () {
@@ -24,8 +25,10 @@
             var getExtraBody = typeof opts.getExtraBody === 'function' ? opts.getExtraBody : function () { return {}; };
             var canWrite = typeof opts.canWrite === 'function' ? opts.canWrite : function () { return true; };
             var pollMs = opts.pollMs || 1600;
+            var idlePollMs = opts.idlePollMs || 8000;
             var pushDebounceMs = opts.pushDebounceMs || 700;
             var onDenied = typeof opts.onDenied === 'function' ? opts.onDenied : null;
+            var isActiveFn = typeof opts.isActive === 'function' ? opts.isActive : null;
 
             var localVersion = 0;
             var lastAppliedFp = '';
@@ -34,6 +37,7 @@
             var pushTimer = null;
             var pollTimer = null;
             var stopped = false;
+            var panelActive = true;
 
             function headers() {
                 return {
@@ -42,6 +46,17 @@
                     'X-CSRF-TOKEN': csrfToken,
                     'X-Requested-With': 'XMLHttpRequest'
                 };
+            }
+
+            function currentlyActive() {
+                if (isActiveFn) {
+                    try { return !!isActiveFn(); } catch (e) { return panelActive; }
+                }
+                return panelActive;
+            }
+
+            function currentPollMs() {
+                return currentlyActive() ? pollMs : idlePollMs;
             }
 
             function applyRemote(elements, version) {
@@ -131,17 +146,45 @@
                 schedulePush();
             }
 
+            function clearPollTimer() {
+                if (pollTimer) {
+                    clearTimeout(pollTimer);
+                    pollTimer = null;
+                }
+            }
+
+            function scheduleNextPull() {
+                if (stopped) return;
+                clearPollTimer();
+                pollTimer = setTimeout(function () {
+                    pollTimer = null;
+                    Promise.resolve(pull()).finally(function () {
+                        scheduleNextPull();
+                    });
+                }, currentPollMs());
+            }
+
             function start() {
                 stopped = false;
+                panelActive = true;
                 pull();
-                if (pollTimer) clearInterval(pollTimer);
-                pollTimer = setInterval(pull, pollMs);
+                scheduleNextPull();
             }
 
             function stop() {
                 stopped = true;
-                if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+                clearPollTimer();
                 if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }
+            }
+
+            /** عند فتح/إغلاق اللوح: نشط = استطلاع سريع، خامل = أبطأ لتوفير الأداء */
+            function setActive(active) {
+                panelActive = !!active;
+                if (stopped) return;
+                if (panelActive) {
+                    pull();
+                }
+                scheduleNextPull();
             }
 
             return {
@@ -151,6 +194,8 @@
                 pushNow: pushNow,
                 schedulePush: schedulePush,
                 onLocalChange: onLocalChange,
+                setActive: setActive,
+                isActive: currentlyActive,
                 getLocalVersion: function () { return localVersion; },
                 setLocalVersion: function (v) { localVersion = Math.max(0, parseInt(v || 0, 10) || 0); }
             };

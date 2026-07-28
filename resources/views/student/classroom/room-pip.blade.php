@@ -139,7 +139,7 @@
                 startWithAudioMuted: true,
                 startWithVideoMuted: true,
                 startSilent: true,
-                iAmRecorder: true,
+                // لا تستخدم iAmRecorder — الانضمام الثانوي كان يقطع سماع أصوات الطلاب عند المضيف
                 toolbarButtons: [],
                 disableFocusIndicator: true,
                 hideConferenceTimer: true,

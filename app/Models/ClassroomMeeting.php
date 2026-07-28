@@ -87,6 +87,38 @@ class ClassroomMeeting extends Model
         return (bool) data_get($this->settings, 'allow_participant_whiteboard', false);
     }
 
+    public function allowsParticipantScreenShare(): bool
+    {
+        return (bool) data_get($this->settings, 'allow_participant_screen_share', false);
+    }
+
+    public function allowsParticipantChat(): bool
+    {
+        return (bool) data_get($this->settings, 'allow_participant_chat', true);
+    }
+
+    public function allowsParticipantRaiseHand(): bool
+    {
+        return (bool) data_get($this->settings, 'allow_participant_raise_hand', true);
+    }
+
+    public function allowsParticipantVirtualBackground(): bool
+    {
+        return (bool) data_get($this->settings, 'allow_participant_virtual_background', true);
+    }
+
+    /** صلاحيات الضيف كما يراها العميل (enter/heartbeat). */
+    public function guestPermissionsPayload(): array
+    {
+        return [
+            'allow_participant_whiteboard' => $this->allowsParticipantWhiteboard(),
+            'allow_participant_screen_share' => $this->allowsParticipantScreenShare(),
+            'allow_participant_chat' => $this->allowsParticipantChat(),
+            'allow_participant_raise_hand' => $this->allowsParticipantRaiseHand(),
+            'allow_participant_virtual_background' => $this->allowsParticipantVirtualBackground(),
+        ];
+    }
+
     public static function generateCode(): string
     {
         do {

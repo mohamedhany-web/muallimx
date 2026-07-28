@@ -236,13 +236,12 @@ class ClassroomJoinController extends Controller
             $meeting->update(['participants_peak' => $newCount]);
         }
 
-        return response()->json([
+        return response()->json(array_merge([
             'ok' => true,
             'token' => $token,
             'active_participants' => $newCount,
             'max_participants' => $maxParticipants,
-            'allow_participant_whiteboard' => $meeting->allowsParticipantWhiteboard(),
-        ]);
+        ], $meeting->guestPermissionsPayload()));
     }
 
     public function heartbeat(Request $request, string $code)
@@ -281,12 +280,11 @@ class ClassroomJoinController extends Controller
             ], 422);
         }
 
-        return response()->json([
+        return response()->json(array_merge([
             'ok' => true,
             'active_participants' => $this->activeParticipantsCount($meeting->id),
             'max_participants' => (int) ($meeting->max_participants ?: 25),
-            'allow_participant_whiteboard' => $meeting->allowsParticipantWhiteboard(),
-        ]);
+        ], $meeting->guestPermissionsPayload()));
     }
 
     public function leave(Request $request, string $code)

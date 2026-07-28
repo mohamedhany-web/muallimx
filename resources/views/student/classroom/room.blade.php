@@ -18,6 +18,8 @@
         $mxNoiseJs = is_readable($mxNoiseJsFile) ? file_get_contents($mxNoiseJsFile) : '';
         $mxWbToolsJsFile = public_path('js/classroom-wb-tools.js');
         $mxWbToolsJs = is_readable($mxWbToolsJsFile) ? file_get_contents($mxWbToolsJsFile) : '';
+        $mxShareCtrlJsFile = public_path('js/classroom-share-controls.js');
+        $mxShareCtrlJs = is_readable($mxShareCtrlJsFile) ? file_get_contents($mxShareCtrlJsFile) : '';
     @endphp
     @if($mxVbgJs !== '')
     <script id="mx-classroom-vbg-js">{!! $mxVbgJs !!}</script>
@@ -27,6 +29,9 @@
     @endif
     @if($mxWbToolsJs !== '')
     <script id="mx-classroom-wb-tools-js">{!! $mxWbToolsJs !!}</script>
+    @endif
+    @if($mxShareCtrlJs !== '')
+    <script id="mx-classroom-share-controls-js">{!! $mxShareCtrlJs !!}</script>
     @endif
     {{-- Inline Meet.Line CSS: production returns 404 for /css/*.css static files; inlining guarantees styles load --}}
     @php
@@ -413,22 +418,17 @@
             <div class="w-14 h-14 mx-auto rounded-2xl bg-[#eef5ff] text-[#0065fd] flex items-center justify-center mb-4">
                 <i class="fas fa-microphone-lines text-xl"></i>
             </div>
-            <h2 class="text-xl sm:text-2xl font-bold text-[#171717] mb-2">السماح بالميكروفون والكاميرا</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-[#171717] mb-2">فحص الميكروفون والكاميرا إلزامي</h2>
             <p class="text-[#717171] text-sm leading-7 mb-5">
-                قبل دخول الاجتماع، اضغط على الزر التالي للسماح بالوصول إلى
-                <strong class="text-[#171717]">الميكروفون والكاميرا</strong>.
-                هذا يساعد في حل مشكلة الأجهزة التي لا يظهر فيها طلب الإذن تلقائياً.
+                لا يمكن دخول الغرفة قبل تفعيل
+                <strong class="text-[#171717]">الميكروفون والكاميرا</strong>
+                من المتصفح. إن رُفض الإذن أو تعذّر الجهاز، أصلح الإعدادات ثم أعد المحاولة — لا يوجد تجاوز.
             </p>
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
                 <button type="button" id="btn-request-media"
                         class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#0065fd] hover:bg-[#005bc5] text-white font-semibold transition-colors">
                     <i class="fas fa-shield-check"></i>
-                    طلب الأذونات والدخول
-                </button>
-                <button type="button" id="btn-join-without-media"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-[#eef5ff] text-[#171717] font-semibold transition-colors border border-[#e9e9e9]">
-                    <i class="fas fa-arrow-left"></i>
-                    دخول بدون تفعيل الأجهزة
+                    تفعيل الأجهزة والدخول
                 </button>
             </div>
             <p id="permission-help" class="mt-4 text-xs text-[#717171]"></p>
@@ -535,12 +535,39 @@
             <button type="button" id="mx-ml-btn-focus" class="mx-ml-icon-btn" title="وضع التركيز (إخفاء الشريط الثانوي)">
                 <i class="fas fa-compress text-[#171717]"></i>
             </button>
-            <label class="classroom-room-toolbar-btn cursor-pointer select-none max-w-[11rem]"
-                   title="السماح للطلاب بالكتابة على السبورة المشتركة (نفس لوح المعلم)">
-                <input type="checkbox" id="mx-classroom-toggle-guest-wb" class="rounded border-[#e9e9e9] text-[#0065fd] focus:ring-[#0065fd] shrink-0 scale-90"
-                       {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}>
-                <span class="font-medium truncate text-[11px]"><span class="hidden sm:inline">كتابة الطلاب</span><span class="sm:hidden">طلاب</span></span>
-            </label>
+            <div class="relative inline-flex" id="mx-guest-perms-wrap">
+                <button type="button" id="mx-guest-perms-btn" class="classroom-room-toolbar-btn" title="صلاحيات الطلاب أثناء الاجتماع" aria-expanded="false" aria-haspopup="true" aria-controls="mx-guest-perms-panel">
+                    <i class="fas fa-user-shield text-[12px] text-[#0065fd]"></i>
+                    <span class="truncate max-w-[6.5rem] text-[11px] font-medium"><span class="hidden sm:inline">صلاحيات الطلاب</span><span class="sm:hidden">صلاحيات</span></span>
+                    <i class="fas fa-chevron-down text-[9px] text-[#717171]" id="mx-guest-perms-chevron"></i>
+                </button>
+                <div id="mx-guest-perms-panel" class="hidden absolute bottom-full mb-2 end-0 z-40 w-[17.5rem] rounded-xl border border-[#e9e9e9] bg-white shadow-xl p-3 text-start" role="menu" dir="rtl">
+                    <p class="text-[11px] font-bold text-[#171717] mb-2">ما يُسمح للطلاب أثناء الجلسة</p>
+                    <div class="space-y-2 text-[12px] text-[#171717]">
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" id="mx-perm-whiteboard" class="rounded border-[#e9e9e9] text-[#0065fd] focus:ring-[#0065fd]" data-perm-key="allow_participant_whiteboard" {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}>
+                            <span>كتابة على السبورة</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" id="mx-perm-screen" class="rounded border-[#e9e9e9] text-[#0065fd] focus:ring-[#0065fd]" data-perm-key="allow_participant_screen_share" {{ $meeting->allowsParticipantScreenShare() ? 'checked' : '' }}>
+                            <span>مشاركة الشاشة</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" id="mx-perm-chat" class="rounded border-[#e9e9e9] text-[#0065fd] focus:ring-[#0065fd]" data-perm-key="allow_participant_chat" {{ $meeting->allowsParticipantChat() ? 'checked' : '' }}>
+                            <span>الدردشة</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" id="mx-perm-raise" class="rounded border-[#e9e9e9] text-[#0065fd] focus:ring-[#0065fd]" data-perm-key="allow_participant_raise_hand" {{ $meeting->allowsParticipantRaiseHand() ? 'checked' : '' }}>
+                            <span>رفع اليد</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" id="mx-perm-vbg" class="rounded border-[#e9e9e9] text-[#0065fd] focus:ring-[#0065fd]" data-perm-key="allow_participant_virtual_background" {{ $meeting->allowsParticipantVirtualBackground() ? 'checked' : '' }}>
+                            <span>خلفية الكاميرا</span>
+                        </label>
+                    </div>
+                    <p id="mx-guest-perms-hint" class="mt-2 text-[10px] text-[#717171]">التغيير يُطبَّق فوراً على الطلاب المتصلين قدر الإمكان.</p>
+                </div>
+            </div>
             <div class="relative inline-flex items-center gap-1" id="mx-record-dd-wrap">
                 <div id="mx-record-idle-wrap" class="inline-flex items-center overflow-hidden rounded-[12px] border border-[#e9e9e9] bg-white">
                     <button type="button" id="btn-record-menu" class="classroom-room-toolbar-btn border-0 rounded-none" title="تسجيل الجلسة تلقائياً — بدون شير سكرين" aria-expanded="false" aria-haspopup="true">
@@ -633,6 +660,38 @@
     <div id="wb-popup-backdrop" class="hidden"></div>
     <div id="wb-popup-panel" class="hidden"></div>
     <div id="wb-popup-toolbar" class="hidden"></div>
+
+    {{-- شريط تحكم عائم أثناء مشاركة الشاشة (مثل Zoom — قابل للسحب) --}}
+    <div id="mx-share-float" aria-hidden="true" role="toolbar" aria-label="تحكم مشاركة الشاشة">
+        <div class="mx-sf-handle" data-sf-handle title="اسحب الشريط لأي زاوية">
+            <i class="fas fa-grip-vertical"></i>
+            <span>مشاركة</span>
+        </div>
+        <button type="button" class="mx-sf-btn" id="mx-sf-mic" data-sf-action="mic" title="ميكروفون" aria-pressed="true">
+            <i class="fas fa-microphone-slash"></i>
+        </button>
+        <button type="button" class="mx-sf-btn is-active" id="mx-sf-noise" data-sf-action="noise" title="عزل الضوضاء" aria-pressed="true">
+            <i class="fas fa-ear-listen"></i>
+        </button>
+        <button type="button" class="mx-sf-btn" id="mx-sf-cam" data-sf-action="cam" title="كاميرا" aria-pressed="true">
+            <i class="fas fa-video-slash"></i>
+        </button>
+        <span class="mx-sf-sep" aria-hidden="true"></span>
+        <button type="button" class="mx-sf-btn mx-sf-btn--stop" id="mx-sf-share" data-sf-action="share" title="إيقاف مشاركة الشاشة">
+            <i class="fas fa-desktop"></i>
+            <span>إيقاف الشير</span>
+        </button>
+        <span class="mx-sf-sep" aria-hidden="true"></span>
+        <button type="button" class="mx-sf-btn" id="mx-sf-people" data-sf-action="people" title="المشاركون">
+            <i class="fas fa-users"></i>
+        </button>
+        <button type="button" class="mx-sf-btn" id="mx-sf-tile" data-sf-action="tile" title="عرض الشبكة">
+            <i class="fas fa-th-large"></i>
+        </button>
+        <button type="button" class="mx-sf-btn" id="mx-sf-wb" data-sf-action="wb" title="السبورة">
+            <i class="fas fa-pen"></i>
+        </button>
+    </div>
 
     {{-- نافذة مشاركين عائمة (Fallback داخل الصفحة إن لم يدعم المتصفح Document PiP) --}}
     <div id="mx-pip-float" aria-hidden="true">
@@ -773,34 +832,64 @@
             var whiteboardSceneGetUrl = '{{ route($rp . 'classroom.whiteboard-scene', $meeting) }}';
             var whiteboardScenePostUrl = '{{ route($rp . 'classroom.whiteboard-scene.push', $meeting) }}';
             var hostWbSync = null;
-            var mxClassroomGuestWbToggle = document.getElementById('mx-classroom-toggle-guest-wb');
-            var mxClassroomGuestWbSaving = false;
-            if (mxClassroomGuestWbToggle) {
-                mxClassroomGuestWbToggle.addEventListener('change', function () {
-                    if (mxClassroomGuestWbSaving) return;
-                    mxClassroomGuestWbSaving = true;
-                    var want = mxClassroomGuestWbToggle.checked;
-                    fetch(participantWbUrl, {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ allow: want }),
-                    }).then(function (r) {
-                        if (!r.ok) {
-                            mxClassroomGuestWbToggle.checked = !want;
-                            return;
-                        }
-                        if (want) {
-                            if (typeof mxToast === 'function') mxToast('تم إتاحة الكتابة للطلاب على الوايت بورد');
-                        } else if (typeof mxToast === 'function') {
-                            mxToast('تم إيقاف كتابة الطلاب');
-                        }
-                    }).catch(function () {
-                        mxClassroomGuestWbToggle.checked = !want;
-                    }).finally(function () {
-                        mxClassroomGuestWbSaving = false;
+            (function bindGuestPermissionsPanel() {
+                var wrap = document.getElementById('mx-guest-perms-wrap');
+                var btn = document.getElementById('mx-guest-perms-btn');
+                var panel = document.getElementById('mx-guest-perms-panel');
+                var chev = document.getElementById('mx-guest-perms-chevron');
+                if (!wrap || !btn || !panel) return;
+                function setOpen(open) {
+                    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    if (open) panel.classList.remove('hidden');
+                    else panel.classList.add('hidden');
+                    if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
+                }
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    setOpen(btn.getAttribute('aria-expanded') !== 'true');
+                });
+                document.addEventListener('click', function (e) {
+                    if (!wrap.contains(e.target)) setOpen(false);
+                });
+                var saving = false;
+                var inputs = panel.querySelectorAll('input[data-perm-key]');
+                inputs.forEach(function (inp) {
+                    inp.addEventListener('change', function () {
+                        if (saving) return;
+                        saving = true;
+                        var payload = {};
+                        var prev = {};
+                        inputs.forEach(function (el) {
+                            var k = el.getAttribute('data-perm-key');
+                            prev[k] = el === inp ? !inp.checked : el.checked;
+                            payload[k] = !!el.checked;
+                        });
+                        fetch(participantWbUrl, {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload),
+                        }).then(function (r) {
+                            if (!r.ok) {
+                                Object.keys(prev).forEach(function (k) {
+                                    var el = panel.querySelector('input[data-perm-key="' + k + '"]');
+                                    if (el) el.checked = !!prev[k];
+                                });
+                                if (typeof mxToast === 'function') mxToast('تعذر حفظ صلاحيات الطلاب');
+                                return;
+                            }
+                            if (typeof mxToast === 'function') mxToast('تم تحديث صلاحيات الطلاب');
+                        }).catch(function () {
+                            Object.keys(prev).forEach(function (k) {
+                                var el = panel.querySelector('input[data-perm-key="' + k + '"]');
+                                if (el) el.checked = !!prev[k];
+                            });
+                            if (typeof mxToast === 'function') mxToast('تعذر حفظ صلاحيات الطلاب');
+                        }).finally(function () {
+                            saving = false;
+                        });
                     });
                 });
-            }
+            })();
             var btnClassroomCopyJoin = document.getElementById('btn-classroom-copy-join');
             if (btnClassroomCopyJoin) {
                 btnClassroomCopyJoin.addEventListener('click', function () {
@@ -837,7 +926,6 @@
             var permissionGate = document.getElementById('permission-gate');
             var permissionHelp = document.getElementById('permission-help');
             var requestMediaBtn = document.getElementById('btn-request-media');
-            var joinWithoutMediaBtn = document.getElementById('btn-join-without-media');
             var api = null;
             var hasJoinedConference = false;
             var isRecording = false;
@@ -1148,7 +1236,13 @@
                                             getUrl: whiteboardSceneGetUrl,
                                             postUrl: whiteboardScenePostUrl,
                                             csrfToken: csrfToken,
-                                            canWrite: function() { return true; }
+                                            canWrite: function() { return true; },
+                                            pollMs: 1600,
+                                            idlePollMs: 8000,
+                                            isActive: function () {
+                                                var p = document.getElementById('mx-artboard-panel');
+                                                return !!(p && p.classList.contains('is-open'));
+                                            }
                                         });
                                     }
                                     if (hostWbSync) hostWbSync.start();
@@ -1261,7 +1355,10 @@
                     if (pen) pen.className = 'fas fa-pen text-[#0065fd] text-sm';
                 }
                 mountClassroomExcalidrawOnce().then(function() {
-                    if (hostWbSync) hostWbSync.start();
+                    if (hostWbSync) {
+                        if (typeof hostWbSync.setActive === 'function') hostWbSync.setActive(true);
+                        else hostWbSync.start();
+                    }
                     setTimeout(nudgeClassroomExLayout, 80);
                     setTimeout(nudgeClassroomExLayout, 400);
                 }).catch(function() {});
@@ -1272,6 +1369,9 @@
                 if (!artboardPanel || !artboardPanel.classList.contains('is-open')) return;
                 wbPopupClosing = true;
                 if (hostWbSync) hostWbSync.pushNow();
+                if (hostWbSync && typeof hostWbSync.setActive === 'function') {
+                    hostWbSync.setActive(false);
+                }
 
                 function detachWhiteboardFromMeetingUi() {
                     var ae = document.activeElement;
@@ -2971,17 +3071,12 @@
 
             async function requestMediaPermission() {
                 if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
-                    setPermissionHelp('المتصفح لا يدعم طلب الأذونات تلقائياً. سنحاول الدخول مباشرة.', true);
-                    hidePermissionGate();
-                    initJitsi();
+                    setPermissionHelp('المتصفح لا يدعم الوصول للأجهزة. استخدم متصفحاً حديثاً عبر HTTPS.', true);
                     return;
                 }
 
-                // على غير HTTPS قد يفشل طلب الإذن (عدا localhost)
                 if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-                    setPermissionHelp('المتصفح يشترط HTTPS لطلب إذن الميكروفون والكاميرا.', true);
-                    hidePermissionGate();
-                    initJitsi();
+                    setPermissionHelp('المتصفح يشترط HTTPS لطلب إذن الميكروفون والكاميرا. لا يمكن الدخول بدون ذلك.', true);
                     return;
                 }
 
@@ -2990,12 +3085,23 @@
                         requestMediaBtn.disabled = true;
                         requestMediaBtn.classList.add('opacity-70', 'cursor-not-allowed');
                     }
-                    setPermissionHelp('جاري طلب الإذن من المتصفح...', false);
+                    setPermissionHelp('جاري فحص الميكروفون والكاميرا...', false);
 
                     var stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                    var hasAudio = stream.getAudioTracks().some(function (t) { return t.readyState === 'live'; });
+                    var hasVideo = stream.getVideoTracks().some(function (t) { return t.readyState === 'live'; });
                     stream.getTracks().forEach(function(track) { track.stop(); });
 
-                    setPermissionHelp('تم منح الإذن بنجاح. جاري فتح الاجتماع...', false);
+                    if (!hasAudio || !hasVideo) {
+                        setPermissionHelp('يجب تفعيل الميكروفون والكاميرا معاً قبل الدخول. تحقق من الأجهزة ثم أعد المحاولة.', true);
+                        if (requestMediaBtn) {
+                            requestMediaBtn.disabled = false;
+                            requestMediaBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+                        }
+                        return;
+                    }
+
+                    setPermissionHelp('تم التحقق بنجاح. جاري فتح الاجتماع...', false);
                     hidePermissionGate();
                     initJitsi();
                 } catch (err) {
@@ -3159,11 +3265,39 @@
                     api.addEventListener('screenSharingStatusChanged', function(e) {
                         var on = !!(e && (e.on === true || e.on === 'true'));
                         try { mxSetShareUi(on); } catch (eShareUi) {}
-                        if (on) {
-                            try { mxOpenParticipantsPip({ reason: 'share' }); } catch (errPip) {}
-                            if (typeof mxToast === 'function') {
-                                mxToast('مشاركة شاشة للعرض فقط — التسجيل من زر «تسجيل الجلسة»');
+                        try {
+                            if (window.__mxNoiseUi && typeof window.__mxNoiseUi.onScreenShareChanged === 'function') {
+                                window.__mxNoiseUi.onScreenShareChanged(on);
+                            } else if (window.MxClassroomNoiseIsolation && typeof window.MxClassroomNoiseIsolation.reattachNoiseAfterTrackChange === 'function') {
+                                var wantNs = window.MxClassroomNoiseIsolation.readSavedEnabled
+                                    ? window.MxClassroomNoiseIsolation.readSavedEnabled()
+                                    : true;
+                                window.MxClassroomNoiseIsolation.reattachNoiseAfterTrackChange(
+                                    window.__mxClassroomJitsiApi || api,
+                                    wantNs
+                                );
                             }
+                        } catch (eNsShare) {}
+                        try {
+                            if (window.MxClassroomShareControls && typeof window.MxClassroomShareControls.preserveReceiveAudio === 'function') {
+                                window.MxClassroomShareControls.preserveReceiveAudio(window.__mxClassroomJitsiApi || api);
+                            }
+                        } catch (eAudio) {}
+                        // لا نفتح انضمام Jitsi ثانٍ أثناء الشير — ذلك كان يقطع سماع الطلاب
+                        if (on) {
+                            try {
+                                if (window.__mxShareFloatUi) {
+                                    window.__mxShareFloatUi.show();
+                                    window.__mxShareFloatUi.openControlsPip();
+                                }
+                            } catch (eFloat) {}
+                            if (typeof mxToast === 'function') {
+                                mxToast('شريط التحكم العائم جاهز — اسحبه لأي زاوية. لسماع الطلاب بوضوح استخدم سماعة رأس.');
+                            }
+                        } else {
+                            try {
+                                if (window.__mxShareFloatUi) window.__mxShareFloatUi.hide();
+                            } catch (eFloatOff) {}
                         }
                     });
                 } catch (e) {
@@ -3199,6 +3333,11 @@
                         : 'fas fa-microphone text-[#0065fd]';
                 }
                 if (btn) btn.classList.toggle('is-active', !muted);
+                try {
+                    if (window.__mxShareFloatUi && typeof window.__mxShareFloatUi.sync === 'function') {
+                        window.__mxShareFloatUi.sync();
+                    }
+                } catch (eSf) {}
             }
             function mxSetCamUi(muted) {
                 var btn = document.getElementById('mx-ml-btn-cam');
@@ -3210,6 +3349,11 @@
                         : 'fas fa-video text-[#0065fd]';
                 }
                 if (btn) btn.classList.toggle('is-active', !muted);
+                try {
+                    if (window.__mxShareFloatUi && typeof window.__mxShareFloatUi.sync === 'function') {
+                        window.__mxShareFloatUi.sync();
+                    }
+                } catch (eSf) {}
             }
             function mxSetShareUi(on) {
                 var btn = document.getElementById('mx-ml-btn-share');
@@ -3229,9 +3373,14 @@
                 }
                 if (hint) {
                     hint.innerHTML = on
-                        ? 'جارٍ الشير الآن<br>بدون تسجيل تلقائي'
+                        ? 'جارٍ الشير — تحكم من الشريط العائم<br>بدون تسجيل تلقائي'
                         : 'شير = عرض فقط<br>بدون حفظ تسجيل';
                 }
+                try {
+                    if (window.__mxShareFloatUi && typeof window.__mxShareFloatUi.sync === 'function') {
+                        window.__mxShareFloatUi.sync();
+                    }
+                } catch (eSf2) {}
             }
             function mxSyncMediaButtonState() {
                 var j = window.__mxClassroomJitsiApi || api;
@@ -3406,6 +3555,14 @@
 
             if (mxPipBtn) {
                 mxPipBtn.addEventListener('click', function () {
+                    // أثناء الشير: لا تفتح انضماماً ثانياً (يقطع سماع الطلاب) — استخدم شريط المشاركين
+                    if (document.body.classList.contains('mx-sharing')) {
+                        mxJitsiCmd('toggleFilmStrip');
+                        if (typeof mxToast === 'function') {
+                            mxToast('شريط المشاركين من نفس الجلسة — حتى تسمع الطلاب أثناء الشير');
+                        }
+                        return;
+                    }
                     if (mxPipIsOpen()) mxCloseParticipantsPip();
                     else mxOpenParticipantsPip({ reason: 'toggle' });
                 });
@@ -3453,10 +3610,35 @@
             });
 
             document.addEventListener('visibilitychange', function () {
-                if (document.visibilityState === 'hidden' && hasJoinedConference) {
-                    try { mxOpenParticipantsPip({ reason: 'blur' }); } catch (e) {}
+                if (document.visibilityState !== 'hidden' || !hasJoinedConference) return;
+                // أثناء الشير: شريط تحكم فقط (بدون انضمام غرفة ثانية يقطع الصوت)
+                var sharing = document.body.classList.contains('mx-sharing');
+                if (sharing && window.__mxShareFloatUi && typeof window.__mxShareFloatUi.openControlsPip === 'function') {
+                    try { window.__mxShareFloatUi.openControlsPip(); } catch (e) {}
+                    return;
                 }
+                // خارج الشير: لا نفتح تلقائياً نافذة مشاركين بانضمام ثانٍ (يؤثر على الصوت)
             });
+
+            (function bindShareFloatBar() {
+                if (!window.MxClassroomShareControls || typeof window.MxClassroomShareControls.bindShareFloat !== 'function') return;
+                var root = document.getElementById('mx-share-float');
+                if (!root) return;
+                window.__mxShareFloatUi = window.MxClassroomShareControls.bindShareFloat({
+                    root: root,
+                    cmd: function (c, a) { return mxJitsiCmd(c, a); },
+                    onStopShare: function () {
+                        mxJitsiCmd('toggleShareScreen');
+                    },
+                    onOpenPeople: function () {
+                        mxJitsiCmd('toggleFilmStrip');
+                        if (typeof mxToast === 'function') mxToast('شريط المشاركين من نفس الجلسة (بدون نافذة ثانية)');
+                    },
+                    onToast: function (msg) {
+                        if (typeof mxToast === 'function') mxToast(msg);
+                    },
+                });
+            })();
 
             (function bindMeetlineDockJitsi() {
                 var btnChat = document.getElementById('mx-ml-btn-chat');
@@ -3691,12 +3873,6 @@
             script.onload = function() {
                 if (requestMediaBtn) {
                     requestMediaBtn.addEventListener('click', requestMediaPermission);
-                }
-                if (joinWithoutMediaBtn) {
-                    joinWithoutMediaBtn.addEventListener('click', function() {
-                        hidePermissionGate();
-                        initJitsi();
-                    });
                 }
             };
             script.onerror = function() {

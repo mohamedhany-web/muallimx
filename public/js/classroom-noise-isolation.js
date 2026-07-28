@@ -1,5 +1,6 @@
 /**
  * Muallimx Classroom — Ambient noise isolation (Jitsi RNNoise + clean mic constraints)
+ * + light meeting performance defaults (lastN / share FPS / adaptive resolution).
  * Works via External API setNoiseSuppressionEnabled; independent of physical mic brand.
  */
 (function (global) {
@@ -28,8 +29,45 @@
     };
   }
 
-  /** Shared Jitsi configOverwrite audio block for host + guest */
+  function prefersSaveBandwidth() {
+    try {
+      var cores = global.navigator && global.navigator.hardwareConcurrency
+        ? Number(global.navigator.hardwareConcurrency)
+        : 4;
+      if (cores > 0 && cores <= 4) return true;
+      var conn = global.navigator && global.navigator.connection;
+      if (conn) {
+        if (conn.saveData) return true;
+        var et = String(conn.effectiveType || '');
+        if (et === '2g' || et === 'slow-2g' || et === '3g') return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function getVideoConstraintsForDevice() {
+    if (prefersSaveBandwidth()) {
+      return {
+        height: { ideal: 480, max: 720 },
+        width: { ideal: 854, max: 1280 },
+        frameRate: { ideal: 24, max: 30 },
+      };
+    }
+    return {
+      height: { ideal: 720, max: 1080 },
+      width: { ideal: 1280, max: 1920 },
+      frameRate: { ideal: 30, max: 30 },
+    };
+  }
+
+  /**
+   * Shared Jitsi configOverwrite for host + guest:
+   * clean mono mic + RNNoise-friendly flags + light perf knobs.
+   * Stereo stays OFF so share/mic path stays low-latency speech.
+   */
   function getJitsiAudioConfigPatch() {
+    var save = prefersSaveBandwidth();
+    var lastN = save ? 4 : 8;
     return {
       disableAP: false,
       disableAEC: false,
@@ -43,12 +81,17 @@
         stereo: false,
         opusMaxAverageBitrate: 64000,
       },
+      // Limit incoming remote video tiles (CPU / bandwidth)
+      channelLastN: lastN,
+      startLastN: lastN,
+      // Screen share: prefer smooth speech over ultra-smooth video
+      desktopSharingFrameRate: {
+        min: 5,
+        max: save ? 10 : 15,
+      },
       constraints: {
         audio: getCleanMicAudioConstraints(),
-        video: {
-          height: { ideal: 720, max: 1080 },
-          width: { ideal: 1280, max: 1920 },
-        },
+        video: getVideoConstraintsForDevice(),
       },
     };
   }
@@ -91,6 +134,24 @@
         }
       }
     }
+  }
+
+  /**
+   * Re-apply NS after track renegotiation (join / unmute / screen share).
+   * Jitsi often rebuilds the mic track on share start/stop; without this, RNNoise can drop.
+   */
+  function reattachNoiseAfterTrackChange(api, enabled, delays) {
+    var on = !!enabled;
+    var times = Array.isArray(delays) && delays.length ? delays : [350, 1000, 2400];
+    var okAny = false;
+    times.forEach(function (ms) {
+      setTimeout(function () {
+        if (setNoiseSuppression(api, on)) okAny = true;
+      }, ms);
+    });
+    // Immediate attempt as well
+    if (setNoiseSuppression(api, on)) okAny = true;
+    return okAny;
   }
 
   /**
@@ -178,6 +239,7 @@
     var onToast = typeof opts.onToast === 'function' ? opts.onToast : function () {};
     var theme = opts.theme === 'dark' ? 'dark' : 'light';
     var enabled = typeof opts.defaultEnabled === 'boolean' ? opts.defaultEnabled : readSavedEnabled();
+    var shareReattachTimer = null;
 
     function apply(next, announce) {
       enabled = !!next;
@@ -215,13 +277,31 @@
       applyToApi: function (api) {
         return setNoiseSuppression(api, enabled);
       },
+      /** Call on screenSharingStatusChanged — keeps RNNoise on mic after renegotiation */
+      onScreenShareChanged: function (sharing) {
+        var api = getApi();
+        reattachNoiseAfterTrackChange(api, enabled, [350, 1000, 2400]);
+        if (shareReattachTimer) clearTimeout(shareReattachTimer);
+        // One calm toast when share starts and isolation is ON
+        if (sharing && enabled) {
+          shareReattachTimer = setTimeout(function () {
+            onToast('عزل الضوضاء ما زال مفعّلاً أثناء مشاركة الشاشة');
+          }, 600);
+        }
+      },
+      reattachAfterTrackChange: function () {
+        return reattachNoiseAfterTrackChange(getApi(), enabled);
+      },
     };
   }
 
   global.MxClassroomNoiseIsolation = {
     getCleanMicAudioConstraints: getCleanMicAudioConstraints,
     getJitsiAudioConfigPatch: getJitsiAudioConfigPatch,
+    getVideoConstraintsForDevice: getVideoConstraintsForDevice,
+    prefersSaveBandwidth: prefersSaveBandwidth,
     setNoiseSuppression: setNoiseSuppression,
+    reattachNoiseAfterTrackChange: reattachNoiseAfterTrackChange,
     enhanceMicStreamForRecording: enhanceMicStreamForRecording,
     readSavedEnabled: readSavedEnabled,
     bindUi: bindUi,

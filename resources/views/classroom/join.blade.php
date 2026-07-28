@@ -64,6 +64,29 @@
         .mx-wb-tool-btn:hover, .mx-wb-tool-btn.is-active { background:rgba(0,101,253,.25); border-color:#38bdf8; color:#7dd3fc; }
         .mx-wb-tool-btn--danger { border-color:rgba(248,113,113,.45); color:#fca5a5; }
         .mx-wb-tools.is-disabled { opacity:.55; pointer-events:none; }
+        /* Guest share zoom (mobile) */
+        #mx-share-zoom-viewport {
+            position: relative; flex: 1; min-height: 0; width: 100%;
+            overflow: hidden; background: #0f172a; touch-action: none;
+        }
+        #mx-share-zoom-viewport #jitsi-container {
+            width: 100%; height: 100%; transform-origin: center center;
+        }
+        #mx-share-zoom-hud {
+            position: absolute; z-index: 40; left: 50%; bottom: 16px; transform: translateX(-50%);
+            display: none; align-items: center; gap: 6px; padding: 6px 8px;
+            border-radius: 12px; background: rgba(15,23,42,.92); border: 1px solid #334155;
+            box-shadow: 0 8px 24px rgba(0,0,0,.35);
+        }
+        #mx-share-zoom-hud.is-on { display: flex; }
+        #mx-share-zoom-hud button {
+            width: 36px; height: 36px; border-radius: 10px; border: 1px solid #475569;
+            background: #1e293b; color: #e2e8f0; cursor: pointer; font-size: 14px;
+        }
+        #mx-share-zoom-hud button:hover { border-color: #38bdf8; color: #7dd3fc; }
+        #mx-share-zoom-hud [data-zoom-label] {
+            min-width: 44px; text-align: center; font-size: 11px; font-weight: 700; color: #94a3b8;
+        }
     </style>
     <meta name="mx-asset-base" content="{{ rtrim(asset(''), '/') }}">
     <script>window.MX_ASSET_BASE = @json(rtrim(asset(''), '/'));</script>
@@ -74,6 +97,8 @@
         $mxNoiseJs = is_readable($mxNoiseJsFile) ? file_get_contents($mxNoiseJsFile) : '';
         $mxWbToolsJsFile = public_path('js/classroom-wb-tools.js');
         $mxWbToolsJs = is_readable($mxWbToolsJsFile) ? file_get_contents($mxWbToolsJsFile) : '';
+        $mxShareZoomJsFile = public_path('js/classroom-share-zoom.js');
+        $mxShareZoomJs = is_readable($mxShareZoomJsFile) ? file_get_contents($mxShareZoomJsFile) : '';
     @endphp
     @if($mxVbgJs !== '')
     <script id="mx-classroom-vbg-js">{!! $mxVbgJs !!}</script>
@@ -83,6 +108,9 @@
     @endif
     @if($mxWbToolsJs !== '')
     <script id="mx-classroom-wb-tools-js">{!! $mxWbToolsJs !!}</script>
+    @endif
+    @if($mxShareZoomJs !== '')
+    <script id="mx-classroom-share-zoom-js">{!! $mxShareZoomJs !!}</script>
     @endif
 </head>
 <body class="bg-slate-950 text-white">
@@ -113,17 +141,37 @@
             @endif
             <p class="text-slate-400 text-xs mb-4 text-center">كود الغرفة: <span class="font-mono font-bold text-cyan-400 text-lg">{{ $code }}</span></p>
             <p class="text-slate-400 text-xs mb-4 text-center">الحد الأقصى للمشاركين: <span class="font-bold text-amber-300">{{ $maxParticipants }}</span></p>
-            <div class="space-y-3">
+            <div class="space-y-3" id="guest-join-name-block">
                 <label class="block text-sm font-medium text-slate-300">اسمك (يظهر للمشاركين)</label>
                 <input type="text" id="guest-name" placeholder="أدخل اسمك" value="" class="w-full px-4 py-3 rounded-xl bg-slate-700 border border-slate-600 text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent">
             </div>
-            <div class="mt-6">
+            <div class="mt-6" id="guest-join-actions">
                 <button type="button" id="btn-join" class="w-full px-6 py-3 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold transition-colors">
                     <i class="fas fa-video ml-2"></i>
                     انضم الآن
                 </button>
             </div>
-            <p class="text-slate-500 text-xs mt-4 text-center">لا تحتاج إلى حساب. ادخل باسمك وانضم مباشرة.</p>
+            <div id="guest-av-gate" class="hidden mt-4 space-y-4 text-center">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center">
+                    <i class="fas fa-microphone-lines text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-white mb-2">فحص الصوت والكاميرا إلزامي</h2>
+                    <p class="text-slate-400 text-sm leading-6">
+                        قبل الدخول يجب تفعيل <strong class="text-slate-200">الميكروفون والكاميرا</strong>.
+                        لا يمكن تخطي هذه الخطوة.
+                    </p>
+                </div>
+                <button type="button" id="btn-guest-av-check" class="w-full px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition-colors">
+                    <i class="fas fa-shield-check ml-2"></i>
+                    تفعيل الأجهزة والمتابعة
+                </button>
+                <button type="button" id="btn-guest-av-back" class="w-full px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-semibold transition-colors">
+                    رجوع
+                </button>
+                <p id="guest-av-help" class="text-xs text-slate-500"></p>
+            </div>
+            <p class="text-slate-500 text-xs mt-4 text-center" id="guest-join-footnote">لا تحتاج إلى حساب. ادخل باسمك ثم فعّل الأجهزة للانضمام.</p>
             @endif
         </div>
     </div>
@@ -160,7 +208,15 @@
             </div>
         </header>
         <div class="room-body">
-            <main id="jitsi-container" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة الاجتماع"></main>
+            <div id="mx-share-zoom-viewport">
+                <main id="jitsi-container" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة الاجتماع"></main>
+                <div id="mx-share-zoom-hud" aria-label="تكبير الشاشة المشتركة">
+                    <button type="button" data-zoom-out title="تصغير">−</button>
+                    <span data-zoom-label>100%</span>
+                    <button type="button" data-zoom-in title="تكبير">+</button>
+                    <button type="button" data-zoom-reset title="إعادة">↺</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -212,13 +268,23 @@
         let joinToken = null;
         let heartbeatTimer = null;
         let guestWbAllowed = false;
+        let guestPerms = {
+            allow_participant_whiteboard: false,
+            allow_participant_screen_share: false,
+            allow_participant_chat: true,
+            allow_participant_raise_hand: true,
+            allow_participant_virtual_background: true,
+        };
         let guestExcMounted = false;
         let guestExcMountPromise = null;
         let guestExcVendorPromise = null;
         let guestWbSync = null;
+        let pendingGuestName = '';
+        let guestAvPassed = false;
 
         function applyGuestWhiteboardAllowed(on) {
             guestWbAllowed = !!on;
+            guestPerms.allow_participant_whiteboard = guestWbAllowed;
             var wrap = document.getElementById('mx-guest-wb-wrap');
             if (wrap) {
                 if (guestWbAllowed) wrap.classList.remove('hidden');
@@ -233,6 +299,97 @@
                 closeGuestWb();
                 if (guestWbSync) guestWbSync.stop();
             }
+        }
+
+        function buildGuestToolbarButtons(perms) {
+            var buttons = ['microphone', 'camera', 'closedcaptions'];
+            if (perms.allow_participant_screen_share) buttons.push('desktop');
+            buttons.push('fullscreen', 'fodeviceselection', 'hangup', 'tileview', 'videoquality', 'filmstrip');
+            if (perms.allow_participant_chat) buttons.push('chat');
+            if (perms.allow_participant_raise_hand) buttons.push('raisehand');
+            if (perms.allow_participant_virtual_background) buttons.push('select-background');
+            return buttons;
+        }
+
+        function applyGuestPermissions(data) {
+            if (!data || typeof data !== 'object') return;
+            [
+                'allow_participant_whiteboard',
+                'allow_participant_screen_share',
+                'allow_participant_chat',
+                'allow_participant_raise_hand',
+                'allow_participant_virtual_background',
+            ].forEach(function (k) {
+                if (typeof data[k] !== 'undefined') guestPerms[k] = !!data[k];
+            });
+            applyGuestWhiteboardAllowed(!!guestPerms.allow_participant_whiteboard);
+
+            var bgBtn = document.getElementById('mx-ml-btn-bg');
+            if (bgBtn) {
+                if (guestPerms.allow_participant_virtual_background) bgBtn.classList.remove('hidden');
+                else {
+                    bgBtn.classList.add('hidden');
+                    try {
+                        if (window.__mxVbgUi && typeof window.__mxVbgUi.closePanel === 'function') {
+                            window.__mxVbgUi.closePanel();
+                        }
+                    } catch (eBg) {}
+                }
+            }
+
+            if (api && typeof api.executeCommand === 'function') {
+                try {
+                    api.executeCommand('overwriteConfig', {
+                        toolbarButtons: buildGuestToolbarButtons(guestPerms),
+                        disableVirtualBackground: !guestPerms.allow_participant_virtual_background,
+                    });
+                } catch (eCfg) {}
+                if (!guestPerms.allow_participant_screen_share) {
+                    try { api.executeCommand('toggleShareScreen', false); } catch (eSs) {}
+                }
+            }
+        }
+
+        function mapGuestMediaError(err) {
+            var code = err && err.name ? String(err.name) : '';
+            if (code === 'NotAllowedError' || code === 'PermissionDeniedError') {
+                return 'المتصفح رفض الإذن. افتح رمز القفل بجانب الرابط ثم اسمح للكاميرا والميكروفون.';
+            }
+            if (code === 'NotFoundError' || code === 'DevicesNotFoundError') {
+                return 'لا توجد كاميرا أو ميكروفون متصل بالجهاز.';
+            }
+            if (code === 'NotReadableError' || code === 'TrackStartError') {
+                return 'تعذر تشغيل الكاميرا/الميكروفون (قد يكون مستخدماً في تطبيق آخر).';
+            }
+            if (code === 'SecurityError') {
+                return 'حظر أمني من المتصفح. افتح الرابط عبر HTTPS.';
+            }
+            return 'تعذر الوصول للكاميرا أو الميكروفون. أصلح الإعدادات ثم أعد المحاولة.';
+        }
+
+        function showGuestAvGate(show) {
+            var nameBlock = document.getElementById('guest-join-name-block');
+            var actions = document.getElementById('guest-join-actions');
+            var gate = document.getElementById('guest-av-gate');
+            var footnote = document.getElementById('guest-join-footnote');
+            if (show) {
+                if (nameBlock) nameBlock.classList.add('hidden');
+                if (actions) actions.classList.add('hidden');
+                if (gate) gate.classList.remove('hidden');
+                if (footnote) footnote.textContent = 'فحص الأجهزة مطلوب — لا يمكن تخطيه.';
+            } else {
+                if (nameBlock) nameBlock.classList.remove('hidden');
+                if (actions) actions.classList.remove('hidden');
+                if (gate) gate.classList.add('hidden');
+                if (footnote) footnote.textContent = 'لا تحتاج إلى حساب. ادخل باسمك ثم فعّل الأجهزة للانضمام.';
+            }
+        }
+
+        function setGuestAvHelp(msg, isError) {
+            var el = document.getElementById('guest-av-help');
+            if (!el) return;
+            el.textContent = msg || '';
+            el.className = 'text-xs ' + (isError ? 'text-rose-300' : 'text-slate-400');
         }
 
         function loadScriptSequential(url) {
@@ -367,6 +524,12 @@
                 csrfToken: csrfToken,
                 getExtraBody: function() { return { token: joinToken || '' }; },
                 canWrite: function() { return !!guestWbAllowed && !!joinToken; },
+                pollMs: 1600,
+                idlePollMs: 8000,
+                isActive: function () {
+                    var popup = document.getElementById('guest-wb-popup');
+                    return !!(popup && popup.classList.contains('is-open'));
+                },
                 onDenied: function() {
                     applyGuestWhiteboardAllowed(false);
                     alert('المعلم أوقف إتاحة الكتابة على الوايت بورد.');
@@ -386,7 +549,10 @@
             document.body.style.overflow = 'hidden';
             mountGuestExcalidraw().then(function() {
                 var sync = ensureGuestWbSync();
-                if (sync) sync.start();
+                if (sync) {
+                    if (typeof sync.setActive === 'function') sync.setActive(true);
+                    else sync.start();
+                }
                 setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
                 setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 400);
             }).catch(function() {});
@@ -396,6 +562,9 @@
             var popup = document.getElementById('guest-wb-popup');
             if (!popup) return;
             if (guestWbSync) guestWbSync.pushNow();
+            if (guestWbSync && typeof guestWbSync.setActive === 'function') {
+                guestWbSync.setActive(false);
+            }
             popup.classList.add('hidden');
             popup.classList.remove('is-open');
             popup.setAttribute('inert', '');
@@ -407,11 +576,65 @@
         document.getElementById('guest-wb-close') && document.getElementById('guest-wb-close').addEventListener('click', closeGuestWb);
         document.getElementById('guest-wb-backdrop') && document.getElementById('guest-wb-backdrop').addEventListener('click', closeGuestWb);
 
-        document.getElementById('btn-join').addEventListener('click', async function() {
-            const name = document.getElementById('guest-name').value.trim() || 'ضيف';
-            const btn = document.getElementById('btn-join');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري التحقق...';
+        document.getElementById('btn-join').addEventListener('click', function() {
+            pendingGuestName = document.getElementById('guest-name').value.trim() || 'ضيف';
+            guestAvPassed = false;
+            setGuestAvHelp('', false);
+            showGuestAvGate(true);
+        });
+
+        document.getElementById('btn-guest-av-back') && document.getElementById('btn-guest-av-back').addEventListener('click', function () {
+            showGuestAvGate(false);
+            var btn = document.getElementById('btn-join');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-video ml-2"></i> انضم الآن';
+            }
+        });
+
+        document.getElementById('btn-guest-av-check') && document.getElementById('btn-guest-av-check').addEventListener('click', async function () {
+            var avBtn = document.getElementById('btn-guest-av-check');
+            var name = pendingGuestName || document.getElementById('guest-name').value.trim() || 'ضيف';
+
+            if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+                setGuestAvHelp('المتصفح لا يدعم الوصول للأجهزة. استخدم متصفحاً حديثاً عبر HTTPS.', true);
+                return;
+            }
+            if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                setGuestAvHelp('المتصفح يشترط HTTPS لتفعيل الميكروفون والكاميرا. لا يمكن الدخول بدون ذلك.', true);
+                return;
+            }
+
+            if (avBtn) {
+                avBtn.disabled = true;
+                avBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الفحص...';
+            }
+            setGuestAvHelp('جاري فحص الميكروفون والكاميرا...', false);
+
+            try {
+                var stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                var hasAudio = stream.getAudioTracks().some(function (t) { return t.readyState === 'live'; });
+                var hasVideo = stream.getVideoTracks().some(function (t) { return t.readyState === 'live'; });
+                stream.getTracks().forEach(function (track) { track.stop(); });
+                if (!hasAudio || !hasVideo) {
+                    setGuestAvHelp('يجب تفعيل الميكروفون والكاميرا معاً قبل الدخول.', true);
+                    if (avBtn) {
+                        avBtn.disabled = false;
+                        avBtn.innerHTML = '<i class="fas fa-shield-check ml-2"></i> تفعيل الأجهزة والمتابعة';
+                    }
+                    return;
+                }
+            } catch (err) {
+                setGuestAvHelp(mapGuestMediaError(err), true);
+                if (avBtn) {
+                    avBtn.disabled = false;
+                    avBtn.innerHTML = '<i class="fas fa-shield-check ml-2"></i> تفعيل الأجهزة والمتابعة';
+                }
+                return;
+            }
+
+            guestAvPassed = true;
+            setGuestAvHelp('تم التحقق. جاري الانضمام...', false);
 
             try {
                 const enterResp = await fetch(`/classroom/join/${code}/enter`, {
@@ -426,16 +649,22 @@
                 const enterData = await enterResp.json();
                 if (!enterResp.ok || !enterData.ok) {
                     alert(enterData.message || 'لا يمكن الانضمام الآن.');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-video ml-2"></i> انضم الآن';
+                    if (avBtn) {
+                        avBtn.disabled = false;
+                        avBtn.innerHTML = '<i class="fas fa-shield-check ml-2"></i> تفعيل الأجهزة والمتابعة';
+                    }
+                    setGuestAvHelp(enterData.message || 'لا يمكن الانضمام الآن.', true);
                     return;
                 }
                 joinToken = enterData.token;
-                applyGuestWhiteboardAllowed(!!enterData.allow_participant_whiteboard);
+                applyGuestPermissions(enterData);
             } catch (e) {
                 alert('تعذر الاتصال بالخادم. حاول مرة أخرى.');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-video ml-2"></i> انضم الآن';
+                if (avBtn) {
+                    avBtn.disabled = false;
+                    avBtn.innerHTML = '<i class="fas fa-shield-check ml-2"></i> تفعيل الأجهزة والمتابعة';
+                }
+                setGuestAvHelp('تعذر الاتصال بالخادم.', true);
                 return;
             }
 
@@ -464,7 +693,8 @@
                         enableRecording: false,
                         startWithAudioMuted: true,
                         startWithVideoMuted: true,
-                        disableVirtualBackground: false,
+                        disableVirtualBackground: !guestPerms.allow_participant_virtual_background,
+                        toolbarButtons: buildGuestToolbarButtons(guestPerms),
                         // الضيف يغادر فقط — لا طرد/إعطاء مشرف/إنهاء للجميع
                         disableRemoteMute: true,
                         remoteVideoMenu: {
@@ -503,11 +733,7 @@
                     PROVIDER_NAME: 'Muallimx',
                     JITSI_WATERMARK_LINK: '',
                     HIDE_DEEP_LINKING_LOGO: true,
-                    TOOLBAR_BUTTONS: [
-                        'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-                        'fodeviceselection', 'hangup', 'chat',
-                        'raisehand', 'tileview', 'videoquality', 'filmstrip', 'select-background'
-                    ],
+                    TOOLBAR_BUTTONS: buildGuestToolbarButtons(guestPerms),
                     SHOW_JITSI_WATERMARK: false,
                     SHOW_WATERMARK_FOR_GUESTS: false,
                     SHOW_BRAND_WATERMARK: false,
@@ -519,6 +745,51 @@
             };
             api = new JitsiMeetExternalAPI(domain, options);
             window.__mxClassroomJitsiApi = api;
+
+            (function bindGuestShareZoom() {
+                if (!window.MxClassroomShareZoom || typeof window.MxClassroomShareZoom.bind !== 'function') return;
+                var viewport = document.getElementById('mx-share-zoom-viewport');
+                var target = document.getElementById('jitsi-container');
+                var hud = document.getElementById('mx-share-zoom-hud');
+                if (!viewport || !target) return;
+                window.__mxGuestShareZoom = window.MxClassroomShareZoom.bind({
+                    viewport: viewport,
+                    target: target,
+                    hud: hud,
+                    onToast: function (msg) {
+                        try { console.info(msg); } catch (e) {}
+                    },
+                });
+                function refreshShareZoom() {
+                    var z = window.__mxGuestShareZoom;
+                    if (!z) return;
+                    var enable = true;
+                    try {
+                        if (api && typeof api.getContentSharingParticipants === 'function') {
+                            var p = api.getContentSharingParticipants();
+                            if (p && typeof p.then === 'function') {
+                                p.then(function (list) {
+                                    var sharing = Array.isArray(list) ? list.length > 0 : !!list;
+                                    z.setActive(sharing || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches));
+                                    if (sharing && hud) hud.classList.add('is-on');
+                                }).catch(function () {});
+                                return;
+                            }
+                        }
+                    } catch (e) {}
+                    try {
+                        enable = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+                    } catch (e2) { enable = true; }
+                    z.setActive(enable);
+                }
+                api.addEventListener('videoConferenceJoined', function () {
+                    setTimeout(refreshShareZoom, 500);
+                });
+                api.addEventListener('screenSharingStatusChanged', function () {
+                    setTimeout(refreshShareZoom, 300);
+                });
+                setInterval(refreshShareZoom, 8000);
+            })();
 
             (function bindGuestNoiseIsolation() {
                 function tryBind() {
@@ -636,6 +907,22 @@
                     } catch (errNs) {}
                 }
             });
+            api.addEventListener('screenSharingStatusChanged', function (e) {
+                var on = !!(e && (e.on === true || e.on === 'true'));
+                try {
+                    if (window.__mxNoiseUi && typeof window.__mxNoiseUi.onScreenShareChanged === 'function') {
+                        window.__mxNoiseUi.onScreenShareChanged(on);
+                    } else if (window.MxClassroomNoiseIsolation && typeof window.MxClassroomNoiseIsolation.reattachNoiseAfterTrackChange === 'function') {
+                        var wantNs = window.MxClassroomNoiseIsolation.readSavedEnabled
+                            ? window.MxClassroomNoiseIsolation.readSavedEnabled()
+                            : true;
+                        window.MxClassroomNoiseIsolation.reattachNoiseAfterTrackChange(
+                            window.__mxClassroomJitsiApi || api,
+                            wantNs
+                        );
+                    }
+                } catch (eNsShare) {}
+            });
             api.addEventListener('videoMuteStatusChanged', function (e) {
                 if (e && e.muted === false) {
                     try {
@@ -667,8 +954,12 @@
                         leaveMeetingAndReload();
                         return;
                     }
-                    if (typeof hbData.allow_participant_whiteboard !== 'undefined') {
-                        applyGuestWhiteboardAllowed(!!hbData.allow_participant_whiteboard);
+                    if (typeof hbData.allow_participant_whiteboard !== 'undefined'
+                        || typeof hbData.allow_participant_screen_share !== 'undefined'
+                        || typeof hbData.allow_participant_chat !== 'undefined'
+                        || typeof hbData.allow_participant_raise_hand !== 'undefined'
+                        || typeof hbData.allow_participant_virtual_background !== 'undefined') {
+                        applyGuestPermissions(hbData);
                     }
                 } catch (e) {}
             }, 15000);
