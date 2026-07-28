@@ -205,6 +205,7 @@ body.mx-meetline {
   gap: 6px;
   padding: 8px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .mx-ml-artboard-title {
@@ -218,6 +219,120 @@ body.mx-meetline {
   border: 1px solid var(--ml-stroke);
   background: var(--ml-bg-50);
   margin: 0;
+  min-width: 6rem;
+}
+
+/* Permanent whiteboard tools */
+.mx-wb-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 8px 10px;
+  border-bottom: 1px solid var(--ml-stroke);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  flex-shrink: 0;
+}
+
+.mx-wb-tools--dark {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border-bottom-color: #334155;
+}
+
+.mx-wb-tools-hint {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #717171;
+  text-align: right;
+}
+
+.mx-wb-tools--dark .mx-wb-tools-hint {
+  color: #94a3b8;
+}
+
+.mx-wb-tools-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.mx-wb-tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--ml-stroke);
+  background: #fff;
+  color: #171717;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.mx-wb-tool-btn i {
+  font-size: 13px;
+  width: 1em;
+  text-align: center;
+}
+
+.mx-wb-tool-btn:hover {
+  background: #eef5ff;
+  border-color: #0065fd;
+  color: #0065fd;
+}
+
+.mx-wb-tool-btn.is-active {
+  background: rgba(0, 101, 253, 0.12);
+  border-color: #0065fd;
+  color: #0065fd;
+  box-shadow: 0 0 0 2px rgba(0, 101, 253, 0.12);
+}
+
+.mx-wb-tool-btn--danger {
+  border-color: rgba(253, 0, 0, 0.25);
+  color: #b91c1c;
+}
+
+.mx-wb-tool-btn--danger:hover,
+.mx-wb-tool-btn--danger.is-active {
+  background: #fff5f5;
+  border-color: #fd0000;
+  color: #fd0000;
+}
+
+.mx-wb-tools--dark .mx-wb-tool-btn {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.mx-wb-tools--dark .mx-wb-tool-btn:hover,
+.mx-wb-tools--dark .mx-wb-tool-btn.is-active {
+  background: rgba(0, 101, 253, 0.25);
+  border-color: #38bdf8;
+  color: #7dd3fc;
+}
+
+.mx-wb-tools.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Prefer our permanent tools; quiet Excalidraw's default left stack a bit */
+.mx-muallimx-whiteboard .App-toolbar,
+.mx-muallimx-whiteboard .Stack > .App-toolbar {
+  opacity: 0.92;
+}
+
+#mx-wb-tools-host,
+#mx-wb-tools-guest {
+  width: 100%;
 }
 
 .mx-ml-icon-btn {

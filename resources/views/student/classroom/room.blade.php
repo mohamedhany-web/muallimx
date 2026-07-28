@@ -16,12 +16,17 @@
         $mxVbgJs = is_readable($mxVbgJsFile) ? file_get_contents($mxVbgJsFile) : '';
         $mxNoiseJsFile = public_path('js/classroom-noise-isolation.js');
         $mxNoiseJs = is_readable($mxNoiseJsFile) ? file_get_contents($mxNoiseJsFile) : '';
+        $mxWbToolsJsFile = public_path('js/classroom-wb-tools.js');
+        $mxWbToolsJs = is_readable($mxWbToolsJsFile) ? file_get_contents($mxWbToolsJsFile) : '';
     @endphp
     @if($mxVbgJs !== '')
     <script id="mx-classroom-vbg-js">{!! $mxVbgJs !!}</script>
     @endif
     @if($mxNoiseJs !== '')
     <script id="mx-classroom-noise-js">{!! $mxNoiseJs !!}</script>
+    @endif
+    @if($mxWbToolsJs !== '')
+    <script id="mx-classroom-wb-tools-js">{!! $mxWbToolsJs !!}</script>
     @endif
     {{-- Inline Meet.Line CSS: production returns 404 for /css/*.css static files; inlining guarantees styles load --}}
     @php
@@ -462,17 +467,18 @@
         </main>
     </div>
 
-    {{-- Artboard / الوايت بورد الجانبي (Meet.Line) --}}
-    <aside id="mx-artboard-panel" aria-label="Artboard" aria-hidden="true" hidden>
+    {{-- Artboard / السبورة المشتركة الحية (Meet.Line) --}}
+    <aside id="mx-artboard-panel" aria-label="سبورة مشتركة" aria-hidden="true" hidden>
         <div class="mx-ml-artboard-head">
-            <h2 class="mx-ml-artboard-title" id="wb-popup-title">Artboard</h2>
+            <h2 class="mx-ml-artboard-title" id="wb-popup-title">سبورة مشتركة (حية)</h2>
             <button type="button" id="btn-wb-popup-fullscreen" class="mx-ml-icon-btn" title="توسيع اللوح">
-                <i class="fas fa-expand text-sm text-[#171717]"></i>
+                <i class="fas fa-expand text-[#171717]"></i>
             </button>
             <button type="button" id="wb-popup-close" class="mx-ml-icon-btn" title="إغلاق اللوح" aria-label="إغلاق">
-                <i class="fas fa-times text-sm"></i>
+                <i class="fas fa-times"></i>
             </button>
         </div>
+        <div id="mx-wb-tools-host"></div>
         <div id="wb-popup-stage" class="mx-ml-artboard-body">
             <div id="classroom-excalidraw-root" class="classroom-excalidraw-host mx-muallimx-whiteboard" data-view-only="0" data-lang="ar"></div>
             <div id="classroom-excalidraw-loading" class="classroom-excalidraw-loading">جاري تحميل Muallimx Whiteboard…</div>
@@ -504,7 +510,7 @@
             <button type="button" id="mx-ml-btn-bg" class="mx-ml-icon-btn" title="خلفية الكاميرا (تمويه / صورة)" aria-expanded="false" aria-controls="mx-vbg-panel">
                 <i class="fas fa-image text-[#171717]"></i>
             </button>
-            <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn" title="الوايت بورد / Artboard" aria-pressed="false">
+            <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn" title="السبورة المشتركة الحية" aria-pressed="false">
                 <i class="fas fa-pen text-[#171717]"></i>
             </button>
             <button type="button" id="mx-ml-btn-react" class="mx-ml-icon-btn" title="رفع اليد / تفاعل">
@@ -530,7 +536,7 @@
                 <i class="fas fa-compress text-[#171717]"></i>
             </button>
             <label class="classroom-room-toolbar-btn cursor-pointer select-none max-w-[11rem]"
-                   title="اتاحة كتابة الطلاب على الوايت بورد">
+                   title="السماح للطلاب بالكتابة على السبورة المشتركة (نفس لوح المعلم)">
                 <input type="checkbox" id="mx-classroom-toggle-guest-wb" class="rounded border-[#e9e9e9] text-[#0065fd] focus:ring-[#0065fd] shrink-0 scale-90"
                        {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}>
                 <span class="font-medium truncate text-[11px]"><span class="hidden sm:inline">كتابة الطلاب</span><span class="sm:hidden">طلاب</span></span>
@@ -1146,6 +1152,25 @@
                                         });
                                     }
                                     if (hostWbSync) hostWbSync.start();
+                                    try {
+                                        if (!window.__mxHostWbTools && window.MxClassroomWbTools && typeof window.MxClassroomWbTools.bindToolbar === 'function') {
+                                            var toolsHost = document.getElementById('mx-wb-tools-host');
+                                            if (toolsHost && !toolsHost.dataset.bound) {
+                                                toolsHost.dataset.bound = '1';
+                                                window.__mxHostWbTools = window.MxClassroomWbTools.bindToolbar({
+                                                    mountEl: toolsHost,
+                                                    theme: 'light',
+                                                    hintText: 'سبورة مشتركة حية — الطلاب يكتبون على نفس اللوح عند التفعيل',
+                                                    getApi: function () { return window.__mxClassroomExcalidrawAPI || null; },
+                                                    canWrite: function () { return true; },
+                                                    onAfterChange: function () {
+                                                        if (hostWbSync && typeof hostWbSync.pushNow === 'function') hostWbSync.pushNow();
+                                                        else if (hostWbSync && typeof hostWbSync.onLocalChange === 'function') hostWbSync.onLocalChange();
+                                                    },
+                                                });
+                                            }
+                                        }
+                                    } catch (eTools) {}
                                     resolve();
                                 } catch (err) {
                                     failMount(err);

@@ -56,6 +56,14 @@
         .mx-vbg-upload { display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed #0065fd; border-radius: 10px; padding: 10px; cursor: pointer; font-size: 12px; font-weight: 600; color: #93c5fd; background: rgba(0,101,253,.15); }
         .mx-vbg-fallback { border: 0; background: transparent; color: #94a3b8; font-size: 11px; text-decoration: underline; cursor: pointer; padding: 4px; }
         @media (max-width: 640px) { .mx-vbg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        /* Guest permanent whiteboard tools */
+        .mx-wb-tools { display:flex; flex-direction:column; gap:6px; width:100%; padding:8px 10px 10px; border-bottom:1px solid #334155; background:linear-gradient(180deg,#1e293b 0%,#0f172a 100%); flex-shrink:0; }
+        .mx-wb-tools-hint { margin:0; font-size:10px; line-height:1.4; color:#94a3b8; text-align:right; }
+        .mx-wb-tools-group { display:flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:flex-end; }
+        .mx-wb-tool-btn { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:7px 10px; border-radius:10px; border:1px solid #475569; background:#1e293b; color:#e2e8f0; font-size:11px; font-weight:600; cursor:pointer; }
+        .mx-wb-tool-btn:hover, .mx-wb-tool-btn.is-active { background:rgba(0,101,253,.25); border-color:#38bdf8; color:#7dd3fc; }
+        .mx-wb-tool-btn--danger { border-color:rgba(248,113,113,.45); color:#fca5a5; }
+        .mx-wb-tools.is-disabled { opacity:.55; pointer-events:none; }
     </style>
     <meta name="mx-asset-base" content="{{ rtrim(asset(''), '/') }}">
     <script>window.MX_ASSET_BASE = @json(rtrim(asset(''), '/'));</script>
@@ -64,12 +72,17 @@
         $mxVbgJs = is_readable($mxVbgJsFile) ? file_get_contents($mxVbgJsFile) : '';
         $mxNoiseJsFile = public_path('js/classroom-noise-isolation.js');
         $mxNoiseJs = is_readable($mxNoiseJsFile) ? file_get_contents($mxNoiseJsFile) : '';
+        $mxWbToolsJsFile = public_path('js/classroom-wb-tools.js');
+        $mxWbToolsJs = is_readable($mxWbToolsJsFile) ? file_get_contents($mxWbToolsJsFile) : '';
     @endphp
     @if($mxVbgJs !== '')
     <script id="mx-classroom-vbg-js">{!! $mxVbgJs !!}</script>
     @endif
     @if($mxNoiseJs !== '')
     <script id="mx-classroom-noise-js">{!! $mxNoiseJs !!}</script>
+    @endif
+    @if($mxWbToolsJs !== '')
+    <script id="mx-classroom-wb-tools-js">{!! $mxWbToolsJs !!}</script>
     @endif
 </head>
 <body class="bg-slate-950 text-white">
@@ -136,9 +149,9 @@
                 <div id="mx-guest-wb-wrap" class="hidden">
                     <button type="button" id="btn-guest-whiteboard"
                             class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 text-sm font-semibold transition-colors border border-amber-500/40"
-                            title="افتح الوايت بورد للكتابة والرسم (لوحة منفصلة عن فيديو الاجتماع)">
-                        <i class="fas fa-chalkboard text-amber-300"></i>
-                        <span class="hidden sm:inline">الوايت بورد</span>
+                            title="اكتب على السبورة المشتركة مع المعلم (نفس اللوح)">
+                        <i class="fas fa-pen text-amber-300"></i>
+                        <span class="hidden sm:inline">قلم السبورة</span>
                     </button>
                 </div>
                 <button type="button" id="btn-leave" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-rose-500/20">
@@ -151,23 +164,24 @@
         </div>
     </div>
 
-    {{-- لوحة الوايت بورد للضيف — منفصلة تماماً عن فيديو الاجتماع --}}
+    {{-- سبورة مشتركة حية — نفس مشهد المعلم --}}
     <div id="guest-wb-popup" class="hidden fixed inset-0 p-2 sm:p-4 flex items-center justify-center" inert aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="guest-wb-title">
         <div id="guest-wb-backdrop" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm cursor-pointer" aria-hidden="true"></div>
         <div class="relative z-10 flex flex-col w-full max-w-[min(1680px,99vw)] h-[min(92vh,calc(100dvh-1rem))] rounded-2xl border border-slate-600 bg-slate-900 shadow-2xl overflow-hidden">
             <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-700 bg-slate-800/95 shrink-0">
                 <h2 id="guest-wb-title" class="text-base font-bold text-white m-0 flex items-center gap-2">
-                    <i class="fas fa-chalkboard text-amber-400"></i>
-                    الوايت بورد
+                    <i class="fas fa-pen text-amber-400"></i>
+                    السبورة المشتركة
                 </h2>
-                <p class="text-[11px] text-slate-400 m-0 hidden sm:block">اكتب هنا على اللوح — وليس على فيديو الاجتماع</p>
+                <p class="text-[11px] text-slate-400 m-0 hidden sm:block">تكتب على نفس لوح المعلم — مباشرة وبشكل حي</p>
                 <button type="button" id="guest-wb-close" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium border border-slate-600">
                     <i class="fas fa-times"></i> إغلاق
                 </button>
             </div>
+            <div id="mx-wb-tools-guest"></div>
             <div class="relative flex-1 min-h-0 bg-slate-950">
                 <div id="guest-excalidraw-root" class="guest-excalidraw-host mx-muallimx-whiteboard" data-lang="ar"></div>
-                <div id="guest-excalidraw-loading">جاري تحميل الوايت بورد…</div>
+                <div id="guest-excalidraw-loading">جاري تحميل السبورة المشتركة…</div>
             </div>
         </div>
     </div>
@@ -210,6 +224,11 @@
                 if (guestWbAllowed) wrap.classList.remove('hidden');
                 else wrap.classList.add('hidden');
             }
+            try {
+                if (window.__mxGuestWbTools && typeof window.__mxGuestWbTools.setEnabled === 'function') {
+                    window.__mxGuestWbTools.setEnabled(!!guestWbAllowed);
+                }
+            } catch (eEn) {}
             if (!guestWbAllowed) {
                 closeGuestWb();
                 if (guestWbSync) guestWbSync.stop();
@@ -296,6 +315,28 @@
                         guestExcMounted = true;
                         if (loading) loading.style.display = 'none';
                         window.dispatchEvent(new Event('resize'));
+                        try {
+                            if (!window.__mxGuestWbTools && window.MxClassroomWbTools && typeof window.MxClassroomWbTools.bindToolbar === 'function') {
+                                var toolsGuest = document.getElementById('mx-wb-tools-guest');
+                                if (toolsGuest && !toolsGuest.dataset.bound) {
+                                    toolsGuest.dataset.bound = '1';
+                                    window.__mxGuestWbTools = window.MxClassroomWbTools.bindToolbar({
+                                        mountEl: toolsGuest,
+                                        theme: 'dark',
+                                        hintText: 'تكتب على سبورة المعلم المشتركة — استخدم القلم أو النص أو الممحاة',
+                                        getApi: function () { return window.__mxGuestExcalidrawAPI || null; },
+                                        canWrite: function () { return !!guestWbAllowed && !!joinToken; },
+                                        onAfterChange: function () {
+                                            if (guestWbSync && typeof guestWbSync.pushNow === 'function') guestWbSync.pushNow();
+                                            else if (guestWbSync && typeof guestWbSync.onLocalChange === 'function') guestWbSync.onLocalChange();
+                                        },
+                                    });
+                                }
+                            }
+                            if (window.__mxGuestWbTools && typeof window.__mxGuestWbTools.setEnabled === 'function') {
+                                window.__mxGuestWbTools.setEnabled(!!guestWbAllowed);
+                            }
+                        } catch (eToolsG) {}
                         resolve();
                     } catch (err) {
                         if (loading) {
