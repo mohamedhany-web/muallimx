@@ -2540,18 +2540,29 @@
 
                     function onStatus(e) {
                         if (!e || settled) return;
-                        var err = e.error || e.errorKey || null;
+                        var err = e.error || e.errorKey || (e.data && (e.data.error || e.data.errorKey)) || null;
                         if (err) {
                             settled = true;
                             cleanup();
-                            resolve({ ok: false, reason: String(err) });
+                            var errStr = (typeof err === 'string') ? err : (err.message || err.name || JSON.stringify(err));
+                            resolve({ ok: false, reason: String(errStr || 'error') });
                             return;
                         }
-                        var on = (e.on === true || e.on === 'true' || e.status === 'on');
+                        var mode = e.mode || (e.data && e.data.mode) || '';
+                        var on = (e.on === true || e.on === 'true' || e.status === 'on' || (e.data && (e.data.on === true || e.data.status === 'on')));
+                        // بعض الإصدارات ترسل خطأ busy كنص في sessionData
+                        var raw = '';
+                        try { raw = JSON.stringify(e).toLowerCase(); } catch (je) { raw = ''; }
+                        if (!on && /busy|resource-constraint|service-unavailable|all recorders/.test(raw)) {
+                            settled = true;
+                            cleanup();
+                            resolve({ ok: false, reason: 'busy' });
+                            return;
+                        }
                         if (on) {
                             settled = true;
                             cleanup();
-                            resolve({ ok: true, mode: e.mode || 'file' });
+                            resolve({ ok: true, mode: mode || 'file' });
                         }
                     }
 
@@ -2812,7 +2823,18 @@
                     return;
                 }
 
-                // احتياطي صامت إذا لم يكن Jibri جاهزاً على السيرفر
+                var jitsiReason = (jitsi && jitsi.reason) ? String(jitsi.reason) : '';
+                var jitsiBusy = /busy|resource|constraint|unavailable|service-unavailable|timeout/i.test(jitsiReason);
+                if (jitsiBusy) {
+                    setRecordStatus('أجهزة التسجيل التلقائي مشغولة بتسجيل آخر — جاري المسار الاحتياطي...', false);
+                    if (typeof mxToast === 'function') {
+                        mxToast('التسجيل التلقائي مشغول (مستخدم آخر) — سنحاول المسار الاحتياطي');
+                    }
+                } else if (jitsiReason) {
+                    setRecordStatus('تعذر التسجيل التلقائي (' + jitsiReason + ') — جاري المسار الاحتياطي...', false);
+                }
+
+                // احتياطي إذا كان Jibri مشغولاً أو غير متاح
                 var browserOk = false;
                 try {
                     browserOk = await startLectureRecordingBrowserFallback();
@@ -2822,9 +2844,16 @@
 
                 if (browserOk) {
                     setRecordButtonBusy(false);
-                    setRecordStatus('التسجيل يعمل بالمسار الاحتياطي المحلي (سيرفر التسجيل غير مفعّل حالياً).', false);
+                    setRecordStatus(
+                        jitsiBusy
+                            ? 'التسجيل يعمل بالمسار الاحتياطي لأن التسجيل التلقائي مشغول حالياً.'
+                            : 'التسجيل يعمل بالمسار الاحتياطي المحلي.',
+                        false
+                    );
                     if (typeof mxToast === 'function') {
-                        mxToast('التسجيل يعمل بالمسار الاحتياطي — يمكنك المتابعة دون قلق');
+                        mxToast(jitsiBusy
+                            ? 'المسار الاحتياطي يعمل — يمكنك المتابعة'
+                            : 'التسجيل يعمل بالمسار الاحتياطي — يمكنك المتابعة دون قلق');
                     }
                     return;
                 }
@@ -2833,8 +2862,20 @@
                 lectureCaptureMode = null;
                 cleanupLectureRecordingVisuals();
                 setRecordButtonBusy(false);
-                setRecordStatus('تعذر بدء التسجيل. فعّل تسجيل السيرفر أو أعد المحاولة.', true);
-                alert('تعذر بدء تسجيل المحاضرة.\n\nالمسار التلقائي يحتاج تفعيل التسجيل على سيرفر الاجتماع (Jibri)، والمسار الاحتياطي المحلي فشل أيضاً.');
+                if (jitsiBusy) {
+                    setRecordStatus('أجهزة التسجيل مشغولة الآن. أعد المحاولة بعد دقائق أو اسمح بمشاركة الشاشة للمسار الاحتياطي.', true);
+                    alert(
+                        'أجهزة التسجيل التلقائي مشغولة حالياً (هناك تسجيل آخر جارٍ).\n\n' +
+                        'انتظر دقيقة ثم أعد المحاولة، أو عند ظهور نافذة مشاركة الشاشة اضغط «السماح» لتفعيل المسار الاحتياطي.'
+                    );
+                } else {
+                    setRecordStatus('تعذر بدء التسجيل. أعد المحاولة أو اسمح بمشاركة الشاشة للمسار الاحتياطي.', true);
+                    alert(
+                        'تعذر بدء تسجيل المحاضرة.\n\n' +
+                        'إن كان هناك تسجيلات أخرى الآن فقد يكون جهاز التسجيل مشغولاً — أعد المحاولة بعد قليل.\n' +
+                        'أو استخدم المسار الاحتياطي بالسماح بمشاركة الشاشة عند ظهور النافذة.'
+                    );
+                }
             }
 
             async function startMicRecording() {
@@ -3308,6 +3349,12 @@
                                 localRecording: {
                                     disable: true,
                                 },
+                                // نخفي إشعار Jitsi الإنجليزي؛ نعالج حالة الانشغال في واجهة Muallimx
+                                disabledNotifications: [
+                                    'notify.recordingBusy',
+                                    'recording.busy',
+                                    'dialog.recording',
+                                ],
                                 startWithAudioMuted: true,
                                 startWithVideoMuted: true,
                                 disableAudioLevels: false,
