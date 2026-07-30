@@ -83,6 +83,7 @@ class ClassroomRecordingWebhookController extends Controller
                 'recording_size' => $size,
                 'recording_duration_seconds' => $duration > 0 ? $duration : (int) ($locked->recording_duration_seconds ?? 0),
                 'recording_uploaded_at' => now(),
+                'recording_status' => 'ready',
             ]);
 
             if ($oldPath !== '' && $oldPath !== $path) {

@@ -709,11 +709,12 @@
     <div id="mx-upload-modal" class="hidden fixed inset-0 z-[180] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm" aria-hidden="true">
         <div class="w-full max-w-md rounded-2xl border border-[#e9e9e9] bg-white shadow-2xl p-5 sm:p-6" role="dialog" aria-labelledby="mx-upload-modal-title" aria-modal="true">
             <h3 id="mx-upload-modal-title" class="text-lg font-bold text-[#171717] m-0 mb-1">جاري رفع التسجيل</h3>
-            <p id="mx-upload-modal-sub" class="text-xs text-[#717171] m-0 mb-4">يتم رفع وحفظ التسجيل. يمكنك تصغير هذه النافذة والمتابعة في الاجتماع.</p>
+            <p id="mx-upload-modal-sub" class="text-xs text-[#717171] m-0 mb-3">يتم رفع وحفظ التسجيل على Cloudflare. يمكنك تصغير هذه النافذة والمتابعة في الاجتماع.</p>
+            <p id="mx-upload-modal-pct" class="text-4xl font-black text-[#0065fd] tabular-nums m-0 mb-2 text-center">0%</p>
             <div class="h-2.5 rounded-full bg-[#f3f4f6] overflow-hidden mb-2">
                 <div id="mx-upload-modal-bar" class="h-full w-0 bg-[#0065fd] transition-[width] duration-150"></div>
             </div>
-            <p id="mx-upload-modal-status" class="text-sm text-slate-300 mb-4 min-h-[2.75rem] whitespace-pre-wrap m-0"></p>
+            <p id="mx-upload-modal-status" class="text-sm text-slate-600 mb-4 min-h-[2.75rem] whitespace-pre-wrap m-0"></p>
             <div class="flex flex-wrap gap-2">
                 <button type="button" id="mx-upload-modal-bg" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm font-medium border border-slate-600">متابعة في الخلفية</button>
                 <button type="button" id="mx-upload-modal-retry" class="hidden inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600/90 hover:bg-amber-600 text-white text-sm font-medium border border-amber-500/40">إعادة المحاولة</button>
@@ -724,6 +725,20 @@
         <i class="fas fa-cloud-arrow-up text-cyan-400"></i>
         <span id="mx-upload-chip-text" class="truncate">رفع التسجيل</span>
     </button>
+
+    {{-- شاشة إنهاء الاجتماع أثناء الرفع — لا تُغلق الصفحة حتى يكتمل الرفع --}}
+    <div id="mx-end-upload-overlay" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md" aria-hidden="true">
+        <div class="w-full max-w-lg rounded-2xl border border-slate-600 bg-slate-900 text-slate-100 shadow-2xl p-6 sm:p-8 text-center">
+            <div class="mx-auto mb-4 h-12 w-12 rounded-full border-4 border-sky-400/30 border-t-sky-400 animate-spin" aria-hidden="true"></div>
+            <h3 id="mx-end-upload-title" class="text-xl font-bold m-0 mb-2">جاري رفع التسجيل…</h3>
+            <p id="mx-end-upload-sub" class="text-sm text-slate-300 m-0 mb-4">لا تغلق هذه الصفحة. سيتم إنهاء الاجتماع تلقائياً بعد اكتمال الرفع إلى Cloudflare.</p>
+            <p id="mx-end-upload-pct" class="text-5xl font-black text-sky-400 tabular-nums m-0 mb-3">0%</p>
+            <div class="h-3 rounded-full bg-slate-700 overflow-hidden mb-3">
+                <div id="mx-end-upload-bar" class="h-full w-0 bg-sky-500 transition-[width] duration-150"></div>
+            </div>
+            <p id="mx-end-upload-status" class="text-sm text-slate-400 m-0 min-h-[2.5rem]"></p>
+        </div>
+    </div>
 
     @include('partials.jitsi-iframe-media-allow')
     @include('partials.mx-classroom-wb-sync')
@@ -813,6 +828,7 @@
             var mxRecLiveBadgeLabel = document.getElementById('mx-rec-live-badge-label');
             var mxUploadModal = document.getElementById('mx-upload-modal');
             var mxUploadModalBar = document.getElementById('mx-upload-modal-bar');
+            var mxUploadModalPct = document.getElementById('mx-upload-modal-pct');
             var mxUploadModalStatus = document.getElementById('mx-upload-modal-status');
             var mxUploadModalTitle = document.getElementById('mx-upload-modal-title');
             var mxUploadModalSub = document.getElementById('mx-upload-modal-sub');
@@ -820,14 +836,24 @@
             var mxUploadModalRetry = document.getElementById('mx-upload-modal-retry');
             var mxUploadChip = document.getElementById('mx-upload-chip');
             var mxUploadChipText = document.getElementById('mx-upload-chip-text');
+            var mxEndUploadOverlay = document.getElementById('mx-end-upload-overlay');
+            var mxEndUploadPct = document.getElementById('mx-end-upload-pct');
+            var mxEndUploadBar = document.getElementById('mx-end-upload-bar');
+            var mxEndUploadStatus = document.getElementById('mx-end-upload-status');
+            var mxEndUploadTitle = document.getElementById('mx-end-upload-title');
+            var mxEndUploadSub = document.getElementById('mx-end-upload-sub');
             var uploadRecordingUrl = '{{ route($rp . 'classroom.recording.upload', $meeting) }}';
             var presignRecordingUrl = '{{ route($rp . 'classroom.recording.presign', $meeting) }}';
             var completeRecordingUrl = '{{ route($rp . 'classroom.recording.complete', $meeting) }}';
+            var recordingStatusUrl = '{{ route($rp . 'classroom.recording.status', $meeting) }}';
+            var recordingProcessingUrl = '{{ route($rp . 'classroom.recording.processing', $meeting) }}';
             var presignAudioUrl = '{{ route($rp . 'classroom.recording-audio.presign', $meeting) }}';
             var uploadAudioUrl = '{{ route($rp . 'classroom.recording-audio.upload', $meeting) }}';
             var completeAudioUrl = '{{ route($rp . 'classroom.recording-audio.complete', $meeting) }}';
             var recordingUploadTabBaseUrl = '{{ route($rp . 'classroom.recording.upload-tab', $meeting) }}';
             var csrfToken = '{{ csrf_token() }}';
+            var mxUploadInProgress = false;
+            var mxBlockUnloadForUpload = false;
             var participantWbUrl = '{{ route($rp . 'classroom.participant-whiteboard', $meeting) }}';
             var whiteboardSceneGetUrl = '{{ route($rp . 'classroom.whiteboard-scene', $meeting) }}';
             var whiteboardScenePostUrl = '{{ route($rp . 'classroom.whiteboard-scene.push', $meeting) }}';
@@ -1064,9 +1090,10 @@
             });
 
             window.addEventListener('beforeunload', function(e) {
-                if (isRecording) {
+                if (isRecording || mxUploadInProgress || mxBlockUnloadForUpload) {
                     e.preventDefault();
                     e.returnValue = '';
+                    return '';
                 }
             });
 
@@ -1697,6 +1724,41 @@
             function mxSetUploadBar(percent) {
                 var p = percent == null ? 0 : Math.max(0, Math.min(100, Number(percent)));
                 if (mxUploadModalBar) mxUploadModalBar.style.width = p + '%';
+                if (mxUploadModalPct) mxUploadModalPct.textContent = Math.round(p) + '%';
+                if (mxEndUploadBar) mxEndUploadBar.style.width = p + '%';
+                if (mxEndUploadPct) mxEndUploadPct.textContent = Math.round(p) + '%';
+            }
+
+            function mxShowEndUploadOverlay(opts) {
+                opts = opts || {};
+                if (!mxEndUploadOverlay) return;
+                mxEndUploadOverlay.classList.remove('hidden');
+                mxEndUploadOverlay.setAttribute('aria-hidden', 'false');
+                mxBlockUnloadForUpload = true;
+                if (mxEndUploadTitle && opts.title) mxEndUploadTitle.textContent = opts.title;
+                if (mxEndUploadSub && opts.sub) mxEndUploadSub.textContent = opts.sub;
+                if (mxEndUploadStatus) mxEndUploadStatus.textContent = opts.status || '';
+                if (opts.percent != null) mxSetUploadBar(opts.percent);
+            }
+
+            function mxHideEndUploadOverlay() {
+                if (!mxEndUploadOverlay) return;
+                mxEndUploadOverlay.classList.add('hidden');
+                mxEndUploadOverlay.setAttribute('aria-hidden', 'true');
+                mxBlockUnloadForUpload = false;
+            }
+
+            function mxMarkRecordingProcessing() {
+                return fetch(recordingProcessingUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: '{}',
+                }).catch(function () { return null; });
             }
 
             function mxRefreshUploadChipText(line, percent) {
@@ -1730,6 +1792,7 @@
                 if (mxUploadChip) mxUploadChip.classList.add('hidden');
                 mxUploadModalMinimized = false;
                 mxCurrentUploadJob = null;
+                mxUploadInProgress = false;
                 if (mxUploadModalRetry) mxUploadModalRetry.classList.add('hidden');
             }
 
@@ -1777,6 +1840,9 @@
                 var pct = opts.percent;
                 if (mxUploadModalStatus && (!mxUploadModalMinimized || opts.forceChip)) {
                     mxUploadModalStatus.textContent = t;
+                }
+                if (mxEndUploadStatus && mxEndUploadOverlay && !mxEndUploadOverlay.classList.contains('hidden')) {
+                    mxEndUploadStatus.textContent = t;
                 }
                 if (pct != null && !isNaN(pct)) {
                     mxSetUploadBar(pct);
@@ -2073,14 +2139,17 @@
             async function mxRunUploadJob(job) {
                 mxCurrentUploadJob = job;
                 mxLastFailedJob = null;
+                mxUploadInProgress = true;
                 if (mxUploadModalRetry) mxUploadModalRetry.classList.add('hidden');
-                mxShowUploadModal(true);
+                if (!(mxEndUploadOverlay && !mxEndUploadOverlay.classList.contains('hidden'))) {
+                    mxShowUploadModal(true);
+                }
                 if (mxUploadModalTitle) {
                     mxUploadModalTitle.textContent = job.kind === 'report' ? 'جاري رفع التقرير الصوتي' : 'جاري رفع تسجيل المحاضرة';
                 }
                 mxSetUploadBar(0);
                 mxReportUploadProgress({
-                    text: 'جاري حفظ نسخة محلية ثم رفع التسجيل...',
+                    text: 'جاري حفظ نسخة محلية ثم رفع التسجيل إلى Cloudflare...',
                     percent: 1,
                     toChip: true,
                 });
@@ -2097,6 +2166,7 @@
                 };
 
                 try {
+                    await mxMarkRecordingProcessing();
                     if (job.kind === 'report') {
                         await uploadAudioBlob(job.blob, job.durationSeconds, onProg);
                     } else {
@@ -2109,13 +2179,18 @@
                         }
                     }
                     await mxIdbDeleteJob(job.id);
-                    mxReportUploadProgress({ text: 'تم رفع وحفظ التسجيل بنجاح.', percent: 100, toChip: true });
-                    setRecordStatus(job.kind === 'report' ? 'تم رفع التقرير الصوتي.' : 'تم رفع تسجيل المحاضرة.', false);
-                    setTimeout(function() {
-                        mxHideUploadUi();
-                    }, 2200);
+                    mxUploadInProgress = false;
+                    mxReportUploadProgress({ text: 'تم الرفع إلى Cloudflare بنجاح.', percent: 100, toChip: true });
+                    setRecordStatus(job.kind === 'report' ? 'تم رفع التقرير الصوتي.' : 'تم رفع تسجيل المحاضرة إلى Cloudflare.', false);
+                    if (!(pendingEndMeetingSubmit && endMeetingForm)) {
+                        setTimeout(function() {
+                            mxHideUploadUi();
+                        }, 2200);
+                    }
+                    return { ok: true };
                 } catch (err) {
                     console.error('mxRunUploadJob:', err);
+                    mxUploadInProgress = false;
                     var msg = (err && err.message) ? err.message : 'فشل الرفع.';
                     persisted.status = 'failed';
                     persisted.lastError = msg;
@@ -2137,14 +2212,17 @@
                 }
             }
 
-            function mxQueueBlobUpload(blob, durationSeconds, kind, secondaryBlob) {
+            function mxQueueBlobUpload(blob, durationSeconds, kind, secondaryBlob, opts) {
+                opts = opts || {};
+                var forceInPage = !!opts.forceInPage || !!pendingEndMeetingSubmit;
                 var label = kind === 'report' ? 'تسجيل التقرير الصوتي' : 'تسجيل المحاضرة';
                 var uploadErr = mxValidateRecordingBeforeUpload(blob, durationSeconds, label);
                 if (uploadErr) {
                     setRecordStatus(uploadErr, true);
                     alert(uploadErr);
                     pendingEndMeetingSubmit = false;
-                    return;
+                    mxHideEndUploadOverlay();
+                    return Promise.reject(new Error(uploadErr));
                 }
                 var job = {
                     id: mxMakeUploadJobId(),
@@ -2156,18 +2234,35 @@
                     status: 'pending',
                     createdAt: Date.now(),
                 };
-                mxIdbPutJob(job).then(function() {
+
+                if (forceInPage) {
+                    return mxIdbPutJob(job).catch(function () {}).then(function () {
+                        return mxRunUploadJob(Object.assign({}, job, { status: 'pending' }));
+                    });
+                }
+
+                return mxIdbPutJob(job).then(function() {
                     var w = mxOpenRecordingUploadTab(job.id);
                     if (!w) {
                         setRecordStatus('المتصفح منع التاب الجديد — سيتم الرفع من هذه الصفحة.', true);
-                        mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function() {});
-                        return;
+                        return mxRunUploadJob(Object.assign({}, job, { status: 'pending' }));
                     }
                     setRecordStatus('تم فتح تاب الرفع في نافذة جديدة — أكمل الرفع هناك وتابع الاجتماع في هذا التاب.', false);
+                    return { ok: true, tab: true };
                 }).catch(function(idbErr) {
                     console.warn('IndexedDB before upload tab:', idbErr);
-                    mxRunUploadJob(Object.assign({}, job, { status: 'pending' })).catch(function() {});
+                    return mxRunUploadJob(Object.assign({}, job, { status: 'pending' }));
                 });
+            }
+
+            function mxSubmitEndMeetingWhenReady() {
+                if (!endMeetingForm) return;
+                pendingEndMeetingSubmit = false;
+                mxBlockUnloadForUpload = false;
+                if (mxEndUploadStatus) mxEndUploadStatus.textContent = 'اكتمل الرفع — جاري إنهاء الاجتماع...';
+                setTimeout(function () {
+                    endMeetingForm.submit();
+                }, 450);
             }
 
             function cleanupLectureRecordingVisuals() {
@@ -2640,15 +2735,32 @@
                     }
 
                     setRecordButtonBusy(false);
-                    setRecordStatus('تم إيقاف تسجيل المحاضرة. جاري فتح تاب الرفع...', false);
-                    mxQueueBlobUpload(blob, durationSeconds, 'lecture', null);
-                    recordedChunks = [];
-                    if (pendingEndMeetingSubmit && endMeetingForm) {
-                        pendingEndMeetingSubmit = false;
-                        setTimeout(function() {
-                            endMeetingForm.submit();
-                        }, 400);
+                    setRecordStatus('تم إيقاف تسجيل المحاضرة. جاري الرفع إلى Cloudflare...', false);
+                    if (pendingEndMeetingSubmit) {
+                        mxShowEndUploadOverlay({
+                            title: 'جاري رفع التسجيل قبل إنهاء الاجتماع',
+                            sub: 'لا تغلق هذه الصفحة. الرفع مستمر ولن يتوقف — سيتم إنهاء الاجتماع تلقائياً بعد اكتماله.',
+                            status: 'تجهيز الملف...',
+                            percent: 2,
+                        });
                     }
+                    mxQueueBlobUpload(blob, durationSeconds, 'lecture', null, { forceInPage: !!pendingEndMeetingSubmit })
+                        .then(function () {
+                            if (pendingEndMeetingSubmit && endMeetingForm) {
+                                mxSubmitEndMeetingWhenReady();
+                            }
+                        })
+                        .catch(function () {
+                            if (pendingEndMeetingSubmit) {
+                                pendingEndMeetingSubmit = false;
+                                if (mxEndUploadStatus) {
+                                    mxEndUploadStatus.textContent = 'فشل الرفع — يمكنك إعادة المحاولة من النافذة ثم إنهاء الاجتماع يدوياً.';
+                                }
+                                if (mxUploadModalRetry) mxUploadModalRetry.classList.remove('hidden');
+                                mxShowUploadModal(true);
+                            }
+                        });
+                    recordedChunks = [];
                 });
 
                 mediaRecorder.start(3000);
@@ -2831,15 +2943,25 @@
                     }
 
                     setRecordButtonBusy(false);
-                    setRecordStatus('تم إيقاف تسجيل التقرير. جاري فتح تاب الرفع...', false);
-                    mxQueueBlobUpload(blob, durationSeconds, 'report', null);
-                    recordedChunks = [];
-                    if (pendingEndMeetingSubmit && endMeetingForm) {
-                        pendingEndMeetingSubmit = false;
-                        setTimeout(function() {
-                            endMeetingForm.submit();
-                        }, 400);
+                    setRecordStatus('تم إيقاف تسجيل التقرير. جاري الرفع...', false);
+                    if (pendingEndMeetingSubmit) {
+                        mxShowEndUploadOverlay({
+                            title: 'جاري رفع التقرير الصوتي',
+                            sub: 'لا تغلق الصفحة — سيتم إنهاء الاجتماع بعد اكتمال الرفع.',
+                            status: 'تجهيز الملف...',
+                            percent: 2,
+                        });
                     }
+                    mxQueueBlobUpload(blob, durationSeconds, 'report', null, { forceInPage: !!pendingEndMeetingSubmit })
+                        .then(function () {
+                            if (pendingEndMeetingSubmit && endMeetingForm) {
+                                mxSubmitEndMeetingWhenReady();
+                            }
+                        })
+                        .catch(function () {
+                            pendingEndMeetingSubmit = false;
+                        });
+                    recordedChunks = [];
                 });
 
                 mediaRecorder.start(4000);
@@ -2857,7 +2979,18 @@
                     }
                     setRecordButtonBusy(true);
                     setRecordStatus('جاري إيقاف التسجيل التلقائي وحفظه على السيرفر...', false);
+                    if (pendingEndMeetingSubmit) {
+                        mxShowEndUploadOverlay({
+                            title: 'جاري حفظ التسجيل على السيرفر',
+                            sub: 'التسجيل يُرفع من السيرفر إلى Cloudflare. لا تغلق الصفحة — سيتم إنهاء الاجتماع بعد بدء الحفظ.',
+                            status: 'إيقاف Jibri وتجهيز الملف...',
+                            percent: 15,
+                        });
+                    }
                     var durationSeconds = recordingStartedAt ? Math.max(1, Math.round((Date.now() - recordingStartedAt) / 1000)) : 0;
+                    try {
+                        await mxMarkRecordingProcessing();
+                    } catch (eMark) {}
                     try {
                         await mxStopJitsiFileRecording();
                     } catch (eStop) {}
@@ -2870,10 +3003,11 @@
                         'تم إيقاف التسجيل. الملف يُحفظ تلقائياً على السيرفر ويظهر في صفحة الاجتماع خلال دقائق. المدة التقريبية: ' + durationSeconds + 'ث.',
                         false
                     );
-                    if (typeof mxToast === 'function') mxToast('التسجيل التلقائي توقف — يُرفع من السيرفر');
+                    if (typeof mxToast === 'function') mxToast('التسجيل التلقائي توقف — يُرفع من السيرفر إلى Cloudflare');
                     if (pendingEndMeetingSubmit && endMeetingForm) {
-                        pendingEndMeetingSubmit = false;
-                        setTimeout(function () { endMeetingForm.submit(); }, 600);
+                        mxSetUploadBar(70);
+                        if (mxEndUploadStatus) mxEndUploadStatus.textContent = 'بدأ الحفظ على السيرفر — جاري إنهاء الاجتماع. تابع الحالة من صفحة التفاصيل.';
+                        setTimeout(function () { mxSubmitEndMeetingWhenReady(); }, 1200);
                     }
                     return;
                 }
@@ -2936,11 +3070,32 @@
 
             if (endMeetingForm && endMeetingBtn) {
                 endMeetingForm.addEventListener('submit', function(e) {
-                    if (!isRecording) return;
+                    if (!isRecording && !mxUploadInProgress) return;
                     e.preventDefault();
                     pendingEndMeetingSubmit = true;
-                    setRecordStatus('سيتم إنهاء الاجتماع بعد حفظ التسجيل وبدء الرفع...', false);
-                    stopBrowserRecording();
+                    if (isRecording) {
+                        setRecordStatus('سيتم إنهاء الاجتماع بعد حفظ التسجيل واكتمال الرفع...', false);
+                        mxShowEndUploadOverlay({
+                            title: 'جاري تجهيز التسجيل قبل الإنهاء',
+                            sub: 'الرفع لن يتوقف. ابقَ في هذه الصفحة حتى يكتمل الحفظ على Cloudflare.',
+                            status: 'إيقاف التسجيل...',
+                            percent: 1,
+                        });
+                        stopBrowserRecording();
+                        return;
+                    }
+                    mxShowEndUploadOverlay({
+                        title: 'انتظر اكتمال الرفع',
+                        sub: 'يوجد رفع قيد التنفيذ. سيتم إنهاء الاجتماع تلقائياً بعده.',
+                        status: 'متابعة الرفع...',
+                        percent: 5,
+                    });
+                    var waitEnd = setInterval(function () {
+                        if (!mxUploadInProgress) {
+                            clearInterval(waitEnd);
+                            mxSubmitEndMeetingWhenReady();
+                        }
+                    }, 500);
                 });
             }
 

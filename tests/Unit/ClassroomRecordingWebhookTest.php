@@ -41,7 +41,12 @@ class ClassroomRecordingWebhookTest extends TestCase
                 $table->unsignedBigInteger('recording_size')->nullable();
                 $table->unsignedInteger('recording_duration_seconds')->nullable();
                 $table->timestamp('recording_uploaded_at')->nullable();
+                $table->string('recording_status', 32)->nullable();
                 $table->timestamps();
+            });
+        } elseif (! Schema::hasColumn('classroom_meetings', 'recording_status')) {
+            Schema::table('classroom_meetings', function (Blueprint $table) {
+                $table->string('recording_status', 32)->nullable();
             });
         }
     }
@@ -102,5 +107,6 @@ class ClassroomRecordingWebhookTest extends TestCase
         $this->assertSame('live_recordings_r2', $meeting->recording_disk);
         $this->assertSame(42, (int) $meeting->recording_duration_seconds);
         $this->assertSame(9999, (int) $meeting->recording_size);
+        $this->assertSame('ready', $meeting->recording_status);
     }
 }

@@ -32,6 +32,7 @@ class ClassroomMeeting extends Model
         'recording_duration_seconds',
         'recording_audio_duration_seconds',
         'recording_uploaded_at',
+        'recording_status',
         'settings',
     ];
 
@@ -141,6 +142,31 @@ class ClassroomMeeting extends Model
         }
 
         return ! empty($this->recording_path) || ! empty($this->recording_audio_path);
+    }
+
+    /** جاري الحفظ/الرفع إلى Cloudflare (Jibri أو المتصفح). */
+    public function isRecordingProcessing(): bool
+    {
+        return $this->recording_status === 'processing' && empty($this->recording_path);
+    }
+
+    public function isRecordingReady(): bool
+    {
+        return ! empty($this->recording_path) || $this->recording_status === 'ready';
+    }
+
+    /** هل الملف موجود فعلياً على Cloudflare R2؟ */
+    public function recordingExistsOnCloudflare(): bool
+    {
+        if ($this->recording_disk !== 'live_recordings_r2' || empty($this->recording_path)) {
+            return false;
+        }
+
+        try {
+            return Storage::disk('live_recordings_r2')->exists((string) $this->recording_path);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     public function getRecordingDownloadUrlAttribute(): ?string

@@ -1422,6 +1422,7 @@ class ClassroomController extends Controller
                 'recording_size' => $size,
                 'recording_duration_seconds' => $durationSeconds,
                 'recording_uploaded_at' => now(),
+                'recording_status' => 'ready',
             ]);
 
             if ($oldPath !== '' && $oldPath !== $path) {
@@ -1434,6 +1435,78 @@ class ClassroomController extends Controller
 
             return $locked->fresh();
         });
+    }
+
+    /**
+     * تعليم أن التسجيل قيد الرفع/المعالجة (قبل اكتمال الملف على Cloudflare).
+     */
+    public function markRecordingProcessing(Request $request, ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if (! $meeting->started_at) {
+            return response()->json(['message' => 'الاجتماع لم يبدأ بعد.'], 422);
+        }
+
+        if (! empty($meeting->recording_path)) {
+            return response()->json([
+                'ok' => true,
+                'status' => 'ready',
+                'message' => 'التسجيل موجود مسبقاً.',
+            ]);
+        }
+
+        $meeting->update(['recording_status' => 'processing']);
+
+        return response()->json([
+            'ok' => true,
+            'status' => 'processing',
+            'message' => 'تم تسجيل حالة «جاري الرفع».',
+        ]);
+    }
+
+    /**
+     * حالة تسجيل المحاضرة + التحقق من وجود الملف على Cloudflare R2.
+     */
+    public function recordingStatus(ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        $meeting->refresh();
+        $hasVideo = ! empty($meeting->recording_path);
+        $cloudflareOk = $hasVideo ? $meeting->recordingExistsOnCloudflare() : false;
+
+        $status = (string) ($meeting->recording_status ?? '');
+        if ($hasVideo && $cloudflareOk) {
+            $status = 'ready';
+        } elseif ($hasVideo && ! $cloudflareOk) {
+            $status = 'pending_cloud';
+        } elseif ($status === '') {
+            $status = 'none';
+        }
+
+        return response()->json([
+            'ok' => true,
+            'status' => $status,
+            'has_video' => $hasVideo,
+            'has_audio' => ! empty($meeting->recording_audio_path),
+            'cloudflare_ok' => $cloudflareOk,
+            'size' => (int) ($meeting->recording_size ?? 0),
+            'duration_seconds' => (int) ($meeting->recording_duration_seconds ?? 0),
+            'uploaded_at' => optional($meeting->recording_uploaded_at)?->toIso8601String(),
+            'download_url' => $cloudflareOk ? $meeting->recording_download_url : null,
+            'message' => match ($status) {
+                'ready' => 'التسجيل مرفوع على Cloudflare وجاهز.',
+                'processing' => 'جاري حفظ/رفع التسجيل… حدّث الصفحة بعد قليل.',
+                'pending_cloud' => 'المسار مسجّل لكن الملف غير ظاهر بعد على Cloudflare.',
+                'failed' => 'فشل حفظ التسجيل.',
+                default => 'لا يوجد تسجيل بعد.',
+            },
+        ]);
     }
 
     private function persistMeetingAudioRecording(

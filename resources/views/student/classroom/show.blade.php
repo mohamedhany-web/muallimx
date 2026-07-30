@@ -85,57 +85,95 @@
             </div>
         </div>
 
-        @if($meeting->ended_at)
+        @if($meeting->ended_at || $meeting->isRecordingProcessing() || $meeting->recording_path || $meeting->recording_audio_path)
             @php
                 $hasVideo = (bool) $meeting->recording_path;
                 $hasAudio = (bool) $meeting->recording_audio_path;
                 $hasAnyMedia = $hasVideo || $hasAudio;
+                $isProcessing = $meeting->isRecordingProcessing();
+                $cloudflareOk = $hasVideo ? $meeting->recordingExistsOnCloudflare() : false;
+                $recordingStatusUrl = route($rp.'classroom.recording.status', $meeting);
             @endphp
-            <div class="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-900/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <div>
-                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100">التسجيل والتقرير الصوتي</p>
-                    @if($hasAnyMedia)
-                        @if($hasVideo)
-                            <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                                تم حفظ تسجيل المحاضرة.
+            <div id="mx-recording-panel" class="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-900/10 p-4 space-y-3"
+                 data-status-url="{{ $recordingStatusUrl }}"
+                 data-initial-status="{{ $isProcessing ? 'processing' : ($cloudflareOk ? 'ready' : ($hasVideo ? 'pending_cloud' : ($hasAnyMedia ? 'ready' : 'none'))) }}">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-bold text-slate-800 dark:text-slate-100">التسجيل والتقرير الصوتي</p>
+                        <p id="mx-rec-status-text" class="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                            @if($isProcessing)
+                                جاري رفع/حفظ التسجيل على Cloudflare… حدّث الصفحة أو انتظر التحديث التلقائي.
+                            @elseif($hasVideo && $cloudflareOk)
+                                تم حفظ تسجيل المحاضرة على Cloudflare.
                                 @if($meeting->recording_uploaded_at)
                                     وقت الرفع: {{ $meeting->recording_uploaded_at->format('Y-m-d H:i') }}
                                 @endif
-                            </p>
-                        @endif
-                        @if($hasAudio)
+                            @elseif($hasVideo && ! $cloudflareOk)
+                                المسار مسجّل لكن التحقق من Cloudflare لم ينجح بعد — أعد التحديث بعد لحظات.
+                            @elseif($hasAudio)
+                                تم حفظ التقرير الصوتي (الفويس) لهذا الاجتماع.
+                            @elseif($meeting->ended_at)
+                                لا يوجد تسجيل مرفوع بعد. إن كنت سجّلت المحاضرة، انتظر اكتمال الرفع من السيرفر.
+                            @else
+                                لا يوجد تسجيل أو تقرير صوتي مرفوع لهذا الاجتماع.
+                            @endif
+                        </p>
+                        @if($hasAudio && $hasVideo)
+                            <p class="text-xs text-emerald-700 dark:text-emerald-300 mt-1">تم حفظ التقرير الصوتي أيضاً.</p>
+                        @elseif($hasAudio && ! $hasVideo)
                             <p class="text-xs text-emerald-700 dark:text-emerald-300 mt-1">تم حفظ التقرير الصوتي (الفويس) لهذا الاجتماع.</p>
                         @endif
-                    @else
-                        <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">لا يوجد تسجيل أو تقرير صوتي مرفوع لهذا الاجتماع.</p>
-                    @endif
+                    </div>
+                    <div id="mx-rec-actions" class="flex flex-wrap items-center gap-2">
+                        @if($isProcessing)
+                            <span id="mx-rec-processing-badge" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-100 text-amber-800 text-xs font-semibold">
+                                <span class="inline-block h-3 w-3 rounded-full border-2 border-amber-500/40 border-t-amber-600 animate-spin"></span>
+                                جاري الرفع…
+                            </span>
+                        @endif
+                        @if($cloudflareOk)
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-semibold">
+                                <i class="fas fa-cloud"></i> Cloudflare جاهز
+                            </span>
+                        @endif
+                        @if($meeting->recording_download_url && $cloudflareOk)
+                            <a href="{{ $meeting->recording_download_url }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold">
+                                <i class="fas fa-download"></i>
+                                تحميل تسجيل المحاضرة
+                            </a>
+                        @endif
+                        @if($meeting->recording_audio_download_url)
+                            <a href="{{ $meeting->recording_audio_download_url }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold">
+                                <i class="fas fa-music"></i>
+                                تحميل التقرير الصوتي
+                            </a>
+                            <audio controls preload="none" class="max-w-full md:max-w-sm h-9 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800">
+                                <source src="{{ $meeting->recording_audio_download_url }}" type="{{ $meeting->recording_audio_mime_type ?: 'audio/webm' }}">
+                            </audio>
+                        @elseif($meeting->recording_audio_path)
+                            <span class="text-xs text-amber-700 dark:text-amber-300">التقرير الصوتي موجود لكن رابط التحميل غير متاح حالياً.</span>
+                        @endif
+                        @if(!$meeting->recording_download_url && !$meeting->recording_audio_download_url && $hasAnyMedia && ! $isProcessing)
+                            <span class="text-xs text-amber-700 dark:text-amber-300">الملف موجود ولكن رابط التحميل غير متاح حالياً.</span>
+                        @endif
+                    </div>
                 </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    @if($meeting->recording_download_url)
-                        <a href="{{ $meeting->recording_download_url }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold">
-                            <i class="fas fa-download"></i>
-                            تحميل تسجيل المحاضرة
-                        </a>
-                    @endif
-                    @if($meeting->recording_audio_download_url)
-                        <a href="{{ $meeting->recording_audio_download_url }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold">
-                            <i class="fas fa-music"></i>
-                            تحميل التقرير الصوتي
-                        </a>
-                        <audio controls preload="none" class="max-w-full md:max-w-sm h-9 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800">
-                            <source src="{{ $meeting->recording_audio_download_url }}" type="{{ $meeting->recording_audio_mime_type ?: 'audio/webm' }}">
-                        </audio>
-                    @elseif($meeting->recording_audio_path)
-                        <span class="text-xs text-amber-700 dark:text-amber-300">التقرير الصوتي موجود لكن رابط التحميل غير متاح حالياً.</span>
-                    @endif
-                    @if(!$meeting->recording_download_url && !$meeting->recording_audio_download_url && $hasAnyMedia)
-                        <span class="text-xs text-amber-700 dark:text-amber-300">الملف موجود ولكن رابط التحميل غير متاح حالياً.</span>
-                    @endif
-                </div>
+                @if($isProcessing || ($hasVideo && ! $cloudflareOk))
+                    <div id="mx-rec-progress-wrap" class="rounded-lg border border-sky-200/80 bg-white/70 dark:bg-slate-900/40 px-3 py-3">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">حالة الرفع إلى Cloudflare</span>
+                            <span id="mx-rec-poll-hint" class="text-[11px] text-slate-500">تحديث تلقائي كل ٥ ثوانٍ</span>
+                        </div>
+                        <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                            <div id="mx-rec-indet-bar" class="h-full w-1/3 bg-sky-500 animate-pulse"></div>
+                        </div>
+                    </div>
+                @endif
             </div>
 
+            @if($meeting->ended_at)
             @php
-                $canGenerateReport = (bool) ($meeting->recording_audio_download_url || $meeting->recording_download_url);
+                $canGenerateReport = (bool) ($meeting->recording_audio_download_url || ($meeting->recording_download_url && $cloudflareOk));
             @endphp
             <div class="rounded-xl border border-violet-200 dark:border-violet-900 bg-violet-50/60 dark:bg-violet-950/20 p-4 space-y-3">
                 <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -173,6 +211,7 @@
                     </div>
                 @endif
             </div>
+            @endif
         @endif
 
         <div class="flex items-center justify-between">
@@ -193,5 +232,44 @@
         </div>
     </div>
 </div>
+@push('scripts')
+<script>
+(function () {
+    var panel = document.getElementById('mx-recording-panel');
+    if (!panel) return;
+    var url = panel.getAttribute('data-status-url');
+    var initial = panel.getAttribute('data-initial-status') || 'none';
+    if (!url || (initial !== 'processing' && initial !== 'pending_cloud')) return;
+
+    var statusEl = document.getElementById('mx-rec-status-text');
+    var tries = 0;
+    var maxTries = 72; // ~6 دقائق
+
+    function poll() {
+        tries += 1;
+        fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data || !data.ok) return;
+                if (statusEl && data.message) statusEl.textContent = data.message;
+                if (data.status === 'ready' && data.cloudflare_ok) {
+                    window.location.reload();
+                    return;
+                }
+                if (tries < maxTries) {
+                    setTimeout(poll, 5000);
+                } else if (statusEl) {
+                    statusEl.textContent = 'ما زال الرفع قيد الانتظار. حدّث الصفحة لاحقاً أو تحقق من إعدادات التسجيل.';
+                }
+            })
+            .catch(function () {
+                if (tries < maxTries) setTimeout(poll, 8000);
+            });
+    }
+
+    setTimeout(poll, 3000);
+})();
+</script>
+@endpush
 @endsection
 
