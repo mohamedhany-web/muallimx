@@ -38,88 +38,55 @@ LIVE_RECORDINGS_WEBHOOK_TOKEN=ضع_رمزا_قويا_هنا
 php artisan config:clear
 ```
 
-## على سيرفر live.muallimx.com
+## حالة السيرفر (محدَّثة)
 
-### 1) تثبيت Jibri وربطه بـ Jitsi
+على `live.muallimx.com` تم تثبيت وربط Jibri:
 
-اتبع دليل Jitsi الرسمي لتثبيت Jibri على نفس الـ VPS أو آلة منفصلة، مع:
+| عنصر | الحالة |
+|------|--------|
+| خدمة `jibri` | `active` — IDLE / HEALTHY |
+| Brewery MUC | `jibribrewery@internal.auth.live.muallimx.com` |
+| `config.js` | `recordingService.enabled` + `hiddenDomain: recorder.live.muallimx.com` |
+| ALSA loopback | مفعّل (`snd-aloop`) |
+| Finalize | `/usr/local/bin/mx-classroom-jibri-finalize.sh` → R2 |
+| أسرار Finalize | `/etc/jitsi/jibri/mx-finalize.env` (صلاحيات 600) |
 
-- حساب XMPP للمسجّل (`recorder@...` / `jibri@...`)
-- `hiddenDomain` للمشاركين المخفيين
-- تفعيل التسجيل في Prosody / Jicofo
+اختبار دخان ناجح: بدء تسجيل → ملف MP4 → رفع إلى `s3://muallimx/classroom-recordings/...`.
 
-### 2) تفعيل الإعدادات في config.js
+**ما زال مطلوباً على استضافة Laravel (cPanel / `muallimx.com`):**
 
-في `/etc/jitsi/meet/live.muallimx.com-config.js` ألغِ التعليق وفعّل تقريباً:
-
-```js
-recordingService: {
-    enabled: true,
-    sharingEnabled: false,
-    hideStorageWarning: true,
-},
-fileRecordingsEnabled: true,
-fileRecordingsServiceEnabled: true,
+```env
+LIVE_RECORDINGS_WEBHOOK_TOKEN=<نفس القيمة في .env المحلي / mx-finalize.env>
 ```
 
-أعد تحميل خدمات Jitsi بعد التعديل.
+ثم `php artisan config:clear` على الاستضافة. بدون هذا السطر يبقى رفع R2 ناجحاً لكن ربط الملف بالاجتماع يردّ `401 Unauthorized`.
 
-### 3) سكربت finalize (رفع R2 + ويب هوك)
-
-مثال مبسّط لـ `/usr/local/bin/mx-classroom-jibri-finalize.sh` (عدّل المسارات والمفاتيح):
+فحص سريع للخدمة:
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-RECORDING_FILE="${1:-}"
-ROOM_NAME="${2:-}"
-MEETING_ID="${3:-}"
-DURATION="${4:-0}"
-
-[[ -n "$RECORDING_FILE" && -f "$RECORDING_FILE" ]] || exit 1
-
-BUCKET="muallimx"
-KEY="classroom-recordings/$(date +%Y/%m)/${ROOM_NAME:-meeting}-$(date +%Y%m%d-%H%M%S)-$(basename "$RECORDING_FILE")"
-WEBHOOK_URL="https://muallimx.com/api/classroom-recordings/register"
-WEBHOOK_TOKEN="REPLACE_WITH_LIVE_RECORDINGS_WEBHOOK_TOKEN"
-
-# رفع إلى Cloudflare R2 (متوافق مع S3)
-aws s3 cp "$RECORDING_FILE" "s3://${BUCKET}/${KEY}" \
-  --endpoint-url "https://YOUR_ACCOUNT_ID.r2.cloudflarestorage.com"
-
-SIZE=$(stat -c%s "$RECORDING_FILE" 2>/dev/null || wc -c < "$RECORDING_FILE")
-
-payload=$(cat <<EOF
-{
-  "classroom_meeting_id": ${MEETING_ID:-null},
-  "room_name": "${ROOM_NAME}",
-  "file_path": "${KEY}",
-  "mime_type": "video/mp4",
-  "duration_seconds": ${DURATION},
-  "file_size": ${SIZE}
-}
-EOF
-)
-
-curl -sS -X POST "$WEBHOOK_URL" \
-  -H "Content-Type: application/json" \
-  -H "X-Webhook-Token: ${WEBHOOK_TOKEN}" \
-  -d "$payload"
+systemctl status jibri --no-pager
+curl -sS http://127.0.0.1:2222/jibri/api/v1.0/health
+curl -sS https://live.muallimx.com/config.js | grep -E 'MX_JIBRI|hiddenDomain|recordingService'
 ```
 
-اربط هذا السكربت من إعدادات Jibri `finalize_recording_script_path` (أو الـ hook المعتمد في إصداركم)، ومرّروا `room_name` ومعرّف الاجتماع من metadata إن وُجد.
+### مرجع إعداد (إن احتجت إعادة التثبيت)
 
-### 4) تجربة سريعة
+- حسابات Prosody: `jibri@auth.live.muallimx.com` و `recorder@recorder.live.muallimx.com`
+- Jicofo: `jibri { brewery-jid = "JibriBrewery@internal.auth.live.muallimx.com" }`
+- مثال السكربت: `tools/mx-classroom-jibri-finalize.example.sh`
+
+### تجربة من Classroom
 
 1. ادخل غرفة Classroom كمدرب.
 2. اضغط تسجيل المحاضرة — **لا** يجب أن تظهر رسالة اختيار تبويب.
 3. تأكد أن Jibri انضم للغرفة (مشارك مخفي).
 4. أوقف التسجيل.
-5. بعد دقائق يظهر الملف في صفحة الاجتماع عبر الويب هوك.
+5. بعد انتهاء الرفع يظهر الملف عبر الويب هوك (بعد ضبط التوكن على الإنتاج).
 
 ## ملاحظات
 
-- بدون Jibri يعمل التطبيق بمحاولة احتياطية محلية صامتة؛ إن فشلت يظهر تنبيه قصير يطلب تفعيل تسجيل السيرفر.
+- السيرفر الحالي ~2 vCPU؛ التسجيل يعمل، لكن تجنّب تسجيلات متزامنة كثيرة على نفس الجهاز.
+- بدون Jibri يعمل التطبيق بمحاولة احتياطية محلية صامتة؛ إن فشلت يظهر تنبيه قصير.
 - المشاركون لا يفعلون شيئاً في كل الأحوال.
 - عزل الضوضاء يبقى مفعّلاً تلقائياً من واجهة الغرفة.
+- يُفضّل تدوير كلمة مرور SSH للـ VPS إن سبق مشاركتها في محادثة.
