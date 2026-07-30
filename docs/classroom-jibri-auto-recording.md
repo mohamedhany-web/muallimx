@@ -44,28 +44,37 @@ php artisan config:clear
 
 | عنصر | الحالة |
 |------|--------|
-| خدمة `jibri` | `active` — IDLE / HEALTHY |
-| Brewery MUC | `jibribrewery@internal.auth.live.muallimx.com` |
+| خدمة `jibri` | `active` — IDLE / HEALTHY — DISPLAY `:0` — API `2222` |
+| خدمة `jibri2` | `active` — IDLE / HEALTHY — DISPLAY `:1` — API `2223` |
+| شاشات Xorg | `jibri-xorg` + `jibri2-xorg` (`X0` و `X1`) |
+| Brewery MUC | `jibribrewery@internal.auth.live.muallimx.com` (nickname: `jibri` و `jibri-2`) |
 | `config.js` | `recordingService.enabled` + `hiddenDomain: recorder.live.muallimx.com` |
-| ALSA loopback | مفعّل (`snd-aloop`) |
+| ALSA loopback | بطاقتان: `Loopback` + `Loopback_1` (`snd-aloop`) |
 | Finalize | `/usr/local/bin/mx-classroom-jibri-finalize.sh` → R2 |
 | أسرار Finalize | `/etc/jitsi/jibri/mx-finalize.env` (صلاحيات 600) |
+| Bucket الرفع | **`academy-data`** (نفس bucket الإنتاج على `muallimx.com`) |
 
-اختبار دخان ناجح: بدء تسجيل → ملف MP4 → رفع إلى `s3://muallimx/classroom-recordings/...`.
+**سعة التسجيل المتزامن:** حتى **تسجيلين تلقائيين** في نفس الوقت (مثيل Jibri لكل تسجيل). إذا بدأ ثالث، يظهر «All recorders are currently busy» ويحاول التطبيق المسار الاحتياطي المحلي.
 
-**ما زال مطلوباً على استضافة Laravel (cPanel / `muallimx.com`):**
+اختبار دخان ناجح: بدء تسجيل → ملف MP4 → رفع إلى `s3://academy-data/classroom-recordings/...` → ويب هوك `201`.
+
+**مهم:** يجب أن يرفع Jibri إلى نفس bucket الذي يقرأه Laravel (`AWS_BUCKET` / `R2_LIVE_RECORDINGS_BUCKET` على الإنتاج = `academy-data`). رفع سابق إلى bucket `muallimx` كان يصل Cloudflare لكن صفحة الاجتماع تعتبر الملف مفقوداً.
+
+**مطلوب على استضافة Laravel إن لم يكن مضبوطاً:**
 
 ```env
-LIVE_RECORDINGS_WEBHOOK_TOKEN=<نفس القيمة في .env المحلي / mx-finalize.env>
+LIVE_RECORDINGS_WEBHOOK_TOKEN=<نفس القيمة في mx-finalize.env>
 ```
 
-ثم `php artisan config:clear` على الاستضافة. بدون هذا السطر يبقى رفع R2 ناجحاً لكن ربط الملف بالاجتماع يردّ `401 Unauthorized`.
+ثم `php artisan config:clear`. بدون التوكن يردّ الويب هوك `401`.
 
 فحص سريع للخدمة:
 
 ```bash
-systemctl status jibri --no-pager
+systemctl status jibri jibri2 jibri-xorg jibri2-xorg --no-pager
 curl -sS http://127.0.0.1:2222/jibri/api/v1.0/health
+curl -sS http://127.0.0.1:2223/jibri/api/v1.0/health
+ls /tmp/.X11-unix/
 curl -sS https://live.muallimx.com/config.js | grep -E 'MX_JIBRI|hiddenDomain|recordingService'
 ```
 
@@ -85,8 +94,8 @@ curl -sS https://live.muallimx.com/config.js | grep -E 'MX_JIBRI|hiddenDomain|re
 
 ## ملاحظات
 
-- السيرفر الحالي ~2 vCPU؛ التسجيل يعمل، لكن تجنّب تسجيلات متزامنة كثيرة على نفس الجهاز.
-- بدون Jibri يعمل التطبيق بمحاولة احتياطية محلية صامتة؛ إن فشلت يظهر تنبيه قصير.
-- المشاركون لا يفعلون شيئاً في كل الأحوال.
+- السيرفر الحالي ~2 vCPU / 8GB؛ مثيلان Jibri كافيان لتسجيلين متوازيين، لكن أكثر من ذلك يحتاج VPS أقوى أو مثيلات Jibri إضافية.
+- إذا كان كلا المسجّلين مشغولين، يحاول التطبيق المسار الاحتياطي المحلي (مشاركة شاشة المتصفح) مع رسالة أوضح بالعربية.
+- المشاركون لا يفعلون شيئاً في المسار التلقائي.
 - عزل الضوضاء يبقى مفعّلاً تلقائياً من واجهة الغرفة.
 - يُفضّل تدوير كلمة مرور SSH للـ VPS إن سبق مشاركتها في محادثة.
