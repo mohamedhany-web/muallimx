@@ -46,13 +46,16 @@ php artisan config:clear
 |------|--------|
 | خدمة `jibri` | `active` — IDLE / HEALTHY — DISPLAY `:0` — API `2222` |
 | خدمة `jibri2` | `active` — IDLE / HEALTHY — DISPLAY `:1` — API `2223` |
-| شاشات Xorg | `jibri-xorg` + `jibri2-xorg` (`X0` و `X1`) |
+| شاشات Xorg | `jibri-xorg` + `jibri2-xorg` — **1280×720** (مطابقة لـ ffmpeg) |
 | Brewery MUC | `jibribrewery@internal.auth.live.muallimx.com` (nickname: `jibri` و `jibri-2`) |
 | `config.js` | `recordingService.enabled` + `hiddenDomain: recorder.live.muallimx.com` |
-| ALSA loopback | بطاقتان: `Loopback` + `Loopback_1` (`snd-aloop`) |
+| ALSA loopback | بطاقتان: `Loopback` + `Loopback_1` — `bsnoop` من `hw:*,1,0` |
+| PulseAudio | `jibri_sink` → Loopback (Chrome يمرّر الصوت عبر Pulse ثم ALSA) |
 | Finalize | `/usr/local/bin/mx-classroom-jibri-finalize.sh` → R2 |
 | أسرار Finalize | `/etc/jitsi/jibri/mx-finalize.env` (صلاحيات 600) |
 | Bucket الرفع | **`academy-data`** (نفس bucket الإنتاج على `muallimx.com`) |
+
+**جودة الصورة/الصوت:** يجب أن تساوي دقة Xorg دقة `ffmpeg.resolution` وإلا يُلتقط ركن الشاشة فقط. مسار الصوت: Chrome → Pulse `jibri_sink` → `snd-aloop` → `plug:bsnoop` → ffmpeg.
 
 **سعة التسجيل المتزامن:** حتى **تسجيلين تلقائيين** في نفس الوقت (مثيل Jibri لكل تسجيل). إذا بدأ ثالث، يظهر «All recorders are currently busy» ويحاول التطبيق المسار الاحتياطي المحلي.
 
