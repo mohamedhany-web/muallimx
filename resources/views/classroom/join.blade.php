@@ -74,18 +74,28 @@
         }
         #mx-share-zoom-hud {
             position: absolute; z-index: 40; left: 50%; bottom: 16px; transform: translateX(-50%);
-            display: none; align-items: center; gap: 6px; padding: 6px 8px;
+            display: none !important; align-items: center; gap: 6px; padding: 6px 8px;
             border-radius: 12px; background: rgba(15,23,42,.92); border: 1px solid #334155;
             box-shadow: 0 8px 24px rgba(0,0,0,.35);
         }
-        #mx-share-zoom-hud.is-on { display: flex; }
-        #mx-share-zoom-hud button {
-            width: 36px; height: 36px; border-radius: 10px; border: 1px solid #475569;
-            background: #1e293b; color: #e2e8f0; cursor: pointer; font-size: 14px;
+        #mx-share-zoom-hud.is-on { display: none !important; }
+        #mx-guest-opts-wrap { position: relative; }
+        #mx-guest-opts-panel {
+            display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
+            min-width: 11rem; padding: 6px; border-radius: 12px; border: 1px solid #334155;
+            background: #0f172a; box-shadow: 0 12px 28px rgba(0,0,0,.4);
         }
-        #mx-share-zoom-hud button:hover { border-color: #38bdf8; color: #7dd3fc; }
-        #mx-share-zoom-hud [data-zoom-label] {
-            min-width: 44px; text-align: center; font-size: 11px; font-weight: 700; color: #94a3b8;
+        #mx-guest-opts-panel.is-open { display: block; }
+        #mx-guest-opts-panel button {
+            display: flex; width: 100%; align-items: center; gap: 8px;
+            padding: 8px 10px; border: 0; border-radius: 8px; background: transparent;
+            color: #e2e8f0; font-size: 12px; font-weight: 600; cursor: pointer; text-align: right;
+        }
+        #mx-guest-opts-panel button:hover { background: rgba(0,101,253,.2); color: #7dd3fc; }
+        #mx-guest-opts-panel .mx-opts-sep { height: 1px; background: #334155; margin: 4px 0; }
+        #mx-wb-tools-guest:empty::before {
+            content: 'جاري تحميل أدوات السبورة…';
+            display: block; padding: 8px 12px; font-size: 11px; color: #94a3b8;
         }
     </style>
     <meta name="mx-asset-base" content="{{ rtrim(asset(''), '/') }}">
@@ -186,6 +196,19 @@
                 <span class="text-slate-400 text-sm shrink-0">— {{ $code }}</span>
             </div>
             <div class="flex items-center gap-2 shrink-0">
+                <div id="mx-guest-opts-wrap">
+                    <button type="button" id="mx-guest-opts-btn" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-100 text-sm font-semibold transition-colors border border-slate-600" title="خيارات العرض" aria-expanded="false" aria-controls="mx-guest-opts-panel">
+                        <i class="fas fa-sliders text-cyan-300"></i>
+                        <span class="hidden sm:inline">خيارات</span>
+                    </button>
+                    <div id="mx-guest-opts-panel" role="menu">
+                        <button type="button" data-zoom-in title="تكبير الشاشة المشتركة"><i class="fas fa-search-plus"></i> تكبير</button>
+                        <button type="button" data-zoom-out title="تصغير"><i class="fas fa-search-minus"></i> تصغير</button>
+                        <button type="button" data-zoom-reset title="إعادة العرض"><i class="fas fa-compress"></i> إعادة العرض <span data-zoom-label class="ms-auto text-slate-400">100%</span></button>
+                        <div class="mx-opts-sep"></div>
+                        <p class="px-2 py-1 text-[10px] text-slate-500 m-0">يمكنك أيضاً التكبير بقرص إصبعين على الجوال</p>
+                    </div>
+                </div>
                 <button type="button" id="mx-ml-btn-noise" class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-cyan-600/25 hover:bg-cyan-600/40 text-cyan-100 text-sm font-semibold transition-colors border border-cyan-500/40" title="عزل الضوضاء: مفعّل (صوت نقي)" aria-pressed="true">
                     <i class="fas fa-ear-listen text-cyan-300"></i>
                     <span class="hidden sm:inline">عزل الضوضاء</span>
@@ -210,12 +233,7 @@
         <div class="room-body">
             <div id="mx-share-zoom-viewport">
                 <main id="jitsi-container" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة الاجتماع"></main>
-                <div id="mx-share-zoom-hud" aria-label="تكبير الشاشة المشتركة">
-                    <button type="button" data-zoom-out title="تصغير">−</button>
-                    <span data-zoom-label>100%</span>
-                    <button type="button" data-zoom-in title="تكبير">+</button>
-                    <button type="button" data-zoom-reset title="إعادة">↺</button>
-                </div>
+                <div id="mx-share-zoom-hud" class="hidden" aria-hidden="true" hidden></div>
             </div>
         </div>
     </div>
@@ -285,6 +303,7 @@
         let guestLastPermFingerprint = '';
 
         function applyGuestWhiteboardAllowed(on) {
+            var prev = !!guestWbAllowed;
             guestWbAllowed = !!on;
             guestPerms.allow_participant_whiteboard = guestWbAllowed;
             var wrap = document.getElementById('mx-guest-wb-wrap');
@@ -297,6 +316,21 @@
                     window.__mxGuestWbTools.setEnabled(!!guestWbAllowed);
                 }
             } catch (eEn) {}
+            if (guestWbAllowed && !prev) {
+                try {
+                    var t = document.getElementById('mx-guest-noise-toast');
+                    if (!t) {
+                        t = document.createElement('div');
+                        t.id = 'mx-guest-noise-toast';
+                        t.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:300;background:#171717;color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;';
+                        document.body.appendChild(t);
+                    }
+                    t.textContent = 'تم إتاحة السبورة — اضغط «قلم السبورة» للفتح';
+                    t.style.opacity = '1';
+                    clearTimeout(window.__mxGuestWbToastTimer);
+                    window.__mxGuestWbToastTimer = setTimeout(function () { t.style.opacity = '0'; }, 3200);
+                } catch (eT) {}
+            }
             if (!guestWbAllowed) {
                 closeGuestWb();
                 if (guestWbSync) guestWbSync.stop();
@@ -557,7 +591,10 @@
         }
 
         function openGuestWb() {
-            if (!guestWbAllowed) return;
+            if (!guestWbAllowed) {
+                alert('المعلم لم يُتح السبورة بعد. انتظر قليلاً أو اطلب منه تفعيل «كتابة على السبورة».');
+                return;
+            }
             var popup = document.getElementById('guest-wb-popup');
             if (!popup) return;
             popup.classList.remove('hidden');
@@ -565,6 +602,11 @@
             popup.removeAttribute('inert');
             popup.setAttribute('aria-hidden', 'false');
             document.body.style.overflow = 'hidden';
+            var loading = document.getElementById('guest-excalidraw-loading');
+            if (loading) {
+                loading.style.display = 'flex';
+                loading.textContent = 'جاري تحميل السبورة المشتركة…';
+            }
             mountGuestExcalidraw().then(function() {
                 var sync = ensureGuestWbSync();
                 if (sync) {
@@ -573,7 +615,14 @@
                 }
                 setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
                 setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 400);
-            }).catch(function() {});
+            }).catch(function(err) {
+                console.error('Guest whiteboard mount failed', err);
+                if (loading) {
+                    loading.style.display = 'flex';
+                    loading.textContent = 'تعذّر تحميل السبورة. حدّث الصفحة أو جرّب متصفحاً أحدث (Chrome/Edge).';
+                }
+                alert('تعذّر فتح السبورة المشتركة. حدّث الصفحة ثم أعد المحاولة.');
+            });
         }
 
         function closeGuestWb() {
@@ -768,7 +817,7 @@
                 if (!window.MxClassroomShareZoom || typeof window.MxClassroomShareZoom.bind !== 'function') return;
                 var viewport = document.getElementById('mx-share-zoom-viewport');
                 var target = document.getElementById('jitsi-container');
-                var hud = document.getElementById('mx-share-zoom-hud');
+                var hud = document.getElementById('mx-guest-opts-panel');
                 if (!viewport || !target) return;
                 window.__mxGuestShareZoom = window.MxClassroomShareZoom.bind({
                     viewport: viewport,
@@ -778,35 +827,26 @@
                         try { console.info(msg); } catch (e) {}
                     },
                 });
-                function refreshShareZoom() {
-                    var z = window.__mxGuestShareZoom;
-                    if (!z) return;
-                    var enable = true;
-                    try {
-                        if (api && typeof api.getContentSharingParticipants === 'function') {
-                            var p = api.getContentSharingParticipants();
-                            if (p && typeof p.then === 'function') {
-                                p.then(function (list) {
-                                    var sharing = Array.isArray(list) ? list.length > 0 : !!list;
-                                    z.setActive(sharing || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches));
-                                    if (sharing && hud) hud.classList.add('is-on');
-                                }).catch(function () {});
-                                return;
-                            }
+                // Always allow zoom controls for guests (pinch + options menu)
+                try { window.__mxGuestShareZoom.setActive(true); } catch (eAct) {}
+
+                var optsBtn = document.getElementById('mx-guest-opts-btn');
+                var optsPanel = document.getElementById('mx-guest-opts-panel');
+                var optsWrap = document.getElementById('mx-guest-opts-wrap');
+                if (optsBtn && optsPanel) {
+                    optsBtn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        var open = !optsPanel.classList.contains('is-open');
+                        optsPanel.classList.toggle('is-open', open);
+                        optsBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    });
+                    document.addEventListener('click', function (e) {
+                        if (optsWrap && !optsWrap.contains(e.target)) {
+                            optsPanel.classList.remove('is-open');
+                            optsBtn.setAttribute('aria-expanded', 'false');
                         }
-                    } catch (e) {}
-                    try {
-                        enable = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-                    } catch (e2) { enable = true; }
-                    z.setActive(enable);
+                    });
                 }
-                api.addEventListener('videoConferenceJoined', function () {
-                    setTimeout(refreshShareZoom, 500);
-                });
-                api.addEventListener('screenSharingStatusChanged', function () {
-                    setTimeout(refreshShareZoom, 300);
-                });
-                setInterval(refreshShareZoom, 8000);
             })();
 
             (function bindGuestNoiseIsolation() {
@@ -911,6 +951,9 @@
                     }
                 } catch (e) {}
                 try {
+                    if (window.__mxNoiseUi && typeof window.__mxNoiseUi.markJoined === 'function') {
+                        window.__mxNoiseUi.markJoined();
+                    }
                     if (window.__mxNoiseUi && typeof window.__mxNoiseUi.enableOnJoin === 'function') {
                         window.__mxNoiseUi.enableOnJoin();
                     }
@@ -983,7 +1026,7 @@
                         applyGuestPermissions(hbData);
                     }
                 } catch (e) {}
-            }, 15000);
+            }, 3000);
 
             api.addEventListener('readyToClose', function() {
                 leaveMeetingAndReload();

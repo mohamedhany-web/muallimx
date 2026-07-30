@@ -269,16 +269,26 @@
 
   /**
    * Keep host receiving student audio while sharing (no second join / no audioOnly).
+   * During share, temporarily soften AEC so remote voices are not ducked by tab/system audio.
+   * @param {any} api
+   * @param {boolean=} sharing
    */
-  function preserveReceiveAudio(api) {
+  function preserveReceiveAudio(api, sharing) {
     if (!api || typeof api.executeCommand !== 'function') return;
     try { api.executeCommand('setAudioOnly', false); } catch (e1) {}
+    var on = !!sharing;
     try {
-      // Ensure speaker path is not stuck muted if API exposes it
-      if (typeof api.isAudioMuted === 'function') {
-        /* local mic mute is separate from receiving */
-      }
-    } catch (e2) {}
+      api.executeCommand('overwriteConfig', {
+        disableAEC: on,
+        disableAP: false,
+        disableNS: false,
+        disableAGC: false,
+      });
+    } catch (e2) {
+      try {
+        api.executeCommand('overwriteConfig', { disableAEC: on });
+      } catch (e3) {}
+    }
   }
 
   global.MxClassroomShareControls = {

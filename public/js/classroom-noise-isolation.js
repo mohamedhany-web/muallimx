@@ -16,7 +16,6 @@
       autoGainControl: true,
       channelCount: { ideal: 1 },
       sampleRate: { ideal: 48000 },
-      // Legacy Chrome keys — ignored when unsupported
       googEchoCancellation: true,
       googExperimentalEchoCancellation: true,
       googAutoGainControl: true,
@@ -60,11 +59,6 @@
     };
   }
 
-  /**
-   * Shared Jitsi configOverwrite for host + guest:
-   * clean mono mic + RNNoise-friendly flags + light perf knobs.
-   * Stereo stays OFF so share/mic path stays low-latency speech.
-   */
   function getJitsiAudioConfigPatch() {
     var save = prefersSaveBandwidth();
     var lastN = save ? 4 : 8;
@@ -81,10 +75,8 @@
         stereo: false,
         opusMaxAverageBitrate: 64000,
       },
-      // Limit incoming remote video tiles (CPU / bandwidth)
       channelLastN: lastN,
       startLastN: lastN,
-      // Screen share: prefer smooth speech over ultra-smooth video
       desktopSharingFrameRate: {
         min: 5,
         max: save ? 10 : 15,
@@ -99,7 +91,7 @@
   function readSavedEnabled() {
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
-      if (raw === null || raw === undefined || raw === '') return true; // default ON
+      if (raw === null || raw === undefined || raw === '') return true;
       var parsed = JSON.parse(raw);
       if (typeof parsed === 'boolean') return parsed;
       if (parsed && typeof parsed.enabled === 'boolean') return parsed.enabled;
@@ -121,7 +113,6 @@
       return true;
     } catch (e1) {
       try {
-        // Older builds: boolean arg
         api.executeCommand('setNoiseSuppressionEnabled', on);
         return true;
       } catch (e2) {
@@ -136,10 +127,6 @@
     }
   }
 
-  /**
-   * Re-apply NS after track renegotiation (join / unmute / screen share).
-   * Jitsi often rebuilds the mic track on share start/stop; without this, RNNoise can drop.
-   */
   function reattachNoiseAfterTrackChange(api, enabled, delays) {
     var on = !!enabled;
     var times = Array.isArray(delays) && delays.length ? delays : [350, 1000, 2400];
@@ -149,15 +136,10 @@
         if (setNoiseSuppression(api, on)) okAny = true;
       }, ms);
     });
-    // Immediate attempt as well
     if (setNoiseSuppression(api, on)) okAny = true;
     return okAny;
   }
 
-  /**
-   * Extra cleanup for MediaRecorder (lecture/report): high-pass + mild compression.
-   * Returns { stream, track, ctx } or null on failure (caller keeps original mic).
-   */
   function enhanceMicStreamForRecording(micStream) {
     if (!micStream || !micStream.getAudioTracks().length) return null;
     var AudioCtx = global.AudioContext || global.webkitAudioContext;
@@ -224,14 +206,6 @@
       : 'عزل الضوضاء: متوقف — اضغط للتفعيل';
   }
 
-  /**
-   * @param {object} opts
-   * @param {HTMLElement} opts.toggleBtn
-   * @param {function(): any} opts.getApi
-   * @param {function(string)=} opts.onToast
-   * @param {boolean=} opts.defaultEnabled
-   * @param {string=} opts.theme 'light' | 'dark'
-   */
   function bindUi(opts) {
     opts = opts || {};
     var btn = opts.toggleBtn;
@@ -240,18 +214,32 @@
     var theme = opts.theme === 'dark' ? 'dark' : 'light';
     var enabled = typeof opts.defaultEnabled === 'boolean' ? opts.defaultEnabled : readSavedEnabled();
     var shareReattachTimer = null;
+    var joined = false;
+    var failToastShown = false;
+
+    function apiReady() {
+      var api = getApi();
+      return !!(api && typeof api.executeCommand === 'function');
+    }
 
     function apply(next, announce) {
       enabled = !!next;
       saveEnabled(enabled);
       updateToggleUi(btn, enabled, theme);
-      var api = getApi();
-      var ok = setNoiseSuppression(api, enabled);
+      if (!apiReady()) {
+        if (announce && joined === false) {
+          // قبل دخول الغرفة: لا رسالة خطأ مزعجة
+          onToast(enabled ? 'عزل الضوضاء سيُفعَّل بعد دخول الغرفة' : 'عزل الضوضاء متوقف');
+        }
+        return false;
+      }
+      var ok = setNoiseSuppression(getApi(), enabled);
       if (announce) {
         if (ok) {
           onToast(enabled ? 'عزل الضوضاء مفعّل — الصوت أنقى' : 'عزل الضوضاء متوقف');
-        } else {
-          onToast('تعذر تطبيق عزل الضوضاء — أعد المحاولة بعد دخول الغرفة');
+        } else if (joined && !failToastShown) {
+          failToastShown = true;
+          onToast('تعذر تطبيق عزل الضوضاء على هذا المتصفح — الميكروفون يعمل بالإعدادات الافتراضية');
         }
       }
       return ok;
@@ -267,9 +255,13 @@
     return {
       isEnabled: function () { return enabled; },
       setEnabled: function (v, announce) { return apply(!!v, !!announce); },
+      markJoined: function () {
+        joined = true;
+        failToastShown = false;
+      },
       enableOnJoin: function () {
-        // Re-apply after join (track may not exist before)
         var self = this;
+        joined = true;
         setTimeout(function () { apply(enabled, false); }, 400);
         setTimeout(function () { apply(enabled, false); }, 1600);
         return self;
@@ -277,17 +269,11 @@
       applyToApi: function (api) {
         return setNoiseSuppression(api, enabled);
       },
-      /** Call on screenSharingStatusChanged — keeps RNNoise on mic after renegotiation */
       onScreenShareChanged: function (sharing) {
-        var api = getApi();
-        reattachNoiseAfterTrackChange(api, enabled, [350, 1000, 2400]);
+        if (!joined || !apiReady()) return;
+        reattachNoiseAfterTrackChange(getApi(), enabled, [350, 1000, 2400]);
         if (shareReattachTimer) clearTimeout(shareReattachTimer);
-        // One calm toast when share starts and isolation is ON
-        if (sharing && enabled) {
-          shareReattachTimer = setTimeout(function () {
-            onToast('عزل الضوضاء ما زال مفعّلاً أثناء مشاركة الشاشة');
-          }, 600);
-        }
+        // بدون توست متكرر أثناء الشير
       },
       reattachAfterTrackChange: function () {
         return reattachNoiseAfterTrackChange(getApi(), enabled);

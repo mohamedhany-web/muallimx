@@ -234,6 +234,15 @@ body.mx-meetline {
   flex-shrink: 0;
 }
 
+#mx-wb-tools-host:empty::before,
+#mx-wb-tools-guest:empty::before {
+  content: 'جاري تحميل أدوات السبورة…';
+  display: block;
+  padding: 4px 2px;
+  font-size: 11px;
+  color: #717171;
+}
+
 .mx-wb-tools--dark {
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
   border-bottom-color: #334155;
@@ -339,10 +348,10 @@ body.mx-meetline {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   padding: 0;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid var(--ml-stroke);
   background: #ffffff;
   color: var(--ml-text);
@@ -379,15 +388,15 @@ body.mx-meetline {
 }
 
 .mx-ml-icon-btn i {
-  font-size: 17px;
+  font-size: 21px;
   line-height: 1;
   width: 1.1em;
   text-align: center;
 }
 
 .mx-ml-icon-btn img {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   display: block;
 }
 
@@ -826,9 +835,9 @@ body.mx-meetline #mx-ml-btn-pip.is-active {
 }
 #mx-share-float .mx-sf-handle i { color: #737373; }
 #mx-share-float .mx-sf-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   border: 1px solid #525252;
   background: #292929;
   color: #fdfdfd;
@@ -838,6 +847,7 @@ body.mx-meetline #mx-ml-btn-pip.is-active {
   cursor: pointer;
   flex-shrink: 0;
   transition: background .15s, border-color .15s, transform .1s;
+  font-size: 18px;
 }
 #mx-share-float .mx-sf-btn:hover {
   background: #0065fd;

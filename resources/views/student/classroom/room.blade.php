@@ -587,11 +587,11 @@
                 <div id="mx-record-dd-panel" class="hidden w-[min(100vw-1.5rem,20rem)] max-w-[calc(100vw-1rem)] rounded-xl border border-[#e9e9e9] bg-white overflow-hidden" role="menu">
                     <div class="mx-ml-record-menu-head">
                         <strong>ماذا تريد؟</strong>
-                        <p>لتسجيل الجلسة اضغط «تسجيل» — بدون شير.<br>لعرض شاشتك فقط بدون حفظ اضغط زر الشير.</p>
+                        <p>التسجيل التلقائي يحتاج تفعيل Jibri على السيرفر؛ وإلا يُستخدم مسار احتياطي محلي بهدوء.<br>لعرض شاشتك فقط بدون حفظ اضغط زر الشير.</p>
                     </div>
                     <button type="button" role="menuitem" data-mx-rec-mode="lecture" class="mx-ml-record-menu-item">
-                        <span class="mx-ml-rec-title">تسجيل الجلسة (تلقائي)</span>
-                        <span class="mx-ml-rec-desc">يحفظ فيديو الاجتماع + أصوات الجميع — بدون مشاركة شاشة</span>
+                        <span class="mx-ml-rec-title">تسجيل الجلسة</span>
+                        <span class="mx-ml-rec-desc">يفضّل التلقائي من السيرفر — أو احتياطي محلي إن لم يكن مفعّلاً</span>
                     </button>
                     <button type="button" role="menuitem" data-mx-rec-mode="report" class="mx-ml-record-menu-item">
                         <span class="mx-ml-rec-title">تقرير صوتي فقط</span>
@@ -2710,6 +2710,10 @@
 
                 if (browserOk) {
                     setRecordButtonBusy(false);
+                    setRecordStatus('التسجيل يعمل بالمسار الاحتياطي المحلي (سيرفر التسجيل غير مفعّل حالياً).', false);
+                    if (typeof mxToast === 'function') {
+                        mxToast('التسجيل يعمل بالمسار الاحتياطي — يمكنك المتابعة دون قلق');
+                    }
                     return;
                 }
 
@@ -2717,8 +2721,8 @@
                 lectureCaptureMode = null;
                 cleanupLectureRecordingVisuals();
                 setRecordButtonBusy(false);
-                setRecordStatus('تعذر بدء التسجيل التلقائي. تأكد من تفعيل التسجيل على سيرفر الاجتماع.', true);
-                alert('تعذر بدء التسجيل التلقائي للمحاضرة.\n\nيلزم تفعيل تسجيل السيرفر على live.muallimx.com (راجع دليل Jibri).');
+                setRecordStatus('تعذر بدء التسجيل. فعّل تسجيل السيرفر أو أعد المحاولة.', true);
+                alert('تعذر بدء تسجيل المحاضرة.\n\nالمسار التلقائي يحتاج تفعيل التسجيل على سيرفر الاجتماع (Jibri)، والمسار الاحتياطي المحلي فشل أيضاً.');
             }
 
             async function startMicRecording() {
@@ -3218,17 +3222,34 @@
                         setTimeout(resizeWbCanvas, 500);
                         mxSyncMediaButtonState();
                         mxUpdateLiveCount();
-                        // اللوح يُفتح يدوياً من زر القلم — لا يفتح تلقائياً حتى لا يسرق مساحة الفيديو
+                        try {
+                            if (window.__mxNoiseUi && typeof window.__mxNoiseUi.markJoined === 'function') {
+                                window.__mxNoiseUi.markJoined();
+                            }
+                            if (window.__mxNoiseUi && typeof window.__mxNoiseUi.enableOnJoin === 'function') {
+                                window.__mxNoiseUi.enableOnJoin();
+                            }
+                        } catch (eNs) {}
                         try {
                             if (window.__mxVbgUi && typeof window.__mxVbgUi.restoreSaved === 'function') {
                                 setTimeout(function () { window.__mxVbgUi.restoreSaved(); }, 800);
                             }
                         } catch (eVbg) {}
-                        try {
-                            if (window.__mxNoiseUi && typeof window.__mxNoiseUi.enableOnJoin === 'function') {
-                                window.__mxNoiseUi.enableOnJoin();
-                            }
-                        } catch (eNs) {}
+                        setTimeout(function () {
+                            try { mxSyncMediaButtonState(); } catch (eSync2) {}
+                            var j = window.__mxClassroomJitsiApi || api;
+                            if (!j || typeof j.isAudioMuted !== 'function') return;
+                            try {
+                                var p = j.isAudioMuted();
+                                function hint(muted) {
+                                    if (muted && typeof mxToast === 'function') {
+                                        mxToast('الميكروفون مكتوم — اضغط زر المايك للتحدث');
+                                    }
+                                }
+                                if (p && typeof p.then === 'function') p.then(hint);
+                                else hint(!!p);
+                            } catch (eHint) {}
+                        }, 900);
                     });
 
                     api.addEventListener('audioMuteStatusChanged', function(e) {
@@ -3259,12 +3280,26 @@
                         var name = (e && (e.displayName || e.id)) || 'مشارك';
                         if (typeof mxToast === 'function') mxToast('انضم: ' + name);
                     });
+                    api.addEventListener('participantLeft', function(e) {
+                        if (!hasJoinedConference) return;
+                        var name = (e && (e.displayName || e.id)) || 'مشارك';
+                        if (typeof mxToast === 'function') mxToast('غادر: ' + name);
+                        try { mxUpdateLiveCount(); } catch (eLeft) {}
+                    });
+                    api.addEventListener('participantKickedOut', function(e) {
+                        if (!hasJoinedConference) return;
+                        var name = (e && (e.displayName || e.id)) || 'مشارك';
+                        if (typeof mxToast === 'function') mxToast('غادر: ' + name);
+                        try { mxUpdateLiveCount(); } catch (eKick) {}
+                    });
                     api.addEventListener('connectionQualityChanged', function(e) {
                         mxSetConnectionQuality(e);
                     });
                     api.addEventListener('screenSharingStatusChanged', function(e) {
                         var on = !!(e && (e.on === true || e.on === 'true'));
                         try { mxSetShareUi(on); } catch (eShareUi) {}
+                        // أغلق أي انضمام مشاركين ثانٍ — يمنع قطع سماع أصوات الطلاب
+                        try { mxCloseParticipantsPip(); } catch (eClosePip) {}
                         try {
                             if (window.__mxNoiseUi && typeof window.__mxNoiseUi.onScreenShareChanged === 'function') {
                                 window.__mxNoiseUi.onScreenShareChanged(on);
@@ -3280,10 +3315,9 @@
                         } catch (eNsShare) {}
                         try {
                             if (window.MxClassroomShareControls && typeof window.MxClassroomShareControls.preserveReceiveAudio === 'function') {
-                                window.MxClassroomShareControls.preserveReceiveAudio(window.__mxClassroomJitsiApi || api);
+                                window.MxClassroomShareControls.preserveReceiveAudio(window.__mxClassroomJitsiApi || api, on);
                             }
                         } catch (eAudio) {}
-                        // لا نفتح انضمام Jitsi ثانٍ أثناء الشير — ذلك كان يقطع سماع الطلاب
                         if (on) {
                             try {
                                 if (window.__mxShareFloatUi) {
@@ -3292,7 +3326,7 @@
                                 }
                             } catch (eFloat) {}
                             if (typeof mxToast === 'function') {
-                                mxToast('شريط التحكم العائم جاهز — اسحبه لأي زاوية. لسماع الطلاب بوضوح استخدم سماعة رأس.');
+                                mxToast('لا تفعّل «صوت التبويب» إن أردت سماع الطلاب — أو استخدم سماعة رأس. الشريط العائم جاهز للسحب.');
                             }
                         } else {
                             try {
