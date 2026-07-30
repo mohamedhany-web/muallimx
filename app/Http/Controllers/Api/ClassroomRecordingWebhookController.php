@@ -42,10 +42,17 @@ class ClassroomRecordingWebhookController extends Controller
             $meeting = ClassroomMeeting::query()->find((int) $validated['classroom_meeting_id']);
         }
         if (! $meeting && ! empty($validated['room_name'])) {
+            $room = (string) $validated['room_name'];
             $meeting = ClassroomMeeting::query()
-                ->where('room_name', $validated['room_name'])
+                ->where('room_name', $room)
                 ->orderByDesc('id')
                 ->first();
+            if (! $meeting) {
+                $meeting = ClassroomMeeting::query()
+                    ->whereRaw('LOWER(room_name) = ?', [strtolower($room)])
+                    ->orderByDesc('id')
+                    ->first();
+            }
         }
 
         if (! $meeting) {

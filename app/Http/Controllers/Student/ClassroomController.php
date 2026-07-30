@@ -1477,14 +1477,32 @@ class ClassroomController extends Controller
         $this->ensureClassroomAccess($user, $meeting);
 
         $meeting->refresh();
+        $cloud = app(\App\Services\ClassroomRecordingCloudService::class);
+
         $hasVideo = ! empty($meeting->recording_path);
-        $cloudflareOk = $hasVideo ? $meeting->recordingExistsOnCloudflare() : false;
+        $cloudflareOk = $hasVideo ? $cloud->objectExists((string) $meeting->recording_path) : false;
+
+        // إن كان المسار فارغاً أو الملف غير موجود: حاول ربط ملف يتيم من R2 باسم الغرفة
+        if ((! $hasVideo || ! $cloudflareOk) && ! empty($meeting->room_name)) {
+            $linked = $cloud->tryLinkOrphanForMeeting($meeting);
+            if ($linked) {
+                $meeting->refresh();
+                $hasVideo = true;
+                $cloudflareOk = true;
+            }
+        }
 
         $status = (string) ($meeting->recording_status ?? '');
         if ($hasVideo && $cloudflareOk) {
             $status = 'ready';
+            if ($meeting->recording_status !== 'ready') {
+                $meeting->update(['recording_status' => 'ready']);
+            }
         } elseif ($hasVideo && ! $cloudflareOk) {
-            $status = 'pending_cloud';
+            // مسار قديم/تالف في قاعدة البيانات بدون ملف حقيقي
+            $status = 'missing';
+        } elseif ($status === 'processing') {
+            $status = 'processing';
         } elseif ($status === '') {
             $status = 'none';
         }
@@ -1492,17 +1510,18 @@ class ClassroomController extends Controller
         return response()->json([
             'ok' => true,
             'status' => $status,
-            'has_video' => $hasVideo,
+            'has_video' => $hasVideo && $cloudflareOk,
             'has_audio' => ! empty($meeting->recording_audio_path),
             'cloudflare_ok' => $cloudflareOk,
             'size' => (int) ($meeting->recording_size ?? 0),
             'duration_seconds' => (int) ($meeting->recording_duration_seconds ?? 0),
             'uploaded_at' => optional($meeting->recording_uploaded_at)?->toIso8601String(),
-            'download_url' => $cloudflareOk ? $meeting->recording_download_url : null,
+            'download_url' => ($hasVideo && $cloudflareOk) ? $meeting->recording_download_url : null,
             'message' => match ($status) {
-                'ready' => 'التسجيل مرفوع على Cloudflare وجاهز.',
-                'processing' => 'جاري حفظ/رفع التسجيل… حدّث الصفحة بعد قليل.',
-                'pending_cloud' => 'المسار مسجّل لكن الملف غير ظاهر بعد على Cloudflare.',
+                'ready' => 'التسجيل مرفوع على Cloudflare وجاهز للتحميل.',
+                'processing' => 'جاري حفظ/رفع التسجيل على السيرفر ثم Cloudflare… انتظر قليلاً.',
+                'pending_cloud' => 'جاري التحقق من الملف على Cloudflare…',
+                'missing' => 'المسار محفوظ لكن الملف غير موجود على Cloudflare. سجّل المحاضرة مجدداً أو تأكد من LIVE_RECORDINGS_WEBHOOK_TOKEN على الاستضافة.',
                 'failed' => 'فشل حفظ التسجيل.',
                 default => 'لا يوجد تسجيل بعد.',
             },

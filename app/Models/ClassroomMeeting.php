@@ -162,11 +162,8 @@ class ClassroomMeeting extends Model
             return false;
         }
 
-        try {
-            return Storage::disk('live_recordings_r2')->exists((string) $this->recording_path);
-        } catch (\Throwable $e) {
-            return false;
-        }
+        return app(\App\Services\ClassroomRecordingCloudService::class)
+            ->objectExists((string) $this->recording_path);
     }
 
     public function getRecordingDownloadUrlAttribute(): ?string

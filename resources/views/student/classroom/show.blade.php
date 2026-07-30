@@ -109,7 +109,7 @@
                                     وقت الرفع: {{ $meeting->recording_uploaded_at->format('Y-m-d H:i') }}
                                 @endif
                             @elseif($hasVideo && ! $cloudflareOk)
-                                المسار مسجّل لكن التحقق من Cloudflare لم ينجح بعد — أعد التحديث بعد لحظات.
+                                الملف غير موجود حالياً على Cloudflare (مسار قديم أو فشل الربط). افتح الصفحة بعد ضبط التوكن أو سجّل المحاضرة من جديد.
                             @elseif($hasAudio)
                                 تم حفظ التقرير الصوتي (الفويس) لهذا الاجتماع.
                             @elseif($meeting->ended_at)
@@ -239,7 +239,7 @@
     if (!panel) return;
     var url = panel.getAttribute('data-status-url');
     var initial = panel.getAttribute('data-initial-status') || 'none';
-    if (!url || (initial !== 'processing' && initial !== 'pending_cloud')) return;
+    if (!url || (initial !== 'processing' && initial !== 'pending_cloud' && initial !== 'missing' && initial !== 'none')) return;
 
     var statusEl = document.getElementById('mx-rec-status-text');
     var tries = 0;
@@ -256,10 +256,14 @@
                     window.location.reload();
                     return;
                 }
-                if (tries < maxTries) {
+                if (data.status === 'missing') {
+                    // توقف عن الانتظار اللانهائي
+                    return;
+                }
+                if (tries < maxTries && (data.status === 'processing' || data.status === 'pending_cloud' || data.status === 'none')) {
                     setTimeout(poll, 5000);
-                } else if (statusEl) {
-                    statusEl.textContent = 'ما زال الرفع قيد الانتظار. حدّث الصفحة لاحقاً أو تحقق من إعدادات التسجيل.';
+                } else if (tries >= maxTries && statusEl) {
+                    statusEl.textContent = 'انتهت مهلة الانتظار. تأكد من LIVE_RECORDINGS_WEBHOOK_TOKEN على الاستضافة ثم سجّل مجدداً أو حدّث الصفحة لاحقاً.';
                 }
             })
             .catch(function () {
@@ -267,7 +271,7 @@
             });
     }
 
-    setTimeout(poll, 3000);
+    setTimeout(poll, 2000);
 })();
 </script>
 @endpush
