@@ -22,9 +22,12 @@ $checks = [
     'join_zoom_in_opts' => str_contains($join, 'data-zoom-in') && str_contains($join, 'mx-guest-opts-panel'),
     'join_hb_3s' => str_contains($join, '}, 3000);'),
     'join_wb_mount_error' => str_contains($join, 'تعذّر فتح السبورة'),
-    'join_wb_toast' => str_contains($join, 'تم إتاحة السبورة'),
+    'join_wb_toast' => str_contains($join, 'تم إتاحة الكتابة') || str_contains($join, 'تم إتاحة السبورة'),
+    'join_wb_view_always' => str_contains($join, 'showGuestWbButtonAfterJoin'),
     'join_no_toggle_share_deny' => ! preg_match('/toggleShareScreen,\s*false/', $join),
     'tools_empty_hint' => str_contains($css, 'جاري تحميل أدوات السبورة'),
+    'participants_panel' => str_contains($room, 'mx-participants-panel'),
+    'end_no_force_inpage' => ! preg_match('/forceInPage\s*=\s*!!opts\.forceInPage\s*\|\|\s*!!pendingEndMeetingSubmit/', $room),
 ];
 
 $fail = 0;

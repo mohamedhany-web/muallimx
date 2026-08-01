@@ -342,11 +342,11 @@ class ClassroomJoinController extends Controller
     }
 
     /**
-     * جلب مشهد الوايت بورد المشترك (للضيف عند تفعيل الكتابة).
+     * جلب مشهد الوايت بورد المشترك (مشاهدة دائماً للضيف المنضم؛ الكتابة حسب الصلاحية).
      */
     public function whiteboardScene(Request $request, string $code)
     {
-        $meeting = $this->resolveLiveMeetingForGuestWb($request, $code);
+        $meeting = $this->resolveLiveMeetingForGuestWb($request, $code, false);
         if ($meeting instanceof \Illuminate\Http\JsonResponse) {
             return $meeting;
         }
@@ -359,16 +359,16 @@ class ClassroomJoinController extends Controller
             'elements' => $scene['elements'],
             'updated_by' => $scene['updated_by'],
             'ts' => $scene['ts'],
-            'allow_write' => true,
+            'allow_write' => $meeting->allowsParticipantWhiteboard(),
         ]);
     }
 
     /**
-     * حفظ مشهد الوايت بورد من الضيف (يكتب على اللوح وليس فوق فيديو الاجتماع).
+     * حفظ مشهد الوايت بورد من الضيف (يتطلب صلاحية الكتابة).
      */
     public function pushWhiteboardScene(Request $request, string $code)
     {
-        $meeting = $this->resolveLiveMeetingForGuestWb($request, $code);
+        $meeting = $this->resolveLiveMeetingForGuestWb($request, $code, true);
         if ($meeting instanceof \Illuminate\Http\JsonResponse) {
             return $meeting;
         }
@@ -393,9 +393,10 @@ class ClassroomJoinController extends Controller
     }
 
     /**
+     * @param  bool  $requireWrite  true = يتطلب allow_participant_whiteboard (للدفع فقط)
      * @return ClassroomMeeting|\Illuminate\Http\JsonResponse
      */
-    private function resolveLiveMeetingForGuestWb(Request $request, string $code)
+    private function resolveLiveMeetingForGuestWb(Request $request, string $code, bool $requireWrite = true)
     {
         $code = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
         $meeting = ClassroomMeeting::where('code', $code)->first();
@@ -411,7 +412,7 @@ class ClassroomJoinController extends Controller
             return response()->json(['ok' => false, 'message' => 'انتهت مدة الاجتماع', 'ended' => true], 422);
         }
 
-        if (! $meeting->allowsParticipantWhiteboard()) {
+        if ($requireWrite && ! $meeting->allowsParticipantWhiteboard()) {
             return response()->json(['ok' => false, 'message' => 'المعلم لم يُتح الكتابة على الوايت بورد بعد'], 422);
         }
 

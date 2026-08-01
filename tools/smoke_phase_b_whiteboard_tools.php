@@ -17,12 +17,13 @@ $checks = [
     'room_inline_js' => str_contains($room, 'mx-classroom-wb-tools-js'),
     'room_tools_host' => str_contains($room, 'mx-wb-tools-host'),
     'room_shared_title' => str_contains($room, 'سبورة مشتركة'),
-    'room_bind_tools' => str_contains($room, 'MxClassroomWbTools.bindToolbar'),
+    'room_bind_tools' => str_contains($room, 'mxEnsureHostWbTools') || str_contains($room, 'MxClassroomWbTools.bindToolbar'),
     'join_inline_js' => str_contains($join, 'mx-classroom-wb-tools-js'),
     'join_tools_guest' => str_contains($join, 'mx-wb-tools-guest'),
     'join_shared_copy' => str_contains($join, 'السبورة المشتركة'),
     'join_bind_tools' => str_contains($join, 'MxClassroomWbTools.bindToolbar'),
-    'join_pen_btn' => str_contains($join, 'قلم السبورة'),
+    'join_pen_btn' => str_contains($join, 'قلم السبورة') || str_contains($join, 'btn-guest-whiteboard'),
+    'js_bind_when_ready' => str_contains($js, 'bindToolbarWhenReady'),
 ];
 
 $fail = 0;

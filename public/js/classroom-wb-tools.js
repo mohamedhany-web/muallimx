@@ -163,8 +163,42 @@
     };
   }
 
+  /**
+   * Bind toolbar immediately (DOM does not need API). Retries default pen until API is ready.
+   */
+  function bindToolbarWhenReady(opts) {
+    opts = opts || {};
+    var onFail = typeof opts.onFail === 'function' ? opts.onFail : null;
+    var handle = null;
+    try {
+      handle = bindToolbar(opts);
+    } catch (err) {
+      if (onFail) onFail(err);
+      return null;
+    }
+    if (!handle) {
+      if (onFail) onFail(new Error('bindToolbar returned null'));
+      return null;
+    }
+    var attempts = 0;
+    var maxAttempts = typeof opts.maxAttempts === 'number' ? opts.maxAttempts : 16;
+    var delayMs = typeof opts.retryMs === 'number' ? opts.retryMs : 200;
+    function nudgePen() {
+      attempts += 1;
+      var api = typeof opts.getApi === 'function' ? opts.getApi() : null;
+      if (api) {
+        setTool(api, 'freedraw');
+        return;
+      }
+      if (attempts < maxAttempts) setTimeout(nudgePen, delayMs);
+    }
+    setTimeout(nudgePen, 100);
+    return handle;
+  }
+
   global.MxClassroomWbTools = {
     bindToolbar: bindToolbar,
+    bindToolbarWhenReady: bindToolbarWhenReady,
     setTool: setTool,
     clearAll: clearAll,
     TOOLS: TOOLS,

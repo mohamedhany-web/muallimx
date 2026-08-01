@@ -20,6 +20,19 @@
         #guest-wb-popup.is-open { display: flex !important; }
         .guest-excalidraw-host { position: absolute; inset: 0; width: 100%; height: 100%; }
         .guest-excalidraw-host .excalidraw { height: 100% !important; --color-surface-lowest: #0f172a; }
+        #btn-guest-whiteboard.mx-guest-wb-pulse {
+            animation: mxGuestWbPulse 0.8s ease-in-out 3;
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55);
+        }
+        @keyframes mxGuestWbPulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+        #btn-guest-whiteboard.mx-guest-wb-writable {
+            background: rgba(217, 119, 6, 0.4);
+            border-color: rgba(251, 191, 36, 0.7);
+        }
         .mx-muallimx-whiteboard .excalidraw .layer-ui__library,
         .mx-muallimx-whiteboard .excalidraw .library-menu,
         .mx-muallimx-whiteboard .excalidraw [data-testid="collab-button"],
@@ -220,9 +233,9 @@
                 <div id="mx-guest-wb-wrap" class="hidden">
                     <button type="button" id="btn-guest-whiteboard"
                             class="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-amber-600/25 hover:bg-amber-600/35 text-amber-100 text-sm font-semibold transition-colors border border-amber-500/40"
-                            title="اكتب على السبورة المشتركة مع المعلم (نفس اللوح)">
+                            title="شاهد السبورة المشتركة مع المعلم (الكتابة عند تفعيل الصلاحية)">
                         <i class="fas fa-pen text-amber-300"></i>
-                        <span class="hidden sm:inline">قلم السبورة</span>
+                        <span class="hidden sm:inline" id="btn-guest-whiteboard-label">السبورة</span>
                     </button>
                 </div>
                 <button type="button" id="btn-leave" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm font-semibold transition-colors shadow-lg shadow-rose-500/20">
@@ -247,7 +260,7 @@
                     <i class="fas fa-pen text-amber-400"></i>
                     السبورة المشتركة
                 </h2>
-                <p class="text-[11px] text-slate-400 m-0 hidden sm:block">تكتب على نفس لوح المعلم — مباشرة وبشكل حي</p>
+                <p id="guest-wb-mode-hint" class="text-[11px] text-slate-400 m-0 hidden sm:block">مشاهدة حية لسبورة المعلم — الكتابة عند التفعيل</p>
                 <button type="button" id="guest-wb-close" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-medium border border-slate-600">
                     <i class="fas fa-times"></i> إغلاق
                 </button>
@@ -296,6 +309,7 @@
         let guestExcMounted = false;
         let guestExcMountPromise = null;
         let guestExcVendorPromise = null;
+        let guestExcReactRoot = null;
         let guestWbSync = null;
         let pendingGuestName = '';
         let guestAvPassed = false;
@@ -306,16 +320,64 @@
             var prev = !!guestWbAllowed;
             guestWbAllowed = !!on;
             guestPerms.allow_participant_whiteboard = guestWbAllowed;
+            // Button stays visible after join for view-only; write unlocks tools.
             var wrap = document.getElementById('mx-guest-wb-wrap');
-            if (wrap) {
-                if (guestWbAllowed) wrap.classList.remove('hidden');
-                else wrap.classList.add('hidden');
+            if (wrap && joinToken) {
+                wrap.classList.remove('hidden');
+            }
+            var btn = document.getElementById('btn-guest-whiteboard');
+            var label = document.getElementById('btn-guest-whiteboard-label');
+            var hint = document.getElementById('guest-wb-mode-hint');
+            if (btn) {
+                btn.title = guestWbAllowed
+                    ? 'اكتب على السبورة المشتركة مع المعلم (نفس اللوح)'
+                    : 'شاهد السبورة المشتركة (المعلم لم يُتح الكتابة بعد)';
+                if (guestWbAllowed) {
+                    btn.classList.add('mx-guest-wb-writable');
+                } else {
+                    btn.classList.remove('mx-guest-wb-writable');
+                }
+            }
+            if (label) {
+                label.textContent = guestWbAllowed ? 'قلم السبورة' : 'السبورة';
+            }
+            if (hint) {
+                hint.textContent = guestWbAllowed
+                    ? 'تكتب على نفس لوح المعلم — مباشرة وبشكل حي'
+                    : 'مشاهدة حية لسبورة المعلم — اطلب تفعيل الكتابة من المعلم';
             }
             try {
                 if (window.__mxGuestWbTools && typeof window.__mxGuestWbTools.setEnabled === 'function') {
                     window.__mxGuestWbTools.setEnabled(!!guestWbAllowed);
                 }
             } catch (eEn) {}
+            // Remount when write permission flips while board is open so viewModeEnabled matches.
+            if (prev !== guestWbAllowed) {
+                var popupOpen = document.getElementById('guest-wb-popup');
+                if (popupOpen && popupOpen.classList.contains('is-open')) {
+                    try {
+                        if (guestExcReactRoot && typeof guestExcReactRoot.unmount === 'function') {
+                            guestExcReactRoot.unmount();
+                        }
+                    } catch (eUm) {}
+                    guestExcReactRoot = null;
+                    guestExcMounted = false;
+                    guestExcMountPromise = null;
+                    window.__mxGuestExcalidrawAPI = null;
+                    window.__mxGuestWbTools = null;
+                    var toolsGuest = document.getElementById('mx-wb-tools-guest');
+                    if (toolsGuest) {
+                        toolsGuest.innerHTML = '';
+                        delete toolsGuest.dataset.bound;
+                    }
+                    mountGuestExcalidraw().then(function () {
+                        if (guestWbSync) {
+                            if (typeof guestWbSync.setActive === 'function') guestWbSync.setActive(true);
+                            else guestWbSync.start();
+                        }
+                    }).catch(function () {});
+                }
+            }
             if (guestWbAllowed && !prev) {
                 try {
                     var t = document.getElementById('mx-guest-noise-toast');
@@ -325,16 +387,34 @@
                         t.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:300;background:#171717;color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;';
                         document.body.appendChild(t);
                     }
-                    t.textContent = 'تم إتاحة السبورة — اضغط «قلم السبورة» للفتح';
+                    t.textContent = 'تم إتاحة الكتابة — اضغط «قلم السبورة» للتعديل على اللوح';
                     t.style.opacity = '1';
                     clearTimeout(window.__mxGuestWbToastTimer);
                     window.__mxGuestWbToastTimer = setTimeout(function () { t.style.opacity = '0'; }, 3200);
+                    if (btn) {
+                        btn.classList.add('mx-guest-wb-pulse');
+                        setTimeout(function () { btn.classList.remove('mx-guest-wb-pulse'); }, 2400);
+                    }
                 } catch (eT) {}
             }
-            if (!guestWbAllowed) {
-                closeGuestWb();
-                if (guestWbSync) guestWbSync.stop();
+            // Revoking write: keep board open in view mode; do not close or stop sync pull.
+            if (!guestWbAllowed && prev) {
+                try {
+                    var t2 = document.getElementById('mx-guest-noise-toast');
+                    if (t2) {
+                        t2.textContent = 'أُوقفت الكتابة — يمكنك متابعة مشاهدة السبورة';
+                        t2.style.opacity = '1';
+                        clearTimeout(window.__mxGuestWbToastTimer);
+                        window.__mxGuestWbToastTimer = setTimeout(function () { t2.style.opacity = '0'; }, 2800);
+                    }
+                } catch (eT2) {}
             }
+        }
+
+        function showGuestWbButtonAfterJoin() {
+            var wrap = document.getElementById('mx-guest-wb-wrap');
+            if (wrap) wrap.classList.remove('hidden');
+            applyGuestWhiteboardAllowed(!!guestWbAllowed);
         }
 
         function buildGuestToolbarButtons(perms) {
@@ -498,6 +578,13 @@
             var loading = document.getElementById('guest-excalidraw-loading');
             if (!root) return Promise.reject(new Error('no root'));
             if (loading) loading.style.display = 'flex';
+            try {
+                if (guestExcReactRoot && typeof guestExcReactRoot.unmount === 'function') {
+                    guestExcReactRoot.unmount();
+                }
+            } catch (eUm2) {}
+            guestExcReactRoot = null;
+            try { root.innerHTML = ''; } catch (eClr) {}
 
             guestExcMountPromise = ensureGuestExVendor().then(function() {
                 return new Promise(function(resolve, reject) {
@@ -512,7 +599,7 @@
                         var createRoot = ReactDOM.createRoot;
                         var props = {
                             langCode: 'ar-SA',
-                            viewModeEnabled: false,
+                            viewModeEnabled: !guestWbAllowed,
                             excalidrawAPI: function(exApi) {
                                 window.__mxGuestExcalidrawAPI = exApi;
                             },
@@ -520,7 +607,8 @@
                                 if (guestWbSync) guestWbSync.onLocalChange();
                             }
                         };
-                        createRoot(root).render(ReactMod.createElement(Lib.Excalidraw, props));
+                        guestExcReactRoot = createRoot(root);
+                        guestExcReactRoot.render(ReactMod.createElement(Lib.Excalidraw, props));
                         guestExcMounted = true;
                         if (loading) loading.style.display = 'none';
                         window.dispatchEvent(new Event('resize'));
@@ -582,17 +670,20 @@
                     var popup = document.getElementById('guest-wb-popup');
                     return !!(popup && popup.classList.contains('is-open'));
                 },
-                onDenied: function() {
-                    applyGuestWhiteboardAllowed(false);
-                    alert('المعلم أوقف إتاحة الكتابة على الوايت بورد.');
+                onDenied: function(data) {
+                    // Pull is always allowed for view; 422 here means meeting ended / invalid token.
+                    var msg = (data && data.message) ? data.message : 'تعذر مزامنة السبورة.';
+                    if (data && data.ended) {
+                        alert(msg);
+                    }
                 }
             });
             return guestWbSync;
         }
 
         function openGuestWb() {
-            if (!guestWbAllowed) {
-                alert('المعلم لم يُتح السبورة بعد. انتظر قليلاً أو اطلب منه تفعيل «كتابة على السبورة».');
+            if (!joinToken) {
+                alert('انضم للاجتماع أولاً ثم افتح السبورة.');
                 return;
             }
             var popup = document.getElementById('guest-wb-popup');
@@ -605,7 +696,9 @@
             var loading = document.getElementById('guest-excalidraw-loading');
             if (loading) {
                 loading.style.display = 'flex';
-                loading.textContent = 'جاري تحميل السبورة المشتركة…';
+                loading.textContent = guestWbAllowed
+                    ? 'جاري تحميل السبورة المشتركة…'
+                    : 'جاري تحميل السبورة للمشاهدة…';
             }
             mountGuestExcalidraw().then(function() {
                 var sync = ensureGuestWbSync();
@@ -613,6 +706,11 @@
                     if (typeof sync.setActive === 'function') sync.setActive(true);
                     else sync.start();
                 }
+                try {
+                    if (window.__mxGuestWbTools && typeof window.__mxGuestWbTools.setEnabled === 'function') {
+                        window.__mxGuestWbTools.setEnabled(!!guestWbAllowed);
+                    }
+                } catch (eEn2) {}
                 setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 100);
                 setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 400);
             }).catch(function(err) {
@@ -725,6 +823,7 @@
                 }
                 joinToken = enterData.token;
                 applyGuestPermissions(enterData);
+                showGuestWbButtonAfterJoin();
             } catch (e) {
                 alert('تعذر الاتصال بالخادم. حاول مرة أخرى.');
                 if (avBtn) {
@@ -760,6 +859,8 @@
                         enableRecording: false,
                         startWithAudioMuted: true,
                         startWithVideoMuted: true,
+                        enableLayerSuspension: true,
+                        maxFullResolutionParticipants: 1,
                         disableVirtualBackground: !guestPerms.allow_participant_virtual_background,
                         toolbarButtons: buildGuestToolbarButtons(guestPerms),
                         // الضيف يغادر فقط — لا طرد/إعطاء مشرف/إنهاء للجميع

@@ -28,12 +28,9 @@
     };
   }
 
+  /** Network-only save mode — do NOT use CPU core count (many laptops have ≤4 cores on good Wi‑Fi). */
   function prefersSaveBandwidth() {
     try {
-      var cores = global.navigator && global.navigator.hardwareConcurrency
-        ? Number(global.navigator.hardwareConcurrency)
-        : 4;
-      if (cores > 0 && cores <= 4) return true;
       var conn = global.navigator && global.navigator.connection;
       if (conn) {
         if (conn.saveData) return true;
@@ -45,23 +42,25 @@
   }
 
   function getVideoConstraintsForDevice() {
+    // Peak mode for 2-vCPU live bridge: prefer 360p cams; share FPS stays separate.
     if (prefersSaveBandwidth()) {
       return {
-        height: { ideal: 480, max: 720 },
-        width: { ideal: 854, max: 1280 },
-        frameRate: { ideal: 24, max: 30 },
+        height: { ideal: 240, max: 480 },
+        width: { ideal: 426, max: 854 },
+        frameRate: { ideal: 15, max: 24 },
       };
     }
     return {
-      height: { ideal: 720, max: 1080 },
-      width: { ideal: 1280, max: 1920 },
-      frameRate: { ideal: 30, max: 30 },
+      height: { ideal: 360, max: 720 },
+      width: { ideal: 640, max: 1280 },
+      frameRate: { ideal: 24, max: 30 },
     };
   }
 
   function getJitsiAudioConfigPatch() {
     var save = prefersSaveBandwidth();
-    var lastN = save ? 4 : 8;
+    // Fewer simultaneous incoming videos = less JVB CPU on small hosts.
+    var lastN = save ? 4 : 6;
     return {
       disableAP: false,
       disableAEC: false,
@@ -71,15 +70,36 @@
       enableNoisyMicDetection: true,
       enableTalkWhileMuted: true,
       enableOpusRed: true,
+      enableLayerSuspension: true,
+      maxFullResolutionParticipants: 1,
+      resolution: save ? 240 : 360,
       audioQuality: {
         stereo: false,
-        opusMaxAverageBitrate: 64000,
+        opusMaxAverageBitrate: 48000,
       },
       channelLastN: lastN,
-      startLastN: lastN,
+      startLastN: Math.min(4, lastN),
+      // Screen share: keep readable on weak nets; 24fps otherwise (CPU-friendly vs 30).
       desktopSharingFrameRate: {
         min: 5,
-        max: save ? 10 : 15,
+        max: save ? 15 : 24,
+      },
+      videoQuality: {
+        enableAdaptiveMode: true,
+        codecPreferenceOrder: ['VP8', 'VP9', 'H264'],
+        screenshareCodec: 'VP8',
+        maxBitratesVideo: {
+          low: 100000,
+          standard: 250000,
+          high: 800000,
+          fullHd: 1200000,
+          ssHigh: 1800000,
+        },
+        minHeightForQualityLvl: {
+          180: 'low',
+          360: 'standard',
+          720: 'high',
+        },
       },
       constraints: {
         audio: getCleanMicAudioConstraints(),

@@ -510,7 +510,7 @@
             <button type="button" id="mx-ml-btn-bg" class="mx-ml-icon-btn" title="خلفية الكاميرا (تمويه / صورة)" aria-expanded="false" aria-controls="mx-vbg-panel">
                 <i class="fas fa-image text-[#171717]"></i>
             </button>
-            <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn" title="السبورة المشتركة الحية" aria-pressed="false">
+            <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn" title="فتح السبورة وأدوات القلم (W)" aria-pressed="false">
                 <i class="fas fa-pen text-[#171717]"></i>
             </button>
             <button type="button" id="mx-ml-btn-react" class="mx-ml-icon-btn" title="رفع اليد / تفاعل">
@@ -705,6 +705,16 @@
         </div>
     </div>
 
+    {{-- قائمة مشاركين مخصصة (لا تعتمد على Jitsi pane / بدون انضمام ثانٍ) --}}
+    <aside id="mx-participants-panel" class="mx-participants-panel" aria-hidden="true" hidden>
+        <div class="mx-participants-panel-head">
+            <strong>المشاركون <span id="mx-participants-panel-count">(0)</span></strong>
+            <button type="button" id="mx-participants-panel-close" title="إغلاق" aria-label="إغلاق"><i class="fas fa-times"></i></button>
+        </div>
+        <ul id="mx-participants-panel-list" class="mx-participants-panel-list"></ul>
+        <p class="mx-participants-panel-hint">تُحدَّث القائمة مباشرة من الجلسة الحالية</p>
+    </aside>
+
     {{-- نافذة رفع التسجيل — يمكن تصغيرها والمتابعة داخل الغرفة --}}
     <div id="mx-upload-modal" class="hidden fixed inset-0 z-[180] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm" aria-hidden="true">
         <div class="w-full max-w-md rounded-2xl border border-[#e9e9e9] bg-white shadow-2xl p-5 sm:p-6" role="dialog" aria-labelledby="mx-upload-modal-title" aria-modal="true">
@@ -726,12 +736,12 @@
         <span id="mx-upload-chip-text" class="truncate">رفع التسجيل</span>
     </button>
 
-    {{-- شاشة إنهاء الاجتماع أثناء الرفع — لا تُغلق الصفحة حتى يكتمل الرفع --}}
+    {{-- شاشة حالة قصيرة (نادراً — الرفع الافتراضي في تاب منفصل والإنهاء فوري) --}}
     <div id="mx-end-upload-overlay" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md" aria-hidden="true">
         <div class="w-full max-w-lg rounded-2xl border border-slate-600 bg-slate-900 text-slate-100 shadow-2xl p-6 sm:p-8 text-center">
             <div class="mx-auto mb-4 h-12 w-12 rounded-full border-4 border-sky-400/30 border-t-sky-400 animate-spin" aria-hidden="true"></div>
-            <h3 id="mx-end-upload-title" class="text-xl font-bold m-0 mb-2">جاري رفع التسجيل…</h3>
-            <p id="mx-end-upload-sub" class="text-sm text-slate-300 m-0 mb-4">لا تغلق هذه الصفحة. سيتم إنهاء الاجتماع تلقائياً بعد اكتمال الرفع إلى Cloudflare.</p>
+            <h3 id="mx-end-upload-title" class="text-xl font-bold m-0 mb-2">جاري تجهيز التسجيل…</h3>
+            <p id="mx-end-upload-sub" class="text-sm text-slate-300 m-0 mb-4">يُفتح تاب الرفع في نافذة منفصلة ثم يُنهى الاجتماع فوراً.</p>
             <p id="mx-end-upload-pct" class="text-5xl font-black text-sky-400 tabular-nums m-0 mb-3">0%</p>
             <div class="h-3 rounded-full bg-slate-700 overflow-hidden mb-3">
                 <div id="mx-end-upload-bar" class="h-full w-0 bg-sky-500 transition-[width] duration-150"></div>
@@ -900,8 +910,12 @@
                                     var el = panel.querySelector('input[data-perm-key="' + k + '"]');
                                     if (el) el.checked = !!prev[k];
                                 });
-                                if (typeof mxToast === 'function') mxToast('تعذر حفظ صلاحيات الطلاب');
-                                return;
+                                return r.json().then(function (d) {
+                                    var msg = (d && d.message) ? d.message : 'تعذر حفظ صلاحيات الطلاب';
+                                    if (typeof mxToast === 'function') mxToast(msg);
+                                }).catch(function () {
+                                    if (typeof mxToast === 'function') mxToast('تعذر حفظ صلاحيات الطلاب');
+                                });
                             }
                             if (typeof mxToast === 'function') mxToast('تم تحديث صلاحيات الطلاب');
                         }).catch(function () {
@@ -1273,25 +1287,7 @@
                                         });
                                     }
                                     if (hostWbSync) hostWbSync.start();
-                                    try {
-                                        if (!window.__mxHostWbTools && window.MxClassroomWbTools && typeof window.MxClassroomWbTools.bindToolbar === 'function') {
-                                            var toolsHost = document.getElementById('mx-wb-tools-host');
-                                            if (toolsHost && !toolsHost.dataset.bound) {
-                                                toolsHost.dataset.bound = '1';
-                                                window.__mxHostWbTools = window.MxClassroomWbTools.bindToolbar({
-                                                    mountEl: toolsHost,
-                                                    theme: 'light',
-                                                    hintText: 'سبورة مشتركة حية — الطلاب يكتبون على نفس اللوح عند التفعيل',
-                                                    getApi: function () { return window.__mxClassroomExcalidrawAPI || null; },
-                                                    canWrite: function () { return true; },
-                                                    onAfterChange: function () {
-                                                        if (hostWbSync && typeof hostWbSync.pushNow === 'function') hostWbSync.pushNow();
-                                                        else if (hostWbSync && typeof hostWbSync.onLocalChange === 'function') hostWbSync.onLocalChange();
-                                                    },
-                                                });
-                                            }
-                                        }
-                                    } catch (eTools) {}
+                                    mxEnsureHostWbTools();
                                     resolve();
                                 } catch (err) {
                                     failMount(err);
@@ -1370,6 +1366,62 @@
             var artboardPanel = document.getElementById('mx-artboard-panel');
             var wbOpenBtn = document.getElementById('btn-wb-popup-open');
 
+            function mxShowWbToolsError(msg) {
+                var host = document.getElementById('mx-wb-tools-host');
+                if (!host) return;
+                host.innerHTML = '<p class="mx-wb-tools-hint" style="color:#c50000;font-weight:600;">' +
+                    (msg || 'تعذّر تحميل أدوات السبورة. حدّث الصفحة.') + '</p>';
+                if (typeof mxToast === 'function') mxToast(msg || 'تعذّر تحميل أدوات السبورة');
+            }
+
+            function mxEnsureHostWbTools() {
+                if (window.__mxHostWbTools) return window.__mxHostWbTools;
+                var toolsHost = document.getElementById('mx-wb-tools-host');
+                if (!toolsHost) return null;
+                if (!window.MxClassroomWbTools) {
+                    mxShowWbToolsError('مكتبة أدوات السبورة غير محمّلة.');
+                    return null;
+                }
+                var binder = window.MxClassroomWbTools.bindToolbarWhenReady
+                    || window.MxClassroomWbTools.bindToolbar;
+                if (typeof binder !== 'function') {
+                    mxShowWbToolsError('دالة ربط الأدوات غير متاحة.');
+                    return null;
+                }
+                if (toolsHost.dataset.bound === '1' && !window.__mxHostWbTools) {
+                    toolsHost.innerHTML = '';
+                    delete toolsHost.dataset.bound;
+                }
+                toolsHost.dataset.bound = '1';
+                try {
+                    window.__mxHostWbTools = binder({
+                        mountEl: toolsHost,
+                        theme: 'light',
+                        hintText: 'سبورة مشتركة حية — الطلاب يكتبون على نفس اللوح عند التفعيل',
+                        getApi: function () { return window.__mxClassroomExcalidrawAPI || null; },
+                        canWrite: function () { return true; },
+                        maxAttempts: 16,
+                        retryMs: 200,
+                        onFail: function (err) {
+                            console.error('Host whiteboard tools bind failed', err);
+                            mxShowWbToolsError('تعذّر ربط أدوات القلم. أعد فتح السبورة.');
+                            delete toolsHost.dataset.bound;
+                            window.__mxHostWbTools = null;
+                        },
+                        onAfterChange: function () {
+                            if (hostWbSync && typeof hostWbSync.pushNow === 'function') hostWbSync.pushNow();
+                            else if (hostWbSync && typeof hostWbSync.onLocalChange === 'function') hostWbSync.onLocalChange();
+                        },
+                    });
+                } catch (eTools) {
+                    console.error('mxEnsureHostWbTools', eTools);
+                    mxShowWbToolsError('خطأ في تحميل أدوات السبورة.');
+                    delete toolsHost.dataset.bound;
+                    window.__mxHostWbTools = null;
+                }
+                return window.__mxHostWbTools;
+            }
+
             function openWbPopup() {
                 if (!artboardPanel) return;
                 artboardPanel.hidden = false;
@@ -1378,17 +1430,23 @@
                 if (wbOpenBtn) {
                     wbOpenBtn.classList.add('is-active', 'mx-ml-wb-active');
                     wbOpenBtn.setAttribute('aria-pressed', 'true');
+                    wbOpenBtn.title = 'إغلاق السبورة وأدوات القلم';
                     var pen = wbOpenBtn.querySelector('i');
                     if (pen) pen.className = 'fas fa-pen text-[#0065fd] text-sm';
                 }
                 mountClassroomExcalidrawOnce().then(function() {
+                    mxEnsureHostWbTools();
                     if (hostWbSync) {
                         if (typeof hostWbSync.setActive === 'function') hostWbSync.setActive(true);
                         else hostWbSync.start();
                     }
                     setTimeout(nudgeClassroomExLayout, 80);
                     setTimeout(nudgeClassroomExLayout, 400);
-                }).catch(function() {});
+                    if (typeof mxToast === 'function') mxToast('السبورة مفتوحة — استخدم شريط القلم أعلى اللوح');
+                }).catch(function(err) {
+                    console.error('openWbPopup mount failed', err);
+                    mxShowWbToolsError('تعذّر فتح السبورة. حدّث الصفحة أو جرّب Chrome.');
+                });
             }
 
             function closeWbPopup() {
@@ -1411,6 +1469,7 @@
                     if (wbOpenBtn) {
                         wbOpenBtn.classList.remove('is-active', 'mx-ml-wb-active');
                         wbOpenBtn.setAttribute('aria-pressed', 'false');
+                        wbOpenBtn.title = 'فتح السبورة وأدوات القلم (W)';
                         var pen = wbOpenBtn.querySelector('i');
                         if (pen) pen.className = 'fas fa-pen text-[#171717] text-sm';
                     }
@@ -2212,9 +2271,14 @@
                 }
             }
 
+            /**
+             * Queue recording upload. Prefer a separate upload tab — never block end-meeting on Cloudflare.
+             * forceInPage only when popup blocked or explicitly requested (not because ending).
+             */
             function mxQueueBlobUpload(blob, durationSeconds, kind, secondaryBlob, opts) {
                 opts = opts || {};
-                var forceInPage = !!opts.forceInPage || !!pendingEndMeetingSubmit;
+                // Do NOT tie forceInPage to pendingEndMeetingSubmit — end meeting must open the upload tab and leave.
+                var forceInPage = !!opts.forceInPage;
                 var label = kind === 'report' ? 'تسجيل التقرير الصوتي' : 'تسجيل المحاضرة';
                 var uploadErr = mxValidateRecordingBeforeUpload(blob, durationSeconds, label);
                 if (uploadErr) {
@@ -2244,25 +2308,33 @@
                 return mxIdbPutJob(job).then(function() {
                     var w = mxOpenRecordingUploadTab(job.id);
                     if (!w) {
+                        // Popup blocked: fall back to in-page upload (caller may still end meeting after IDB save).
                         setRecordStatus('المتصفح منع التاب الجديد — سيتم الرفع من هذه الصفحة.', true);
+                        if (opts.preferTabOnly) {
+                            // Job is in IDB; upload tab can be opened later from meeting details / retry.
+                            return { ok: true, tab: false, idbOnly: true, jobId: job.id };
+                        }
                         return mxRunUploadJob(Object.assign({}, job, { status: 'pending' }));
                     }
-                    setRecordStatus('تم فتح تاب الرفع في نافذة جديدة — أكمل الرفع هناك وتابع الاجتماع في هذا التاب.', false);
-                    return { ok: true, tab: true };
+                    setRecordStatus('تم فتح تاب الرفع في نافذة جديدة — أكمل الرفع هناك.', false);
+                    return { ok: true, tab: true, jobId: job.id };
                 }).catch(function(idbErr) {
                     console.warn('IndexedDB before upload tab:', idbErr);
                     return mxRunUploadJob(Object.assign({}, job, { status: 'pending' }));
                 });
             }
 
+            /** End meeting immediately — do not wait for Cloudflare upload. */
             function mxSubmitEndMeetingWhenReady() {
                 if (!endMeetingForm) return;
                 pendingEndMeetingSubmit = false;
                 mxBlockUnloadForUpload = false;
-                if (mxEndUploadStatus) mxEndUploadStatus.textContent = 'اكتمل الرفع — جاري إنهاء الاجتماع...';
-                setTimeout(function () {
-                    endMeetingForm.submit();
-                }, 450);
+                mxHideEndUploadOverlay();
+                try {
+                    endMeetingForm.removeAttribute('onsubmit');
+                    endMeetingForm.onsubmit = null;
+                } catch (eOn) {}
+                endMeetingForm.submit();
             }
 
             function cleanupLectureRecordingVisuals() {
@@ -2741,34 +2813,29 @@
                         setRecordStatus(lectureErr, true);
                         alert(lectureErr);
                         recordedChunks = [];
-                        pendingEndMeetingSubmit = false;
+                        // Still end the meeting if the user already confirmed end — do not leave them stuck.
+                        if (pendingEndMeetingSubmit && endMeetingForm) {
+                            mxSubmitEndMeetingWhenReady();
+                        } else {
+                            pendingEndMeetingSubmit = false;
+                        }
                         return;
                     }
 
                     setRecordButtonBusy(false);
-                    setRecordStatus('تم إيقاف تسجيل المحاضرة. جاري الرفع إلى Cloudflare...', false);
-                    if (pendingEndMeetingSubmit) {
-                        mxShowEndUploadOverlay({
-                            title: 'جاري رفع التسجيل قبل إنهاء الاجتماع',
-                            sub: 'لا تغلق هذه الصفحة. الرفع مستمر ولن يتوقف — سيتم إنهاء الاجتماع تلقائياً بعد اكتماله.',
-                            status: 'تجهيز الملف...',
-                            percent: 2,
-                        });
-                    }
-                    mxQueueBlobUpload(blob, durationSeconds, 'lecture', null, { forceInPage: !!pendingEndMeetingSubmit })
+                    setRecordStatus('تم إيقاف تسجيل المحاضرة. جاري فتح تاب الرفع...', false);
+                    var endAfterQueue = !!pendingEndMeetingSubmit;
+                    // Prefer separate upload tab; end meeting as soon as the job is queued (do not wait for upload).
+                    mxQueueBlobUpload(blob, durationSeconds, 'lecture', null, { preferTabOnly: endAfterQueue })
                         .then(function () {
-                            if (pendingEndMeetingSubmit && endMeetingForm) {
+                            if (endAfterQueue && endMeetingForm) {
                                 mxSubmitEndMeetingWhenReady();
                             }
                         })
                         .catch(function () {
-                            if (pendingEndMeetingSubmit) {
-                                pendingEndMeetingSubmit = false;
-                                if (mxEndUploadStatus) {
-                                    mxEndUploadStatus.textContent = 'فشل الرفع — يمكنك إعادة المحاولة من النافذة ثم إنهاء الاجتماع يدوياً.';
-                                }
-                                if (mxUploadModalRetry) mxUploadModalRetry.classList.remove('hidden');
-                                mxShowUploadModal(true);
+                            if (endAfterQueue && endMeetingForm) {
+                                // Still end — job may be in IDB for later retry from upload tab.
+                                mxSubmitEndMeetingWhenReady();
                             }
                         });
                     recordedChunks = [];
@@ -2979,28 +3046,27 @@
                         setRecordStatus(reportErr, true);
                         alert(reportErr);
                         recordedChunks = [];
-                        pendingEndMeetingSubmit = false;
+                        if (pendingEndMeetingSubmit && endMeetingForm) {
+                            mxSubmitEndMeetingWhenReady();
+                        } else {
+                            pendingEndMeetingSubmit = false;
+                        }
                         return;
                     }
 
                     setRecordButtonBusy(false);
-                    setRecordStatus('تم إيقاف تسجيل التقرير. جاري الرفع...', false);
-                    if (pendingEndMeetingSubmit) {
-                        mxShowEndUploadOverlay({
-                            title: 'جاري رفع التقرير الصوتي',
-                            sub: 'لا تغلق الصفحة — سيتم إنهاء الاجتماع بعد اكتمال الرفع.',
-                            status: 'تجهيز الملف...',
-                            percent: 2,
-                        });
-                    }
-                    mxQueueBlobUpload(blob, durationSeconds, 'report', null, { forceInPage: !!pendingEndMeetingSubmit })
+                    setRecordStatus('تم إيقاف تسجيل التقرير. جاري فتح تاب الرفع...', false);
+                    var endAfterReport = !!pendingEndMeetingSubmit;
+                    mxQueueBlobUpload(blob, durationSeconds, 'report', null, { preferTabOnly: endAfterReport })
                         .then(function () {
-                            if (pendingEndMeetingSubmit && endMeetingForm) {
+                            if (endAfterReport && endMeetingForm) {
                                 mxSubmitEndMeetingWhenReady();
                             }
                         })
                         .catch(function () {
-                            pendingEndMeetingSubmit = false;
+                            if (endAfterReport && endMeetingForm) {
+                                mxSubmitEndMeetingWhenReady();
+                            }
                         });
                     recordedChunks = [];
                 });
@@ -3020,15 +3086,8 @@
                     }
                     setRecordButtonBusy(true);
                     setRecordStatus('جاري إيقاف التسجيل التلقائي وحفظه على السيرفر...', false);
-                    if (pendingEndMeetingSubmit) {
-                        mxShowEndUploadOverlay({
-                            title: 'جاري حفظ التسجيل على السيرفر',
-                            sub: 'التسجيل يُرفع من السيرفر إلى Cloudflare. لا تغلق الصفحة — سيتم إنهاء الاجتماع بعد بدء الحفظ.',
-                            status: 'إيقاف Jibri وتجهيز الملف...',
-                            percent: 15,
-                        });
-                    }
                     var durationSeconds = recordingStartedAt ? Math.max(1, Math.round((Date.now() - recordingStartedAt) / 1000)) : 0;
+                    var endAfterJibri = !!pendingEndMeetingSubmit;
                     try {
                         await mxMarkRecordingProcessing();
                     } catch (eMark) {}
@@ -3045,18 +3104,16 @@
                         false
                     );
                     if (typeof mxToast === 'function') mxToast('التسجيل التلقائي توقف — يُرفع من السيرفر إلى Cloudflare');
-                    if (pendingEndMeetingSubmit && endMeetingForm) {
-                        mxSetUploadBar(70);
-                        if (mxEndUploadStatus) mxEndUploadStatus.textContent = 'بدأ الحفظ على السيرفر — جاري إنهاء الاجتماع. تابع الحالة من صفحة التفاصيل.';
-                        setTimeout(function () { mxSubmitEndMeetingWhenReady(); }, 1200);
+                    // Jibri saves server-side — end meeting immediately (no artificial delay).
+                    if (endAfterJibri && endMeetingForm) {
+                        mxSubmitEndMeetingWhenReady();
                     }
                     return;
                 }
 
                 if (!mediaRecorder || mediaRecorder.state !== 'recording') {
                     if (pendingEndMeetingSubmit && endMeetingForm) {
-                        pendingEndMeetingSubmit = false;
-                        endMeetingForm.submit();
+                        mxSubmitEndMeetingWhenReady();
                     }
                     return;
                 }
@@ -3111,32 +3168,16 @@
 
             if (endMeetingForm && endMeetingBtn) {
                 endMeetingForm.addEventListener('submit', function(e) {
-                    if (!isRecording && !mxUploadInProgress) return;
+                    // Upload already in a separate tab (or in-page): do not block ending the meeting.
+                    if (!isRecording) return;
+                    // Local MediaRecorder / Jibri still running: stop first, queue upload tab, then end immediately.
                     e.preventDefault();
                     pendingEndMeetingSubmit = true;
-                    if (isRecording) {
-                        setRecordStatus('سيتم إنهاء الاجتماع بعد حفظ التسجيل واكتمال الرفع...', false);
-                        mxShowEndUploadOverlay({
-                            title: 'جاري تجهيز التسجيل قبل الإنهاء',
-                            sub: 'الرفع لن يتوقف. ابقَ في هذه الصفحة حتى يكتمل الحفظ على Cloudflare.',
-                            status: 'إيقاف التسجيل...',
-                            percent: 1,
-                        });
-                        stopBrowserRecording();
-                        return;
+                    setRecordStatus('جاري إيقاف التسجيل وفتح تاب الرفع ثم إنهاء الاجتماع...', false);
+                    if (typeof mxToast === 'function') {
+                        mxToast('إيقاف التسجيل → تاب الرفع → إنهاء فوري');
                     }
-                    mxShowEndUploadOverlay({
-                        title: 'انتظر اكتمال الرفع',
-                        sub: 'يوجد رفع قيد التنفيذ. سيتم إنهاء الاجتماع تلقائياً بعده.',
-                        status: 'متابعة الرفع...',
-                        percent: 5,
-                    });
-                    var waitEnd = setInterval(function () {
-                        if (!mxUploadInProgress) {
-                            clearInterval(waitEnd);
-                            mxSubmitEndMeetingWhenReady();
-                        }
-                    }, 500);
+                    stopBrowserRecording();
                 });
             }
 
@@ -3357,10 +3398,16 @@
                                 ],
                                 startWithAudioMuted: true,
                                 startWithVideoMuted: true,
+                                // Peak defaults for 2-vCPU bridge (audioPatch may tighten further)
+                                enableLayerSuspension: true,
+                                maxFullResolutionParticipants: 1,
                                 disableAudioLevels: false,
                                 disableVirtualBackground: false,
-                                // شريط Jitsi الداخلي مخفي — التحكم من شريط Meet.Line السفلي
-                                toolbarButtons: [],
+                                // Enable participants-pane + chat features for executeCommand; hide chrome via CSS (.mx-hide-jitsi-toolbox)
+                                toolbarButtons: [
+                                    'microphone', 'camera', 'desktop', 'chat',
+                                    'raisehand', 'participants-pane', 'tileview', 'hangup',
+                                ],
                                 buttonsWithNotifyClick: [],
                                 hideConferenceTimer: false,
                                 disableFocusIndicator: true,
@@ -3391,7 +3438,10 @@
                             PROVIDER_NAME: 'Muallimx',
                             JITSI_WATERMARK_LINK: '',
                             HIDE_DEEP_LINKING_LOGO: true,
-                            TOOLBAR_BUTTONS: [],
+                            TOOLBAR_BUTTONS: [
+                                'microphone', 'camera', 'desktop', 'chat',
+                                'raisehand', 'participants-pane', 'tileview', 'hangup',
+                            ],
                             TOOLBAR_ALWAYS_VISIBLE: false,
                             SHOW_JITSI_WATERMARK: false,
                             SHOW_WATERMARK_FOR_GUESTS: false,
@@ -3647,6 +3697,117 @@
                     }
                     el.textContent = String(n);
                 } catch (e) {}
+                try { mxRefreshParticipantsPanel(); } catch (e2) {}
+            }
+
+            function mxGetParticipantsRoster() {
+                var j = window.__mxClassroomJitsiApi || api;
+                var list = [];
+                var seen = {};
+                function pushOne(id, name, isLocal) {
+                    var key = String(id || name || '');
+                    if (!key || seen[key]) return;
+                    seen[key] = true;
+                    list.push({
+                        id: key,
+                        name: (name && String(name).trim()) ? String(name).trim() : 'مشارك',
+                        isLocal: !!isLocal,
+                    });
+                }
+                try {
+                    if (j && typeof j.getParticipantsInfo === 'function') {
+                        var info = j.getParticipantsInfo() || [];
+                        info.forEach(function (p) {
+                            if (!p) return;
+                            pushOne(
+                                p.participantId || p.id,
+                                p.displayName || p.name,
+                                !!(p.formattedDisplayName && String(p.formattedDisplayName).indexOf('(me)') >= 0)
+                                    || !!(p.isLocal)
+                            );
+                        });
+                    }
+                } catch (eInfo) {}
+                if (!list.length) {
+                    pushOne('local', (typeof userName !== 'undefined' && userName) ? userName : 'أنت', true);
+                }
+                return list;
+            }
+
+            function mxRefreshParticipantsPanel() {
+                var ul = document.getElementById('mx-participants-panel-list');
+                var countEl = document.getElementById('mx-participants-panel-count');
+                if (!ul) return;
+                var roster = mxGetParticipantsRoster();
+                if (countEl) countEl.textContent = '(' + roster.length + ')';
+                ul.innerHTML = '';
+                roster.forEach(function (p) {
+                    var li = document.createElement('li');
+                    var av = document.createElement('span');
+                    av.className = 'mx-p-avatar';
+                    av.textContent = (p.name || '?').charAt(0);
+                    var nm = document.createElement('span');
+                    nm.className = 'mx-p-name';
+                    nm.textContent = p.name;
+                    li.appendChild(av);
+                    li.appendChild(nm);
+                    if (p.isLocal) {
+                        var you = document.createElement('span');
+                        you.className = 'mx-p-you';
+                        you.textContent = 'أنت';
+                        li.appendChild(you);
+                    }
+                    ul.appendChild(li);
+                });
+            }
+
+            function mxParticipantsPanelIsOpen() {
+                var panel = document.getElementById('mx-participants-panel');
+                return !!(panel && panel.classList.contains('is-open'));
+            }
+
+            function mxSetParticipantsPanelOpen(on) {
+                var panel = document.getElementById('mx-participants-panel');
+                var btnPeople = document.getElementById('mx-ml-btn-participants');
+                if (!panel) return;
+                if (on) {
+                    mxRefreshParticipantsPanel();
+                    panel.hidden = false;
+                    panel.classList.add('is-open');
+                    panel.setAttribute('aria-hidden', 'false');
+                    if (btnPeople) {
+                        btnPeople.classList.add('is-active');
+                        btnPeople.setAttribute('aria-pressed', 'true');
+                    }
+                } else {
+                    panel.classList.remove('is-open');
+                    panel.hidden = true;
+                    panel.setAttribute('aria-hidden', 'true');
+                    if (btnPeople) {
+                        btnPeople.classList.remove('is-active');
+                        btnPeople.setAttribute('aria-pressed', 'false');
+                    }
+                }
+            }
+
+            function mxToggleParticipantsUi() {
+                var j = window.__mxClassroomJitsiApi || api;
+                if (!j || typeof j.executeCommand !== 'function') {
+                    alert('ادخل الاجتماع أولاً ثم أعد المحاولة.');
+                    return;
+                }
+                // Prefer custom roster (reliable) + also try native pane when not sharing.
+                if (mxParticipantsPanelIsOpen()) {
+                    mxSetParticipantsPanelOpen(false);
+                    try { j.executeCommand('toggleParticipantsPane', false); } catch (eClose) {}
+                    return;
+                }
+                mxSetParticipantsPanelOpen(true);
+                if (!document.body.classList.contains('mx-sharing')) {
+                    try { j.executeCommand('toggleParticipantsPane', true); } catch (eOpen) {
+                        try { j.executeCommand('toggleParticipantsPane'); } catch (e2) {}
+                    }
+                }
             }
             function mxToast(msg) {
                 var t = document.getElementById('mx-ml-toast');
@@ -3791,11 +3952,11 @@
 
             if (mxPipBtn) {
                 mxPipBtn.addEventListener('click', function () {
-                    // أثناء الشير: لا تفتح انضماماً ثانياً (يقطع سماع الطلاب) — استخدم شريط المشاركين
+                    // أثناء الشير: لا تفتح انضماماً ثانياً (يقطع سماع الطلاب) — استخدم قائمة المشاركين المخصصة
                     if (document.body.classList.contains('mx-sharing')) {
-                        mxJitsiCmd('toggleFilmStrip');
+                        mxToggleParticipantsUi();
                         if (typeof mxToast === 'function') {
-                            mxToast('شريط المشاركين من نفس الجلسة — حتى تسمع الطلاب أثناء الشير');
+                            mxToast('قائمة المشاركين من نفس الجلسة — حتى تسمع الطلاب أثناء الشير');
                         }
                         return;
                     }
@@ -3867,8 +4028,8 @@
                         mxJitsiCmd('toggleShareScreen');
                     },
                     onOpenPeople: function () {
-                        mxJitsiCmd('toggleFilmStrip');
-                        if (typeof mxToast === 'function') mxToast('شريط المشاركين من نفس الجلسة (بدون نافذة ثانية)');
+                        // أثناء الشير: قائمة مخصصة من نفس الجلسة (بدون انضمام ثانٍ يقطع الصوت)
+                        mxToggleParticipantsUi();
                     },
                     onToast: function (msg) {
                         if (typeof mxToast === 'function') mxToast(msg);
@@ -3990,21 +4151,17 @@
                 }
                 if (btnPeople) {
                     btnPeople.addEventListener('click', function() {
-                        btnPeople.classList.toggle('is-active');
-                        var j = window.__mxClassroomJitsiApi || api;
-                        if (!j || typeof j.executeCommand !== 'function') {
-                            alert('ادخل الاجتماع أولاً ثم أعد المحاولة.');
-                            return;
-                        }
+                        mxToggleParticipantsUi();
+                    });
+                }
+                var mxPartClose = document.getElementById('mx-participants-panel-close');
+                if (mxPartClose) {
+                    mxPartClose.addEventListener('click', function () {
+                        mxSetParticipantsPanelOpen(false);
                         try {
-                            j.executeCommand('toggleParticipantsPane');
-                        } catch (e1) {
-                            try { j.executeCommand('toggleParticipantsPane', true); }
-                            catch (e2) {
-                                try { j.executeCommand('toggleFilmStrip'); }
-                                catch (e3) { alert('تعذر فتح قائمة المشاركين.'); }
-                            }
-                        }
+                            var j = window.__mxClassroomJitsiApi || api;
+                            if (j) j.executeCommand('toggleParticipantsPane', false);
+                        } catch (eC) {}
                     });
                 }
 

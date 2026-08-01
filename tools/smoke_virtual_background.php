@@ -29,7 +29,12 @@ ok(str_contains($roomSrc, 'mx-classroom-vbg-js'), 'room_inline_js');
 ok(str_contains($roomSrc, 'disableVirtualBackground: false'), 'room_config');
 ok(str_contains($joinSrc, 'mx-ml-btn-bg'), 'join_btn');
 ok(str_contains($joinSrc, 'mx-classroom-vbg-js'), 'join_inline_js');
-ok(str_contains($joinSrc, 'disableVirtualBackground: false'), 'join_config');
+// Guest VBG is permission-gated (not hard-coded false)
+ok(
+    str_contains($joinSrc, 'disableVirtualBackground: !guestPerms.allow_participant_virtual_background')
+    || str_contains($joinSrc, 'disableVirtualBackground: false'),
+    'join_config'
+);
 
 foreach ($presets as $p) {
     ok(is_readable($root.'/public/images/classroom-backgrounds/'.$p), 'preset_'.$p);
