@@ -10,8 +10,11 @@ $checks = [
     'js_share_hook' => str_contains($js, 'onScreenShareChanged'),
     'js_channel_lastn' => str_contains($js, 'channelLastN'),
     'js_desktop_fps' => str_contains($js, 'desktopSharingFrameRate'),
-    // Peak mode: 15fps on weak nets, 24fps otherwise (CPU-friendly on 2-vCPU hosts)
-    'js_desktop_fps_high' => str_contains($js, 'max: save ? 15 : 24'),
+    // Share quality: durable 30fps cap, min 24 on good nets
+    'js_desktop_fps_high' => str_contains($js, 'max: 30'),
+    'js_share_min_fps' => str_contains($js, 'min: save ? 20 : 24'),
+    'js_sshigh' => str_contains($js, '3500000'),
+    'js_no_adaptive' => str_contains($js, 'enableAdaptiveMode: false'),
     'js_no_cpu_share_gate' => ! preg_match('/hardwareConcurrency/', $js),
     'js_stereo_off' => str_contains($js, 'stereo: false'),
     'js_save_bw' => str_contains($js, 'prefersSaveBandwidth'),

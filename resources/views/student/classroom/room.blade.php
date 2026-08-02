@@ -20,6 +20,8 @@
         $mxWbToolsJs = is_readable($mxWbToolsJsFile) ? file_get_contents($mxWbToolsJsFile) : '';
         $mxShareCtrlJsFile = public_path('js/classroom-share-controls.js');
         $mxShareCtrlJs = is_readable($mxShareCtrlJsFile) ? file_get_contents($mxShareCtrlJsFile) : '';
+        $mxNetQualityJsFile = public_path('js/classroom-net-quality.js');
+        $mxNetQualityJs = is_readable($mxNetQualityJsFile) ? file_get_contents($mxNetQualityJsFile) : '';
     @endphp
     @if($mxVbgJs !== '')
     <script id="mx-classroom-vbg-js">{!! $mxVbgJs !!}</script>
@@ -32,6 +34,9 @@
     @endif
     @if($mxShareCtrlJs !== '')
     <script id="mx-classroom-share-controls-js">{!! $mxShareCtrlJs !!}</script>
+    @endif
+    @if($mxNetQualityJs !== '')
+    <script id="mx-classroom-net-quality-js">{!! $mxNetQualityJs !!}</script>
     @endif
     {{-- Inline Meet.Line CSS: production returns 404 for /css/*.css static files; inlining guarantees styles load --}}
     @php
@@ -447,6 +452,10 @@
 
     <div class="mx-ml-stage-row">
     <div id="meeting-stage" class="mx-ml-video flex-1 min-h-0 relative w-full">
+        <div id="mx-net-quality-banner" hidden aria-hidden="true" role="status" aria-live="polite">
+            <i class="fas fa-wifi" aria-hidden="true"></i>
+            <span data-mx-net-msg>اتصال الإنترنت غير مستقر — قد تنخفض جودة الصوت/الفيديو أو مشاركة الشاشة.</span>
+        </div>
         <main id="jitsi-container" class="flex-1 min-h-0 relative w-full h-full" role="application" aria-label="غرفة الاجتماع">
             <div id="jitsi-loading" class="flex flex-col items-center justify-center h-full text-slate-400 text-sm gap-3">
                 <i class="fas fa-spinner fa-spin text-2xl text-[#0065fd]"></i>
@@ -3398,9 +3407,26 @@
                                 ],
                                 startWithAudioMuted: true,
                                 startWithVideoMuted: true,
-                                // Peak defaults for 2-vCPU bridge (audioPatch may tighten further)
-                                enableLayerSuspension: true,
-                                maxFullResolutionParticipants: 1,
+                                // Hard share-quality floor (audioPatch may raise further; must not leave weak defaults)
+                                enableLayerSuspension: false,
+                                maxFullResolutionParticipants: 2,
+                                p2p: { enabled: false },
+                                resolution: 720,
+                                desktopSharingFrameRate: { min: 24, max: 30 },
+                                channelLastN: 12,
+                                startLastN: 12,
+                                videoQuality: {
+                                    enableAdaptiveMode: false,
+                                    screenshareCodec: 'VP8',
+                                    codecPreferenceOrder: ['VP8', 'VP9', 'H264'],
+                                    maxBitratesVideo: {
+                                        low: 200000,
+                                        standard: 500000,
+                                        high: 1500000,
+                                        fullHd: 2500000,
+                                        ssHigh: 3500000,
+                                    },
+                                },
                                 disableAudioLevels: false,
                                 disableVirtualBackground: false,
                                 // Enable participants-pane + chat features for executeCommand; hide chrome via CSS (.mx-hide-jitsi-toolbox)
@@ -3546,6 +3572,21 @@
                     });
                     api.addEventListener('connectionQualityChanged', function(e) {
                         mxSetConnectionQuality(e);
+                        // While sharing: fight sudden freezes from BWE/lastN dips
+                        try {
+                            var sharing = document.getElementById('mx-ml-btn-share');
+                            var isSharing = sharing && sharing.getAttribute('aria-pressed') === 'true';
+                            if (!isSharing || !hasJoinedConference) return;
+                            var level = (e && typeof e === 'object')
+                                ? (e.connectionQuality != null ? e.connectionQuality : e)
+                                : e;
+                            level = Number(level);
+                            if (!isFinite(level)) return;
+                            if (level > 0 && level <= 1) {
+                                try { api.executeCommand('setLastN', 8); } catch (eLn) {}
+                                try { api.executeCommand('setVideoQuality', 720); } catch (eVq) {}
+                            }
+                        } catch (eShareStab) {}
                     });
                     api.addEventListener('screenSharingStatusChanged', function(e) {
                         var on = !!(e && (e.on === true || e.on === 'true'));
@@ -3571,6 +3612,10 @@
                             }
                         } catch (eAudio) {}
                         if (on) {
+                            // Lock receive path for durable share (tile off, lastN floor, prefer 720 receive)
+                            try { api.executeCommand('setTileView', false); } catch (eTv) {}
+                            try { api.executeCommand('setLastN', 8); } catch (eLn2) {}
+                            try { api.executeCommand('setVideoQuality', 720); } catch (eVq2) {}
                             try {
                                 if (window.__mxShareFloatUi) {
                                     window.__mxShareFloatUi.show();
@@ -4199,6 +4244,10 @@
             })();
 
             function mxSetConnectionQuality(e) {
+                if (window.__mxNetQualityMonitor && typeof window.__mxNetQualityMonitor.onConnectionQuality === 'function') {
+                    window.__mxNetQualityMonitor.onConnectionQuality(e);
+                    return;
+                }
                 var wrap = document.getElementById('mx-ml-quality');
                 var label = document.getElementById('mx-ml-quality-label');
                 if (!wrap || !label) return;
@@ -4214,6 +4263,20 @@
                 wrap.setAttribute('data-level', String(level));
                 label.textContent = level >= 4 ? 'ممتاز' : level === 3 ? 'جيد' : level === 2 ? 'متوسط' : level === 1 ? 'ضعيف' : '—';
             }
+
+            // Init network-blame banner (sustained poor CQ + network evidence)
+            try {
+                if (window.MxClassroomNetQuality && typeof window.MxClassroomNetQuality.createMonitor === 'function') {
+                    window.__mxNetQualityMonitor = window.MxClassroomNetQuality.createMonitor({
+                        bannerEl: document.getElementById('mx-net-quality-banner'),
+                        qualityWrap: document.getElementById('mx-ml-quality'),
+                        qualityLabel: document.getElementById('mx-ml-quality-label'),
+                        onToast: function (msg) { try { mxToast(msg); } catch (eT) {} },
+                        poorMs: 8000,
+                        recoverMs: 5000,
+                    });
+                }
+            } catch (eNetMon) {}
 
             function tickMeetingTimer() {
                 if (!meetingEndsAt || (!timerChip && !timerChipMobile)) return;

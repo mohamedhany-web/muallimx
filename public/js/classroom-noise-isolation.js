@@ -42,25 +42,24 @@
   }
 
   function getVideoConstraintsForDevice() {
-    // Peak mode for 2-vCPU live bridge: prefer 360p cams; share FPS stays separate.
+    // Camera stays below share priority; text/slides need the bitrate budget.
     if (prefersSaveBandwidth()) {
       return {
-        height: { ideal: 240, max: 480 },
-        width: { ideal: 426, max: 854 },
-        frameRate: { ideal: 15, max: 24 },
+        height: { ideal: 360, max: 480 },
+        width: { ideal: 640, max: 854 },
+        frameRate: { ideal: 20, max: 24 },
       };
     }
     return {
-      height: { ideal: 360, max: 720 },
-      width: { ideal: 640, max: 1280 },
-      frameRate: { ideal: 24, max: 30 },
+      height: { ideal: 720, max: 720 },
+      width: { ideal: 1280, max: 1280 },
+      frameRate: { ideal: 30, max: 30 },
     };
   }
 
   function getJitsiAudioConfigPatch() {
     var save = prefersSaveBandwidth();
-    // Fewer simultaneous incoming videos = less JVB CPU on small hosts.
-    var lastN = save ? 4 : 6;
+    var lastN = save ? 8 : 12;
     return {
       disableAP: false,
       disableAEC: false,
@@ -70,30 +69,41 @@
       enableNoisyMicDetection: true,
       enableTalkWhileMuted: true,
       enableOpusRed: true,
-      enableLayerSuspension: true,
-      maxFullResolutionParticipants: 1,
-      resolution: save ? 240 : 360,
+      enableLayerSuspension: false,
+      maxFullResolutionParticipants: 2,
+      resolution: save ? 360 : 720,
+      p2p: { enabled: false },
       audioQuality: {
         stereo: false,
-        opusMaxAverageBitrate: 48000,
+        opusMaxAverageBitrate: 64000,
       },
       channelLastN: lastN,
-      startLastN: Math.min(4, lastN),
-      // Screen share: keep readable on weak nets; 24fps otherwise (CPU-friendly vs 30).
+      startLastN: lastN,
+      // Force crisp durable screen share (overrides weak server/default caps).
       desktopSharingFrameRate: {
-        min: 5,
-        max: save ? 15 : 24,
+        min: save ? 20 : 24,
+        max: 30,
       },
       videoQuality: {
-        enableAdaptiveMode: true,
+        // Adaptive mode was crushing share clarity under tiny BWE dips.
+        enableAdaptiveMode: false,
         codecPreferenceOrder: ['VP8', 'VP9', 'H264'],
         screenshareCodec: 'VP8',
         maxBitratesVideo: {
-          low: 100000,
-          standard: 250000,
-          high: 800000,
-          fullHd: 1200000,
-          ssHigh: 1800000,
+          low: 200000,
+          standard: 500000,
+          high: 1500000,
+          fullHd: 2500000,
+          ssHigh: save ? 2500000 : 3500000,
+        },
+        vp8: {
+          maxBitratesVideo: {
+            low: 200000,
+            standard: 500000,
+            high: 1500000,
+            fullHd: 2500000,
+            ssHigh: save ? 2500000 : 3500000,
+          },
         },
         minHeightForQualityLvl: {
           180: 'low',

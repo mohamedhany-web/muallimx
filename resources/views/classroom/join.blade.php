@@ -69,6 +69,27 @@
         .mx-vbg-upload { display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px dashed #0065fd; border-radius: 10px; padding: 10px; cursor: pointer; font-size: 12px; font-weight: 600; color: #93c5fd; background: rgba(0,101,253,.15); }
         .mx-vbg-fallback { border: 0; background: transparent; color: #94a3b8; font-size: 11px; text-decoration: underline; cursor: pointer; padding: 4px; }
         @media (max-width: 640px) { .mx-vbg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        #mx-net-quality-banner {
+            display: none; position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 40;
+            max-width: min(36rem, calc(100% - 24px)); padding: 10px 14px; border-radius: 12px;
+            background: rgba(124, 45, 18, 0.95); border: 1px solid #fb923c; color: #ffedd5;
+            box-shadow: 0 8px 28px rgba(0,0,0,.25); font-size: 12.5px; font-weight: 600; line-height: 1.45; text-align: center;
+            pointer-events: none; align-items: flex-start; gap: 8px;
+        }
+        #mx-net-quality-banner.is-visible { display: flex; }
+        #mx-net-quality-banner i { margin-top: 2px; color: #fdba74; flex-shrink: 0; }
+        #mx-ml-quality { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #cbd5e1; padding: 4px 8px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; }
+        .mx-ml-quality-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+        .mx-ml-quality-bars i { display: block; width: 3px; border-radius: 1px; background: #475569; }
+        .mx-ml-quality-bars i:nth-child(1) { height: 4px; }
+        .mx-ml-quality-bars i:nth-child(2) { height: 6px; }
+        .mx-ml-quality-bars i:nth-child(3) { height: 9px; }
+        .mx-ml-quality-bars i:nth-child(4) { height: 12px; }
+        #mx-ml-quality[data-level="1"] .mx-ml-quality-bars i:nth-child(-n+1) { background: #f87171; }
+        #mx-ml-quality[data-level="2"] .mx-ml-quality-bars i:nth-child(-n+2) { background: #fb923c; }
+        #mx-ml-quality[data-level="3"] .mx-ml-quality-bars i:nth-child(-n+3) { background: #38bdf8; }
+        #mx-ml-quality[data-level="4"] .mx-ml-quality-bars i { background: #4ade80; }
+        .room-body { position: relative; }
         /* Guest permanent whiteboard tools */
         .mx-wb-tools { display:flex; flex-direction:column; gap:6px; width:100%; padding:8px 10px 10px; border-bottom:1px solid #334155; background:linear-gradient(180deg,#1e293b 0%,#0f172a 100%); flex-shrink:0; }
         .mx-wb-tools-hint { margin:0; font-size:10px; line-height:1.4; color:#94a3b8; text-align:right; }
@@ -122,6 +143,8 @@
         $mxWbToolsJs = is_readable($mxWbToolsJsFile) ? file_get_contents($mxWbToolsJsFile) : '';
         $mxShareZoomJsFile = public_path('js/classroom-share-zoom.js');
         $mxShareZoomJs = is_readable($mxShareZoomJsFile) ? file_get_contents($mxShareZoomJsFile) : '';
+        $mxNetQualityJsFile = public_path('js/classroom-net-quality.js');
+        $mxNetQualityJs = is_readable($mxNetQualityJsFile) ? file_get_contents($mxNetQualityJsFile) : '';
     @endphp
     @if($mxVbgJs !== '')
     <script id="mx-classroom-vbg-js">{!! $mxVbgJs !!}</script>
@@ -134,6 +157,9 @@
     @endif
     @if($mxShareZoomJs !== '')
     <script id="mx-classroom-share-zoom-js">{!! $mxShareZoomJs !!}</script>
+    @endif
+    @if($mxNetQualityJs !== '')
+    <script id="mx-classroom-net-quality-js">{!! $mxNetQualityJs !!}</script>
     @endif
 </head>
 <body class="bg-slate-950 text-white">
@@ -207,6 +233,10 @@
                 </span>
                 <span class="font-bold text-white truncate">Muallimx Classroom</span>
                 <span class="text-slate-400 text-sm shrink-0">— {{ $code }}</span>
+                <span id="mx-ml-quality" class="hidden sm:inline-flex" title="جودة الاتصال">
+                    <span id="mx-ml-quality-bars" class="mx-ml-quality-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                    <span id="mx-ml-quality-label">—</span>
+                </span>
             </div>
             <div class="flex items-center gap-2 shrink-0">
                 <div id="mx-guest-opts-wrap">
@@ -245,6 +275,10 @@
         </header>
         <div class="room-body">
             <div id="mx-share-zoom-viewport">
+                <div id="mx-net-quality-banner" class="mx-net-banner--dark" hidden aria-hidden="true" role="status" aria-live="polite">
+                    <i class="fas fa-wifi" aria-hidden="true"></i>
+                    <span data-mx-net-msg>اتصال الإنترنت غير مستقر — قد تنخفض جودة الصوت/الفيديو أو مشاركة الشاشة.</span>
+                </div>
                 <main id="jitsi-container" class="flex-1 min-h-0 relative" role="application" aria-label="غرفة الاجتماع"></main>
                 <div id="mx-share-zoom-hud" class="hidden" aria-hidden="true" hidden></div>
             </div>
@@ -859,8 +893,25 @@
                         enableRecording: false,
                         startWithAudioMuted: true,
                         startWithVideoMuted: true,
-                        enableLayerSuspension: true,
-                        maxFullResolutionParticipants: 1,
+                        enableLayerSuspension: false,
+                        maxFullResolutionParticipants: 2,
+                        p2p: { enabled: false },
+                        resolution: 720,
+                        desktopSharingFrameRate: { min: 24, max: 30 },
+                        channelLastN: 12,
+                        startLastN: 12,
+                        videoQuality: {
+                            enableAdaptiveMode: false,
+                            screenshareCodec: 'VP8',
+                            codecPreferenceOrder: ['VP8', 'VP9', 'H264'],
+                            maxBitratesVideo: {
+                                low: 200000,
+                                standard: 500000,
+                                high: 1500000,
+                                fullHd: 2500000,
+                                ssHigh: 3500000,
+                            },
+                        },
                         disableVirtualBackground: !guestPerms.allow_participant_virtual_background,
                         toolbarButtons: buildGuestToolbarButtons(guestPerms),
                         // الضيف يغادر فقط — لا طرد/إعطاء مشرف/إنهاء للجميع
@@ -1059,6 +1110,25 @@
                         window.__mxNoiseUi.enableOnJoin();
                     }
                 } catch (eNs) {}
+            });
+            try {
+                if (window.MxClassroomNetQuality && typeof window.MxClassroomNetQuality.createMonitor === 'function') {
+                    window.__mxNetQualityMonitor = window.MxClassroomNetQuality.createMonitor({
+                        bannerEl: document.getElementById('mx-net-quality-banner'),
+                        qualityWrap: document.getElementById('mx-ml-quality'),
+                        qualityLabel: document.getElementById('mx-ml-quality-label'),
+                        onToast: null,
+                        poorMs: 8000,
+                        recoverMs: 5000,
+                    });
+                }
+            } catch (eNetMon) {}
+            api.addEventListener('connectionQualityChanged', function (e) {
+                try {
+                    if (window.__mxNetQualityMonitor && typeof window.__mxNetQualityMonitor.onConnectionQuality === 'function') {
+                        window.__mxNetQualityMonitor.onConnectionQuality(e);
+                    }
+                } catch (eCq) {}
             });
             api.addEventListener('audioMuteStatusChanged', function (e) {
                 if (e && e.muted === false) {

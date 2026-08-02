@@ -38,10 +38,16 @@ $checks = [
     'ctrl_wb_push_require_write' => str_contains($ctrl, 'resolveLiveMeetingForGuestWb($request, $code, true)'),
     'ctrl_allow_write_payload' => str_contains($ctrl, "'allow_write' => \$meeting->allowsParticipantWhiteboard()"),
 
-    // 4 — share quality (no CPU-core gate; peak-mode caps at 24fps)
+    // 4 — share quality (no CPU-core gate; crisp share up to 30fps / 3.5Mbps)
     'noise_no_cpu_core_gate' => ! preg_match('/hardwareConcurrency/', $jsNoise),
-    'noise_share_fps_30' => str_contains($jsNoise, 'max: save ? 15 : 24'),
-    'noise_share_comment' => str_contains($jsNoise, 'CPU-friendly'),
+    'noise_share_fps_30' => str_contains($jsNoise, 'max: 30'),
+    'noise_share_comment' => str_contains($jsNoise, 'Force crisp durable screen share') || str_contains($jsNoise, 'crisp durable'),
+    'noise_no_layer_suspension' => str_contains($jsNoise, 'enableLayerSuspension: false'),
+    'noise_p2p_off' => str_contains($jsNoise, 'p2p: { enabled: false }'),
+    'noise_sshigh_35' => str_contains($jsNoise, '3500000'),
+    'noise_adaptive_off' => str_contains($jsNoise, 'enableAdaptiveMode: false'),
+    'room_share_sshigh' => str_contains($room, 'ssHigh: 3500000'),
+    'room_share_fps_floor' => str_contains($room, 'desktopSharingFrameRate: { min: 24, max: 30 }'),
 
     // 5+6 — upload tab + immediate end (do not forceInPage on end)
     'room_no_force_inpage_on_pending_end' => ! preg_match('/forceInPage\s*=\s*!!opts\.forceInPage\s*\|\|\s*!!pendingEndMeetingSubmit/', $room),

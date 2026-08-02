@@ -537,6 +537,49 @@ body.mx-meetline {
 #mx-ml-quality[data-level="3"] .mx-ml-quality-bars i:nth-child(-n+3) { background: #0065fd; }
 #mx-ml-quality[data-level="4"] .mx-ml-quality-bars i { background: #16a34a; }
 
+/* Network instability banner — only shown when monitor blames local network */
+#mx-net-quality-banner {
+  display: none;
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  max-width: min(36rem, calc(100% - 24px));
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  pointer-events: none;
+}
+#mx-net-quality-banner.is-visible {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+#mx-net-quality-banner i {
+  margin-top: 2px;
+  color: #ea580c;
+  flex-shrink: 0;
+}
+body.mx-meetline #meeting-screen #mx-net-quality-banner,
+#meeting-screen #mx-net-quality-banner {
+  /* guest dark header context */
+}
+#meeting-screen.dark-net-banner #mx-net-quality-banner,
+#meeting-screen #mx-net-quality-banner.mx-net-banner--dark {
+  background: rgba(124, 45, 18, 0.95);
+  border-color: #fb923c;
+  color: #ffedd5;
+}
+
+
 body.mx-meetline.mx-ml-focus .classroom-room-toolbar-btn span,
 body.mx-meetline.mx-ml-focus #mx-record-dd-wrap,
 body.mx-meetline.mx-ml-focus #pkg-features-dd-wrap,
