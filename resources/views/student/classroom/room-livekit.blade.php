@@ -152,10 +152,21 @@
             <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn" title="السبورة" aria-pressed="false">
                 <i class="fas fa-pen text-[#171717]"></i>
             </button>
-            <button type="button" id="mx-ml-btn-react" class="mx-ml-icon-btn" title="رفع اليد">
-                <i class="fas fa-hand-paper text-[#171717]"></i>
-            </button>
+            <div id="mx-ml-react-wrap">
+                <button type="button" id="mx-ml-btn-react" class="mx-ml-icon-btn" title="رفع اليد / تفاعل">
+                    <i class="fas fa-hand-paper text-[#171717]"></i>
+                </button>
+            </div>
             <span class="mx-ml-dock-sep" aria-hidden="true"></span>
+            <button type="button" id="mx-ml-btn-tile" class="mx-ml-icon-btn is-active" title="عرض الشبكة / المتحدث">
+                <i class="fas fa-th-large text-[#171717]"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-focus" class="mx-ml-icon-btn" title="وضع التركيز">
+                <i class="fas fa-compress text-[#171717]"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-pip" class="mx-ml-icon-btn" title="نافذة المشاركين العائمة">
+                <i class="fas fa-window-restore text-[#171717]"></i>
+            </button>
             <button type="button" id="mx-ml-btn-people" class="mx-ml-icon-btn" title="المشاركون">
                 <i class="fas fa-users text-[#171717]"></i>
             </button>
@@ -218,6 +229,15 @@
     </div>
 </div>
 <div id="mx-lk-toast" role="status"></div>
+
+<div id="mx-share-float" aria-hidden="true">
+    <button type="button" class="mx-sf-btn" id="mx-sf-mic" title="ميكروفون"><i class="fas fa-microphone"></i></button>
+    <button type="button" class="mx-sf-btn is-active" id="mx-sf-noise" title="عزل الضوضاء" aria-pressed="true"><i class="fas fa-ear-listen"></i></button>
+    <button type="button" class="mx-sf-btn" id="mx-sf-cam" title="كاميرا"><i class="fas fa-video"></i></button>
+    <button type="button" class="mx-sf-btn" id="mx-sf-tile" title="شبكة/متحدث"><i class="fas fa-th-large"></i></button>
+    <button type="button" class="mx-sf-btn" id="mx-sf-people" title="مشاركون"><i class="fas fa-users"></i></button>
+    <button type="button" class="mx-sf-btn is-danger" id="mx-sf-stop-share" title="إيقاف الشير"><i class="fas fa-desktop"></i></button>
+</div>
 
 <script type="module">
 import * as LivekitClient from 'https://cdn.jsdelivr.net/npm/livekit-client@2.9.8/dist/livekit-client.esm.mjs';

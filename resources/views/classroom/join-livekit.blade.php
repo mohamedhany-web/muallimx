@@ -47,7 +47,7 @@
 </head>
 <body class="join-lobby">
     <div id="join-screen" class="min-h-screen flex flex-col items-center justify-center p-4">
-        <div class="w-full max-w-md rounded-2xl bg-slate-800/90 border border-slate-600 p-6 shadow-2xl">
+        <div id="join-form-card" class="w-full max-w-md rounded-2xl bg-slate-800/90 border border-slate-600 p-6 shadow-2xl">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-bolt text-3xl"></i>
@@ -63,6 +63,15 @@
             <input type="text" id="guest-name" placeholder="أدخل اسمك" class="w-full px-4 py-3 rounded-xl bg-slate-700 border border-slate-600 text-white mb-4">
             <button type="button" id="btn-join" class="w-full px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold">انضم الآن</button>
             <p id="join-help" class="text-xs text-slate-500 mt-4 text-center"></p>
+        </div>
+
+        <div id="waiting-room-card" class="mx-lk-waiting-card hidden">
+            <div class="mx-lk-waiting-pulse"><i class="fas fa-hourglass-half text-2xl"></i></div>
+            <h2 class="text-lg font-bold text-white m-0">غرفة الانتظار</h2>
+            <p class="text-slate-300 text-sm mt-2 mb-1" id="waiting-room-title">{{ $meeting->title ?? ('غرفة ' . $code) }}</p>
+            <p class="text-slate-400 text-xs leading-relaxed" id="waiting-room-msg">المعلم لم يبدأ الجلسة بعد. سنُدخلك تلقائياً فور البدء…</p>
+            <p class="text-sky-300 text-xs mt-4 font-semibold" id="waiting-room-tick">جاري الانتظار…</p>
+            <button type="button" id="btn-waiting-cancel" class="mt-5 px-4 py-2 rounded-xl border border-slate-600 text-slate-300 text-sm hover:bg-slate-800">إلغاء</button>
         </div>
     </div>
 
@@ -103,14 +112,20 @@
             <div class="mx-ml-dock">
                 <div class="flex flex-wrap items-center justify-center gap-1.5">
                     <button type="button" id="mx-ml-btn-mic" class="mx-ml-icon-btn" title="ميكروفون"><i class="fas fa-microphone-slash text-[#fd0000]" id="mx-ml-mic-icon"></i></button>
+                    <button type="button" id="mx-ml-btn-noise" class="mx-ml-icon-btn is-active" title="عزل الضوضاء" aria-pressed="true"><i class="fas fa-ear-listen text-[#0065fd]"></i></button>
                     <button type="button" id="mx-ml-btn-cam" class="mx-ml-icon-btn" title="كاميرا"><i class="fas fa-video-slash text-[#fd0000]" id="mx-ml-cam-icon"></i></button>
                     <span class="mx-ml-dock-sep" aria-hidden="true"></span>
                     <button type="button" id="mx-ml-btn-share" class="mx-ml-icon-btn" title="شير"><i class="fas fa-desktop" id="mx-ml-share-icon"></i></button>
                     <button type="button" id="mx-ml-btn-annotate" class="mx-ml-icon-btn" title="اكتب على الشاشة" disabled><i class="fas fa-pen-fancy"></i></button>
                     <button type="button" id="mx-ml-btn-laser" class="mx-ml-icon-btn" title="مؤشر ليزر" disabled><i class="fas fa-location-crosshairs"></i></button>
                     <button type="button" id="btn-guest-whiteboard" class="mx-ml-icon-btn" title="السبورة"><i class="fas fa-pen"></i></button>
-                    <button type="button" id="mx-ml-btn-react" class="mx-ml-icon-btn" title="رفع اليد"><i class="fas fa-hand-paper"></i></button>
+                    <div id="mx-ml-react-wrap">
+                        <button type="button" id="mx-ml-btn-react" class="mx-ml-icon-btn" title="رفع اليد / تفاعل"><i class="fas fa-hand-paper"></i></button>
+                    </div>
                     <span class="mx-ml-dock-sep" aria-hidden="true"></span>
+                    <button type="button" id="mx-ml-btn-tile" class="mx-ml-icon-btn is-active" title="شبكة/متحدث"><i class="fas fa-th-large"></i></button>
+                    <button type="button" id="mx-ml-btn-focus" class="mx-ml-icon-btn" title="تركيز"><i class="fas fa-compress"></i></button>
+                    <button type="button" id="mx-ml-btn-pip" class="mx-ml-icon-btn" title="نافذة مشاركين"><i class="fas fa-window-restore"></i></button>
                     <button type="button" id="mx-ml-btn-people" class="mx-ml-icon-btn" title="مشاركون"><i class="fas fa-users"></i></button>
                     <button type="button" id="mx-ml-btn-chat" class="mx-ml-icon-btn" title="دردشة"><i class="fas fa-comments"></i></button>
                     <button type="button" id="mx-ml-btn-bg" class="mx-ml-icon-btn" title="خلفية"><i class="fas fa-image"></i></button>
@@ -135,6 +150,14 @@
         </div>
     </div>
     <div id="mx-lk-toast" role="status"></div>
+    <div id="mx-share-float" aria-hidden="true">
+        <button type="button" class="mx-sf-btn" id="mx-sf-mic" title="ميك"><i class="fas fa-microphone"></i></button>
+        <button type="button" class="mx-sf-btn is-active" id="mx-sf-noise" title="عزل"><i class="fas fa-ear-listen"></i></button>
+        <button type="button" class="mx-sf-btn" id="mx-sf-cam" title="كاميرا"><i class="fas fa-video"></i></button>
+        <button type="button" class="mx-sf-btn" id="mx-sf-tile" title="شبكة"><i class="fas fa-th-large"></i></button>
+        <button type="button" class="mx-sf-btn" id="mx-sf-people" title="مشاركون"><i class="fas fa-users"></i></button>
+        <button type="button" class="mx-sf-btn is-danger" id="mx-sf-stop-share" title="إيقاف الشير"><i class="fas fa-desktop"></i></button>
+    </div>
 
 @php
     $mxGuestPermDefaults = [
@@ -216,6 +239,153 @@ document.getElementById('mx-lk-wb-close')?.addEventListener('click', () => {
     document.getElementById('mx-lk-wb-popup').classList.remove('is-open');
 });
 
+let waitingTimer = null;
+let waitingDots = 0;
+
+function showWaitingRoom(msg) {
+    document.getElementById('join-form-card')?.classList.add('hidden');
+    const card = document.getElementById('waiting-room-card');
+    card?.classList.remove('hidden');
+    if (msg) {
+        const el = document.getElementById('waiting-room-msg');
+        if (el) el.textContent = msg;
+    }
+}
+
+function hideWaitingRoom() {
+    document.getElementById('waiting-room-card')?.classList.add('hidden');
+    document.getElementById('join-form-card')?.classList.remove('hidden');
+    if (waitingTimer) {
+        clearInterval(waitingTimer);
+        waitingTimer = null;
+    }
+}
+
+document.getElementById('btn-waiting-cancel')?.addEventListener('click', () => {
+    hideWaitingRoom();
+    const btn = document.getElementById('btn-join');
+    if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'انضم الآن';
+    }
+    setHelp('', false);
+});
+
+async function enterMeeting(name, { silent } = {}) {
+    const enterResp = await fetch(`/classroom/join/${code}/enter`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrf,
+            Accept: 'application/json',
+        },
+        body: JSON.stringify({ display_name: name }),
+    });
+    const enterData = await enterResp.json();
+    if (enterResp.status === 422 && enterData.waiting) {
+        return { waiting: true, message: enterData.message || 'المعلم لم يبدأ الجلسة بعد.' };
+    }
+    if (!enterResp.ok || !enterData.ok) {
+        throw new Error(enterData.message || 'لا يمكن الانضمام');
+    }
+    if (!enterData.livekit?.token) throw new Error('لم يُرجع الخادم توكن LiveKit');
+    return { waiting: false, enterData };
+}
+
+async function bootGuestMeeting(enterData, name) {
+    joinToken = enterData.token;
+    if (typeof window.__mxShareAnnSetGuestToken === 'function') {
+        window.__mxShareAnnSetGuestToken(joinToken);
+    }
+    currentPerms = Object.assign(currentPerms, {
+        allow_participant_whiteboard: !!enterData.allow_participant_whiteboard,
+        allow_participant_screen_share: !!enterData.allow_participant_screen_share,
+        allow_participant_chat: !!enterData.allow_participant_chat,
+        allow_participant_raise_hand: !!enterData.allow_participant_raise_hand,
+        allow_participant_virtual_background: !!enterData.allow_participant_virtual_background,
+    });
+
+    document.getElementById('join-screen').classList.add('hidden');
+    document.getElementById('meeting-screen').classList.remove('hidden');
+    document.body.className = 'mx-meetline mx-lk-room';
+
+    lkApi = await window.MxLiveKitClassroom.boot(LivekitClient, {
+        isHost: false,
+        url: enterData.livekit.url,
+        token: enterData.livekit.token,
+        csrfToken: csrf,
+        meetingCode: code,
+        permissions: currentPerms,
+        onPermissions: (p) => {
+            currentPerms = Object.assign(currentPerms, p || {});
+            document.getElementById('btn-guest-whiteboard')?.classList.toggle(
+                'mx-guest-wb-writable',
+                !!currentPerms.allow_participant_whiteboard
+            );
+        },
+        onMeetingEnded: () => { location.reload(); },
+        onKicked: () => { location.reload(); },
+    });
+
+    setInterval(async () => {
+        if (!joinToken) return;
+        try {
+            const r = await fetch(`/classroom/join/${code}/heartbeat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    Accept: 'application/json',
+                },
+                body: JSON.stringify({ token: joinToken }),
+            });
+            const d = await r.json();
+            if (d.ended) {
+                location.reload();
+                return;
+            }
+            if (d.ok) {
+                const next = {
+                    allow_participant_whiteboard: !!d.allow_participant_whiteboard,
+                    allow_participant_screen_share: !!d.allow_participant_screen_share,
+                    allow_participant_chat: !!d.allow_participant_chat,
+                    allow_participant_raise_hand: !!d.allow_participant_raise_hand,
+                    allow_participant_virtual_background: !!d.allow_participant_virtual_background,
+                };
+                lkApi.applyPermissions(next);
+            }
+        } catch (_) {}
+    }, 12000);
+}
+
+function startWaitingPoll(name) {
+    showWaitingRoom();
+    const tick = document.getElementById('waiting-room-tick');
+    if (waitingTimer) clearInterval(waitingTimer);
+    waitingTimer = setInterval(async () => {
+        waitingDots = (waitingDots + 1) % 4;
+        if (tick) tick.textContent = 'جاري الانتظار' + '.'.repeat(waitingDots + 1);
+        try {
+            const result = await enterMeeting(name, { silent: true });
+            if (result.waiting) {
+                const msg = document.getElementById('waiting-room-msg');
+                if (msg && result.message) msg.textContent = result.message;
+                return;
+            }
+            hideWaitingRoom();
+            await bootGuestMeeting(result.enterData, name);
+        } catch (e) {
+            // keep waiting unless hard error for ended meeting
+            if (String(e.message || '').includes('إنهاء') || String(e.message || '').includes('انتهى')) {
+                hideWaitingRoom();
+                setHelp(e.message, true);
+                const btn = document.getElementById('btn-join');
+                if (btn) { btn.disabled = false; btn.textContent = 'انضم الآن'; }
+            }
+        }
+    }, 3000);
+}
+
 document.getElementById('btn-join').addEventListener('click', async () => {
     const name = document.getElementById('guest-name').value.trim() || 'ضيف';
     const btn = document.getElementById('btn-join');
@@ -223,82 +393,13 @@ document.getElementById('btn-join').addEventListener('click', async () => {
     btn.textContent = 'جاري الانضمام…';
     setHelp('جاري التحقق…', false);
     try {
-        const enterResp = await fetch(`/classroom/join/${code}/enter`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrf,
-                Accept: 'application/json',
-            },
-            body: JSON.stringify({ display_name: name }),
-        });
-        const enterData = await enterResp.json();
-        if (!enterResp.ok || !enterData.ok) throw new Error(enterData.message || 'لا يمكن الانضمام');
-        if (!enterData.livekit?.token) throw new Error('لم يُرجع الخادم توكن LiveKit');
-        joinToken = enterData.token;
-        if (typeof window.__mxShareAnnSetGuestToken === 'function') {
-            window.__mxShareAnnSetGuestToken(joinToken);
+        const result = await enterMeeting(name);
+        if (result.waiting) {
+            setHelp('', false);
+            startWaitingPoll(name);
+            return;
         }
-        currentPerms = Object.assign(currentPerms, {
-            allow_participant_whiteboard: !!enterData.allow_participant_whiteboard,
-            allow_participant_screen_share: !!enterData.allow_participant_screen_share,
-            allow_participant_chat: !!enterData.allow_participant_chat,
-            allow_participant_raise_hand: !!enterData.allow_participant_raise_hand,
-            allow_participant_virtual_background: !!enterData.allow_participant_virtual_background,
-        });
-
-        document.getElementById('join-screen').classList.add('hidden');
-        document.getElementById('meeting-screen').classList.remove('hidden');
-        document.body.className = 'mx-meetline mx-lk-room';
-
-        lkApi = await window.MxLiveKitClassroom.boot(LivekitClient, {
-            isHost: false,
-            url: enterData.livekit.url,
-            token: enterData.livekit.token,
-            csrfToken: csrf,
-            meetingCode: code,
-            permissions: currentPerms,
-            onPermissions: (p) => {
-                currentPerms = Object.assign(currentPerms, p || {});
-                document.getElementById('btn-guest-whiteboard')?.classList.toggle(
-                    'mx-guest-wb-writable',
-                    !!currentPerms.allow_participant_whiteboard
-                );
-            },
-            onMeetingEnded: () => { location.reload(); },
-            onKicked: () => { location.reload(); },
-        });
-
-        // heartbeat for permissions refresh
-        setInterval(async () => {
-            if (!joinToken) return;
-            try {
-                const r = await fetch(`/classroom/join/${code}/heartbeat`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrf,
-                        Accept: 'application/json',
-                    },
-                    body: JSON.stringify({ token: joinToken }),
-                });
-                const d = await r.json();
-                if (d.ended) {
-                    location.reload();
-                    return;
-                }
-                if (d.ok) {
-                    const next = {
-                        allow_participant_whiteboard: !!d.allow_participant_whiteboard,
-                        allow_participant_screen_share: !!d.allow_participant_screen_share,
-                        allow_participant_chat: !!d.allow_participant_chat,
-                        allow_participant_raise_hand: !!d.allow_participant_raise_hand,
-                        allow_participant_virtual_background: !!d.allow_participant_virtual_background,
-                    };
-                    lkApi.applyPermissions(next);
-                }
-            } catch (_) {}
-        }, 12000);
+        await bootGuestMeeting(result.enterData, name);
     } catch (e) {
         setHelp(e.message || String(e), true);
         btn.disabled = false;

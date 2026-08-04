@@ -116,6 +116,205 @@
     var recordingKind = null;
     var recordingStream = null;
     var api = {};
+    var layoutMode = 'grid'; // grid | speaker
+    var noiseOn = true;
+    var krispProcessor = null;
+    var krispReady = false;
+    var activeSpeakerId = '';
+    var REACTIONS = ['👍', '👏', '❤️', '😂', '😮', '🎉', '🔥', '✋'];
+
+    function cleanMicConstraints() {
+      if (window.MxClassroomNoiseIsolation && typeof window.MxClassroomNoiseIsolation.getCleanMicAudioConstraints === 'function') {
+        return window.MxClassroomNoiseIsolation.getCleanMicAudioConstraints();
+      }
+      return {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        channelCount: { ideal: 1 },
+      };
+    }
+
+    async function ensureKrisp() {
+      if (krispProcessor) return krispProcessor;
+      try {
+        var mod = await import('https://cdn.jsdelivr.net/npm/@livekit/krisp-noise-filter@0.3.4/+esm');
+        var supported = typeof mod.isKrispNoiseFilterSupported === 'function'
+          ? mod.isKrispNoiseFilterSupported()
+          : true;
+        if (!supported) return null;
+        krispProcessor = typeof mod.KrispNoiseFilter === 'function' ? mod.KrispNoiseFilter() : null;
+        krispReady = !!krispProcessor;
+        return krispProcessor;
+      } catch (e) {
+        krispReady = false;
+        return null;
+      }
+    }
+
+    async function applyNoiseToLocalAudio(on) {
+      noiseOn = !!on;
+      refreshLocalTrackRefs();
+      if (!localAudio) {
+        paintNoise();
+        return;
+      }
+      try {
+        if (localAudio.mediaStreamTrack && localAudio.mediaStreamTrack.applyConstraints) {
+          await localAudio.mediaStreamTrack.applyConstraints(on ? cleanMicConstraints() : {
+            echoCancellation: true,
+            noiseSuppression: false,
+            autoGainControl: true,
+          });
+        }
+      } catch (e) {}
+      try {
+        var proc = await ensureKrisp();
+        if (proc && typeof localAudio.setProcessor === 'function') {
+          if (on) {
+            await localAudio.setProcessor(proc);
+            if (typeof proc.setEnabled === 'function') await proc.setEnabled(true);
+          } else if (typeof proc.setEnabled === 'function') {
+            await proc.setEnabled(false);
+          } else if (typeof localAudio.stopProcessor === 'function') {
+            await localAudio.stopProcessor();
+          }
+        }
+      } catch (e2) {
+        // Krisp may require LiveKit Cloud — WebRTC NS still applied above
+      }
+      paintNoise();
+    }
+
+    function paintNoise() {
+      var btn = $('mx-ml-btn-noise');
+      if (!btn) return;
+      btn.classList.toggle('is-active', noiseOn);
+      btn.setAttribute('aria-pressed', noiseOn ? 'true' : 'false');
+      btn.title = noiseOn
+        ? (krispReady ? 'عزل الضوضاء Krisp: مفعّل' : 'عزل الضوضاء: مفعّل (WebRTC)')
+        : 'عزل الضوضاء: متوقف';
+      var icon = btn.querySelector('i');
+      if (icon) icon.className = noiseOn ? 'fas fa-ear-listen text-[#0065fd]' : 'fas fa-ear-listen text-[#171717]';
+      var sf = $('mx-sf-noise');
+      if (sf) {
+        sf.classList.toggle('is-active', noiseOn);
+        sf.setAttribute('aria-pressed', noiseOn ? 'true' : 'false');
+      }
+    }
+
+    function setLayoutMode(mode) {
+      layoutMode = mode === 'speaker' ? 'speaker' : 'grid';
+      if (stage) {
+        stage.dataset.layout = layoutMode;
+        stage.classList.toggle('lk-layout-speaker', layoutMode === 'speaker');
+        stage.classList.toggle('lk-layout-grid', layoutMode === 'grid');
+      }
+      var tileBtn = $('mx-ml-btn-tile');
+      if (tileBtn) {
+        tileBtn.classList.toggle('is-active', layoutMode === 'grid');
+        tileBtn.title = layoutMode === 'grid' ? 'عرض الشبكة (مفعّل) — اضغط للمتحدث' : 'عرض المتحدث — اضغط للشبكة';
+      }
+      applySpeakerLayout();
+    }
+
+    function applySpeakerLayout() {
+      if (!stage || stage.classList.contains('has-screen')) return;
+      var tiles = Array.from(stage.querySelectorAll('.lk-tile:not(.is-screen)'));
+      tiles.forEach(function (t) {
+        t.classList.remove('is-speaker-main', 'is-speaker-side');
+      });
+      if (layoutMode !== 'speaker' || tiles.length < 2) return;
+      var main = null;
+      if (activeSpeakerId) {
+        main = tiles.find(function (t) {
+          return (t.dataset.key || '').indexOf(activeSpeakerId + ':') === 0;
+        });
+      }
+      if (!main) main = tiles[0];
+      tiles.forEach(function (t) {
+        if (t === main) t.classList.add('is-speaker-main');
+        else t.classList.add('is-speaker-side');
+      });
+      if (main && stage.firstChild !== main) stage.insertBefore(main, stage.firstChild);
+    }
+
+    function showReactionBurst(emoji, name) {
+      if (!stage) return;
+      var el = document.createElement('div');
+      el.className = 'lk-reaction-burst';
+      el.innerHTML = '<span class="lk-reaction-emoji"></span><span class="lk-reaction-name"></span>';
+      el.querySelector('.lk-reaction-emoji').textContent = emoji;
+      el.querySelector('.lk-reaction-name').textContent = name || '';
+      el.style.left = 12 + Math.random() * 70 + '%';
+      el.style.bottom = 18 + Math.random() * 40 + '%';
+      stage.appendChild(el);
+      setTimeout(function () {
+        el.remove();
+      }, 2200);
+    }
+
+    async function sendReaction(emoji) {
+      emoji = String(emoji || '').slice(0, 8);
+      if (!emoji) return;
+      showReactionBurst(emoji, room.localParticipant.name || 'أنت');
+      await sendData('reaction', { emoji: emoji }, false);
+    }
+
+    function toggleFocusMode() {
+      document.body.classList.toggle('mx-ml-focus');
+      var on = document.body.classList.contains('mx-ml-focus');
+      var btn = $('mx-ml-btn-focus');
+      if (btn) btn.classList.toggle('is-active', on);
+      toast(on ? 'وضع التركيز' : 'إظهار الأدوات');
+    }
+
+    function togglePipPanel() {
+      var panel = $('mx-lk-people-panel');
+      if (!panel) return;
+      panel.classList.toggle('hidden');
+      panel.classList.toggle('lk-pip-float', !panel.classList.contains('hidden'));
+      var btn = $('mx-ml-btn-pip');
+      if (btn) btn.classList.toggle('is-active', !panel.classList.contains('hidden'));
+      if (!panel.classList.contains('hidden')) renderPeople();
+    }
+
+    function syncShareFloat() {
+      var bar = $('mx-share-float');
+      document.body.classList.toggle('mx-sharing', !!shareOn);
+      if (bar) bar.classList.toggle('is-open', !!shareOn);
+    }
+
+    function ensureReactMenu() {
+      var host = $('mx-ml-react-wrap');
+      if (!host || host.querySelector('#mx-ml-react-menu')) return;
+      var menu = document.createElement('div');
+      menu.id = 'mx-ml-react-menu';
+      menu.className = 'mx-lk-react-menu hidden';
+      menu.setAttribute('role', 'menu');
+      var handBtn = document.createElement('button');
+      handBtn.type = 'button';
+      handBtn.className = 'mx-lk-react-item';
+      handBtn.innerHTML = '<i class="fas fa-hand-paper"></i><span>رفع اليد</span>';
+      handBtn.addEventListener('click', function () {
+        menu.classList.add('hidden');
+        toggleHand().catch(function () {});
+      });
+      menu.appendChild(handBtn);
+      REACTIONS.forEach(function (em) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'mx-lk-react-emoji';
+        b.textContent = em;
+        b.title = em;
+        b.addEventListener('click', function () {
+          menu.classList.add('hidden');
+          sendReaction(em).catch(function () {});
+        });
+        menu.appendChild(b);
+      });
+      host.appendChild(menu);
+    }
 
     function setStatus(t) {
       if (statusEl) statusEl.textContent = t;
@@ -175,6 +374,7 @@
         stage.appendChild(strip);
       }
       syncShareTools(true);
+      applySpeakerLayout();
     }
 
     function syncShareTools(on) {
@@ -575,6 +775,9 @@
           !!msg.p.on
         );
       }
+      if (msg.t === 'reaction' && msg.p && msg.p.emoji) {
+        showReactionBurst(String(msg.p.emoji), from);
+      }
     }
 
     function paintMic() {
@@ -607,6 +810,7 @@
       }
       if (icon) icon.className = shareOn ? 'fas fa-desktop text-[#0065fd]' : 'fas fa-desktop text-[#171717]';
       layoutStage();
+      syncShareFloat();
     }
     function paintHand() {
       var btn = $('mx-ml-btn-react');
@@ -676,6 +880,7 @@
           micOn = next;
         }
         paintMic();
+        if (micOn && noiseOn) applyNoiseToLocalAudio(true).catch(function () {});
       }
     }
 
@@ -998,7 +1203,25 @@
       if (mic) mic.addEventListener('click', function () { toggleMic().catch(function (e) { toast(e.message || 'خطأ ميكروفون'); }); });
       if (cam) cam.addEventListener('click', function () { toggleCam().catch(function (e) { toast(e.message || 'خطأ كاميرا'); }); });
       if (share) share.addEventListener('click', function () { toggleShare().catch(function (e) { toast(e.message || 'خطأ الشير'); }); });
-      if (hand) hand.addEventListener('click', function () { toggleHand().catch(function () {}); });
+      if (hand) {
+        ensureReactMenu();
+        hand.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          var menu = $('mx-ml-react-menu');
+          if (!menu) {
+            toggleHand().catch(function () {});
+            return;
+          }
+          menu.classList.toggle('hidden');
+        });
+        document.addEventListener('click', function (ev) {
+          var menu = $('mx-ml-react-menu');
+          var wrap = $('mx-ml-react-wrap');
+          if (!menu || menu.classList.contains('hidden')) return;
+          if (wrap && wrap.contains(ev.target)) return;
+          menu.classList.add('hidden');
+        });
+      }
       if (chatSend && chatInput) {
         chatSend.addEventListener('click', function () {
           sendChat(chatInput.value).then(function () {
@@ -1073,6 +1296,80 @@
           }
         });
       }
+
+      var noiseBtn = $('mx-ml-btn-noise');
+      if (noiseBtn) {
+        noiseBtn.addEventListener('click', function () {
+          applyNoiseToLocalAudio(!noiseOn).catch(function () {});
+        });
+      }
+      var sfNoise = $('mx-sf-noise');
+      if (sfNoise) {
+        sfNoise.addEventListener('click', function () {
+          applyNoiseToLocalAudio(!noiseOn).catch(function () {});
+        });
+      }
+      var sfStop = $('mx-sf-stop-share');
+      if (sfStop) {
+        sfStop.addEventListener('click', function () {
+          stopScreenShare().catch(function () {});
+        });
+      }
+      var sfMic = $('mx-sf-mic');
+      if (sfMic) {
+        sfMic.addEventListener('click', function () {
+          toggleMic().catch(function () {});
+        });
+      }
+      var sfCam = $('mx-sf-cam');
+      if (sfCam) {
+        sfCam.addEventListener('click', function () {
+          toggleCam().catch(function () {});
+        });
+      }
+      var sfPeople = $('mx-sf-people');
+      if (sfPeople) {
+        sfPeople.addEventListener('click', function () {
+          togglePipPanel();
+        });
+      }
+      var sfTile = $('mx-sf-tile');
+      if (sfTile) {
+        sfTile.addEventListener('click', function () {
+          setLayoutMode(layoutMode === 'grid' ? 'speaker' : 'grid');
+        });
+      }
+
+      var tileBtn = $('mx-ml-btn-tile');
+      if (tileBtn) {
+        tileBtn.addEventListener('click', function () {
+          setLayoutMode(layoutMode === 'grid' ? 'speaker' : 'grid');
+          toast(layoutMode === 'grid' ? 'عرض الشبكة' : 'عرض المتحدث');
+        });
+      }
+      var focusBtn = $('mx-ml-btn-focus');
+      if (focusBtn) {
+        focusBtn.addEventListener('click', function () {
+          toggleFocusMode();
+        });
+      }
+      var pipBtn = $('mx-ml-btn-pip');
+      if (pipBtn) {
+        pipBtn.addEventListener('click', function () {
+          togglePipPanel();
+        });
+      }
+
+      document.addEventListener('keydown', function (ev) {
+        if (ev.target && (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA')) return;
+        var k = (ev.key || '').toLowerCase();
+        if (k === 'm') toggleMic().catch(function () {});
+        if (k === 'v') toggleCam().catch(function () {});
+        if (k === 's' && !ev.metaKey && !ev.ctrlKey) toggleShare().catch(function () {});
+        if (k === 'f') toggleFocusMode();
+        if (k === 't') setLayoutMode(layoutMode === 'grid' ? 'speaker' : 'grid');
+        if (k === 'h') toggleHand().catch(function () {});
+      });
 
       if (isHost) {
         document.querySelectorAll('[data-perm-key]').forEach(function (input) {
@@ -1191,6 +1488,10 @@
       .on(RoomEvent.ConnectionQualityChanged, function (quality, participant) {
         if (!participant || participant.isLocal) setQualityUI(quality);
       })
+      .on(RoomEvent.ActiveSpeakersChanged, function (speakers) {
+        activeSpeakerId = speakers && speakers[0] ? speakers[0].identity : '';
+        applySpeakerLayout();
+      })
       .on(RoomEvent.Disconnected, function () {
         setStatus('انقطع الاتصال');
       })
@@ -1206,11 +1507,14 @@
     setStatus('متصل');
     applyPermissions(perms);
     wireUi();
+    setLayoutMode('grid');
     paintMic();
     paintCam();
     paintShare();
     paintHand();
+    paintNoise();
     renderPeople();
+    applyNoiseToLocalAudio(true).catch(function () {});
     room.remoteParticipants.forEach(function (p) {
       p.trackPublications.forEach(function (pub) {
         if (pub.track) attachTrack(pub.track, p);
