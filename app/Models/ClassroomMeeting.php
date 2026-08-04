@@ -108,6 +108,19 @@ class ClassroomMeeting extends Model
         return (bool) data_get($this->settings, 'allow_participant_virtual_background', true);
     }
 
+    /** jitsi (default) | livekit — pilot A/B without removing Jitsi */
+    public function liveProvider(): string
+    {
+        $p = strtolower((string) data_get($this->settings, 'live_provider', 'jitsi'));
+
+        return in_array($p, ['jitsi', 'livekit'], true) ? $p : 'jitsi';
+    }
+
+    public function usesLiveKit(): bool
+    {
+        return $this->liveProvider() === 'livekit';
+    }
+
     /** صلاحيات الضيف كما يراها العميل (enter/heartbeat). */
     public function guestPermissionsPayload(): array
     {

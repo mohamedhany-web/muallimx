@@ -91,6 +91,20 @@ return [
         'token' => env('LIVE_RECORDINGS_WEBHOOK_TOKEN'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | LiveKit (pilot alongside Jitsi on live.muallimx.com)
+    |--------------------------------------------------------------------------
+    | Signaling: wss://live.muallimx.com:8443
+    | Keys live on the meet VPS at /opt/livekit/KEYS.env — copy into app .env
+    */
+    'livekit' => [
+        'url' => env('LIVEKIT_URL', 'wss://live.muallimx.com:8443'),
+        'api_key' => env('LIVEKIT_API_KEY'),
+        'api_secret' => env('LIVEKIT_API_SECRET'),
+        'enabled' => env('LIVEKIT_ENABLED', true),
+    ],
+
     'n8n' => [
         'token' => env('N8N_WEBHOOK_TOKEN'),
         'live_session_report_webhook' => env('N8N_LIVE_SESSION_REPORT_WEBHOOK'),

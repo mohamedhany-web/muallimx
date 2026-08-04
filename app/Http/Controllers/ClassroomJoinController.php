@@ -7,6 +7,7 @@ use App\Models\ClassroomMeetingParticipant;
 use App\Models\LiveSetting;
 use App\Models\User;
 use App\Services\ClassroomWhiteboardSceneService;
+use App\Services\LiveKitTokenService;
 use App\Services\SubscriptionLimitService;
 use App\Support\ShareAnnotationSanitizer;
 use Illuminate\Http\Request;
@@ -169,6 +170,17 @@ class ClassroomJoinController extends Controller
         $maxParticipants = (int) ($meeting?->max_participants ?? 25);
         $meetingEnded = (bool) ($meeting && $meeting->ended_at);
 
+        if ($meeting && $meeting->usesLiveKit() && ! $meetingEnded) {
+            return view('classroom.join-livekit', compact(
+                'code',
+                'roomName',
+                'meeting',
+                'joinUrl',
+                'maxParticipants',
+                'meetingEnded'
+            ));
+        }
+
         return view('classroom.join', compact('code', 'roomName', 'meeting', 'jitsiDomain', 'joinUrl', 'maxParticipants', 'meetingEnded'));
     }
 
@@ -236,12 +248,35 @@ class ClassroomJoinController extends Controller
             $meeting->update(['participants_peak' => $newCount]);
         }
 
-        return response()->json(array_merge([
+        $payload = array_merge([
             'ok' => true,
             'token' => $token,
             'active_participants' => $newCount,
             'max_participants' => $maxParticipants,
-        ], $meeting->guestPermissionsPayload()));
+            'live_provider' => $meeting->liveProvider(),
+        ], $meeting->guestPermissionsPayload());
+
+        if ($meeting->usesLiveKit()) {
+            $livekit = app(LiveKitTokenService::class);
+            if (! $livekit->isConfigured()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'جلسة LiveKit لكن المفاتيح غير مضبوطة على التطبيق.',
+                ], 503);
+            }
+            $payload['livekit'] = [
+                'url' => $livekit->wsUrl(),
+                'token' => $livekit->createToken(
+                    $meeting->room_name,
+                    'guest-'.substr(hash('sha256', $token), 0, 16),
+                    $displayName,
+                    ['canPublish' => true, 'canSubscribe' => true]
+                ),
+                'room' => $meeting->room_name,
+            ];
+        }
+
+        return response()->json($payload);
     }
 
     public function heartbeat(Request $request, string $code)

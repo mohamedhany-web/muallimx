@@ -22,7 +22,14 @@
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
                 <h1 class="text-2xl font-black text-slate-900 dark:text-white">{{ $meeting->title }}</h1>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">الكود: <span class="font-mono font-bold">{{ $meeting->code }}</span></p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">الكود: <span class="font-mono font-bold">{{ $meeting->code }}</span>
+                    · المحرك:
+                    @if($meeting->usesLiveKit())
+                        <span class="font-semibold text-emerald-600 dark:text-emerald-400">LiveKit (تجربة)</span>
+                    @else
+                        <span class="font-semibold text-slate-700 dark:text-slate-200">Jitsi</span>
+                    @endif
+                </p>
             </div>
             <div class="flex items-center gap-2">
                 @if(!$meeting->consultation_request_id && !($useInstructorRoutes ?? false) && !$meeting->isLive() && !$meeting->ended_at)
