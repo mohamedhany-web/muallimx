@@ -48,23 +48,14 @@ class LiveServerController extends Controller
      */
     public function updateLiveVideoProvider(Request $request)
     {
-        $data = $request->validate([
-            'live_video_provider' => 'required|in:jitsi,livekit',
-        ]);
-
-        $provider = $data['live_video_provider'];
-        if ($provider === 'livekit') {
-            $livekit = app(\App\Services\LiveKitTokenService::class);
-            if (! config('services.livekit.enabled') || ! $livekit->isConfigured()) {
-                return back()->with('error', 'لا يمكن تفعيل LiveKit: أضف LIVEKIT_URL و LIVEKIT_API_KEY و LIVEKIT_API_SECRET في .env ثم أعد المحاولة.');
-            }
+        $livekit = app(\App\Services\LiveKitTokenService::class);
+        if (! config('services.livekit.enabled') || ! $livekit->isConfigured()) {
+            return back()->with('error', 'LiveKit غير مضبوط: أضف LIVEKIT_URL و LIVEKIT_API_KEY و LIVEKIT_API_SECRET في .env.');
         }
 
-        LiveSetting::setLiveVideoProvider($provider);
+        LiveSetting::setLiveVideoProvider('livekit');
 
-        $label = $provider === 'livekit' ? 'LiveKit' : 'Jitsi';
-
-        return back()->with('success', "تم ضبط محرك الفيديو للموقع على {$label}. كل جلسات Classroom الجديدة والقائمة ستستخدم هذا المحرك.");
+        return back()->with('success', 'محرك الفيديو للموقع مضبوط على LiveKit فقط (Jitsi متوقف من التطبيق).');
     }
 
     public function create()

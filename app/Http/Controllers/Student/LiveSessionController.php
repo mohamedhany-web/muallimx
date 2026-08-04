@@ -104,10 +104,37 @@ class LiveSessionController extends Controller
             ]);
         }
 
-        $jitsiDomain = $liveSession->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
-        $allowStudentWhiteboard = $liveSession->allowsStudentWhiteboard();
+        $livekit = app(\App\Services\LiveKitTokenService::class);
+        if (! config('services.livekit.enabled') || ! $livekit->isConfigured()) {
+            return back()->with('error', 'LiveKit غير مضبوط على التطبيق (LIVEKIT_*).');
+        }
 
-        return view('student.live-sessions.room', compact('liveSession', 'jitsiDomain', 'user', 'allowStudentWhiteboard'));
+        $roomName = 'ls-'.($liveSession->room_name ?: ('session-'.$liveSession->id));
+        $allowStudentWhiteboard = $liveSession->allowsStudentWhiteboard();
+        $livekitToken = $livekit->createToken(
+            $roomName,
+            'student-'.$user->id,
+            $user->name ?: 'طالب',
+            [
+                'canPublish' => true,
+                'canSubscribe' => true,
+                'canPublishSources' => array_values(array_filter([
+                    'microphone',
+                    'camera',
+                    $liveSession->allow_screen_share ? 'screen_share' : null,
+                    $liveSession->allow_screen_share ? 'screen_share_audio' : null,
+                ])),
+            ]
+        );
+        $livekitUrl = $livekit->wsUrl();
+
+        return view('student.live-sessions.room-livekit', compact(
+            'liveSession',
+            'user',
+            'allowStudentWhiteboard',
+            'livekitToken',
+            'livekitUrl'
+        ));
     }
 
     public function leave(LiveSession $liveSession)

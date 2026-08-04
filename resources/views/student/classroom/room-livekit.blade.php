@@ -23,8 +23,11 @@
         $mxVbgJs = is_readable($mxVbgJsFile) ? file_get_contents($mxVbgJsFile) : '';
         $mxNoiseJsFile = public_path('js/classroom-noise-isolation.js');
         $mxNoiseJs = is_readable($mxNoiseJsFile) ? file_get_contents($mxNoiseJsFile) : '';
+        $academicObserverMode = ! empty($academicObserverMode);
         $rp = ($useInstructorRoutes ?? false) ? 'instructor.' : 'student.';
-        if ($useInstructorRoutes ?? false) {
+        if ($academicObserverMode) {
+            $roomExitUrl = $academicObserverExitUrl ?? route('employee.dashboard');
+        } elseif ($useInstructorRoutes ?? false) {
             $roomExitUrl = $meeting->consultation_request_id
                 ? route('instructor.consultations.show', $meeting->consultation_request_id)
                 : route('instructor.consultations.index');
@@ -74,7 +77,7 @@
                 <i class="fas fa-arrow-right"></i>
             </a>
             <div class="min-w-0">
-                <p class="text-[11px] font-semibold text-[#93c5fd] m-0">LiveKit · Meet.Line</p>
+                <p class="text-[11px] font-semibold text-[#93c5fd] m-0">{{ $academicObserverMode ? 'LiveKit · إشراف' : 'LiveKit · Meet.Line' }}</p>
                 <h1 class="mx-ml-title truncate">{{ $meeting->title ?: ('غرفة ' . $meeting->code) }}</h1>
             </div>
             <span id="mx-live-rec-badge" class="hidden mx-ml-record-chip"><i class="fas fa-circle text-[#fd0000] text-[8px]"></i> REC</span>
@@ -86,6 +89,7 @@
             <span id="lk-status" class="text-xs">…</span>
         </div>
         <div class="flex items-center gap-2 shrink-0">
+            @unless($academicObserverMode)
             <button type="button" id="btn-classroom-copy-join" class="mx-ml-code-pill" title="نسخ رابط الانضمام" data-join-url="{{ url('classroom/join/' . $meeting->code) }}">
                 <i class="fas fa-link text-[10px] me-1"></i>
                 <span class="font-mono">{{ $meeting->code }}</span>
@@ -94,6 +98,9 @@
                 @csrf
                 <button type="submit" id="mx-end-meeting-btn" class="mx-ml-end-btn">إنهاء</button>
             </form>
+            @else
+            <a href="{{ $roomExitUrl }}" class="mx-ml-end-btn">مغادرة الإشراف</a>
+            @endunless
         </div>
     </header>
 
@@ -155,6 +162,7 @@
             <button type="button" id="mx-ml-btn-chat" class="mx-ml-icon-btn" title="الدردشة">
                 <i class="fas fa-comments text-[#171717]"></i>
             </button>
+            @unless($academicObserverMode)
             <span class="mx-ml-dock-sep" aria-hidden="true"></span>
             <div class="relative inline-flex" id="mx-guest-perms-wrap">
                 <button type="button" id="mx-guest-perms-btn" class="classroom-room-toolbar-btn" title="صلاحيات الطلاب" aria-expanded="false" aria-controls="mx-guest-perms-panel">
@@ -187,16 +195,19 @@
                     <button type="button" role="menuitem" data-mx-rec-mode="report" class="mx-ml-record-menu-item"><span class="mx-ml-rec-title">تقرير صوتي فقط</span><span class="mx-ml-rec-desc">ميكروفون للتقرير</span></button>
                 </div>
             </div>
+            @endunless
         </div>
     </div>
 </div>
 
+@unless($academicObserverMode)
 <div id="mx-share-ann-hold" hidden>
 @include('partials.mx-share-annotation-overlay', [
     'mxAnnRole' => 'viewer_poll',
     'mxAnnPollUrl' => route($rp.'classroom.share-annotations', $meeting),
 ])
 </div>
+@endunless
 <div id="mx-lk-wb-popup" aria-hidden="true">
     <div class="mx-lk-wb-card">
         <div class="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-700 text-white">
@@ -277,23 +288,24 @@ document.getElementById('mx-lk-wb-close')?.addEventListener('click', () => {
 });
 
 const api = await window.MxLiveKitClassroom.boot(LivekitClient, {
-    isHost: true,
+    isHost: @json(! $academicObserverMode),
     url: @json($livekitUrl),
     token: @json($livekitToken),
     csrfToken: csrf,
     meetingCode: @json($meeting->code),
     joinUrl: @json(url('classroom/join/'.$meeting->code)),
     exitUrl: @json($roomExitUrl),
-    permissionsUrl: @json(route($rp.'classroom.participant-whiteboard', $meeting)),
+    permissionsUrl: @json($academicObserverMode ? '' : route($rp.'classroom.participant-whiteboard', $meeting)),
     permissions: @json($meeting->guestPermissionsPayload()),
-    presignUrl: @json(route($rp.'classroom.recording.presign', $meeting)),
-    completeUrl: @json(route($rp.'classroom.recording.complete', $meeting)),
-    audioPresignUrl: @json(route($rp.'classroom.recording-audio.presign', $meeting)),
-    audioCompleteUrl: @json(route($rp.'classroom.recording-audio.complete', $meeting)),
-    uploadTabUrl: @json(route($rp.'classroom.recording.upload-tab', $meeting)),
+    presignUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording.presign', $meeting)),
+    completeUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording.complete', $meeting)),
+    audioPresignUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording-audio.presign', $meeting)),
+    audioCompleteUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording-audio.complete', $meeting)),
+    uploadTabUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording.upload-tab', $meeting)),
     onMeetingEnded: () => { location.href = @json($roomExitUrl); },
 });
 
+@unless($academicObserverMode)
 // Best-effort: browser noise constraints + VBG hooks if scripts present
 document.getElementById('mx-ml-btn-noise')?.addEventListener('click', async () => {
     try {
@@ -308,6 +320,7 @@ document.getElementById('mx-ml-btn-noise')?.addEventListener('click', async () =
 document.getElementById('mx-ml-btn-bg')?.addEventListener('click', () => {
     alert('خلفيات الكاميرا المتقدمة تُفعَّل تدريجياً على LiveKit. استخدم تمويه النظام من إعدادات المتصفح إن لزم.');
 });
+@endunless
 </script>
 </body>
 </html>

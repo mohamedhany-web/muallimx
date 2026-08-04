@@ -165,23 +165,19 @@ class ClassroomJoinController extends Controller
 
         $roomName = 'Muallimx-'.$code;
         $meeting = ClassroomMeeting::where('code', $code)->first();
-        $jitsiDomain = LiveSetting::getJitsiDomain();
         $joinUrl = url('classroom/join/'.$code);
         $maxParticipants = (int) ($meeting?->max_participants ?? 25);
         $meetingEnded = (bool) ($meeting && $meeting->ended_at);
 
-        if ($meeting && $meeting->usesLiveKit() && ! $meetingEnded) {
-            return view('classroom.join-livekit', compact(
-                'code',
-                'roomName',
-                'meeting',
-                'joinUrl',
-                'maxParticipants',
-                'meetingEnded'
-            ));
-        }
-
-        return view('classroom.join', compact('code', 'roomName', 'meeting', 'jitsiDomain', 'joinUrl', 'maxParticipants', 'meetingEnded'));
+        // LiveKit-only guest join (Jitsi path retired)
+        return view('classroom.join-livekit', compact(
+            'code',
+            'roomName',
+            'meeting',
+            'joinUrl',
+            'maxParticipants',
+            'meetingEnded'
+        ));
     }
 
     public function enter(Request $request, string $code)

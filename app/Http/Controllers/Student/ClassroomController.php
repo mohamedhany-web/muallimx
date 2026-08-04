@@ -403,61 +403,44 @@ class ClassroomController extends Controller
                     : 'انتهت مدة الاجتماع المسموح بها حسب باقتك. يمكنك ترقية الباقة لزيادة مدة الميتينج.');
         }
 
-        $jitsiDomain = LiveSetting::getJitsiDomain();
-        $isDemoJitsi = (strpos($jitsiDomain, 'meet.jit.si') !== false);
         $meetingEndsAt = $meeting->started_at ? $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes) : null;
         $useInstructorRoutes = request()->routeIs('instructor.*');
         $subscriptionFeatureMenuItems = ClassroomSubscriptionFeatureMenuService::menuItemsForUser($user, $useInstructorRoutes);
         $subscriptionPackageLabel = $user->activeSubscription()?->plan_name;
 
-        if ($meeting->usesLiveKit()) {
-            $livekit = app(LiveKitTokenService::class);
-            if (! $livekit->isConfigured()) {
-                $back = request()->routeIs('instructor.*')
-                    ? route('instructor.classroom.show', $meeting)
-                    : route('student.classroom.show', $meeting);
+        $livekit = app(LiveKitTokenService::class);
+        if (! config('services.livekit.enabled') || ! $livekit->isConfigured()) {
+            $back = request()->routeIs('instructor.*')
+                ? route('instructor.classroom.show', $meeting)
+                : route('student.classroom.show', $meeting);
 
-                return redirect()->to($back)
-                    ->with('error', 'جلسة LiveKit لكن المفاتيح غير مضبوطة على التطبيق (LIVEKIT_*).');
-            }
-            $livekitToken = $livekit->createToken(
-                $meeting->room_name,
-                'host-'.$user->id,
-                $user->name ?: 'معلم',
-                ['canPublish' => true, 'canSubscribe' => true, 'roomAdmin' => true]
-            );
-            $livekitUrl = $livekit->wsUrl();
-
-            return view('student.classroom.room-livekit', compact(
-                'meeting',
-                'user',
-                'maxDurationMinutes',
-                'effectiveDurationMinutes',
-                'meetingEndsAt',
-                'useInstructorRoutes',
-                'subscriptionFeatureMenuItems',
-                'subscriptionPackageLabel',
-                'livekitToken',
-                'livekitUrl'
-            ));
+            return redirect()->to($back)
+                ->with('error', 'LiveKit غير مضبوط على التطبيق (LIVEKIT_*). أضف المفاتيح ثم أعد المحاولة.');
         }
+        $livekitToken = $livekit->createToken(
+            $meeting->room_name,
+            'host-'.$user->id,
+            $user->name ?: 'معلم',
+            ['canPublish' => true, 'canSubscribe' => true, 'roomAdmin' => true]
+        );
+        $livekitUrl = $livekit->wsUrl();
 
-        return view('student.classroom.room', compact(
+        return view('student.classroom.room-livekit', compact(
             'meeting',
-            'jitsiDomain',
             'user',
-            'isDemoJitsi',
             'maxDurationMinutes',
             'effectiveDurationMinutes',
             'meetingEndsAt',
             'useInstructorRoutes',
             'subscriptionFeatureMenuItems',
-            'subscriptionPackageLabel'
+            'subscriptionPackageLabel',
+            'livekitToken',
+            'livekitUrl'
         ));
     }
 
     /**
-     * نافذة عائمة لرؤية المشاركين أثناء مشاركة تاب/تطبيق آخر (مثل Zoom).
+     * نافذة عائمة — على LiveKit نوجّه للغرفة الرئيسية (PiP المنفصل كان يعتمد على Jitsi).
      */
     public function roomPip(ClassroomMeeting $meeting)
     {
@@ -465,23 +448,11 @@ class ClassroomController extends Controller
         $this->ensureMeetingOwnership($meeting, $user);
         $this->ensureClassroomAccess($user, $meeting);
 
-        if ($meeting->ended_at || ! $meeting->started_at) {
-            return response('الاجتماع غير متاح', 410);
-        }
-
-        if (SubscriptionLimitService::expireMeetingIfPastDuration($meeting)) {
-            return response('انتهت مدة الاجتماع', 410);
-        }
-
-        $jitsiDomain = LiveSetting::getJitsiDomain();
         $useInstructorRoutes = request()->routeIs('instructor.*');
+        $roomRoute = $useInstructorRoutes ? 'instructor.classroom.room' : 'student.classroom.room';
 
-        return view('student.classroom.room-pip', compact(
-            'meeting',
-            'jitsiDomain',
-            'user',
-            'useInstructorRoutes'
-        ));
+        return redirect()->route($roomRoute, $meeting)
+            ->with('info', 'نافذة PiP المنفصلة أُوقفت مع الانتقال الكامل إلى LiveKit — استخدم الغرفة الرئيسية.');
     }
 
     /**

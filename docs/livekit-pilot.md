@@ -1,46 +1,47 @@
-# LiveKit Classroom (Meet.Line parity)
+# LiveKit site-wide (Jitsi retired from app)
 
-Site-wide engine switch: Admin → سيرفرات البث → **محرك الفيديو للموقع** (`jitsi` | `livekit`).
+## App
 
-## Signaling
-
-Preferred client URL:
+- Provider is **always LiveKit** (`LiveSetting::usesLiveKit()` → true).
+- Classroom host/guest, Live Sessions, and academic observers use LiveKit rooms.
+- PiP Jitsi window redirects to the main LiveKit room.
+- Requires on **app** `.env`:
 
 ```env
+LIVEKIT_ENABLED=true
 LIVEKIT_URL=wss://live.muallimx.com/livekit
 LIVEKIT_API_KEY=...
 LIVEKIT_API_SECRET=...
-LIVEKIT_ENABLED=true
 ```
 
-Keys live on the meet VPS at `/opt/livekit/KEYS.env` — copy into the **app** `.env`, then `php artisan config:clear`.
+Then: `php artisan migrate` + `php artisan config:clear` + `php artisan view:clear`.
 
-## What LiveKit Classroom includes now
+## Features shipping now
 
 | Feature | Status |
 |---------|--------|
-| Meet.Line shell (host + guest) | Done |
-| Mic / cam / 1080p screen share | Done |
-| Participants list + mute/kick (host) | Done (data-channel fallback) |
-| Chat + raise hand (DataChannel) | Done |
-| Guest permissions + heartbeat | Done |
-| Token `canPublishSources` | Done |
-| Excalidraw whiteboard sync | Done (same HTTP APIs) |
-| Local MediaRecorder + R2 upload | Done (no Egress) |
-| Connection quality meter | Done |
-| Noise constraint toggle | Best-effort browser |
-| Full VBG ML / LiveKit Egress | Deferred |
+| Meet.Line immersive Classroom | Done |
+| Mic / cam / screen + side filmstrip | Done |
+| Chat / hand / laser / annotate on share | Done |
+| Local lecture + audio report → R2 | Done |
+| Live Sessions on LiveKit | Done (A/V/chat/share) |
+| Academic observer (subscribe-only) | Done |
+| Guest permissions | Done |
 
-## Code map
+## Next LiveKit upgrades (optional)
 
-- Shared client: `public/js/classroom-livekit-room.js` (inlined into blades)
-- Host: `resources/views/student/classroom/room-livekit.blade.php`
-- Guest: `resources/views/classroom/join-livekit.blade.php`
-- Styles: `public/css/classroom-livekit.css` + Meet.Line CSS
-- Tokens: `app/Services/LiveKitTokenService.php`
+| Feature | Effort | Notes |
+|---------|--------|-------|
+| Server Egress recording | L | Needs egress worker on VPS |
+| Full VBG (`@livekit/track-processors`) | M | Replace browser alert |
+| Krisp / better noise | M | Track processor |
+| Reactions / emoji | S | DataChannel |
+| Waiting room admit | M | LiveKit Server API |
+| Breakout rooms | L | Multi-room tokens |
+| Closed captions | L | STT pipeline |
+| True RoomService mute | M | Server API |
+| Browser Document PiP | M | Over LiveKit tiles |
 
-## Deferred
+## Remove Jitsi from meet VPS
 
-- LiveKit Egress / server-side recording (needs stronger VPS)
-- Document PiP, closed captions
-- Live Sessions product (non-Classroom) on LiveKit
+See `docs/remove-jitsi-keep-livekit.md`. **Only after** production smoke on LiveKit succeeds.

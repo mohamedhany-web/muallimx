@@ -140,15 +140,29 @@ class LiveSessionController extends Controller
                 ->with('info', 'الجلسة ليست في وضع البث');
         }
 
-        $jitsiDomain = $liveSession->server?->normalized_domain ?: LiveSetting::getJitsiDomain();
+        $livekit = app(\App\Services\LiveKitTokenService::class);
+        if (! config('services.livekit.enabled') || ! $livekit->isConfigured()) {
+            return redirect()->route('instructor.live-sessions.show', $liveSession)
+                ->with('error', 'LiveKit غير مضبوط على التطبيق (LIVEKIT_*).');
+        }
+
+        $roomName = 'ls-'.($liveSession->room_name ?: ('session-'.$liveSession->id));
         $user = auth()->user();
+        $livekitToken = $livekit->createToken(
+            $roomName,
+            'host-'.$user->id,
+            $user->name ?: 'مدرّس',
+            ['canPublish' => true, 'canSubscribe' => true, 'roomAdmin' => true]
+        );
+        $livekitUrl = $livekit->wsUrl();
         $subscriptionFeatureMenuItems = ClassroomSubscriptionFeatureMenuService::menuItemsForUser($user, true);
         $subscriptionPackageLabel = $user->activeSubscription()?->plan_name;
 
-        return view('instructor.live-sessions.room', compact(
+        return view('instructor.live-sessions.room-livekit', compact(
             'liveSession',
-            'jitsiDomain',
             'user',
+            'livekitToken',
+            'livekitUrl',
             'subscriptionFeatureMenuItems',
             'subscriptionPackageLabel'
         ));

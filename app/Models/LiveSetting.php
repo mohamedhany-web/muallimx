@@ -40,26 +40,22 @@ class LiveSetting extends Model
     }
 
     /**
-     * محرك الفيديو للموقع بالكامل: jitsi | livekit (من لوحة سيرفرات البث).
+     * محرك الفيديو للموقع: LiveKit فقط (Jitsi أُزيل من مسار الإنتاج).
      */
     public static function getLiveVideoProvider(): string
     {
-        $p = strtolower(trim((string) static::get('live_video_provider', 'jitsi')));
-
-        return in_array($p, ['jitsi', 'livekit'], true) ? $p : 'jitsi';
+        return 'livekit';
     }
 
     public static function usesLiveKit(): bool
     {
-        return static::getLiveVideoProvider() === 'livekit';
+        return true;
     }
 
     public static function setLiveVideoProvider(string $provider): void
     {
-        $provider = strtolower(trim($provider));
-        if (! in_array($provider, ['jitsi', 'livekit'], true)) {
-            $provider = 'jitsi';
-        }
+        // Jitsi retired — persist livekit only
+        $provider = 'livekit';
 
         static::updateOrCreate(
             ['key' => 'live_video_provider'],
@@ -67,7 +63,7 @@ class LiveSetting extends Model
                 'value' => $provider,
                 'type' => 'string',
                 'group' => 'general',
-                'label' => 'محرك الفيديو للموقع (Jitsi / LiveKit)',
+                'label' => 'محرك الفيديو للموقع (LiveKit)',
             ]
         );
         Cache::forget('live_setting_live_video_provider');

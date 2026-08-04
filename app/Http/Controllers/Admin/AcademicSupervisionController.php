@@ -252,31 +252,42 @@ class AcademicSupervisionController extends Controller
         }
 
         $admin = auth()->user();
-        $jitsiDomain = LiveSetting::getJitsiDomain();
-        $isDemoJitsi = (strpos($jitsiDomain, 'meet.jit.si') !== false);
         $meetingEndsAt = $meeting->started_at ? $meeting->started_at->copy()->addMinutes($effectiveDurationMinutes) : null;
         $useInstructorRoutes = false;
         $user = $admin;
         $academicObserverMode = true;
         $academicObserverExitUrl = route('admin.academic-supervision.supervisors.students.show', [$supervisor, $student]);
-        $jitsiDisplayName = 'إدارة: '.$admin->name;
+        $observerDisplayName = 'إدارة: '.$admin->name;
         $subscriptionFeatureMenuItems = [];
         $subscriptionPackageLabel = null;
 
-        return view('student.classroom.room', compact(
+        $livekit = app(\App\Services\LiveKitTokenService::class);
+        if (! config('services.livekit.enabled') || ! $livekit->isConfigured()) {
+            return redirect()
+                ->route('admin.academic-supervision.supervisors.students.show', [$supervisor, $student])
+                ->with('error', 'LiveKit غير مضبوط — تعذر دخول غرفة الإشراف.');
+        }
+        $livekitToken = $livekit->createToken(
+            $meeting->room_name,
+            'observer-admin-'.$admin->id,
+            $observerDisplayName,
+            ['canPublish' => false, 'canSubscribe' => true, 'canPublishData' => false, 'roomAdmin' => false]
+        );
+        $livekitUrl = $livekit->wsUrl();
+
+        return view('student.classroom.room-livekit', compact(
             'meeting',
-            'jitsiDomain',
             'user',
-            'isDemoJitsi',
             'maxDurationMinutes',
             'effectiveDurationMinutes',
             'meetingEndsAt',
             'useInstructorRoutes',
             'academicObserverMode',
             'academicObserverExitUrl',
-            'jitsiDisplayName',
             'subscriptionFeatureMenuItems',
-            'subscriptionPackageLabel'
+            'subscriptionPackageLabel',
+            'livekitToken',
+            'livekitUrl'
         ));
     }
 }
