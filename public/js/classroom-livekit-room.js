@@ -162,6 +162,9 @@
         stage.appendChild(tile);
       }
       tileMap.set(key, tile);
+      if (stage) {
+        stage.classList.toggle('has-screen', !!stage.querySelector('.lk-tile.is-screen'));
+      }
       return tile;
     }
 
@@ -171,6 +174,9 @@
       if (!tile) return;
       tile.remove();
       tileMap.delete(key);
+      if (stage) {
+        stage.classList.toggle('has-screen', !!stage.querySelector('.lk-tile.is-screen'));
+      }
     }
 
     function refreshHandLabels() {
@@ -417,6 +423,7 @@
       var icon = $('mx-ml-mic-icon');
       if (!btn) return;
       btn.setAttribute('aria-pressed', micOn ? 'true' : 'false');
+      btn.classList.toggle('is-active', micOn);
       if (icon) {
         icon.className = micOn ? 'fas fa-microphone text-[#0065fd]' : 'fas fa-microphone-slash text-[#fd0000]';
       }
@@ -426,9 +433,11 @@
       var icon = $('mx-ml-cam-icon');
       if (!btn) return;
       btn.setAttribute('aria-pressed', camOn ? 'true' : 'false');
+      btn.classList.toggle('is-active', camOn);
       if (icon) {
         icon.className = camOn ? 'fas fa-video text-[#0065fd]' : 'fas fa-video-slash text-[#fd0000]';
       }
+      syncLocalMediaTile(Track.Source.Camera, camOn);
     }
     function paintShare() {
       var btn = $('mx-ml-btn-share');
@@ -437,6 +446,7 @@
       btn.setAttribute('aria-pressed', shareOn ? 'true' : 'false');
       btn.classList.toggle('is-active', shareOn);
       if (icon) icon.className = shareOn ? 'fas fa-desktop text-[#0065fd]' : 'fas fa-desktop text-[#171717]';
+      if (stage) stage.classList.toggle('has-screen', !!shareOn || stage.querySelector('.lk-tile.is-screen'));
     }
     function paintHand() {
       var btn = $('mx-ml-btn-react');
@@ -444,33 +454,109 @@
       btn.classList.toggle('is-active', handRaised);
     }
 
+    function syncLocalMediaTile(source, enabled) {
+      try {
+        var key = tileKey(room.localParticipant, source);
+        var tile = tileMap.get(key);
+        if (!tile) return;
+        tile.classList.toggle('is-muted', !enabled);
+        var video = tile.querySelector('video');
+        if (video) {
+          video.style.opacity = enabled ? '1' : '0';
+        }
+        if (!enabled && source === Track.Source.Camera) {
+          // Soft-hide empty camera slot so layout stays balanced
+          tile.classList.add('is-off');
+        } else {
+          tile.classList.remove('is-off');
+        }
+      } catch (e) {}
+    }
+
+    function refreshLocalTrackRefs() {
+      try {
+        var camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
+        localVideo = (camPub && camPub.track) || localVideo;
+        var micPub = room.localParticipant.getTrackPublication(Track.Source.Microphone);
+        localAudio = (micPub && micPub.track) || localAudio;
+        camOn = !!room.localParticipant.isCameraEnabled;
+        micOn = !!room.localParticipant.isMicrophoneEnabled;
+        shareOn = !!room.localParticipant.isScreenShareEnabled;
+      } catch (e) {}
+    }
+
     async function toggleMic() {
-      if (!localAudio) {
-        var tracks = await createLocalTracks({ audio: true, video: false });
-        localAudio = tracks[0];
-        await room.localParticipant.publishTrack(localAudio);
-        micOn = true;
-      } else {
-        micOn = !micOn;
-        await localAudio.setEnabled(micOn);
+      var next = !micOn;
+      try {
+        if (typeof room.localParticipant.setMicrophoneEnabled === 'function') {
+          await room.localParticipant.setMicrophoneEnabled(next);
+        } else if (!localAudio) {
+          var tracks = await createLocalTracks({ audio: true, video: false });
+          localAudio = tracks[0];
+          await room.localParticipant.publishTrack(localAudio);
+        } else {
+          await localAudio.setEnabled(next);
+          if (localAudio.mediaStreamTrack) localAudio.mediaStreamTrack.enabled = next;
+        }
+      } finally {
+        refreshLocalTrackRefs();
+        // Prefer explicit intent if SDK state lags one tick
+        if (typeof room.localParticipant.isMicrophoneEnabled === 'boolean') {
+          micOn = !!room.localParticipant.isMicrophoneEnabled;
+        } else {
+          micOn = next;
+        }
+        paintMic();
       }
-      paintMic();
     }
 
     async function toggleCam() {
-      if (!localVideo) {
-        var tracks = await createLocalTracks({
-          audio: false,
-          video: { resolution: VideoPresets.h720.resolution },
-        });
-        localVideo = tracks[0];
-        await room.localParticipant.publishTrack(localVideo);
-        camOn = true;
-      } else {
-        camOn = !camOn;
-        await localVideo.setEnabled(camOn);
+      var next = !camOn;
+      try {
+        if (typeof room.localParticipant.setCameraEnabled === 'function') {
+          // Official path: disables + stops camera hardware reliably
+          await room.localParticipant.setCameraEnabled(next, {
+            resolution: VideoPresets.h720.resolution,
+          });
+        } else if (!localVideo && next) {
+          var tracks = await createLocalTracks({
+            audio: false,
+            video: { resolution: VideoPresets.h720.resolution },
+          });
+          localVideo = tracks[0];
+          await room.localParticipant.publishTrack(localVideo);
+        } else if (localVideo) {
+          await localVideo.setEnabled(next);
+          if (localVideo.mediaStreamTrack) {
+            localVideo.mediaStreamTrack.enabled = next;
+          }
+          if (!next) {
+            try {
+              await room.localParticipant.unpublishTrack(localVideo, true);
+            } catch (e) {}
+            try {
+              localVideo.stop();
+            } catch (e2) {}
+            localVideo = null;
+            removeTile(room.localParticipant, Track.Source.Camera);
+          }
+        }
+      } finally {
+        refreshLocalTrackRefs();
+        if (typeof room.localParticipant.isCameraEnabled === 'boolean') {
+          camOn = !!room.localParticipant.isCameraEnabled;
+        } else {
+          camOn = next;
+        }
+        if (!camOn) {
+          syncLocalMediaTile(Track.Source.Camera, false);
+          // Ensure local preview tile disappears when camera is off
+          try {
+            removeTile(room.localParticipant, Track.Source.Camera);
+          } catch (e3) {}
+        }
+        paintCam();
       }
-      paintCam();
     }
 
     async function startScreenShare() {
@@ -478,24 +564,40 @@
         toast('المعلم لم يُتح مشاركة الشاشة');
         return;
       }
-      var tracks = await createLocalScreenTracks({
-        audio: false,
-        resolution: ScreenSharePresets.h1080fps30.resolution,
-        contentHint: 'detail',
-      });
-      localScreenTracks = tracks;
-      for (var i = 0; i < tracks.length; i++) {
-        var t = tracks[i];
-        try {
-          if (t.mediaStreamTrack) t.mediaStreamTrack.contentHint = 'detail';
-        } catch (e) {}
-        await room.localParticipant.publishTrack(t, {
-          source: Track.Source.ScreenShare,
-          name: 'screen',
-          simulcast: false,
-          videoCodec: 'vp8',
-          screenShareEncoding: { maxBitrate: 6_000_000, maxFramerate: 30 },
+      if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
+        await room.localParticipant.setScreenShareEnabled(true, {
+          audio: false,
+          resolution: ScreenSharePresets.h1080fps30.resolution,
+          contentHint: 'detail',
         });
+        refreshLocalTrackRefs();
+        var pub = room.localParticipant.getTrackPublication(Track.Source.ScreenShare);
+        if (pub && pub.track) {
+          localScreenTracks = [pub.track];
+          try {
+            if (pub.track.mediaStreamTrack) pub.track.mediaStreamTrack.contentHint = 'detail';
+          } catch (e) {}
+        }
+      } else {
+        var tracks = await createLocalScreenTracks({
+          audio: false,
+          resolution: ScreenSharePresets.h1080fps30.resolution,
+          contentHint: 'detail',
+        });
+        localScreenTracks = tracks;
+        for (var i = 0; i < tracks.length; i++) {
+          var t = tracks[i];
+          try {
+            if (t.mediaStreamTrack) t.mediaStreamTrack.contentHint = 'detail';
+          } catch (e) {}
+          await room.localParticipant.publishTrack(t, {
+            source: Track.Source.ScreenShare,
+            name: 'screen',
+            simulcast: false,
+            videoCodec: 'vp8',
+            screenShareEncoding: { maxBitrate: 6_000_000, maxFramerate: 30 },
+          });
+        }
       }
       shareOn = true;
       paintShare();
@@ -503,19 +605,21 @@
     }
 
     async function stopScreenShare() {
+      if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
+        try {
+          await room.localParticipant.setScreenShareEnabled(false);
+        } catch (e) {}
+      }
       for (var i = 0; i < localScreenTracks.length; i++) {
         var t = localScreenTracks[i];
         try {
           await room.localParticipant.unpublishTrack(t);
-        } catch (e) {}
+        } catch (e2) {}
         try {
           t.stop();
-        } catch (e2) {}
+        } catch (e3) {}
       }
       localScreenTracks = [];
-      try {
-        await room.localParticipant.setScreenShareEnabled(false);
-      } catch (e3) {}
       shareOn = false;
       paintShare();
       setStatus('متصل');
