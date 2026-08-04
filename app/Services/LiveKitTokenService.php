@@ -26,7 +26,13 @@ class LiveKitTokenService
     }
 
     /**
-     * @param  array{canPublish?:bool,canSubscribe?:bool,canPublishData?:bool,roomAdmin?:bool}  $grants
+     * @param  array{
+     *   canPublish?:bool,
+     *   canSubscribe?:bool,
+     *   canPublishData?:bool,
+     *   roomAdmin?:bool,
+     *   canPublishSources?:list<string>
+     * }  $grants
      */
     public function createToken(
         string $roomName,
@@ -52,6 +58,12 @@ class LiveKitTokenService
         ];
         if (! empty($grants['roomAdmin'])) {
             $video['roomAdmin'] = true;
+        }
+        if (! empty($grants['canPublishSources']) && is_array($grants['canPublishSources'])) {
+            $sources = array_values(array_filter(array_map('strval', $grants['canPublishSources'])));
+            if ($sources !== []) {
+                $video['canPublishSources'] = $sources;
+            }
         }
 
         $header = ['alg' => 'HS256', 'typ' => 'JWT', 'kid' => $apiKey];

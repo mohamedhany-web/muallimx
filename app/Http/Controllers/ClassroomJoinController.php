@@ -264,13 +264,22 @@ class ClassroomJoinController extends Controller
                     'message' => 'جلسة LiveKit لكن المفاتيح غير مضبوطة على التطبيق.',
                 ], 503);
             }
+            $sources = ['camera', 'microphone'];
+            if ($meeting->allowsParticipantScreenShare()) {
+                $sources[] = 'screen_share';
+            }
             $payload['livekit'] = [
                 'url' => $livekit->wsUrl(),
                 'token' => $livekit->createToken(
                     $meeting->room_name,
                     'guest-'.substr(hash('sha256', $token), 0, 16),
                     $displayName,
-                    ['canPublish' => true, 'canSubscribe' => true]
+                    [
+                        'canPublish' => true,
+                        'canSubscribe' => true,
+                        'canPublishData' => true,
+                        'canPublishSources' => $sources,
+                    ]
                 ),
                 'room' => $meeting->room_name,
             ];

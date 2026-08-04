@@ -10,28 +10,42 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    @php
+        $mxMeetlineCssFile = public_path('css/classroom-meetline.css');
+        $mxMeetlineCss = is_readable($mxMeetlineCssFile) ? file_get_contents($mxMeetlineCssFile) : '';
+        $mxLkCssFile = public_path('css/classroom-livekit.css');
+        $mxLkCss = is_readable($mxLkCssFile) ? file_get_contents($mxLkCssFile) : '';
+        $mxLkRoomJsFile = public_path('js/classroom-livekit-room.js');
+        $mxLkRoomJs = is_readable($mxLkRoomJsFile) ? file_get_contents($mxLkRoomJsFile) : '';
+    @endphp
+    @if($mxMeetlineCss !== '')
+    <style id="mx-classroom-meetline-css">{!! $mxMeetlineCss !!}</style>
+    @endif
+    @if($mxLkCss !== '')
+    <style id="mx-classroom-livekit-css">{!! $mxLkCss !!}</style>
+    @endif
     <style>
         * { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
-        html, body { height: 100%; margin: 0; background: #0b1220; color: #e2e8f0; }
-        body.in-room { overflow: hidden; }
-        #lk-stage { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-content: start; }
-        .lk-tile { position: relative; background: #111827; border: 1px solid #334155; border-radius: 14px; overflow: hidden; min-height: 150px; aspect-ratio: 16/10; }
-        .lk-tile video { width: 100%; height: 100%; object-fit: contain; background: #020617; display: block; }
-        .lk-tile .label { position: absolute; left: 8px; bottom: 8px; z-index: 2; font-size: 11px; font-weight: 600; background: rgba(15,23,42,.85); border: 1px solid #475569; padding: 3px 8px; border-radius: 8px; }
-        .lk-tile.is-screen {
-            grid-column: 1 / -1;
-            min-height: min(68vh, 780px);
-            aspect-ratio: auto;
-            height: min(68vh, 780px);
-        }
-        .lk-tile.is-screen video { object-fit: contain; }
-        .ctrl-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 12px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; font-size: 13px; font-weight: 600; cursor: pointer; }
-        .ctrl-btn:hover { border-color: #38bdf8; color: #7dd3fc; }
-        .ctrl-btn.is-off { border-color: #f87171; color: #fecaca; background: rgba(127,29,29,.35); }
-        .ctrl-btn.is-on { border-color: #34d399; color: #a7f3d0; }
+        body.join-lobby { background: #0b1220; color: #e2e8f0; }
+        #mx-ml-quality { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #525252; padding: 4px 8px; border-radius: 8px; border: 1px solid #e9e9e9; background: #fff; }
+        .mx-ml-quality-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+        .mx-ml-quality-bars i { display: block; width: 3px; border-radius: 1px; background: #d4d4d4; }
+        .mx-ml-quality-bars i:nth-child(1) { height: 4px; }
+        .mx-ml-quality-bars i:nth-child(2) { height: 6px; }
+        .mx-ml-quality-bars i:nth-child(3) { height: 9px; }
+        .mx-ml-quality-bars i:nth-child(4) { height: 12px; }
+        #mx-ml-quality[data-level="1"] .mx-ml-quality-bars i:nth-child(-n+1) { background: #f87171; }
+        #mx-ml-quality[data-level="2"] .mx-ml-quality-bars i:nth-child(-n+2) { background: #fb923c; }
+        #mx-ml-quality[data-level="3"] .mx-ml-quality-bars i:nth-child(-n+3) { background: #38bdf8; }
+        #mx-ml-quality[data-level="4"] .mx-ml-quality-bars i { background: #4ade80; }
+        #btn-guest-whiteboard.mx-guest-wb-writable { background: #eef5ff; border-color: #93c5fd; }
     </style>
+    @include('partials.mx-classroom-wb-sync')
+    @if($mxLkRoomJs !== '')
+    <script id="mx-classroom-livekit-room-js">{!! $mxLkRoomJs !!}</script>
+    @endif
 </head>
-<body>
+<body class="join-lobby">
     <div id="join-screen" class="min-h-screen flex flex-col items-center justify-center p-4">
         <div class="w-full max-w-md rounded-2xl bg-slate-800/90 border border-slate-600 p-6 shadow-2xl">
             <div class="text-center mb-6">
@@ -39,7 +53,7 @@
                     <i class="fas fa-bolt text-3xl"></i>
                 </div>
                 <h1 class="text-xl font-bold">Muallimx · LiveKit</h1>
-                <p class="text-slate-400 text-sm mt-1">تجربة جودة — نفس السيرفر بجانب Jitsi</p>
+                <p class="text-slate-400 text-sm mt-1">Classroom Meet.Line</p>
             </div>
             @if($meeting && $meeting->title)
                 <p class="text-slate-300 text-sm mb-4 text-center">{{ $meeting->title }}</p>
@@ -47,174 +61,144 @@
             <p class="text-slate-400 text-xs mb-4 text-center">كود: <span class="font-mono font-bold text-emerald-300 text-lg">{{ $code }}</span></p>
             <label class="block text-sm font-medium text-slate-300 mb-1">اسمك</label>
             <input type="text" id="guest-name" placeholder="أدخل اسمك" class="w-full px-4 py-3 rounded-xl bg-slate-700 border border-slate-600 text-white mb-4">
-            <button type="button" id="btn-join" class="w-full px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold">
-                انضم الآن
-            </button>
+            <button type="button" id="btn-join" class="w-full px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold">انضم الآن</button>
             <p id="join-help" class="text-xs text-slate-500 mt-4 text-center"></p>
         </div>
     </div>
 
-    <div id="meeting-screen" class="hidden h-screen flex flex-col">
-        <header class="h-14 shrink-0 px-4 flex items-center justify-between border-b border-slate-700 bg-slate-900">
-            <div class="min-w-0">
-                <p class="text-xs text-emerald-300 font-semibold">LiveKit</p>
-                <p class="text-sm font-bold truncate">{{ $meeting->title ?? $code }}</p>
+    <div id="meeting-screen" class="hidden">
+        <div class="mx-ml-shell" style="position:fixed;inset:6px;">
+            <header class="mx-ml-top">
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold text-[#0065fd] m-0">LiveKit · طالب</p>
+                        <h1 class="mx-ml-title truncate">{{ $meeting->title ?? $code }}</h1>
+                    </div>
+                    <span id="mx-ml-quality" title="جودة الاتصال">
+                        <span class="mx-ml-quality-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                        <span id="mx-ml-quality-label">—</span>
+                    </span>
+                    <span class="text-xs text-[#717171]">متصل: <strong id="mx-lk-count">1</strong></span>
+                    <span id="lk-status" class="text-xs text-[#717171]">…</span>
+                </div>
+                <button type="button" id="btn-guest-leave" class="mx-ml-end-btn">مغادرة</button>
+            </header>
+
+            <div class="mx-ml-main-lk">
+                <div id="lk-stage"></div>
+                <aside id="mx-lk-people-panel" class="mx-lk-side hidden" dir="rtl">
+                    <div class="mx-lk-side-head"><span>المشاركون</span></div>
+                    <div class="mx-lk-side-body" id="mx-lk-people-list"></div>
+                </aside>
+                <aside id="mx-lk-chat-panel" class="mx-lk-side hidden" dir="rtl" style="left:auto;right:8px;">
+                    <div class="mx-lk-side-head"><span>الدردشة</span></div>
+                    <div class="mx-lk-side-body" id="mx-lk-chat-log"></div>
+                    <div class="mx-lk-chat-compose">
+                        <input type="text" id="mx-lk-chat-input" placeholder="اكتب رسالة…" maxlength="500">
+                        <button type="button" id="mx-lk-chat-send">إرسال</button>
+                    </div>
+                </aside>
             </div>
-            <span id="lk-status" class="text-xs text-slate-400">…</span>
-        </header>
-        <main class="flex-1 min-h-0 overflow-auto p-3">
-            <div id="lk-stage"></div>
-        </main>
-        <footer class="shrink-0 border-t border-slate-700 bg-slate-900 px-3 py-3 flex flex-wrap justify-center gap-2">
-            <button type="button" id="btn-mic" class="ctrl-btn is-off"><i class="fas fa-microphone-slash"></i> ميكروفون</button>
-            <button type="button" id="btn-cam" class="ctrl-btn is-off"><i class="fas fa-video-slash"></i> كاميرا</button>
-            <button type="button" id="btn-share" class="ctrl-btn"><i class="fas fa-desktop"></i> شاشة</button>
-            <button type="button" id="btn-leave" class="ctrl-btn" style="border-color:#f87171;color:#fecaca;">مغادرة</button>
-        </footer>
+
+            <div class="mx-ml-dock">
+                <div class="flex w-full flex-wrap items-center justify-center gap-1.5">
+                    <button type="button" id="mx-ml-btn-mic" class="mx-ml-icon-btn" title="ميكروفون"><i class="fas fa-microphone-slash text-[#fd0000]" id="mx-ml-mic-icon"></i></button>
+                    <button type="button" id="mx-ml-btn-cam" class="mx-ml-icon-btn" title="كاميرا"><i class="fas fa-video-slash text-[#fd0000]" id="mx-ml-cam-icon"></i></button>
+                    <button type="button" id="btn-guest-whiteboard" class="mx-ml-icon-btn" title="السبورة"><i class="fas fa-pen"></i></button>
+                    <button type="button" id="mx-ml-btn-react" class="mx-ml-icon-btn" title="رفع اليد"><i class="fas fa-hand-paper"></i></button>
+                    <button type="button" id="mx-ml-btn-share" class="mx-ml-icon-btn" title="شير"><i class="fas fa-desktop" id="mx-ml-share-icon"></i></button>
+                    <button type="button" id="mx-ml-btn-people" class="mx-ml-icon-btn" title="مشاركون"><i class="fas fa-users"></i></button>
+                    <button type="button" id="mx-ml-btn-chat" class="mx-ml-icon-btn" title="دردشة"><i class="fas fa-comments"></i></button>
+                    <button type="button" id="mx-ml-btn-bg" class="mx-ml-icon-btn" title="خلفية"><i class="fas fa-image"></i></button>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <div id="mx-lk-wb-popup" aria-hidden="true">
+        <div class="mx-lk-wb-card">
+            <div class="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-700 text-white">
+                <strong class="text-sm">السبورة</strong>
+                <button type="button" id="mx-lk-wb-close" class="px-3 py-1 rounded-lg bg-slate-700 text-sm">إغلاق</button>
+            </div>
+            <div id="mx-lk-wb-host" class="mx-muallimx-whiteboard"></div>
+        </div>
+    </div>
+    <div id="mx-lk-toast" role="status"></div>
+
 <script type="module">
-import {
-    Room,
-    RoomEvent,
-    Track,
-    createLocalTracks,
-    createLocalScreenTracks,
-    VideoPresets,
-    VideoQuality,
-    ScreenSharePresets,
-} from 'https://cdn.jsdelivr.net/npm/livekit-client@2.9.8/dist/livekit-client.esm.mjs';
+import * as LivekitClient from 'https://cdn.jsdelivr.net/npm/livekit-client@2.9.8/dist/livekit-client.esm.mjs';
 
 const code = @json($code);
-const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-const stage = document.getElementById('lk-stage');
-const statusEl = document.getElementById('lk-status');
+const csrf = document.querySelector('meta[name="csrf-token"]').content;
 const helpEl = document.getElementById('join-help');
-
-let room;
 let joinToken = '';
-let micOn = false;
-let camOn = false;
-let shareOn = false;
-let localAudio;
-let localVideo;
-let localScreenTracks = [];
-const tileMap = new Map();
+let guestWbApi = null;
+let guestWbSync = null;
+let lkApi = null;
+let currentPerms = @json($meeting?->guestPermissionsPayload() ?? [
+    'allow_participant_whiteboard' => false,
+    'allow_participant_screen_share' => false,
+    'allow_participant_chat' => true,
+    'allow_participant_raise_hand' => true,
+    'allow_participant_virtual_background' => true,
+]);
 
 function setHelp(msg, isErr) {
     helpEl.textContent = msg || '';
     helpEl.className = 'text-xs mt-4 text-center ' + (isErr ? 'text-rose-400' : 'text-slate-500');
 }
-function setStatus(t) { if (statusEl) statusEl.textContent = t; }
 
-function tileKey(p, source) { return p.identity + ':' + source; }
-function ensureTile(participant, source) {
-    const key = tileKey(participant, source);
-    let tile = tileMap.get(key);
-    if (tile) return tile;
-    tile = document.createElement('div');
-    tile.className = 'lk-tile' + (source === Track.Source.ScreenShare ? ' is-screen' : '');
-    const video = document.createElement('video');
-    video.autoplay = true;
-    video.playsInline = true;
-    video.muted = participant.isLocal;
-    const label = document.createElement('div');
-    label.className = 'label';
-    label.textContent = (participant.name || participant.identity) + (source === Track.Source.ScreenShare ? ' · شاشة' : '');
-    tile.appendChild(video);
-    tile.appendChild(label);
-    if (source === Track.Source.ScreenShare && stage.firstChild) {
-        stage.insertBefore(tile, stage.firstChild);
-    } else {
-        stage.appendChild(tile);
-    }
-    tileMap.set(key, tile);
-    return tile;
-}
-function removeTile(participant, source) {
-    const key = tileKey(participant, source);
-    const tile = tileMap.get(key);
-    if (!tile) return;
-    tile.remove();
-    tileMap.delete(key);
-}
-function attachTrack(track, participant) {
-    if (track.kind === Track.Kind.Audio) {
-        if (participant.isLocal) return;
-        const el = track.attach();
-        el.style.display = 'none';
-        document.body.appendChild(el);
-        return;
-    }
-    if (track.kind !== Track.Kind.Video) return;
-    if (track.source === Track.Source.ScreenShare) {
-        try {
-            if (track.mediaStreamTrack) track.mediaStreamTrack.contentHint = 'detail';
-        } catch (_) {}
-    }
-    const tile = ensureTile(participant, track.source);
-    track.attach(tile.querySelector('video'));
-}
-function detachTrack(track, participant) {
-    track.detach().forEach((el) => el.remove());
-    if (track.kind === Track.Kind.Video) removeTile(participant, track.source);
-}
-
-function paintMic() {
-    const btn = document.getElementById('btn-mic');
-    btn.classList.toggle('is-off', !micOn);
-    btn.classList.toggle('is-on', micOn);
-    btn.innerHTML = micOn ? '<i class="fas fa-microphone"></i> ميكروفون' : '<i class="fas fa-microphone-slash"></i> ميكروفون';
-}
-function paintCam() {
-    const btn = document.getElementById('btn-cam');
-    btn.classList.toggle('is-off', !camOn);
-    btn.classList.toggle('is-on', camOn);
-    btn.innerHTML = camOn ? '<i class="fas fa-video"></i> كاميرا' : '<i class="fas fa-video-slash"></i> كاميرا';
-}
-function paintShare() {
-    const btn = document.getElementById('btn-share');
-    btn.classList.toggle('is-on', shareOn);
-    btn.innerHTML = shareOn ? '<i class="fas fa-desktop"></i> إيقاف' : '<i class="fas fa-desktop"></i> شاشة';
-}
-
-async function connectLiveKit(url, token) {
-    room = new Room({
-        adaptiveStream: false,
-        dynacast: false,
-        videoCaptureDefaults: { resolution: VideoPresets.h720.resolution },
-        publishDefaults: {
-            videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
-            screenShareEncoding: { maxBitrate: 6_000_000, maxFramerate: 30 },
-            screenShareSimulcastLayers: [],
-            videoCodec: 'vp8',
-        },
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
     });
-    room
-        .on(RoomEvent.TrackSubscribed, (track, publication, p) => {
-            if (publication && track.source === Track.Source.ScreenShare) {
-                try { publication.setVideoQuality(VideoQuality.HIGH); } catch (_) {}
-            }
-            attachTrack(track, p);
-        })
-        .on(RoomEvent.TrackUnsubscribed, (track, _pub, p) => detachTrack(track, p))
-        .on(RoomEvent.LocalTrackPublished, (pub, p) => { if (pub.track) attachTrack(pub.track, p); })
-        .on(RoomEvent.LocalTrackUnpublished, (pub, p) => { if (pub.track) detachTrack(pub.track, p); })
-        .on(RoomEvent.Disconnected, () => setStatus('انقطع'))
-        .on(RoomEvent.Reconnecting, () => setStatus('إعادة اتصال…'))
-        .on(RoomEvent.Reconnected, () => setStatus('متصل'));
+}
 
-    await room.connect(url, token);
-    setStatus('متصل');
-    room.remoteParticipants.forEach((p) => {
-        p.trackPublications.forEach((pub) => {
-            if (pub.track) attachTrack(pub.track, p);
-            if (pub.source === Track.Source.ScreenShare) {
-                try { pub.setVideoQuality(VideoQuality.HIGH); } catch (_) {}
-            }
+async function ensureWb() {
+    if (guestWbApi) return guestWbApi;
+    await loadScript('https://unpkg.com/react@18.2.0/umd/react.production.min.js');
+    await loadScript('https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js');
+    await loadScript('https://unpkg.com/@excalidraw/excalidraw@0.17.6/dist/excalidraw.production.min.js');
+    const host = document.getElementById('mx-lk-wb-host');
+    const root = window.ReactDOM.createRoot(host);
+    root.render(window.React.createElement(window.ExcalidrawLib.Excalidraw, {
+        langCode: 'ar',
+        theme: 'dark',
+        viewModeEnabled: !currentPerms.allow_participant_whiteboard,
+        UIOptions: { canvasActions: { loadScene: false, export: false } },
+        excalidrawAPI: (api) => { guestWbApi = api; },
+    }));
+    await new Promise((r) => setTimeout(r, 250));
+    if (window.MxClassroomWbSync && !guestWbSync) {
+        guestWbSync = window.MxClassroomWbSync.attach({
+            getApi: () => guestWbApi,
+            getUrl: @json(route('classroom.join.whiteboard-scene', $code)),
+            postUrl: @json(route('classroom.join.whiteboard-scene.push', $code)),
+            csrfToken: csrf,
+            getExtraBody: () => ({ token: joinToken }),
+            canWrite: () => !!currentPerms.allow_participant_whiteboard,
+            isActive: () => document.getElementById('mx-lk-wb-popup').classList.contains('is-open'),
         });
-    });
+    }
+    return guestWbApi;
 }
+
+document.getElementById('btn-guest-whiteboard')?.addEventListener('click', async () => {
+    const popup = document.getElementById('mx-lk-wb-popup');
+    popup.classList.add('is-open');
+    await ensureWb();
+    guestWbSync?.setActive?.(true);
+});
+document.getElementById('mx-lk-wb-close')?.addEventListener('click', () => {
+    guestWbSync?.pushNow?.();
+    guestWbSync?.setActive?.(false);
+    document.getElementById('mx-lk-wb-popup').classList.remove('is-open');
+});
 
 document.getElementById('btn-join').addEventListener('click', async () => {
     const name = document.getElementById('guest-name').value.trim() || 'ضيف';
@@ -227,119 +211,98 @@ document.getElementById('btn-join').addEventListener('click', async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrf,
+                Accept: 'application/json',
             },
             body: JSON.stringify({ display_name: name }),
         });
         const enterData = await enterResp.json();
-        if (!enterResp.ok || !enterData.ok) {
-            throw new Error(enterData.message || 'لا يمكن الانضمام');
-        }
-        if (!enterData.livekit || !enterData.livekit.token) {
-            throw new Error('لم يُرجع الخادم توكن LiveKit');
-        }
+        if (!enterResp.ok || !enterData.ok) throw new Error(enterData.message || 'لا يمكن الانضمام');
+        if (!enterData.livekit?.token) throw new Error('لم يُرجع الخادم توكن LiveKit');
         joinToken = enterData.token;
+        currentPerms = Object.assign(currentPerms, {
+            allow_participant_whiteboard: !!enterData.allow_participant_whiteboard,
+            allow_participant_screen_share: !!enterData.allow_participant_screen_share,
+            allow_participant_chat: !!enterData.allow_participant_chat,
+            allow_participant_raise_hand: !!enterData.allow_participant_raise_hand,
+            allow_participant_virtual_background: !!enterData.allow_participant_virtual_background,
+        });
+
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('meeting-screen').classList.remove('hidden');
-        document.body.classList.add('in-room');
-        await connectLiveKit(enterData.livekit.url, enterData.livekit.token);
-        paintMic(); paintCam(); paintShare();
+        document.body.className = 'mx-meetline';
+
+        lkApi = await window.MxLiveKitClassroom.boot(LivekitClient, {
+            isHost: false,
+            url: enterData.livekit.url,
+            token: enterData.livekit.token,
+            csrfToken: csrf,
+            meetingCode: code,
+            permissions: currentPerms,
+            onPermissions: (p) => {
+                currentPerms = Object.assign(currentPerms, p || {});
+                document.getElementById('btn-guest-whiteboard')?.classList.toggle(
+                    'mx-guest-wb-writable',
+                    !!currentPerms.allow_participant_whiteboard
+                );
+            },
+            onMeetingEnded: () => { location.reload(); },
+            onKicked: () => { location.reload(); },
+        });
+
+        // heartbeat for permissions refresh
+        setInterval(async () => {
+            if (!joinToken) return;
+            try {
+                const r = await fetch(`/classroom/join/${code}/heartbeat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        Accept: 'application/json',
+                    },
+                    body: JSON.stringify({ token: joinToken }),
+                });
+                const d = await r.json();
+                if (d.ended) {
+                    location.reload();
+                    return;
+                }
+                if (d.ok) {
+                    const next = {
+                        allow_participant_whiteboard: !!d.allow_participant_whiteboard,
+                        allow_participant_screen_share: !!d.allow_participant_screen_share,
+                        allow_participant_chat: !!d.allow_participant_chat,
+                        allow_participant_raise_hand: !!d.allow_participant_raise_hand,
+                        allow_participant_virtual_background: !!d.allow_participant_virtual_background,
+                    };
+                    lkApi.applyPermissions(next);
+                }
+            } catch (_) {}
+        }, 12000);
     } catch (e) {
         setHelp(e.message || String(e), true);
         btn.disabled = false;
-        btn.innerHTML = 'انضم الآن';
+        btn.textContent = 'انضم الآن';
     }
 });
 
-document.getElementById('btn-mic').addEventListener('click', async () => {
-    if (!room) return;
-    if (!localAudio) {
-        const tracks = await createLocalTracks({ audio: true, video: false });
-        localAudio = tracks[0];
-        await room.localParticipant.publishTrack(localAudio);
-        micOn = true;
-    } else {
-        micOn = !micOn;
-        await localAudio.setEnabled(micOn);
-    }
-    paintMic();
-});
-
-document.getElementById('btn-cam').addEventListener('click', async () => {
-    if (!room) return;
-    if (!localVideo) {
-        const tracks = await createLocalTracks({ audio: false, video: { resolution: VideoPresets.h720.resolution } });
-        localVideo = tracks[0];
-        await room.localParticipant.publishTrack(localVideo);
-        camOn = true;
-    } else {
-        camOn = !camOn;
-        await localVideo.setEnabled(camOn);
-    }
-    paintCam();
-});
-
-document.getElementById('btn-share').addEventListener('click', async () => {
-    if (!room) return;
-    try {
-        if (!shareOn) {
-            const tracks = await createLocalScreenTracks({
-                audio: false,
-                resolution: ScreenSharePresets.h1080fps30.resolution,
-                contentHint: 'detail',
-            });
-            localScreenTracks = tracks;
-            for (const t of tracks) {
-                try {
-                    if (t.mediaStreamTrack) t.mediaStreamTrack.contentHint = 'detail';
-                } catch (_) {}
-                await room.localParticipant.publishTrack(t, {
-                    source: Track.Source.ScreenShare,
-                    name: 'screen',
-                    simulcast: false,
-                    videoCodec: 'vp8',
-                    screenShareEncoding: { maxBitrate: 6_000_000, maxFramerate: 30 },
-                });
-            }
-            shareOn = true;
-            setStatus('شير · 1080p');
-        } else {
-            for (const t of localScreenTracks) {
-                try { await room.localParticipant.unpublishTrack(t); } catch (_) {}
-                try { t.stop(); } catch (_) {}
-            }
-            localScreenTracks = [];
-            try { await room.localParticipant.setScreenShareEnabled(false); } catch (_) {}
-            shareOn = false;
-            setStatus('متصل');
-        }
-        paintShare();
-    } catch (e) {
-        alert('تعذر مشاركة الشاشة');
-    }
-});
-
-document.getElementById('btn-leave').addEventListener('click', async () => {
+document.getElementById('btn-guest-leave')?.addEventListener('click', async () => {
     try {
         if (joinToken) {
             await fetch(`/classroom/join/${code}/leave`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
-                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    Accept: 'application/json',
                 },
                 body: JSON.stringify({ token: joinToken }),
             });
         }
     } catch (_) {}
-    try { room && room.disconnect(); } catch (_) {}
+    try { lkApi?.disconnect?.(); } catch (_) {}
     location.reload();
-});
-
-window.addEventListener('beforeunload', () => {
-    try { room && room.disconnect(); } catch (_) {}
 });
 </script>
 </body>
