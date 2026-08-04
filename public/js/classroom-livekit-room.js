@@ -476,11 +476,20 @@
     function refreshLocalTrackRefs() {
       try {
         var camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
-        localVideo = (camPub && camPub.track) || localVideo;
+        // Do not keep a stale track when the camera/mic is unpublished
+        localVideo = (camPub && camPub.track) || null;
         var micPub = room.localParticipant.getTrackPublication(Track.Source.Microphone);
-        localAudio = (micPub && micPub.track) || localAudio;
-        camOn = !!room.localParticipant.isCameraEnabled;
-        micOn = !!room.localParticipant.isMicrophoneEnabled;
+        localAudio = (micPub && micPub.track) || null;
+        if (typeof room.localParticipant.isCameraEnabled === 'boolean') {
+          camOn = !!room.localParticipant.isCameraEnabled;
+        } else {
+          camOn = !!(localVideo && !localVideo.isMuted);
+        }
+        if (typeof room.localParticipant.isMicrophoneEnabled === 'boolean') {
+          micOn = !!room.localParticipant.isMicrophoneEnabled;
+        } else {
+          micOn = !!(localAudio && !localAudio.isMuted);
+        }
         shareOn = !!room.localParticipant.isScreenShareEnabled;
       } catch (e) {}
     }
