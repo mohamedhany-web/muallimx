@@ -22,7 +22,12 @@ Then: `php artisan migrate` + `php artisan config:clear` + `php artisan view:cle
 |---------|--------|
 | Meet.Line immersive Classroom | Done |
 | Mic / cam / screen + side filmstrip | Done |
-| Chat / hand / laser / annotate on share | Done |
+| Grid / speaker layout + focus + PiP float | Done |
+| Share float chrome while presenting | Done |
+| Chat / hand / emoji reactions | Done |
+| Laser + annotate on share | Done |
+| Krisp (when supported) + WebRTC noise | Done |
+| Guest waiting room (auto-enter when host starts) | Done |
 | Local lecture + audio report → R2 | Done |
 | Live Sessions on LiveKit | Done (A/V/chat/share) |
 | Academic observer (subscribe-only) | Done |
@@ -34,9 +39,7 @@ Then: `php artisan migrate` + `php artisan config:clear` + `php artisan view:cle
 |---------|--------|-------|
 | Server Egress recording | L | Needs egress worker on VPS |
 | Full VBG (`@livekit/track-processors`) | M | Replace browser alert |
-| Krisp / better noise | M | Track processor |
-| Reactions / emoji | S | DataChannel |
-| Waiting room admit | M | LiveKit Server API |
+| Host admit/deny lobby (beyond wait-for-start) | M | LiveKit Server API |
 | Breakout rooms | L | Multi-room tokens |
 | Closed captions | L | STT pipeline |
 | True RoomService mute | M | Server API |
