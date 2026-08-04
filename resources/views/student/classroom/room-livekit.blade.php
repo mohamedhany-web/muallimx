@@ -320,8 +320,10 @@ const api = await window.MxLiveKitClassroom.boot(LivekitClient, {
     permissions: @json($meeting->guestPermissionsPayload()),
     presignUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording.presign', $meeting)),
     completeUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording.complete', $meeting)),
+    uploadUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording.upload', $meeting)),
     audioPresignUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording-audio.presign', $meeting)),
     audioCompleteUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording-audio.complete', $meeting)),
+    audioUploadUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording-audio.upload', $meeting)),
     uploadTabUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording.upload-tab', $meeting)),
     onMeetingEnded: () => { location.href = @json($roomExitUrl); },
 });

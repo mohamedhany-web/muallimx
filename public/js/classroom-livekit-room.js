@@ -1197,6 +1197,41 @@
       });
     }
 
+    function uploadRecordingViaServer(result, isAudio, csrf) {
+      var uploadUrl = isAudio ? (config.audioUploadUrl || '') : (config.uploadUrl || '');
+      if (!uploadUrl) {
+        return Promise.reject(new Error('مسار الرفع عبر الخادم غير مضبوط'));
+      }
+      var durationSec = Math.max(1, Math.round((result.durationMs || 0) / 1000) || 1);
+      var mime = result.blob.type || (isAudio ? 'audio/webm' : 'video/webm');
+      var ext = (mime.indexOf('mp4') >= 0) ? 'mp4' : ((mime.indexOf('ogg') >= 0) ? 'ogg' : 'webm');
+      var field = isAudio ? 'recording_audio' : 'recording';
+      var filename = (isAudio ? 'report' : 'meeting') + '-' + Date.now() + '.' + ext;
+      var formData = new FormData();
+      formData.append(field, result.blob, filename);
+      formData.append('duration_seconds', String(durationSec));
+      return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', uploadUrl, true);
+        xhr.setRequestHeader('X-CSRF-TOKEN', csrf);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.onload = function () {
+          var data = {};
+          try { data = xhr.responseText ? JSON.parse(xhr.responseText) : {}; } catch (e) {}
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(data);
+            return;
+          }
+          reject(new Error((data && data.message) ? data.message : 'فشل الرفع عبر الخادم'));
+        };
+        xhr.onerror = function () {
+          reject(new Error('فشل الاتصال أثناء الرفع عبر الخادم'));
+        };
+        xhr.send(formData);
+      });
+    }
+
     async function uploadRecording(result) {
       if (!result || !result.blob) {
         toast('لا يوجد ملف للرفع');
@@ -1212,49 +1247,66 @@
       }
       toast('جاري رفع التسجيل…');
       var mime = result.blob.type || (isAudio ? 'audio/webm' : 'video/webm');
-      var presignRes = await fetch(presignUrl, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrf,
-        },
-        body: JSON.stringify({ content_type: mime }),
-      });
-      var presign = await presignRes.json().catch(function () { return {}; });
-      if (!presignRes.ok) throw new Error(presign.message || 'فشل تجهيز الرفع');
-      if (!presign.direct_upload || !presign.upload_url || !presign.upload_token) {
-        toast(presign.message || 'الرفع المباشر غير متاح حالياً — راجع إعدادات R2');
-        return;
-      }
-      var putHeaders = { 'Content-Type': presign.content_type || mime };
-      if (presign.headers && typeof presign.headers === 'object') {
-        Object.keys(presign.headers).forEach(function (k) {
-          putHeaders[k] = presign.headers[k];
+      var putSucceeded = false;
+      try {
+        var presignRes = await fetch(presignUrl, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrf,
+          },
+          body: JSON.stringify({ content_type: mime }),
         });
+        var presign = await presignRes.json().catch(function () { return {}; });
+
+        if (presignRes.ok && presign.direct_upload === false) {
+          toast('جاري الرفع عبر الخادم…');
+          await uploadRecordingViaServer(result, isAudio, csrf);
+          toast(isAudio ? 'تم رفع التقرير الصوتي' : 'تم رفع تسجيل الجلسة');
+          return;
+        }
+
+        if (!presignRes.ok) throw new Error(presign.message || 'فشل تجهيز الرفع');
+        if (!presign.upload_url || !presign.upload_token) {
+          throw new Error(presign.message || 'رابط الرفع غير متاح');
+        }
+
+        var putHeaders = { 'Content-Type': presign.content_type || mime };
+        if (presign.headers && typeof presign.headers === 'object') {
+          Object.keys(presign.headers).forEach(function (k) {
+            putHeaders[k] = presign.headers[k];
+          });
+        }
+        var put = await fetch(presign.upload_url, {
+          method: 'PUT',
+          headers: putHeaders,
+          body: result.blob,
+        });
+        if (!put.ok) throw new Error('فشل رفع الملف للسحابة (' + put.status + ')');
+        putSucceeded = true;
+        var completeRes = await fetch(completeUrl, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrf,
+          },
+          body: JSON.stringify({
+            upload_token: presign.upload_token,
+            duration_seconds: Math.max(1, Math.round((result.durationMs || 0) / 1000) || 1),
+          }),
+        });
+        var complete = await completeRes.json().catch(function () { return {}; });
+        if (!completeRes.ok) throw new Error(complete.message || 'فشل تأكيد الرفع');
+        toast(isAudio ? 'تم رفع التقرير الصوتي' : 'تم رفع تسجيل الجلسة');
+      } catch (err) {
+        if (putSucceeded) throw err;
+        console.warn('Direct upload failed, falling back to server upload', err);
+        toast('جاري الرفع عبر الخادم…');
+        await uploadRecordingViaServer(result, isAudio, csrf);
+        toast(isAudio ? 'تم رفع التقرير الصوتي' : 'تم رفع تسجيل الجلسة');
       }
-      var put = await fetch(presign.upload_url, {
-        method: 'PUT',
-        headers: putHeaders,
-        body: result.blob,
-      });
-      if (!put.ok) throw new Error('فشل رفع الملف للسحابة (' + put.status + ')');
-      var completeRes = await fetch(completeUrl, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrf,
-        },
-        body: JSON.stringify({
-          upload_token: presign.upload_token,
-          duration_seconds: Math.max(1, Math.round((result.durationMs || 0) / 1000) || 1),
-        }),
-      });
-      var complete = await completeRes.json().catch(function () { return {}; });
-      if (!completeRes.ok) throw new Error(complete.message || 'فشل تأكيد الرفع');
-      toast(isAudio ? 'تم رفع التقرير الصوتي' : 'تم رفع تسجيل الجلسة');
-      // Do not open upload-tab — LiveKit uploads in-page (Jitsi used a separate job tab)
     }
 
     function wireUi() {

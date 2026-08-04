@@ -726,13 +726,8 @@ class ClassroomController extends Controller
             return response()->json(['message' => 'لا يمكن رفع تسجيل لاجتماع لم يبدأ بعد.'], 422);
         }
 
+        // لا تعتمد على providesTemporaryUploadUrls() — مع Flysystem 3 قد تُرجع false رغم أن R2/S3 يعملان.
         $disk = Storage::disk('live_recordings_r2');
-        if (! $disk->providesTemporaryUploadUrls()) {
-            return response()->json([
-                'direct_upload' => false,
-                'message' => 'التخزين الحالي لا يدعم الرفع المباشر؛ سيتم الرفع عبر الخادم.',
-            ]);
-        }
 
         $validated = $request->validate([
             'content_type' => ['nullable', 'string', 'max:191'],
@@ -778,8 +773,8 @@ class ClassroomController extends Controller
 
             return response()->json([
                 'direct_upload' => false,
-                'message' => 'تعذر تجهيز رابط الرفع إلى التخزين السحابي. تحقق من إعدادات الموقع.',
-            ], 503);
+                'message' => 'تعذر تجهيز رابط الرفع إلى التخزين السحابي؛ سيتم الرفع عبر الخادم.',
+            ]);
         }
 
         return response()->json([
@@ -890,13 +885,8 @@ class ClassroomController extends Controller
             return response()->json(['message' => 'لا يمكن رفع تسجيل صوتي لاجتماع لم يبدأ بعد.'], 422);
         }
 
+        // لا تعتمد على providesTemporaryUploadUrls() — مع Flysystem 3 قد تُرجع false رغم أن R2/S3 يعملان.
         $disk = Storage::disk('live_recordings_r2');
-        if (! $disk->providesTemporaryUploadUrls()) {
-            return response()->json([
-                'direct_upload' => false,
-                'message' => 'التخزين الحالي لا يدعم الرفع المباشر.',
-            ]);
-        }
 
         $validated = $request->validate([
             'content_type' => ['nullable', 'string', 'max:191'],
@@ -941,8 +931,8 @@ class ClassroomController extends Controller
 
             return response()->json([
                 'direct_upload' => false,
-                'message' => 'تعذر تجهيز رابط رفع الملف الصوتي إلى التخزين السحابي.',
-            ], 503);
+                'message' => 'تعذر تجهيز رابط رفع الملف الصوتي؛ سيتم الرفع عبر الخادم.',
+            ]);
         }
 
         return response()->json([

@@ -351,13 +351,8 @@ class LiveSessionController extends Controller
             return response()->json(['message' => 'الجلسة ليست في وضع البث.'], 422);
         }
 
+        // لا تعتمد على providesTemporaryUploadUrls() — مع Flysystem 3 قد تُرجع false رغم أن R2/S3 يعملان.
         $disk = Storage::disk('live_recordings_r2');
-        if (! $disk->providesTemporaryUploadUrls()) {
-            return response()->json([
-                'direct_upload' => false,
-                'message' => 'التخزين الحالي لا يدعم الرفع المباشر. تحقق من إعدادات R2.',
-            ], 503);
-        }
 
         $validated = $request->validate([
             'content_type' => ['nullable', 'string', 'max:191'],
