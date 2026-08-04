@@ -275,7 +275,7 @@ document.getElementById('btn-copy').addEventListener('click', async () => {
     } catch (e) {
         console.error(e);
         setStatus('فشل الاتصال');
-        alert('فشل الاتصال بـ LiveKit. تأكد من LIVEKIT_* في .env وأن المنفذ 8443 مفتوح.\n' + (e?.message || e));
+        alert('فشل الاتصال بـ LiveKit. تأكد من LIVEKIT_URL=wss://live.muallimx.com/livekit في .env ثم امسح الكاش.\n' + (e?.message || e));
     }
 })();
 

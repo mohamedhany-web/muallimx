@@ -95,11 +95,12 @@ return [
     |--------------------------------------------------------------------------
     | LiveKit (pilot alongside Jitsi on live.muallimx.com)
     |--------------------------------------------------------------------------
-    | Signaling: wss://live.muallimx.com:8443
+    | Signaling: wss://live.muallimx.com/livekit (preferred; 443)
+    | Fallback:  wss://live.muallimx.com:8443
     | Keys live on the meet VPS at /opt/livekit/KEYS.env — copy into app .env
     */
     'livekit' => [
-        'url' => env('LIVEKIT_URL', 'wss://live.muallimx.com:8443'),
+        'url' => env('LIVEKIT_URL', 'wss://live.muallimx.com/livekit'),
         'api_key' => env('LIVEKIT_API_KEY'),
         'api_secret' => env('LIVEKIT_API_SECRET'),
         'enabled' => env('LIVEKIT_ENABLED', true),

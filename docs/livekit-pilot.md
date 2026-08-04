@@ -10,8 +10,8 @@ Trial setup on the **same** meet VPS (`live.muallimx.com`, 2 vCPU / 8 GB) to A/B
 | Config | `/opt/livekit/livekit.yaml` |
 | Keys | `/opt/livekit/KEYS.env` (chmod 600) |
 | Container | `mx-livekit` (`network_mode: host`) |
-| Signaling TLS | `https://live.muallimx.com:8443` → `127.0.0.1:7880` |
-| WebSocket for clients | `wss://live.muallimx.com:8443` |
+| Signaling TLS | `https://live.muallimx.com/livekit/` on **443** (preferred); also `:8443` |
+| WebSocket for clients | `wss://live.muallimx.com/livekit` |
 | RTC UDP | `50000–50100` |
 | TURN | existing coturn on `3478` (no second TURN in LiveKit) |
 
@@ -29,7 +29,7 @@ Copy API key/secret from `/opt/livekit/KEYS.env` on the meet box into the **Lara
 
 ```env
 LIVEKIT_ENABLED=true
-LIVEKIT_URL=wss://live.muallimx.com:8443
+LIVEKIT_URL=wss://live.muallimx.com/livekit
 LIVEKIT_API_KEY=...
 LIVEKIT_API_SECRET=...
 ```
