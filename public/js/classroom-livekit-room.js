@@ -385,11 +385,13 @@
         if (on && screenTile) {
           screenTile.appendChild(layer);
           if (typeof window.__mxShareAnnSetAllowed === 'function') {
-            // Host always sees drawings; guests need whiteboard permission to draw
             window.__mxShareAnnSetAllowed(isHost || !!perms.allow_participant_whiteboard);
           }
           if (isHost) {
             layer.classList.remove('hidden');
+          }
+          if (typeof window.__mxShareAnnRemounted === 'function') {
+            window.__mxShareAnnRemounted();
           }
           try {
             window.dispatchEvent(new Event('resize'));
@@ -777,6 +779,19 @@
       }
       if (msg.t === 'reaction' && msg.p && msg.p.emoji) {
         showReactionBurst(String(msg.p.emoji), from);
+      }
+      if (msg.t === 'annotate' && msg.p) {
+        if (typeof window.__mxShareAnnApplyRemoteLayer === 'function') {
+          window.__mxShareAnnApplyRemoteLayer(identity || 'guest', msg.p.polylines || []);
+        }
+      }
+      if (msg.t === 'annotate_clear') {
+        if (typeof window.__mxShareAnnClearRemote === 'function') {
+          window.__mxShareAnnClearRemote();
+        }
+        if (typeof window.__mxShareAnnForceLocalClear === 'function') {
+          window.__mxShareAnnForceLocalClear();
+        }
       }
     }
 
@@ -1318,14 +1333,12 @@
             toast('المعلم لم يُتح الكتابة على الشاشة (صلاحية السبورة)');
             return;
           }
-          if (isHost) {
-            // Host already polls/views student drawings; open tip
-            toast('الطلاب يرسمون على الشاشة عند تفعيل صلاحية السبورة');
-            return;
-          }
           if (typeof window.__mxShareAnnOpenToolbar === 'function') {
             window.__mxShareAnnOpenToolbar();
             annotateBtn.classList.add('is-active');
+            if (isHost) {
+              toast('تعرض رسومات الطلاب — استخدم «مسح كل الرسومات» عند الحاجة');
+            }
           }
         });
       }
@@ -1585,6 +1598,15 @@
     paintNoise();
     renderPeople();
     applyNoiseToLocalAudio(true).catch(function () {});
+
+    // Realtime share-annotation bridge (guest → host)
+    window.__mxShareAnnBroadcast = function (polylines) {
+      sendData('annotate', { polylines: polylines || [] }, false).catch(function () {});
+    };
+    window.__mxShareAnnBroadcastClear = function () {
+      sendData('annotate_clear', {}, true).catch(function () {});
+    };
+
     room.remoteParticipants.forEach(function (p) {
       p.trackPublications.forEach(function (pub) {
         if (pub.track) attachTrack(pub.track, p);

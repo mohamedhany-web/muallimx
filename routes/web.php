@@ -736,6 +736,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('student.classroom.recording.upload-tab');
         Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('student.classroom.participant-whiteboard');
         Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('student.classroom.share-annotations');
+        Route::post('/classroom/{meeting}/share-annotations/clear', [\App\Http\Controllers\Student\ClassroomController::class, 'clearShareAnnotations'])->name('student.classroom.share-annotations.clear');
         Route::get('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardScene'])->name('student.classroom.whiteboard-scene');
         Route::post('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'pushWhiteboardScene'])->name('student.classroom.whiteboard-scene.push');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('student.classroom.end');
@@ -1792,6 +1793,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('classroom.recording.upload-tab');
         Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('classroom.participant-whiteboard');
         Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('classroom.share-annotations');
+        Route::post('/classroom/{meeting}/share-annotations/clear', [\App\Http\Controllers\Student\ClassroomController::class, 'clearShareAnnotations'])->name('classroom.share-annotations.clear');
         Route::get('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardScene'])->name('classroom.whiteboard-scene');
         Route::post('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'pushWhiteboardScene'])->name('classroom.whiteboard-scene.push');
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('classroom.end');

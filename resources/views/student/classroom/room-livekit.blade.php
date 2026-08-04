@@ -143,7 +143,7 @@
             <button type="button" id="mx-ml-btn-share" class="mx-ml-icon-btn" title="مشاركة الشاشة" aria-pressed="false">
                 <i class="fas fa-desktop text-[#171717]" id="mx-ml-share-icon"></i>
             </button>
-            <button type="button" id="mx-ml-btn-annotate" class="mx-ml-icon-btn" title="كتابة الطلاب على الشاشة" disabled>
+            <button type="button" id="mx-ml-btn-annotate" class="mx-ml-icon-btn" title="عرض/مسح رسومات الشاشة" disabled>
                 <i class="fas fa-pen-fancy text-[#171717]"></i>
             </button>
             <button type="button" id="mx-ml-btn-laser" class="mx-ml-icon-btn" title="مؤشر ليزر على الشاشة" disabled>
@@ -216,6 +216,7 @@
 @include('partials.mx-share-annotation-overlay', [
     'mxAnnRole' => 'viewer_poll',
     'mxAnnPollUrl' => route($rp.'classroom.share-annotations', $meeting),
+    'mxAnnClearUrl' => route($rp.'classroom.share-annotations.clear', $meeting),
 ])
 </div>
 @endunless

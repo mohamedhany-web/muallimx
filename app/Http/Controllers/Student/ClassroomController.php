@@ -540,6 +540,17 @@ class ClassroomController extends Controller
         return response()->json(['layers' => $layers]);
     }
 
+    public function clearShareAnnotations(ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        Cache::forget('mx_share_ann_classroom_'.$meeting->id);
+
+        return response()->json(['ok' => true, 'layers' => []]);
+    }
+
     public function whiteboardScene(ClassroomMeeting $meeting)
     {
         $user = Auth::user();
