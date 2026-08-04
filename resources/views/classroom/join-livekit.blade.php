@@ -126,6 +126,18 @@
     </div>
     <div id="mx-lk-toast" role="status"></div>
 
+@php
+    $mxGuestPermDefaults = [
+        'allow_participant_whiteboard' => false,
+        'allow_participant_screen_share' => false,
+        'allow_participant_chat' => true,
+        'allow_participant_raise_hand' => true,
+        'allow_participant_virtual_background' => true,
+    ];
+    $mxGuestPerms = $meeting
+        ? ($meeting->guestPermissionsPayload() ?: $mxGuestPermDefaults)
+        : $mxGuestPermDefaults;
+@endphp
 <script type="module">
 import * as LivekitClient from 'https://cdn.jsdelivr.net/npm/livekit-client@2.9.8/dist/livekit-client.esm.mjs';
 
@@ -136,13 +148,7 @@ let joinToken = '';
 let guestWbApi = null;
 let guestWbSync = null;
 let lkApi = null;
-let currentPerms = @json($meeting?->guestPermissionsPayload() ?? [
-    'allow_participant_whiteboard' => false,
-    'allow_participant_screen_share' => false,
-    'allow_participant_chat' => true,
-    'allow_participant_raise_hand' => true,
-    'allow_participant_virtual_background' => true,
-]);
+let currentPerms = @json($mxGuestPerms);
 
 function setHelp(msg, isErr) {
     helpEl.textContent = msg || '';
