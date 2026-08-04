@@ -200,9 +200,9 @@
                     </button>
                 </div>
                 <button type="button" id="btn-record-stop" class="hidden classroom-room-toolbar-btn bg-[#fd0000] text-white border-[#c50000]">إيقاف</button>
-                <div id="mx-record-dd-panel" class="hidden w-[min(100vw-1.5rem,20rem)] rounded-xl border border-[#e9e9e9] bg-white overflow-hidden" role="menu">
-                    <div class="mx-ml-record-menu-head"><strong>تسجيل محلي</strong><p>يُرفع إلى السحابة بعد الإيقاف (بدون Egress).</p></div>
-                    <button type="button" role="menuitem" data-mx-rec-mode="lecture" class="mx-ml-record-menu-item"><span class="mx-ml-rec-title">تسجيل الجلسة</span><span class="mx-ml-rec-desc">فيديو/صوت محلي</span></button>
+                <div id="mx-record-dd-panel" class="hidden absolute bottom-full mb-2 end-0 z-50 w-[min(100vw-1.5rem,20rem)] rounded-xl border border-[#e9e9e9] bg-white overflow-hidden shadow-xl" role="menu">
+                    <div class="mx-ml-record-menu-head"><strong>تسجيل محلي</strong><p>يُحفظ على جهازك ثم يُرفع للسحابة بعد الإيقاف.</p></div>
+                    <button type="button" role="menuitem" data-mx-rec-mode="lecture" class="mx-ml-record-menu-item"><span class="mx-ml-rec-title">تسجيل الجلسة</span><span class="mx-ml-rec-desc">يفضّل الشاشة أو الكاميرا + الميكروفون</span></button>
                     <button type="button" role="menuitem" data-mx-rec-mode="report" class="mx-ml-record-menu-item"><span class="mx-ml-rec-title">تقرير صوتي فقط</span><span class="mx-ml-rec-desc">ميكروفون للتقرير</span></button>
                 </div>
             </div>

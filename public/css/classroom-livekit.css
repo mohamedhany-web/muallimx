@@ -439,6 +439,41 @@ body.mx-lk-room #mx-classroom-toolbar-inner {
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(233, 233, 233, 0.9);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  overflow: visible !important;
+  position: relative;
+}
+
+/* Record / permissions menus must float ABOVE the dock, not expand it */
+body.mx-lk-room #mx-record-dd-wrap,
+body.mx-lk-room #mx-guest-perms-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  z-index: 60;
+}
+
+body.mx-lk-room #mx-record-dd-panel,
+body.mx-lk-room #mx-guest-perms-panel {
+  position: absolute !important;
+  bottom: calc(100% + 10px) !important;
+  right: 0 !important;
+  left: auto !important;
+  top: auto !important;
+  z-index: 70 !important;
+  width: min(20rem, calc(100vw - 1.5rem)) !important;
+  max-height: min(60vh, 360px);
+  overflow: auto;
+  margin: 0 !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 101, 253, 0.08);
+}
+
+body.mx-lk-room #mx-record-dd-panel.hidden,
+body.mx-lk-room #mx-guest-perms-panel.hidden {
+  display: none !important;
+}
+
+body.mx-lk-room #btn-record-stop {
+  border-radius: 12px;
 }
 
 body.mx-lk-room .mx-ml-icon-btn {

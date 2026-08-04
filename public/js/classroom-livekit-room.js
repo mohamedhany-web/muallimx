@@ -1055,34 +1055,75 @@
     var recordingStartedAt = 0;
 
     async function startLocalRecording(kind) {
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') return;
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        toast('التسجيل يعمل بالفعل');
+        return;
+      }
       recordingKind = kind === 'report' ? 'report' : 'lecture';
       recordedChunks = [];
       recordingStartedAt = Date.now();
       var tracks = [];
+      refreshLocalTrackRefs();
+
+      // Always capture mic for lecture + report
       if (localAudio && localAudio.mediaStreamTrack) {
+        try {
+          if (!localAudio.mediaStreamTrack.enabled) localAudio.mediaStreamTrack.enabled = true;
+        } catch (e0) {}
         tracks.push(localAudio.mediaStreamTrack.clone());
       } else {
-        var a = await createLocalTracks({ audio: true, video: false });
+        var a = await createLocalTracks({ audio: cleanMicConstraints(), video: false });
         localAudio = a[0];
         await room.localParticipant.publishTrack(localAudio);
         micOn = true;
         paintMic();
+        if (noiseOn) applyNoiseToLocalAudio(true).catch(function () {});
         tracks.push(localAudio.mediaStreamTrack.clone());
       }
+
+      var hasVideo = false;
       if (recordingKind === 'lecture') {
-        // Prefer screen share while presenting so the lecture capture matches what students see
+        // Prefer screen while presenting; else camera
         if (localScreenTracks[0] && localScreenTracks[0].mediaStreamTrack) {
           tracks.push(localScreenTracks[0].mediaStreamTrack.clone());
+          hasVideo = true;
         } else if (localVideo && localVideo.mediaStreamTrack) {
           tracks.push(localVideo.mediaStreamTrack.clone());
+          hasVideo = true;
+        }
+        if (!hasVideo) {
+          toast('لا توجد كاميرا/شاشة — سيتم تسجيل الصوت فقط. فعّل الكاميرا أو الشير لفيديو.');
+          recordingKind = 'report';
         }
       }
+
+      if (!tracks.length) {
+        toast('تعذر بدء التسجيل: لا توجد مسارات صوت/فيديو');
+        recordingKind = null;
+        return;
+      }
+
       recordingStream = new MediaStream(tracks);
-      var mime = pickRecorderMime(recordingKind === 'report');
-      mediaRecorder = new MediaRecorder(recordingStream, mime ? { mimeType: mime } : undefined);
+      var mime = pickRecorderMime(recordingKind === 'report' || !hasVideo);
+      try {
+        mediaRecorder = new MediaRecorder(recordingStream, mime ? { mimeType: mime } : undefined);
+      } catch (e) {
+        try {
+          mediaRecorder = new MediaRecorder(recordingStream);
+        } catch (e2) {
+          recordingStream.getTracks().forEach(function (t) {
+            try { t.stop(); } catch (e3) {}
+          });
+          recordingStream = null;
+          recordingKind = null;
+          throw new Error('المتصفح لا يدعم MediaRecorder لهذا النوع');
+        }
+      }
       mediaRecorder.ondataavailable = function (ev) {
         if (ev.data && ev.data.size) recordedChunks.push(ev.data);
+      };
+      mediaRecorder.onerror = function () {
+        toast('خطأ أثناء التسجيل');
       };
       mediaRecorder.start(1000);
       var badge = $('mx-live-rec-badge');
@@ -1091,7 +1132,9 @@
       var idleWrap = $('mx-record-idle-wrap');
       if (stopBtn) stopBtn.classList.remove('hidden');
       if (idleWrap) idleWrap.classList.add('hidden');
-      toast(recordingKind === 'report' ? 'بدأ التسجيل الصوتي' : 'بدأ تسجيل الجلسة (محلي)');
+      var menuBtn = $('btn-record-menu');
+      if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+      toast(recordingKind === 'report' ? 'بدأ التسجيل الصوتي' : 'بدأ تسجيل الجلسة');
     }
 
     function stopLocalRecording() {
@@ -1101,9 +1144,13 @@
           return;
         }
         mediaRecorder.onstop = function () {
-          var type = recordingKind === 'report' ? 'audio/webm' : 'video/webm';
+          var type =
+            recordingKind === 'report'
+              ? 'audio/webm'
+              : (mediaRecorder && mediaRecorder.mimeType) || 'video/webm';
           var blob = new Blob(recordedChunks, { type: type });
           var durationMs = Math.max(1000, Date.now() - (recordingStartedAt || Date.now()));
+          var kindDone = recordingKind;
           if (recordingStream) {
             recordingStream.getTracks().forEach(function (t) {
               try {
@@ -1119,8 +1166,13 @@
           var idleWrap = $('mx-record-idle-wrap');
           if (stopBtn) stopBtn.classList.add('hidden');
           if (idleWrap) idleWrap.classList.remove('hidden');
-          resolve({ blob: blob, kind: recordingKind, durationMs: durationMs });
           recordingKind = null;
+          if (!blob.size) {
+            toast('التسجيل فارغ — لم يُرفع');
+            resolve(null);
+            return;
+          }
+          resolve({ blob: blob, kind: kindDone, durationMs: durationMs });
         };
         try {
           mediaRecorder.stop();
@@ -1143,6 +1195,7 @@
         toast('مسارات الرفع غير مضبوطة');
         return;
       }
+      toast('جاري رفع التسجيل…');
       var mime = result.blob.type || (isAudio ? 'audio/webm' : 'video/webm');
       var presignRes = await fetch(presignUrl, {
         method: 'POST',
@@ -1153,10 +1206,10 @@
         },
         body: JSON.stringify({ content_type: mime }),
       });
-      var presign = await presignRes.json();
+      var presign = await presignRes.json().catch(function () { return {}; });
       if (!presignRes.ok) throw new Error(presign.message || 'فشل تجهيز الرفع');
       if (!presign.direct_upload || !presign.upload_url || !presign.upload_token) {
-        toast(presign.message || 'الرفع المباشر غير متاح حالياً');
+        toast(presign.message || 'الرفع المباشر غير متاح حالياً — راجع إعدادات R2');
         return;
       }
       var putHeaders = { 'Content-Type': presign.content_type || mime };
@@ -1170,7 +1223,7 @@
         headers: putHeaders,
         body: result.blob,
       });
-      if (!put.ok) throw new Error('فشل رفع الملف للسحابة');
+      if (!put.ok) throw new Error('فشل رفع الملف للسحابة (' + put.status + ')');
       var completeRes = await fetch(completeUrl, {
         method: 'POST',
         headers: {
@@ -1185,8 +1238,8 @@
       });
       var complete = await completeRes.json().catch(function () { return {}; });
       if (!completeRes.ok) throw new Error(complete.message || 'فشل تأكيد الرفع');
-      toast('تم رفع التسجيل');
-      if (config.uploadTabUrl) window.open(config.uploadTabUrl, '_blank');
+      toast(isAudio ? 'تم رفع التقرير الصوتي' : 'تم رفع تسجيل الجلسة');
+      // Do not open upload-tab — LiveKit uploads in-page (Jitsi used a separate job tab)
     }
 
     function wireUi() {
@@ -1410,24 +1463,41 @@
         }
 
         document.querySelectorAll('[data-mx-rec-mode]').forEach(function (btn) {
-          btn.addEventListener('click', function () {
+          btn.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            var panel = $('mx-record-dd-panel');
+            if (panel) panel.classList.add('hidden');
+            var menuBtn = $('btn-record-menu');
+            if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
             startLocalRecording(btn.getAttribute('data-mx-rec-mode')).catch(function (e) {
               toast(e.message || 'تعذر بدء التسجيل');
             });
-            var panel = $('mx-record-dd-panel');
-            if (panel) panel.classList.add('hidden');
           });
         });
         var recMenu = $('btn-record-menu');
         var recPanel = $('mx-record-dd-panel');
+        var recWrap = $('mx-record-dd-wrap');
         if (recMenu && recPanel) {
-          recMenu.addEventListener('click', function () {
-            recPanel.classList.toggle('hidden');
+          recMenu.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            var open = recPanel.classList.contains('hidden');
+            recPanel.classList.toggle('hidden', !open);
+            recMenu.setAttribute('aria-expanded', open ? 'true' : 'false');
+            var permsPanel = $('mx-guest-perms-panel');
+            if (permsPanel) permsPanel.classList.add('hidden');
+          });
+          document.addEventListener('click', function (ev) {
+            if (!recWrap || recWrap.contains(ev.target)) return;
+            recPanel.classList.add('hidden');
+            recMenu.setAttribute('aria-expanded', 'false');
           });
         }
         var recStop = $('btn-record-stop');
         if (recStop) {
           recStop.addEventListener('click', function () {
+            toast('جاري إيقاف التسجيل…');
             stopLocalRecording().then(function (result) {
               if (!result) return;
               return uploadRecording(result);
