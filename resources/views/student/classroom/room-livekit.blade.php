@@ -66,7 +66,7 @@
     <script id="mx-classroom-noise-js">{!! $mxNoiseJs !!}</script>
     @endif
 </head>
-<body class="mx-meetline bg-[#fdfdfd]">
+<body class="mx-meetline mx-lk-room">
 <div class="mx-ml-shell">
     <header class="mx-ml-top">
         <div class="flex items-center gap-2 min-w-0 flex-1">
@@ -74,7 +74,7 @@
                 <i class="fas fa-arrow-right"></i>
             </a>
             <div class="min-w-0">
-                <p class="text-[11px] font-semibold text-[#0065fd] m-0">LiveKit · Meet.Line</p>
+                <p class="text-[11px] font-semibold text-[#93c5fd] m-0">LiveKit · Meet.Line</p>
                 <h1 class="mx-ml-title truncate">{{ $meeting->title ?: ('غرفة ' . $meeting->code) }}</h1>
             </div>
             <span id="mx-live-rec-badge" class="hidden mx-ml-record-chip"><i class="fas fa-circle text-[#fd0000] text-[8px]"></i> REC</span>
@@ -82,8 +82,8 @@
                 <span class="mx-ml-quality-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
                 <span id="mx-ml-quality-label">—</span>
             </span>
-            <span class="text-xs text-[#717171]">متصل: <strong id="mx-lk-count">1</strong></span>
-            <span id="lk-status" class="text-xs text-[#717171]">…</span>
+            <span class="text-xs">متصل: <strong id="mx-lk-count">1</strong></span>
+            <span id="lk-status" class="text-xs">…</span>
         </div>
         <div class="flex items-center gap-2 shrink-0">
             <button type="button" id="btn-classroom-copy-join" class="mx-ml-code-pill" title="نسخ رابط الانضمام" data-join-url="{{ url('classroom/join/' . $meeting->code) }}">
@@ -108,7 +108,7 @@
             <div class="mx-lk-side-body" id="mx-lk-people-list"></div>
         </aside>
 
-        <aside id="mx-lk-chat-panel" class="mx-lk-side hidden" dir="rtl" style="left:auto;right:8px;">
+        <aside id="mx-lk-chat-panel" class="mx-lk-side hidden" dir="rtl">
             <div class="mx-lk-side-head"><span>الدردشة</span></div>
             <div class="mx-lk-side-body" id="mx-lk-chat-log"></div>
             <div class="mx-lk-chat-compose">

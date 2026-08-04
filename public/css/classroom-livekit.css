@@ -1,12 +1,96 @@
-/* LiveKit Meet.Line layout — balanced full-page shell */
+/* LiveKit immersive classroom — full-viewport Meet (no inset card frame) */
+
+body.mx-lk-room,
+body.mx-meetline.mx-lk-room {
+  background: #070b14 !important;
+  color: #e8eef7;
+}
+
+/* Kill the Meet.Line “card in a page” frame for LiveKit only */
+body.mx-lk-room .mx-ml-shell,
+body.mx-meetline.mx-lk-room .mx-ml-shell {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100dvh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #070b14 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  z-index: 1;
+}
+
+/* ── Top chrome (slim, edge-to-edge) ── */
+body.mx-lk-room .mx-ml-top {
+  position: relative;
+  z-index: 40;
+  flex-shrink: 0;
+  min-height: 52px;
+  padding: 8px 14px;
+  gap: 10px;
+  background: rgba(7, 11, 20, 0.82);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #e8eef7;
+}
+
+body.mx-lk-room .mx-ml-title {
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+body.mx-lk-room .mx-ml-top .text-xs,
+body.mx-lk-room .mx-ml-top .text-\[11px\],
+body.mx-lk-room #lk-status,
+body.mx-lk-room #mx-lk-count {
+  color: #94a3b8 !important;
+}
+
+body.mx-lk-room .mx-ml-top a {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #93c5fd !important;
+}
+
+body.mx-lk-room .mx-ml-top a:hover {
+  background: rgba(0, 101, 253, 0.2) !important;
+}
+
+body.mx-lk-room #mx-ml-quality {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #cbd5e1 !important;
+}
+
+body.mx-lk-room .mx-ml-code-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.mx-lk-room .mx-ml-end-btn {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+/* ── Main stage: eats ALL remaining viewport ── */
 .mx-ml-main-lk {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 0;
   overflow: hidden;
+  background: #05080f;
 }
 
 #lk-stage {
@@ -15,76 +99,91 @@
   width: 100%;
   height: 100%;
   display: grid;
-  gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  grid-auto-rows: minmax(160px, 1fr);
-  align-content: stretch;
-  overflow: auto;
-  padding: 10px;
-  background: #0f172a;
-  border-radius: 12px;
+  gap: 8px;
+  padding: 8px;
   box-sizing: border-box;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  align-content: stretch;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(0, 101, 253, 0.12), transparent 55%),
+    #05080f;
+  border-radius: 0;
 }
 
-/* Single participant: fill the stage */
+/* 1 tile → full stage */
 #lk-stage:not(.has-screen):has(.lk-tile:only-child) {
   grid-template-columns: 1fr;
   grid-auto-rows: 1fr;
+  padding: 0;
+  gap: 0;
 }
 
 #lk-stage:not(.has-screen):has(.lk-tile:only-child) .lk-tile {
   aspect-ratio: auto;
   min-height: 0;
   height: 100%;
+  border-radius: 0;
+  border: 0;
 }
 
-/* With screen share: big screen + camera strip */
+/* 2 tiles side-by-side */
+#lk-stage:not(.has-screen):has(.lk-tile:nth-child(2):last-child) {
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;
+}
+
+/* Screen share: giant main + filmstrip */
 #lk-stage.has-screen {
-  grid-template-columns: 1fr;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-rows: minmax(0, 1fr) 128px;
   grid-auto-rows: unset;
+  padding: 8px;
+  gap: 8px;
 }
 
 #lk-stage.has-screen .lk-tile.is-screen {
   grid-column: 1 / -1;
   grid-row: 1;
-  height: auto;
-  min-height: 0;
   aspect-ratio: auto;
-  max-height: none;
+  min-height: 0;
+  height: auto;
+  border-radius: 12px;
 }
 
 #lk-stage.has-screen .lk-tile:not(.is-screen) {
   grid-row: 2;
-  min-height: 112px;
-  max-height: 140px;
+  min-height: 100px;
+  max-height: 128px;
   aspect-ratio: 16 / 10;
-}
-
-#lk-stage.has-screen {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  grid-template-rows: minmax(0, 1fr) 140px;
-}
-
-#lk-stage.has-screen .lk-tile.is-screen {
-  grid-column: 1 / -1;
 }
 
 .lk-tile {
   position: relative;
-  background: #111827;
-  border: 1px solid #334155;
-  border-radius: 12px;
+  background: #0c1220;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
   overflow: hidden;
-  min-height: 140px;
-  aspect-ratio: 16 / 10;
-  transition: opacity 0.2s ease, border-color 0.2s ease;
+  min-height: 0;
+  aspect-ratio: auto;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  animation: lkTileIn 0.28s ease both;
+}
+
+@keyframes lkTileIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.lk-tile:hover {
+  border-color: rgba(0, 101, 253, 0.45);
+  box-shadow: 0 0 0 1px rgba(0, 101, 253, 0.2);
 }
 
 .lk-tile.is-off,
 .lk-tile.is-muted {
-  opacity: 0.55;
+  opacity: 0.5;
   border-style: dashed;
 }
 
@@ -95,43 +194,66 @@
 .lk-tile video {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   background: #020617;
   display: block;
 }
 
+.lk-tile.is-screen video {
+  object-fit: contain;
+  background: #000;
+}
+
 .lk-tile .label {
   position: absolute;
-  left: 8px;
-  bottom: 8px;
+  left: 10px;
+  bottom: 10px;
   z-index: 2;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  background: rgba(15, 23, 42, 0.88);
-  border: 1px solid #475569;
-  color: #e2e8f0;
-  padding: 3px 8px;
-  border-radius: 8px;
-  max-width: calc(100% - 16px);
+  letter-spacing: 0.01em;
+  background: rgba(7, 11, 20, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 999px;
+  max-width: calc(100% - 20px);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
+/* ── Side panels (drawer over stage) ── */
 .mx-lk-side {
   position: absolute;
   top: 10px;
+  bottom: 10px;
   left: 10px;
-  z-index: 30;
-  width: min(340px, calc(100% - 20px));
-  max-height: min(68vh, 520px);
+  z-index: 45;
+  width: min(360px, calc(100% - 20px));
+  max-height: none;
+  height: auto;
   display: flex;
   flex-direction: column;
-  background: #fff;
-  border: 1px solid #e9e9e9;
-  border-radius: 12px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
   overflow: hidden;
+  color: #171717;
+  animation: lkPanelIn 0.22s ease both;
+}
+
+#mx-lk-chat-panel.mx-lk-side {
+  left: auto;
+  right: 10px;
+}
+
+@keyframes lkPanelIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .mx-lk-side.hidden { display: none !important; }
@@ -141,9 +263,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-bottom: 1px solid #e9e9e9;
-  background: #f3f4f6;
+  background: #f8fafc;
   font-size: 13px;
   font-weight: 700;
 }
@@ -152,17 +274,18 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 10px;
+  padding: 12px;
 }
 
 .mx-lk-person {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 8px;
-  border-radius: 10px;
+  padding: 10px;
+  border-radius: 12px;
   border: 1px solid #e9e9e9;
   margin-bottom: 8px;
+  background: #fff;
 }
 
 .mx-lk-person-name { font-size: 12px; font-weight: 600; color: #171717; }
@@ -174,10 +297,18 @@
   border: 1px solid #e9e9e9;
   background: #fff;
   border-radius: 8px;
-  padding: 5px 8px;
+  padding: 6px 10px;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.mx-lk-person-actions button:hover,
+.mx-lk-side-head button:hover,
+#mx-lk-chat-send:hover {
+  border-color: #0065fd;
+  color: #0065fd;
+  background: #eef5ff;
 }
 
 .mx-lk-person-actions button.is-danger { color: #c50000; border-color: #fecaca; }
@@ -187,83 +318,129 @@
 .mx-lk-chat-compose {
   display: flex;
   gap: 6px;
-  padding: 8px;
+  padding: 10px;
   border-top: 1px solid #e9e9e9;
+  background: #f8fafc;
 }
 
 .mx-lk-chat-compose input {
   flex: 1;
   border: 1px solid #e9e9e9;
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-radius: 10px;
+  padding: 10px 12px;
   font-size: 12px;
+  background: #fff;
 }
 
+/* ── Floating dock (uses space without framing the page) ── */
+body.mx-lk-room .mx-ml-dock {
+  position: relative;
+  z-index: 40;
+  flex-shrink: 0;
+  display: flex !important;
+  align-items: center;
+  justify-content: center !important;
+  gap: 0;
+  padding: 10px 12px 14px;
+  background: linear-gradient(180deg, transparent 0%, rgba(7, 11, 20, 0.55) 40%, rgba(7, 11, 20, 0.92) 100%);
+  border: 0 !important;
+  box-shadow: none !important;
+  flex-wrap: wrap;
+}
+
+body.mx-lk-room .mx-ml-dock > div,
+body.mx-lk-room #mx-classroom-toolbar-inner {
+  display: inline-flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(233, 233, 233, 0.9);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+}
+
+body.mx-lk-room .mx-ml-icon-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #fff;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+body.mx-lk-room .mx-ml-icon-btn:hover {
+  transform: translateY(-1px);
+}
+
+body.mx-lk-room .mx-ml-icon-btn.is-active {
+  border-color: #0065fd !important;
+  background: #eef5ff !important;
+}
+
+body.mx-lk-room .mx-ml-icon-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+body.mx-lk-room .mx-ml-dock-sep {
+  background: #e5e7eb;
+  height: 24px;
+}
+
+body.mx-lk-room .classroom-room-toolbar-btn {
+  background: #fff;
+  border-color: #e9e9e9;
+  color: #171717;
+}
+
+/* Toast */
 #mx-lk-toast {
   position: fixed;
-  bottom: 96px;
+  bottom: 104px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 80;
   display: none;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(23, 23, 23, 0.92);
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.94);
   color: #fff;
   font-size: 12px;
   font-weight: 600;
   max-width: min(90vw, 420px);
   text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 #mx-lk-toast.is-visible { display: block; }
 
-.mx-ml-icon-btn.is-active {
-  border-color: #0065fd !important;
-  background: #eef5ff !important;
-}
-
-.mx-ml-icon-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-/* Keep dock + stage proportions steady inside Meet.Line shell */
-body.mx-meetline .mx-ml-shell {
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-body.mx-meetline .mx-ml-dock {
-  flex-shrink: 0;
-  justify-content: center;
-}
-
-body.mx-meetline .mx-ml-top {
-  flex-shrink: 0;
-}
-
+/* Whiteboard full-ish */
 #mx-lk-wb-popup {
   position: fixed;
   inset: 0;
   z-index: 90;
   display: none;
   flex-direction: column;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(2, 6, 23, 0.55);
+  backdrop-filter: blur(4px);
 }
 
 #mx-lk-wb-popup.is-open { display: flex; }
 
 #mx-lk-wb-popup .mx-lk-wb-card {
   margin: auto;
-  width: min(1100px, calc(100vw - 24px));
-  height: min(80vh, 760px);
+  width: min(1200px, calc(100vw - 16px));
+  height: min(88vh, 860px);
   background: #0f172a;
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid #334155;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
 }
 
 #mx-lk-wb-host {
@@ -272,27 +449,65 @@ body.mx-meetline .mx-ml-top {
   position: relative;
 }
 
+/* Guest lobby stays its own screen; meeting uses immersive shell */
+#meeting-screen:not(.hidden) {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
 @media (max-width: 768px) {
+  body.mx-lk-room .mx-ml-top {
+    min-height: 48px;
+    padding: 6px 10px;
+    flex-wrap: wrap;
+  }
+
   #lk-stage {
+    gap: 6px;
+    padding: 6px;
     grid-template-columns: 1fr;
-    grid-auto-rows: minmax(180px, auto);
-    padding: 8px;
-    gap: 8px;
+    grid-auto-rows: minmax(0, 1fr);
+  }
+
+  #lk-stage:not(.has-screen):has(.lk-tile:nth-child(2):last-child) {
+    grid-template-columns: 1fr;
+    grid-auto-rows: minmax(0, 1fr);
   }
 
   #lk-stage.has-screen {
-    grid-template-rows: minmax(0, 1fr) 110px;
+    grid-template-rows: minmax(0, 1fr) 96px;
   }
 
   #lk-stage.has-screen .lk-tile:not(.is-screen) {
-    max-height: 110px;
-    min-height: 96px;
+    max-height: 96px;
+    min-height: 84px;
+  }
+
+  body.mx-lk-room .mx-ml-dock {
+    padding: 8px 8px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body.mx-lk-room .mx-ml-icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  body.mx-lk-room .mx-ml-icon-btn i {
+    font-size: 18px;
   }
 
   .mx-lk-side {
-    width: calc(100% - 16px);
-    left: 8px;
-    right: 8px;
-    max-height: min(55vh, 420px);
+    top: 6px;
+    bottom: 6px;
+    left: 6px;
+    right: 6px;
+    width: auto;
+  }
+
+  #mx-lk-chat-panel.mx-lk-side {
+    left: 6px;
+    right: 6px;
   }
 }

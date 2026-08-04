@@ -67,19 +67,19 @@
     </div>
 
     <div id="meeting-screen" class="hidden">
-        <div class="mx-ml-shell" style="position:fixed;inset:6px;">
+        <div class="mx-ml-shell">
             <header class="mx-ml-top">
                 <div class="flex items-center gap-2 min-w-0 flex-1">
                     <div class="min-w-0">
-                        <p class="text-[11px] font-semibold text-[#0065fd] m-0">LiveKit · طالب</p>
+                        <p class="text-[11px] font-semibold text-[#93c5fd] m-0">LiveKit · طالب</p>
                         <h1 class="mx-ml-title truncate">{{ $meeting->title ?? $code }}</h1>
                     </div>
                     <span id="mx-ml-quality" title="جودة الاتصال">
                         <span class="mx-ml-quality-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
                         <span id="mx-ml-quality-label">—</span>
                     </span>
-                    <span class="text-xs text-[#717171]">متصل: <strong id="mx-lk-count">1</strong></span>
-                    <span id="lk-status" class="text-xs text-[#717171]">…</span>
+                    <span class="text-xs">متصل: <strong id="mx-lk-count">1</strong></span>
+                    <span id="lk-status" class="text-xs">…</span>
                 </div>
                 <button type="button" id="btn-guest-leave" class="mx-ml-end-btn">مغادرة</button>
             </header>
@@ -90,7 +90,7 @@
                     <div class="mx-lk-side-head"><span>المشاركون</span></div>
                     <div class="mx-lk-side-body" id="mx-lk-people-list"></div>
                 </aside>
-                <aside id="mx-lk-chat-panel" class="mx-lk-side hidden" dir="rtl" style="left:auto;right:8px;">
+                <aside id="mx-lk-chat-panel" class="mx-lk-side hidden" dir="rtl">
                     <div class="mx-lk-side-head"><span>الدردشة</span></div>
                     <div class="mx-lk-side-body" id="mx-lk-chat-log"></div>
                     <div class="mx-lk-chat-compose">
@@ -101,7 +101,7 @@
             </div>
 
             <div class="mx-ml-dock">
-                <div class="flex w-full flex-wrap items-center justify-center gap-1.5">
+                <div class="flex flex-wrap items-center justify-center gap-1.5">
                     <button type="button" id="mx-ml-btn-mic" class="mx-ml-icon-btn" title="ميكروفون"><i class="fas fa-microphone-slash text-[#fd0000]" id="mx-ml-mic-icon"></i></button>
                     <button type="button" id="mx-ml-btn-cam" class="mx-ml-icon-btn" title="كاميرا"><i class="fas fa-video-slash text-[#fd0000]" id="mx-ml-cam-icon"></i></button>
                     <button type="button" id="btn-guest-whiteboard" class="mx-ml-icon-btn" title="السبورة"><i class="fas fa-pen"></i></button>
@@ -236,7 +236,7 @@ document.getElementById('btn-join').addEventListener('click', async () => {
 
         document.getElementById('join-screen').classList.add('hidden');
         document.getElementById('meeting-screen').classList.remove('hidden');
-        document.body.className = 'mx-meetline';
+        document.body.className = 'mx-meetline mx-lk-room';
 
         lkApi = await window.MxLiveKitClassroom.boot(LivekitClient, {
             isHost: false,
