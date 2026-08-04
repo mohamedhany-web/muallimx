@@ -18,7 +18,13 @@
         .lk-tile { position: relative; background: #111827; border: 1px solid #334155; border-radius: 14px; overflow: hidden; min-height: 150px; aspect-ratio: 16/10; }
         .lk-tile video { width: 100%; height: 100%; object-fit: contain; background: #020617; display: block; }
         .lk-tile .label { position: absolute; left: 8px; bottom: 8px; z-index: 2; font-size: 11px; font-weight: 600; background: rgba(15,23,42,.85); border: 1px solid #475569; padding: 3px 8px; border-radius: 8px; }
-        .lk-tile.is-screen { grid-column: 1 / -1; min-height: 280px; aspect-ratio: 16/9; }
+        .lk-tile.is-screen {
+            grid-column: 1 / -1;
+            min-height: min(68vh, 780px);
+            aspect-ratio: auto;
+            height: min(68vh, 780px);
+        }
+        .lk-tile.is-screen video { object-fit: contain; }
         .ctrl-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 12px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; font-size: 13px; font-weight: 600; cursor: pointer; }
         .ctrl-btn:hover { border-color: #38bdf8; color: #7dd3fc; }
         .ctrl-btn.is-off { border-color: #f87171; color: #fecaca; background: rgba(127,29,29,.35); }
@@ -73,7 +79,10 @@ import {
     RoomEvent,
     Track,
     createLocalTracks,
+    createLocalScreenTracks,
     VideoPresets,
+    VideoQuality,
+    ScreenSharePresets,
 } from 'https://cdn.jsdelivr.net/npm/livekit-client@2.9.8/dist/livekit-client.esm.mjs';
 
 const code = @json($code);
@@ -89,6 +98,7 @@ let camOn = false;
 let shareOn = false;
 let localAudio;
 let localVideo;
+let localScreenTracks = [];
 const tileMap = new Map();
 
 function setHelp(msg, isErr) {
@@ -113,7 +123,11 @@ function ensureTile(participant, source) {
     label.textContent = (participant.name || participant.identity) + (source === Track.Source.ScreenShare ? ' · شاشة' : '');
     tile.appendChild(video);
     tile.appendChild(label);
-    stage.appendChild(tile);
+    if (source === Track.Source.ScreenShare && stage.firstChild) {
+        stage.insertBefore(tile, stage.firstChild);
+    } else {
+        stage.appendChild(tile);
+    }
     tileMap.set(key, tile);
     return tile;
 }
@@ -133,6 +147,11 @@ function attachTrack(track, participant) {
         return;
     }
     if (track.kind !== Track.Kind.Video) return;
+    if (track.source === Track.Source.ScreenShare) {
+        try {
+            if (track.mediaStreamTrack) track.mediaStreamTrack.contentHint = 'detail';
+        } catch (_) {}
+    }
     const tile = ensureTile(participant, track.source);
     track.attach(tile.querySelector('video'));
 }
@@ -161,17 +180,23 @@ function paintShare() {
 
 async function connectLiveKit(url, token) {
     room = new Room({
-        adaptiveStream: true,
-        dynacast: true,
+        adaptiveStream: false,
+        dynacast: false,
         videoCaptureDefaults: { resolution: VideoPresets.h720.resolution },
         publishDefaults: {
             videoSimulcastLayers: [VideoPresets.h180, VideoPresets.h360],
-            screenShareEncoding: { maxBitrate: 3_500_000, maxFramerate: 30 },
+            screenShareEncoding: { maxBitrate: 6_000_000, maxFramerate: 30 },
+            screenShareSimulcastLayers: [],
             videoCodec: 'vp8',
         },
     });
     room
-        .on(RoomEvent.TrackSubscribed, (track, _pub, p) => attachTrack(track, p))
+        .on(RoomEvent.TrackSubscribed, (track, publication, p) => {
+            if (publication && track.source === Track.Source.ScreenShare) {
+                try { publication.setVideoQuality(VideoQuality.HIGH); } catch (_) {}
+            }
+            attachTrack(track, p);
+        })
         .on(RoomEvent.TrackUnsubscribed, (track, _pub, p) => detachTrack(track, p))
         .on(RoomEvent.LocalTrackPublished, (pub, p) => { if (pub.track) attachTrack(pub.track, p); })
         .on(RoomEvent.LocalTrackUnpublished, (pub, p) => { if (pub.track) detachTrack(pub.track, p); })
@@ -182,7 +207,12 @@ async function connectLiveKit(url, token) {
     await room.connect(url, token);
     setStatus('متصل');
     room.remoteParticipants.forEach((p) => {
-        p.trackPublications.forEach((pub) => { if (pub.track) attachTrack(pub.track, p); });
+        p.trackPublications.forEach((pub) => {
+            if (pub.track) attachTrack(pub.track, p);
+            if (pub.source === Track.Source.ScreenShare) {
+                try { pub.setVideoQuality(VideoQuality.HIGH); } catch (_) {}
+            }
+        });
     });
 }
 
@@ -254,14 +284,35 @@ document.getElementById('btn-share').addEventListener('click', async () => {
     if (!room) return;
     try {
         if (!shareOn) {
-            await room.localParticipant.setScreenShareEnabled(true, {
+            const tracks = await createLocalScreenTracks({
                 audio: false,
-                resolution: { width: 1920, height: 1080, frameRate: 30 },
+                resolution: ScreenSharePresets.h1080fps30.resolution,
+                contentHint: 'detail',
             });
+            localScreenTracks = tracks;
+            for (const t of tracks) {
+                try {
+                    if (t.mediaStreamTrack) t.mediaStreamTrack.contentHint = 'detail';
+                } catch (_) {}
+                await room.localParticipant.publishTrack(t, {
+                    source: Track.Source.ScreenShare,
+                    name: 'screen',
+                    simulcast: false,
+                    videoCodec: 'vp8',
+                    screenShareEncoding: { maxBitrate: 6_000_000, maxFramerate: 30 },
+                });
+            }
             shareOn = true;
+            setStatus('شير · 1080p');
         } else {
-            await room.localParticipant.setScreenShareEnabled(false);
+            for (const t of localScreenTracks) {
+                try { await room.localParticipant.unpublishTrack(t); } catch (_) {}
+                try { t.stop(); } catch (_) {}
+            }
+            localScreenTracks = [];
+            try { await room.localParticipant.setScreenShareEnabled(false); } catch (_) {}
             shareOn = false;
+            setStatus('متصل');
         }
         paintShare();
     } catch (e) {
