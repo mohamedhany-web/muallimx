@@ -123,7 +123,7 @@
             <button type="button" id="mx-ml-btn-mic" class="mx-ml-icon-btn" title="ميكروفون" aria-pressed="false">
                 <i class="fas fa-microphone-slash text-[#fd0000]" id="mx-ml-mic-icon"></i>
             </button>
-            <button type="button" id="mx-ml-btn-noise" class="mx-ml-icon-btn" title="عزل الضوضاء (قيود المتصفح)" aria-pressed="false">
+            <button type="button" id="mx-ml-btn-noise" class="mx-ml-icon-btn" title="عزل الضوضاء" aria-pressed="false">
                 <i class="fas fa-ear-listen text-[#171717]"></i>
             </button>
             <button type="button" id="mx-ml-btn-cam" class="mx-ml-icon-btn" title="الكاميرا" aria-pressed="false">
@@ -132,6 +132,16 @@
             <button type="button" id="mx-ml-btn-bg" class="mx-ml-icon-btn" title="خلفية الكاميرا" aria-expanded="false">
                 <i class="fas fa-image text-[#171717]"></i>
             </button>
+            <span class="mx-ml-dock-sep" aria-hidden="true"></span>
+            <button type="button" id="mx-ml-btn-share" class="mx-ml-icon-btn" title="مشاركة الشاشة" aria-pressed="false">
+                <i class="fas fa-desktop text-[#171717]" id="mx-ml-share-icon"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-annotate" class="mx-ml-icon-btn" title="كتابة الطلاب على الشاشة" disabled>
+                <i class="fas fa-pen-fancy text-[#171717]"></i>
+            </button>
+            <button type="button" id="mx-ml-btn-laser" class="mx-ml-icon-btn" title="مؤشر ليزر على الشاشة" disabled>
+                <i class="fas fa-location-crosshairs text-[#171717]"></i>
+            </button>
             <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn" title="السبورة" aria-pressed="false">
                 <i class="fas fa-pen text-[#171717]"></i>
             </button>
@@ -139,9 +149,6 @@
                 <i class="fas fa-hand-paper text-[#171717]"></i>
             </button>
             <span class="mx-ml-dock-sep" aria-hidden="true"></span>
-            <button type="button" id="mx-ml-btn-share" class="mx-ml-icon-btn" title="مشاركة الشاشة" aria-pressed="false">
-                <i class="fas fa-desktop text-[#171717]" id="mx-ml-share-icon"></i>
-            </button>
             <button type="button" id="mx-ml-btn-people" class="mx-ml-icon-btn" title="المشاركون">
                 <i class="fas fa-users text-[#171717]"></i>
             </button>
@@ -157,7 +164,7 @@
                 <div id="mx-guest-perms-panel" class="hidden absolute bottom-full mb-2 end-0 z-40 w-[17.5rem] rounded-xl border border-[#e9e9e9] bg-white shadow-xl p-3 text-start" role="menu" dir="rtl">
                     <p class="text-[11px] font-bold text-[#171717] mb-2">ما يُسمح للطلاب</p>
                     <div class="space-y-2 text-[12px] text-[#171717]">
-                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded border-[#e9e9e9] text-[#0065fd]" data-perm-key="allow_participant_whiteboard" {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}><span>السبورة</span></label>
+                        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded border-[#e9e9e9] text-[#0065fd]" data-perm-key="allow_participant_whiteboard" {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}><span>السبورة + الكتابة على الشاشة</span></label>
                         <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded border-[#e9e9e9] text-[#0065fd]" data-perm-key="allow_participant_screen_share" {{ $meeting->allowsParticipantScreenShare() ? 'checked' : '' }}><span>شير الشاشة</span></label>
                         <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded border-[#e9e9e9] text-[#0065fd]" data-perm-key="allow_participant_chat" {{ $meeting->allowsParticipantChat() ? 'checked' : '' }}><span>الدردشة</span></label>
                         <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded border-[#e9e9e9] text-[#0065fd]" data-perm-key="allow_participant_raise_hand" {{ $meeting->allowsParticipantRaiseHand() ? 'checked' : '' }}><span>رفع اليد</span></label>
@@ -184,6 +191,12 @@
     </div>
 </div>
 
+<div id="mx-share-ann-hold" hidden>
+@include('partials.mx-share-annotation-overlay', [
+    'mxAnnRole' => 'viewer_poll',
+    'mxAnnPollUrl' => route($rp.'classroom.share-annotations', $meeting),
+])
+</div>
 <div id="mx-lk-wb-popup" aria-hidden="true">
     <div class="mx-lk-wb-card">
         <div class="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-700 text-white">

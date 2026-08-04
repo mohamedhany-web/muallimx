@@ -137,6 +137,152 @@
       return participant.identity + ':' + source;
     }
 
+    function getFilmstrip() {
+      if (!stage) return null;
+      var strip = stage.querySelector('.lk-filmstrip');
+      if (!strip) {
+        strip = document.createElement('div');
+        strip.className = 'lk-filmstrip';
+        stage.appendChild(strip);
+      }
+      return strip;
+    }
+
+    function layoutStage() {
+      if (!stage) return;
+      var hasScreen = !!stage.querySelector('.lk-tile.is-screen');
+      stage.classList.toggle('has-screen', hasScreen);
+      var strip = stage.querySelector('.lk-filmstrip');
+      if (!hasScreen) {
+        if (strip) {
+          Array.from(strip.querySelectorAll('.lk-tile')).forEach(function (t) {
+            stage.appendChild(t);
+          });
+          strip.remove();
+        }
+        syncShareTools(false);
+        return;
+      }
+      strip = getFilmstrip();
+      Array.from(stage.querySelectorAll('.lk-tile:not(.is-screen)')).forEach(function (t) {
+        if (t.parentElement !== strip) strip.appendChild(t);
+      });
+      var screenTile = stage.querySelector('.lk-tile.is-screen');
+      if (screenTile && stage.firstChild !== screenTile) {
+        stage.insertBefore(screenTile, stage.firstChild);
+      }
+      if (strip && strip.parentElement === stage) {
+        stage.appendChild(strip);
+      }
+      syncShareTools(true);
+    }
+
+    function syncShareTools(on) {
+      var layer = document.getElementById('mx-share-ann-layer');
+      var hold = document.getElementById('mx-share-ann-hold');
+      var screenTile = stage && stage.querySelector('.lk-tile.is-screen');
+      if (layer) {
+        if (on && screenTile) {
+          screenTile.appendChild(layer);
+          if (typeof window.__mxShareAnnSetAllowed === 'function') {
+            // Host always sees drawings; guests need whiteboard permission to draw
+            window.__mxShareAnnSetAllowed(isHost || !!perms.allow_participant_whiteboard);
+          }
+          if (isHost) {
+            layer.classList.remove('hidden');
+          }
+          try {
+            window.dispatchEvent(new Event('resize'));
+          } catch (e) {}
+        } else {
+          if (hold) hold.appendChild(layer);
+          if (typeof window.__mxShareAnnSetAllowed === 'function') {
+            window.__mxShareAnnSetAllowed(false);
+          }
+        }
+      }
+      ensurePointerLayer(on ? screenTile : null);
+      var drawBtn = $('mx-ml-btn-annotate');
+      if (drawBtn) {
+        drawBtn.disabled = !(on && (isHost || perms.allow_participant_whiteboard));
+        drawBtn.classList.toggle('is-active', false);
+      }
+      var laserBtn = $('mx-ml-btn-laser');
+      if (laserBtn) {
+        laserBtn.disabled = !on;
+        if (!on) {
+          laserBtn.classList.remove('is-active');
+          document.body.classList.remove('lk-laser-on');
+          laserOn = false;
+        }
+      }
+    }
+
+    var laserOn = false;
+    var pointerDots = new Map();
+    var pointerLayer = null;
+    var lastPointerSent = 0;
+
+    function ensurePointerLayer(screenTile) {
+      if (!screenTile) {
+        if (pointerLayer && pointerLayer.parentElement) pointerLayer.remove();
+        pointerLayer = null;
+        pointerDots.clear();
+        return;
+      }
+      pointerLayer = screenTile.querySelector('#lk-pointer-layer');
+      if (!pointerLayer) {
+        pointerLayer = document.createElement('div');
+        pointerLayer.id = 'lk-pointer-layer';
+        screenTile.appendChild(pointerLayer);
+        pointerLayer.addEventListener('pointermove', onLaserMove);
+        pointerLayer.addEventListener('pointerdown', onLaserMove);
+        pointerLayer.addEventListener('pointerleave', function () {
+          if (!laserOn) return;
+          sendData('pointer', { on: false }, false).catch(function () {});
+        });
+      }
+    }
+
+    function onLaserMove(ev) {
+      if (!laserOn || !pointerLayer) return;
+      var now = Date.now();
+      if (now - lastPointerSent < 40) return;
+      lastPointerSent = now;
+      var rect = pointerLayer.getBoundingClientRect();
+      if (rect.width < 1 || rect.height < 1) return;
+      var x = (ev.clientX - rect.left) / rect.width;
+      var y = (ev.clientY - rect.top) / rect.height;
+      x = Math.max(0, Math.min(1, x));
+      y = Math.max(0, Math.min(1, y));
+      showPointer(room.localParticipant.identity, room.localParticipant.name || 'أنت', x, y, true);
+      sendData('pointer', { on: true, x: x, y: y }, false).catch(function () {});
+    }
+
+    function showPointer(identity, name, x, y, on) {
+      if (!pointerLayer) return;
+      var key = String(identity || '');
+      var el = pointerDots.get(key);
+      if (!on) {
+        if (el) {
+          el.remove();
+          pointerDots.delete(key);
+        }
+        return;
+      }
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'lk-laser-dot';
+        el.innerHTML = '<span class="lk-laser-name"></span>';
+        pointerLayer.appendChild(el);
+        pointerDots.set(key, el);
+      }
+      el.style.left = (x * 100) + '%';
+      el.style.top = (y * 100) + '%';
+      var nameEl = el.querySelector('.lk-laser-name');
+      if (nameEl) nameEl.textContent = name || '';
+    }
+
     function ensureTile(participant, source) {
       var key = tileKey(participant, source);
       var tile = tileMap.get(key);
@@ -156,15 +302,16 @@
         (raisedHands.has(participant.identity) ? ' ✋' : '');
       tile.appendChild(video);
       tile.appendChild(label);
-      if (source === Track.Source.ScreenShare && stage.firstChild) {
-        stage.insertBefore(tile, stage.firstChild);
+      if (source === Track.Source.ScreenShare) {
+        if (stage.firstChild) stage.insertBefore(tile, stage.firstChild);
+        else stage.appendChild(tile);
+      } else if (stage.classList.contains('has-screen') || stage.querySelector('.lk-tile.is-screen')) {
+        getFilmstrip().appendChild(tile);
       } else {
         stage.appendChild(tile);
       }
       tileMap.set(key, tile);
-      if (stage) {
-        stage.classList.toggle('has-screen', !!stage.querySelector('.lk-tile.is-screen'));
-      }
+      layoutStage();
       return tile;
     }
 
@@ -174,9 +321,7 @@
       if (!tile) return;
       tile.remove();
       tileMap.delete(key);
-      if (stage) {
-        stage.classList.toggle('has-screen', !!stage.querySelector('.lk-tile.is-screen'));
-      }
+      layoutStage();
     }
 
     function refreshHandLabels() {
@@ -332,6 +477,7 @@
       var handBtn = $('mx-ml-btn-react');
       var wbBtn = $('btn-wb-popup-open') || $('btn-guest-whiteboard');
       var vbgBtn = $('mx-ml-btn-bg');
+      var annotateBtn = $('mx-ml-btn-annotate');
       if (!isHost) {
         if (shareBtn) shareBtn.disabled = !perms.allow_participant_screen_share;
         if (chatBtn) chatBtn.disabled = !perms.allow_participant_chat;
@@ -343,6 +489,10 @@
         if (shareOn && !perms.allow_participant_screen_share) {
           stopScreenShare();
         }
+      }
+      if (annotateBtn) {
+        var hasScreen = !!(stage && stage.querySelector('.lk-tile.is-screen'));
+        annotateBtn.disabled = !(hasScreen && (isHost || perms.allow_participant_whiteboard));
       }
       if (typeof config.onPermissions === 'function') {
         try {
@@ -416,6 +566,15 @@
           toast('قام المعلم بكتم جهازك');
         }
       }
+      if (msg.t === 'pointer' && msg.p) {
+        showPointer(
+          identity,
+          from,
+          Number(msg.p.x) || 0,
+          Number(msg.p.y) || 0,
+          !!msg.p.on
+        );
+      }
     }
 
     function paintMic() {
@@ -442,11 +601,12 @@
     function paintShare() {
       var btn = $('mx-ml-btn-share');
       var icon = $('mx-ml-share-icon');
-      if (!btn) return;
-      btn.setAttribute('aria-pressed', shareOn ? 'true' : 'false');
-      btn.classList.toggle('is-active', shareOn);
+      if (btn) {
+        btn.setAttribute('aria-pressed', shareOn ? 'true' : 'false');
+        btn.classList.toggle('is-active', shareOn);
+      }
       if (icon) icon.className = shareOn ? 'fas fa-desktop text-[#0065fd]' : 'fas fa-desktop text-[#171717]';
-      if (stage) stage.classList.toggle('has-screen', !!shareOn || stage.querySelector('.lk-tile.is-screen'));
+      layoutStage();
     }
     function paintHand() {
       var btn = $('mx-ml-btn-react');
@@ -706,10 +866,11 @@
         tracks.push(localAudio.mediaStreamTrack.clone());
       }
       if (recordingKind === 'lecture') {
-        if (localVideo && localVideo.mediaStreamTrack) {
-          tracks.push(localVideo.mediaStreamTrack.clone());
-        } else if (localScreenTracks[0] && localScreenTracks[0].mediaStreamTrack) {
+        // Prefer screen share while presenting so the lecture capture matches what students see
+        if (localScreenTracks[0] && localScreenTracks[0].mediaStreamTrack) {
           tracks.push(localScreenTracks[0].mediaStreamTrack.clone());
+        } else if (localVideo && localVideo.mediaStreamTrack) {
+          tracks.push(localVideo.mediaStreamTrack.clone());
         }
       }
       recordingStream = new MediaStream(tracks);
@@ -866,6 +1027,50 @@
           }
           chatPanel.classList.toggle('hidden');
           if (peoplePanel) peoplePanel.classList.add('hidden');
+        });
+      }
+
+      var annotateBtn = $('mx-ml-btn-annotate');
+      if (annotateBtn) {
+        annotateBtn.addEventListener('click', function () {
+          var hasScreen = !!(stage && stage.querySelector('.lk-tile.is-screen'));
+          if (!hasScreen) {
+            toast('فعّل مشاركة الشاشة أولاً للرسم عليها');
+            return;
+          }
+          if (!isHost && !perms.allow_participant_whiteboard) {
+            toast('المعلم لم يُتح الكتابة على الشاشة (صلاحية السبورة)');
+            return;
+          }
+          if (isHost) {
+            // Host already polls/views student drawings; open tip
+            toast('الطلاب يرسمون على الشاشة عند تفعيل صلاحية السبورة');
+            return;
+          }
+          if (typeof window.__mxShareAnnOpenToolbar === 'function') {
+            window.__mxShareAnnOpenToolbar();
+            annotateBtn.classList.add('is-active');
+          }
+        });
+      }
+
+      var laserBtn = $('mx-ml-btn-laser');
+      if (laserBtn) {
+        laserBtn.addEventListener('click', function () {
+          var hasScreen = !!(stage && stage.querySelector('.lk-tile.is-screen'));
+          if (!hasScreen) {
+            toast('فعّل مشاركة الشاشة أولاً للإشارة عليها');
+            return;
+          }
+          laserOn = !laserOn;
+          laserBtn.classList.toggle('is-active', laserOn);
+          document.body.classList.toggle('lk-laser-on', laserOn);
+          if (!laserOn) {
+            sendData('pointer', { on: false }, false).catch(function () {});
+            showPointer(room.localParticipant.identity, '', 0, 0, false);
+          } else {
+            toast('حرّك المؤشر فوق الشاشة للإشارة');
+          }
         });
       }
 

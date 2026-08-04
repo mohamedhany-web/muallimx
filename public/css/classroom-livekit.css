@@ -134,28 +134,47 @@ body.mx-lk-room .mx-ml-end-btn {
   grid-auto-rows: 1fr;
 }
 
-/* Screen share: giant main + filmstrip */
+/* Screen share: giant main + SIDE filmstrip (scrolls independently) */
 #lk-stage.has-screen {
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  grid-template-rows: minmax(0, 1fr) 128px;
-  grid-auto-rows: unset;
-  padding: 8px;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
   gap: 8px;
+  padding: 8px;
+  overflow: hidden;
+  direction: ltr;
 }
 
 #lk-stage.has-screen .lk-tile.is-screen {
-  grid-column: 1 / -1;
-  grid-row: 1;
-  aspect-ratio: auto;
+  flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
   height: auto;
-  border-radius: 12px;
+  aspect-ratio: auto;
+  border-radius: 14px;
+  z-index: 1;
 }
 
-#lk-stage.has-screen .lk-tile:not(.is-screen) {
-  grid-row: 2;
-  min-height: 100px;
-  max-height: 128px;
+#lk-stage.has-screen .lk-filmstrip {
+  flex: 0 0 148px;
+  width: 148px;
+  min-width: 148px;
+  max-width: 148px;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+}
+
+#lk-stage.has-screen .lk-filmstrip .lk-tile {
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 92px;
   aspect-ratio: 16 / 10;
 }
 
@@ -202,6 +221,65 @@ body.mx-lk-room .mx-ml-end-btn {
 .lk-tile.is-screen video {
   object-fit: contain;
   background: #000;
+}
+
+/* Annotation + laser live on top of shared screen */
+.lk-tile.is-screen #mx-share-ann-layer {
+  position: absolute !important;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.lk-tile.is-screen #mx-share-ann-toolbar {
+  bottom: 12px;
+}
+
+#lk-pointer-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.lk-laser-dot {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff 0%, #f43f5e 45%, rgba(244, 63, 94, 0.15) 70%, transparent 72%);
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.85);
+  transition: left 0.05s linear, top 0.05s linear, opacity 0.2s ease;
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.lk-laser-dot .lk-laser-name {
+  position: absolute;
+  left: 20px;
+  top: -2px;
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.75);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+
+body.mx-lk-room.lk-laser-on .lk-tile.is-screen {
+  cursor: crosshair;
+}
+
+body.mx-lk-room.lk-laser-on .lk-tile.is-screen #lk-pointer-layer {
+  pointer-events: auto;
+}
+
+#mx-share-ann-hold {
+  display: none !important;
 }
 
 .lk-tile .label {
@@ -476,12 +554,21 @@ body.mx-lk-room .classroom-room-toolbar-btn {
   }
 
   #lk-stage.has-screen {
-    grid-template-rows: minmax(0, 1fr) 96px;
+    gap: 6px;
+    padding: 6px;
   }
 
-  #lk-stage.has-screen .lk-tile:not(.is-screen) {
-    max-height: 96px;
-    min-height: 84px;
+  #lk-stage.has-screen .lk-filmstrip {
+    flex-basis: 104px;
+    width: 104px;
+    min-width: 104px;
+    max-width: 104px;
+    gap: 6px;
+  }
+
+  #lk-stage.has-screen .lk-filmstrip .lk-tile {
+    min-height: 72px;
+    aspect-ratio: 4 / 3;
   }
 
   body.mx-lk-room .mx-ml-dock {

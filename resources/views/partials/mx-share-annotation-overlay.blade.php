@@ -303,6 +303,9 @@
         if (isEmitter()) {
             layer.classList.add('hidden');
             setDrawActive(false);
+        } else if (isViewer()) {
+            layer.classList.remove('hidden');
+            resizeCanvas();
         }
     };
 

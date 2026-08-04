@@ -104,9 +104,13 @@
                 <div class="flex flex-wrap items-center justify-center gap-1.5">
                     <button type="button" id="mx-ml-btn-mic" class="mx-ml-icon-btn" title="ميكروفون"><i class="fas fa-microphone-slash text-[#fd0000]" id="mx-ml-mic-icon"></i></button>
                     <button type="button" id="mx-ml-btn-cam" class="mx-ml-icon-btn" title="كاميرا"><i class="fas fa-video-slash text-[#fd0000]" id="mx-ml-cam-icon"></i></button>
+                    <span class="mx-ml-dock-sep" aria-hidden="true"></span>
+                    <button type="button" id="mx-ml-btn-share" class="mx-ml-icon-btn" title="شير"><i class="fas fa-desktop" id="mx-ml-share-icon"></i></button>
+                    <button type="button" id="mx-ml-btn-annotate" class="mx-ml-icon-btn" title="اكتب على الشاشة" disabled><i class="fas fa-pen-fancy"></i></button>
+                    <button type="button" id="mx-ml-btn-laser" class="mx-ml-icon-btn" title="مؤشر ليزر" disabled><i class="fas fa-location-crosshairs"></i></button>
                     <button type="button" id="btn-guest-whiteboard" class="mx-ml-icon-btn" title="السبورة"><i class="fas fa-pen"></i></button>
                     <button type="button" id="mx-ml-btn-react" class="mx-ml-icon-btn" title="رفع اليد"><i class="fas fa-hand-paper"></i></button>
-                    <button type="button" id="mx-ml-btn-share" class="mx-ml-icon-btn" title="شير"><i class="fas fa-desktop" id="mx-ml-share-icon"></i></button>
+                    <span class="mx-ml-dock-sep" aria-hidden="true"></span>
                     <button type="button" id="mx-ml-btn-people" class="mx-ml-icon-btn" title="مشاركون"><i class="fas fa-users"></i></button>
                     <button type="button" id="mx-ml-btn-chat" class="mx-ml-icon-btn" title="دردشة"><i class="fas fa-comments"></i></button>
                     <button type="button" id="mx-ml-btn-bg" class="mx-ml-icon-btn" title="خلفية"><i class="fas fa-image"></i></button>
@@ -115,6 +119,12 @@
         </div>
     </div>
 
+    <div id="mx-share-ann-hold" hidden>
+    @include('partials.mx-share-annotation-overlay', [
+        'mxAnnRole' => 'classroom_guest_emit',
+        'mxAnnPostUrl' => route('classroom.join.share-annotation', $code),
+    ])
+    </div>
     <div id="mx-lk-wb-popup" aria-hidden="true">
         <div class="mx-lk-wb-card">
             <div class="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-700 text-white">
@@ -226,6 +236,9 @@ document.getElementById('btn-join').addEventListener('click', async () => {
         if (!enterResp.ok || !enterData.ok) throw new Error(enterData.message || 'لا يمكن الانضمام');
         if (!enterData.livekit?.token) throw new Error('لم يُرجع الخادم توكن LiveKit');
         joinToken = enterData.token;
+        if (typeof window.__mxShareAnnSetGuestToken === 'function') {
+            window.__mxShareAnnSetGuestToken(joinToken);
+        }
         currentPerms = Object.assign(currentPerms, {
             allow_participant_whiteboard: !!enterData.allow_participant_whiteboard,
             allow_participant_screen_share: !!enterData.allow_participant_screen_share,
