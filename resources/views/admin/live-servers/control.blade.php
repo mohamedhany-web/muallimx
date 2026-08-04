@@ -37,6 +37,8 @@
     <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-red-700 dark:text-red-400 text-sm"><i class="fas fa-exclamation-circle ml-1"></i> {{ session('error') }}</div>
     @endif
 
+    @include('admin.live-servers._live-video-provider')
+
     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-5" id="servers-grid">
         @forelse($servers as $server)
         @php

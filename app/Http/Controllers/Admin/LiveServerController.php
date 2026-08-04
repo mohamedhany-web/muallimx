@@ -16,7 +16,15 @@ class LiveServerController extends Controller
     {
         $servers = LiveServer::withCount(['sessions', 'activeSessions'])->latest()->get();
         $defaultJitsiDomain = LiveSetting::get('jitsi_domain', '');
-        return view('admin.live-servers.index', compact('servers', 'defaultJitsiDomain'));
+        $liveVideoProvider = LiveSetting::getLiveVideoProvider();
+        $livekitConfigured = app(\App\Services\LiveKitTokenService::class)->isConfigured();
+
+        return view('admin.live-servers.index', compact(
+            'servers',
+            'defaultJitsiDomain',
+            'liveVideoProvider',
+            'livekitConfigured'
+        ));
     }
 
     /** لوحة التحكم بالسيرفرات (ريال تايم) — عرض كل السيرفرات مع روابط لوحة التحكم والاختبار. */
@@ -24,7 +32,39 @@ class LiveServerController extends Controller
     {
         $servers = LiveServer::withCount(['sessions', 'activeSessions'])->latest()->get();
         $defaultJitsiDomain = LiveSetting::getJitsiDomain();
-        return view('admin.live-servers.control', compact('servers', 'defaultJitsiDomain'));
+        $liveVideoProvider = LiveSetting::getLiveVideoProvider();
+        $livekitConfigured = app(\App\Services\LiveKitTokenService::class)->isConfigured();
+
+        return view('admin.live-servers.control', compact(
+            'servers',
+            'defaultJitsiDomain',
+            'liveVideoProvider',
+            'livekitConfigured'
+        ));
+    }
+
+    /**
+     * اختيار محرك الفيديو للموقع بالكامل (Jitsi أو LiveKit).
+     */
+    public function updateLiveVideoProvider(Request $request)
+    {
+        $data = $request->validate([
+            'live_video_provider' => 'required|in:jitsi,livekit',
+        ]);
+
+        $provider = $data['live_video_provider'];
+        if ($provider === 'livekit') {
+            $livekit = app(\App\Services\LiveKitTokenService::class);
+            if (! config('services.livekit.enabled') || ! $livekit->isConfigured()) {
+                return back()->with('error', 'لا يمكن تفعيل LiveKit: أضف LIVEKIT_URL و LIVEKIT_API_KEY و LIVEKIT_API_SECRET في .env ثم أعد المحاولة.');
+            }
+        }
+
+        LiveSetting::setLiveVideoProvider($provider);
+
+        $label = $provider === 'livekit' ? 'LiveKit' : 'Jitsi';
+
+        return back()->with('success', "تم ضبط محرك الفيديو للموقع على {$label}. كل جلسات Classroom الجديدة والقائمة ستستخدم هذا المحرك.");
     }
 
     public function create()

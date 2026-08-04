@@ -42,12 +42,13 @@ php artisan config:clear
 
 Without these, creating a LiveKit meeting fails with a clear error, and guests cannot mint tokens.
 
-## How to try
+## How to switch (site-wide)
 
-1. Classroom → إنشاء اجتماع → **محرك الفيديو: LiveKit**.
-2. Host opens the LiveKit room UI (mic / cam / screen share).
-3. Share `/classroom/join/{code}` — guests get the LiveKit join page automatically.
-4. Create a second meeting with **Jitsi** and compare share clarity / stability.
+Admin → **سيرفرات البث** (or control panel) → card **محرك الفيديو للموقع بالكامل** → choose **Jitsi** or **LiveKit** → Save.
+
+Same setting also appears under **إعدادات نظام البث** as `live_video_provider`.
+
+Classroom host/guest rooms follow this setting automatically. Per-meeting provider selection was removed.
 
 ## Limits (same VPS)
 

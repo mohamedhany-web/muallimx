@@ -39,6 +39,40 @@ class LiveSetting extends Model
         return 'meet.jit.si';
     }
 
+    /**
+     * محرك الفيديو للموقع بالكامل: jitsi | livekit (من لوحة سيرفرات البث).
+     */
+    public static function getLiveVideoProvider(): string
+    {
+        $p = strtolower(trim((string) static::get('live_video_provider', 'jitsi')));
+
+        return in_array($p, ['jitsi', 'livekit'], true) ? $p : 'jitsi';
+    }
+
+    public static function usesLiveKit(): bool
+    {
+        return static::getLiveVideoProvider() === 'livekit';
+    }
+
+    public static function setLiveVideoProvider(string $provider): void
+    {
+        $provider = strtolower(trim($provider));
+        if (! in_array($provider, ['jitsi', 'livekit'], true)) {
+            $provider = 'jitsi';
+        }
+
+        static::updateOrCreate(
+            ['key' => 'live_video_provider'],
+            [
+                'value' => $provider,
+                'type' => 'string',
+                'group' => 'general',
+                'label' => 'محرك الفيديو للموقع (Jitsi / LiveKit)',
+            ]
+        );
+        Cache::forget('live_setting_live_video_provider');
+    }
+
     public static function get(string $key, $default = null)
     {
         $setting = Cache::remember("live_setting_{$key}", 3600, function () use ($key) {

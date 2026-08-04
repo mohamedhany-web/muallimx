@@ -153,7 +153,6 @@ class ClassroomController extends Controller
             'start_now' => ['nullable', Rule::in(['0', '1'])],
             'scheduled_for' => ['nullable', 'date'],
             'planned_duration_minutes' => ['nullable', 'integer', 'min:15', 'max:'.$limits['classroom_max_duration_minutes']],
-            'live_provider' => ['nullable', Rule::in(['jitsi', 'livekit'])],
         ]);
 
         $code = ClassroomMeeting::generateCode();
@@ -164,9 +163,8 @@ class ClassroomController extends Controller
         $planned = min($planned, (int) $limits['classroom_max_duration_minutes']);
         $maxParticipants = min((int) $data['max_participants'], (int) $limits['classroom_max_participants']);
 
-        $liveProvider = (string) ($data['live_provider'] ?? 'jitsi');
-        if ($liveProvider === 'livekit' && (! config('services.livekit.enabled') || ! app(LiveKitTokenService::class)->isConfigured())) {
-            return back()->withInput()->with('error', 'LiveKit غير مفعّل على السيرفر حالياً. اختر Jitsi أو أضف مفاتيح LIVEKIT_* في .env.');
+        if (LiveSetting::usesLiveKit() && (! config('services.livekit.enabled') || ! app(LiveKitTokenService::class)->isConfigured())) {
+            return back()->withInput()->with('error', 'محرك الموقع مضبوط على LiveKit لكن المفاتيح غير مضبوطة (LIVEKIT_*). عدّل الإعداد من لوحة سيرفرات البث أو أضف المفاتيح.');
         }
 
         $meeting = ClassroomMeeting::create([
@@ -178,16 +176,11 @@ class ClassroomController extends Controller
             'planned_duration_minutes' => $planned,
             'max_participants' => $maxParticipants,
             'started_at' => $startNow ? now() : null,
-            'settings' => [
-                'live_provider' => $liveProvider,
-            ],
         ]);
 
         if ($startNow) {
             return redirect()->route('student.classroom.room', $meeting)
-                ->with('success', $liveProvider === 'livekit'
-                    ? 'بدأت جلسة LiveKit للتجربة. قارن الجودة مع Jitsi.'
-                    : 'بدأت الجلسة. شارك رابطك الثابت مع الطلاب.');
+                ->with('success', 'بدأت الجلسة. شارك رابطك الثابت مع الطلاب.');
         }
 
         return redirect()->route('student.classroom.show', $meeting)

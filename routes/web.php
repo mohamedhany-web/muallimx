@@ -1702,6 +1702,7 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
             Route::get('/control', [\App\Http\Controllers\Admin\LiveServerController::class, 'control'])->name('control');
             Route::get('/create', [\App\Http\Controllers\Admin\LiveServerController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\Admin\LiveServerController::class, 'store'])->name('store');
+            Route::post('/live-video-provider', [\App\Http\Controllers\Admin\LiveServerController::class, 'updateLiveVideoProvider'])->name('live-video-provider');
             Route::get('/{liveServer}/edit', [\App\Http\Controllers\Admin\LiveServerController::class, 'edit'])->name('edit');
             Route::get('/{liveServer}/ssh-browse', [\App\Http\Controllers\Admin\LiveServerController::class, 'sshBrowse'])->name('ssh-browse');
             Route::get('/{liveServer}/ssh-file', [\App\Http\Controllers\Admin\LiveServerController::class, 'sshFile'])->name('ssh-file');

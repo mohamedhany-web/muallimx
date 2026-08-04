@@ -47,17 +47,8 @@
             @error('planned_duration_minutes')<p class="text-xs text-rose-600 mt-1">{{ $message }}</p>@enderror
         </div>
 
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">محرك الفيديو (تجربة مقارنة)</label>
-            <select name="live_provider" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-white">
-                <option value="jitsi" {{ old('live_provider', 'jitsi') === 'jitsi' ? 'selected' : '' }}>Jitsi Meet.Line (الافتراضي)</option>
-                <option value="livekit" {{ old('live_provider') === 'livekit' ? 'selected' : '' }}>LiveKit (تجربة جودة على نفس السيرفر)</option>
-            </select>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Jitsi يبقى كما هو. LiveKit للتجربة فقط — لا تشغّل جلسات ثقيلة على الاثنين معاً على نفس الـ VPS.</p>
-            @error('live_provider')<p class="text-xs text-rose-600 mt-1">{{ $message }}</p>@enderror
-        </div>
-
         <div class="rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-600 p-3 text-xs text-slate-600 dark:text-slate-300 space-y-1">
+            <p>محرك الفيديو الحالي للموقع: <span class="font-bold">{{ \App\Models\LiveSetting::usesLiveKit() ? 'LiveKit' : 'Jitsi' }}</span> — يُغيَّر من لوحة الأدمن (سيرفرات البث).</p>
             <p>استهلاك الشهر الحالي: {{ number_format($usedMeetingsThisMonth) }} من {{ number_format($limits['classroom_meetings_per_month']) }}.
             المتبقي: <span class="font-bold">{{ number_format($remainingMeetingsThisMonth) }}</span></p>
             @if(!empty($fixedJoinUrl))

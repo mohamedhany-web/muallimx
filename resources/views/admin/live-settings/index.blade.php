@@ -61,6 +61,11 @@
                             <option value="1" {{ $setting->value ? 'selected' : '' }}>نعم</option>
                             <option value="0" {{ !$setting->value ? 'selected' : '' }}>لا</option>
                         </select>
+                    @elseif($setting->key === 'live_video_provider')
+                        <select name="settings[{{ $index }}][value]" class="w-48 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
+                            <option value="jitsi" {{ $setting->value === 'jitsi' ? 'selected' : '' }}>Jitsi</option>
+                            <option value="livekit" {{ $setting->value === 'livekit' ? 'selected' : '' }}>LiveKit</option>
+                        </select>
                     @elseif($setting->type === 'integer')
                         <input type="number" name="settings[{{ $index }}][value]" value="{{ $setting->value }}" class="w-32 rounded-lg border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm">
                     @else
