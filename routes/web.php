@@ -305,6 +305,8 @@ Route::post('/classroom/join/t/{slug}/enter', [\App\Http\Controllers\ClassroomJo
 
 Route::get('/classroom/join/{code}', [\App\Http\Controllers\ClassroomJoinController::class, 'show'])->name('classroom.join')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/enter', [\App\Http\Controllers\ClassroomJoinController::class, 'enter'])->name('classroom.join.enter')->where('code', '[A-Za-z0-9]+');
+Route::post('/classroom/join/{code}/waiting-status', [\App\Http\Controllers\ClassroomJoinController::class, 'waitingStatus'])->name('classroom.join.waiting-status')->where('code', '[A-Za-z0-9]+');
+Route::post('/classroom/join/{code}/waiting-cancel', [\App\Http\Controllers\ClassroomJoinController::class, 'cancelWaiting'])->name('classroom.join.waiting-cancel')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/heartbeat', [\App\Http\Controllers\ClassroomJoinController::class, 'heartbeat'])->name('classroom.join.heartbeat')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/leave', [\App\Http\Controllers\ClassroomJoinController::class, 'leave'])->name('classroom.join.leave')->where('code', '[A-Za-z0-9]+');
 Route::post('/classroom/join/{code}/share-annotation', [\App\Http\Controllers\ClassroomJoinController::class, 'pushShareAnnotation'])
@@ -735,6 +737,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom/room/{meeting}/pip', [\App\Http\Controllers\Student\ClassroomController::class, 'roomPip'])->name('student.classroom.room.pip');
         Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('student.classroom.recording.upload-tab');
         Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('student.classroom.participant-whiteboard');
+        Route::get('/classroom/{meeting}/waiting-room', [\App\Http\Controllers\Student\ClassroomController::class, 'waitingRoomList'])->name('student.classroom.waiting-room');
+        Route::post('/classroom/{meeting}/waiting-room/{guest}/admit', [\App\Http\Controllers\Student\ClassroomController::class, 'admitWaitingGuest'])->name('student.classroom.waiting-room.admit');
+        Route::post('/classroom/{meeting}/waiting-room/{guest}/deny', [\App\Http\Controllers\Student\ClassroomController::class, 'denyWaitingGuest'])->name('student.classroom.waiting-room.deny');
         Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('student.classroom.share-annotations');
         Route::post('/classroom/{meeting}/share-annotations/clear', [\App\Http\Controllers\Student\ClassroomController::class, 'clearShareAnnotations'])->name('student.classroom.share-annotations.clear');
         Route::get('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardScene'])->name('student.classroom.whiteboard-scene');
@@ -1792,6 +1797,9 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/classroom/room/{meeting}/pip', [\App\Http\Controllers\Student\ClassroomController::class, 'roomPip'])->name('classroom.room.pip');
         Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('classroom.recording.upload-tab');
         Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('classroom.participant-whiteboard');
+        Route::get('/classroom/{meeting}/waiting-room', [\App\Http\Controllers\Student\ClassroomController::class, 'waitingRoomList'])->name('classroom.waiting-room');
+        Route::post('/classroom/{meeting}/waiting-room/{guest}/admit', [\App\Http\Controllers\Student\ClassroomController::class, 'admitWaitingGuest'])->name('classroom.waiting-room.admit');
+        Route::post('/classroom/{meeting}/waiting-room/{guest}/deny', [\App\Http\Controllers\Student\ClassroomController::class, 'denyWaitingGuest'])->name('classroom.waiting-room.deny');
         Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('classroom.share-annotations');
         Route::post('/classroom/{meeting}/share-annotations/clear', [\App\Http\Controllers\Student\ClassroomController::class, 'clearShareAnnotations'])->name('classroom.share-annotations.clear');
         Route::get('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardScene'])->name('classroom.whiteboard-scene');

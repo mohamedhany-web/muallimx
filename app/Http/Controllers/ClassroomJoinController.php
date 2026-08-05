@@ -4,15 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\ClassroomMeeting;
 use App\Models\ClassroomMeetingParticipant;
+use App\Models\ClassroomMeetingWaitingGuest;
 use App\Models\LiveSetting;
 use App\Models\User;
+use App\Services\ClassroomWaitingRoomService;
 use App\Services\ClassroomWhiteboardSceneService;
-use App\Services\LiveKitTokenService;
 use App\Services\SubscriptionLimitService;
 use App\Support\ShareAnnotationSanitizer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\RateLimiter;
 
 class ClassroomJoinController extends Controller
 {
@@ -184,6 +185,11 @@ class ClassroomJoinController extends Controller
     {
         $code = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
         $meeting = ClassroomMeeting::where('code', $code)->firstOrFail();
+        $waitingRoom = app(ClassroomWaitingRoomService::class);
+
+        if ($rateLimited = $this->joinRateLimitResponse($request, 'enter:'.$code)) {
+            return $rateLimited;
+        }
 
         if ($meeting->ended_at) {
             return response()->json([
@@ -192,11 +198,14 @@ class ClassroomJoinController extends Controller
             ], 422);
         }
 
+        $displayName = $waitingRoom->normalizeDisplayName($request);
+
         if (! $meeting->started_at) {
             return response()->json([
                 'ok' => false,
                 'message' => 'المعلم لم يبدأ الجلسة بعد.',
                 'waiting' => true,
+                'reason' => 'meeting_not_started',
             ], 422);
         }
 
@@ -207,81 +216,125 @@ class ClassroomJoinController extends Controller
             ], 422);
         }
 
-        $owner = $meeting->user;
-
-        $maxParticipants = (int) ($meeting->max_participants ?: 25);
-        if ($owner && ! $meeting->consultation_request_id) {
-            $limits = SubscriptionLimitService::limitsForUser($owner);
-            $maxParticipants = min($maxParticipants, (int) $limits['classroom_max_participants']);
-        }
-        $activeParticipants = $this->activeParticipantsCount($meeting->id);
-        if ($activeParticipants >= $maxParticipants) {
-            return response()->json([
-                'ok' => false,
-                'message' => 'تم الوصول للحد الأقصى للطلاب في هذا الاجتماع.',
-            ], 422);
-        }
-
-        $displayName = trim((string) $request->input('display_name', 'ضيف'));
-        if ($displayName === '') {
-            $displayName = 'ضيف';
-        }
-        $displayName = mb_substr($displayName, 0, 120);
-
-        $token = Str::random(48);
-        ClassroomMeetingParticipant::create([
-            'classroom_meeting_id' => $meeting->id,
-            'token' => $token,
-            'display_name' => $displayName,
-            'ip_address' => $request->ip(),
-            'user_agent' => substr((string) $request->userAgent(), 0, 255),
-            'joined_at' => now(),
-            'last_seen_at' => now(),
-        ]);
-
-        $newCount = $this->activeParticipantsCount($meeting->id);
-        if ($newCount > (int) ($meeting->participants_peak ?? 0)) {
-            $meeting->update(['participants_peak' => $newCount]);
-        }
-
-        $payload = array_merge([
-            'ok' => true,
-            'token' => $token,
-            'active_participants' => $newCount,
-            'max_participants' => $maxParticipants,
-            'live_provider' => $meeting->liveProvider(),
-        ], $meeting->guestPermissionsPayload());
-
-        if ($meeting->usesLiveKit()) {
-            $livekit = app(LiveKitTokenService::class);
-            if (! $livekit->isConfigured()) {
+        if (! $meeting->waitingRoomEnabled()) {
+            try {
+                $payload = $waitingRoom->buildGuestEnterPayload(
+                    $meeting,
+                    $displayName,
+                    $request->ip(),
+                    (string) $request->userAgent()
+                );
+            } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
                 return response()->json([
                     'ok' => false,
-                    'message' => 'جلسة LiveKit لكن المفاتيح غير مضبوطة على التطبيق.',
-                ], 503);
+                    'message' => $e->getMessage() ?: 'لا يمكن الانضمام.',
+                ], $e->getStatusCode());
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => $e->getMessage() ?: 'لا يمكن الانضمام.',
+                ], 422);
             }
-            $sources = ['camera', 'microphone'];
-            if ($meeting->allowsParticipantScreenShare()) {
-                $sources[] = 'screen_share';
-            }
-            $payload['livekit'] = [
-                'url' => $livekit->wsUrl(),
-                'token' => $livekit->createToken(
-                    $meeting->room_name,
-                    'guest-'.substr(hash('sha256', $token), 0, 16),
-                    $displayName,
-                    [
-                        'canPublish' => true,
-                        'canSubscribe' => true,
-                        'canPublishData' => true,
-                        'canPublishSources' => $sources,
-                    ]
-                ),
-                'room' => $meeting->room_name,
-            ];
+
+            return response()->json($payload);
         }
 
-        return response()->json($payload);
+        $waitingToken = trim((string) $request->input('waiting_token', ''));
+        if ($waitingToken !== '') {
+            $existing = ClassroomMeetingWaitingGuest::query()
+                ->where('classroom_meeting_id', $meeting->id)
+                ->where('waiting_token', $waitingToken)
+                ->first();
+
+            if ($existing) {
+                $statusPayload = $waitingRoom->pollWaitingStatus($meeting, $waitingToken);
+                if (! empty($statusPayload['ok'])) {
+                    return response()->json($statusPayload);
+                }
+
+                return response()->json($statusPayload, ! empty($statusPayload['invalid']) ? 404 : 422);
+            }
+        }
+
+        $guest = $waitingRoom->createWaitingGuest(
+            $meeting,
+            $displayName,
+            $request->ip(),
+            (string) $request->userAgent()
+        );
+
+        return response()->json([
+            'ok' => false,
+            'waiting' => true,
+            'reason' => 'host_admit_pending',
+            'waiting_token' => $guest->waiting_token,
+            'message' => 'بانتظار قبول المضيف.',
+        ], 422);
+    }
+
+    public function waitingStatus(Request $request, string $code)
+    {
+        $code = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
+        $meeting = ClassroomMeeting::where('code', $code)->firstOrFail();
+
+        if ($rateLimited = $this->joinRateLimitResponse($request, 'wait:'.$code)) {
+            return $rateLimited;
+        }
+
+        $waitingToken = trim((string) $request->input('waiting_token', ''));
+        if ($waitingToken === '') {
+            return response()->json(['ok' => false, 'message' => 'رمز الانتظار مطلوب.'], 422);
+        }
+
+        $payload = app(ClassroomWaitingRoomService::class)->pollWaitingStatus($meeting, $waitingToken);
+        if (! empty($payload['ok'])) {
+            return response()->json($payload);
+        }
+
+        $status = 422;
+        if (! empty($payload['invalid'])) {
+            $status = 404;
+        }
+
+        return response()->json($payload, $status);
+    }
+
+    public function cancelWaiting(Request $request, string $code)
+    {
+        $code = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $code));
+        $meeting = ClassroomMeeting::where('code', $code)->firstOrFail();
+
+        $waitingToken = trim((string) $request->input('waiting_token', ''));
+        if ($waitingToken === '') {
+            return response()->json(['ok' => false, 'message' => 'رمز الانتظار مطلوب.'], 422);
+        }
+
+        $guest = ClassroomMeetingWaitingGuest::query()
+            ->where('classroom_meeting_id', $meeting->id)
+            ->where('waiting_token', $waitingToken)
+            ->first();
+
+        if (! $guest) {
+            return response()->json(['ok' => false, 'message' => 'طلب الانتظار غير موجود.'], 404);
+        }
+
+        app(ClassroomWaitingRoomService::class)->cancelWaitingGuest($guest);
+
+        return response()->json(['ok' => true, 'message' => 'تم إلغاء طلب الانتظار.']);
+    }
+
+    private function joinRateLimitResponse(Request $request, string $suffix): ?\Illuminate\Http\JsonResponse
+    {
+        $key = 'classroom_join:'.sha1($request->ip().'|'.$suffix);
+        if (RateLimiter::tooManyAttempts($key, 90)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة.',
+            ], 429);
+        }
+        RateLimiter::hit($key, 60);
+
+        return null;
     }
 
     public function heartbeat(Request $request, string $code)
@@ -477,10 +530,6 @@ class ClassroomJoinController extends Controller
 
     private function activeParticipantsCount(int $meetingId): int
     {
-        return ClassroomMeetingParticipant::query()
-            ->where('classroom_meeting_id', $meetingId)
-            ->whereNull('left_at')
-            ->where('last_seen_at', '>=', now()->subMinutes(2))
-            ->count();
+        return app(ClassroomWaitingRoomService::class)->activeParticipantsCount($meetingId);
     }
 }

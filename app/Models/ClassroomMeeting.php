@@ -66,6 +66,17 @@ class ClassroomMeeting extends Model
         return $this->hasMany(ClassroomMeetingParticipant::class, 'classroom_meeting_id');
     }
 
+    public function waitingGuests(): HasMany
+    {
+        return $this->hasMany(ClassroomMeetingWaitingGuest::class, 'classroom_meeting_id');
+    }
+
+    /** غرفة الانتظار الفردية (قبول/رفض) — افتراضيًا غير مفعّلة. */
+    public function waitingRoomEnabled(): bool
+    {
+        return (bool) data_get($this->settings, 'waiting_room_enabled', false);
+    }
+
     /** تقارير نصية عبر n8n مرتبطة بالتسجيل/التقرير الصوتي */
     public function aiReports(): HasMany
     {
@@ -123,6 +134,7 @@ class ClassroomMeeting extends Model
     public function guestPermissionsPayload(): array
     {
         return [
+            'waiting_room_enabled' => $this->waitingRoomEnabled(),
             'allow_participant_whiteboard' => $this->allowsParticipantWhiteboard(),
             'allow_participant_screen_share' => $this->allowsParticipantScreenShare(),
             'allow_participant_chat' => $this->allowsParticipantChat(),

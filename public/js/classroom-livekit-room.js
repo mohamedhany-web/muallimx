@@ -38,6 +38,133 @@
     }, ms || 2400);
   }
 
+  function formatBytes(bytes) {
+    var n = Number(bytes) || 0;
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return (n / 1024).toFixed(0) + ' KB';
+    if (n < 1073741824) return (n / 1048576).toFixed(1) + ' MB';
+    return (n / 1073741824).toFixed(2) + ' GB';
+  }
+
+  var uploadModal = {
+    ensure: function () {
+      var el = $('mx-lk-upload-modal');
+      if (el) return el;
+      el = document.createElement('div');
+      el.id = 'mx-lk-upload-modal';
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-modal', 'true');
+      el.innerHTML =
+        '<div class="mx-lk-up-card">' +
+        '<div class="mx-lk-up-icon" id="mx-lk-up-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>' +
+        '<div class="mx-lk-up-title" id="mx-lk-up-title">جاري رفع التسجيل</div>' +
+        '<div class="mx-lk-up-sub" id="mx-lk-up-sub">يرجى عدم إغلاق الصفحة حتى اكتمال الرفع.</div>' +
+        '<div class="mx-lk-up-bar"><div class="mx-lk-up-fill" id="mx-lk-up-fill"></div></div>' +
+        '<div class="mx-lk-up-meta"><span id="mx-lk-up-percent">0%</span><span id="mx-lk-up-size"></span></div>' +
+        '<button type="button" class="mx-lk-up-close" id="mx-lk-up-close">إغلاق</button>' +
+        '</div>';
+      document.body.appendChild(el);
+      var closeBtn = $('mx-lk-up-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function () {
+          uploadModal.hide();
+        });
+      }
+      return el;
+    },
+    open: function (title, sub) {
+      var el = this.ensure();
+      el.classList.remove('is-error', 'is-done');
+      el.classList.add('is-open', 'is-indeterminate');
+      var t = $('mx-lk-up-title');
+      if (t) t.textContent = title || 'جاري رفع التسجيل';
+      var s = $('mx-lk-up-sub');
+      if (s) s.textContent = sub || 'يرجى عدم إغلاق الصفحة حتى اكتمال الرفع.';
+      var icon = $('mx-lk-up-icon');
+      if (icon) icon.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i>';
+      var fill = $('mx-lk-up-fill');
+      if (fill) fill.style.width = '0%';
+      var pct = $('mx-lk-up-percent');
+      if (pct) pct.textContent = '—';
+      var size = $('mx-lk-up-size');
+      if (size) size.textContent = '';
+    },
+    status: function (sub) {
+      var s = $('mx-lk-up-sub');
+      if (s) s.textContent = sub;
+    },
+    progress: function (percent, loaded, total) {
+      var el = $('mx-lk-upload-modal');
+      if (!el) return;
+      var p = Math.max(0, Math.min(100, Math.round(percent)));
+      el.classList.remove('is-indeterminate');
+      var fill = $('mx-lk-up-fill');
+      if (fill) fill.style.width = p + '%';
+      var pct = $('mx-lk-up-percent');
+      if (pct) pct.textContent = p + '%';
+      var size = $('mx-lk-up-size');
+      if (size && total) size.textContent = formatBytes(loaded) + ' / ' + formatBytes(total);
+    },
+    indeterminate: function (sub) {
+      var el = $('mx-lk-upload-modal');
+      if (!el) return;
+      el.classList.add('is-indeterminate');
+      var pct = $('mx-lk-up-percent');
+      if (pct) pct.textContent = '—';
+      if (sub) this.status(sub);
+    },
+    done: function (title, sub) {
+      var el = this.ensure();
+      el.classList.remove('is-indeterminate', 'is-error');
+      el.classList.add('is-open', 'is-done');
+      var t = $('mx-lk-up-title');
+      if (t) t.textContent = title || 'تم رفع التسجيل';
+      var s = $('mx-lk-up-sub');
+      if (s) s.textContent = sub || 'يمكنك الآن متابعة الجلسة.';
+      var icon = $('mx-lk-up-icon');
+      if (icon) icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+      var fill = $('mx-lk-up-fill');
+      if (fill) fill.style.width = '100%';
+      var pct = $('mx-lk-up-percent');
+      if (pct) pct.textContent = '100%';
+      clearTimeout(uploadModal._t);
+      uploadModal._t = setTimeout(function () {
+        uploadModal.hide();
+      }, 4000);
+    },
+    fail: function (message) {
+      var el = this.ensure();
+      el.classList.remove('is-indeterminate', 'is-done');
+      el.classList.add('is-open', 'is-error');
+      var t = $('mx-lk-up-title');
+      if (t) t.textContent = 'تعذر رفع التسجيل';
+      var s = $('mx-lk-up-sub');
+      if (s) s.textContent = message || 'حدث خطأ غير متوقع أثناء الرفع.';
+      var icon = $('mx-lk-up-icon');
+      if (icon) icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+    },
+    hide: function () {
+      var el = $('mx-lk-upload-modal');
+      if (!el) return;
+      clearTimeout(uploadModal._t);
+      el.classList.remove('is-open', 'is-indeterminate', 'is-done', 'is-error');
+    },
+  };
+
+  function warnBeforeUnload(ev) {
+    ev.preventDefault();
+    ev.returnValue = '';
+    return '';
+  }
+
+  function beginUploadGuard() {
+    window.addEventListener('beforeunload', warnBeforeUnload);
+  }
+
+  function endUploadGuard() {
+    window.removeEventListener('beforeunload', warnBeforeUnload);
+  }
+
   function qualityLabel(q, ConnectionQuality) {
     if (!ConnectionQuality) return '—';
     if (q === ConnectionQuality.Excellent) return 'ممتاز';
@@ -81,6 +208,7 @@
 
     var perms = Object.assign(
       {
+        waiting_room_enabled: false,
         allow_participant_whiteboard: true,
         allow_participant_screen_share: true,
         allow_participant_chat: true,
@@ -122,6 +250,141 @@
     var krispReady = false;
     var activeSpeakerId = '';
     var REACTIONS = ['👍', '👏', '❤️', '😂', '😮', '🎉', '🔥', '✋'];
+    var waitingRoomPollTimer = null;
+    var participantFloatMode = 'grid';
+    var participantFloatWindow = null;
+    var participantFloatCanvasTimer = null;
+    var participantFloatCanvasVideo = null;
+    var participantFloatCanvasEl = null;
+    var participantPipOpen = false;
+    var participantPipManual = false;
+    var participantPipAutoOpened = false;
+    var participantPipSurface = 'none';
+    var participantPipRefreshPending = false;
+    var participantFloatCanvasDirty = true;
+    var participantFloatCanvasLastSig = '';
+
+    function waitingRoomBaseUrl() {
+      return (config.waitingRoomListUrl || '').replace(/\/$/, '');
+    }
+
+    function updateWaitingBadge(count) {
+      var badge = $('mx-waiting-badge');
+      var countEl = $('mx-waiting-count');
+      var n = Math.max(0, parseInt(count, 10) || 0);
+      if (countEl) countEl.textContent = String(n);
+      if (!badge) return;
+      if (n > 0) {
+        badge.textContent = n > 99 ? '99+' : String(n);
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function renderWaitingGuests(guests) {
+      var list = $('mx-waiting-room-list');
+      var empty = $('mx-waiting-room-empty');
+      if (!list) return;
+      list.innerHTML = '';
+      var items = Array.isArray(guests) ? guests : [];
+      if (empty) empty.classList.toggle('hidden', items.length > 0);
+      items.forEach(function (guest) {
+        var row = document.createElement('div');
+        row.className = 'mx-waiting-guest-row';
+        var name = document.createElement('span');
+        name.className = 'mx-waiting-guest-name';
+        name.textContent = guest.display_name || 'ضيف';
+        var actions = document.createElement('div');
+        actions.className = 'mx-waiting-guest-actions';
+        var admit = document.createElement('button');
+        admit.type = 'button';
+        admit.className = 'mx-waiting-btn is-admit';
+        admit.textContent = 'قبول';
+        admit.addEventListener('click', function () {
+          actOnWaitingGuest(guest.id, 'admit');
+        });
+        var deny = document.createElement('button');
+        deny.type = 'button';
+        deny.className = 'mx-waiting-btn is-deny';
+        deny.textContent = 'رفض';
+        deny.addEventListener('click', function () {
+          actOnWaitingGuest(guest.id, 'deny');
+        });
+        actions.appendChild(admit);
+        actions.appendChild(deny);
+        row.appendChild(name);
+        row.appendChild(actions);
+        list.appendChild(row);
+      });
+    }
+
+    function actOnWaitingGuest(guestId, action) {
+      var base = waitingRoomBaseUrl();
+      if (!base || !guestId) return;
+      var url = base + '/' + guestId + '/' + (action === 'admit' ? 'admit' : 'deny');
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': config.csrfToken || '',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({}),
+      })
+        .then(function (r) {
+          return r.json().then(function (d) {
+            return { ok: r.ok, data: d };
+          });
+        })
+        .then(function (res) {
+          if (!res.ok) throw new Error((res.data && res.data.message) || 'فشل تنفيذ الإجراء');
+          updateWaitingBadge(res.data.pending_count);
+          return pollWaitingRoom();
+        })
+        .catch(function (e) {
+          toast(e.message || 'تعذر تحديث غرفة الانتظار');
+        });
+    }
+
+    function pollWaitingRoom() {
+      var url = config.waitingRoomListUrl;
+      if (!url || !isHost) return Promise.resolve();
+      return fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      })
+        .then(function (r) {
+          return r.json();
+        })
+        .then(function (data) {
+          if (!data.ok) return;
+          var enabled = !!data.waiting_room_enabled;
+          var section = $('mx-waiting-room-section');
+          if (section) section.classList.toggle('hidden', !enabled);
+          var toggle = document.querySelector('[data-perm-key="waiting_room_enabled"]');
+          if (toggle) toggle.checked = enabled;
+          updateWaitingBadge(data.pending_count);
+          renderWaitingGuests(data.guests);
+        })
+        .catch(function () {});
+    }
+
+    function startWaitingRoomPoll() {
+      if (waitingRoomPollTimer) return;
+      pollWaitingRoom();
+      waitingRoomPollTimer = setInterval(pollWaitingRoom, 3000);
+    }
+
+    function stopWaitingRoomPoll() {
+      if (waitingRoomPollTimer) {
+        clearInterval(waitingRoomPollTimer);
+        waitingRoomPollTimer = null;
+      }
+    }
 
     function cleanMicConstraints() {
       if (window.MxClassroomNoiseIsolation && typeof window.MxClassroomNoiseIsolation.getCleanMicAudioConstraints === 'function') {
@@ -269,20 +532,629 @@
       toast(on ? 'وضع التركيز' : 'إظهار الأدوات');
     }
 
-    function togglePipPanel() {
-      var panel = $('mx-lk-people-panel');
-      if (!panel) return;
-      panel.classList.toggle('hidden');
-      panel.classList.toggle('lk-pip-float', !panel.classList.contains('hidden'));
-      var btn = $('mx-ml-btn-pip');
-      if (btn) btn.classList.toggle('is-active', !panel.classList.contains('hidden'));
-      if (!panel.classList.contains('hidden')) renderPeople();
+    function participantCameraTrack(participant) {
+      if (!participant || typeof participant.getTrackPublication !== 'function') return null;
+      var publication = participant.getTrackPublication(Track.Source.Camera);
+      return publication && publication.track && publication.track.mediaStreamTrack
+        ? publication.track.mediaStreamTrack
+        : null;
+    }
+
+    function participantMicOn(participant) {
+      if (!participant || typeof participant.getTrackPublication !== 'function') return false;
+      var publication = participant.getTrackPublication(Track.Source.Microphone);
+      return !!(publication && publication.track && !publication.isMuted && !publication.track.isMuted);
+    }
+
+    function participantFloatParticipants() {
+      var all = [room.localParticipant].concat(Array.from(room.remoteParticipants.values()));
+      if (participantFloatMode === 'speaker' && activeSpeakerId) {
+        all.sort(function (a, b) {
+          if (a.identity === activeSpeakerId) return -1;
+          if (b.identity === activeSpeakerId) return 1;
+          return 0;
+        });
+      }
+      return all;
+    }
+
+    function participantFloatSignature() {
+      return participantFloatParticipants()
+        .map(function (p) {
+          var cam = participantCameraTrack(p);
+          return [
+            p.identity,
+            p.name || '',
+            participantMicOn(p) ? '1' : '0',
+            raisedHands.has(p.identity) ? '1' : '0',
+            p.identity === activeSpeakerId ? '1' : '0',
+            cam && cam.readyState === 'live' ? '1' : '0',
+          ].join(':');
+        })
+        .join('|');
+    }
+
+    function isParticipantPipOpen() {
+      if (participantPipSurface === 'document') {
+        return !!(participantFloatWindow && !participantFloatWindow.closed);
+      }
+      if (participantPipSurface === 'canvas') {
+        return !!(
+          participantFloatCanvasVideo &&
+          document.pictureInPictureElement === participantFloatCanvasVideo
+        );
+      }
+      if (participantPipSurface === 'inline') {
+        var root = $('mx-participant-float');
+        return !!(root && root.classList.contains('is-open'));
+      }
+      return false;
+    }
+
+    function paintPipButtons() {
+      var open = isParticipantPipOpen();
+      participantPipOpen = open;
+      ['mx-ml-btn-pip', 'mx-sf-people'].forEach(function (id) {
+        var btn = $(id);
+        if (!btn) return;
+        btn.classList.toggle('is-active', open);
+        btn.setAttribute('aria-pressed', open ? 'true' : 'false');
+      });
+    }
+
+    function scheduleParticipantPipRefresh() {
+      if (!isParticipantPipOpen() && !participantPipOpen) return;
+      participantFloatCanvasDirty = true;
+      if (participantPipRefreshPending) return;
+      participantPipRefreshPending = true;
+      requestAnimationFrame(function () {
+        participantPipRefreshPending = false;
+        if (!isParticipantPipOpen()) return;
+        renderParticipantFloat();
+        paintPipControlBar();
+      });
+    }
+
+    function showPipInvite() {
+      if (!shareOn) return;
+      var el = $('mx-pip-invite');
+      if (!el) {
+        el = document.createElement('button');
+        el.id = 'mx-pip-invite';
+        el.type = 'button';
+        el.className = 'mx-pip-invite';
+        el.setAttribute('aria-label', 'فتح نافذة المشاركين العائمة');
+        el.innerHTML = '<i class="fas fa-users" aria-hidden="true"></i><span>اضغط لفتح نافذة المشاركين</span>';
+        el.addEventListener('click', function () {
+          openParticipantPip({ manual: true }).catch(function (e) {
+            toast(e.message || 'تعذر فتح النافذة');
+          });
+        });
+        document.body.appendChild(el);
+      }
+      el.classList.add('is-visible');
+    }
+
+    function hidePipInvite() {
+      var el = $('mx-pip-invite');
+      if (el) el.classList.remove('is-visible');
+    }
+
+    function createParticipantFloatCard(doc, participant) {
+      var card = doc.createElement('div');
+      card.className = 'mx-pfloat-card';
+      if (participant.identity === activeSpeakerId) card.classList.add('is-speaking');
+      if (raisedHands.has(participant.identity)) card.classList.add('is-hand');
+      var track = participantCameraTrack(participant);
+      if (track && track.readyState === 'live') {
+        var video = doc.createElement('video');
+        video.autoplay = true;
+        video.playsInline = true;
+        video.muted = true;
+        video.srcObject = new MediaStream([track]);
+        video.play().catch(function () {});
+        card.appendChild(video);
+      } else {
+        var avatar = doc.createElement('div');
+        avatar.className = 'mx-pfloat-avatar';
+        var displayName = participant.name || participant.identity || 'مشارك';
+        avatar.textContent = displayName.trim().charAt(0).toUpperCase() || '؟';
+        card.appendChild(avatar);
+      }
+      var footer = doc.createElement('div');
+      footer.className = 'mx-pfloat-card-footer';
+      var name = doc.createElement('span');
+      name.className = 'mx-pfloat-name';
+      name.textContent = (participant.name || participant.identity || 'مشارك') + (participant.isLocal ? ' · أنت' : '');
+      footer.appendChild(name);
+      var badges = doc.createElement('span');
+      badges.className = 'mx-pfloat-badges';
+      var mic = doc.createElement('i');
+      mic.className = participantMicOn(participant)
+        ? 'fas fa-microphone'
+        : 'fas fa-microphone-slash is-muted';
+      mic.setAttribute('aria-hidden', 'true');
+      badges.appendChild(mic);
+      if (raisedHands.has(participant.identity)) {
+        var hand = doc.createElement('i');
+        hand.className = 'fas fa-hand-paper mx-pfloat-hand';
+        hand.setAttribute('aria-hidden', 'true');
+        badges.appendChild(hand);
+      }
+      footer.appendChild(badges);
+      card.appendChild(footer);
+      return card;
+    }
+
+    function renderParticipantFloatInto(doc, root) {
+      if (!doc || !root) return;
+      var grid = root.querySelector('.mx-pfloat-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      var participants = participantFloatParticipants();
+      grid.dataset.count = String(participants.length);
+      grid.classList.toggle('is-speaker', participantFloatMode === 'speaker');
+      participants.forEach(function (participant) {
+        grid.appendChild(createParticipantFloatCard(doc, participant));
+      });
+      var count = root.querySelector('.mx-pfloat-count');
+      if (count) count.textContent = String(participants.length);
+      var modeIcon = root.querySelector('[data-pfloat-action="layout"] i, [data-pfloat-control="layout"] i');
+      if (modeIcon) {
+        modeIcon.className = participantFloatMode === 'grid' ? 'fas fa-grip' : 'fas fa-user-large';
+      }
+      participantFloatCanvasDirty = true;
+    }
+
+    function participantFloatMarkup(options) {
+      options = options || {};
+      var withControls = !!options.withControls;
+      var hidePopout = !!options.hidePopout;
+      var toolbar = withControls
+        ? '<div class="mx-pfloat-toolbar">' +
+          '<button type="button" data-pfloat-control="mic" title="ميكروفون" aria-label="ميكروفون"><i class="fas fa-microphone"></i></button>' +
+          '<button type="button" data-pfloat-control="cam" title="كاميرا" aria-label="كاميرا"><i class="fas fa-video"></i></button>' +
+          '<button type="button" data-pfloat-control="stop-share" class="is-danger" title="إيقاف الشير" aria-label="إيقاف الشير"><i class="fas fa-desktop"></i></button>' +
+          '<button type="button" data-pfloat-control="layout" title="شبكة / متحدث" aria-label="تبديل العرض"><i class="fas fa-grip"></i></button>' +
+          '</div>'
+        : '';
+      var popoutBtn = hidePopout
+        ? ''
+        : '<button type="button" data-pfloat-action="popout" title="نافذة خارج الصفحة" aria-label="نافذة خارج الصفحة"><i class="fas fa-up-right-from-square"></i></button>';
+      return (
+        '<div class="mx-pfloat-head">' +
+        '<div class="mx-pfloat-title"><span class="mx-pfloat-live"></span><strong>المشاركون</strong><span class="mx-pfloat-count">0</span></div>' +
+        '<div class="mx-pfloat-actions">' +
+        '<button type="button" data-pfloat-action="layout" title="شبكة / متحدث" aria-label="تبديل العرض"><i class="fas fa-grip"></i></button>' +
+        popoutBtn +
+        '<button type="button" data-pfloat-action="minimize" title="تصغير" aria-label="تصغير"><i class="fas fa-minus"></i></button>' +
+        '<button type="button" data-pfloat-action="close" title="إغلاق" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>' +
+        '</div></div>' +
+        toolbar +
+        '<div class="mx-pfloat-grid"></div>'
+      );
+    }
+
+    function paintPipControlBar() {
+      function update(doc, root) {
+        if (!root) return;
+        var micBtn = root.querySelector('[data-pfloat-control="mic"] i');
+        if (micBtn) {
+          micBtn.className = micOn ? 'fas fa-microphone' : 'fas fa-microphone-slash is-muted';
+        }
+        var camBtn = root.querySelector('[data-pfloat-control="cam"] i');
+        if (camBtn) {
+          camBtn.className = camOn ? 'fas fa-video' : 'fas fa-video-slash is-muted';
+        }
+        var shareBtn = root.querySelector('[data-pfloat-control="stop-share"]');
+        if (shareBtn) shareBtn.classList.toggle('hidden', !shareOn);
+      }
+      update(document, $('mx-participant-float'));
+      if (participantFloatWindow && !participantFloatWindow.closed) {
+        update(
+          participantFloatWindow.document,
+          participantFloatWindow.document.getElementById('mx-participant-popout')
+        );
+      }
+    }
+
+    function wireParticipantFloatControls(root) {
+      if (!root || root.dataset.controlsReady === '1') return;
+      root.dataset.controlsReady = '1';
+      root.querySelectorAll('[data-pfloat-control]').forEach(function (button) {
+        button.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          var action = button.getAttribute('data-pfloat-control');
+          if (action === 'mic') toggleMic().catch(function () {});
+          else if (action === 'cam') toggleCam().catch(function () {});
+          else if (action === 'stop-share') stopScreenShare().catch(function () {});
+          else if (action === 'layout') {
+            participantFloatMode = participantFloatMode === 'grid' ? 'speaker' : 'grid';
+            renderParticipantFloat();
+          }
+          scheduleParticipantPipRefresh();
+        });
+      });
+    }
+
+    function wireParticipantFloatActions(root, isPopout) {
+      if (!root) return;
+      wireParticipantFloatControls(root);
+      root.querySelectorAll('[data-pfloat-action]').forEach(function (button) {
+        button.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          var action = button.getAttribute('data-pfloat-action');
+          if (action === 'layout') {
+            participantFloatMode = participantFloatMode === 'grid' ? 'speaker' : 'grid';
+            renderParticipantFloat();
+          } else if (action === 'popout') {
+            openParticipantPip({ manual: true, preferDocument: true }).catch(function (e) {
+              toast(e.message || 'تعذر فتح النافذة الخارجية');
+            });
+          } else if (action === 'minimize') {
+            root.classList.toggle('is-minimized');
+            var icon = button.querySelector('i');
+            if (icon) icon.className = root.classList.contains('is-minimized') ? 'fas fa-expand' : 'fas fa-minus';
+          } else if (action === 'close') {
+            closeParticipantPip();
+          }
+        });
+      });
+    }
+
+    function makeParticipantFloatDraggable(root) {
+      var head = root && root.querySelector('.mx-pfloat-head');
+      if (!root || !head || root.dataset.dragReady === '1') return;
+      root.dataset.dragReady = '1';
+      head.addEventListener('pointerdown', function (ev) {
+        if (ev.target.closest('button')) return;
+        var rect = root.getBoundingClientRect();
+        var startX = ev.clientX;
+        var startY = ev.clientY;
+        var left = rect.left;
+        var top = rect.top;
+        root.style.right = 'auto';
+        root.style.bottom = 'auto';
+        root.setPointerCapture(ev.pointerId);
+        function move(moveEv) {
+          var nextLeft = Math.max(6, Math.min(window.innerWidth - root.offsetWidth - 6, left + moveEv.clientX - startX));
+          var nextTop = Math.max(6, Math.min(window.innerHeight - root.offsetHeight - 6, top + moveEv.clientY - startY));
+          root.style.left = nextLeft + 'px';
+          root.style.top = nextTop + 'px';
+        }
+        function up() {
+          root.removeEventListener('pointermove', move);
+          root.removeEventListener('pointerup', up);
+          root.removeEventListener('pointercancel', up);
+        }
+        root.addEventListener('pointermove', move);
+        root.addEventListener('pointerup', up);
+        root.addEventListener('pointercancel', up);
+      });
+    }
+
+    function ensureParticipantFloat() {
+      var root = $('mx-participant-float');
+      if (root) return root;
+      root = document.createElement('section');
+      root.id = 'mx-participant-float';
+      root.setAttribute('dir', 'rtl');
+      root.setAttribute('aria-label', 'نافذة المشاركين العائمة');
+      root.innerHTML = participantFloatMarkup({ withControls: true });
+      document.body.appendChild(root);
+      wireParticipantFloatActions(root, false);
+      makeParticipantFloatDraggable(root);
+      return root;
+    }
+
+    function renderParticipantFloat() {
+      var root = $('mx-participant-float');
+      if (root) renderParticipantFloatInto(document, root);
+      if (participantFloatWindow && !participantFloatWindow.closed) {
+        var pipRoot = participantFloatWindow.document.getElementById('mx-participant-popout');
+        if (pipRoot) renderParticipantFloatInto(participantFloatWindow.document, pipRoot);
+      }
+      paintPipControlBar();
+    }
+
+    function openParticipantFloat() {
+      var root = ensureParticipantFloat();
+      root.classList.add('is-open');
+      participantPipSurface = 'inline';
+      renderParticipantFloat();
+      paintPipButtons();
+    }
+
+    function closeParticipantFloatInline() {
+      var root = $('mx-participant-float');
+      if (root) root.classList.remove('is-open');
+      if (participantPipSurface === 'inline') participantPipSurface = 'none';
+    }
+
+    function closeParticipantPip(opts) {
+      opts = opts || {};
+      if (opts.onlyAuto && participantPipManual) return;
+      closeParticipantFloatInline();
+      if (participantFloatWindow && !participantFloatWindow.closed) {
+        try {
+          participantFloatWindow.close();
+        } catch (e) {}
+      }
+      participantFloatWindow = null;
+      stopCanvasPictureInPicture();
+      participantPipOpen = false;
+      participantPipManual = false;
+      participantPipAutoOpened = false;
+      participantPipSurface = 'none';
+      hidePipInvite();
+      paintPipButtons();
+    }
+
+    function participantPopoutCss() {
+      return (
+        'html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07101f;color:#fff;font-family:Arial,sans-serif}' +
+        '#mx-participant-popout{display:flex;flex-direction:column;width:100%;height:100%}' +
+        '.mx-pfloat-head{height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#0f1c30;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}' +
+        '.mx-pfloat-title,.mx-pfloat-actions{display:flex;align-items:center;gap:7px}.mx-pfloat-title{font-size:12px}.mx-pfloat-count{background:#263750;padding:2px 7px;border-radius:10px}' +
+        '.mx-pfloat-live{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.12)}' +
+        '.mx-pfloat-actions button{width:29px;height:29px;border:0;border-radius:8px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}' +
+        '.mx-pfloat-toolbar{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px 8px;background:#0a1528;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}' +
+        '.mx-pfloat-toolbar button{width:34px;height:34px;border:0;border-radius:9px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer}' +
+        '.mx-pfloat-toolbar button.is-danger{background:rgba(253,0,0,.22);color:#fca5a5}' +
+        '.mx-pfloat-toolbar button.hidden{display:none}' +
+        '.mx-pfloat-grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding:6px;overflow:auto}' +
+        '.mx-pfloat-grid[data-count="1"]{grid-template-columns:1fr}' +
+        '.mx-pfloat-grid[data-count="3"],.mx-pfloat-grid[data-count="5"],.mx-pfloat-grid[data-count="6"]{grid-template-columns:repeat(3,minmax(0,1fr))}' +
+        '.mx-pfloat-grid.is-speaker .mx-pfloat-card:first-child{grid-column:1/-1;min-height:55%}' +
+        '.mx-pfloat-card{position:relative;min-height:80px;overflow:hidden;border-radius:10px;background:#14243b;border:1px solid rgba(255,255,255,.08)}' +
+        '.mx-pfloat-card.is-speaking{border-color:#22c55e;box-shadow:inset 0 0 0 2px #22c55e}' +
+        '.mx-pfloat-card.is-hand .mx-pfloat-hand{color:#fbbf24}' +
+        '.mx-pfloat-card video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}' +
+        '.mx-pfloat-avatar{position:absolute;inset:0;display:grid;place-items:center;font-size:28px;font-weight:800;color:#bfdbfe;background:linear-gradient(145deg,#1e3a5f,#172554)}' +
+        '.mx-pfloat-card-footer{position:absolute;inset:auto 0 0;display:flex;justify-content:space-between;align-items:center;gap:5px;padding:18px 7px 6px;background:linear-gradient(transparent,rgba(2,6,23,.88));font-size:10px}' +
+        '.mx-pfloat-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}' +
+        '.mx-pfloat-badges{display:flex;align-items:center;gap:4px;flex-shrink:0}' +
+        '.is-muted{color:#f87171}.mx-pfloat-hand{color:#fbbf24}' +
+        '.is-minimized .mx-pfloat-grid,.is-minimized .mx-pfloat-toolbar{display:none}.is-minimized{height:42px!important}'
+      );
+    }
+
+    async function openParticipantDocumentPip() {
+      if (participantFloatWindow && !participantFloatWindow.closed) {
+        participantFloatWindow.focus();
+        participantPipSurface = 'document';
+        return;
+      }
+      participantFloatWindow = await window.documentPictureInPicture.requestWindow({ width: 460, height: 360 });
+      var doc = participantFloatWindow.document;
+      doc.title = 'مشاركو Muallimx';
+      var style = doc.createElement('style');
+      style.textContent = participantPopoutCss();
+      doc.head.appendChild(style);
+      var root = doc.createElement('section');
+      root.id = 'mx-participant-popout';
+      root.setAttribute('dir', 'rtl');
+      root.innerHTML = participantFloatMarkup({ withControls: true, hidePopout: true });
+      doc.body.appendChild(root);
+      wireParticipantFloatActions(root, true);
+      participantFloatWindow.addEventListener('pagehide', function () {
+        participantFloatWindow = null;
+        if (participantPipSurface === 'document') {
+          participantPipSurface = 'none';
+          participantPipOpen = false;
+          if (!participantPipManual) participantPipAutoOpened = false;
+          paintPipButtons();
+        }
+      });
+      renderParticipantFloatInto(doc, root);
+      paintPipControlBar();
+      participantPipSurface = 'document';
+    }
+
+    async function openParticipantPip(opts) {
+      opts = opts || {};
+      var manual = opts.manual !== false;
+      if (isParticipantPipOpen()) {
+        paintPipButtons();
+        return true;
+      }
+      if (
+        opts.preferDocument !== false &&
+        window.documentPictureInPicture &&
+        typeof window.documentPictureInPicture.requestWindow === 'function'
+      ) {
+        try {
+          await openParticipantDocumentPip();
+          participantPipOpen = true;
+          participantPipManual = manual;
+          participantPipAutoOpened = !manual;
+          hidePipInvite();
+          paintPipButtons();
+          return true;
+        } catch (e) {
+          if (manual) {
+            /* fall through */
+          }
+        }
+      }
+      if (document.pictureInPictureEnabled) {
+        try {
+          await openCanvasPictureInPicture();
+          participantPipOpen = true;
+          participantPipManual = manual;
+          participantPipAutoOpened = !manual;
+          hidePipInvite();
+          paintPipButtons();
+          return true;
+        } catch (e) {
+          if (manual) {
+            /* fall through */
+          }
+        }
+      }
+      openParticipantFloat();
+      participantPipOpen = true;
+      participantPipManual = manual;
+      participantPipAutoOpened = !manual;
+      if (!manual && shareOn) showPipInvite();
+      paintPipButtons();
+      return true;
+    }
+
+    async function toggleParticipantPip() {
+      if (isParticipantPipOpen()) {
+        participantPipManual = false;
+        closeParticipantPip();
+        return;
+      }
+      await openParticipantPip({ manual: true });
+    }
+
+    function drawParticipantCanvas(canvas, ctx) {
+      if (!canvas || !ctx) return;
+      var participants = participantFloatParticipants();
+      var count = Math.max(1, participants.length);
+      var cols = count === 1 ? 1 : count <= 4 ? 2 : 3;
+      var rows = Math.ceil(count / cols);
+      var gap = 8;
+      var width = (canvas.width - gap * (cols + 1)) / cols;
+      var height = (canvas.height - gap * (rows + 1)) / rows;
+      ctx.fillStyle = '#07101f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      participants.forEach(function (participant, index) {
+        var col = index % cols;
+        var row = Math.floor(index / cols);
+        var x = gap + col * (width + gap);
+        var y = gap + row * (height + gap);
+        ctx.fillStyle = '#14243b';
+        ctx.fillRect(x, y, width, height);
+        var key = tileKey(participant, Track.Source.Camera);
+        var tile = tileMap.get(key);
+        var video = tile && tile.querySelector('video');
+        if (video && video.readyState >= 2 && video.videoWidth > 0) {
+          ctx.save();
+          ctx.translate(x + width, y);
+          ctx.scale(-1, 1);
+          ctx.drawImage(video, 0, 0, width, height);
+          ctx.restore();
+        } else {
+          ctx.fillStyle = '#bfdbfe';
+          ctx.font = 'bold 44px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          var n = participant.name || participant.identity || '؟';
+          ctx.fillText(n.charAt(0).toUpperCase(), x + width / 2, y + height / 2);
+        }
+        if (participant.identity === activeSpeakerId) {
+          ctx.strokeStyle = '#22c55e';
+          ctx.lineWidth = 4;
+          ctx.strokeRect(x + 2, y + 2, width - 4, height - 4);
+        }
+        ctx.fillStyle = 'rgba(2,6,23,.82)';
+        ctx.fillRect(x, y + height - 30, width, 30);
+        ctx.fillStyle = '#fff';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        var label = (participant.name || participant.identity || 'مشارك').slice(0, 22);
+        if (raisedHands.has(participant.identity)) label += ' ✋';
+        ctx.fillText(label, x + width - 8, y + height - 15);
+        if (!participantMicOn(participant)) {
+          ctx.fillStyle = '#f87171';
+          ctx.font = '12px Arial';
+          ctx.textAlign = 'left';
+          ctx.fillText('🔇', x + 8, y + height - 15);
+        }
+      });
+    }
+
+    async function openCanvasPictureInPicture() {
+      if (!document.pictureInPictureEnabled) {
+        throw new Error('المتصفح لا يدعم النافذة الخارجية؛ استخدم Chrome أو Edge حديثًا.');
+      }
+      if (participantFloatCanvasVideo && document.pictureInPictureElement === participantFloatCanvasVideo) {
+        participantPipSurface = 'canvas';
+        return;
+      }
+      var canvas = participantFloatCanvasEl;
+      if (!canvas) {
+        canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 360;
+        canvas.style.display = 'none';
+        document.body.appendChild(canvas);
+        participantFloatCanvasEl = canvas;
+      }
+      var ctx = canvas.getContext('2d');
+      participantFloatCanvasVideo = document.createElement('video');
+      participantFloatCanvasVideo.muted = true;
+      participantFloatCanvasVideo.playsInline = true;
+      participantFloatCanvasVideo.srcObject = canvas.captureStream(10);
+      participantFloatCanvasVideo.style.display = 'none';
+      document.body.appendChild(participantFloatCanvasVideo);
+      await participantFloatCanvasVideo.play();
+      participantFloatCanvasLastSig = '';
+      participantFloatCanvasDirty = true;
+      drawParticipantCanvas(canvas, ctx);
+      participantFloatCanvasTimer = setInterval(function () {
+        var sig = participantFloatSignature();
+        if (!participantFloatCanvasDirty && sig === participantFloatCanvasLastSig) return;
+        participantFloatCanvasLastSig = sig;
+        participantFloatCanvasDirty = false;
+        drawParticipantCanvas(canvas, ctx);
+      }, 120);
+      participantFloatCanvasVideo.addEventListener(
+        'leavepictureinpicture',
+        function () {
+          if (participantPipSurface === 'canvas') {
+            participantPipSurface = 'none';
+            participantPipOpen = false;
+            paintPipButtons();
+          }
+          stopCanvasPictureInPicture();
+        },
+        { once: true }
+      );
+      await participantFloatCanvasVideo.requestPictureInPicture();
+      participantPipSurface = 'canvas';
+    }
+
+    function stopCanvasPictureInPicture() {
+      if (participantFloatCanvasTimer) {
+        clearInterval(participantFloatCanvasTimer);
+        participantFloatCanvasTimer = null;
+      }
+      if (participantFloatCanvasVideo) {
+        if (document.pictureInPictureElement === participantFloatCanvasVideo) {
+          document.exitPictureInPicture().catch(function () {});
+        }
+        var stream = participantFloatCanvasVideo.srcObject;
+        if (stream && typeof stream.getTracks === 'function') {
+          stream.getTracks().forEach(function (track) {
+            track.stop();
+          });
+        }
+        participantFloatCanvasVideo.remove();
+        participantFloatCanvasVideo = null;
+      }
+      if (participantPipSurface === 'canvas') participantPipSurface = 'none';
     }
 
     function syncShareFloat() {
       var bar = $('mx-share-float');
       document.body.classList.toggle('mx-sharing', !!shareOn);
       if (bar) bar.classList.toggle('is-open', !!shareOn);
+      if (shareOn) {
+        openParticipantPip({ manual: false }).catch(function () {
+          openParticipantFloat();
+          showPipInvite();
+        });
+      } else {
+        closeParticipantPip({ onlyAuto: true });
+        hidePipInvite();
+      }
     }
 
     function ensureReactMenu() {
@@ -535,6 +1407,7 @@
         label.textContent = raisedHands.has(identity) ? base + ' ✋' : base;
       });
       renderPeople();
+      scheduleParticipantPipRefresh();
     }
 
     function attachTrack(track, participant) {
@@ -804,6 +1677,7 @@
       if (icon) {
         icon.className = micOn ? 'fas fa-microphone text-[#0065fd]' : 'fas fa-microphone-slash text-[#fd0000]';
       }
+      scheduleParticipantPipRefresh();
     }
     function paintCam() {
       var btn = $('mx-ml-btn-cam');
@@ -815,6 +1689,7 @@
         icon.className = camOn ? 'fas fa-video text-[#0065fd]' : 'fas fa-video-slash text-[#fd0000]';
       }
       syncLocalMediaTile(Track.Source.Camera, camOn);
+      scheduleParticipantPipRefresh();
     }
     function paintShare() {
       var btn = $('mx-ml-btn-share');
@@ -826,6 +1701,7 @@
       if (icon) icon.className = shareOn ? 'fas fa-desktop text-[#0065fd]' : 'fas fa-desktop text-[#171717]';
       layoutStage();
       syncShareFloat();
+      scheduleParticipantPipRefresh();
     }
     function paintHand() {
       var btn = $('mx-ml-btn-react');
@@ -1216,6 +2092,15 @@
         xhr.setRequestHeader('X-CSRF-TOKEN', csrf);
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.setRequestHeader('Accept', 'application/json');
+        xhr.timeout = 0;
+        xhr.upload.onprogress = function (ev) {
+          if (ev.lengthComputable && ev.total > 0) {
+            uploadModal.progress((ev.loaded / ev.total) * 100, ev.loaded, ev.total);
+          }
+        };
+        xhr.upload.onload = function () {
+          uploadModal.indeterminate('جاري حفظ الملف على الخادم…');
+        };
         xhr.onload = function () {
           var data = {};
           try { data = xhr.responseText ? JSON.parse(xhr.responseText) : {}; } catch (e) {}
@@ -1232,6 +2117,33 @@
       });
     }
 
+    function putBlobWithProgress(url, blob, headers) {
+      return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('PUT', url, true);
+        Object.keys(headers || {}).forEach(function (k) {
+          try { xhr.setRequestHeader(k, headers[k]); } catch (e) {}
+        });
+        xhr.timeout = 0;
+        xhr.upload.onprogress = function (ev) {
+          if (ev.lengthComputable && ev.total > 0) {
+            uploadModal.progress((ev.loaded / ev.total) * 100, ev.loaded, ev.total);
+          }
+        };
+        xhr.onload = function () {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+            return;
+          }
+          reject(new Error('فشل رفع الملف للسحابة (' + xhr.status + ')'));
+        };
+        xhr.onerror = function () {
+          reject(new Error('انقطع الاتصال أثناء الرفع للسحابة'));
+        };
+        xhr.send(blob);
+      });
+    }
+
     async function uploadRecording(result) {
       if (!result || !result.blob) {
         toast('لا يوجد ملف للرفع');
@@ -1245,67 +2157,76 @@
         toast('مسارات الرفع غير مضبوطة');
         return;
       }
-      toast('جاري رفع التسجيل…');
       var mime = result.blob.type || (isAudio ? 'audio/webm' : 'video/webm');
+      var doneTitle = isAudio ? 'تم رفع التقرير الصوتي' : 'تم رفع تسجيل الجلسة';
       var putSucceeded = false;
+      uploadModal.open(
+        isAudio ? 'جاري رفع التقرير الصوتي' : 'جاري رفع تسجيل الجلسة',
+        'حجم الملف ' + formatBytes(result.blob.size) + ' — جاري تجهيز الرفع…'
+      );
+      beginUploadGuard();
       try {
-        var presignRes = await fetch(presignUrl, {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrf,
-          },
-          body: JSON.stringify({ content_type: mime }),
-        });
-        var presign = await presignRes.json().catch(function () { return {}; });
-
-        if (presignRes.ok && presign.direct_upload === false) {
-          toast('جاري الرفع عبر الخادم…');
-          await uploadRecordingViaServer(result, isAudio, csrf);
-          toast(isAudio ? 'تم رفع التقرير الصوتي' : 'تم رفع تسجيل الجلسة');
-          return;
-        }
-
-        if (!presignRes.ok) throw new Error(presign.message || 'فشل تجهيز الرفع');
-        if (!presign.upload_url || !presign.upload_token) {
-          throw new Error(presign.message || 'رابط الرفع غير متاح');
-        }
-
-        var putHeaders = { 'Content-Type': presign.content_type || mime };
-        if (presign.headers && typeof presign.headers === 'object') {
-          Object.keys(presign.headers).forEach(function (k) {
-            putHeaders[k] = presign.headers[k];
+        try {
+          var presignRes = await fetch(presignUrl, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrf,
+            },
+            body: JSON.stringify({ content_type: mime }),
           });
+          var presign = await presignRes.json().catch(function () { return {}; });
+
+          if (presignRes.ok && presign.direct_upload === false) {
+            uploadModal.status('جاري الرفع عبر الخادم…');
+            await uploadRecordingViaServer(result, isAudio, csrf);
+            uploadModal.done(doneTitle);
+            return;
+          }
+
+          if (!presignRes.ok) throw new Error(presign.message || 'فشل تجهيز الرفع');
+          if (!presign.upload_url || !presign.upload_token) {
+            throw new Error(presign.message || 'رابط الرفع غير متاح');
+          }
+
+          var putHeaders = { 'Content-Type': presign.content_type || mime };
+          if (presign.headers && typeof presign.headers === 'object') {
+            Object.keys(presign.headers).forEach(function (k) {
+              putHeaders[k] = presign.headers[k];
+            });
+          }
+          uploadModal.status('جاري الرفع إلى التخزين السحابي…');
+          await putBlobWithProgress(presign.upload_url, result.blob, putHeaders);
+          putSucceeded = true;
+          uploadModal.indeterminate('جاري تأكيد الملف على الخادم…');
+          var completeRes = await fetch(completeUrl, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrf,
+            },
+            body: JSON.stringify({
+              upload_token: presign.upload_token,
+              duration_seconds: Math.max(1, Math.round((result.durationMs || 0) / 1000) || 1),
+            }),
+          });
+          var complete = await completeRes.json().catch(function () { return {}; });
+          if (!completeRes.ok) throw new Error(complete.message || 'فشل تأكيد الرفع');
+          uploadModal.done(doneTitle);
+        } catch (err) {
+          if (putSucceeded) throw err;
+          console.warn('Direct upload failed, falling back to server upload', err);
+          uploadModal.indeterminate('تعذر الرفع المباشر — جاري الرفع عبر الخادم…');
+          await uploadRecordingViaServer(result, isAudio, csrf);
+          uploadModal.done(doneTitle);
         }
-        var put = await fetch(presign.upload_url, {
-          method: 'PUT',
-          headers: putHeaders,
-          body: result.blob,
-        });
-        if (!put.ok) throw new Error('فشل رفع الملف للسحابة (' + put.status + ')');
-        putSucceeded = true;
-        var completeRes = await fetch(completeUrl, {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrf,
-          },
-          body: JSON.stringify({
-            upload_token: presign.upload_token,
-            duration_seconds: Math.max(1, Math.round((result.durationMs || 0) / 1000) || 1),
-          }),
-        });
-        var complete = await completeRes.json().catch(function () { return {}; });
-        if (!completeRes.ok) throw new Error(complete.message || 'فشل تأكيد الرفع');
-        toast(isAudio ? 'تم رفع التقرير الصوتي' : 'تم رفع تسجيل الجلسة');
-      } catch (err) {
-        if (putSucceeded) throw err;
-        console.warn('Direct upload failed, falling back to server upload', err);
-        toast('جاري الرفع عبر الخادم…');
-        await uploadRecordingViaServer(result, isAudio, csrf);
-        toast(isAudio ? 'تم رفع التقرير الصوتي' : 'تم رفع تسجيل الجلسة');
+      } catch (finalErr) {
+        uploadModal.fail(finalErr && finalErr.message ? finalErr.message : 'تعذر رفع التسجيل.');
+        throw finalErr;
+      } finally {
+        endUploadGuard();
       }
     }
 
@@ -1448,7 +2369,9 @@
       var sfPeople = $('mx-sf-people');
       if (sfPeople) {
         sfPeople.addEventListener('click', function () {
-          togglePipPanel();
+          toggleParticipantPip().catch(function (e) {
+            toast(e.message || 'تعذر فتح نافذة المشاركين');
+          });
         });
       }
       var sfTile = $('mx-sf-tile');
@@ -1474,7 +2397,9 @@
       var pipBtn = $('mx-ml-btn-pip');
       if (pipBtn) {
         pipBtn.addEventListener('click', function () {
-          togglePipPanel();
+          toggleParticipantPip().catch(function (e) {
+            toast(e.message || 'تعذر فتح نافذة المشاركين');
+          });
         });
       }
 
@@ -1492,8 +2417,9 @@
       if (isHost) {
         document.querySelectorAll('[data-perm-key]').forEach(function (input) {
           input.addEventListener('change', function () {
+            var key = input.getAttribute('data-perm-key');
             var body = {};
-            body[input.getAttribute('data-perm-key')] = !!input.checked;
+            body[key] = !!input.checked;
             fetch(config.permissionsUrl, {
               method: 'POST',
               headers: {
@@ -1508,15 +2434,33 @@
                 return r.json();
               })
               .then(function (data) {
-                if (!data.ok) throw new Error(data.message || 'فشل حفظ الصلاحية');
-                return broadcastPermissions(data);
+                if (!data.ok) throw new Error(data.message || 'فشل حفظ الإعداد');
+                if (key === 'waiting_room_enabled') {
+                  var section = $('mx-waiting-room-section');
+                  if (section) section.classList.toggle('hidden', !input.checked);
+                  if (input.checked) startWaitingRoomPoll();
+                  else {
+                    stopWaitingRoomPoll();
+                    updateWaitingBadge(0);
+                    renderWaitingGuests([]);
+                  }
+                  updateWaitingBadge(data.waiting_pending_count);
+                }
+                if (key.indexOf('allow_participant_') === 0) {
+                  return broadcastPermissions(data);
+                }
+                return data;
               })
               .catch(function (e) {
-                toast(e.message || 'تعذر حفظ الصلاحية');
+                toast(e.message || 'تعذر حفظ الإعداد');
                 input.checked = !input.checked;
               });
           });
         });
+
+        if (config.waitingRoomListUrl && perms.waiting_room_enabled) {
+          startWaitingRoomPoll();
+        }
 
         var muteAll = $('mx-lk-mute-all');
         if (muteAll) {
@@ -1562,12 +2506,15 @@
         var recStop = $('btn-record-stop');
         if (recStop) {
           recStop.addEventListener('click', function () {
-            toast('جاري إيقاف التسجيل…');
+            uploadModal.open('جاري إنهاء التسجيل', 'يتم تجهيز ملف التسجيل…');
             stopLocalRecording().then(function (result) {
-              if (!result) return;
+              if (!result) {
+                uploadModal.hide();
+                return;
+              }
               return uploadRecording(result);
             }).catch(function (e) {
-              toast(e.message || 'تعذر رفع التسجيل');
+              uploadModal.fail(e.message || 'تعذر رفع التسجيل');
             });
           });
         }
@@ -1599,23 +2546,29 @@
         }
         attachTrack(track, participant);
         renderPeople();
+        scheduleParticipantPipRefresh();
       })
       .on(RoomEvent.TrackUnsubscribed, function (track, _pub, participant) {
         detachTrack(track, participant);
+        scheduleParticipantPipRefresh();
       })
       .on(RoomEvent.LocalTrackPublished, function (pub, participant) {
         if (pub.track) attachTrack(pub.track, participant);
+        scheduleParticipantPipRefresh();
       })
       .on(RoomEvent.LocalTrackUnpublished, function (pub, participant) {
         if (pub.track) detachTrack(pub.track, participant);
+        scheduleParticipantPipRefresh();
       })
       .on(RoomEvent.ParticipantConnected, function () {
         renderPeople();
+        scheduleParticipantPipRefresh();
         toast('انضم مشارك');
       })
       .on(RoomEvent.ParticipantDisconnected, function (p) {
         raisedHands.delete(p.identity);
         renderPeople();
+        scheduleParticipantPipRefresh();
       })
       .on(RoomEvent.DataReceived, function (payload, participant) {
         handleData(payload, participant);
@@ -1626,9 +2579,12 @@
       .on(RoomEvent.ActiveSpeakersChanged, function (speakers) {
         activeSpeakerId = speakers && speakers[0] ? speakers[0].identity : '';
         applySpeakerLayout();
+        scheduleParticipantPipRefresh();
       })
       .on(RoomEvent.Disconnected, function () {
         setStatus('انقطع الاتصال');
+        closeParticipantPip();
+        stopWaitingRoomPoll();
       })
       .on(RoomEvent.Reconnecting, function () {
         setStatus('إعادة اتصال…');
@@ -1679,6 +2635,9 @@
     api.applyPermissions = applyPermissions;
     api.startLocalRecording = startLocalRecording;
     api.stopLocalRecording = stopLocalRecording;
+    api.openParticipantPip = openParticipantPip;
+    api.closeParticipantPip = closeParticipantPip;
+    api.isParticipantPipOpen = isParticipantPipOpen;
     api.getLocalVideoTrack = function () {
       return localVideo;
     };
@@ -1686,12 +2645,14 @@
       return localAudio;
     };
     api.disconnect = function () {
+      closeParticipantPip();
       try {
         room.disconnect();
       } catch (e) {}
     };
 
     window.addEventListener('beforeunload', function () {
+      closeParticipantPip();
       try {
         room.disconnect();
       } catch (e) {}

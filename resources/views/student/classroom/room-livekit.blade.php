@@ -164,7 +164,7 @@
             <button type="button" id="mx-ml-btn-focus" class="mx-ml-icon-btn" title="وضع التركيز">
                 <i class="fas fa-compress text-[#171717]"></i>
             </button>
-            <button type="button" id="mx-ml-btn-pip" class="mx-ml-icon-btn" title="نافذة المشاركين العائمة">
+            <button type="button" id="mx-ml-btn-pip" class="mx-ml-icon-btn" title="نافذة المشاركين العائمة (Always-on-top)" aria-pressed="false" aria-label="فتح نافذة المشاركين العائمة">
                 <i class="fas fa-window-restore text-[#171717]"></i>
             </button>
             <button type="button" id="mx-ml-btn-people" class="mx-ml-icon-btn" title="المشاركون">
@@ -176,12 +176,26 @@
             @unless($academicObserverMode)
             <span class="mx-ml-dock-sep" aria-hidden="true"></span>
             <div class="relative inline-flex" id="mx-guest-perms-wrap">
-                <button type="button" id="mx-guest-perms-btn" class="classroom-room-toolbar-btn" title="صلاحيات الطلاب" aria-expanded="false" aria-controls="mx-guest-perms-panel">
-                    <i class="fas fa-user-shield text-[12px] text-[#0065fd]"></i>
-                    <span class="hidden sm:inline text-[11px]">صلاحيات</span>
+                <button type="button" id="mx-guest-perms-btn" class="classroom-room-toolbar-btn" title="إعدادات الاجتماع" aria-expanded="false" aria-controls="mx-guest-perms-panel">
+                    <i class="fas fa-gear text-[12px] text-[#0065fd]"></i>
+                    <span class="hidden sm:inline text-[11px]">إعدادات</span>
+                    <span id="mx-waiting-badge" class="hidden ms-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#fd0000] text-white text-[10px] font-bold leading-[18px] text-center">0</span>
                 </button>
-                <div id="mx-guest-perms-panel" class="hidden absolute bottom-full mb-2 end-0 z-40 w-[17.5rem] rounded-xl border border-[#e9e9e9] bg-white shadow-xl p-3 text-start" role="menu" dir="rtl">
-                    <p class="text-[11px] font-bold text-[#171717] mb-2">ما يُسمح للطلاب</p>
+                <div id="mx-guest-perms-panel" class="hidden absolute bottom-full mb-2 end-0 z-40 w-[min(100vw-1.5rem,20rem)] rounded-xl border border-[#e9e9e9] bg-white shadow-xl p-3 text-start max-h-[min(70vh,420px)] overflow-y-auto" role="menu" dir="rtl">
+                    <p class="text-[11px] font-bold text-[#171717] mb-2">إعدادات الاجتماع</p>
+                    <div class="rounded-lg border border-[#eef2f7] bg-[#f8fafc] p-2.5 mb-3">
+                        <label class="flex items-center gap-2 cursor-pointer text-[12px] text-[#171717] font-semibold">
+                            <input type="checkbox" class="rounded border-[#e9e9e9] text-[#0065fd]" data-perm-key="waiting_room_enabled" {{ $meeting->waitingRoomEnabled() ? 'checked' : '' }}>
+                            <span>تفعيل غرفة الانتظار</span>
+                        </label>
+                        <p class="text-[10px] text-[#64748b] mt-1 leading-relaxed">عند التفعيل يجب قبول كل ضيف يدوياً. عند الإيقاف يُسمح لكل المنتظرين بالدخول.</p>
+                        <div id="mx-waiting-room-section" class="mt-2.5 {{ $meeting->waitingRoomEnabled() ? '' : 'hidden' }}">
+                            <p class="text-[10px] font-bold text-[#475569] mb-1.5">في الانتظار (<span id="mx-waiting-count">0</span>)</p>
+                            <div id="mx-waiting-room-list" class="space-y-1.5 max-h-36 overflow-y-auto"></div>
+                            <p id="mx-waiting-room-empty" class="text-[10px] text-[#94a3b8] py-2 text-center">لا يوجد ضيوف بانتظار القبول</p>
+                        </div>
+                    </div>
+                    <p class="text-[11px] font-bold text-[#171717] mb-2">صلاحيات الطلاب</p>
                     <div class="space-y-2 text-[12px] text-[#171717]">
                         <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded border-[#e9e9e9] text-[#0065fd]" data-perm-key="allow_participant_whiteboard" {{ $meeting->allowsParticipantWhiteboard() ? 'checked' : '' }}><span>السبورة + الكتابة على الشاشة</span></label>
                         <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded border-[#e9e9e9] text-[#0065fd]" data-perm-key="allow_participant_screen_share" {{ $meeting->allowsParticipantScreenShare() ? 'checked' : '' }}><span>شير الشاشة</span></label>
@@ -206,6 +220,33 @@
                     <button type="button" role="menuitem" data-mx-rec-mode="report" class="mx-ml-record-menu-item"><span class="mx-ml-rec-title">تقرير صوتي فقط</span><span class="mx-ml-rec-desc">ميكروفون للتقرير</span></button>
                 </div>
             </div>
+            @if(!empty($subscriptionFeatureMenuItems))
+            <div class="relative inline-flex shrink-0" id="pkg-features-dd-wrap">
+                <button type="button" id="pkg-features-dd-btn" class="classroom-room-toolbar-btn" aria-expanded="false" aria-haspopup="true" aria-controls="pkg-features-dd-panel" title="الخدمات المشترك بها">
+                    <i class="fas fa-layer-group text-[#0065fd] text-[11px]"></i>
+                    <span class="hidden sm:inline text-[11px]">الخدمات</span>
+                    <i class="fas fa-chevron-down text-[9px] text-[#717171] transition-transform" id="pkg-features-dd-chevron"></i>
+                </button>
+                <div id="pkg-features-dd-panel" class="pkg-features-dd-panel-inner hidden absolute bottom-full mb-2 end-0 z-50 w-[min(100vw-1.5rem,19.5rem)] rounded-xl border border-[#e9e9e9] bg-white overflow-hidden shadow-xl" role="menu" dir="rtl">
+                    <div class="px-3 py-2.5 border-b border-[#e9e9e9] bg-[#f3f4f6]">
+                        <p class="text-xs font-semibold text-[#171717] m-0">الخدمات المشترك بها</p>
+                        @if(!empty($subscriptionPackageLabel))
+                        <p class="text-[11px] text-[#717171] m-0 mt-0.5">{{ $subscriptionPackageLabel }}</p>
+                        @endif
+                    </div>
+                    <div class="max-h-[min(58vh,20rem)] overflow-y-auto py-1.5 px-1">
+                        @foreach($subscriptionFeatureMenuItems as $item)
+                        <a href="{{ $item['url'] }}" target="_blank" rel="noopener noreferrer" role="menuitem" class="group flex items-center gap-3 px-2.5 py-2 mx-0.5 rounded-lg text-[#171717] hover:bg-[#eef5ff] transition-colors">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $item['icon_bg'] }} {{ $item['icon_text'] }}">
+                                <i class="fas {{ $item['icon'] }} text-sm"></i>
+                            </span>
+                            <span class="min-w-0 flex-1 text-sm font-medium text-right">{{ $item['label'] }}</span>
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
             @endunless
         </div>
     </div>
@@ -236,7 +277,7 @@
     <button type="button" class="mx-sf-btn is-active" id="mx-sf-noise" title="عزل الضوضاء" aria-pressed="true"><i class="fas fa-ear-listen"></i></button>
     <button type="button" class="mx-sf-btn" id="mx-sf-cam" title="كاميرا"><i class="fas fa-video"></i></button>
     <button type="button" class="mx-sf-btn" id="mx-sf-tile" title="شبكة/متحدث"><i class="fas fa-th-large"></i></button>
-    <button type="button" class="mx-sf-btn" id="mx-sf-people" title="مشاركون"><i class="fas fa-users"></i></button>
+    <button type="button" class="mx-sf-btn" id="mx-sf-people" title="نافذة المشاركين العائمة" aria-pressed="false" aria-label="فتح نافذة المشاركين"><i class="fas fa-users"></i></button>
     <button type="button" class="mx-sf-btn is-danger" id="mx-sf-stop-share" title="إيقاف الشير"><i class="fas fa-desktop"></i></button>
 </div>
 
@@ -250,6 +291,38 @@ if (permsBtn && permsPanel) {
     permsBtn.addEventListener('click', () => {
         permsPanel.classList.toggle('hidden');
         permsBtn.setAttribute('aria-expanded', permsPanel.classList.contains('hidden') ? 'false' : 'true');
+    });
+}
+
+const pkgFeaturesWrap = document.getElementById('pkg-features-dd-wrap');
+const pkgFeaturesBtn = document.getElementById('pkg-features-dd-btn');
+const pkgFeaturesPanel = document.getElementById('pkg-features-dd-panel');
+const pkgFeaturesChevron = document.getElementById('pkg-features-dd-chevron');
+if (pkgFeaturesWrap && pkgFeaturesBtn && pkgFeaturesPanel) {
+    const setPackageFeaturesOpen = (open) => {
+        pkgFeaturesPanel.classList.toggle('hidden', !open);
+        pkgFeaturesBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        pkgFeaturesChevron?.classList.toggle('rotate-180', open);
+    };
+
+    pkgFeaturesBtn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const open = pkgFeaturesPanel.classList.contains('hidden');
+        setPackageFeaturesOpen(open);
+        if (open) {
+            permsPanel?.classList.add('hidden');
+            permsBtn?.setAttribute('aria-expanded', 'false');
+        }
+    });
+    pkgFeaturesPanel.addEventListener('click', (event) => event.stopPropagation());
+    document.addEventListener('click', (event) => {
+        if (!pkgFeaturesWrap.contains(event.target)) setPackageFeaturesOpen(false);
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            setPackageFeaturesOpen(false);
+            pkgFeaturesBtn.focus();
+        }
     });
 }
 
@@ -317,6 +390,7 @@ const api = await window.MxLiveKitClassroom.boot(LivekitClient, {
     joinUrl: @json(url('classroom/join/'.$meeting->code)),
     exitUrl: @json($roomExitUrl),
     permissionsUrl: @json($academicObserverMode ? '' : route($rp.'classroom.participant-whiteboard', $meeting)),
+    waitingRoomListUrl: @json($academicObserverMode ? '' : route($rp.'classroom.waiting-room', $meeting)),
     permissions: @json($meeting->guestPermissionsPayload()),
     presignUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording.presign', $meeting)),
     completeUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording.complete', $meeting)),

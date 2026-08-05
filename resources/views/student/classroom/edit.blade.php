@@ -38,6 +38,16 @@
             @error('planned_duration_minutes')<p class="text-xs text-rose-600 mt-1">{{ $message }}</p>@enderror
         </div>
 
+        <div class="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/30 p-4">
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" name="waiting_room_enabled" value="1" class="mt-1 rounded border-slate-300 text-sky-600" {{ old('waiting_room_enabled', $meeting->waitingRoomEnabled()) ? 'checked' : '' }}>
+                <span>
+                    <span class="block text-sm font-semibold text-slate-800 dark:text-slate-200">تفعيل غرفة الانتظار</span>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400 mt-1">اختياري — عند التفعيل يجب قبول كل ضيف يدوياً قبل دخوله.</span>
+                </span>
+            </label>
+        </div>
+
         <div class="flex items-center justify-end gap-2">
             <a href="{{ route('student.classroom.show', $meeting) }}" class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300">رجوع</a>
             <button type="submit" class="px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold">حفظ التعديلات</button>

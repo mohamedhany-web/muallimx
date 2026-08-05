@@ -69,7 +69,7 @@
             <div class="mx-lk-waiting-pulse"><i class="fas fa-hourglass-half text-2xl"></i></div>
             <h2 class="text-lg font-bold text-white m-0">غرفة الانتظار</h2>
             <p class="text-slate-300 text-sm mt-2 mb-1" id="waiting-room-title">{{ $meeting->title ?? ('غرفة ' . $code) }}</p>
-            <p class="text-slate-400 text-xs leading-relaxed" id="waiting-room-msg">المعلم لم يبدأ الجلسة بعد. سنُدخلك تلقائياً فور البدء…</p>
+            <p class="text-slate-400 text-xs leading-relaxed" id="waiting-room-msg">انتظر حتى يبدأ المضيف الجلسة أو يقبلك للدخول…</p>
             <p class="text-sky-300 text-xs mt-4 font-semibold" id="waiting-room-tick">جاري الانتظار…</p>
             <button type="button" id="btn-waiting-cancel" class="mt-5 px-4 py-2 rounded-xl border border-slate-600 text-slate-300 text-sm hover:bg-slate-800">إلغاء</button>
         </div>
@@ -125,7 +125,7 @@
                     <span class="mx-ml-dock-sep" aria-hidden="true"></span>
                     <button type="button" id="mx-ml-btn-tile" class="mx-ml-icon-btn is-active" title="شبكة/متحدث"><i class="fas fa-th-large"></i></button>
                     <button type="button" id="mx-ml-btn-focus" class="mx-ml-icon-btn" title="تركيز"><i class="fas fa-compress"></i></button>
-                    <button type="button" id="mx-ml-btn-pip" class="mx-ml-icon-btn" title="نافذة مشاركين"><i class="fas fa-window-restore"></i></button>
+                    <button type="button" id="mx-ml-btn-pip" class="mx-ml-icon-btn" title="نافذة المشاركين العائمة (Always-on-top)" aria-pressed="false" aria-label="فتح نافذة المشاركين العائمة"><i class="fas fa-window-restore"></i></button>
                     <button type="button" id="mx-ml-btn-people" class="mx-ml-icon-btn" title="مشاركون"><i class="fas fa-users"></i></button>
                     <button type="button" id="mx-ml-btn-chat" class="mx-ml-icon-btn" title="دردشة"><i class="fas fa-comments"></i></button>
                     <button type="button" id="mx-ml-btn-bg" class="mx-ml-icon-btn" title="خلفية"><i class="fas fa-image"></i></button>
@@ -155,7 +155,7 @@
         <button type="button" class="mx-sf-btn is-active" id="mx-sf-noise" title="عزل"><i class="fas fa-ear-listen"></i></button>
         <button type="button" class="mx-sf-btn" id="mx-sf-cam" title="كاميرا"><i class="fas fa-video"></i></button>
         <button type="button" class="mx-sf-btn" id="mx-sf-tile" title="شبكة"><i class="fas fa-th-large"></i></button>
-        <button type="button" class="mx-sf-btn" id="mx-sf-people" title="مشاركون"><i class="fas fa-users"></i></button>
+        <button type="button" class="mx-sf-btn" id="mx-sf-people" title="نافذة المشاركين العائمة" aria-pressed="false" aria-label="فتح نافذة المشاركين"><i class="fas fa-users"></i></button>
         <button type="button" class="mx-sf-btn is-danger" id="mx-sf-stop-share" title="إيقاف الشير"><i class="fas fa-desktop"></i></button>
     </div>
 
@@ -241,15 +241,21 @@ document.getElementById('mx-lk-wb-close')?.addEventListener('click', () => {
 
 let waitingTimer = null;
 let waitingDots = 0;
+let waitingToken = null;
+let guestDisplayName = '';
 
-function showWaitingRoom(msg) {
+function waitingMessageForReason(reason, fallback) {
+    if (reason === 'host_admit_pending') return 'بانتظار قبول المضيف للدخول…';
+    if (reason === 'meeting_not_started') return 'المعلم لم يبدأ الجلسة بعد. سنُدخلك تلقائياً فور البدء…';
+    return fallback || 'جاري الانتظار…';
+}
+
+function showWaitingRoom(msg, reason) {
     document.getElementById('join-form-card')?.classList.add('hidden');
     const card = document.getElementById('waiting-room-card');
     card?.classList.remove('hidden');
-    if (msg) {
-        const el = document.getElementById('waiting-room-msg');
-        if (el) el.textContent = msg;
-    }
+    const el = document.getElementById('waiting-room-msg');
+    if (el) el.textContent = waitingMessageForReason(reason, msg);
 }
 
 function hideWaitingRoom() {
@@ -259,9 +265,23 @@ function hideWaitingRoom() {
         clearInterval(waitingTimer);
         waitingTimer = null;
     }
+    waitingToken = null;
 }
 
-document.getElementById('btn-waiting-cancel')?.addEventListener('click', () => {
+async function cancelWaitingRequest() {
+    if (waitingToken) {
+        try {
+            await fetch(`/classroom/join/${code}/waiting-cancel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                    Accept: 'application/json',
+                },
+                body: JSON.stringify({ waiting_token: waitingToken }),
+            });
+        } catch (_) {}
+    }
     hideWaitingRoom();
     const btn = document.getElementById('btn-join');
     if (btn) {
@@ -269,9 +289,17 @@ document.getElementById('btn-waiting-cancel')?.addEventListener('click', () => {
         btn.textContent = 'انضم الآن';
     }
     setHelp('', false);
+}
+
+document.getElementById('btn-waiting-cancel')?.addEventListener('click', () => {
+    cancelWaitingRequest();
 });
 
-async function enterMeeting(name, { silent } = {}) {
+async function enterMeeting(name, opts = {}) {
+    const body = { display_name: name };
+    if (opts.waitingToken || waitingToken) {
+        body.waiting_token = opts.waitingToken || waitingToken;
+    }
     const enterResp = await fetch(`/classroom/join/${code}/enter`, {
         method: 'POST',
         headers: {
@@ -279,17 +307,55 @@ async function enterMeeting(name, { silent } = {}) {
             'X-CSRF-TOKEN': csrf,
             Accept: 'application/json',
         },
-        body: JSON.stringify({ display_name: name }),
+        body: JSON.stringify(body),
     });
     const enterData = await enterResp.json();
-    if (enterResp.status === 422 && enterData.waiting) {
-        return { waiting: true, message: enterData.message || 'المعلم لم يبدأ الجلسة بعد.' };
+    if (enterResp.ok && enterData.ok && enterData.livekit?.token) {
+        return { waiting: false, enterData };
     }
-    if (!enterResp.ok || !enterData.ok) {
-        throw new Error(enterData.message || 'لا يمكن الانضمام');
+    if (enterData.denied) {
+        throw new Error(enterData.message || 'رفض المضيف طلب دخولك.');
     }
-    if (!enterData.livekit?.token) throw new Error('لم يُرجع الخادم توكن LiveKit');
-    return { waiting: false, enterData };
+    if (enterData.waiting || enterResp.status === 422) {
+        if (enterData.waiting_token) waitingToken = enterData.waiting_token;
+        return {
+            waiting: true,
+            reason: enterData.reason || (enterData.waiting_token ? 'host_admit_pending' : 'meeting_not_started'),
+            message: enterData.message,
+        };
+    }
+    throw new Error(enterData.message || 'لا يمكن الانضمام');
+}
+
+async function pollWaitingStatus() {
+    if (!waitingToken) return { waiting: true, reason: 'meeting_not_started' };
+    const resp = await fetch(`/classroom/join/${code}/waiting-status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrf,
+            Accept: 'application/json',
+        },
+        body: JSON.stringify({ waiting_token: waitingToken }),
+    });
+    const data = await resp.json();
+    if (resp.ok && data.ok && data.livekit?.token) {
+        return { waiting: false, enterData: data };
+    }
+    if (data.denied) {
+        throw new Error(data.message || 'رفض المضيف طلب دخولك.');
+    }
+    if (data.cancelled) {
+        throw new Error(data.message || 'تم إلغاء طلب الانتظار.');
+    }
+    if (data.ended) {
+        throw new Error(data.message || 'انتهى الاجتماع.');
+    }
+    return {
+        waiting: true,
+        reason: data.reason || 'host_admit_pending',
+        message: data.message,
+    };
 }
 
 async function bootGuestMeeting(enterData, name) {
@@ -359,35 +425,38 @@ async function bootGuestMeeting(enterData, name) {
 }
 
 function startWaitingPoll(name) {
-    showWaitingRoom();
+    guestDisplayName = name;
+    showWaitingRoom('', waitingToken ? 'host_admit_pending' : 'meeting_not_started');
     const tick = document.getElementById('waiting-room-tick');
     if (waitingTimer) clearInterval(waitingTimer);
     waitingTimer = setInterval(async () => {
         waitingDots = (waitingDots + 1) % 4;
         if (tick) tick.textContent = 'جاري الانتظار' + '.'.repeat(waitingDots + 1);
         try {
-            const result = await enterMeeting(name, { silent: true });
+            let result;
+            if (waitingToken) {
+                result = await pollWaitingStatus();
+            } else {
+                result = await enterMeeting(guestDisplayName || name);
+            }
             if (result.waiting) {
-                const msg = document.getElementById('waiting-room-msg');
-                if (msg && result.message) msg.textContent = result.message;
+                showWaitingRoom(result.message, result.reason);
                 return;
             }
             hideWaitingRoom();
-            await bootGuestMeeting(result.enterData, name);
+            await bootGuestMeeting(result.enterData, guestDisplayName || name);
         } catch (e) {
-            // keep waiting unless hard error for ended meeting
-            if (String(e.message || '').includes('إنهاء') || String(e.message || '').includes('انتهى')) {
-                hideWaitingRoom();
-                setHelp(e.message, true);
-                const btn = document.getElementById('btn-join');
-                if (btn) { btn.disabled = false; btn.textContent = 'انضم الآن'; }
-            }
+            hideWaitingRoom();
+            setHelp(e.message || String(e), true);
+            const btn = document.getElementById('btn-join');
+            if (btn) { btn.disabled = false; btn.textContent = 'انضم الآن'; }
         }
     }, 3000);
 }
 
 document.getElementById('btn-join').addEventListener('click', async () => {
     const name = document.getElementById('guest-name').value.trim() || 'ضيف';
+    guestDisplayName = name;
     const btn = document.getElementById('btn-join');
     btn.disabled = true;
     btn.textContent = 'جاري الانضمام…';

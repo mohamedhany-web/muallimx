@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassroomMeeting;
-use App\Support\ClassroomRecordingGuard;
 use App\Models\ClassroomMeetingReport;
 use App\Models\IntegrationSetting;
 use App\Models\LiveSetting;
 use App\Services\ClassroomSlugService;
 use App\Services\ClassroomSubscriptionFeatureMenuService;
+use App\Services\ClassroomWaitingRoomService;
 use App\Services\ClassroomWhiteboardSceneService;
 use App\Services\LiveKitTokenService;
 use App\Services\SubscriptionLimitService;
+use App\Support\ClassroomRecordingGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -153,6 +154,7 @@ class ClassroomController extends Controller
             'start_now' => ['nullable', Rule::in(['0', '1'])],
             'scheduled_for' => ['nullable', 'date'],
             'planned_duration_minutes' => ['nullable', 'integer', 'min:15', 'max:'.$limits['classroom_max_duration_minutes']],
+            'waiting_room_enabled' => ['nullable', 'boolean'],
         ]);
 
         $code = ClassroomMeeting::generateCode();
@@ -176,6 +178,9 @@ class ClassroomController extends Controller
             'planned_duration_minutes' => $planned,
             'max_participants' => $maxParticipants,
             'started_at' => $startNow ? now() : null,
+            'settings' => [
+                'waiting_room_enabled' => $request->boolean('waiting_room_enabled'),
+            ],
         ]);
 
         if ($startNow) {
@@ -295,16 +300,23 @@ class ClassroomController extends Controller
             'max_participants' => ['required', 'integer', 'min:2', 'max:'.$limits['classroom_max_participants']],
             'scheduled_for' => ['nullable', 'date'],
             'planned_duration_minutes' => ['nullable', 'integer', 'min:15', 'max:'.$limits['classroom_max_duration_minutes']],
+            'waiting_room_enabled' => ['nullable', 'boolean'],
         ]);
 
         $planned = (int) ($data['planned_duration_minutes'] ?? $limits['classroom_default_duration_minutes']);
         $planned = min($planned, (int) $limits['classroom_max_duration_minutes']);
+
+        $settings = is_array($meeting->settings) ? $meeting->settings : [];
+        if ($request->has('waiting_room_enabled')) {
+            $settings['waiting_room_enabled'] = $request->boolean('waiting_room_enabled');
+        }
 
         $meeting->update([
             'title' => $data['title'],
             'scheduled_for' => $data['scheduled_for'] ?? null,
             'planned_duration_minutes' => $planned,
             'max_participants' => min((int) $data['max_participants'], (int) $limits['classroom_max_participants']),
+            'settings' => $settings,
         ]);
 
         return redirect()->route('student.classroom.show', $meeting)->with('success', 'تم تحديث إعدادات الاجتماع.');
@@ -492,6 +504,7 @@ class ClassroomController extends Controller
             'allow_participant_chat' => ['sometimes', 'boolean'],
             'allow_participant_raise_hand' => ['sometimes', 'boolean'],
             'allow_participant_virtual_background' => ['sometimes', 'boolean'],
+            'waiting_room_enabled' => ['sometimes', 'boolean'],
         ]);
 
         $settings = is_array($meeting->settings) ? $meeting->settings : [];
@@ -502,27 +515,104 @@ class ClassroomController extends Controller
             'allow_participant_chat' => $validated['allow_participant_chat'] ?? null,
             'allow_participant_raise_hand' => $validated['allow_participant_raise_hand'] ?? null,
             'allow_participant_virtual_background' => $validated['allow_participant_virtual_background'] ?? null,
+            'waiting_room_enabled' => array_key_exists('waiting_room_enabled', $validated)
+                ? (bool) $validated['waiting_room_enabled']
+                : null,
         ];
 
         $changed = false;
+        $waitingRoomToggle = null;
         foreach ($map as $key => $value) {
             if ($value === null) {
                 continue;
+            }
+            if ($key === 'waiting_room_enabled') {
+                $waitingRoomToggle = (bool) $value;
             }
             $settings[$key] = (bool) $value;
             $changed = true;
         }
 
         if (! $changed) {
-            return response()->json(['message' => 'لم يُرسل أي صلاحية للتحديث.'], 422);
+            return response()->json(['message' => 'لم يُرسل أي إعداد للتحديث.'], 422);
         }
 
         $meeting->update(['settings' => $settings]);
         $meeting->refresh();
 
+        if ($waitingRoomToggle === false) {
+            app(ClassroomWaitingRoomService::class)->admitAllPending($meeting);
+        }
+
+        $waitingRoom = app(ClassroomWaitingRoomService::class);
+
         return response()->json(array_merge([
             'ok' => true,
+            'waiting_room_enabled' => $meeting->waitingRoomEnabled(),
+            'waiting_pending_count' => $waitingRoom->pendingCount($meeting),
         ], $meeting->guestPermissionsPayload()));
+    }
+
+    public function waitingRoomList(ClassroomMeeting $meeting)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if ($meeting->ended_at || ! $meeting->started_at) {
+            return response()->json(['message' => 'الاجتماع غير نشط حالياً.'], 422);
+        }
+
+        $waitingRoom = app(ClassroomWaitingRoomService::class);
+
+        return response()->json([
+            'ok' => true,
+            'waiting_room_enabled' => $meeting->waitingRoomEnabled(),
+            'pending_count' => $waitingRoom->pendingCount($meeting),
+            'guests' => $waitingRoom->listPendingForHost($meeting),
+        ]);
+    }
+
+    public function admitWaitingGuest(ClassroomMeeting $meeting, \App\Models\ClassroomMeetingWaitingGuest $guest)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if ($meeting->ended_at || ! $meeting->started_at) {
+            return response()->json(['message' => 'الاجتماع غير نشط حالياً.'], 422);
+        }
+
+        $waitingRoom = app(ClassroomWaitingRoomService::class);
+        $waitingRoom->admitGuest($meeting, $guest);
+
+        return response()->json([
+            'ok' => true,
+            'guest_id' => $guest->id,
+            'status' => $guest->fresh()->status,
+            'pending_count' => $waitingRoom->pendingCount($meeting),
+        ]);
+    }
+
+    public function denyWaitingGuest(ClassroomMeeting $meeting, \App\Models\ClassroomMeetingWaitingGuest $guest)
+    {
+        $user = Auth::user();
+        $this->ensureMeetingOwnership($meeting, $user);
+        $this->ensureClassroomAccess($user, $meeting);
+
+        if ($meeting->ended_at || ! $meeting->started_at) {
+            return response()->json(['message' => 'الاجتماع غير نشط حالياً.'], 422);
+        }
+
+        $waitingRoom = app(ClassroomWaitingRoomService::class);
+        $waitingRoom->denyGuest($meeting, $guest);
+
+        return response()->json([
+            'ok' => true,
+            'guest_id' => $guest->id,
+            'status' => $guest->fresh()->status,
+            'pending_count' => $waitingRoom->pendingCount($meeting),
+        ]);
     }
 
     public function shareAnnotations(ClassroomMeeting $meeting)
@@ -1056,6 +1146,7 @@ class ClassroomController extends Controller
             $msg = str_contains((string) $e->getMessage(), 'ffmpeg')
                 ? 'تعذر تحويل الصوت إلى MP3: ffmpeg غير متاح على الخادم.'
                 : 'تعذر رفع/تحويل ملف الصوت إلى MP3.';
+
             return response()->json([
                 'message' => $msg,
             ], 500);
@@ -1188,6 +1279,7 @@ class ClassroomController extends Controller
                 $message = str_contains((string) $e->getMessage(), 'ffmpeg')
                     ? 'فشل التحويل إلى MP3 لأن ffmpeg غير متاح على الخادم.'
                     : 'فشل تحويل ملف الصوت إلى MP3. أعد المحاولة.';
+
                 return response()->json(['message' => $message], 422);
             }
         }

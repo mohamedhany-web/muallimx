@@ -47,6 +47,16 @@
             @error('planned_duration_minutes')<p class="text-xs text-rose-600 mt-1">{{ $message }}</p>@enderror
         </div>
 
+        <div class="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/30 p-4">
+            <label class="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" name="waiting_room_enabled" value="1" class="mt-1 rounded border-slate-300 text-sky-600" {{ old('waiting_room_enabled') ? 'checked' : '' }}>
+                <span>
+                    <span class="block text-sm font-semibold text-slate-800 dark:text-slate-200">تفعيل غرفة الانتظار</span>
+                    <span class="block text-xs text-slate-500 dark:text-slate-400 mt-1">اختياري — عند التفعيل يجب قبول كل ضيف يدوياً قبل دخوله. يمكنك تغييرها لاحقاً من داخل الاجتماع.</span>
+                </span>
+            </label>
+        </div>
+
         <div class="rounded-xl bg-slate-50 dark:bg-slate-700/30 border border-slate-200 dark:border-slate-600 p-3 text-xs text-slate-600 dark:text-slate-300 space-y-1">
             <p>محرك الفيديو الحالي للموقع: <span class="font-bold">{{ \App\Models\LiveSetting::usesLiveKit() ? 'LiveKit' : 'Jitsi' }}</span> — يُغيَّر من لوحة الأدمن (سيرفرات البث).</p>
             <p>استهلاك الشهر الحالي: {{ number_format($usedMeetingsThisMonth) }} من {{ number_format($limits['classroom_meetings_per_month']) }}.
