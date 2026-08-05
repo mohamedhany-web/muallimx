@@ -321,6 +321,18 @@ Route::post('/classroom/join/{code}/whiteboard-scene', [\App\Http\Controllers\Cl
     ->middleware('throttle:90,1')
     ->name('classroom.join.whiteboard-scene.push')
     ->where('code', '[A-Za-z0-9]+');
+Route::get('/classroom/join/{code}/curriculum/state', [\App\Http\Controllers\ClassroomJoinController::class, 'curriculumState'])
+    ->middleware('throttle:60,1')
+    ->name('classroom.join.curriculum.state')
+    ->where('code', '[A-Za-z0-9]+');
+Route::get('/classroom/join/{code}/curriculum/{sessionId}/slide/{slide}', [\App\Http\Controllers\ClassroomJoinController::class, 'curriculumSlide'])
+    ->middleware('throttle:120,1')
+    ->name('classroom.join.curriculum.slide')
+    ->where(['code' => '[A-Za-z0-9]+', 'sessionId' => '[A-Za-z0-9\-]+', 'slide' => '[0-9]+']);
+Route::get('/classroom/join/{code}/curriculum/{sessionId}/thumb/{slide}', [\App\Http\Controllers\ClassroomJoinController::class, 'curriculumThumb'])
+    ->middleware('throttle:120,1')
+    ->name('classroom.join.curriculum.thumb')
+    ->where(['code' => '[A-Za-z0-9]+', 'sessionId' => '[A-Za-z0-9\-]+', 'slide' => '[0-9]+']);
 
 // التواصل
 Route::get('/contact', [\App\Http\Controllers\Public\ContactController::class, 'index'])->name('public.contact');
@@ -722,38 +734,49 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         });
         // Muallimx Classroom — بديل Zoom للمعلم (رابط/كود للضيوف بدون اشتراك)
         Route::middleware(['teacher.subscription'])->group(function () {
-        Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
-        Route::get('/classroom/create', [\App\Http\Controllers\Student\ClassroomController::class, 'create'])->name('student.classroom.create');
-        Route::post('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'store'])->name('student.classroom.store');
-        Route::put('/classroom/fixed-link', [\App\Http\Controllers\Student\ClassroomController::class, 'updateClassroomSlug'])->name('student.classroom.fixed-link');
-        Route::get('/classroom/whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardStandalone'])->name('student.classroom.whiteboard');
-        Route::get('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'show'])->name('student.classroom.show');
-        Route::get('/classroom/{meeting}/edit', [\App\Http\Controllers\Student\ClassroomController::class, 'edit'])->name('student.classroom.edit');
-        Route::put('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'update'])->name('student.classroom.update');
-        Route::delete('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'destroy'])->name('student.classroom.destroy');
-        Route::post('/classroom/start', [\App\Http\Controllers\Student\ClassroomController::class, 'start'])->name('student.classroom.start');
-        Route::post('/classroom/{meeting}/start', [\App\Http\Controllers\Student\ClassroomController::class, 'startMeeting'])->name('student.classroom.start-meeting');
-        Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
-        Route::get('/classroom/room/{meeting}/pip', [\App\Http\Controllers\Student\ClassroomController::class, 'roomPip'])->name('student.classroom.room.pip');
-        Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('student.classroom.recording.upload-tab');
-        Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('student.classroom.participant-whiteboard');
-        Route::get('/classroom/{meeting}/waiting-room', [\App\Http\Controllers\Student\ClassroomController::class, 'waitingRoomList'])->name('student.classroom.waiting-room');
-        Route::post('/classroom/{meeting}/waiting-room/{guest}/admit', [\App\Http\Controllers\Student\ClassroomController::class, 'admitWaitingGuest'])->name('student.classroom.waiting-room.admit');
-        Route::post('/classroom/{meeting}/waiting-room/{guest}/deny', [\App\Http\Controllers\Student\ClassroomController::class, 'denyWaitingGuest'])->name('student.classroom.waiting-room.deny');
-        Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('student.classroom.share-annotations');
-        Route::post('/classroom/{meeting}/share-annotations/clear', [\App\Http\Controllers\Student\ClassroomController::class, 'clearShareAnnotations'])->name('student.classroom.share-annotations.clear');
-        Route::get('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardScene'])->name('student.classroom.whiteboard-scene');
-        Route::post('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'pushWhiteboardScene'])->name('student.classroom.whiteboard-scene.push');
-        Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('student.classroom.end');
-        Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('student.classroom.recording.upload');
-        Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('student.classroom.recording.presign');
-        Route::post('/classroom/{meeting}/recording/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectRecordingUpload'])->name('student.classroom.recording.complete');
-        Route::get('/classroom/{meeting}/recording/status', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingStatus'])->name('student.classroom.recording.status');
-        Route::post('/classroom/{meeting}/recording/processing', [\App\Http\Controllers\Student\ClassroomController::class, 'markRecordingProcessing'])->name('student.classroom.recording.processing');
-        Route::post('/classroom/{meeting}/recording-audio/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignAudioUpload'])->name('student.classroom.recording-audio.presign');
-        Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('student.classroom.recording-audio.upload');
-        Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('student.classroom.recording-audio.complete');
-        Route::post('/classroom/{meeting}/ai-report', [\App\Http\Controllers\Student\ClassroomController::class, 'generateAiReport'])->name('student.classroom.ai-report');
+            Route::get('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'index'])->name('student.classroom.index');
+            Route::get('/classroom/create', [\App\Http\Controllers\Student\ClassroomController::class, 'create'])->name('student.classroom.create');
+            Route::post('/classroom', [\App\Http\Controllers\Student\ClassroomController::class, 'store'])->name('student.classroom.store');
+            Route::put('/classroom/fixed-link', [\App\Http\Controllers\Student\ClassroomController::class, 'updateClassroomSlug'])->name('student.classroom.fixed-link');
+            Route::get('/classroom/whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardStandalone'])->name('student.classroom.whiteboard');
+            Route::get('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'show'])->name('student.classroom.show');
+            Route::get('/classroom/{meeting}/edit', [\App\Http\Controllers\Student\ClassroomController::class, 'edit'])->name('student.classroom.edit');
+            Route::put('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'update'])->name('student.classroom.update');
+            Route::delete('/classroom/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'destroy'])->name('student.classroom.destroy');
+            Route::post('/classroom/start', [\App\Http\Controllers\Student\ClassroomController::class, 'start'])->name('student.classroom.start');
+            Route::post('/classroom/{meeting}/start', [\App\Http\Controllers\Student\ClassroomController::class, 'startMeeting'])->name('student.classroom.start-meeting');
+            Route::get('/classroom/room/{meeting}', [\App\Http\Controllers\Student\ClassroomController::class, 'room'])->name('student.classroom.room');
+            Route::get('/classroom/room/{meeting}/pip', [\App\Http\Controllers\Student\ClassroomController::class, 'roomPip'])->name('student.classroom.room.pip');
+            Route::get('/classroom/room/{meeting}/recording-upload', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingUploadTab'])->name('student.classroom.recording.upload-tab');
+            Route::post('/classroom/{meeting}/participant-whiteboard', [\App\Http\Controllers\Student\ClassroomController::class, 'updateParticipantWhiteboard'])->name('student.classroom.participant-whiteboard');
+            Route::get('/classroom/{meeting}/waiting-room', [\App\Http\Controllers\Student\ClassroomController::class, 'waitingRoomList'])->name('student.classroom.waiting-room');
+            Route::post('/classroom/{meeting}/waiting-room/{guest}/admit', [\App\Http\Controllers\Student\ClassroomController::class, 'admitWaitingGuest'])->name('student.classroom.waiting-room.admit');
+            Route::post('/classroom/{meeting}/waiting-room/{guest}/deny', [\App\Http\Controllers\Student\ClassroomController::class, 'denyWaitingGuest'])->name('student.classroom.waiting-room.deny');
+            Route::get('/classroom/{meeting}/share-annotations', [\App\Http\Controllers\Student\ClassroomController::class, 'shareAnnotations'])->name('student.classroom.share-annotations');
+            Route::post('/classroom/{meeting}/share-annotations/clear', [\App\Http\Controllers\Student\ClassroomController::class, 'clearShareAnnotations'])->name('student.classroom.share-annotations.clear');
+            Route::get('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardScene'])->name('student.classroom.whiteboard-scene');
+            Route::post('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'pushWhiteboardScene'])->name('student.classroom.whiteboard-scene.push');
+            Route::get('/classroom/{meeting}/curriculum/catalog', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumCatalog'])->name('student.classroom.curriculum.catalog');
+            Route::post('/classroom/{meeting}/curriculum/present', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumPresent'])->name('student.classroom.curriculum.present');
+            Route::get('/classroom/{meeting}/curriculum/state', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumState'])->name('student.classroom.curriculum.state');
+            Route::post('/classroom/{meeting}/curriculum/slide', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumUpdateSlide'])->name('student.classroom.curriculum.slide.update');
+            Route::post('/classroom/{meeting}/curriculum/stop', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumStop'])->name('student.classroom.curriculum.stop');
+            Route::get('/classroom/{meeting}/curriculum/{sessionId}/slide/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumSlide'])
+                ->name('student.classroom.curriculum.slide')
+                ->where(['sessionId' => '[A-Za-z0-9\-]+', 'slide' => '[0-9]+']);
+            Route::get('/classroom/{meeting}/curriculum/{sessionId}/thumb/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumThumb'])
+                ->name('student.classroom.curriculum.thumb')
+                ->where(['sessionId' => '[A-Za-z0-9\-]+', 'slide' => '[0-9]+']);
+            Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('student.classroom.end');
+            Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('student.classroom.recording.upload');
+            Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('student.classroom.recording.presign');
+            Route::post('/classroom/{meeting}/recording/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectRecordingUpload'])->name('student.classroom.recording.complete');
+            Route::get('/classroom/{meeting}/recording/status', [\App\Http\Controllers\Student\ClassroomController::class, 'recordingStatus'])->name('student.classroom.recording.status');
+            Route::post('/classroom/{meeting}/recording/processing', [\App\Http\Controllers\Student\ClassroomController::class, 'markRecordingProcessing'])->name('student.classroom.recording.processing');
+            Route::post('/classroom/{meeting}/recording-audio/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignAudioUpload'])->name('student.classroom.recording-audio.presign');
+            Route::post('/classroom/{meeting}/recording-audio/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadAudioRecording'])->name('student.classroom.recording-audio.upload');
+            Route::post('/classroom/{meeting}/recording-audio/complete', [\App\Http\Controllers\Student\ClassroomController::class, 'completeDirectAudioUpload'])->name('student.classroom.recording-audio.complete');
+            Route::post('/classroom/{meeting}/ai-report', [\App\Http\Controllers\Student\ClassroomController::class, 'generateAiReport'])->name('student.classroom.ai-report');
         });
     });
 
@@ -784,10 +807,29 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::get('/curriculum-library/{item:slug}/m/{material}/html', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialHtml'])->name('curriculum-library.material.html');
         Route::get('/curriculum-library/{item:slug}/m/{material}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPdf'])->name('curriculum-library.material.pdf');
         Route::get('/curriculum-library/{item:slug}/m/{material}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialPresentation'])->name('curriculum-library.material.presentation');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/animation-video', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialAnimationVideo'])->name('curriculum-library.material.animation-video');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/manifest', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlidesManifest'])->name('curriculum-library.material.slides.manifest');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/{slide}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlideImage'])
+            ->whereNumber('slide')
+            ->middleware('throttle:120,1')
+            ->name('curriculum-library.material.slides.image');
+        Route::get('/curriculum-library/{item:slug}/m/{material}/slides/{slide}/thumb', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewMaterialSlideThumb'])
+            ->whereNumber('slide')
+            ->middleware('throttle:120,1')
+            ->name('curriculum-library.material.slides.thumb');
         Route::get('/curriculum-library/{item:slug}/file/{file}/download', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'download'])->name('curriculum-library.file.download');
         Route::get('/curriculum-library/{item:slug}/file/{file}/view', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewHtml'])->name('curriculum-library.file.view');
         Route::get('/curriculum-library/{item:slug}/file/{file}/pdf', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPdf'])->name('curriculum-library.file.pdf');
         Route::get('/curriculum-library/{item:slug}/file/{file}/presentation', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewPresentation'])->name('curriculum-library.file.presentation');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/manifest', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlidesManifest'])->name('curriculum-library.file.slides.manifest');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/{slide}', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlideImage'])
+            ->whereNumber('slide')
+            ->middleware('throttle:120,1')
+            ->name('curriculum-library.file.slides.image');
+        Route::get('/curriculum-library/{item:slug}/file/{file}/slides/{slide}/thumb', [\App\Http\Controllers\Student\CurriculumLibraryController::class, 'viewFileSlideThumb'])
+            ->whereNumber('slide')
+            ->middleware('throttle:120,1')
+            ->name('curriculum-library.file.slides.thumb');
     });
 
     // لوحة الموظفين — عناصر القائمة تُحدَّد بصلاحيات الوظيفة (employee_jobs.permissions)
@@ -1460,6 +1502,10 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/curriculum-library/items/{item}/sections/{section}/materials/multipart-proxy-part', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'multipartProxyUploadPartMaterial'])->name('curriculum-library.items.materials.multipart-proxy-part');
         Route::post('/curriculum-library/items/{item}/sections/{section}/materials', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'storeMaterial'])->name('curriculum-library.items.materials.store');
         Route::put('/curriculum-library/items/{item}/materials/{material}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'updateMaterial'])->name('curriculum-library.items.materials.update');
+        Route::get('/curriculum-library/items/{item}/materials/{material}/conversion-status', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'materialPresentationConversionStatus'])->name('curriculum-library.items.materials.conversion-status');
+        Route::post('/curriculum-library/items/{item}/materials/{material}/retry-conversion', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'retryMaterialPresentationConversion'])->name('curriculum-library.items.materials.retry-conversion');
+        Route::post('/curriculum-library/items/{item}/materials/{material}/animation-video', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'storeMaterialAnimationVideo'])->name('curriculum-library.items.materials.animation-video.store');
+        Route::delete('/curriculum-library/items/{item}/materials/{material}/animation-video', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'destroyMaterialAnimationVideo'])->name('curriculum-library.items.materials.animation-video.destroy');
         Route::delete('/curriculum-library/items/{item}/materials/{material}', [\App\Http\Controllers\Admin\CurriculumLibraryStructureController::class, 'destroyMaterial'])->name('curriculum-library.items.materials.destroy');
         Route::get('/curriculum-library/items/{item}/edit', [\App\Http\Controllers\Admin\CurriculumLibraryController::class, 'editItem'])->name('curriculum-library.items.edit');
         // دعم fallback لـ POST في حالة فشل method spoof (_method=PUT) على بعض البيئات
@@ -1804,6 +1850,17 @@ Route::middleware(['auth', 'prevent-concurrent'])->group(function () {
         Route::post('/classroom/{meeting}/share-annotations/clear', [\App\Http\Controllers\Student\ClassroomController::class, 'clearShareAnnotations'])->name('classroom.share-annotations.clear');
         Route::get('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'whiteboardScene'])->name('classroom.whiteboard-scene');
         Route::post('/classroom/{meeting}/whiteboard-scene', [\App\Http\Controllers\Student\ClassroomController::class, 'pushWhiteboardScene'])->name('classroom.whiteboard-scene.push');
+        Route::get('/classroom/{meeting}/curriculum/catalog', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumCatalog'])->name('classroom.curriculum.catalog');
+        Route::post('/classroom/{meeting}/curriculum/present', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumPresent'])->name('classroom.curriculum.present');
+        Route::get('/classroom/{meeting}/curriculum/state', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumState'])->name('classroom.curriculum.state');
+        Route::post('/classroom/{meeting}/curriculum/slide', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumUpdateSlide'])->name('classroom.curriculum.slide.update');
+        Route::post('/classroom/{meeting}/curriculum/stop', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumStop'])->name('classroom.curriculum.stop');
+        Route::get('/classroom/{meeting}/curriculum/{sessionId}/slide/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumSlide'])
+            ->name('classroom.curriculum.slide')
+            ->where(['sessionId' => '[A-Za-z0-9\-]+', 'slide' => '[0-9]+']);
+        Route::get('/classroom/{meeting}/curriculum/{sessionId}/thumb/{slide}', [\App\Http\Controllers\Student\ClassroomController::class, 'curriculumThumb'])
+            ->name('classroom.curriculum.thumb')
+            ->where(['sessionId' => '[A-Za-z0-9\-]+', 'slide' => '[0-9]+']);
         Route::post('/classroom/room/{meeting}/end', [\App\Http\Controllers\Student\ClassroomController::class, 'end'])->name('classroom.end');
         Route::post('/classroom/{meeting}/recording/upload', [\App\Http\Controllers\Student\ClassroomController::class, 'uploadRecording'])->name('classroom.recording.upload');
         Route::post('/classroom/{meeting}/recording/presign', [\App\Http\Controllers\Student\ClassroomController::class, 'presignRecordingUpload'])->name('classroom.recording.presign');

@@ -631,4 +631,101 @@
 </script>
 @endpush
 @endif
+@push('scripts')
+<script>
+(function () {
+    var labels = {
+        none: 'غير مجدول',
+        pending: 'قيد الانتظار',
+        processing: 'جاري التحويل',
+        ready: 'جاهز',
+        failed: 'فشل التحويل',
+        unavailable: 'غير متاح',
+        stale: 'يحتاج إعادة بناء'
+    };
+    var styles = {
+        none: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
+        pending: 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200',
+        processing: 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200',
+        ready: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200',
+        failed: 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-200',
+        unavailable: 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-200',
+        stale: 'bg-violet-100 text-violet-800 dark:bg-violet-950/60 dark:text-violet-200'
+    };
+    var allStyleClasses = Object.keys(styles).reduce(function (out, key) {
+        return out.concat(styles[key].split(' '));
+    }, []);
+
+    function renderStatus(row, data) {
+        var status = labels[data.status] ? data.status : 'none';
+        var badge = row.querySelector('[data-conversion-badge]');
+        var label = row.querySelector('[data-conversion-label]');
+        var spinner = row.querySelector('[data-conversion-spinner]');
+        var error = row.querySelector('[data-conversion-error]');
+        var button = row.querySelector('[data-conversion-action]');
+        var text = labels[status];
+
+        if (status === 'ready' && Number(data.slide_count) > 0) {
+            text += ' (' + Number(data.slide_count) + ' شريحة)';
+        }
+        row.dataset.conversionStatus = status;
+        if (label) label.textContent = text;
+        if (badge) {
+            allStyleClasses.forEach(function (className) { badge.classList.remove(className); });
+            styles[status].split(' ').forEach(function (className) { badge.classList.add(className); });
+            badge.title = data.error_summary || '';
+        }
+        var busy = status === 'pending' || status === 'processing';
+        if (spinner) spinner.classList.toggle('hidden', !busy);
+        if (error) {
+            error.textContent = data.error_summary || '';
+            error.title = data.error_summary || '';
+            error.classList.toggle('hidden', !data.error_summary);
+        }
+        if (button) {
+            button.disabled = busy;
+            button.textContent = busy ? 'قيد التنفيذ' : (status === 'ready' ? 'إعادة بناء' : (status === 'none' ? 'تحويل العرض' : 'إعادة المحاولة'));
+        }
+    }
+
+    function activeRows() {
+        return Array.prototype.filter.call(document.querySelectorAll('[data-conversion-row]'), function (row) {
+            return row.dataset.conversionStatus === 'pending' || row.dataset.conversionStatus === 'processing';
+        });
+    }
+
+    function pollActiveConversions() {
+        var rows = activeRows();
+        if (!rows.length) return;
+        Promise.all(rows.map(function (row) {
+            return fetch(row.dataset.statusUrl, {
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function (response) {
+                if (!response.ok) throw new Error('status');
+                return response.json();
+            }).then(function (data) {
+                renderStatus(row, data || {});
+            }).catch(function () {
+                // Keep the last known state and try again while this row is active.
+            });
+        })).then(function () {
+            if (activeRows().length) window.setTimeout(pollActiveConversions, 5000);
+        });
+    }
+
+    document.addEventListener('submit', function (event) {
+        var form = event.target.closest && event.target.closest('[data-conversion-form]');
+        if (!form) return;
+        var row = form.closest('[data-conversion-row]');
+        if (row && row.dataset.conversionStatus === 'ready' &&
+            !window.confirm('إعادة بناء الشرائح الحالية؟ سيظل ملف PowerPoint الأصلي دون تغيير.')) {
+            event.preventDefault();
+        }
+    });
+
+    if (activeRows().length) window.setTimeout(pollActiveConversions, 5000);
+})();
+</script>
+@endpush
 @endsection

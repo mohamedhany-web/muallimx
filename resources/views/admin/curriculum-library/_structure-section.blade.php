@@ -190,7 +190,41 @@
         </div>
         <div class="divide-y divide-slate-100 dark:divide-slate-700">
             @foreach($section->materials as $mat)
-                <div class="px-4 sm:px-5 py-4 hover:bg-slate-50/80 dark:hover:bg-slate-900/40 transition-colors">
+                @php
+                    $isPresentation = $mat->file_kind === 'pptx';
+                    $presentationDerivative = $mat->relationLoaded('presentationDerivative') ? $mat->presentationDerivative : null;
+                    $conversionStatus = $isPresentation
+                        ? ($mat->relationLoaded('presentationDerivative') ? ($presentationDerivative?->status ?? 'none') : 'unavailable')
+                        : null;
+                    $conversionStatus = in_array($conversionStatus, ['none', 'pending', 'processing', 'ready', 'failed', 'unavailable', 'stale'], true)
+                        ? $conversionStatus
+                        : 'none';
+                    $conversionError = \App\Models\CurriculumPresentationDerivative::safeErrorSummary($presentationDerivative?->error_message);
+                    $conversionLabels = [
+                        'none' => 'غير مجدول',
+                        'pending' => 'قيد الانتظار',
+                        'processing' => 'جاري التحويل',
+                        'ready' => 'جاهز' . (($presentationDerivative?->slide_count ?? 0) > 0 ? ' (' . $presentationDerivative->slide_count . ' شريحة)' : ''),
+                        'failed' => 'فشل التحويل',
+                        'unavailable' => 'غير متاح',
+                        'stale' => 'يحتاج إعادة بناء',
+                    ];
+                    $conversionStyles = [
+                        'none' => 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200',
+                        'pending' => 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200',
+                        'processing' => 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200',
+                        'ready' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200',
+                        'failed' => 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-200',
+                        'unavailable' => 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-200',
+                        'stale' => 'bg-violet-100 text-violet-800 dark:bg-violet-950/60 dark:text-violet-200',
+                    ];
+                @endphp
+                <div class="px-4 sm:px-5 py-4 hover:bg-slate-50/80 dark:hover:bg-slate-900/40 transition-colors"
+                     @if($isPresentation)
+                         data-conversion-row
+                         data-conversion-status="{{ $conversionStatus }}"
+                         data-status-url="{{ route('admin.curriculum-library.items.materials.conversion-status', [$item, $mat]) }}"
+                     @endif>
                     <form action="{{ route('admin.curriculum-library.items.materials.update', [$item, $mat]) }}" method="POST">
                         @csrf
                         @method('PUT')
@@ -230,6 +264,104 @@
                             </div>
                         </div>
                     </form>
+                    @if($isPresentation)
+                        <div class="mt-3 flex flex-wrap items-center justify-end gap-2">
+                            <span data-conversion-badge
+                                  class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-black {{ $conversionStyles[$conversionStatus] }}"
+                                  @if($conversionError) title="{{ $conversionError }}" @endif>
+                                <i data-conversion-spinner class="fas fa-circle-notch fa-spin {{ in_array($conversionStatus, ['pending', 'processing'], true) ? '' : 'hidden' }}"></i>
+                                <span data-conversion-label>{{ $conversionLabels[$conversionStatus] }}</span>
+                            </span>
+                            <span data-conversion-error class="max-w-md truncate text-[11px] text-rose-700 dark:text-rose-300 {{ $conversionError ? '' : 'hidden' }}"
+                                  @if($conversionError) title="{{ $conversionError }}" @endif>{{ $conversionError }}</span>
+                            <form action="{{ route('admin.curriculum-library.items.materials.retry-conversion', [$item, $mat]) }}"
+                                  method="POST"
+                                  data-conversion-form>
+                                @csrf
+                                <button type="submit"
+                                        data-conversion-action
+                                        class="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-[11px] font-black text-indigo-700 hover:bg-indigo-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-200"
+                                        {{ in_array($conversionStatus, ['pending', 'processing'], true) ? 'disabled' : '' }}>
+                                    {{ in_array($conversionStatus, ['pending', 'processing'], true) ? 'قيد التنفيذ' : ($conversionStatus === 'ready' ? 'إعادة بناء' : ($conversionStatus === 'none' ? 'تحويل العرض' : 'إعادة المحاولة')) }}
+                                </button>
+                            </form>
+                        </div>
+
+                        @php
+                            $hasAnimVideo = $mat->hasAnimationVideo();
+                            $animSizeLabel = null;
+                            if ($hasAnimVideo && $mat->animation_video_size) {
+                                $bytes = (int) $mat->animation_video_size;
+                                $animSizeLabel = $bytes >= 1048576
+                                    ? number_format($bytes / 1048576, 1) . ' ميجابايت'
+                                    : number_format(max(1, $bytes / 1024), 0) . ' كيلوبايت';
+                            }
+                            $animMaxMb = max(1, (int) round(((int) config('curriculum_presentation.animation_video_max_bytes', 524288000)) / 1048576));
+                        @endphp
+                        <div class="mt-3 rounded-xl border border-amber-200/80 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/30 p-3 space-y-2">
+                            <div class="flex flex-wrap items-start justify-between gap-2">
+                                <div class="min-w-0">
+                                    <p class="text-[11px] font-black text-amber-900 dark:text-amber-200">فيديو الحركات (اختياري)</p>
+                                    <p class="text-[11px] text-amber-800/90 dark:text-amber-300/90 leading-relaxed mt-0.5">
+                                        صدّر العرض من PowerPoint إلى MP4 (أو WebM) ثم ارفعه هنا للحفاظ على الحركات والصوت والتوقيت.
+                                        الملف الأصلي PPT/PPTX يبقى كما هو، ومشغّل الشرائح الثابتة يبقى متاحاً للطالب.
+                                    </p>
+                                </div>
+                                @if($hasAnimVideo)
+                                    <span class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 shrink-0">
+                                        <i class="fas fa-check-circle"></i>
+                                        مرفوع
+                                        @if($animSizeLabel) · {{ $animSizeLabel }} @endif
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-black bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300 shrink-0">
+                                        غير مرفوع
+                                    </span>
+                                @endif
+                            </div>
+                            @if($hasAnimVideo && $mat->animation_video_original_name)
+                                <p class="text-[11px] text-slate-600 dark:text-slate-400 truncate" title="{{ $mat->animation_video_original_name }}">
+                                    الملف: {{ $mat->animation_video_original_name }}
+                                    @if($mat->animation_video_uploaded_at)
+                                        · {{ $mat->animation_video_uploaded_at->format('Y-m-d H:i') }}
+                                    @endif
+                                </p>
+                            @endif
+                            <form action="{{ route('admin.curriculum-library.items.materials.animation-video.store', [$item, $mat]) }}"
+                                  method="POST"
+                                  enctype="multipart/form-data"
+                                  class="flex flex-wrap items-end gap-2">
+                                @csrf
+                                <div class="min-w-0 flex-1">
+                                    <label class="block text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                        {{ $hasAnimVideo ? 'استبدال الفيديو (MP4 / WebM)' : 'رفع فيديو (MP4 / WebM)' }}
+                                        — حد أقصى {{ $animMaxMb }} ميجابايت
+                                    </label>
+                                    <input type="file"
+                                           name="animation_video"
+                                           accept=".mp4,.webm,video/mp4,video/webm"
+                                           required
+                                           class="block w-full text-xs text-slate-700 dark:text-slate-200 file:me-2 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-[11px] file:font-black file:text-white hover:file:bg-indigo-700">
+                                </div>
+                                <button type="submit"
+                                        class="rounded-lg bg-amber-600 px-3 py-2 text-[11px] font-black text-white hover:bg-amber-700">
+                                    {{ $hasAnimVideo ? 'استبدال' : 'رفع' }}
+                                </button>
+                            </form>
+                            @if($hasAnimVideo)
+                                <form action="{{ route('admin.curriculum-library.items.materials.animation-video.destroy', [$item, $mat]) }}"
+                                      method="POST"
+                                      onsubmit="return confirm('حذف فيديو الحركات فقط؟ الملف الأصلي PPT/PPTX والشرائح المشتقة لن تُمس.');"
+                                      class="flex justify-end">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline">
+                                        حذف فيديو الحركات
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    @endif
                     <div class="mt-2 flex justify-end">
                         <form action="{{ route('admin.curriculum-library.items.materials.destroy', [$item, $mat]) }}" method="POST" onsubmit="return confirm('حذف الملف نهائياً من المنصة؟');">
                             @csrf

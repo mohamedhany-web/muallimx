@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\CurriculumLibraryItem;
 use App\Models\CurriculumLibraryMaterial;
 use App\Models\CurriculumLibrarySection;
+use App\Models\CurriculumPresentationDerivative;
 use App\Services\CurriculumLibraryR2MultipartService;
+use App\Services\CurriculumPresentationConversionService;
 use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Throwable;
@@ -19,7 +22,8 @@ use Throwable;
 class CurriculumLibraryStructureController extends Controller
 {
     public function __construct(
-        protected CurriculumLibraryR2MultipartService $r2Multipart
+        protected CurriculumLibraryR2MultipartService $r2Multipart,
+        protected CurriculumPresentationConversionService $presentationConversion
     ) {}
 
     /** امتدادات مسموحة لمواد المناهج (رفع لوحة التحكم) — متوافقة تقريباً مع FileUploadSecurityMiddleware */
@@ -51,7 +55,7 @@ class CurriculumLibraryStructureController extends Controller
             'order' => 'nullable|integer|min:0',
         ]);
 
-        if (!empty($validated['parent_id'])) {
+        if (! empty($validated['parent_id'])) {
             CurriculumLibrarySection::where('id', $validated['parent_id'])
                 ->where('curriculum_library_item_id', $item->id)
                 ->firstOrFail();
@@ -126,12 +130,12 @@ class CurriculumLibraryStructureController extends Controller
         $maxMbLabel = max(1, (int) round($maxKb / 1024));
 
         $request->validate([
-            'file' => 'required|file|max:' . $maxKb,
+            'file' => 'required|file|max:'.$maxKb,
             'title' => 'nullable|string|max:255',
             'view_in_platform' => 'nullable|boolean',
             'allow_download' => 'nullable|boolean',
         ], [
-            'file.max' => 'حجم الملف يتجاوز الحد المسموح لمادة المنهج (' . $maxMbLabel . ' ميجابايت كحد أقصى).',
+            'file.max' => 'حجم الملف يتجاوز الحد المسموح لمادة المنهج ('.$maxMbLabel.' ميجابايت كحد أقصى).',
         ]);
 
         @ini_set('max_input_time', '7200');
@@ -149,7 +153,7 @@ class CurriculumLibraryStructureController extends Controller
             $path = $upload->store('curriculum-library/materials/'.$section->id, 'r2');
             $order = ((int) ($section->materials()->max('order') ?? 0)) + 1;
 
-            CurriculumLibraryMaterial::create([
+            $material = CurriculumLibraryMaterial::create([
                 'curriculum_library_section_id' => $section->id,
                 'title' => $request->input('title') ?: null,
                 'path' => $path,
@@ -161,6 +165,8 @@ class CurriculumLibraryStructureController extends Controller
                 'order' => $order,
                 'is_active' => true,
             ]);
+
+            $this->queuePresentationConversionAfterCreate($material);
         } catch (\Throwable $e) {
             Log::error('Curriculum material upload failed', [
                 'item_id' => $item->id,
@@ -211,14 +217,241 @@ class CurriculumLibraryStructureController extends Controller
     {
         $this->assertMaterialBelongs($item, $material);
 
-        $disk = $material->storage_disk ?: 'r2';
-        if ($material->path && Storage::disk($disk)->exists($material->path)) {
-            Storage::disk($disk)->delete($material->path);
-        }
-        $material->delete();
+        $material->deleteWithStorage();
 
         return redirect()->route('admin.curriculum-library.items.structure', $item)
             ->with('success', 'تم حذف المادة.');
+    }
+
+    /**
+     * إعادة محاولة تحويل عرض PPT/PPTX إلى شرائح مشتقة (لا يمس الملف الأصلي).
+     */
+    public function retryMaterialPresentationConversion(CurriculumLibraryItem $item, CurriculumLibraryMaterial $material)
+    {
+        $this->assertMaterialBelongs($item, $material);
+
+        if (! Schema::hasTable('curriculum_presentation_derivatives')) {
+            return redirect()->route('admin.curriculum-library.items.structure', $item)
+                ->with('error', 'جدول التحويل غير جاهز بعد. نفّذ الترحيلات أولاً.');
+        }
+
+        if (! $this->presentationConversion->materialIsConvertible($material)) {
+            return redirect()->route('admin.curriculum-library.items.structure', $item)
+                ->with('error', 'هذه المادة ليست عرض PPT/PPTX قابلاً للتحويل.');
+        }
+
+        $derivative = $material->presentationDerivative()->first();
+        if ($derivative && in_array($derivative->status, [
+            CurriculumPresentationDerivative::STATUS_PENDING,
+            CurriculumPresentationDerivative::STATUS_PROCESSING,
+        ], true)) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'التحويل قيد التنفيذ بالفعل.',
+                ], 409);
+            }
+
+            return redirect()->route('admin.curriculum-library.items.structure', $item)
+                ->with('error', 'التحويل قيد التنفيذ بالفعل.');
+        }
+
+        $this->presentationConversion->queueMaterialIfEligible($material);
+
+        if (request()->expectsJson()) {
+            return response()->json(['ok' => true, 'message' => 'تمت جدولة إعادة التحويل.']);
+        }
+
+        return redirect()->route('admin.curriculum-library.items.structure', $item)
+            ->with('success', 'تمت جدولة إعادة تحويل العرض.');
+    }
+
+    /**
+     * حالة تحويل مختصرة للوحة التحكم؛ لا تكشف مسارات التخزين أو روابط المصدر.
+     */
+    public function materialPresentationConversionStatus(
+        CurriculumLibraryItem $item,
+        CurriculumLibraryMaterial $material
+    ): JsonResponse {
+        $this->assertMaterialBelongs($item, $material);
+
+        if (! $this->presentationConversion->materialIsConvertible($material)) {
+            abort(404);
+        }
+
+        if (! Schema::hasTable('curriculum_presentation_derivatives')) {
+            return response()->json([
+                'status' => CurriculumPresentationDerivative::STATUS_UNAVAILABLE,
+                'slide_count' => null,
+                'error_summary' => 'خدمة التحويل غير جاهزة حالياً.',
+            ]);
+        }
+
+        $derivative = $material->presentationDerivative()->first();
+        $status = $derivative?->status;
+        $allowedStatuses = [
+            CurriculumPresentationDerivative::STATUS_PENDING,
+            CurriculumPresentationDerivative::STATUS_PROCESSING,
+            CurriculumPresentationDerivative::STATUS_READY,
+            CurriculumPresentationDerivative::STATUS_FAILED,
+            CurriculumPresentationDerivative::STATUS_UNAVAILABLE,
+            CurriculumPresentationDerivative::STATUS_STALE,
+        ];
+
+        if (! in_array($status, $allowedStatuses, true)) {
+            $status = 'none';
+        }
+
+        return response()->json([
+            'status' => $status,
+            'slide_count' => $status === CurriculumPresentationDerivative::STATUS_READY
+                ? max(0, (int) ($derivative?->slide_count ?? 0))
+                : null,
+            'error_summary' => CurriculumPresentationDerivative::safeErrorSummary($derivative?->error_message),
+        ]);
+    }
+
+    /**
+     * Upload/replace companion animation video (MP4/WebM). Never touches original PPT/PPTX path.
+     */
+    public function storeMaterialAnimationVideo(
+        Request $request,
+        CurriculumLibraryItem $item,
+        CurriculumLibraryMaterial $material
+    ) {
+        $this->assertMaterialBelongs($item, $material);
+
+        if ($material->file_kind !== 'pptx') {
+            return redirect()->route('admin.curriculum-library.items.structure', $item)
+                ->with('error', 'فيديو الحركات متاح فقط لمواد PPT/PPTX.');
+        }
+
+        $maxBytes = (int) config('curriculum_presentation.animation_video_max_bytes', 500 * 1024 * 1024);
+        $maxKb = max(1, (int) ceil($maxBytes / 1024));
+        $maxMbLabel = max(1, (int) round($maxBytes / 1024 / 1024));
+        $allowedExt = config('curriculum_presentation.animation_video_allowed_extensions', ['mp4', 'webm']);
+        $allowedMimes = config('curriculum_presentation.animation_video_allowed_mimes', [
+            'video/mp4', 'video/webm', 'application/mp4', 'application/octet-stream',
+        ]);
+
+        $request->validate([
+            'animation_video' => 'required|file|max:'.$maxKb,
+        ], [
+            'animation_video.required' => 'يرجى اختيار ملف فيديو MP4 أو WebM.',
+            'animation_video.max' => 'حجم فيديو الحركات يتجاوز الحد المسموح ('.$maxMbLabel.' ميجابايت كحد أقصى).',
+        ]);
+
+        @ini_set('max_input_time', '7200');
+        @set_time_limit(0);
+
+        $upload = $request->file('animation_video');
+        $ext = strtolower((string) $upload->getClientOriginalExtension());
+        $mime = strtolower((string) ($upload->getMimeType() ?: ''));
+
+        if (! in_array($ext, $allowedExt, true)) {
+            return redirect()->route('admin.curriculum-library.items.structure', $item)
+                ->with('error', 'يُسمح فقط بملفات MP4 أو WebM لفيديو الحركات.');
+        }
+
+        if ($mime !== '' && ! in_array($mime, $allowedMimes, true)) {
+            return redirect()->route('admin.curriculum-library.items.structure', $item)
+                ->with('error', 'نوع ملف الفيديو غير مسموح. استخدم تصدير PowerPoint إلى MP4 أو WebM.');
+        }
+
+        $sourcePathBefore = $material->path;
+        $sourceDiskBefore = $material->storage_disk;
+        $oldVideoPath = $material->animation_video_path;
+        $oldVideoDisk = $material->animation_video_disk ?: 'r2';
+
+        $uuid = (string) Str::uuid();
+        $filename = $uuid.'.'.$ext;
+        $directory = 'curriculum-library/animations/material/'.$material->id;
+        $newPath = null;
+
+        try {
+            $newPath = $upload->storeAs($directory, $filename, 'r2');
+            if (! $newPath) {
+                throw new \RuntimeException('Failed to store animation video sidecar.');
+            }
+
+            $material->forceFill([
+                'animation_video_path' => $newPath,
+                'animation_video_disk' => 'r2',
+                'animation_video_original_name' => $upload->getClientOriginalName(),
+                'animation_video_mime' => $mime !== '' ? $mime : ($ext === 'webm' ? 'video/webm' : 'video/mp4'),
+                'animation_video_size' => (int) $upload->getSize(),
+                'animation_video_uploaded_at' => now(),
+            ])->save();
+        } catch (Throwable $e) {
+            if ($newPath) {
+                try {
+                    Storage::disk('r2')->delete($newPath);
+                } catch (Throwable) {
+                }
+            }
+
+            Log::error('Curriculum animation video upload failed', [
+                'item_id' => $item->id,
+                'material_id' => $material->id,
+                'user_id' => auth()->id(),
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('admin.curriculum-library.items.structure', $item)
+                ->with('error', 'تعذّر رفع فيديو الحركات. تحقّق من الملف والاتصال ثم أعد المحاولة.');
+        }
+
+        // Source invariant: never mutate original PPT/PPTX object or path.
+        $material->refresh();
+        if ($material->path !== $sourcePathBefore || $material->storage_disk !== $sourceDiskBefore) {
+            Log::critical('Animation video upload mutated source path — refusing to continue cleanup', [
+                'material_id' => $material->id,
+            ]);
+        }
+
+        if ($oldVideoPath && $oldVideoPath !== $newPath) {
+            try {
+                if (Storage::disk($oldVideoDisk)->exists($oldVideoPath)) {
+                    Storage::disk($oldVideoDisk)->delete($oldVideoPath);
+                }
+            } catch (Throwable) {
+                // Best-effort old sidecar cleanup only.
+            }
+        }
+
+        return redirect()->route('admin.curriculum-library.items.structure', $item)
+            ->with('success', 'تم حفظ فيديو الحركات بنجاح (الملف الأصلي لم يُمس).');
+    }
+
+    /**
+     * Remove companion animation video sidecar only — never the original PPT/PPTX.
+     */
+    public function destroyMaterialAnimationVideo(
+        CurriculumLibraryItem $item,
+        CurriculumLibraryMaterial $material
+    ) {
+        $this->assertMaterialBelongs($item, $material);
+
+        if ($material->file_kind !== 'pptx') {
+            return redirect()->route('admin.curriculum-library.items.structure', $item)
+                ->with('error', 'فيديو الحركات متاح فقط لمواد PPT/PPTX.');
+        }
+
+        $sourcePathBefore = $material->path;
+        $sourceDiskBefore = $material->storage_disk;
+
+        $material->deleteAnimationVideoFromStorage();
+        $material->clearAnimationVideoAttributes();
+
+        $material->refresh();
+        if ($material->path !== $sourcePathBefore || $material->storage_disk !== $sourceDiskBefore) {
+            Log::critical('Animation video delete mutated source path', [
+                'material_id' => $material->id,
+            ]);
+        }
+
+        return redirect()->route('admin.curriculum-library.items.structure', $item)
+            ->with('success', 'تم حذف فيديو الحركات. العرض الأصلي والشرائح المشتقة لم تُمس.');
     }
 
     /**
@@ -779,7 +1012,7 @@ class CurriculumLibraryStructureController extends Controller
         try {
             $order = ((int) ($section->materials()->max('order') ?? 0)) + 1;
 
-            CurriculumLibraryMaterial::create([
+            $material = CurriculumLibraryMaterial::create([
                 'curriculum_library_section_id' => $section->id,
                 'title' => $title ?: null,
                 'path' => $path,
@@ -791,6 +1024,8 @@ class CurriculumLibraryStructureController extends Controller
                 'order' => $order,
                 'is_active' => true,
             ]);
+
+            $this->queuePresentationConversionAfterCreate($material);
         } catch (Throwable $e) {
             try {
                 $disk->delete($path);
@@ -808,6 +1043,25 @@ class CurriculumLibraryStructureController extends Controller
         return null;
     }
 
+    /**
+     * Queue slide conversion only after the material row exists. Schema-guarded for lightweight tests.
+     */
+    protected function queuePresentationConversionAfterCreate(CurriculumLibraryMaterial $material): void
+    {
+        if (! Schema::hasTable('curriculum_presentation_derivatives')) {
+            return;
+        }
+
+        try {
+            $this->presentationConversion->queueMaterialIfEligible($material);
+        } catch (Throwable $e) {
+            Log::warning('Curriculum presentation conversion queue skipped', [
+                'material_id' => $material->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
     protected function assertSectionBelongs(CurriculumLibraryItem $item, CurriculumLibrarySection $section): void
     {
         if ((int) $section->curriculum_library_item_id !== (int) $item->id) {
@@ -818,7 +1072,7 @@ class CurriculumLibraryStructureController extends Controller
     protected function assertMaterialBelongs(CurriculumLibraryItem $item, CurriculumLibraryMaterial $material): void
     {
         $material->loadMissing('section');
-        if (!$material->section || (int) $material->section->curriculum_library_item_id !== (int) $item->id) {
+        if (! $material->section || (int) $material->section->curriculum_library_item_id !== (int) $item->id) {
             abort(404);
         }
     }

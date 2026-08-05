@@ -232,6 +232,9 @@
 
     var tileMap = new Map();
     var raisedHands = new Set();
+    var curriculumActive = false;
+    var curriculumHandler = null;
+    var curriculumSnapshot = null;
     var localAudio = null;
     var localVideo = null;
     var localScreenTracks = [];
@@ -1666,6 +1669,16 @@
           window.__mxShareAnnForceLocalClear();
         }
       }
+      if (typeof msg.t === 'string' && msg.t.indexOf('curriculum_') === 0) {
+        if (msg.t === 'curriculum_state_req' && isHost && curriculumActive && curriculumSnapshot) {
+          sendData('curriculum_state', curriculumSnapshot).catch(function () {});
+        }
+        if (curriculumHandler) {
+          try {
+            curriculumHandler(msg, participant);
+          } catch (e) {}
+        }
+      }
     }
 
     function paintMic() {
@@ -1829,6 +1842,13 @@
         toast('المعلم لم يُتح مشاركة الشاشة');
         return;
       }
+      if (curriculumActive) {
+        if (typeof api.closeCurriculumPresenter === 'function') {
+          try {
+            api.closeCurriculumPresenter();
+          } catch (e) {}
+        }
+      }
       if (typeof room.localParticipant.setScreenShareEnabled === 'function') {
         await room.localParticipant.setScreenShareEnabled(true, {
           audio: false,
@@ -1926,11 +1946,40 @@
 
     async function announceMeetingEnded() {
       try {
+        if (typeof api.closeCurriculumPresenter === 'function') {
+          api.closeCurriculumPresenter();
+        }
+      } catch (e0) {}
+      try {
         await sendData('meeting_ended', {});
       } catch (e) {}
       try {
         room.disconnect();
       } catch (e2) {}
+    }
+
+    function replayCurriculumState() {
+      if (!isHost || !curriculumActive || !curriculumSnapshot) return;
+      sendData('curriculum_state', curriculumSnapshot).catch(function () {});
+    }
+
+    function sendCurriculum(type, payload, reliable) {
+      if (isHost) {
+        if (type === 'curriculum_open' || type === 'curriculum_state') {
+          curriculumSnapshot = Object.assign({}, payload || {}, { active: true });
+          curriculumActive = true;
+        } else if (type === 'curriculum_slide' && curriculumSnapshot) {
+          curriculumSnapshot.index = payload && payload.index != null ? payload.index : curriculumSnapshot.index;
+        } else if (type === 'curriculum_viewport' && curriculumSnapshot) {
+          curriculumSnapshot.scale = payload.scale;
+          curriculumSnapshot.tx = payload.tx;
+          curriculumSnapshot.ty = payload.ty;
+        } else if (type === 'curriculum_close') {
+          curriculumActive = false;
+          curriculumSnapshot = null;
+        }
+      }
+      return sendData(type, payload || {}, reliable !== false);
     }
 
     function pickRecorderMime(preferAudioOnly) {
@@ -2564,6 +2613,7 @@
         renderPeople();
         scheduleParticipantPipRefresh();
         toast('انضم مشارك');
+        replayCurriculumState();
       })
       .on(RoomEvent.ParticipantDisconnected, function (p) {
         raisedHands.delete(p.identity);
@@ -2585,12 +2635,22 @@
         setStatus('انقطع الاتصال');
         closeParticipantPip();
         stopWaitingRoomPoll();
+        try {
+          if (typeof api.closeCurriculumPresenter === 'function') {
+            api.closeCurriculumPresenter();
+          }
+        } catch (e) {}
       })
       .on(RoomEvent.Reconnecting, function () {
         setStatus('إعادة اتصال…');
       })
       .on(RoomEvent.Reconnected, function () {
         setStatus('متصل');
+        if (isHost) {
+          replayCurriculumState();
+        } else {
+          sendData('curriculum_state_req', {}).catch(function () {});
+        }
       });
 
     setStatus('جاري الاتصال…');
@@ -2644,8 +2704,28 @@
     api.getLocalAudioTrack = function () {
       return localAudio;
     };
+    api.toast = toast;
+    api.sendCurriculum = sendCurriculum;
+    api.registerCurriculumHandler = function (fn) {
+      curriculumHandler = typeof fn === 'function' ? fn : null;
+    };
+    api.setCurriculumActive = function (on) {
+      curriculumActive = !!on;
+      if (!on) curriculumSnapshot = null;
+    };
+    api.stopScreenShareIfActive = function () {
+      if (!shareOn) return Promise.resolve();
+      return stopScreenShare();
+    };
+    api.openCurriculumPresenter = function () {};
+    api.closeCurriculumPresenter = function () {};
     api.disconnect = function () {
       closeParticipantPip();
+      try {
+        if (typeof api.closeCurriculumPresenter === 'function') {
+          api.closeCurriculumPresenter();
+        }
+      } catch (e0) {}
       try {
         room.disconnect();
       } catch (e) {}
@@ -2653,6 +2733,11 @@
 
     window.addEventListener('beforeunload', function () {
       closeParticipantPip();
+      try {
+        if (typeof api.closeCurriculumPresenter === 'function') {
+          api.closeCurriculumPresenter();
+        }
+      } catch (e0) {}
       try {
         room.disconnect();
       } catch (e) {}

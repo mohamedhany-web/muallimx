@@ -17,6 +17,8 @@
         $mxLkCss = is_readable($mxLkCssFile) ? file_get_contents($mxLkCssFile) : '';
         $mxLkRoomJsFile = public_path('js/classroom-livekit-room.js');
         $mxLkRoomJs = is_readable($mxLkRoomJsFile) ? file_get_contents($mxLkRoomJsFile) : '';
+        $mxCurriculumPresenterJsFile = public_path('js/classroom-curriculum-presenter.js');
+        $mxCurriculumPresenterJs = is_readable($mxCurriculumPresenterJsFile) ? file_get_contents($mxCurriculumPresenterJsFile) : '';
     @endphp
     @if($mxMeetlineCss !== '')
     <style id="mx-classroom-meetline-css">{!! $mxMeetlineCss !!}</style>
@@ -43,6 +45,9 @@
     @include('partials.mx-classroom-wb-sync')
     @if($mxLkRoomJs !== '')
     <script id="mx-classroom-livekit-room-js">{!! $mxLkRoomJs !!}</script>
+    @endif
+    @if($mxCurriculumPresenterJs !== '')
+    <script id="mx-classroom-curriculum-presenter-js">{!! $mxCurriculumPresenterJs !!}</script>
     @endif
 </head>
 <body class="join-lobby">
@@ -393,6 +398,15 @@ async function bootGuestMeeting(enterData, name) {
         onKicked: () => { location.reload(); },
     });
 
+    if (window.MxClassroomCurriculumPresenter) {
+        window.__mxCurriculumPresenter = window.MxClassroomCurriculumPresenter.attach(lkApi, {
+            isHost: false,
+            guestToken: joinToken,
+            stateUrl: @json(route('classroom.join.curriculum.state', ['code' => $code])),
+            slideBaseUrl: @json(url('classroom/join/'.$code.'/curriculum')),
+        });
+    }
+
     setInterval(async () => {
         if (!joinToken) return;
         try {
@@ -490,6 +504,7 @@ document.getElementById('btn-guest-leave')?.addEventListener('click', async () =
             });
         }
     } catch (_) {}
+    try { window.__mxCurriculumPresenter?.destroy?.(); } catch (_) {}
     try { lkApi?.disconnect?.(); } catch (_) {}
     location.reload();
 });

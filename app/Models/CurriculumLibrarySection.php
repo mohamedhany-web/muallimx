@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 
 class CurriculumLibrarySection extends Model
 {
@@ -53,11 +53,19 @@ class CurriculumLibrarySection extends Model
      */
     public static function treeForItem(CurriculumLibraryItem $item, bool $onlyActive = true): Collection
     {
+        $materialRelations = [];
+        if (Schema::hasTable('curriculum_presentation_derivatives')) {
+            $materialRelations[] = 'presentationDerivative';
+        }
+
         $query = static::query()
             ->where('curriculum_library_item_id', $item->id)
             ->with([
-                'materials' => function ($q) use ($onlyActive) {
+                'materials' => function ($q) use ($onlyActive, $materialRelations) {
                     $q->orderBy('order')->orderBy('id');
+                    if ($materialRelations !== []) {
+                        $q->with($materialRelations);
+                    }
                     if ($onlyActive) {
                         $q->where('is_active', true);
                     }
@@ -99,11 +107,8 @@ class CurriculumLibrarySection extends Model
             $child->deleteWithStorage();
         }
         foreach ($this->materials()->get() as $material) {
-            $disk = $material->storage_disk ?: 'r2';
-            if ($material->path && Storage::disk($disk)->exists($material->path)) {
-                Storage::disk($disk)->delete($material->path);
-            }
-            $material->delete();
+            // Uses model helper so presentation derivatives are removed with the material.
+            $material->deleteWithStorage();
         }
         $this->delete();
     }

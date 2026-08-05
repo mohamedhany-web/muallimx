@@ -48,8 +48,13 @@ class SecurityHeadersMiddleware
             return;
         }
 
-        $jitsiDomain = LiveSetting::getJitsiDomain();
-        $jitsiOrigin = $jitsiDomain !== '' ? ' https://'.$jitsiDomain : '';
+        $jitsiOrigin = '';
+        try {
+            $jitsiDomain = LiveSetting::getJitsiDomain();
+            $jitsiOrigin = $jitsiDomain !== '' ? ' https://'.$jitsiDomain : '';
+        } catch (\Throwable) {
+            // Keep CSP intact even if live settings are unavailable.
+        }
 
         // فواتيرك: الإطارات والنماذج والسكربتات الديناميكية من نطاقهم (blob: لمسار احتياطي fetch→Blob على صفحة الدفع)
         $fawaterkCsp = ' https://app.fawaterk.com https://staging.fawaterk.com https://*.fawaterk.com https://fawaterk.com https://www.fawaterk.com https://*.fawaterak.xyz';
@@ -73,6 +78,7 @@ class SecurityHeadersMiddleware
             'https://cdnjs.cloudflare.com '.
             'https://cdn.jsdelivr.net; '.
             "img-src 'self' data: https: blob:; ".
+            "media-src 'self' https: blob:; ".
             "connect-src 'self' https: ws: wss:; ".
             "frame-src 'self' ".
             'https://iframe.mediadelivery.net '.
@@ -80,6 +86,7 @@ class SecurityHeadersMiddleware
             'https://www.youtube.com '.
             'https://youtube.com '.
             'https://www.youtube-nocookie.com '.
+            'https://view.officeapps.live.com '.
             $jitsiOrigin.
             $fawaterkCsp.'; '.
             "object-src 'none'; ".

@@ -25,6 +25,11 @@ class CriticalModulesSmokeTest extends TestCase
             \App\Models\ClassroomMeeting::class,
             \App\Models\ClassroomMeetingWaitingGuest::class,
             \App\Services\ClassroomWaitingRoomService::class,
+            \App\Models\CurriculumPresentationDerivative::class,
+            \App\Services\CurriculumPresentationConversionService::class,
+            \App\Services\CurriculumPresentationViewerService::class,
+            \App\Services\ClassroomCurriculumPresentService::class,
+            \App\Jobs\ConvertCurriculumPresentationJob::class,
             \App\Http\Controllers\Api\ClassroomRecordingWebhookController::class,
             \App\Http\Controllers\Admin\ClassroomRecordingController::class,
         ];

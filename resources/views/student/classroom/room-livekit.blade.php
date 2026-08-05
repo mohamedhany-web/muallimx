@@ -17,6 +17,8 @@
         $mxLkCss = is_readable($mxLkCssFile) ? file_get_contents($mxLkCssFile) : '';
         $mxLkRoomJsFile = public_path('js/classroom-livekit-room.js');
         $mxLkRoomJs = is_readable($mxLkRoomJsFile) ? file_get_contents($mxLkRoomJsFile) : '';
+        $mxCurriculumPresenterJsFile = public_path('js/classroom-curriculum-presenter.js');
+        $mxCurriculumPresenterJs = is_readable($mxCurriculumPresenterJsFile) ? file_get_contents($mxCurriculumPresenterJsFile) : '';
         $mxWbToolsJsFile = public_path('js/classroom-wb-tools.js');
         $mxWbToolsJs = is_readable($mxWbToolsJsFile) ? file_get_contents($mxWbToolsJsFile) : '';
         $mxVbgJsFile = public_path('js/classroom-virtual-background.js');
@@ -58,6 +60,9 @@
     @include('partials.mx-classroom-wb-sync')
     @if($mxLkRoomJs !== '')
     <script id="mx-classroom-livekit-room-js">{!! $mxLkRoomJs !!}</script>
+    @endif
+    @if($mxCurriculumPresenterJs !== '')
+    <script id="mx-classroom-curriculum-presenter-js">{!! $mxCurriculumPresenterJs !!}</script>
     @endif
     @if($mxWbToolsJs !== '')
     <script id="mx-classroom-wb-tools-js">{!! $mxWbToolsJs !!}</script>
@@ -149,6 +154,11 @@
             <button type="button" id="mx-ml-btn-laser" class="mx-ml-icon-btn" title="مؤشر ليزر على الشاشة" disabled>
                 <i class="fas fa-location-crosshairs text-[#171717]"></i>
             </button>
+            @unless($academicObserverMode)
+            <button type="button" id="mx-ml-btn-curriculum" class="mx-ml-icon-btn" title="عرض منهج" aria-pressed="false">
+                <i class="fas fa-book-open text-[#171717]"></i>
+            </button>
+            @endunless
             <button type="button" id="btn-wb-popup-open" class="mx-ml-icon-btn" title="السبورة" aria-pressed="false">
                 <i class="fas fa-pen text-[#171717]"></i>
             </button>
@@ -401,6 +411,19 @@ const api = await window.MxLiveKitClassroom.boot(LivekitClient, {
     uploadTabUrl: @json($academicObserverMode ? '' : route($rp.'classroom.recording.upload-tab', $meeting)),
     onMeetingEnded: () => { location.href = @json($roomExitUrl); },
 });
+
+@unless($academicObserverMode)
+if (window.MxClassroomCurriculumPresenter) {
+    window.MxClassroomCurriculumPresenter.attach(api, {
+        isHost: true,
+        catalogUrl: @json(route($rp.'classroom.curriculum.catalog', $meeting)),
+        presentUrl: @json(route($rp.'classroom.curriculum.present', $meeting)),
+        stateUrl: @json(route($rp.'classroom.curriculum.state', $meeting)),
+        slideUpdateUrl: @json(route($rp.'classroom.curriculum.slide.update', $meeting)),
+        stopUrl: @json(route($rp.'classroom.curriculum.stop', $meeting)),
+    });
+}
+@endunless
 
 @unless($academicObserverMode)
 // Best-effort: browser noise constraints + VBG hooks if scripts present

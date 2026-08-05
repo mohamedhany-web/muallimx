@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\SecurityService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use App\Services\SecurityService;
 use Symfony\Component\HttpFoundation\Response;
 
 class FileUploadSecurityMiddleware
@@ -25,30 +25,30 @@ class FileUploadSecurityMiddleware
     {
         if ($request->hasFile('*')) {
             $files = $request->allFiles();
-            
+
             foreach ($files as $key => $file) {
                 // معالجة ملف واحد أو مصفوفة
                 $fileArray = is_array($file) ? $file : [$file];
-                
+
                 foreach ($fileArray as $uploadedFile) {
                     if ($uploadedFile && $uploadedFile->isValid()) {
                         // التحقق من نوع الملف المسموح
                         $allowedMimes = $this->getAllowedMimes($key);
                         $maxSize = $this->getMaxSize($request, $key);
-                        
+
                         $validation = $this->securityService->validateUploadedFile(
                             $uploadedFile,
                             $allowedMimes,
                             $maxSize
                         );
 
-                        if (!$validation['valid']) {
+                        if (! $validation['valid']) {
                             $this->securityService->logSuspiciousActivity(
                                 'Invalid File Upload',
                                 $request,
-                                'File: ' . $uploadedFile->getClientOriginalName() . ' - Errors: ' . implode(', ', $validation['errors'])
+                                'File: '.$uploadedFile->getClientOriginalName().' - Errors: '.implode(', ', $validation['errors'])
                             );
-                            
+
                             return back()
                                 ->withErrors([$key => $validation['errors']])
                                 ->withInput();
@@ -81,7 +81,12 @@ class FileUploadSecurityMiddleware
                 'xlsx', 'xls', 'csv', 'doc', 'docx', 'pdf', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'rar', 'html', 'htm',
             ],
             'image' => ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-            'video' => ['video/mp4', 'video/webm', 'video/ogg'],
+            // Companion animation video for curriculum PPTX (field name animation_video) — mp4/webm only.
+            'animation_video' => [
+                'video/mp4', 'video/webm', 'application/mp4', 'application/octet-stream',
+                'mp4', 'webm',
+            ],
+            'video' => ['video/mp4', 'video/webm', 'video/ogg', 'mp4', 'webm'],
             // تسجيل شاشة المتصفح غالباً يخرج WebM وأحياناً MIME غير قياسي حسب المتصفح.
             'recording' => [
                 'video/webm', 'video/mp4', 'video/ogg', 'audio/webm', 'audio/ogg', 'application/octet-stream',
@@ -137,9 +142,16 @@ class FileUploadSecurityMiddleware
             return min($this->phpIniUploadMaxBytes(), $appCap > 0 ? $appCap : 150 * 1024 * 1024);
         }
 
+        if ($request->routeIs('admin.curriculum-library.items.materials.animation-video.store')) {
+            $appCap = (int) config('curriculum_presentation.animation_video_max_bytes', 500 * 1024 * 1024);
+
+            return min($this->phpIniUploadMaxBytes(), $appCap > 0 ? $appCap : 500 * 1024 * 1024);
+        }
+
         $maxBytes = (int) config('upload_limits.max_upload_bytes', 40 * 1024 * 1024);
 
         $sizeMap = [
+            'animation_video' => (int) config('curriculum_presentation.animation_video_max_bytes', 524288000),
             'video' => 524288000,   // 500 MB
             'recording' => 1073741824, // 1 GB
             'image' => $maxBytes,
